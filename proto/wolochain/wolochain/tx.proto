@@ -1,0 +1,7 @@
+syntax = "proto3";
+package wolochain.wolochain;
+
+option go_package = "github.com/emaren/wolochain/x/wolochain/types";
+
+// Msg defines the Msg service.
+service Msg {}

@@ -1,0 +1,12 @@
+syntax = "proto3";
+package wolochain.wolochain;
+
+import "gogoproto/gogo.proto";
+import "wolochain/wolochain/params.proto";
+
+option go_package = "github.com/emaren/wolochain/x/wolochain/types";
+
+// GenesisState defines the wolochain module's genesis state.
+message GenesisState {
+  Params params = 1 [(gogoproto.nullable) = false];
+}
