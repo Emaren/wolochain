@@ -5,3 +5,8 @@ release/
 .vscode/
 .DS_Store
 .env
+
+build/
+wolochaind
+*.log
+*.sh
