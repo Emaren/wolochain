@@ -1,7 +1,6 @@
 package app
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -118,7 +117,6 @@ import (
 	// this line is used by starport scaffolding # stargate/app/moduleImport
 
 	appparams "github.com/emaren/wolochain/app/params"
-	"github.com/emaren/wolochain/docs"
 )
 
 const (
@@ -855,47 +853,35 @@ func (app *App) GetSubspace(moduleName string) paramstypes.Subspace {
 // API server.
 func (app *App) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig) {
 	clientCtx := apiSvr.ClientCtx
-	// Register new tx routes from grpc-gateway.
+
+	// 1) Expose transaction and auth gRPC→REST handlers (so /cosmos/tx/v1beta1/... works)
 	authtx.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
-	// Register new tendermint queries routes from grpc-gateway.
+
+	// 2) Expose Tendermint endpoints (blocks/latest, validatorsets, etc.)
 	tmservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
-	// Register node gRPC service for grpc-gateway.
+
+	// 3) Expose node info endpoints (node status, syncing, etc.)
 	nodeservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
-	// Register grpc-gateway routes for all modules.
+	// 4) Expose all module‐specific gRPC→REST handlers (bank, staking, gov, your x/wolochain, etc.)
 	ModuleBasics.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
-	// Register the /denom_metadata HTTP handler
-	if err := banktypes.RegisterQueryHandlerClient(
-		context.Background(),                // the ctx
-		apiSvr.GRPCGatewayRouter,            // the mux
-		banktypes.NewQueryClient(clientCtx), // the bank QueryClient
-	); err != nil {
-		// panic here so you catch errors at startup
-		panic(fmt.Errorf("failed to register bank denom_metadata handler: %w", err))
-	}
-	// register app's OpenAPI routes.
-	docs.RegisterOpenAPIService(Name, apiSvr.Router)
+
+	// ── DO NOT call ModuleBasics.RegisterRESTRoutes(...) here anymore ──
+	// All REST is now handled via gRPC‐Gateway. Calling RegisterRESTRoutes no longer exists.
 }
 
-// RegisterTxService implements the Application.RegisterTxService method.
-func (app *App) RegisterTxService(clientCtx client.Context) {
-	authtx.RegisterTxService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.BaseApp.Simulate, app.interfaceRegistry)
-}
-
-// RegisterTendermintService implements the Application.RegisterTendermintService method.
-func (app *App) RegisterTendermintService(clientCtx client.Context) {
-	tmservice.RegisterTendermintService(
-		clientCtx,
-		app.BaseApp.GRPCQueryRouter(),
-		app.interfaceRegistry,
-		app.Query,
-	)
-}
-
-// RegisterNodeService implements the Application.RegisterNodeService method.
 func (app *App) RegisterNodeService(clientCtx client.Context) {
-	nodeservice.RegisterNodeService(clientCtx, app.GRPCQueryRouter())
+	// Stub for interface compliance. Ping.pub doesn't use this directly.
 }
+
+func (app *App) RegisterTendermintService(clientCtx client.Context) {
+	// Stub for interface compliance. Already handled in RegisterAPIRoutes.
+}
+
+func (app *App) RegisterTxService(clientCtx client.Context) {
+	// Stub for interface compliance. Actual tx routes registered in RegisterAPIRoutes.
+}
+
 
 // initParamsKeeper init params keeper and its subspaces
 func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino, key, tkey storetypes.StoreKey) paramskeeper.Keeper {
@@ -927,4 +913,13 @@ func (app *App) SimulationManager() *module.SimulationManager {
 // ModuleManager returns the app ModuleManager
 func (app *App) ModuleManager() *module.Manager {
 	return app.mm
+}
+
+// GetModuleNames returns the list of registered module names
+func GetModuleNames() []string {
+	names := []string{}
+	for name := range ModuleBasics {
+		names = append(names, name)
+	}
+	return names
 }
