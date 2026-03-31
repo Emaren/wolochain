@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"WoloChain/x/wolochain/keeper"
-	"WoloChain/x/wolochain/types"
+	"github.com/emaren/wolochain/x/wolochain/keeper"
+	"github.com/emaren/wolochain/x/wolochain/types"
 )
 
 func TestParamsQuery(t *testing.T) {

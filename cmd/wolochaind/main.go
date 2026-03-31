@@ -7,8 +7,8 @@ import (
 	clienthelpers "cosmossdk.io/client/v2/helpers"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 
-	"WoloChain/app"
-	"WoloChain/cmd/WoloChaind/cmd"
+	"github.com/emaren/wolochain/app"
+	"github.com/emaren/wolochain/cmd/wolochaind/cmd"
 )
 
 func main() {

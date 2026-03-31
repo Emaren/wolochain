@@ -146,7 +146,7 @@ func addTestnetFlagsToCmd(cmd *cobra.Command) {
 	cmd.Flags().Int(flagNumValidators, 4, "Number of validators to initialize the testnet with")
 	cmd.Flags().StringP(flagOutputDir, "o", "./.testnets", "Directory to store initialization data for the testnet")
 	cmd.Flags().String(flags.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
-	cmd.Flags().String(server.FlagMinGasPrices, fmt.Sprintf("0.0001%s", sdk.DefaultBondDenom), "Minimum gas prices to accept for transactions; All fees in a tx must meet this minimum (e.g. 0.01photino,0.001stake)")
+	cmd.Flags().String(server.FlagMinGasPrices, fmt.Sprintf("0.0001%s", sdk.DefaultBondDenom), "Minimum gas prices to accept for transactions; All fees in a tx must meet this minimum (e.g. 0.01uwolo)")
 	cmd.Flags().String(flags.FlagKeyType, string(hd.Secp256k1Type), "Key signing algorithm to generate keys for")
 
 	// support old flags name for backwards compatibility
@@ -255,7 +255,7 @@ func initTestnetFiles(
 		accTokens := sdk.TokensFromConsensusPower(1000, sdk.DefaultPowerReduction)
 		accStakingTokens := sdk.TokensFromConsensusPower(500, sdk.DefaultPowerReduction)
 		coins := sdk.Coins{
-			sdk.NewCoin("testtoken", accTokens),
+			sdk.NewCoin(sdk.DefaultBondDenom, accTokens),
 			sdk.NewCoin(sdk.DefaultBondDenom, accStakingTokens),
 		}
 

@@ -4,7 +4,7 @@ package wolochain.wolochain.v1;
 import "amino/amino.proto";
 import "gogoproto/gogo.proto";
 
-option go_package = "WoloChain/x/wolochain/types";
+option go_package = "github.com/emaren/wolochain/x/wolochain/types";
 
 // Params defines the parameters for the module.
 message Params {

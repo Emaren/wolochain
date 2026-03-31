@@ -3,7 +3,7 @@ package wolochain
 import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 
-	"WoloChain/x/wolochain/types"
+	"github.com/emaren/wolochain/x/wolochain/types"
 )
 
 // AutoCLIOptions implements the autocli.HasAutoCLIConfig interface.

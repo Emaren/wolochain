@@ -6,7 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
-	"WoloChain/x/wolochain/types"
+	"github.com/emaren/wolochain/x/wolochain/types"
 )
 
 // GenerateGenesisState creates a randomized GenState of the module.

@@ -15,8 +15,8 @@ import (
 	"google.golang.org/grpc"
 	
 
-	"WoloChain/x/wolochain/keeper"
-	"WoloChain/x/wolochain/types"
+	"github.com/emaren/wolochain/x/wolochain/keeper"
+	"github.com/emaren/wolochain/x/wolochain/types"
 	
 )
 

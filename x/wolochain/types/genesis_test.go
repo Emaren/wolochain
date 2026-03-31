@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"WoloChain/x/wolochain/types"
+	"github.com/emaren/wolochain/x/wolochain/types"
 )
 
 func TestGenesisState_Validate(t *testing.T) {

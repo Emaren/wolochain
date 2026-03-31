@@ -6,8 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-    "WoloChain/x/wolochain/keeper"
-    "WoloChain/x/wolochain/types"
+    "github.com/emaren/wolochain/x/wolochain/keeper"
+    "github.com/emaren/wolochain/x/wolochain/types"
 )
 
 func TestMsgUpdateParams(t *testing.T) {

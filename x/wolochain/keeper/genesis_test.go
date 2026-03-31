@@ -3,7 +3,7 @@ package keeper_test
 import (
 	"testing"
 
-	"WoloChain/x/wolochain/types"
+	"github.com/emaren/wolochain/x/wolochain/types"
 
 	"github.com/stretchr/testify/require"
 )

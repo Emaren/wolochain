@@ -3,7 +3,7 @@ package keeper
 import (
 	"context"
 
-	"WoloChain/x/wolochain/types"
+	"github.com/emaren/wolochain/x/wolochain/types"
 )
 
 // InitGenesis initializes the module's state from a provided genesis state.

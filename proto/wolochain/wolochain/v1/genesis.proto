@@ -5,7 +5,7 @@ import "amino/amino.proto";
 import "gogoproto/gogo.proto";
 import "wolochain/wolochain/v1/params.proto";
 
-option go_package = "WoloChain/x/wolochain/types";
+option go_package = "github.com/emaren/wolochain/x/wolochain/types";
 
 // GenesisState defines the wolochain module's genesis state.
 message GenesisState {

@@ -17,7 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/spf13/cobra"
 
-	"WoloChain/app"
+	"github.com/emaren/wolochain/app"
 )
 
 // NewRootCmd creates a new root command for WoloChaind. It is called once in the main function.

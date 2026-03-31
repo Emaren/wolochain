@@ -12,7 +12,7 @@ cd "$(dirname "$0")/.."
 
 echo "==> building binary"
 mkdir -p build
-go build -o ./build/wolochaind ./cmd/WoloChaind
+go build -o ./build/wolochaind ./cmd/wolochaind
 
 echo "==> resetting local chain home"
 rm -rf "${CHAIN_HOME}"

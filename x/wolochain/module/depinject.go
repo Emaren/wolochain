@@ -11,8 +11,8 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	ibckeeper "github.com/cosmos/ibc-go/v10/modules/core/keeper"
 
-	"WoloChain/x/wolochain/keeper"
-	"WoloChain/x/wolochain/types"
+	"github.com/emaren/wolochain/x/wolochain/keeper"
+	"github.com/emaren/wolochain/x/wolochain/types"
 )
 
 var _ depinject.OnePerModuleType = AppModule{}

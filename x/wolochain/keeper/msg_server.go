@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	"WoloChain/x/wolochain/types"
+	"github.com/emaren/wolochain/x/wolochain/types"
 )
 
 type msgServer struct {

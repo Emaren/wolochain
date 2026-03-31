@@ -15,9 +15,9 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
-	"WoloChain/x/wolochain/keeper"
-	module "WoloChain/x/wolochain/module"
-	"WoloChain/x/wolochain/types"
+	"github.com/emaren/wolochain/x/wolochain/keeper"
+	module "github.com/emaren/wolochain/x/wolochain/module"
+	"github.com/emaren/wolochain/x/wolochain/types"
 )
 
 type fixture struct {

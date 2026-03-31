@@ -3,12 +3,12 @@ package wolochain.wolochain.module.v1;
 
 import "cosmos/app/v1alpha1/module.proto";
 
-option go_package = "WoloChain/x/wolochain/types";
+option go_package = "github.com/emaren/wolochain/x/wolochain/types";
 
 // Module is the config object for the module.
 message Module {
   option (cosmos.app.v1alpha1.module) = {
-    go_import: "WoloChain/x/wolochain"
+    go_import: "github.com/emaren/wolochain/x/wolochain"
   };
 
   // authority defines the custom module authority.

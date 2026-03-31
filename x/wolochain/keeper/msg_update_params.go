@@ -6,7 +6,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
-    "WoloChain/x/wolochain/types"
+    "github.com/emaren/wolochain/x/wolochain/types"
 )
 
 func (k msgServer) UpdateParams(ctx context.Context, req *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {

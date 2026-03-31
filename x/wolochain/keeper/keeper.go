@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	 
 
-	"WoloChain/x/wolochain/types"
+	"github.com/emaren/wolochain/x/wolochain/types"
 )
 
 type Keeper struct {

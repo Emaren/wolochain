@@ -7,13 +7,13 @@ import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "wolochain/wolochain/v1/params.proto";
 
-option go_package = "WoloChain/x/wolochain/types";
+option go_package = "github.com/emaren/wolochain/x/wolochain/types";
 
 // Query defines the gRPC querier service.
 service Query {
   // Parameters queries the parameters of the module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/WoloChain/wolochain/v1/params";
+    option (google.api.http).get = "/wolochain/wolochain/v1/params";
   }
 }
 
