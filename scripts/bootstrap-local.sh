@@ -1,115 +1,199 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-CHAIN_HOME="${HOME}/.wolochain"
-CHAIN_ID="wolo-1"
-KEY_NAME="validator"
-DENOM="uwolo"
-SELF_DELEGATION="1000000000${DENOM}"
-GENESIS_BALANCE="100000000000000${DENOM}"
+ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT"
 
-cd "$(dirname "$0")/.."
+BIN="$ROOT/build/wolochaind"
+HOME_DIR="${WOLO_HOME:-$HOME/.wolochain}"
+CHAIN_ID="${WOLO_CHAIN_ID:-wolo-1}"
+MONIKER="${WOLO_MONIKER:-local}"
 
-echo "==> building binary"
-mkdir -p build
-go build -o ./build/wolochaind ./cmd/wolochaind
+KEYS=(
+  foundercold
+  founderoperating
+  communitytreasury
+  dexliquidity
+  faucetgrowth
+  validatorops
+  ecosystembounties
+)
 
-echo "==> resetting local chain home"
-rm -rf "${CHAIN_HOME}"
+build_binary() {
+  mkdir -p "$ROOT/build"
+  go build -o "$BIN" ./cmd/wolochaind
+}
 
-echo "==> init chain"
-./build/wolochaind init local --chain-id "${CHAIN_ID}" --home "${CHAIN_HOME}"
+patch_app_toml() {
+  python3 - <<'PY'
+from pathlib import Path
+import re
 
-echo "==> create validator key"
-./build/wolochaind keys add "${KEY_NAME}" --keyring-backend test --home "${CHAIN_HOME}" >/dev/null 2>&1 || true
+p = Path.home() / ".wolochain/config/app.toml"
+s = p.read_text()
 
-ADDR="$(./build/wolochaind keys show "${KEY_NAME}" -a --keyring-backend test --home "${CHAIN_HOME}")"
-echo "validator address: ${ADDR}"
-
-echo "==> add genesis account"
-./build/wolochaind genesis add-genesis-account "${ADDR}" "${GENESIS_BALANCE}" --home "${CHAIN_HOME}" --keyring-backend test
-
-echo "==> create gentx"
-./build/wolochaind genesis gentx "${KEY_NAME}" "${SELF_DELEGATION}" \
-  --from "${KEY_NAME}" \
-  --chain-id "${CHAIN_ID}" \
-  --home "${CHAIN_HOME}" \
-  --keyring-backend test
-
-GENTX="$(ls "${CHAIN_HOME}"/config/gentx/gentx-*.json | head -n1)"
-echo "gentx: ${GENTX}"
-
-echo "==> patch empty delegator_address if needed"
-python3 - "$ADDR" "$GENTX" <<'PY'
-import json, pathlib, sys
-
-addr = sys.argv[1]
-gentx = pathlib.Path(sys.argv[2])
-
-data = json.loads(gentx.read_text())
-msg = data["body"]["messages"][0]
-
-if msg.get("delegator_address", "") != addr:
-    msg["delegator_address"] = addr
-    gentx.write_text(json.dumps(data, indent=2) + "\n")
-    print(f"patched delegator_address -> {addr}")
+if 'minimum-gas-prices = ""' in s:
+    s = s.replace('minimum-gas-prices = ""', 'minimum-gas-prices = "0uwolo"', 1)
 else:
-    print("delegator_address already correct")
+    s = re.sub(
+        r'^minimum-gas-prices = ".*"$',
+        'minimum-gas-prices = "0uwolo"',
+        s,
+        count=1,
+        flags=re.MULTILINE,
+    )
+
+p.write_text(s)
+print(f"patched {p}")
 PY
+}
 
-echo "==> re-sign gentx"
-./build/wolochaind tx sign "$GENTX" \
-  --from "${KEY_NAME}" \
-  --chain-id "${CHAIN_ID}" \
-  --home "${CHAIN_HOME}" \
-  --keyring-backend test \
-  --offline \
-  --account-number 0 \
-  --sequence 0 \
-  --output-document "$GENTX" \
-  --overwrite >/dev/null
+patch_genesis() {
+  python3 - <<'PY'
+import json
+from pathlib import Path
 
-echo "==> collect gentxs"
-./build/wolochaind genesis collect-gentxs --home "${CHAIN_HOME}"
+p = Path.home() / ".wolochain/config/genesis.json"
+g = json.loads(p.read_text())
 
-echo "==> zero mint inflation in genesis safely"
-python3 - "${CHAIN_HOME}/config/genesis.json" <<'PY'
-import json, pathlib, sys
+g["chain_id"] = "wolo-1"
+app = g["app_state"]
 
-genesis_path = pathlib.Path(sys.argv[1])
-data = json.loads(genesis_path.read_text())
+if "staking" in app and "params" in app["staking"]:
+    app["staking"]["params"]["bond_denom"] = "uwolo"
 
-mint = data["app_state"]["mint"]
-mint["minter"]["inflation"] = "0.000000000000000000"
-mint["minter"]["annual_provisions"] = "0.000000000000000000"
-mint["params"]["inflation_rate_change"] = "0.000000000000000000"
-mint["params"]["inflation_max"] = "0.000000000000000000"
-mint["params"]["inflation_min"] = "0.000000000000000000"
-mint["params"]["goal_bonded"] = "0.670000000000000000"
-mint["params"]["mint_denom"] = "uwolo"
+if "mint" in app:
+    params = app["mint"].setdefault("params", {})
+    params["mint_denom"] = "uwolo"
+    for k in ("inflation_rate_change", "inflation_max", "inflation_min"):
+        if k in params:
+            params[k] = "0.000000000000000000"
+    minter = app["mint"].setdefault("minter", {})
+    if "inflation" in minter:
+        minter["inflation"] = "0.000000000000000000"
+    if "annual_provisions" in minter:
+        minter["annual_provisions"] = "0.000000000000000000"
 
-staking = data["app_state"]["staking"]
-staking["params"]["bond_denom"] = "uwolo"
+if "crisis" in app and "constant_fee" in app["crisis"]:
+    app["crisis"]["constant_fee"]["denom"] = "uwolo"
 
-gov = data["app_state"]["gov"]["params"]
-for key in ("min_deposit", "expedited_min_deposit"):
-    for coin in gov.get(key, []):
-        coin["denom"] = "uwolo"
+if "gov" in app and "params" in app["gov"]:
+    gp = app["gov"]["params"]
+    for key in ("min_deposit", "expedited_min_deposit"):
+        if isinstance(gp.get(key), list):
+            for coin in gp[key]:
+                if isinstance(coin, dict) and "denom" in coin:
+                    coin["denom"] = "uwolo"
+    for key in (
+        "burn_vote_quorum",
+        "burn_proposal_deposit_prevote",
+        "burn_vote_veto",
+    ):
+        if key in gp:
+            gp[key] = False
 
-genesis_path.write_text(json.dumps(data, indent=2) + "\n")
-print("patched genesis mint/staking/gov and zeroed inflation safely")
+bank = app.setdefault("bank", {})
+bank["denom_metadata"] = [
+    {
+        "description": "WOLO is the fixed-supply native token of WoloChain.",
+        "denom_units": [
+            {"denom": "uwolo", "exponent": 0, "aliases": ["microWOLO"]},
+            {"denom": "wolo", "exponent": 6},
+        ],
+        "base": "uwolo",
+        "display": "wolo",
+        "name": "WOLO",
+        "symbol": "WOLO",
+    }
+]
+
+p.write_text(json.dumps(g, indent=2) + "\n")
+print(f"patched {p}")
 PY
+}
 
-echo "==> validate genesis"
-./build/wolochaind genesis validate --home "${CHAIN_HOME}"
+addr() {
+  "$BIN" keys show "$1" --address --keyring-backend test --home "$HOME_DIR"
+}
 
-echo "==> recreate validator state file"
-mkdir -p "${CHAIN_HOME}/data"
-cat > "${CHAIN_HOME}/data/priv_validator_state.json" <<'EOF'
-{"height":"0","round":0,"step":0}
-EOF
+echo "=== build binary ==="
+build_binary
 
-echo "==> done"
 echo
-echo "Start with:"
-echo "./build/wolochaind start --home ${CHAIN_HOME} --minimum-gas-prices 0${DENOM}"
+echo "=== reset local home ==="
+rm -rf "$HOME_DIR"
+"$BIN" init "$MONIKER" --chain-id "$CHAIN_ID" --home "$HOME_DIR" >/dev/null
+
+echo
+echo "=== patch config ==="
+patch_app_toml
+patch_genesis
+
+echo
+echo "=== create keys ==="
+for name in "${KEYS[@]}"; do
+  "$BIN" keys add "$name" --keyring-backend test --home "$HOME_DIR" >/dev/null 2>&1
+done
+
+echo
+echo "=== add genesis balances ==="
+"$BIN" genesis add-genesis-account foundercold        60000000000000uwolo --keyring-backend test --home "$HOME_DIR"
+"$BIN" genesis add-genesis-account founderoperating    5000000000000uwolo --keyring-backend test --home "$HOME_DIR"
+"$BIN" genesis add-genesis-account communitytreasury  10000000000000uwolo --keyring-backend test --home "$HOME_DIR"
+"$BIN" genesis add-genesis-account dexliquidity       10000000000000uwolo --keyring-backend test --home "$HOME_DIR"
+"$BIN" genesis add-genesis-account faucetgrowth        7000000000000uwolo --keyring-backend test --home "$HOME_DIR"
+"$BIN" genesis add-genesis-account validatorops        5000000000000uwolo --keyring-backend test --home "$HOME_DIR"
+"$BIN" genesis add-genesis-account ecosystembounties   3000000000000uwolo --keyring-backend test --home "$HOME_DIR"
+
+echo
+echo "=== create gentx ==="
+"$BIN" genesis gentx validatorops 1000000000uwolo \
+  --chain-id "$CHAIN_ID" \
+  --keyring-backend test \
+  --home "$HOME_DIR"
+
+echo
+echo "=== collect + validate ==="
+"$BIN" genesis collect-gentxs --home "$HOME_DIR"
+"$BIN" genesis validate-genesis --home "$HOME_DIR"
+
+echo
+echo "=== write local addresses ==="
+{
+  echo "foundercold $(addr foundercold)"
+  echo "founderoperating $(addr founderoperating)"
+  echo "communitytreasury $(addr communitytreasury)"
+  echo "dexliquidity $(addr dexliquidity)"
+  echo "faucetgrowth $(addr faucetgrowth)"
+  echo "validatorops $(addr validatorops)"
+  echo "ecosystembounties $(addr ecosystembounties)"
+} | tee "$ROOT/build/local-addresses.txt"
+
+echo
+echo "=== supply sanity check ==="
+python3 - <<'PY'
+import json
+from pathlib import Path
+
+p = Path.home() / ".wolochain/config/genesis.json"
+g = json.loads(p.read_text())
+bank = g["app_state"]["bank"]
+
+balances = bank.get("balances", [])
+supply = 0
+for coin in bank.get("supply", []):
+    if coin.get("denom") == "uwolo":
+        supply += int(coin["amount"])
+
+print("balance_count =", len(balances))
+print("total_uwolo   =", supply)
+print("total_wolo    =", supply / 1_000_000)
+print("expected      =", 100_000_000_000_000)
+print("match         =", supply == 100_000_000_000_000)
+PY
+
+echo
+echo "Done."
+echo "Home:   $HOME_DIR"
+echo "Binary: $BIN"
+echo "Addrs:  $ROOT/build/local-addresses.txt"
