@@ -1,0 +1,14 @@
+syntax = "proto3";
+package wolochain.wolochain.v1;
+
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "WoloChain/x/wolochain/types";
+
+// Params defines the parameters for the module.
+message Params {
+  option (amino.name) = "wolochain/x/wolochain/Params";
+  option (gogoproto.equal) = true;
+  
+}
