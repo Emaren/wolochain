@@ -25,3 +25,5 @@ release/
 scripts/local-dev.env
 build/wolochaind
 build/local-addresses.txt
+
+scripts/local-validator/

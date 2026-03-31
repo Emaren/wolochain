@@ -156,6 +156,15 @@ echo "=== reset local home ==="
 rm -rf "$HOME_DIR"
 "$BIN" init "$MONIKER" --chain-id "$CHAIN_ID" --home "$HOME_DIR" >/dev/null
 
+VALIDATOR_DIR="$ROOT/scripts/local-validator"
+mkdir -p "$VALIDATOR_DIR"
+
+if [[ -f "$VALIDATOR_DIR/node_key.json" && -f "$VALIDATOR_DIR/priv_validator_key.json" ]]; then
+  cp "$VALIDATOR_DIR/node_key.json" "$HOME_DIR/config/node_key.json"
+  cp "$VALIDATOR_DIR/priv_validator_key.json" "$HOME_DIR/config/priv_validator_key.json"
+  echo "restored canonical local validator identity"
+fi
+
 echo
 echo "=== patch config ==="
 patch_app_toml
