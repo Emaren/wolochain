@@ -20,3 +20,8 @@ release/
 *.db
 *.db-lock
 *.wal
+
+# WoloChain local dev secrets / generated outputs
+scripts/local-dev.env
+build/wolochaind
+build/local-addresses.txt

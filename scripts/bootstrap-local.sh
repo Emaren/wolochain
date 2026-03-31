@@ -8,16 +8,39 @@ BIN="$ROOT/build/wolochaind"
 HOME_DIR="${WOLO_HOME:-$HOME/.wolochain}"
 CHAIN_ID="${WOLO_CHAIN_ID:-wolo-1}"
 MONIKER="${WOLO_MONIKER:-local}"
+ENV_FILE="${WOLO_LOCAL_ENV_FILE:-$ROOT/scripts/local-dev.env}"
 
-KEYS=(
-  foundercold
-  founderoperating
-  communitytreasury
-  dexliquidity
-  faucetgrowth
-  validatorops
-  ecosystembounties
+if [[ -f "$ENV_FILE" ]]; then
+  set -a
+  # shellcheck disable=SC1090
+  source "$ENV_FILE"
+  set +a
+fi
+
+required_vars=(
+  WOLO_MNEMONIC_FOUNDERCOLD
+  WOLO_MNEMONIC_FOUNDEROPERATING
+  WOLO_MNEMONIC_COMMUNITYTREASURY
+  WOLO_MNEMONIC_DEXLIQUIDITY
+  WOLO_MNEMONIC_FAUCETGROWTH
+  WOLO_MNEMONIC_VALIDATOROPS
+  WOLO_MNEMONIC_ECOSYSTEMBOUNTIES
 )
+
+missing=()
+for var in "${required_vars[@]}"; do
+  if [[ -z "${!var:-}" ]]; then
+    missing+=("$var")
+  fi
+done
+
+if (( ${#missing[@]} > 0 )); then
+  echo "Missing deterministic mnemonic env vars:"
+  printf '  - %s\n' "${missing[@]}"
+  echo
+  echo "Create $ROOT/scripts/local-dev.env from scripts/local-dev.env.example and fill it in."
+  exit 1
+fi
 
 build_binary() {
   mkdir -p "$ROOT/build"
@@ -112,6 +135,15 @@ print(f"patched {p}")
 PY
 }
 
+recover_key() {
+  local name="$1"
+  local mnemonic="$2"
+  printf '%s\n\n' "$mnemonic" | "$BIN" keys add "$name" \
+    --recover \
+    --keyring-backend test \
+    --home "$HOME_DIR" >/dev/null 2>&1
+}
+
 addr() {
   "$BIN" keys show "$1" --address --keyring-backend test --home "$HOME_DIR"
 }
@@ -130,10 +162,14 @@ patch_app_toml
 patch_genesis
 
 echo
-echo "=== create keys ==="
-for name in "${KEYS[@]}"; do
-  "$BIN" keys add "$name" --keyring-backend test --home "$HOME_DIR" >/dev/null 2>&1
-done
+echo "=== recover deterministic keys ==="
+recover_key foundercold         "$WOLO_MNEMONIC_FOUNDERCOLD"
+recover_key founderoperating    "$WOLO_MNEMONIC_FOUNDEROPERATING"
+recover_key communitytreasury   "$WOLO_MNEMONIC_COMMUNITYTREASURY"
+recover_key dexliquidity        "$WOLO_MNEMONIC_DEXLIQUIDITY"
+recover_key faucetgrowth        "$WOLO_MNEMONIC_FAUCETGROWTH"
+recover_key validatorops        "$WOLO_MNEMONIC_VALIDATOROPS"
+recover_key ecosystembounties   "$WOLO_MNEMONIC_ECOSYSTEMBOUNTIES"
 
 echo
 echo "=== add genesis balances ==="
