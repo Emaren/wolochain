@@ -46,8 +46,7 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v10/modules/core/keeper"
 
 	"WoloChain/docs"
-	wolochainmodulekeeper "WoloChain/x/wolochain/keeper"
-)
+	)
 
 const (
 	Name                 = "WoloChain"
@@ -87,7 +86,6 @@ type App struct {
 	ICAHostKeeper       icahostkeeper.Keeper
 	TransferKeeper      ibctransferkeeper.Keeper
 
-	WolochainKeeper wolochainmodulekeeper.Keeper
 
 	sm *module.SimulationManager
 }
@@ -156,7 +154,6 @@ func New(
 		&app.ConsensusParamsKeeper,
 		&app.CircuitBreakerKeeper,
 		&app.ParamsKeeper,
-		&app.WolochainKeeper,
 	); err != nil {
 		panic(err)
 	}

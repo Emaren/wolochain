@@ -1,9 +1,7 @@
 package app
 
 import (
-	_ "WoloChain/x/wolochain/module"
-	wolochainmoduletypes "WoloChain/x/wolochain/types"
-	"time"
+			"time"
 
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
@@ -126,7 +124,6 @@ var (
 						// ibc modules
 						ibcexported.ModuleName,
 						// chain modules
-						wolochainmoduletypes.ModuleName,
 // this line is used by starport scaffolding # stargate/app/beginBlockers
 					},
 					EndBlockers: []string{
@@ -135,7 +132,6 @@ var (
 						feegrant.ModuleName,
 						group.ModuleName,
 						// chain modules
-						wolochainmoduletypes.ModuleName,
 // this line is used by starport scaffolding # stargate/app/endBlockers
 					},
 					// The following is mostly only needed when ModuleName != StoreKey name.
@@ -172,7 +168,6 @@ var (
 						ibctransfertypes.ModuleName,
 						icatypes.ModuleName,
 						// chain modules
-						wolochainmoduletypes.ModuleName,
 // this line is used by starport scaffolding # stargate/app/initGenesis
 					},
 				}),
@@ -185,7 +180,7 @@ var (
 					EnableUnorderedTransactions: true,
 					// By default modules authority is the governance module. This is configurable with the following:
 					// Authority: "group", // A custom module authority can be set using a module name
-					// Authority: "cosmos1cwwv22j5ca08ggdv9c2uky355k908694z577tv", // or a specific address
+					// Authority: "wolo1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", // or a specific address
 				}),
 			},
 			{
@@ -268,10 +263,6 @@ var (
 			{
 				Name:   epochstypes.ModuleName,
 				Config: appconfig.WrapAny(&epochsmodulev1.Module{}),
-			},
-			{
-				Name:   wolochainmoduletypes.ModuleName,
-				Config: appconfig.WrapAny(&wolochainmoduletypes.Module{}),
 			},
 // this line is used by starport scaffolding # stargate/app/moduleConfig
 		},

@@ -4,7 +4,6 @@ import (
 	"cosmossdk.io/core/appmodule"
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
-	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -19,14 +18,14 @@ import (
 	icahosttypes "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/host/types"
 	icatypes "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/types"
 	ibctransfer "github.com/cosmos/ibc-go/v10/modules/apps/transfer"
-	ibctransferv2 "github.com/cosmos/ibc-go/v10/modules/apps/transfer/v2"
 	ibctransferkeeper "github.com/cosmos/ibc-go/v10/modules/apps/transfer/keeper"
 	ibctransfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
+	ibctransferv2 "github.com/cosmos/ibc-go/v10/modules/apps/transfer/v2"
 	ibc "github.com/cosmos/ibc-go/v10/modules/core"
-	ibcapi "github.com/cosmos/ibc-go/v10/modules/core/api"
 	ibcclienttypes "github.com/cosmos/ibc-go/v10/modules/core/02-client/types" // nolint:staticcheck // Deprecated: params key table is needed for params migration
 	ibcconnectiontypes "github.com/cosmos/ibc-go/v10/modules/core/03-connection/types"
 	porttypes "github.com/cosmos/ibc-go/v10/modules/core/05-port/types"
+	ibcapi "github.com/cosmos/ibc-go/v10/modules/core/api"
 	ibcexported "github.com/cosmos/ibc-go/v10/modules/core/exported"
 	ibckeeper "github.com/cosmos/ibc-go/v10/modules/core/keeper"
 	solomachine "github.com/cosmos/ibc-go/v10/modules/light-clients/06-solomachine"
@@ -102,10 +101,10 @@ func (app *App) registerIBCModules(appOpts servertypes.AppOptions) error {
 
 	// create IBC module from bottom to top of stack
 	var (
-		transferStack porttypes.IBCModule = ibctransfer.NewIBCModule(app.TransferKeeper)
+		transferStack      porttypes.IBCModule = ibctransfer.NewIBCModule(app.TransferKeeper)
 		transferStackV2    ibcapi.IBCModule    = ibctransferv2.NewIBCModule(app.TransferKeeper)
 		icaControllerStack porttypes.IBCModule = icacontroller.NewIBCMiddleware(app.ICAControllerKeeper)
-		icaHostStack porttypes.IBCModule = icahost.NewIBCModule(app.ICAHostKeeper)
+		icaHostStack       porttypes.IBCModule = icahost.NewIBCModule(app.ICAHostKeeper)
 	)
 
 	// create IBC v1 router, add transfer route, then set it on the keeper
