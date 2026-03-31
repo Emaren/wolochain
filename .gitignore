@@ -1,9 +1,22 @@
+# frontend junk
 vue/node_modules
 vue/dist
+
+# build artifacts
+build/
 release/
+
+# editor / OS junk
 .idea/
 .vscode/
 .DS_Store
+
+# logs / temp
 *.dot
 *.log
 *.ign
+
+# local chain state
+*.db
+*.db-lock
+*.wal
