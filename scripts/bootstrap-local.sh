@@ -72,7 +72,7 @@ echo "==> re-sign gentx"
 echo "==> collect gentxs"
 ./build/wolochaind genesis collect-gentxs --home "${CHAIN_HOME}"
 
-echo "==> zero mint inflation in genesis"
+echo "==> zero mint inflation in genesis safely"
 python3 - "${CHAIN_HOME}/config/genesis.json" <<'PY'
 import json, pathlib, sys
 
@@ -85,7 +85,7 @@ mint["minter"]["annual_provisions"] = "0.000000000000000000"
 mint["params"]["inflation_rate_change"] = "0.000000000000000000"
 mint["params"]["inflation_max"] = "0.000000000000000000"
 mint["params"]["inflation_min"] = "0.000000000000000000"
-mint["params"]["goal_bonded"] = "0.000000000000000000"
+mint["params"]["goal_bonded"] = "0.670000000000000000"
 mint["params"]["mint_denom"] = "uwolo"
 
 staking = data["app_state"]["staking"]
@@ -97,7 +97,7 @@ for key in ("min_deposit", "expedited_min_deposit"):
         coin["denom"] = "uwolo"
 
 genesis_path.write_text(json.dumps(data, indent=2) + "\n")
-print("patched genesis mint/staking/gov denoms and zeroed inflation")
+print("patched genesis mint/staking/gov and zeroed inflation safely")
 PY
 
 echo "==> validate genesis"

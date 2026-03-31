@@ -1,50 +1,154 @@
-# wolochain
-**wolochain** is a blockchain built using Cosmos SDK and Tendermint and created with [Ignite CLI](https://ignite.com/cli).
+# WoloChain
 
-## Get started
+**WoloChain** is a fixed-supply Cosmos-based blockchain for the **AoE2HDBets** ecosystem.
 
-```
-ignite chain serve
-```
+Its job is simple:
 
-`serve` command installs dependencies, builds, initializes, and starts your blockchain in development.
+- hold scarce **WOLO** balances
+- support transfers and payouts
+- act as the money rail for AoE2HDBets
+- stay brutally clean and understandable
 
-### Configure
+WoloChain v1 is **not** trying to be everything at once.
 
-Your blockchain in development can be configured with `config.yml`. To learn more, see the [Ignite CLI docs](https://docs.ignite.com).
+It is **not** launching with:
 
-### Web Frontend
+- on-chain betting logic
+- on-chain faucet logic
+- privacy features
+- rich-list theater
+- smart contracts on day one
+- gimmicky tokenomics
 
-Additionally, Ignite CLI offers a frontend scaffolding feature (based on Vue) to help you quickly build a web frontend for your blockchain:
+The chain owns scarcity and settlement.  
+AoE2HDBets owns the game logic, faucet rules, premium entitlements, rewards UX, and anti-abuse controls.
 
-Use: `ignite scaffold vue`
-This command can be run within your scaffolded blockchain project.
+---
 
+## Canonical v1 identity
 
-For more information see the [monorepo for Ignite front-end development](https://github.com/ignite/web).
+- **Chain name:** `WoloChain`
+- **Binary:** `wolochaind`
+- **Chain ID:** `wolo-1`
+- **Node home:** `~/.wolochain`
+- **Address prefix:** `wolo`
+- **Address format:** `wolo1...`
+- **Base denom:** `uwolo`
+- **Display denom:** `wolo`
+- **Symbol:** `WOLO`
+- **Decimals:** `6`
 
-## Release
-To release a new version of your blockchain, create and push a new tag with `v` prefix. A new draft release with the configured targets will be created.
+---
 
-```
-git tag v0.1
-git push origin v0.1
-```
+## Monetary policy
 
-After a draft release is created, make your final changes from the release page and publish it.
+WoloChain is being built around a simple promise:
 
-### Install
-To install the latest version of your blockchain node's binary, execute the following command on your machine:
+- **Max supply:** `100,000,000 WOLO`
+- **Base units:** `100,000,000,000,000 uwolo`
+- **Inflation:** `0`
+- **Post-genesis minting:** disabled
+- **Burning:** disabled
+- **No hidden supply tricks**
+- **No chicanery**
 
-```
-curl https://get.ignite.com/username/WoloChain@latest! | sudo bash
-```
-`username/WoloChain` should match the `username` and `repo_name` of the Github repository to which the source code was pushed. Learn more about [the install process](https://github.com/allinbits/starport-installer).
+All supply is intended to exist at genesis and remain fixed.
 
-## Learn more
+---
 
-- [Ignite CLI](https://ignite.com/cli)
-- [Tutorials](https://docs.ignite.com/guide)
-- [Ignite CLI docs](https://docs.ignite.com)
-- [Cosmos SDK docs](https://docs.cosmos.network)
-- [Developer Chat](https://discord.gg/ignite)
+## v1 utility
+
+WOLO v1 is for:
+
+- betting balances
+- transfers
+- premium subscriptions
+- tournament payouts
+- rewards and promotions
+- faucet onboarding
+
+---
+
+## Architecture stance
+
+WoloChain is the chain layer for **AoE2HDBets**.
+
+**WoloChain owns:**
+
+- scarcity
+- balances
+- transfers
+- payout rail
+- future IBC readiness
+
+**AoE2HDBets owns:**
+
+- betting UX
+- faucet eligibility and abuse prevention
+- premium subscriptions
+- rewards logic
+- user growth loops
+
+That boundary is intentional.
+
+---
+
+## Repo scope
+
+This repo owns:
+
+- chain code
+- app wiring
+- genesis
+- scripts
+- chain docs
+- local and testnet bootstrap
+
+This repo does **not** own:
+
+- Ping.pub explorer UI
+- AoE2HDBets faucet business logic
+- AoE2HDBets betting rules
+- public marketing pages
+- future DEX liquidity operations
+
+---
+
+## Build order
+
+1. Lock docs and invariants
+2. Normalize chain identity and denom
+3. Build exact genesis allocations
+4. Prove the local chain works
+5. Deploy VPS testnet/staging
+6. Bring up the separate explorer
+7. Integrate AoE2HDBets wallet, balance, faucet, and premium flows
+8. Move toward public beta once the machine behaves
+
+---
+
+## Local development
+
+WoloChain is being built locally first, then promoted upward:
+
+- **Local chain** = private workshop on your machine
+- **Testnet** = deployed dress rehearsal
+- **Mainnet** = public chain with real value and real trust
+
+The goal is not to rush junk into production.  
+The goal is to make the chain correct, then make it public.
+
+---
+
+## Philosophy
+
+WoloChain v1 should feel:
+
+- scarce
+- honest
+- usable
+- public
+- simple
+- clean enough to trust
+
+That is the target.
