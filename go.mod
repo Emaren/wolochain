@@ -1,4 +1,4 @@
-module WoloChain
+module github.com/emaren/wolochain
 
 go 1.24.0
 
