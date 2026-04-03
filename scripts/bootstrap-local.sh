@@ -6,7 +6,7 @@ cd "$ROOT"
 
 BIN="$ROOT/build/wolochaind"
 HOME_DIR="${WOLO_HOME:-$HOME/.wolochain}"
-CHAIN_ID="${WOLO_CHAIN_ID:-wolo-1}"
+CHAIN_ID="${WOLO_CHAIN_ID:-wolo-testnet}"
 MONIKER="${WOLO_MONIKER:-local}"
 ENV_FILE="${WOLO_LOCAL_ENV_FILE:-$ROOT/scripts/local-dev.env}"
 
@@ -79,7 +79,7 @@ from pathlib import Path
 p = Path.home() / ".wolochain/config/genesis.json"
 g = json.loads(p.read_text())
 
-g["chain_id"] = "wolo-1"
+g["chain_id"] = "wolo-testnet"
 app = g["app_state"]
 
 if "staking" in app and "params" in app["staking"]:
