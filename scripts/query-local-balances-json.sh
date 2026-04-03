@@ -23,15 +23,20 @@ fi
 export WOLO_BIN="$BIN"
 export WOLO_HOME_DIR="$HOME_DIR"
 export WOLO_NODE_ADDR="$NODE"
+export WOLO_RPC_HTTP="$RPC_HTTP"
+export WOLO_CHAIN_ID_FALLBACK="${WOLO_CHAIN_ID:-wolo-testnet}"
 
 python3 - <<'PY'
 import json
 import os
 import subprocess
+import urllib.request
 
 bin_path = os.environ["WOLO_BIN"]
 home_dir = os.environ["WOLO_HOME_DIR"]
 node = os.environ["WOLO_NODE_ADDR"]
+rpc_http = os.environ["WOLO_RPC_HTTP"].rstrip("/")
+chain_id_fallback = os.environ["WOLO_CHAIN_ID_FALLBACK"]
 
 names = [
     "foundercold",
@@ -43,8 +48,21 @@ names = [
     "ecosystembounties",
 ]
 
+def detect_chain_id() -> str:
+    try:
+        with urllib.request.urlopen(f"{rpc_http}/status", timeout=5) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+        return (
+            payload.get("result", {})
+            .get("node_info", {})
+            .get("network")
+            or chain_id_fallback
+        )
+    except Exception:
+        return chain_id_fallback
+
 out = {
-    "chain_id": "wolo-1",
+    "chain_id": detect_chain_id(),
     "denom": {"base": "uwolo", "display": "wolo", "decimals": 6},
     "accounts": {},
 }
