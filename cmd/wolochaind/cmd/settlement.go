@@ -1011,9 +1011,15 @@ func (cfg settlementConfig) resolvePayoutAddress(ctx context.Context) (string, e
 	}
 
 	cmd := exec.CommandContext(ctx, cfg.ExecutablePath, args...)
-	output, err := cmd.CombinedOutput()
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	output, err := cmd.Output()
 	if err != nil {
-		return "", fmt.Errorf("could not resolve payout signer %q: %s", cfg.PayoutKeyName, strings.TrimSpace(string(output)))
+		detail := strings.TrimSpace(stderr.String())
+		if detail == "" {
+			detail = strings.TrimSpace(string(output))
+		}
+		return "", fmt.Errorf("could not resolve payout signer %q: %s", cfg.PayoutKeyName, detail)
 	}
 
 	address := strings.TrimSpace(string(output))
