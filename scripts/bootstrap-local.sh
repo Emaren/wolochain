@@ -66,6 +66,21 @@ else:
         flags=re.MULTILINE,
     )
 
+s = re.sub(
+    r'(?ms)^\[api\]\n.*?(?=^\[|\Z)',
+    '[api]\n'
+    'enable = true\n'
+    'swagger = false\n'
+    'enabled-unsafe-cors = false\n'
+    'address = "tcp://127.0.0.1:1317"\n'
+    'max-open-connections = 1000\n'
+    'rpc-read-timeout = 10\n'
+    'rpc-write-timeout = 0\n'
+    'rpc-max-body-bytes = 1000000\n\n',
+    s,
+    count=1,
+)
+
 p.write_text(s)
 print(f"patched {p}")
 PY

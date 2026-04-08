@@ -23,7 +23,10 @@ release/
 
 # WoloChain local dev secrets / generated outputs
 scripts/local-dev.env
-build/wolochaind
-build/local-addresses.txt
+/build/wolochaind
+/build/wolochaind-*
+/build/local-balances.json
+/build/local-addresses.txt
+/wolochaind
 
 scripts/local-validator/

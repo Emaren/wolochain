@@ -1,0 +1,33 @@
+# WoloChain settlement executor config
+#
+# Copy these into the environment for `wolochaind settlement ...` or the
+# localhost settlement server. Keep secrets and local paths out of git.
+
+export WOLO_SETTLEMENT_HOME="$HOME/.wolochain"
+export WOLO_SETTLEMENT_NODE="tcp://127.0.0.1:26657"
+export WOLO_SETTLEMENT_RPC_HTTP="http://127.0.0.1:26657"
+export WOLO_SETTLEMENT_REST_URL="http://127.0.0.1:1317"
+
+export WOLO_SETTLEMENT_CHAIN_ID="wolo-testnet"
+export WOLO_SETTLEMENT_BASE_DENOM="uwolo"
+export WOLO_SETTLEMENT_DISPLAY_DENOM="wolo"
+export WOLO_SETTLEMENT_ADDRESS_PREFIX="wolo"
+
+# Required for payout execution
+export WOLO_SETTLEMENT_PAYOUT_KEY_NAME="validatorops"
+export WOLO_SETTLEMENT_KEYRING_BACKEND="test"
+export WOLO_SETTLEMENT_PAYOUT_ADDRESS=""
+
+# Optional escrow classification for proof lookups
+export WOLO_SETTLEMENT_ESCROW_ADDRESS=""
+
+# Broadcast / fee controls
+export WOLO_SETTLEMENT_BROADCAST_MODE="sync"
+export WOLO_SETTLEMENT_GAS="auto"
+export WOLO_SETTLEMENT_GAS_ADJUSTMENT="1.5"
+export WOLO_SETTLEMENT_GAS_PRICES="0.025uwolo"
+export WOLO_SETTLEMENT_FEES=""
+
+# Localhost API server
+export WOLO_SETTLEMENT_LISTEN_ADDR="127.0.0.1:8091"
+export WOLO_SETTLEMENT_AUTH_TOKEN=""

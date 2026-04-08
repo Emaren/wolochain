@@ -36,6 +36,7 @@ func initRootCmd(
 		genutilcli.InitCmd(basicManager, app.DefaultNodeHome),
 		NewInPlaceTestnetCmd(),
 		NewTestnetMultiNodeCmd(basicManager, banktypes.GenesisBalancesIterator{}),
+		settlementCommand(),
 		debug.Cmd(),
 		confixcmd.ConfigCommand(),
 		pruning.Cmd(newApp, app.DefaultNodeHome),

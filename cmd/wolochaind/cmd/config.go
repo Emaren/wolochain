@@ -41,6 +41,8 @@ func initAppConfig() (string, interface{}) {
 	//
 	// In tests, we set the min gas prices to 0.
 	// srvCfg.MinGasPrices = "0uwolo"
+	srvCfg.API.Enable = true
+	srvCfg.API.Address = "tcp://127.0.0.1:1317"
 
 	customAppConfig := CustomAppConfig{
 		Config: *srvCfg,
