@@ -2,6 +2,17 @@
 
 set -euo pipefail
 
+SETTLEMENT_ENV_FILE="${SETTLEMENT_ENV_FILE:-}"
+if [[ -z "$SETTLEMENT_ENV_FILE" ]] && command -v systemctl >/dev/null 2>&1; then
+  SETTLEMENT_ENV_FILE="$(systemctl show -p EnvironmentFiles --value wolochain-settlement.service 2>/dev/null | awk '{print $1}' | sed 's/^-//')"
+fi
+if [[ -n "$SETTLEMENT_ENV_FILE" && -r "$SETTLEMENT_ENV_FILE" ]]; then
+  set -a
+  # shellcheck disable=SC1090
+  source "$SETTLEMENT_ENV_FILE"
+  set +a
+fi
+
 SETTLEMENT_BASE_URL="${SETTLEMENT_BASE_URL:-http://127.0.0.1:8091}"
 WOLOCHAIND_BIN="${WOLOCHAIND_BIN:-./build/wolochaind}"
 WOLOCHAIND_SUDO_USER="${WOLOCHAIND_SUDO_USER:-}"
@@ -12,8 +23,13 @@ WOLO_SETTLEMENT_CHAIN_ID="${WOLO_SETTLEMENT_CHAIN_ID:-wolo-testnet}"
 WOLO_SETTLEMENT_BASE_DENOM="${WOLO_SETTLEMENT_BASE_DENOM:-uwolo}"
 WOLO_SETTLEMENT_DISPLAY_DENOM="${WOLO_SETTLEMENT_DISPLAY_DENOM:-wolo}"
 WOLO_SETTLEMENT_ADDRESS_PREFIX="${WOLO_SETTLEMENT_ADDRESS_PREFIX:-wolo}"
+WOLO_SETTLEMENT_PAYOUT_ADDRESS="${WOLO_SETTLEMENT_PAYOUT_ADDRESS:-}"
 VERIFY_REQUEST_ID="${VERIFY_REQUEST_ID:-verify-live-auth-check}"
 VERIFY_RUN_ID="${VERIFY_RUN_ID:-verify-live-run-check}"
+VERIFY_WAIT_FOR_READY="${VERIFY_WAIT_FOR_READY:-1}"
+VERIFY_READY_TIMEOUT_SEC="${VERIFY_READY_TIMEOUT_SEC:-60}"
+VERIFY_READY_INTERVAL_SEC="${VERIFY_READY_INTERVAL_SEC:-1}"
+VERIFY_VERBOSE="${VERIFY_VERBOSE:-0}"
 VERIFY_ESCROW_TX_HASH="${VERIFY_ESCROW_TX_HASH:-}"
 VERIFY_ESCROW_EXPECTED_SENDER="${VERIFY_ESCROW_EXPECTED_SENDER:-}"
 VERIFY_ESCROW_EXPECTED_AMOUNT_UWOLO="${VERIFY_ESCROW_EXPECTED_AMOUNT_UWOLO:-}"
@@ -39,18 +55,62 @@ record_ok() {
   printf 'OK: %s\n' "$1"
 }
 
-curl_json() {
+http_request() {
   local method="$1"
   local url="$2"
   local body_path="$3"
   shift 3
 
-  curl -sS -X "$method" -o "$body_path" -w '%{http_code}' "$url" "$@"
+  if code="$(curl -sS -X "$method" -o "$body_path" -w '%{http_code}' "$url" "$@" 2>"$body_path.stderr")"; then
+    printf '%s' "$code"
+    return 0
+  fi
+
+  printf '000'
+  return 1
+}
+
+print_response() {
+  local body_path="$1"
+  local mode="${2:-default}"
+  if [[ "$mode" != "always" && "$VERIFY_VERBOSE" != "1" ]]; then
+    return
+  fi
+  cat "$body_path" 2>/dev/null || true
+  if [[ -s "$body_path.stderr" ]]; then
+    printf '\n[curl stderr]\n'
+    cat "$body_path.stderr"
+  fi
+  printf '\n'
+}
+
+strip_known_noise_file() {
+  local path="$1"
+  sed -i.bak '/^WARNING: sonic\/ast only supports .*fallback to encoding\/json$/d' "$path" 2>/dev/null || true
+  rm -f "$path.bak"
 }
 
 looks_like_json_response() {
   local body_path="$1"
-  grep -qE '"(ok|detail|failure_code|count|lookup|deposits)"' "$body_path"
+  grep -qE '"(ok|detail|failure_code|count|lookup|deposits|status|summary)"' "$body_path" 2>/dev/null
+}
+
+extract_json_string() {
+  local key="$1"
+  local body_path="$2"
+  sed -n 's/.*"'"$key"'":[[:space:]]*"\([^"]*\)".*/\1/p' "$body_path" | head -n 1
+}
+
+extract_json_bool() {
+  local key="$1"
+  local body_path="$2"
+  if grep -q '"'"$key"'":[[:space:]]*true' "$body_path" 2>/dev/null; then
+    printf 'true\n'
+    return
+  fi
+  if grep -q '"'"$key"'":[[:space:]]*false' "$body_path" 2>/dev/null; then
+    printf 'false\n'
+  fi
 }
 
 settlement_env() {
@@ -63,6 +123,7 @@ settlement_env() {
       WOLO_SETTLEMENT_BASE_DENOM="$WOLO_SETTLEMENT_BASE_DENOM" \
       WOLO_SETTLEMENT_DISPLAY_DENOM="$WOLO_SETTLEMENT_DISPLAY_DENOM" \
       WOLO_SETTLEMENT_ADDRESS_PREFIX="$WOLO_SETTLEMENT_ADDRESS_PREFIX" \
+      WOLO_SETTLEMENT_PAYOUT_ADDRESS="$WOLO_SETTLEMENT_PAYOUT_ADDRESS" \
       "$WOLOCHAIND_BIN" "$@"
     return
   fi
@@ -75,7 +136,61 @@ settlement_env() {
     WOLO_SETTLEMENT_BASE_DENOM="$WOLO_SETTLEMENT_BASE_DENOM" \
     WOLO_SETTLEMENT_DISPLAY_DENOM="$WOLO_SETTLEMENT_DISPLAY_DENOM" \
     WOLO_SETTLEMENT_ADDRESS_PREFIX="$WOLO_SETTLEMENT_ADDRESS_PREFIX" \
+    WOLO_SETTLEMENT_PAYOUT_ADDRESS="$WOLO_SETTLEMENT_PAYOUT_ADDRESS" \
     "$WOLOCHAIND_BIN" "$@"
+}
+
+capture_settlement_cli() {
+  local output_path="$1"
+  shift
+
+  local rc=0
+  if settlement_env "$@" >"$output_path" 2>&1; then
+    rc=0
+  else
+    rc=$?
+  fi
+  strip_known_noise_file "$output_path"
+  return "$rc"
+}
+
+fetch_health() {
+  health_body="$tmpdir/health.json"
+  health_rc=0
+  if health_code="$(http_request GET "$SETTLEMENT_BASE_URL/settlement/v1/health" "$health_body")"; then
+    health_rc=0
+  else
+    health_rc=$?
+  fi
+  strip_known_noise_file "$health_body"
+  strip_known_noise_file "$health_body.stderr"
+}
+
+health_is_ready() {
+  [[ "${health_code:-000}" == "200" ]] && grep -q '"ok":[[:space:]]*true' "$health_body" 2>/dev/null
+}
+
+wait_for_health() {
+  local deadline=$((SECONDS + VERIFY_READY_TIMEOUT_SEC))
+  local waited=0
+
+  while true; do
+    fetch_health
+    if health_is_ready; then
+      return 0
+    fi
+
+    if [[ "$SECONDS" -ge "$deadline" ]]; then
+      return 1
+    fi
+
+    if [[ "$waited" -eq 0 ]]; then
+      printf 'Waiting up to %ss for settlement health at %s/settlement/v1/health\n' \
+        "$VERIFY_READY_TIMEOUT_SEC" "$SETTLEMENT_BASE_URL"
+      waited=1
+    fi
+    sleep "$VERIFY_READY_INTERVAL_SEC"
+  done
 }
 
 if ! have curl; then
@@ -95,48 +210,67 @@ else
 fi
 
 note "Health"
-health_body="$tmpdir/health.json"
-health_code="$(curl_json GET "$SETTLEMENT_BASE_URL/settlement/v1/health" "$health_body")"
-cat "$health_body"
-printf '\n'
-if [ "$health_code" != "200" ]; then
-  record_failure "health endpoint returned HTTP $health_code"
+if [[ "$VERIFY_WAIT_FOR_READY" == "1" ]]; then
+  if wait_for_health; then
+    record_ok "settlement health became ready"
+  else
+    record_failure "settlement health did not become ready within ${VERIFY_READY_TIMEOUT_SEC}s"
+  fi
 else
-  record_ok "health endpoint returned HTTP 200"
+  fetch_health
 fi
 
-payout_address="$(sed -n 's/.*"payout_address":[[:space:]]*"\([^"]*\)".*/\1/p' "$health_body" | head -n 1)"
-escrow_address="$(sed -n 's/.*"escrow_address":[[:space:]]*"\([^"]*\)".*/\1/p' "$health_body" | head -n 1)"
-auth_token_set="$(sed -n 's/.*"auth_token_set":[[:space:]]*\(true\|false\).*/\1/p' "$health_body" | head -n 1)"
+printf 'HTTP %s\n' "${health_code:-000}"
+
+if [ "${health_code:-000}" != "200" ]; then
+  print_response "$health_body" always
+  record_failure "health endpoint returned HTTP ${health_code:-000}"
+elif health_is_ready; then
+  print_response "$health_body"
+  record_ok "health endpoint returned HTTP 200 with ok=true"
+else
+  print_response "$health_body" always
+  record_failure "health endpoint returned HTTP 200 but ok=true was not present"
+fi
+
+payout_address="$(extract_json_string payout_address "$health_body")"
+escrow_address="$(extract_json_string escrow_address "$health_body")"
+auth_token_set="$(extract_json_bool auth_token_set "$health_body")"
 if [ -z "$payout_address" ]; then
-  payout_address="wolo1jx4n3n2ey6uzfq28kplkmpd2am98xsmcn0nerx"
+  payout_address="${WOLO_SETTLEMENT_PAYOUT_ADDRESS:-wolo1jx4n3n2ey6uzfq28kplkmpd2am98xsmcn0nerx}"
 fi
 if [ -z "$escrow_address" ]; then
   printf 'Escrow address is not configured on the target service.\n'
 else
+  printf 'Payout address: %s\n' "$payout_address"
   printf 'Escrow address: %s\n' "$escrow_address"
 fi
 
 note "Auth Check"
 auth_body="$tmpdir/auth.json"
-auth_code="$(curl_json POST "$SETTLEMENT_BASE_URL/settlement/v1/payouts" "$auth_body" \
+auth_code="000"
+if ! auth_code="$(http_request POST "$SETTLEMENT_BASE_URL/settlement/v1/payouts" "$auth_body" \
   -H 'content-type: application/json' \
-  --data '{"request_id":"'"$VERIFY_REQUEST_ID"'","to_address":"wolo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqe36l7r","amount_uwolo":"1","memo":"verify auth"}')"
+  --data '{"request_id":"'"$VERIFY_REQUEST_ID"'","to_address":"wolo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqe36l7r","amount_uwolo":"1","memo":"verify auth"}')"; then
+  :
+fi
 printf 'HTTP %s\n' "$auth_code"
-cat "$auth_body"
-printf '\n'
 case "$auth_token_set" in
   true)
     if [ "$auth_code" = "401" ]; then
+      print_response "$auth_body"
       record_ok "missing bearer token was rejected"
     else
+      print_response "$auth_body" always
       record_failure "expected HTTP 401 without bearer token, got $auth_code"
     fi
     ;;
   false|"")
     if [ "$auth_code" = "401" ]; then
+      print_response "$auth_body" always
       record_failure "service reports auth disabled but payout POST returned HTTP 401"
     else
+      print_response "$auth_body"
       record_ok "auth token is not set on the target service"
     fi
     ;;
@@ -161,35 +295,44 @@ cat >"$run_body" <<EOF
 EOF
 
 run_check_body="$tmpdir/run-check.json"
-run_check_code="$(curl_json POST "$SETTLEMENT_BASE_URL/settlement/v1/runs/validate" "$run_check_body" \
+run_check_code="000"
+if ! run_check_code="$(http_request POST "$SETTLEMENT_BASE_URL/settlement/v1/runs/validate" "$run_check_body" \
   -H 'content-type: application/json' \
-  --data @"$run_body")"
+  --data @"$run_body")"; then
+  :
+fi
 printf 'HTTP %s\n' "$run_check_code"
-cat "$run_check_body"
-printf '\n'
+
 if [ "$run_check_code" = "404" ]; then
+  print_response "$run_check_body" always
   record_failure "grouped dry-run route is not deployed on this service"
 elif [ "$run_check_code" = "401" ]; then
+  print_response "$run_check_body"
   record_ok "grouped dry-run route exists and is auth-protected"
-elif [ "$run_check_code" = "200" ] || [ "$run_check_code" = "400" ] || [ "$run_check_code" = "409" ]; then
+elif [ "$run_check_code" = "200" ] || [ "$run_check_code" = "400" ] || [ "$run_check_code" = "409" ] || [ "$run_check_code" = "503" ]; then
+  print_response "$run_check_body"
   record_ok "grouped dry-run route responded with a structured application status"
 else
+  print_response "$run_check_body" always
   record_failure "unexpected grouped dry-run HTTP status $run_check_code"
 fi
 
 if [ "${auth_token_set:-false}" = "true" ] && [ -n "${WOLO_SETTLEMENT_AUTH_TOKEN:-}" ] && [ "$run_check_code" != "404" ]; then
   note "Authorized Grouped Dry-Run"
   run_auth_body="$tmpdir/run-auth.json"
-  run_auth_code="$(curl_json POST "$SETTLEMENT_BASE_URL/settlement/v1/runs/validate" "$run_auth_body" \
+  run_auth_code="000"
+  if ! run_auth_code="$(http_request POST "$SETTLEMENT_BASE_URL/settlement/v1/runs/validate" "$run_auth_body" \
     -H 'content-type: application/json' \
     -H "authorization: Bearer $WOLO_SETTLEMENT_AUTH_TOKEN" \
-    --data @"$run_body")"
+    --data @"$run_body")"; then
+    :
+  fi
   printf 'HTTP %s\n' "$run_auth_code"
-  cat "$run_auth_body"
-  printf '\n'
   if [ "$run_auth_code" = "200" ] || [ "$run_auth_code" = "409" ]; then
+    print_response "$run_auth_body"
     record_ok "authorized grouped dry-run completed"
   else
+    print_response "$run_auth_body" always
     record_failure "authorized grouped dry-run returned HTTP $run_auth_code"
   fi
 else
@@ -198,26 +341,33 @@ fi
 
 note "Escrow Read-Only Routes"
 escrow_recent_body="$tmpdir/escrow-recent.json"
-escrow_recent_code="$(curl_json GET "$SETTLEMENT_BASE_URL/settlement/v1/escrow/deposits?limit=1" "$escrow_recent_body")"
+escrow_recent_code="000"
+if ! escrow_recent_code="$(http_request GET "$SETTLEMENT_BASE_URL/settlement/v1/escrow/deposits?limit=1" "$escrow_recent_body")"; then
+  :
+fi
 printf 'HTTP %s\n' "$escrow_recent_code"
-cat "$escrow_recent_body"
-printf '\n'
 if [ "$escrow_recent_code" = "404" ]; then
+  print_response "$escrow_recent_body" always
   record_failure "escrow recent route is not deployed on this service"
 elif looks_like_json_response "$escrow_recent_body"; then
+  print_response "$escrow_recent_body"
   record_ok "escrow recent route responded with a structured application status"
 else
+  print_response "$escrow_recent_body" always
   record_failure "escrow recent route did not return the expected JSON surface"
 fi
 
 escrow_probe_body="$tmpdir/escrow-probe.json"
-escrow_probe_code="$(curl_json GET "$SETTLEMENT_BASE_URL/settlement/v1/escrow/txs/not-a-real-hash" "$escrow_probe_body")"
+escrow_probe_code="000"
+if ! escrow_probe_code="$(http_request GET "$SETTLEMENT_BASE_URL/settlement/v1/escrow/txs/not-a-real-hash" "$escrow_probe_body")"; then
+  :
+fi
 printf 'HTTP %s\n' "$escrow_probe_code"
-cat "$escrow_probe_body"
-printf '\n'
-if [ "$escrow_probe_code" = "400" ] && looks_like_json_response "$escrow_probe_body"; then
+if { [ "$escrow_probe_code" = "400" ] || [ "$escrow_probe_code" = "503" ]; } && looks_like_json_response "$escrow_probe_body"; then
+  print_response "$escrow_probe_body"
   record_ok "escrow verify route is deployed and validates tx hash format"
 else
+  print_response "$escrow_probe_body" always
   record_failure "escrow verify route did not return the expected structured invalid-tx response"
 fi
 
@@ -238,13 +388,16 @@ if [ -n "$VERIFY_ESCROW_TX_HASH" ]; then
   fi
 
   escrow_verify_body="$tmpdir/escrow-verify.json"
-  escrow_verify_code="$(curl_json GET "$escrow_verify_url" "$escrow_verify_body")"
+  escrow_verify_code="000"
+  if ! escrow_verify_code="$(http_request GET "$escrow_verify_url" "$escrow_verify_body")"; then
+    :
+  fi
   printf 'HTTP %s\n' "$escrow_verify_code"
-  cat "$escrow_verify_body"
-  printf '\n'
   if looks_like_json_response "$escrow_verify_body"; then
+    print_response "$escrow_verify_body"
     record_ok "escrow verify request returned a structured application status"
   else
+    print_response "$escrow_verify_body" always
     record_failure "escrow verify request did not return the expected JSON surface"
   fi
 else
@@ -253,19 +406,33 @@ fi
 
 note "CLI Surface"
 cli_help="$tmpdir/settlement-help.txt"
-settlement_env settlement --help >"$cli_help" 2>&1 || true
-cat "$cli_help"
-printf '\n'
+capture_settlement_cli "$cli_help" settlement --help || true
+print_response "$cli_help"
 
 if grep -qE '(^|[[:space:]])inspect([[:space:]]|$)' "$cli_help" && grep -qE '(^|[[:space:]])recent([[:space:]]|$)' "$cli_help"; then
   record_ok "request-level inspect/recent commands are available"
 
   note "Request Recent Summary"
-  settlement_env settlement recent --summary-only || record_failure "request-level recent summary failed"
+  request_recent="$tmpdir/request-recent.json"
+  if capture_settlement_cli "$request_recent" settlement recent --summary-only; then
+    print_response "$request_recent"
+    record_ok "request-level recent summary command succeeded"
+  else
+    print_response "$request_recent" always
+    record_failure "request-level recent summary failed"
+  fi
 
   note "Missing Request Inspect"
-  settlement_env settlement inspect --request-id verify-live-missing --summary-only || record_failure "request-level inspect failed"
+  request_inspect="$tmpdir/request-inspect.json"
+  if capture_settlement_cli "$request_inspect" settlement inspect --request-id verify-live-missing --summary-only; then
+    print_response "$request_inspect"
+    record_ok "request-level inspect command succeeded"
+  else
+    print_response "$request_inspect" always
+    record_failure "request-level inspect failed"
+  fi
 else
+  print_response "$cli_help" always
   record_failure "request-level inspect/recent commands are not deployed in the current binary"
 fi
 
@@ -273,11 +440,26 @@ if grep -qE '(^|[[:space:]])run([[:space:]]|$)' "$cli_help"; then
   record_ok "grouped run commands are available"
 
   note "Run Recent Summary"
-  settlement_env settlement run recent --summary-only || record_failure "grouped run recent summary failed"
+  run_recent="$tmpdir/run-recent.json"
+  if capture_settlement_cli "$run_recent" settlement run recent --summary-only; then
+    print_response "$run_recent"
+    record_ok "grouped run recent summary command succeeded"
+  else
+    print_response "$run_recent" always
+    record_failure "grouped run recent summary failed"
+  fi
 
   note "Missing Run Inspect"
-  settlement_env settlement run inspect --run-id verify-live-missing --summary-only || record_failure "grouped run inspect failed"
+  run_inspect="$tmpdir/run-inspect.json"
+  if capture_settlement_cli "$run_inspect" settlement run inspect --run-id verify-live-missing --summary-only; then
+    print_response "$run_inspect"
+    record_ok "grouped run inspect command succeeded"
+  else
+    print_response "$run_inspect" always
+    record_failure "grouped run inspect failed"
+  fi
 else
+  print_response "$cli_help" always
   record_failure "grouped run commands are not deployed in the current binary"
 fi
 

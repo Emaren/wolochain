@@ -61,7 +61,7 @@ Current live caveats:
 
 - The VPS validator is currently isolated with `0` peers.
 - Settlement still uses the `test` keyring backend on the VPS.
-- The highest-value WoloChain work right now is networking / peer health, alerting, and doc accuracy — not new chain features.
+- The highest-value WoloChain work right now is restart reliability, operator truthfulness, monitoring, backup / restore ergonomics, and doc accuracy — not new chain features.
 
 ## Local Workflow
 
@@ -122,11 +122,14 @@ Settlement execution supports:
 
 Operator helpers in this repo:
 
-- [`scripts/check-settlement-cutover.sh`](scripts/check-settlement-cutover.sh): config, key, doctor, and route checks
-- [`scripts/check-settlement-alerts.sh`](scripts/check-settlement-alerts.sh): machine-readable settlement health / alert JSON with exit codes for cron or VPSSentry
-- [`scripts/verify-live-settlement.sh`](scripts/verify-live-settlement.sh): live HTTP / CLI surface verification
-- [`scripts/backup-live-settlement.sh`](scripts/backup-live-settlement.sh): rollback-oriented backup of the current binary, env, and settlement state
-- [`scripts/restore-live-settlement.sh`](scripts/restore-live-settlement.sh): restore a known-good settlement backup and restart the service
+- [`scripts/check-settlement-cutover.sh`](scripts/check-settlement-cutover.sh): separates intended config checks, local CLI doctor truth, live service truth, and operator warnings
+- [`scripts/check-settlement-alerts.sh`](scripts/check-settlement-alerts.sh): machine-readable settlement JSON with separate live / local / operator / storage scopes and exit codes for cron or VPSSentry
+- [`scripts/run-settlement-alert-check.sh`](scripts/run-settlement-alert-check.sh): writes the latest alert JSON to `$HOME/wolochain-settlement-alerts/latest.json` by default and preserves the alert script exit code
+- [`scripts/install-settlement-alert-cron.sh`](scripts/install-settlement-alert-cron.sh): installs an idempotent `crontab` entry for the current user that runs the alert runner every 5 minutes by default
+- [`scripts/verify-live-settlement.sh`](scripts/verify-live-settlement.sh): waits for settlement health after restart, then verifies the live HTTP / CLI surface
+- [`scripts/clean-build-cache.sh`](scripts/clean-build-cache.sh): clears Go build cache, module cache, and temp directories only; it does not touch settlement state
+- [`scripts/backup-live-settlement.sh`](scripts/backup-live-settlement.sh): rollback-oriented backup with source-path and free-space sanity checks
+- [`scripts/restore-live-settlement.sh`](scripts/restore-live-settlement.sh): defaults to a shared-binary rollback that restarts node + settlement; `RESTORE_MODE=settlement-only` is the explicit env/state-only path
 
 ## Settlement Boundary
 
@@ -169,15 +172,25 @@ For one logical result with many payouts, the preferred flow is:
 ## Production Notes
 
 - Do not commit compiled binaries or validator home data.
-- Prefer [`scripts/build-linux-amd64.sh`](scripts/build-linux-amd64.sh) for VPS builds instead of raw `go build`.
+- The live VPS extra volume is now a real `30G` ext4 filesystem. Verify that truth with `lsblk -o NAME,SIZE,FSTYPE,FSAVAIL,FSUSE%,MOUNTPOINTS` and `df -h / /mnt/HC_Volume_105319120` before large builds or backups.
+- The preferred production build venue is now the VPS itself, using the resized extra volume for `GOTMPDIR`, `GOCACHE`, and the build-helper default `GOPATH` / `GOMODCACHE`.
+- Before the first local VPS build, precreate `/mnt/HC_Volume_105319120/wolochain/go`, `/mnt/HC_Volume_105319120/wolochain/go/bin`, `/mnt/HC_Volume_105319120/wolochain/go-cache`, and `/mnt/HC_Volume_105319120/wolochain/go-tmp` for the build user.
+- If Hetzner expands the volume again later, the guest still needs the on-host filesystem step. For the current ext4 layout that means `sudo resize2fs /dev/sdb`, then re-check `df -h /mnt/HC_Volume_105319120`.
 - Treat settlement request state as operator data; it lives on the VPS extra volume.
 - Treat grouped run state as operator data too; it lives beside request state under the settlement state dir.
 - Prefer keeping `WOLO_SETTLEMENT_AUTH_TOKEN` enabled even for localhost-only POSTs and have callers send bearer auth.
 - `WOLO_SETTLEMENT_ESCROW_ADDRESS` only affects proof classification and operator warnings; it does not create escrow semantics by itself.
 - Set `WOLO_SETTLEMENT_FEES` if you want dry-run grouped runs to return a deterministic fee estimate in `uwolo`.
-- Use [`scripts/check-settlement-alerts.sh`](scripts/check-settlement-alerts.sh) from cron or VPSSentry.
-- Use [`scripts/verify-live-settlement.sh`](scripts/verify-live-settlement.sh) after deploys or service restarts to confirm the live settlement surface is still correct.
-- Use [`scripts/restore-live-settlement.sh`](scripts/restore-live-settlement.sh) if the live service comes up wrong and you need to return to the last known-good backup quickly.
+- Use [`scripts/install-settlement-alert-cron.sh`](scripts/install-settlement-alert-cron.sh) as the repo-owned cron installer for [`scripts/run-settlement-alert-check.sh`](scripts/run-settlement-alert-check.sh).
+- [`scripts/run-settlement-alert-check.sh`](scripts/run-settlement-alert-check.sh) overwrites the latest JSON on each run and preserves the underlying alert exit code.
+- [`scripts/check-settlement-alerts.sh`](scripts/check-settlement-alerts.sh) also watches free space on `/` and `/mnt/HC_Volume_105319120`. The default thresholds are root warn below `2GiB` / fail below `1GiB`, and extra-volume warn below `8GiB` / fail below `4GiB`.
+- Downstream consumers should invoke `sudo -u tony ./scripts/run-settlement-alert-check.sh`, page on exit `1`, treat exit `2` as a local monitoring failure, and read `/home/tony/wolochain-settlement-alerts/latest.json` for `failed_checks_by_scope`, `warn_checks_by_scope`, and the `storage` summary.
+- The cron-installed `runner.log` is append-only by design; rotate it with host-level logrotate or existing ops tooling if you want retention control.
+- Use [`scripts/verify-live-settlement.sh`](scripts/verify-live-settlement.sh) after deploys or service restarts; it now waits for `GET /settlement/v1/health` to return `200` with `ok=true` before running the deeper checks.
+- Run [`scripts/clean-build-cache.sh`](scripts/clean-build-cache.sh) before retrying VPS builds under disk pressure; it only clears Go build/module cache and temp paths.
+- If the VPS still fails a fresh build after cleanup, stop and re-check the mounted extra-volume size and free space before falling back to an off-box build.
+- Prefer `BACKUP_ROOT=/home/tony/wolochain-settlement-backups ./scripts/backup-live-settlement.sh` when the extra volume is tight on free space.
+- Use [`scripts/restore-live-settlement.sh`](scripts/restore-live-settlement.sh) if the live service comes up wrong and you need to return to the last known-good backup quickly. The default restore mode is `shared-binary`, because the live node and settlement services both execute `/var/www/WoloChain/build/wolochaind`.
 - Use `wolochaind settlement escrow verify` or `GET /settlement/v1/escrow/txs/{tx_hash}` when an app / operator needs to prove a deposit really hit the configured escrow address.
 - Use `wolochaind settlement escrow recent` or `GET /settlement/v1/escrow/deposits` to recover from partial app-side state loss without adding market logic to WoloChain.
 
