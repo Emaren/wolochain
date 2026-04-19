@@ -1378,23 +1378,65 @@ func writeFakeSettlementExecutable(t *testing.T, payoutAddress string) string {
 }
 
 func writeFakeSettlementExecutableWithTxs(t *testing.T, payoutAddress string, recipientTxHashes map[string]string) string {
+	return writeFakeSettlementExecutableWithTxsAndKeys(t, map[string]string{
+		"payout": payoutAddress,
+	}, recipientTxHashes)
+}
+
+func writeFakeSettlementExecutableWithTxsAndKeys(t *testing.T, keyAddresses map[string]string, recipientTxHashes map[string]string) string {
 	t.Helper()
 
 	path := filepath.Join(t.TempDir(), "fake-wolochaind.sh")
-	script := "#!/bin/sh\n" +
-		"if [ \"$1\" = \"keys\" ] && [ \"$2\" = \"show\" ] && [ \"$3\" = \"payout\" ]; then\n" +
-		"  printf '%s\\n' '" + payoutAddress + "'\n" +
-		"  exit 0\n" +
-		"fi\n"
+	script := "#!/bin/sh\n"
+	if len(keyAddresses) > 0 {
+		script += "if [ \"$1\" = \"keys\" ] && [ \"$2\" = \"show\" ]; then\n" +
+			"  case \"$3\" in\n"
+		for keyName, address := range keyAddresses {
+			script += "    \"" + keyName + "\") printf '%s\\n' '" + address + "'; exit 0 ;;\n"
+		}
+		script += "  esac\n" +
+			"fi\n"
+	}
 	if len(recipientTxHashes) > 0 {
 		script += "if [ \"$1\" = \"tx\" ] && [ \"$2\" = \"bank\" ] && [ \"$3\" = \"send\" ]; then\n" +
+			"  sender=\"$4\"\n" +
 			"  recipient=\"$5\"\n" +
+			"  amount=\"$6\"\n" +
+			"  memo=\"\"\n" +
+			"  prev=\"\"\n" +
+			"  for arg in \"$@\"; do\n" +
+			"    if [ \"$prev\" = \"--note\" ]; then\n" +
+			"      memo=\"$arg\"\n" +
+			"      break\n" +
+			"    fi\n" +
+			"    prev=\"$arg\"\n" +
+			"  done\n" +
+			"  case \"$sender|$recipient|$amount|$memo\" in\n"
+		for key, txHash := range recipientTxHashes {
+			script += "    \"" + key + "\") printf '{\"height\":\"0\",\"txhash\":\"" + txHash + "\",\"code\":0,\"codespace\":\"\",\"raw_log\":\"\"}\\n'; exit 0 ;;\n"
+		}
+		script += "  esac\n" +
+			"  case \"$recipient|$amount|$memo\" in\n"
+		for key, txHash := range recipientTxHashes {
+			script += "    \"" + key + "\") printf '{\"height\":\"0\",\"txhash\":\"" + txHash + "\",\"code\":0,\"codespace\":\"\",\"raw_log\":\"\"}\\n'; exit 0 ;;\n"
+		}
+		script += "  esac\n" +
+			"  case \"$sender|$recipient|$amount\" in\n"
+		for key, txHash := range recipientTxHashes {
+			script += "    \"" + key + "\") printf '{\"height\":\"0\",\"txhash\":\"" + txHash + "\",\"code\":0,\"codespace\":\"\",\"raw_log\":\"\"}\\n'; exit 0 ;;\n"
+		}
+		script += "  esac\n" +
+			"  case \"$recipient|$amount\" in\n"
+		for recipient, txHash := range recipientTxHashes {
+			script += "    \"" + recipient + "\") printf '{\"height\":\"0\",\"txhash\":\"" + txHash + "\",\"code\":0,\"codespace\":\"\",\"raw_log\":\"\"}\\n'; exit 0 ;;\n"
+		}
+		script += "  esac\n" +
 			"  case \"$recipient\" in\n"
 		for recipient, txHash := range recipientTxHashes {
 			script += "    \"" + recipient + "\") printf '{\"height\":\"0\",\"txhash\":\"" + txHash + "\",\"code\":0,\"codespace\":\"\",\"raw_log\":\"\"}\\n'; exit 0 ;;\n"
 		}
 		script += "  esac\n" +
-			"  printf 'unknown recipient: %s\\n' \"$recipient\" >&2\n" +
+			"  printf 'unknown send target: %s %s %s %s\\n' \"$sender\" \"$recipient\" \"$amount\" \"$memo\" >&2\n" +
 			"  exit 1\n" +
 			"fi\n"
 	}

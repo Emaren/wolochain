@@ -83,11 +83,17 @@ The chain-owned settlement server exposes loopback HTTP endpoints:
 - `GET /settlement/v1/txs/{tx_hash}`
 - `GET /settlement/v1/escrow/txs/{tx_hash}`
 - `GET /settlement/v1/escrow/deposits`
+- `POST /settlement/v1/challenges/validate`
+- `POST /settlement/v1/challenges`
+- `GET /settlement/v1/challenges/{settlement_run_id}`
+- `GET /settlement/v1/challenges`
+- `GET /settlement/v1/challenges/funding/txs/{tx_hash}`
+- `GET /settlement/v1/challenges/funding/deposits`
 
 Auth behavior:
 
 - when `WOLO_SETTLEMENT_AUTH_TOKEN` is set, settlement POST routes require `Authorization: Bearer ...`
-- that includes `POST /settlement/v1/payouts`, `POST /settlement/v1/runs/validate`, and `POST /settlement/v1/runs`
+- that includes `POST /settlement/v1/payouts`, `POST /settlement/v1/runs/validate`, `POST /settlement/v1/runs`, `POST /settlement/v1/challenges/validate`, and `POST /settlement/v1/challenges`
 - read-only health and proof routes remain open
 
 This repo also exposes CLI settlement commands:
@@ -103,6 +109,12 @@ This repo also exposes CLI settlement commands:
 - `wolochaind settlement run execute`
 - `wolochaind settlement run inspect`
 - `wolochaind settlement run recent`
+- `wolochaind settlement challenge funding verify`
+- `wolochaind settlement challenge funding recent`
+- `wolochaind settlement challenge validate`
+- `wolochaind settlement challenge execute`
+- `wolochaind settlement challenge inspect`
+- `wolochaind settlement challenge recent`
 - `wolochaind settlement serve`
 
 Settlement execution supports:
@@ -119,6 +131,11 @@ Settlement execution supports:
 - stored grouped-run inspection by `settlement_run_id`
 - recent failure / refusal summaries via `wolochaind settlement recent --summary-only`
 - recent grouped-run summaries via `wolochaind settlement run recent --summary-only`
+- challenge funding verification from structured escrow deposit memos
+- bucket-aware challenge settlement plans that keep `wager` and `guarantee` distinct
+- optional escrow-to-payout shortfall top-up via `WOLO_SETTLEMENT_ESCROW_AUTO_TOP_UP_ENABLED`
+- stored challenge settlement inspection by `settlement_run_id`
+- recent challenge settlement summaries via `wolochaind settlement challenge recent --summary-only`
 
 Operator helpers in this repo:
 
@@ -158,6 +175,35 @@ WoloChain does not infer meaning from those fields beyond validation, recording,
 
 Generic refunds or reversals do not need a special WoloChain abstraction. The existing single-payout and grouped-run rails already cover that operator path as long as the caller provides the recipient, amount, and metadata.
 
+## Challenge Settlement Primitives
+
+Challenge settlement stays generic and app-owned at the decision layer.
+
+WoloChain owns:
+
+- verifying one escrow funding deposit per participant against the canonical memo convention
+- preserving `wager` and `guarantee` buckets in dry-run, execute, and proof output
+- validating that an explicit challenge settlement request allocates each verified bucket exactly once
+- executing the resulting grouped transfers safely over the existing payout rail
+- storing idempotent challenge settlement state by `settlement_run_id`
+- exposing grouped proof URLs, transfer tx hashes, and recent/inspect surfaces
+- optionally topping up the payout signer from escrow before execution when `WOLO_SETTLEMENT_ESCROW_AUTO_TOP_UP_ENABLED=true`
+
+AoE2HDBets still owns:
+
+- challenge terms
+- check-in and no-show decisions
+- match results
+- deciding the exact transfer list for refunds, payouts, and treasury routing
+
+The canonical funding memo convention is:
+
+```text
+wolo.challenge.funding.v1:source_app=aoe2hdbets&challenge_id=challenge-42&participant_side=left&participant_id=user-1&wager_uwolo=1000000&guarantee_uwolo=500000
+```
+
+AoE2HDBets should verify funding with `GET /settlement/v1/challenges/funding/txs/{tx_hash}` or `wolochaind settlement challenge funding verify`, then submit the explicit bucket moves to `POST /settlement/v1/challenges/validate` or `wolochaind settlement challenge validate` before calling `POST /settlement/v1/challenges` or `wolochaind settlement challenge execute`.
+
 ## Grouped Run Flow
 
 For one logical result with many payouts, the preferred flow is:
@@ -180,6 +226,9 @@ For one logical result with many payouts, the preferred flow is:
 - Treat grouped run state as operator data too; it lives beside request state under the settlement state dir.
 - Prefer keeping `WOLO_SETTLEMENT_AUTH_TOKEN` enabled even for localhost-only POSTs and have callers send bearer auth.
 - `WOLO_SETTLEMENT_ESCROW_ADDRESS` only affects proof classification and operator warnings; it does not create escrow semantics by itself.
+- `WOLO_SETTLEMENT_ESCROW_KEY_NAME` and `WOLO_SETTLEMENT_ESCROW_ADDRESS` are both required if you want challenge auto-top-up from escrow.
+- `WOLO_SETTLEMENT_TREASURY_ADDRESS` sets the default challenge treasury route, but callers can still pass an explicit `treasury_address` per challenge request.
+- `WOLO_SETTLEMENT_ESCROW_AUTO_TOP_UP_ENABLED=true` lets challenge execution move only the shortfall needed to make the payout signer whole before the grouped payout run starts.
 - Set `WOLO_SETTLEMENT_FEES` if you want dry-run grouped runs to return a deterministic fee estimate in `uwolo`.
 - Use [`scripts/install-settlement-alert-cron.sh`](scripts/install-settlement-alert-cron.sh) as the repo-owned cron installer for [`scripts/run-settlement-alert-check.sh`](scripts/run-settlement-alert-check.sh).
 - [`scripts/run-settlement-alert-check.sh`](scripts/run-settlement-alert-check.sh) overwrites the latest JSON on each run and preserves the underlying alert exit code.
@@ -193,5 +242,7 @@ For one logical result with many payouts, the preferred flow is:
 - Use [`scripts/restore-live-settlement.sh`](scripts/restore-live-settlement.sh) if the live service comes up wrong and you need to return to the last known-good backup quickly. The default restore mode is `shared-binary`, because the live node and settlement services both execute `/var/www/WoloChain/build/wolochaind`.
 - Use `wolochaind settlement escrow verify` or `GET /settlement/v1/escrow/txs/{tx_hash}` when an app / operator needs to prove a deposit really hit the configured escrow address.
 - Use `wolochaind settlement escrow recent` or `GET /settlement/v1/escrow/deposits` to recover from partial app-side state loss without adding market logic to WoloChain.
+- Use `wolochaind settlement challenge funding verify` or `GET /settlement/v1/challenges/funding/txs/{tx_hash}` when AoE2HDBets needs a challenge-aware proof surface for escrow funding.
+- Use `wolochaind settlement challenge recent --summary-only` or `GET /settlement/v1/challenges?summary_only=1` for operator visibility into challenge settlement replays, partial failures, and top-up history.
 
 For the live VPS layout and deploy runbook, see [docs/testnet-ops.md](docs/testnet-ops.md).

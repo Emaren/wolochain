@@ -26,6 +26,7 @@ WOLO_SETTLEMENT_ADDRESS_PREFIX="${WOLO_SETTLEMENT_ADDRESS_PREFIX:-wolo}"
 WOLO_SETTLEMENT_PAYOUT_ADDRESS="${WOLO_SETTLEMENT_PAYOUT_ADDRESS:-}"
 VERIFY_REQUEST_ID="${VERIFY_REQUEST_ID:-verify-live-auth-check}"
 VERIFY_RUN_ID="${VERIFY_RUN_ID:-verify-live-run-check}"
+VERIFY_CHALLENGE_RUN_ID="${VERIFY_CHALLENGE_RUN_ID:-verify-live-challenge-check}"
 VERIFY_WAIT_FOR_READY="${VERIFY_WAIT_FOR_READY:-1}"
 VERIFY_READY_TIMEOUT_SEC="${VERIFY_READY_TIMEOUT_SEC:-60}"
 VERIFY_READY_INTERVAL_SEC="${VERIFY_READY_INTERVAL_SEC:-1}"
@@ -339,6 +340,65 @@ else
   printf 'Skipping authorized grouped dry-run because the token is not available in this shell or the route is not deployed.\n'
 fi
 
+note "Challenge Dry-Run Route"
+challenge_body="$tmpdir/challenge.json"
+cat >"$challenge_body" <<EOF
+{
+  "settlement_run_id": "$VERIFY_CHALLENGE_RUN_ID",
+  "source_app": "verify-live-settlement",
+  "challenge_id": "verify-challenge",
+  "note": "dry-run only",
+  "memo": "challenge dry-run verify",
+  "funding": [],
+  "transfers": []
+}
+EOF
+
+challenge_check_body="$tmpdir/challenge-check.json"
+challenge_check_code="000"
+if ! challenge_check_code="$(http_request POST "$SETTLEMENT_BASE_URL/settlement/v1/challenges/validate" "$challenge_check_body" \
+  -H 'content-type: application/json' \
+  --data @"$challenge_body")"; then
+  :
+fi
+printf 'HTTP %s\n' "$challenge_check_code"
+
+if [ "$challenge_check_code" = "404" ]; then
+  print_response "$challenge_check_body" always
+  record_failure "challenge dry-run route is not deployed on this service"
+elif [ "$challenge_check_code" = "401" ]; then
+  print_response "$challenge_check_body"
+  record_ok "challenge dry-run route exists and is auth-protected"
+elif [ "$challenge_check_code" = "200" ] || [ "$challenge_check_code" = "400" ] || [ "$challenge_check_code" = "409" ] || [ "$challenge_check_code" = "503" ]; then
+  print_response "$challenge_check_body"
+  record_ok "challenge dry-run route responded with a structured application status"
+else
+  print_response "$challenge_check_body" always
+  record_failure "unexpected challenge dry-run HTTP status $challenge_check_code"
+fi
+
+if [ "${auth_token_set:-false}" = "true" ] && [ -n "${WOLO_SETTLEMENT_AUTH_TOKEN:-}" ] && [ "$challenge_check_code" != "404" ]; then
+  note "Authorized Challenge Dry-Run"
+  challenge_auth_body="$tmpdir/challenge-auth.json"
+  challenge_auth_code="000"
+  if ! challenge_auth_code="$(http_request POST "$SETTLEMENT_BASE_URL/settlement/v1/challenges/validate" "$challenge_auth_body" \
+    -H 'content-type: application/json' \
+    -H "authorization: Bearer $WOLO_SETTLEMENT_AUTH_TOKEN" \
+    --data @"$challenge_body")"; then
+    :
+  fi
+  printf 'HTTP %s\n' "$challenge_auth_code"
+  if [ "$challenge_auth_code" = "200" ] || [ "$challenge_auth_code" = "400" ] || [ "$challenge_auth_code" = "409" ]; then
+    print_response "$challenge_auth_body"
+    record_ok "authorized challenge dry-run completed"
+  else
+    print_response "$challenge_auth_body" always
+    record_failure "authorized challenge dry-run returned HTTP $challenge_auth_code"
+  fi
+else
+  printf 'Skipping authorized challenge dry-run because the token is not available in this shell or the route is not deployed.\n'
+fi
+
 note "Escrow Read-Only Routes"
 escrow_recent_body="$tmpdir/escrow-recent.json"
 escrow_recent_code="000"
@@ -404,6 +464,55 @@ else
   printf 'Skipping live escrow deposit verification because VERIFY_ESCROW_TX_HASH is not set.\n'
 fi
 
+note "Challenge Read-Only Routes"
+challenge_recent_body="$tmpdir/challenge-recent.json"
+challenge_recent_code="000"
+if ! challenge_recent_code="$(http_request GET "$SETTLEMENT_BASE_URL/settlement/v1/challenges?limit=1&summary_only=1" "$challenge_recent_body")"; then
+  :
+fi
+printf 'HTTP %s\n' "$challenge_recent_code"
+if [ "$challenge_recent_code" = "404" ]; then
+  print_response "$challenge_recent_body" always
+  record_failure "challenge recent route is not deployed on this service"
+elif looks_like_json_response "$challenge_recent_body"; then
+  print_response "$challenge_recent_body"
+  record_ok "challenge recent route responded with a structured application status"
+else
+  print_response "$challenge_recent_body" always
+  record_failure "challenge recent route did not return the expected JSON surface"
+fi
+
+challenge_funding_recent_body="$tmpdir/challenge-funding-recent.json"
+challenge_funding_recent_code="000"
+if ! challenge_funding_recent_code="$(http_request GET "$SETTLEMENT_BASE_URL/settlement/v1/challenges/funding/deposits?limit=1" "$challenge_funding_recent_body")"; then
+  :
+fi
+printf 'HTTP %s\n' "$challenge_funding_recent_code"
+if [ "$challenge_funding_recent_code" = "404" ]; then
+  print_response "$challenge_funding_recent_body" always
+  record_failure "challenge funding recent route is not deployed on this service"
+elif looks_like_json_response "$challenge_funding_recent_body"; then
+  print_response "$challenge_funding_recent_body"
+  record_ok "challenge funding recent route responded with a structured application status"
+else
+  print_response "$challenge_funding_recent_body" always
+  record_failure "challenge funding recent route did not return the expected JSON surface"
+fi
+
+challenge_funding_probe_body="$tmpdir/challenge-funding-probe.json"
+challenge_funding_probe_code="000"
+if ! challenge_funding_probe_code="$(http_request GET "$SETTLEMENT_BASE_URL/settlement/v1/challenges/funding/txs/not-a-real-hash" "$challenge_funding_probe_body")"; then
+  :
+fi
+printf 'HTTP %s\n' "$challenge_funding_probe_code"
+if { [ "$challenge_funding_probe_code" = "400" ] || [ "$challenge_funding_probe_code" = "404" ] || [ "$challenge_funding_probe_code" = "503" ]; } && looks_like_json_response "$challenge_funding_probe_body"; then
+  print_response "$challenge_funding_probe_body"
+  record_ok "challenge funding verify route is deployed and returns structured status"
+else
+  print_response "$challenge_funding_probe_body" always
+  record_failure "challenge funding verify route did not return the expected structured response"
+fi
+
 note "CLI Surface"
 cli_help="$tmpdir/settlement-help.txt"
 capture_settlement_cli "$cli_help" settlement --help || true
@@ -467,6 +576,32 @@ if grep -qE '(^|[[:space:]])escrow([[:space:]]|$)' "$cli_help"; then
   record_ok "escrow verification commands are available"
 else
   record_failure "escrow verification commands are not deployed in the current binary"
+fi
+
+if grep -qE '(^|[[:space:]])challenge([[:space:]]|$)' "$cli_help"; then
+  record_ok "challenge settlement commands are available"
+
+  note "Challenge Recent Summary"
+  challenge_recent="$tmpdir/challenge-recent-cli.json"
+  if capture_settlement_cli "$challenge_recent" settlement challenge recent --summary-only; then
+    print_response "$challenge_recent"
+    record_ok "challenge recent summary command succeeded"
+  else
+    print_response "$challenge_recent" always
+    record_failure "challenge recent summary failed"
+  fi
+
+  note "Missing Challenge Inspect"
+  challenge_inspect="$tmpdir/challenge-inspect-cli.json"
+  if capture_settlement_cli "$challenge_inspect" settlement challenge inspect --settlement-id verify-live-missing --summary-only; then
+    print_response "$challenge_inspect"
+    record_ok "challenge inspect command succeeded"
+  else
+    print_response "$challenge_inspect" always
+    record_failure "challenge inspect failed"
+  fi
+else
+  record_failure "challenge settlement commands are not deployed in the current binary"
 fi
 
 note "Summary"

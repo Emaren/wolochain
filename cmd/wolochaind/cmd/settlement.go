@@ -58,7 +58,10 @@ type settlementConfig struct {
 	AddressPrefix         string
 	PayoutKeyName         string
 	PayoutAddress         string
+	EscrowKeyName         string
 	EscrowAddress         string
+	TreasuryAddress       string
+	EscrowAutoTopUp       bool
 	BroadcastMode         string
 	Gas                   string
 	GasAdjustment         string
@@ -579,6 +582,7 @@ func settlementCommand() *cobra.Command {
 		newSettlementDoctorCmd(),
 		newSettlementExecuteCmd(),
 		newSettlementEscrowCmd(),
+		newSettlementChallengeCmd(),
 		newSettlementLookupCmd(),
 		newSettlementInspectCmd(),
 		newSettlementRecentCmd(),
@@ -1246,6 +1250,223 @@ func (cfg settlementConfig) newSettlementHTTPHandler() http.Handler {
 		writeJSONResponse(w, statusCode, response)
 	})
 
+	mux.HandleFunc("/settlement/v1/challenges/validate", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			writeJSONResponse(w, http.StatusMethodNotAllowed, map[string]string{"detail": "method not allowed"})
+			return
+		}
+		if err := cfg.checkAuth(r); err != nil {
+			writeJSONResponse(w, http.StatusUnauthorized, map[string]string{"detail": err.Error()})
+			return
+		}
+
+		var request settlementChallengeRequest
+		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+			writeJSONResponse(w, http.StatusBadRequest, settlementChallengeResponse{
+				OK:          false,
+				DryRun:      true,
+				Status:      "failed",
+				FailureCode: "INVALID_CHALLENGE",
+				Detail:      "request body must be valid JSON",
+			})
+			return
+		}
+
+		response, err := cfg.validateSettlementChallenge(r.Context(), request)
+		if err != nil {
+			writeJSONResponse(w, http.StatusInternalServerError, map[string]string{"detail": err.Error()})
+			return
+		}
+
+		statusCode := http.StatusOK
+		if !response.OK {
+			statusCode = http.StatusConflict
+			if response.FailureCode == "INVALID_CHALLENGE" {
+				statusCode = http.StatusBadRequest
+			}
+		}
+
+		writeJSONResponse(w, statusCode, response)
+	})
+
+	mux.HandleFunc("/settlement/v1/challenges/funding/txs/", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			writeJSONResponse(w, http.StatusMethodNotAllowed, map[string]string{"detail": "method not allowed"})
+			return
+		}
+
+		txHash := strings.TrimPrefix(r.URL.Path, "/settlement/v1/challenges/funding/txs/")
+		response, err := cfg.verifyChallengeFundingDeposit(r.Context(), txHash, settlementChallengeFundingExpectation{
+			Sender:           r.URL.Query().Get("expected_sender"),
+			SourceApp:        r.URL.Query().Get("source_app"),
+			ChallengeID:      r.URL.Query().Get("challenge_id"),
+			SourceEventID:    r.URL.Query().Get("source_event_id"),
+			ParticipantSide:  r.URL.Query().Get("participant_side"),
+			ParticipantID:    r.URL.Query().Get("participant_id"),
+			TotalFundedUWolo: r.URL.Query().Get("expected_amount_uwolo"),
+			WagerUWolo:       r.URL.Query().Get("wager_uwolo"),
+			GuaranteeUWolo:   r.URL.Query().Get("guarantee_uwolo"),
+		})
+		if err != nil {
+			writeJSONResponse(w, http.StatusInternalServerError, map[string]string{"detail": err.Error()})
+			return
+		}
+
+		statusCode := http.StatusOK
+		if !response.OK {
+			statusCode = http.StatusConflict
+			switch response.FailureCode {
+			case "ESCROW_UNCONFIGURED", "INVALID_ADDRESS", "INVALID_AMOUNT", "INVALID_TX_HASH", "INVALID_CHALLENGE":
+				statusCode = http.StatusBadRequest
+			case "TX_NOT_FOUND", "NOT_ESCROW_DEPOSIT":
+				statusCode = http.StatusNotFound
+			case "LOOKUP_FAILED", "RPC_UNREACHABLE", "CHAIN_ID_MISMATCH", "REST_DRIFT":
+				statusCode = http.StatusServiceUnavailable
+			}
+		}
+
+		writeJSONResponse(w, statusCode, response)
+	})
+
+	mux.HandleFunc("/settlement/v1/challenges/funding/deposits", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			writeJSONResponse(w, http.StatusMethodNotAllowed, map[string]string{"detail": "method not allowed"})
+			return
+		}
+
+		limit := 20
+		if rawLimit := strings.TrimSpace(r.URL.Query().Get("limit")); rawLimit != "" {
+			parsedLimit, err := strconv.Atoi(rawLimit)
+			if err != nil {
+				writeJSONResponse(w, http.StatusBadRequest, settlementChallengeFundingRecentResponse{
+					OK:          false,
+					FailureCode: "INVALID_LIMIT",
+					Detail:      "limit must be a positive integer",
+				})
+				return
+			}
+			limit = parsedLimit
+		}
+
+		response, err := cfg.listRecentChallengeFundingDeposits(r.Context(), settlementChallengeFundingRecentFilters{
+			Limit:           limit,
+			Sender:          r.URL.Query().Get("sender"),
+			SourceApp:       r.URL.Query().Get("source_app"),
+			ChallengeID:     r.URL.Query().Get("challenge_id"),
+			SourceEventID:   r.URL.Query().Get("source_event_id"),
+			ParticipantSide: r.URL.Query().Get("participant_side"),
+			ParticipantID:   r.URL.Query().Get("participant_id"),
+		})
+		if err != nil {
+			writeJSONResponse(w, http.StatusInternalServerError, map[string]string{"detail": err.Error()})
+			return
+		}
+
+		statusCode := http.StatusOK
+		if !response.OK {
+			statusCode = http.StatusConflict
+			switch response.FailureCode {
+			case "ESCROW_UNCONFIGURED", "INVALID_ADDRESS", "INVALID_LIMIT", "INVALID_CHALLENGE":
+				statusCode = http.StatusBadRequest
+			case "LOOKUP_FAILED", "RPC_UNREACHABLE", "CHAIN_ID_MISMATCH", "REST_DRIFT":
+				statusCode = http.StatusServiceUnavailable
+			}
+		}
+
+		writeJSONResponse(w, statusCode, response)
+	})
+
+	mux.HandleFunc("/settlement/v1/challenges/", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			writeJSONResponse(w, http.StatusMethodNotAllowed, map[string]string{"detail": "method not allowed"})
+			return
+		}
+
+		settlementID := strings.TrimPrefix(r.URL.Path, "/settlement/v1/challenges/")
+		response, err := cfg.inspectSettlementChallenge(strings.TrimSpace(settlementID))
+		if err != nil {
+			writeJSONResponse(w, http.StatusInternalServerError, map[string]string{"detail": err.Error()})
+			return
+		}
+
+		statusCode := http.StatusOK
+		if !response.Found {
+			statusCode = http.StatusNotFound
+		}
+		writeJSONResponse(w, statusCode, response)
+	})
+
+	mux.HandleFunc("/settlement/v1/challenges", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodPost:
+			if err := cfg.checkAuth(r); err != nil {
+				writeJSONResponse(w, http.StatusUnauthorized, map[string]string{"detail": err.Error()})
+				return
+			}
+
+			var request settlementChallengeRequest
+			if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+				writeJSONResponse(w, http.StatusBadRequest, settlementChallengeResponse{
+					OK:          false,
+					DryRun:      false,
+					Status:      "failed",
+					FailureCode: "INVALID_CHALLENGE",
+					Detail:      "request body must be valid JSON",
+				})
+				return
+			}
+
+			response, err := cfg.executeSettlementChallenge(r.Context(), request)
+			if err != nil {
+				writeJSONResponse(w, http.StatusInternalServerError, map[string]string{"detail": err.Error()})
+				return
+			}
+
+			statusCode := http.StatusOK
+			if !response.OK {
+				statusCode = http.StatusConflict
+				if response.FailureCode == "INVALID_CHALLENGE" {
+					statusCode = http.StatusBadRequest
+				}
+			}
+
+			writeJSONResponse(w, statusCode, response)
+		case http.MethodGet:
+			limit := 20
+			if rawLimit := strings.TrimSpace(r.URL.Query().Get("limit")); rawLimit != "" {
+				parsedLimit, err := strconv.Atoi(rawLimit)
+				if err != nil {
+					writeJSONResponse(w, http.StatusBadRequest, settlementChallengeRecentResponse{
+						Count:   0,
+						Summary: settlementChallengeRecentSummary{RequestedLimit: limit},
+					})
+					return
+				}
+				limit = parsedLimit
+			}
+			status := strings.TrimSpace(strings.ToLower(r.URL.Query().Get("status")))
+			if status == "" {
+				status = "all"
+			}
+			failureCode := strings.TrimSpace(strings.ToUpper(r.URL.Query().Get("failure_code")))
+			summaryOnly := strings.EqualFold(strings.TrimSpace(r.URL.Query().Get("summary_only")), "true")
+
+			items, err := cfg.listRecentSettlementChallenges(limit, status, failureCode)
+			if err != nil {
+				writeJSONResponse(w, http.StatusInternalServerError, map[string]string{"detail": err.Error()})
+				return
+			}
+
+			writeJSONResponse(w, http.StatusOK, settlementChallengeRecentResponse{
+				Count:   len(items),
+				Summary: summarizeSettlementChallengeRecentItems(limit, status, failureCode, items),
+				Items:   optionalSettlementChallengeRecentItems(summaryOnly, items),
+			})
+		default:
+			writeJSONResponse(w, http.StatusMethodNotAllowed, map[string]string{"detail": "method not allowed"})
+		}
+	})
+
 	mux.HandleFunc("/settlement/v1/txs/", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			writeJSONResponse(w, http.StatusMethodNotAllowed, map[string]string{"detail": "method not allowed"})
@@ -1318,7 +1539,10 @@ func loadSettlementConfig() (settlementConfig, error) {
 		AddressPrefix:         getenvDefault("WOLO_SETTLEMENT_ADDRESS_PREFIX", settlementCanonicalPrefix),
 		PayoutKeyName:         strings.TrimSpace(os.Getenv("WOLO_SETTLEMENT_PAYOUT_KEY_NAME")),
 		PayoutAddress:         strings.TrimSpace(os.Getenv("WOLO_SETTLEMENT_PAYOUT_ADDRESS")),
+		EscrowKeyName:         strings.TrimSpace(getenvDefault("WOLO_SETTLEMENT_ESCROW_KEY_NAME", "escrow")),
 		EscrowAddress:         strings.TrimSpace(getenvFirst("WOLO_SETTLEMENT_ESCROW_ADDRESS", "WOLO_BET_ESCROW_ADDRESS")),
+		TreasuryAddress:       strings.TrimSpace(os.Getenv("WOLO_SETTLEMENT_TREASURY_ADDRESS")),
+		EscrowAutoTopUp:       parseBoolEnv("WOLO_SETTLEMENT_ESCROW_AUTO_TOP_UP_ENABLED"),
 		BroadcastMode:         getenvDefault("WOLO_SETTLEMENT_BROADCAST_MODE", "sync"),
 		Gas:                   getenvDefault("WOLO_SETTLEMENT_GAS", "auto"),
 		GasAdjustment:         getenvDefault("WOLO_SETTLEMENT_GAS_ADJUSTMENT", "1.5"),
@@ -1418,6 +1642,15 @@ func (cfg settlementConfig) buildHealthReport(ctx context.Context) settlementHea
 	}
 	if cfg.EscrowAddress == "" {
 		report.Warnings = append(report.Warnings, "WOLO_SETTLEMENT_ESCROW_ADDRESS is empty; escrow proof/discovery helpers are disabled")
+	}
+	if cfg.EscrowAutoTopUp && cfg.EscrowKeyName == "" {
+		report.Warnings = append(report.Warnings, "WOLO_SETTLEMENT_ESCROW_AUTO_TOP_UP_ENABLED is on but WOLO_SETTLEMENT_ESCROW_KEY_NAME is empty")
+	}
+	if cfg.EscrowAutoTopUp && cfg.EscrowAddress == "" {
+		report.Warnings = append(report.Warnings, "WOLO_SETTLEMENT_ESCROW_AUTO_TOP_UP_ENABLED is on but WOLO_SETTLEMENT_ESCROW_ADDRESS is empty")
+	}
+	if cfg.TreasuryAddress != "" && !isWoloAddress(cfg.TreasuryAddress, cfg.AddressPrefix) {
+		report.Warnings = append(report.Warnings, "WOLO_SETTLEMENT_TREASURY_ADDRESS does not match the wolo prefix")
 	}
 
 	payoutAddress, err := cfg.resolvePayoutAddress(ctx)

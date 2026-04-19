@@ -240,7 +240,7 @@ Env inspection:
 ```bash
 systemctl show -p EnvironmentFiles wolochain-settlement.service
 ENV_FILE=$(systemctl show -p EnvironmentFiles --value wolochain-settlement.service | awk '{print $1}' | sed 's/^-//')
-sudo grep -E '^(WOLO_SETTLEMENT_(KEY_NAME|KEYRING_BACKEND|PAYOUT_ADDRESS|ESCROW_ADDRESS|AUTH_TOKEN|STATE_DIR|PUBLIC_REST_URL|MIN_PAYOUT_BALANCE_UWOLO|FEE_HEADROOM_UWOLO)|WOLO_(CHAIN_ID|NODE|HOME))=' "$ENV_FILE" \
+sudo grep -E '^(WOLO_SETTLEMENT_(KEY_NAME|KEYRING_BACKEND|PAYOUT_ADDRESS|ESCROW_ADDRESS|TREASURY_ADDRESS|AUTH_TOKEN|STATE_DIR|PUBLIC_REST_URL|MIN_PAYOUT_BALANCE_UWOLO|FEE_HEADROOM_UWOLO|ESCROW_AUTO_TOP_UP_ENABLED)|WOLO_(CHAIN_ID|NODE|HOME))=' "$ENV_FILE" \
   | sed -E 's#^(WOLO_SETTLEMENT_AUTH_TOKEN)=.*#\1=***MASKED***#'
 ```
 
@@ -254,17 +254,24 @@ Current live surface on April 9, 2026:
 - `POST /settlement/v1/runs` is part of the live settlement surface
 - `GET /settlement/v1/escrow/deposits` is live
 - `GET /settlement/v1/escrow/txs/{tx_hash}` is live
-- the live CLI exposes `doctor`, `execute`, `lookup`, `inspect`, `recent`, `run`, `escrow`, and `serve`
+- `POST /settlement/v1/challenges/validate` is part of the live settlement surface
+- `POST /settlement/v1/challenges` is part of the live settlement surface
+- `GET /settlement/v1/challenges`, `GET /settlement/v1/challenges/{settlement_run_id}`, `GET /settlement/v1/challenges/funding/deposits`, and `GET /settlement/v1/challenges/funding/txs/{tx_hash}` are part of the live read-only surface
+- the live CLI exposes `doctor`, `execute`, `lookup`, `inspect`, `recent`, `run`, `escrow`, `challenge`, and `serve`
 
 When `WOLO_SETTLEMENT_AUTH_TOKEN` is set:
 
 - `POST /settlement/v1/payouts` requires `Authorization: Bearer ...`
 - `POST /settlement/v1/runs/validate` requires `Authorization: Bearer ...`
 - `POST /settlement/v1/runs` requires `Authorization: Bearer ...`
+- `POST /settlement/v1/challenges/validate` requires `Authorization: Bearer ...`
+- `POST /settlement/v1/challenges` requires `Authorization: Bearer ...`
 - `GET /settlement/v1/health` stays open
 - `GET /settlement/v1/txs/{tx_hash}` stays open
 - `GET /settlement/v1/escrow/txs/{tx_hash}` stays open
 - `GET /settlement/v1/escrow/deposits` stays open
+- challenge funding proof / discovery routes stay open
+- challenge inspect / recent routes stay open
 
 Dry-run grouped settlement run:
 
@@ -343,6 +350,306 @@ build/wolochaind settlement escrow recent --limit 20
 build/wolochaind settlement escrow recent --limit 20 --sender wolo1sender...
 ```
 
+## Challenge Settlement Contract
+
+Challenge settlement stays operator-driven and app-owned at the decision layer.
+
+AoE2HDBets owns:
+
+- challenge terms
+- who checked in
+- no-show and result decisions
+- the exact transfer list for refunds, payouts, and treasury routing
+
+WoloChain owns:
+
+- challenge funding proof from escrow deposits
+- exact `wager` / `guarantee` bucket accounting
+- dry-run validation of the explicit transfer plan
+- safe idempotent execution over the existing payout rail
+- grouped proof surfaces, tx hashes, and inspect / recent state
+- optional escrow-to-payout shortfall top-up before execution
+
+Canonical challenge funding memo:
+
+```text
+wolo.challenge.funding.v1:source_app=aoe2hdbets&challenge_id=challenge-42&participant_side=left&participant_id=user-1&wager_uwolo=1000000&guarantee_uwolo=500000
+```
+
+Accepted funding memo aliases:
+
+- `app` for `source_app`
+- `cid` for `challenge_id`
+- `event_id` or `eid` for `source_event_id`
+- `side` for `participant_side`
+- `pid` for `participant_id`
+- `w` for `wager_uwolo`
+- `g` for `guarantee_uwolo`
+- optional `total_funded_uwolo`, `total_uwolo`, `total`, or `t`
+
+Read-only funding verification:
+
+```bash
+curl -sS \
+  "http://127.0.0.1:8091/settlement/v1/challenges/funding/txs/TX_HASH?source_app=aoe2hdbets&challenge_id=challenge-42&participant_side=left&participant_id=user-1&expected_amount_uwolo=1500000&wager_uwolo=1000000&guarantee_uwolo=500000"
+
+build/wolochaind settlement challenge funding verify \
+  --tx-hash TX_HASH \
+  --source-app aoe2hdbets \
+  --challenge-id challenge-42 \
+  --participant-side left \
+  --participant-id user-1 \
+  --expected-amount-uwolo 1500000 \
+  --wager-uwolo 1000000 \
+  --guarantee-uwolo 500000
+```
+
+Recent challenge funding discovery:
+
+```bash
+curl -sS "http://127.0.0.1:8091/settlement/v1/challenges/funding/deposits?limit=20&source_app=aoe2hdbets&challenge_id=challenge-42"
+build/wolochaind settlement challenge funding recent --limit 20 --source-app aoe2hdbets --challenge-id challenge-42
+```
+
+Dry-run and execute use the same JSON body. Dry-run first:
+
+```bash
+curl -sS \
+  -H "authorization: Bearer $WOLO_SETTLEMENT_AUTH_TOKEN" \
+  -H 'content-type: application/json' \
+  -d @challenge.json \
+  http://127.0.0.1:8091/settlement/v1/challenges/validate
+```
+
+Then execute the exact same payload:
+
+```bash
+curl -sS \
+  -H "authorization: Bearer $WOLO_SETTLEMENT_AUTH_TOKEN" \
+  -H 'content-type: application/json' \
+  -d @challenge.json \
+  http://127.0.0.1:8091/settlement/v1/challenges
+```
+
+Or from the CLI:
+
+```bash
+build/wolochaind settlement challenge validate --file challenge.json
+build/wolochaind settlement challenge execute --file challenge.json
+build/wolochaind settlement challenge inspect --settlement-id challenge-run-42
+build/wolochaind settlement challenge recent --summary-only
+```
+
+Request contract:
+
+- `settlement_run_id`: stable idempotency key for the whole challenge settlement
+- `source_app`: stable caller id like `aoe2hdbets`
+- `challenge_id` and/or `source_event_id`: challenge reference from the app
+- `treasury_address`: optional explicit destination for treasury forfeits; falls back to `WOLO_SETTLEMENT_TREASURY_ADDRESS`
+- `funding[]`: one verified escrow funding tx per participant
+- `transfers[]`: explicit bucket movements with `bucket`, `reason`, `to_address`, and amount
+
+Each transfer line must name the originating participant with `participant_side` and/or `participant_id`. WoloChain verifies that every participant's funded `wager` and `guarantee` buckets are allocated exactly once across the request.
+
+### One No-Show
+
+Dry-run request:
+
+```json
+{
+  "settlement_run_id": "challenge-run-noshow-42",
+  "source_app": "aoe2hdbets",
+  "challenge_id": "challenge-42",
+  "note": "left checked in, right no-show",
+  "memo": "challenge-42-noshow",
+  "funding": [
+    {
+      "funding_tx_hash": "LEFT_FUNDING_TX_HASH",
+      "depositor_address": "wolo1leftplayer...",
+      "participant_side": "left",
+      "participant_id": "left-user"
+    },
+    {
+      "funding_tx_hash": "RIGHT_FUNDING_TX_HASH",
+      "depositor_address": "wolo1rightplayer...",
+      "participant_side": "right",
+      "participant_id": "right-user"
+    }
+  ],
+  "transfers": [
+    {
+      "participant_side": "left",
+      "participant_id": "left-user",
+      "bucket": "guarantee",
+      "reason": "return",
+      "to_address": "wolo1leftplayer...",
+      "amount_uwolo": "500000",
+      "memo": "left guarantee return"
+    },
+    {
+      "participant_side": "right",
+      "participant_id": "right-user",
+      "bucket": "guarantee",
+      "reason": "payout",
+      "to_address": "wolo1leftplayer...",
+      "amount_uwolo": "500000",
+      "memo": "right guarantee forfeit"
+    },
+    {
+      "participant_side": "left",
+      "participant_id": "left-user",
+      "bucket": "wager",
+      "reason": "refund",
+      "to_address": "wolo1leftplayer...",
+      "amount_uwolo": "1000000",
+      "memo": "left wager refund"
+    },
+    {
+      "participant_side": "right",
+      "participant_id": "right-user",
+      "bucket": "wager",
+      "reason": "refund",
+      "to_address": "wolo1rightplayer...",
+      "amount_uwolo": "1000000",
+      "memo": "right wager refund"
+    }
+  ]
+}
+```
+
+### Double No-Show
+
+Dry-run request:
+
+```json
+{
+  "settlement_run_id": "challenge-run-double-noshow-42",
+  "source_app": "aoe2hdbets",
+  "challenge_id": "challenge-42",
+  "treasury_address": "wolo1treasury...",
+  "note": "double no-show",
+  "memo": "challenge-42-double-noshow",
+  "funding": [
+    {
+      "funding_tx_hash": "LEFT_FUNDING_TX_HASH",
+      "depositor_address": "wolo1leftplayer...",
+      "participant_side": "left",
+      "participant_id": "left-user"
+    },
+    {
+      "funding_tx_hash": "RIGHT_FUNDING_TX_HASH",
+      "depositor_address": "wolo1rightplayer...",
+      "participant_side": "right",
+      "participant_id": "right-user"
+    }
+  ],
+  "transfers": [
+    {
+      "participant_side": "left",
+      "participant_id": "left-user",
+      "bucket": "guarantee",
+      "reason": "treasury",
+      "to_address": "wolo1treasury...",
+      "amount_uwolo": "500000",
+      "memo": "left guarantee treasury"
+    },
+    {
+      "participant_side": "right",
+      "participant_id": "right-user",
+      "bucket": "guarantee",
+      "reason": "treasury",
+      "to_address": "wolo1treasury...",
+      "amount_uwolo": "500000",
+      "memo": "right guarantee treasury"
+    },
+    {
+      "participant_side": "left",
+      "participant_id": "left-user",
+      "bucket": "wager",
+      "reason": "refund",
+      "to_address": "wolo1leftplayer...",
+      "amount_uwolo": "1000000",
+      "memo": "left wager refund"
+    },
+    {
+      "participant_side": "right",
+      "participant_id": "right-user",
+      "bucket": "wager",
+      "reason": "refund",
+      "to_address": "wolo1rightplayer...",
+      "amount_uwolo": "1000000",
+      "memo": "right wager refund"
+    }
+  ]
+}
+```
+
+### Played Match Settlement
+
+Dry-run request:
+
+```json
+{
+  "settlement_run_id": "challenge-run-played-42",
+  "source_app": "aoe2hdbets",
+  "challenge_id": "challenge-42",
+  "note": "left won played match",
+  "memo": "challenge-42-played",
+  "funding": [
+    {
+      "funding_tx_hash": "LEFT_FUNDING_TX_HASH",
+      "depositor_address": "wolo1leftplayer...",
+      "participant_side": "left",
+      "participant_id": "left-user"
+    },
+    {
+      "funding_tx_hash": "RIGHT_FUNDING_TX_HASH",
+      "depositor_address": "wolo1rightplayer...",
+      "participant_side": "right",
+      "participant_id": "right-user"
+    }
+  ],
+  "transfers": [
+    {
+      "participant_side": "left",
+      "participant_id": "left-user",
+      "bucket": "guarantee",
+      "reason": "return",
+      "to_address": "wolo1leftplayer...",
+      "amount_uwolo": "500000",
+      "memo": "left guarantee return"
+    },
+    {
+      "participant_side": "right",
+      "participant_id": "right-user",
+      "bucket": "guarantee",
+      "reason": "return",
+      "to_address": "wolo1rightplayer...",
+      "amount_uwolo": "500000",
+      "memo": "right guarantee return"
+    },
+    {
+      "participant_side": "left",
+      "participant_id": "left-user",
+      "bucket": "wager",
+      "reason": "payout",
+      "to_address": "wolo1leftplayer...",
+      "amount_uwolo": "1000000",
+      "memo": "left wager return"
+    },
+    {
+      "participant_side": "right",
+      "participant_id": "right-user",
+      "bucket": "wager",
+      "reason": "payout",
+      "to_address": "wolo1leftplayer...",
+      "amount_uwolo": "1000000",
+      "memo": "right wager payout"
+    }
+  ]
+}
+```
+
 ## Grouped Settlement Boundary
 
 Grouped settlement runs are generic WoloChain settlement wrappers, not app logic.
@@ -373,6 +680,14 @@ Safe operator flow:
 5. Operator inspects the grouped run and, if needed, the per-request records.
 
 If `WOLO_SETTLEMENT_FEES` is unset, grouped dry-runs still validate reserve / headroom math but return a warning that deterministic fee estimates are unavailable.
+
+Challenge-specific config:
+
+- `WOLO_SETTLEMENT_ESCROW_KEY_NAME`: escrow signer key name used for challenge auto-top-up
+- `WOLO_SETTLEMENT_TREASURY_ADDRESS`: default treasury route for challenge guarantee forfeits
+- `WOLO_SETTLEMENT_ESCROW_AUTO_TOP_UP_ENABLED=true`: allow escrow -> payout shortfall funding before challenge execution
+
+When top-up is enabled, challenge dry-run shows whether the payout signer is short, how much must move from escrow, and whether escrow can cover that shortfall. If top-up is disabled or impossible, dry-run fails early with a specific failure code instead of letting the later payout run die on an underfunded signer.
 
 ## Escrow Recovery Boundary
 
@@ -415,9 +730,12 @@ What it checks:
 - health route returns `200`
 - missing bearer auth is rejected when auth is enabled
 - grouped dry-run route exists and responds structurally
+- challenge dry-run route exists and responds structurally
 - escrow read-only routes exist and respond structurally
+- challenge read-only routes exist and respond structurally
 - request-level `inspect` / `recent` commands are available
 - grouped `run inspect` / `run recent` commands are available
+- challenge `inspect` / `recent` commands are available
 - `settlement escrow ...` CLI commands are available
 
 The script intentionally avoids live payout execution. It uses:

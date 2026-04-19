@@ -23,9 +23,16 @@ export WOLO_SETTLEMENT_PAYOUT_KEY_NAME="payout"
 export WOLO_SETTLEMENT_KEYRING_BACKEND="test"
 export WOLO_SETTLEMENT_PAYOUT_ADDRESS="wolo1cy04t5af0mr9d8n6rrzgr8e9j4vuf42nfg02q5"
 
-# Escrow classification address used by proof / discovery helpers.
-# The app must actually send stakes here for WoloChain recovery helpers to see them.
+# Escrow signer and classification address used by proof / discovery helpers.
+# Challenge funding verification and optional payout top-ups resolve this key.
+export WOLO_SETTLEMENT_ESCROW_KEY_NAME="escrow"
+# The app must actually send challenge deposits here for funding verification to see them.
 export WOLO_SETTLEMENT_ESCROW_ADDRESS="wolo1t4jq7wd4x030t9f0yfqfq74pt4pmaep5nu67y4"
+# Optional default treasury route for challenge guarantee forfeits.
+export WOLO_SETTLEMENT_TREASURY_ADDRESS="wolo1treasuryxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+# When enabled, challenge settlement can move only the required shortfall from escrow into
+# the payout signer before executing the payout run.
+export WOLO_SETTLEMENT_ESCROW_AUTO_TOP_UP_ENABLED="true"
 
 # Broadcast / fee controls
 export WOLO_SETTLEMENT_BROADCAST_MODE="sync"
