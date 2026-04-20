@@ -20,6 +20,7 @@ if ! curl -fsS "$RPC_HTTP/status" >/dev/null 2>&1; then
   exit 1
 fi
 
+echo "=== chain invariants ==="
 ./scripts/check-chain-invariants.sh
 
 echo

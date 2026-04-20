@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  foundation:
+    name: Foundation checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Set up Buf
+        uses: bufbuild/buf-setup-action@v1
+        with:
+          version: 1.54.0
+
+      - name: Build wolochaind
+        run: go build ./cmd/wolochaind
+
+      - name: Settlement tests
+        run: go test ./cmd/wolochaind/cmd -count=1
+
+      - name: Full repo tests
+        run: go test ./...
+
+      - name: Operator script syntax
+        run: bash -n scripts/*.sh
+
+      - name: Chain invariant guard
+        run: WOLO_SKIP_RUNTIME_CHECKS=1 ./scripts/check-chain-invariants.sh
+
+      - name: Generated proto drift
+        run: ./scripts/check-generated-protos.sh
