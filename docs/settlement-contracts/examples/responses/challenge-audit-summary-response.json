@@ -1,0 +1,30 @@
+{
+  "ok": true,
+  "detail": "challenge settlement state reconciles with funding, payout, top-up, and grouped run proofs",
+  "settlement_run_id": "aoe2hdbets:challenge-42:one-noshow:v1",
+  "challenge_path": "/var/lib/wolochain/settlement-state/challenge-settlements/aoe2hdbets:challenge-42:one-noshow:v1.json",
+  "run_path": "/var/lib/wolochain/settlement-state/runs/aoe2hdbets:challenge-42:one-noshow:v1.json",
+  "checked_at": "2026-04-20T12:48:00Z",
+  "summary": {
+    "source_app": "aoe2hdbets",
+    "challenge_id": "challenge-42",
+    "source_event_id": "match-2026-04-20-00042",
+    "treasury_address": "wolo1treasury000000000000000000000000000000",
+    "funding_count": 2,
+    "funding_verified_count": 2,
+    "funding_total_uwolo": "3000000",
+    "wager_funded_uwolo": "2000000",
+    "guarantee_funded_uwolo": "1000000",
+    "requested_transfer_count": 4,
+    "transfer_tx_checked_count": 4,
+    "requested_total_uwolo": "3000000",
+    "wager_transfer_uwolo": "2000000",
+    "guarantee_transfer_uwolo": "1000000",
+    "treasury_transfer_uwolo": "0",
+    "top_up_required": true,
+    "top_up_amount_uwolo": "3000000",
+    "top_up_tx_checked": true,
+    "stored_status": "confirmed",
+    "stored_confirmed_total_uwolo": "3000000"
+  }
+}

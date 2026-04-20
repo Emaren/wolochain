@@ -715,6 +715,20 @@ Machine-readable contracts and examples live under `docs/settlement-contracts/`:
 - `examples/challenge-double-noshow.json`
 - `examples/challenge-played-match.json`
 - `examples/challenge-canceled-refund.json`
+- `examples/responses/challenge-funding-verify-response.json`
+- `examples/responses/challenge-funding-recent-response.json`
+- `examples/responses/challenge-validate-response.json`
+- `examples/responses/challenge-execute-response.json`
+- `examples/responses/challenge-inspect-summary-response.json`
+- `examples/responses/challenge-audit-summary-response.json`
+
+For AoE2HDBets automatic funding detection, use the recent funding route as read-only WoloChain truth:
+
+```bash
+curl -sS "http://127.0.0.1:8091/settlement/v1/challenges/funding/deposits?source_app=aoe2hdbets&challenge_id=challenge-42&limit=20"
+```
+
+Then verify each candidate tx hash with the expected participant and bucket fields before building the challenge settlement request. WoloChain proves escrow/bucket/tx state; AoE2HDBets still owns whether that proof means the challenge is funded, canceled, won, no-showed, or ready to settle.
 
 ## Escrow Recovery Boundary
 

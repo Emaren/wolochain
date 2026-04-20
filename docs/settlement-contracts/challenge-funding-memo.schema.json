@@ -47,14 +47,19 @@
       "$ref": "#/$defs/positive_uwolo"
     }
   },
-  "anyOf": [
-    { "required": ["challenge_id"] },
-    { "required": ["source_event_id"] }
-  ],
-  "anyOf": [
-    { "required": ["participant_side"] },
-    { "required": ["participant_id"] },
-    { "required": ["participant_side", "participant_id"] }
+  "allOf": [
+    {
+      "anyOf": [
+        { "required": ["challenge_id"] },
+        { "required": ["source_event_id"] }
+      ]
+    },
+    {
+      "anyOf": [
+        { "required": ["participant_side"] },
+        { "required": ["participant_id"] }
+      ]
+    }
   ],
   "$defs": {
     "positive_uwolo": {

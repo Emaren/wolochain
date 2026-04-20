@@ -1,0 +1,31 @@
+{
+  "found": true,
+  "settlement_run_id": "aoe2hdbets:challenge-42:one-noshow:v1",
+  "challenge_path": "/var/lib/wolochain/settlement-state/challenge-settlements/aoe2hdbets:challenge-42:one-noshow:v1.json",
+  "summary": {
+    "settlement_run_id": "aoe2hdbets:challenge-42:one-noshow:v1",
+    "updated_at": "2026-04-20T12:47:49Z",
+    "status": "confirmed",
+    "retryable": false,
+    "idempotent_replay": false,
+    "source_app": "aoe2hdbets",
+    "challenge_id": "challenge-42",
+    "source_event_id": "match-2026-04-20-00042",
+    "treasury_address": "wolo1treasury000000000000000000000000000000",
+    "participant_count": 2,
+    "funding_verified_count": 2,
+    "requested_transfer_count": 4,
+    "executed_transfer_count": 4,
+    "confirmed_transfer_count": 4,
+    "accepted_transfer_count": 0,
+    "refused_transfer_count": 0,
+    "rejected_transfer_count": 0,
+    "replay_transfer_count": 0,
+    "funding_total_uwolo": "3000000",
+    "requested_total_uwolo": "3000000",
+    "top_up_required": true,
+    "top_up_executed": true,
+    "top_up_tx_hash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    "detail": "all 4 challenge transfers confirmed on WoloChain"
+  }
+}

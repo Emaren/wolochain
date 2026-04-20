@@ -207,6 +207,8 @@ wolo.challenge.funding.v1:source_app=aoe2hdbets&challenge_id=challenge-42&partic
 
 AoE2HDBets should verify funding with `GET /settlement/v1/challenges/funding/txs/{tx_hash}` or `wolochaind settlement challenge funding verify`, then submit the explicit bucket moves to `POST /settlement/v1/challenges/validate` or `wolochaind settlement challenge validate` before calling `POST /settlement/v1/challenges` or `wolochaind settlement challenge execute`.
 
+For automatic funding detection, AoE2HDBets can poll `GET /settlement/v1/challenges/funding/deposits?source_app=aoe2hdbets&challenge_id=...` or run `wolochaind settlement challenge funding recent`. That read-only surface proves which escrow deposits WoloChain can see; AoE2HDBets still decides whether a challenge is ready to lock, cancel, or settle.
+
 After execution, operators can reconcile stored challenge state against chain reality with:
 
 ```bash
@@ -220,6 +222,7 @@ The machine-readable integration contract lives in [`docs/settlement-contracts`]
 - [`challenge-settlement-request.schema.json`](docs/settlement-contracts/challenge-settlement-request.schema.json)
 - [`challenge-funding-memo.schema.json`](docs/settlement-contracts/challenge-funding-memo.schema.json)
 - example request payloads for one no-show, double no-show, played match, and canceled/refunded outcomes
+- example response payloads for funding verify/recent, validate, execute, inspect, and audit
 
 ## Grouped Run Flow
 
