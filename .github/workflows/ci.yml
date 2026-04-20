@@ -13,6 +13,8 @@ jobs:
   foundation:
     name: Foundation checks
     runs-on: ubuntu-latest
+    env:
+      GOFLAGS: -tags=go1.27
 
     steps:
       - name: Checkout
