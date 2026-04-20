@@ -1299,6 +1299,7 @@ func (cfg settlementConfig) newSettlementHTTPHandler() http.Handler {
 		response, err := cfg.verifyChallengeFundingDeposit(r.Context(), txHash, settlementChallengeFundingExpectation{
 			Sender:           r.URL.Query().Get("expected_sender"),
 			SourceApp:        r.URL.Query().Get("source_app"),
+			SettlementRunID:  r.URL.Query().Get("settlement_run_id"),
 			ChallengeID:      r.URL.Query().Get("challenge_id"),
 			SourceEventID:    r.URL.Query().Get("source_event_id"),
 			ParticipantSide:  r.URL.Query().Get("participant_side"),
@@ -1352,6 +1353,7 @@ func (cfg settlementConfig) newSettlementHTTPHandler() http.Handler {
 			Limit:           limit,
 			Sender:          r.URL.Query().Get("sender"),
 			SourceApp:       r.URL.Query().Get("source_app"),
+			SettlementRunID: r.URL.Query().Get("settlement_run_id"),
 			ChallengeID:     r.URL.Query().Get("challenge_id"),
 			SourceEventID:   r.URL.Query().Get("source_event_id"),
 			ParticipantSide: r.URL.Query().Get("participant_side"),

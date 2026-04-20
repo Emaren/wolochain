@@ -202,12 +202,14 @@ AoE2HDBets still owns:
 The canonical funding memo convention is:
 
 ```text
-wolo.challenge.funding.v1:source_app=aoe2hdbets&challenge_id=challenge-42&participant_side=left&participant_id=user-1&wager_uwolo=1000000&guarantee_uwolo=500000
+wolo.challenge.funding.v1:app=aoe2hdbets&sid=aoe2hdbets:challenge-42:one-noshow:v1&cid=challenge-42&side=left&pid=user-1&w=1000000&g=500000&t=1500000
 ```
+
+Use the compact aliases on actual funding transactions so the memo stays under the chain memo limit. WoloChain normalizes them to `source_app`, `settlement_run_id`, `challenge_id`, `participant_side`, `participant_id`, `wager_uwolo`, `guarantee_uwolo`, and `total_funded_uwolo` in proof responses.
 
 AoE2HDBets should verify funding with `GET /settlement/v1/challenges/funding/txs/{tx_hash}` or `wolochaind settlement challenge funding verify`, then submit the explicit bucket moves to `POST /settlement/v1/challenges/validate` or `wolochaind settlement challenge validate` before calling `POST /settlement/v1/challenges` or `wolochaind settlement challenge execute`.
 
-For automatic funding detection, AoE2HDBets can poll `GET /settlement/v1/challenges/funding/deposits?source_app=aoe2hdbets&challenge_id=...` or run `wolochaind settlement challenge funding recent`. That read-only surface proves which escrow deposits WoloChain can see; AoE2HDBets still decides whether a challenge is ready to lock, cancel, or settle.
+For automatic funding detection, AoE2HDBets can poll `GET /settlement/v1/challenges/funding/deposits?source_app=aoe2hdbets&settlement_run_id=...&challenge_id=...` or run `wolochaind settlement challenge funding recent`. That read-only surface proves which escrow deposits WoloChain can see; AoE2HDBets still decides whether a challenge is ready to lock, cancel, or settle.
 
 After execution, operators can reconcile stored challenge state against chain reality with:
 

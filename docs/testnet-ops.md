@@ -370,15 +370,18 @@ WoloChain owns:
 - grouped proof surfaces, tx hashes, and inspect / recent state
 - optional escrow-to-payout shortfall top-up before execution
 
-Canonical challenge funding memo:
+Canonical challenge funding memo for actual funding transactions:
 
 ```text
-wolo.challenge.funding.v1:source_app=aoe2hdbets&challenge_id=challenge-42&participant_side=left&participant_id=user-1&wager_uwolo=1000000&guarantee_uwolo=500000
+wolo.challenge.funding.v1:app=aoe2hdbets&sid=aoe2hdbets:challenge-42:one-noshow:v1&cid=challenge-42&side=left&pid=user-1&w=1000000&g=500000&t=1500000
 ```
+
+Use the compact aliases on chain so the memo stays under the chain memo limit. WoloChain proof responses normalize those aliases back to the expanded field names.
 
 Accepted funding memo aliases:
 
 - `app` for `source_app`
+- `run_id` or `sid` for `settlement_run_id`
 - `cid` for `challenge_id`
 - `event_id` or `eid` for `source_event_id`
 - `side` for `participant_side`
@@ -391,11 +394,12 @@ Read-only funding verification:
 
 ```bash
 curl -sS \
-  "http://127.0.0.1:8091/settlement/v1/challenges/funding/txs/TX_HASH?source_app=aoe2hdbets&challenge_id=challenge-42&participant_side=left&participant_id=user-1&expected_amount_uwolo=1500000&wager_uwolo=1000000&guarantee_uwolo=500000"
+  "http://127.0.0.1:8091/settlement/v1/challenges/funding/txs/TX_HASH?source_app=aoe2hdbets&settlement_run_id=aoe2hdbets:challenge-42:one-noshow:v1&challenge_id=challenge-42&participant_side=left&participant_id=user-1&expected_amount_uwolo=1500000&wager_uwolo=1000000&guarantee_uwolo=500000"
 
 build/wolochaind settlement challenge funding verify \
   --tx-hash TX_HASH \
   --source-app aoe2hdbets \
+  --settlement-run-id aoe2hdbets:challenge-42:one-noshow:v1 \
   --challenge-id challenge-42 \
   --participant-side left \
   --participant-id user-1 \
@@ -407,8 +411,8 @@ build/wolochaind settlement challenge funding verify \
 Recent challenge funding discovery:
 
 ```bash
-curl -sS "http://127.0.0.1:8091/settlement/v1/challenges/funding/deposits?limit=20&source_app=aoe2hdbets&challenge_id=challenge-42"
-build/wolochaind settlement challenge funding recent --limit 20 --source-app aoe2hdbets --challenge-id challenge-42
+curl -sS "http://127.0.0.1:8091/settlement/v1/challenges/funding/deposits?limit=20&source_app=aoe2hdbets&settlement_run_id=aoe2hdbets:challenge-42:one-noshow:v1&challenge_id=challenge-42"
+build/wolochaind settlement challenge funding recent --limit 20 --source-app aoe2hdbets --settlement-run-id aoe2hdbets:challenge-42:one-noshow:v1 --challenge-id challenge-42
 ```
 
 Dry-run and execute use the same JSON body. Dry-run first:
@@ -446,8 +450,16 @@ Request contract:
 - `source_app`: stable caller id like `aoe2hdbets`
 - `challenge_id` and/or `source_event_id`: challenge reference from the app
 - `treasury_address`: optional explicit destination for treasury forfeits; falls back to `WOLO_SETTLEMENT_TREASURY_ADDRESS`
-- `funding[]`: one verified escrow funding tx per participant
+- `funding[]`: one verified escrow funding tx per participant; include optional `settlement_run_id`, `expected_amount_uwolo`, `wager_uwolo`, and `guarantee_uwolo` to pin the tx to caller-expected proof fields
 - `transfers[]`: explicit bucket movements with `bucket`, `reason`, `to_address`, and amount
+
+Canonical transfer reasons are proof labels, not WoloChain policy:
+
+- `return`: return a Match Guarantee to its original participant.
+- `forfeit`: pay a forfeited Match Guarantee to the caller-supplied recipient.
+- `treasury`: route a Match Guarantee to the explicit treasury address.
+- `refund`: refund a Wolo Wager or Match Guarantee.
+- `release` or `payout`: release Wolo Wager funds to the caller-supplied winner/payee.
 
 Each transfer line must name the originating participant with `participant_side` and/or `participant_id`. WoloChain verifies that every participant's funded `wager` and `guarantee` buckets are allocated exactly once across the request.
 
@@ -466,14 +478,22 @@ Dry-run request:
     {
       "funding_tx_hash": "LEFT_FUNDING_TX_HASH",
       "depositor_address": "wolo1leftplayer...",
+      "settlement_run_id": "challenge-run-noshow-42",
       "participant_side": "left",
-      "participant_id": "left-user"
+      "participant_id": "left-user",
+      "expected_amount_uwolo": "1500000",
+      "wager_uwolo": "1000000",
+      "guarantee_uwolo": "500000"
     },
     {
       "funding_tx_hash": "RIGHT_FUNDING_TX_HASH",
       "depositor_address": "wolo1rightplayer...",
+      "settlement_run_id": "challenge-run-noshow-42",
       "participant_side": "right",
-      "participant_id": "right-user"
+      "participant_id": "right-user",
+      "expected_amount_uwolo": "1500000",
+      "wager_uwolo": "1000000",
+      "guarantee_uwolo": "500000"
     }
   ],
   "transfers": [
@@ -490,7 +510,7 @@ Dry-run request:
       "participant_side": "right",
       "participant_id": "right-user",
       "bucket": "guarantee",
-      "reason": "payout",
+      "reason": "forfeit",
       "to_address": "wolo1leftplayer...",
       "amount_uwolo": "500000",
       "memo": "right guarantee forfeit"
@@ -533,14 +553,22 @@ Dry-run request:
     {
       "funding_tx_hash": "LEFT_FUNDING_TX_HASH",
       "depositor_address": "wolo1leftplayer...",
+      "settlement_run_id": "challenge-run-double-noshow-42",
       "participant_side": "left",
-      "participant_id": "left-user"
+      "participant_id": "left-user",
+      "expected_amount_uwolo": "1500000",
+      "wager_uwolo": "1000000",
+      "guarantee_uwolo": "500000"
     },
     {
       "funding_tx_hash": "RIGHT_FUNDING_TX_HASH",
       "depositor_address": "wolo1rightplayer...",
+      "settlement_run_id": "challenge-run-double-noshow-42",
       "participant_side": "right",
-      "participant_id": "right-user"
+      "participant_id": "right-user",
+      "expected_amount_uwolo": "1500000",
+      "wager_uwolo": "1000000",
+      "guarantee_uwolo": "500000"
     }
   ],
   "transfers": [
@@ -599,14 +627,22 @@ Dry-run request:
     {
       "funding_tx_hash": "LEFT_FUNDING_TX_HASH",
       "depositor_address": "wolo1leftplayer...",
+      "settlement_run_id": "challenge-run-played-42",
       "participant_side": "left",
-      "participant_id": "left-user"
+      "participant_id": "left-user",
+      "expected_amount_uwolo": "1500000",
+      "wager_uwolo": "1000000",
+      "guarantee_uwolo": "500000"
     },
     {
       "funding_tx_hash": "RIGHT_FUNDING_TX_HASH",
       "depositor_address": "wolo1rightplayer...",
+      "settlement_run_id": "challenge-run-played-42",
       "participant_side": "right",
-      "participant_id": "right-user"
+      "participant_id": "right-user",
+      "expected_amount_uwolo": "1500000",
+      "wager_uwolo": "1000000",
+      "guarantee_uwolo": "500000"
     }
   ],
   "transfers": [
@@ -632,19 +668,19 @@ Dry-run request:
       "participant_side": "left",
       "participant_id": "left-user",
       "bucket": "wager",
-      "reason": "payout",
+      "reason": "release",
       "to_address": "wolo1leftplayer...",
       "amount_uwolo": "1000000",
-      "memo": "left wager return"
+      "memo": "left wager release"
     },
     {
       "participant_side": "right",
       "participant_id": "right-user",
       "bucket": "wager",
-      "reason": "payout",
+      "reason": "release",
       "to_address": "wolo1leftplayer...",
       "amount_uwolo": "1000000",
-      "memo": "right wager payout"
+      "memo": "right wager release"
     }
   ]
 }

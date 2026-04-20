@@ -28,22 +28,33 @@ AoE2HDBets supplies:
 
 - `source_app`, `challenge_id` and/or `source_event_id`
 - the funding tx hashes it wants verified
+- optional per-funding `settlement_run_id`, `expected_amount_uwolo`, `wager_uwolo`, and `guarantee_uwolo` expectations
 - the explicit `wager` and `guarantee` bucket transfer list
 - optional `treasury_address` for caller-decided forfeits
 
 WoloChain verifies:
 
 - each funding tx sent `uwolo` into the configured escrow address
-- the memo has the expected challenge/app/participant fields
+- the memo has the expected app, settlement-run, challenge/event, and participant fields when supplied
 - funded totals split cleanly into `wager_uwolo` and `guarantee_uwolo`
 - the settlement request allocates every verified participant bucket exactly once
 - executed refund/payout/treasury/top-up tx hashes reconcile with stored state
 
+Use compact aliases in actual funding tx memos to stay under the chain memo limit: `app`, `sid`, `cid`, `eid`, `side`, `pid`, `w`, `g`, and `t`. WoloChain normalizes them to the expanded contract fields in verification, inspect, and audit responses.
+
+Canonical transfer reasons are caller-supplied proof labels:
+
+- `return`: Match Guarantee returned to its original participant.
+- `forfeit`: Match Guarantee forfeited to another participant.
+- `treasury`: Match Guarantee routed to the explicit treasury address.
+- `refund`: Wolo Wager or Match Guarantee refunded.
+- `release` or `payout`: Wolo Wager released to the caller-supplied winner/payee.
+
 ## Operator Flow
 
 ```bash
-wolochaind settlement challenge funding verify --tx-hash <funding_tx_hash> ...
-wolochaind settlement challenge funding recent --source-app aoe2hdbets --challenge-id <challenge_id>
+wolochaind settlement challenge funding verify --tx-hash <funding_tx_hash> --settlement-run-id <settlement_run_id> ...
+wolochaind settlement challenge funding recent --source-app aoe2hdbets --settlement-run-id <settlement_run_id> --challenge-id <challenge_id>
 wolochaind settlement challenge validate --file docs/settlement-contracts/examples/challenge-one-noshow.json
 wolochaind settlement challenge execute --file docs/settlement-contracts/examples/challenge-one-noshow.json
 wolochaind settlement challenge inspect --settlement-id <settlement_run_id> --summary-only
@@ -54,8 +65,8 @@ Use real tx hashes and real `wolo1...` addresses before submitting an example pa
 
 ## App Integration Flow
 
-1. Watch or poll `GET /settlement/v1/challenges/funding/deposits?source_app=aoe2hdbets&challenge_id=<challenge_id>` for automatic funding detection.
-2. Verify each candidate deposit with `GET /settlement/v1/challenges/funding/txs/{tx_hash}` and expected source/challenge/participant/bucket fields.
+1. Watch or poll `GET /settlement/v1/challenges/funding/deposits?source_app=aoe2hdbets&settlement_run_id=<settlement_run_id>&challenge_id=<challenge_id>` for automatic funding detection.
+2. Verify each candidate deposit with `GET /settlement/v1/challenges/funding/txs/{tx_hash}` and expected source/settlement/challenge/participant/bucket fields.
 3. Submit the caller-decided transfer plan to `POST /settlement/v1/challenges/validate`.
 4. Execute the exact same payload with `POST /settlement/v1/challenges`.
 5. Show app users `canonical_tx_lookup_preferred` links from funding and transfer responses.

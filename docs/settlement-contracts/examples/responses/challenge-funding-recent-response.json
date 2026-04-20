@@ -3,6 +3,7 @@
   "limit": 20,
   "count": 2,
   "source_app": "aoe2hdbets",
+  "settlement_run_id": "aoe2hdbets:challenge-42:one-noshow:v1",
   "challenge_id": "challenge-42",
   "funding": [
     {
@@ -12,6 +13,7 @@
       "deposit_found": true,
       "funding_tx_hash": "1111111111111111111111111111111111111111111111111111111111111111",
       "source_app": "aoe2hdbets",
+      "settlement_run_id": "aoe2hdbets:challenge-42:one-noshow:v1",
       "challenge_id": "challenge-42",
       "source_event_id": "match-2026-04-20-00042",
       "participant_side": "left",
@@ -33,6 +35,7 @@
       "deposit_found": true,
       "funding_tx_hash": "2222222222222222222222222222222222222222222222222222222222222222",
       "source_app": "aoe2hdbets",
+      "settlement_run_id": "aoe2hdbets:challenge-42:one-noshow:v1",
       "challenge_id": "challenge-42",
       "source_event_id": "match-2026-04-20-00042",
       "participant_side": "right",

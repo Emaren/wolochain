@@ -32,9 +32,12 @@ RIGHT_ID="local-right-$RUN_SUFFIX"
 
 mkdir -p "$WORK_DIR" "$STATE_DIR"
 
-if [[ ! -x "$BIN" ]]; then
+if [[ -z "${WOLO_E2E_BIN:-}" ]]; then
   mkdir -p "$ROOT/build"
   go build -o "$BIN" ./cmd/wolochaind
+elif [[ ! -x "$BIN" ]]; then
+  echo "Configured WOLO_E2E_BIN is not executable: $BIN" >&2
+  exit 1
 fi
 
 if ! curl -fsS "$RPC_HTTP/status" >/dev/null 2>&1; then
@@ -218,8 +221,8 @@ LEFT_FUND_TX="$(tx_send fund-left "$FUNDER_KEY" "$LEFT_ADDR" "$PLAYER_FUND_UWOLO
 RIGHT_FUND_TX="$(tx_send fund-right "$FUNDER_KEY" "$RIGHT_ADDR" "$PLAYER_FUND_UWOLO" "local e2e fund right")"
 printf 'left_fund_tx=%s\nright_fund_tx=%s\n' "$LEFT_FUND_TX" "$RIGHT_FUND_TX"
 
-LEFT_MEMO="wolo.challenge.funding.v1:source_app=$SOURCE_APP&challenge_id=$CHALLENGE_ID&participant_side=left&participant_id=$LEFT_ID&wager_uwolo=$WAGER_UWOLO&guarantee_uwolo=$GUARANTEE_UWOLO&total_funded_uwolo=$TOTAL_DEPOSIT_UWOLO"
-RIGHT_MEMO="wolo.challenge.funding.v1:source_app=$SOURCE_APP&challenge_id=$CHALLENGE_ID&participant_side=right&participant_id=$RIGHT_ID&wager_uwolo=$WAGER_UWOLO&guarantee_uwolo=$GUARANTEE_UWOLO&total_funded_uwolo=$TOTAL_DEPOSIT_UWOLO"
+LEFT_MEMO="wolo.challenge.funding.v1:app=$SOURCE_APP&sid=$SETTLEMENT_RUN_ID&cid=$CHALLENGE_ID&side=left&pid=$LEFT_ID&w=$WAGER_UWOLO&g=$GUARANTEE_UWOLO&t=$TOTAL_DEPOSIT_UWOLO"
+RIGHT_MEMO="wolo.challenge.funding.v1:app=$SOURCE_APP&sid=$SETTLEMENT_RUN_ID&cid=$CHALLENGE_ID&side=right&pid=$RIGHT_ID&w=$WAGER_UWOLO&g=$GUARANTEE_UWOLO&t=$TOTAL_DEPOSIT_UWOLO"
 
 echo
 echo "=== send challenge funding deposits into escrow ==="
@@ -231,6 +234,7 @@ printf 'left_funding_tx=%s\nright_funding_tx=%s\n' "$LEFT_FUNDING_TX" "$RIGHT_FU
   --tx-hash "$LEFT_FUNDING_TX" \
   --expected-sender "$LEFT_ADDR" \
   --source-app "$SOURCE_APP" \
+  --settlement-run-id "$SETTLEMENT_RUN_ID" \
   --challenge-id "$CHALLENGE_ID" \
   --participant-side left \
   --participant-id "$LEFT_ID" \
@@ -243,6 +247,7 @@ assert_json_ok "$WORK_DIR/left-funding-verify.json" "left funding verify"
   --tx-hash "$RIGHT_FUNDING_TX" \
   --expected-sender "$RIGHT_ADDR" \
   --source-app "$SOURCE_APP" \
+  --settlement-run-id "$SETTLEMENT_RUN_ID" \
   --challenge-id "$CHALLENGE_ID" \
   --participant-side right \
   --participant-id "$RIGHT_ID" \
@@ -269,14 +274,22 @@ request = {
         {
             "funding_tx_hash": os.environ["LEFT_FUNDING_TX"],
             "depositor_address": os.environ["LEFT_ADDR"],
+            "settlement_run_id": os.environ["SETTLEMENT_RUN_ID"],
             "participant_side": "left",
             "participant_id": os.environ["LEFT_ID"],
+            "expected_amount_uwolo": str(int(os.environ["WAGER_UWOLO"]) + int(os.environ["GUARANTEE_UWOLO"])),
+            "wager_uwolo": os.environ["WAGER_UWOLO"],
+            "guarantee_uwolo": os.environ["GUARANTEE_UWOLO"],
         },
         {
             "funding_tx_hash": os.environ["RIGHT_FUNDING_TX"],
             "depositor_address": os.environ["RIGHT_ADDR"],
+            "settlement_run_id": os.environ["SETTLEMENT_RUN_ID"],
             "participant_side": "right",
             "participant_id": os.environ["RIGHT_ID"],
+            "expected_amount_uwolo": str(int(os.environ["WAGER_UWOLO"]) + int(os.environ["GUARANTEE_UWOLO"])),
+            "wager_uwolo": os.environ["WAGER_UWOLO"],
+            "guarantee_uwolo": os.environ["GUARANTEE_UWOLO"],
         },
     ],
     "transfers": [
@@ -293,7 +306,7 @@ request = {
             "participant_side": "right",
             "participant_id": os.environ["RIGHT_ID"],
             "bucket": "guarantee",
-            "reason": "payout",
+            "reason": "forfeit",
             "to_address": os.environ["LEFT_ADDR"],
             "amount_uwolo": os.environ["GUARANTEE_UWOLO"],
             "memo": "local-e2e-right-guarantee-forfeit",

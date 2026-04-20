@@ -74,11 +74,26 @@
         "depositor_address": {
           "$ref": "#/$defs/wolo_address"
         },
+        "settlement_run_id": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 96,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{2,95}$"
+        },
         "participant_side": {
           "$ref": "#/$defs/participant_side"
         },
         "participant_id": {
           "$ref": "#/$defs/metadata_id"
+        },
+        "expected_amount_uwolo": {
+          "$ref": "#/$defs/positive_uwolo"
+        },
+        "wager_uwolo": {
+          "$ref": "#/$defs/positive_uwolo"
+        },
+        "guarantee_uwolo": {
+          "$ref": "#/$defs/positive_uwolo"
         }
       },
       "anyOf": [
@@ -112,7 +127,7 @@
           "minLength": 1,
           "maxLength": 32,
           "pattern": "^[a-z][a-z0-9_-]{0,31}$",
-          "examples": ["refund", "return", "payout", "treasury"]
+          "examples": ["return", "forfeit", "treasury", "refund", "release", "payout"]
         },
         "to_address": {
           "$ref": "#/$defs/wolo_address"

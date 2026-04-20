@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://wolochain.local/schemas/challenge-funding-memo.schema.json",
   "title": "WoloChain Challenge Funding Memo Fields",
-  "description": "Structured fields encoded after the wolo.challenge.funding.v1: memo prefix on one escrow funding deposit per participant.",
+  "description": "Normalized structured fields encoded after the wolo.challenge.funding.v1: memo prefix on one escrow funding deposit per participant. Compact on-chain aliases such as app, sid, cid, eid, side, pid, w, g, and t are accepted and normalized to these fields.",
   "type": "object",
   "additionalProperties": false,
   "required": ["source_app", "wager_uwolo", "guarantee_uwolo"],
@@ -24,6 +24,12 @@
       "minLength": 1,
       "maxLength": 128,
       "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$"
+    },
+    "settlement_run_id": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 96,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{2,95}$"
     },
     "participant_side": {
       "type": "string",

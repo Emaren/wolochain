@@ -35,6 +35,7 @@ var (
 type settlementChallengeFundingExpectation struct {
 	Sender           string
 	SourceApp        string
+	SettlementRunID  string
 	ChallengeID      string
 	SourceEventID    string
 	ParticipantSide  string
@@ -52,6 +53,7 @@ type settlementChallengeFundingResult struct {
 	DepositFound               bool   `json:"deposit_found"`
 	FundingTxHash              string `json:"funding_tx_hash,omitempty"`
 	SourceApp                  string `json:"source_app,omitempty"`
+	SettlementRunID            string `json:"settlement_run_id,omitempty"`
 	ChallengeID                string `json:"challenge_id,omitempty"`
 	SourceEventID              string `json:"source_event_id,omitempty"`
 	ParticipantSide            string `json:"participant_side,omitempty"`
@@ -83,6 +85,7 @@ type settlementChallengeFundingRecentFilters struct {
 	Limit           int
 	Sender          string
 	SourceApp       string
+	SettlementRunID string
 	ChallengeID     string
 	SourceEventID   string
 	ParticipantSide string
@@ -97,6 +100,7 @@ type settlementChallengeFundingRecentResponse struct {
 	Count           int                                `json:"count"`
 	SenderFilter    string                             `json:"sender_filter,omitempty"`
 	SourceApp       string                             `json:"source_app,omitempty"`
+	SettlementRunID string                             `json:"settlement_run_id,omitempty"`
 	ChallengeID     string                             `json:"challenge_id,omitempty"`
 	SourceEventID   string                             `json:"source_event_id,omitempty"`
 	ParticipantSide string                             `json:"participant_side,omitempty"`
@@ -117,10 +121,14 @@ type settlementChallengeRequest struct {
 }
 
 type settlementChallengeFundingInput struct {
-	FundingTxHash    string `json:"funding_tx_hash"`
-	DepositorAddress string `json:"depositor_address,omitempty"`
-	ParticipantSide  string `json:"participant_side,omitempty"`
-	ParticipantID    string `json:"participant_id,omitempty"`
+	FundingTxHash       string `json:"funding_tx_hash"`
+	DepositorAddress    string `json:"depositor_address,omitempty"`
+	SettlementRunID     string `json:"settlement_run_id,omitempty"`
+	ParticipantSide     string `json:"participant_side,omitempty"`
+	ParticipantID       string `json:"participant_id,omitempty"`
+	ExpectedAmountUWolo string `json:"expected_amount_uwolo,omitempty"`
+	WagerUWolo          string `json:"wager_uwolo,omitempty"`
+	GuaranteeUWolo      string `json:"guarantee_uwolo,omitempty"`
 }
 
 type settlementChallengeTransferInput struct {
@@ -136,10 +144,14 @@ type settlementChallengeTransferInput struct {
 }
 
 type normalizedSettlementChallengeFundingInput struct {
-	FundingTxHash    string `json:"funding_tx_hash"`
-	DepositorAddress string `json:"depositor_address,omitempty"`
-	ParticipantSide  string `json:"participant_side,omitempty"`
-	ParticipantID    string `json:"participant_id,omitempty"`
+	FundingTxHash       string `json:"funding_tx_hash"`
+	DepositorAddress    string `json:"depositor_address,omitempty"`
+	SettlementRunID     string `json:"settlement_run_id,omitempty"`
+	ParticipantSide     string `json:"participant_side,omitempty"`
+	ParticipantID       string `json:"participant_id,omitempty"`
+	ExpectedAmountUWolo string `json:"expected_amount_uwolo,omitempty"`
+	WagerUWolo          string `json:"wager_uwolo,omitempty"`
+	GuaranteeUWolo      string `json:"guarantee_uwolo,omitempty"`
 }
 
 type normalizedSettlementChallengeTransfer struct {
@@ -396,6 +408,7 @@ func newSettlementChallengeFundingVerifyCmd() *cobra.Command {
 		txHash          string
 		expectedSender  string
 		sourceApp       string
+		settlementID    string
 		challengeID     string
 		sourceEventID   string
 		participantSide string
@@ -417,6 +430,7 @@ func newSettlementChallengeFundingVerifyCmd() *cobra.Command {
 			response, err := cfg.verifyChallengeFundingDeposit(cmd.Context(), txHash, settlementChallengeFundingExpectation{
 				Sender:           expectedSender,
 				SourceApp:        sourceApp,
+				SettlementRunID:  settlementID,
 				ChallengeID:      challengeID,
 				SourceEventID:    sourceEventID,
 				ParticipantSide:  participantSide,
@@ -436,6 +450,7 @@ func newSettlementChallengeFundingVerifyCmd() *cobra.Command {
 	cmd.Flags().StringVar(&txHash, "tx-hash", "", "Funding tx hash to verify")
 	cmd.Flags().StringVar(&expectedSender, "expected-sender", "", "Expected depositor address")
 	cmd.Flags().StringVar(&sourceApp, "source-app", "", "Expected source app")
+	cmd.Flags().StringVar(&settlementID, "settlement-run-id", "", "Expected settlement run id when included in the funding memo")
 	cmd.Flags().StringVar(&challengeID, "challenge-id", "", "Expected challenge id")
 	cmd.Flags().StringVar(&sourceEventID, "source-event-id", "", "Expected source event id")
 	cmd.Flags().StringVar(&participantSide, "participant-side", "", "Expected participant side, such as left or right")
@@ -470,6 +485,7 @@ func newSettlementChallengeFundingRecentCmd() *cobra.Command {
 	cmd.Flags().IntVar(&filters.Limit, "limit", 20, "Maximum number of challenge funding deposits to return")
 	cmd.Flags().StringVar(&filters.Sender, "sender", "", "Optional depositor address filter")
 	cmd.Flags().StringVar(&filters.SourceApp, "source-app", "", "Optional source app filter")
+	cmd.Flags().StringVar(&filters.SettlementRunID, "settlement-run-id", "", "Optional settlement run id filter")
 	cmd.Flags().StringVar(&filters.ChallengeID, "challenge-id", "", "Optional challenge id filter")
 	cmd.Flags().StringVar(&filters.SourceEventID, "source-event-id", "", "Optional source event id filter")
 	cmd.Flags().StringVar(&filters.ParticipantSide, "participant-side", "", "Optional participant side filter")
@@ -858,19 +874,27 @@ func (cfg settlementConfig) buildSettlementChallengePlan(ctx context.Context, re
 	var fundedTotal uint64
 	for index, fundingInput := range request.Funding {
 		normalizedFunding := normalizedSettlementChallengeFundingInput{
-			FundingTxHash:    normalizeTxHash(fundingInput.FundingTxHash),
-			DepositorAddress: strings.TrimSpace(fundingInput.DepositorAddress),
-			ParticipantSide:  strings.TrimSpace(fundingInput.ParticipantSide),
-			ParticipantID:    strings.TrimSpace(fundingInput.ParticipantID),
+			FundingTxHash:       normalizeTxHash(fundingInput.FundingTxHash),
+			DepositorAddress:    strings.TrimSpace(fundingInput.DepositorAddress),
+			SettlementRunID:     strings.TrimSpace(fundingInput.SettlementRunID),
+			ParticipantSide:     strings.TrimSpace(fundingInput.ParticipantSide),
+			ParticipantID:       strings.TrimSpace(fundingInput.ParticipantID),
+			ExpectedAmountUWolo: strings.TrimSpace(fundingInput.ExpectedAmountUWolo),
+			WagerUWolo:          strings.TrimSpace(fundingInput.WagerUWolo),
+			GuaranteeUWolo:      strings.TrimSpace(fundingInput.GuaranteeUWolo),
 		}
 		normalized.Funding = append(normalized.Funding, normalizedFunding)
 		verifyResponse, err := cfg.verifyChallengeFundingDeposit(ctx, normalizedFunding.FundingTxHash, settlementChallengeFundingExpectation{
-			Sender:          normalizedFunding.DepositorAddress,
-			SourceApp:       sourceApp,
-			ChallengeID:     challengeID,
-			SourceEventID:   sourceEventID,
-			ParticipantSide: normalizedFunding.ParticipantSide,
-			ParticipantID:   normalizedFunding.ParticipantID,
+			Sender:           normalizedFunding.DepositorAddress,
+			SourceApp:        sourceApp,
+			SettlementRunID:  normalizedFunding.SettlementRunID,
+			ChallengeID:      challengeID,
+			SourceEventID:    sourceEventID,
+			ParticipantSide:  normalizedFunding.ParticipantSide,
+			ParticipantID:    normalizedFunding.ParticipantID,
+			TotalFundedUWolo: normalizedFunding.ExpectedAmountUWolo,
+			WagerUWolo:       normalizedFunding.WagerUWolo,
+			GuaranteeUWolo:   normalizedFunding.GuaranteeUWolo,
 		})
 		if err != nil {
 			return settlementChallengePlan{}, err
@@ -1493,6 +1517,11 @@ func validateChallengeFundingExpectation(expectation settlementChallengeFundingE
 			return err
 		}
 	}
+	if settlementRunID := strings.TrimSpace(expectation.SettlementRunID); settlementRunID != "" {
+		if err := validateSettlementRunID(settlementRunID); err != nil {
+			return err
+		}
+	}
 	if challengeID := strings.TrimSpace(expectation.ChallengeID); challengeID != "" {
 		if _, err := normalizeSettlementRunMetadataID("challenge_id", challengeID, 128, settlementSourceEventPattern); err != nil {
 			return err
@@ -1519,7 +1548,8 @@ func validateChallengeFundingExpectation(expectation settlementChallengeFundingE
 		if value == "" {
 			continue
 		}
-		if _, err := strconv.ParseUint(value, 10, 64); err != nil {
+		parsed, err := strconv.ParseUint(value, 10, 64)
+		if err != nil || parsed == 0 {
 			return fmt.Errorf("%s must be a positive integer", field)
 		}
 	}
@@ -1554,6 +1584,13 @@ func parseChallengeFundingResult(transfer settlementTransfer, lookup settlementL
 		return settlementChallengeFundingResult{}, err
 	} else {
 		sourceApp = normalizedSourceApp
+	}
+
+	settlementRunID := getValue("settlement_run_id", "run_id", "sid")
+	if settlementRunID != "" {
+		if err := validateSettlementRunID(settlementRunID); err != nil {
+			return settlementChallengeFundingResult{}, err
+		}
 	}
 
 	challengeID := getValue("challenge_id", "cid")
@@ -1621,6 +1658,7 @@ func parseChallengeFundingResult(transfer settlementTransfer, lookup settlementL
 		DepositFound:               true,
 		FundingTxHash:              lookup.TxHash,
 		SourceApp:                  sourceApp,
+		SettlementRunID:            settlementRunID,
 		ChallengeID:                challengeID,
 		SourceEventID:              sourceEventID,
 		ParticipantSide:            participantSide,
@@ -1647,7 +1685,7 @@ func parseChallengeMemoAmount(fieldName, raw string) (uint64, error) {
 		return 0, fmt.Errorf("memo is missing %s", fieldName)
 	}
 	value, err := strconv.ParseUint(raw, 10, 64)
-	if err != nil {
+	if err != nil || value == 0 {
 		return 0, fmt.Errorf("%s must be a positive integer", fieldName)
 	}
 	return value, nil
@@ -1660,6 +1698,7 @@ func compareChallengeFundingExpectation(funding settlementChallengeFundingResult
 		actual   string
 	}{
 		{"source_app", expectation.SourceApp, funding.SourceApp},
+		{"settlement_run_id", expectation.SettlementRunID, funding.SettlementRunID},
 		{"challenge_id", expectation.ChallengeID, funding.ChallengeID},
 		{"source_event_id", expectation.SourceEventID, funding.SourceEventID},
 		{"participant_side", expectation.ParticipantSide, funding.ParticipantSide},
@@ -1687,6 +1726,7 @@ func (cfg settlementConfig) listRecentChallengeFundingDeposits(ctx context.Conte
 		Limit:           filters.Limit,
 		SenderFilter:    strings.TrimSpace(filters.Sender),
 		SourceApp:       strings.TrimSpace(filters.SourceApp),
+		SettlementRunID: strings.TrimSpace(filters.SettlementRunID),
 		ChallengeID:     strings.TrimSpace(filters.ChallengeID),
 		SourceEventID:   strings.TrimSpace(filters.SourceEventID),
 		ParticipantSide: strings.TrimSpace(filters.ParticipantSide),
@@ -1700,6 +1740,7 @@ func (cfg settlementConfig) listRecentChallengeFundingDeposits(ctx context.Conte
 	if err := validateChallengeFundingExpectation(settlementChallengeFundingExpectation{
 		Sender:          response.SenderFilter,
 		SourceApp:       response.SourceApp,
+		SettlementRunID: response.SettlementRunID,
 		ChallengeID:     response.ChallengeID,
 		SourceEventID:   response.SourceEventID,
 		ParticipantSide: response.ParticipantSide,
@@ -1757,6 +1798,7 @@ func (cfg settlementConfig) listRecentChallengeFundingDeposits(ctx context.Conte
 		if mismatch := compareChallengeFundingExpectation(funding, settlementChallengeFundingExpectation{
 			Sender:          response.SenderFilter,
 			SourceApp:       response.SourceApp,
+			SettlementRunID: response.SettlementRunID,
 			ChallengeID:     response.ChallengeID,
 			SourceEventID:   response.SourceEventID,
 			ParticipantSide: response.ParticipantSide,

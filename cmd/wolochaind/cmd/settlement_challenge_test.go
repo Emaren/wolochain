@@ -17,6 +17,7 @@ func TestVerifyChallengeFundingDepositAndRecentRoutes(t *testing.T) {
 		escrowAddress = "wolo1escrow000000000000000000000000000000000"
 		leftAddress   = "wolo1leftplayer000000000000000000000000000000"
 		rightAddress  = "wolo1rightplayer00000000000000000000000000000"
+		runID         = "challenge-123-run"
 	)
 
 	leftFundingTx := strings.Repeat("A", 64)
@@ -30,7 +31,7 @@ func TestVerifyChallengeFundingDepositAndRecentRoutes(t *testing.T) {
 			Sender:      leftAddress,
 			Recipient:   escrowAddress,
 			AmountUWolo: "150",
-			Memo:        challengeFundingMemo("aoe2hdbets", "challenge-123", "", "left", "left-user", "100", "50"),
+			Memo:        challengeFundingMemoWithSettlementRunID(runID, "aoe2hdbets", "challenge-123", "", "left", "left-user", "100", "50"),
 			Timestamp:   "2026-04-19T10:00:00Z",
 		},
 		rightFundingTx: {
@@ -38,7 +39,7 @@ func TestVerifyChallengeFundingDepositAndRecentRoutes(t *testing.T) {
 			Sender:      rightAddress,
 			Recipient:   escrowAddress,
 			AmountUWolo: "150",
-			Memo:        challengeFundingMemo("aoe2hdbets", "challenge-123", "", "right", "right-user", "100", "50"),
+			Memo:        challengeFundingMemoWithSettlementRunID(runID, "aoe2hdbets", "challenge-123", "", "right", "right-user", "100", "50"),
 			Timestamp:   "2026-04-19T10:01:00Z",
 		},
 	}, nil)
@@ -47,6 +48,7 @@ func TestVerifyChallengeFundingDepositAndRecentRoutes(t *testing.T) {
 	response, err := cfg.verifyChallengeFundingDeposit(t.Context(), leftFundingTx, settlementChallengeFundingExpectation{
 		Sender:           leftAddress,
 		SourceApp:        "aoe2hdbets",
+		SettlementRunID:  runID,
 		ChallengeID:      "challenge-123",
 		ParticipantSide:  "left",
 		ParticipantID:    "left-user",
@@ -63,11 +65,15 @@ func TestVerifyChallengeFundingDepositAndRecentRoutes(t *testing.T) {
 	if response.Funding.WagerUWolo != "100" || response.Funding.GuaranteeUWolo != "50" {
 		t.Fatalf("unexpected bucket amounts: %+v", response.Funding)
 	}
+	if response.Funding.SettlementRunID != runID {
+		t.Fatalf("expected settlement run id in funding proof, got %+v", response.Funding)
+	}
 
 	recent, err := cfg.listRecentChallengeFundingDeposits(t.Context(), settlementChallengeFundingRecentFilters{
-		Limit:       2,
-		SourceApp:   "aoe2hdbets",
-		ChallengeID: "challenge-123",
+		Limit:           2,
+		SourceApp:       "aoe2hdbets",
+		SettlementRunID: runID,
+		ChallengeID:     "challenge-123",
 	})
 	if err != nil {
 		t.Fatalf("list recent challenge funding deposits: %v", err)
@@ -84,7 +90,7 @@ func TestVerifyChallengeFundingDepositAndRecentRoutes(t *testing.T) {
 		http.MethodGet,
 		"/settlement/v1/challenges/funding/txs/"+leftFundingTx+
 			"?expected_sender="+url.QueryEscape(leftAddress)+
-			"&source_app=aoe2hdbets&challenge_id=challenge-123&participant_side=left&participant_id=left-user&expected_amount_uwolo=150&wager_uwolo=100&guarantee_uwolo=50",
+			"&source_app=aoe2hdbets&settlement_run_id=challenge-123-run&challenge_id=challenge-123&participant_side=left&participant_id=left-user&expected_amount_uwolo=150&wager_uwolo=100&guarantee_uwolo=50",
 		nil,
 	)
 	verifyRecorder := httptest.NewRecorder()
@@ -100,7 +106,7 @@ func TestVerifyChallengeFundingDepositAndRecentRoutes(t *testing.T) {
 		t.Fatalf("unexpected challenge funding verify body: %+v", verifyBody)
 	}
 
-	recentRequest := httptest.NewRequest(http.MethodGet, "/settlement/v1/challenges/funding/deposits?limit=1&source_app=aoe2hdbets&challenge_id=challenge-123", nil)
+	recentRequest := httptest.NewRequest(http.MethodGet, "/settlement/v1/challenges/funding/deposits?limit=1&source_app=aoe2hdbets&settlement_run_id=challenge-123-run&challenge_id=challenge-123", nil)
 	recentRecorder := httptest.NewRecorder()
 	handler.ServeHTTP(recentRecorder, recentRequest)
 	if recentRecorder.Code != http.StatusOK {
@@ -221,6 +227,114 @@ func TestValidateSettlementChallengeRequiresExactBucketAllocation(t *testing.T) 
 	}
 }
 
+func TestValidateSettlementChallengeFundingExpectationsAndTreasuryForfeit(t *testing.T) {
+	t.Parallel()
+
+	const (
+		payoutAddress   = "wolo1payoutaddress000000000000000000000000000"
+		escrowAddress   = "wolo1escrow000000000000000000000000000000000"
+		leftAddress     = "wolo1leftplayer000000000000000000000000000000"
+		rightAddress    = "wolo1rightplayer00000000000000000000000000000"
+		treasuryAddress = "wolo1treasury000000000000000000000000000000"
+		runID           = "challenge-double-noshow-run"
+	)
+
+	leftFundingTx := strings.Repeat("7", 64)
+	rightFundingTx := strings.Repeat("8", 64)
+	cfg := newTestChallengeSettlementConfig(t, payoutAddress, escrowAddress, treasuryAddress, map[string]string{
+		payoutAddress: "1000",
+		escrowAddress: "1000",
+	}, map[string]mockSettlementTx{
+		leftFundingTx: {
+			Hash:        leftFundingTx,
+			Sender:      leftAddress,
+			Recipient:   escrowAddress,
+			AmountUWolo: "150",
+			Memo:        challengeFundingMemoWithSettlementRunID(runID, "aoe2hdbets", "challenge-double-noshow", "", "left", "left-user", "100", "50"),
+			Timestamp:   "2026-04-19T12:30:00Z",
+		},
+		rightFundingTx: {
+			Hash:        rightFundingTx,
+			Sender:      rightAddress,
+			Recipient:   escrowAddress,
+			AmountUWolo: "150",
+			Memo:        challengeFundingMemoWithSettlementRunID(runID, "aoe2hdbets", "challenge-double-noshow", "", "right", "right-user", "100", "50"),
+			Timestamp:   "2026-04-19T12:31:00Z",
+		},
+	}, nil)
+
+	buildRequest := func() settlementChallengeRequest {
+		return settlementChallengeRequest{
+			SettlementRunID: runID,
+			SourceApp:       "aoe2hdbets",
+			ChallengeID:     "challenge-double-noshow",
+			TreasuryAddress: treasuryAddress,
+			Funding: []settlementChallengeFundingInput{
+				{
+					FundingTxHash:       leftFundingTx,
+					DepositorAddress:    leftAddress,
+					SettlementRunID:     runID,
+					ParticipantSide:     "left",
+					ParticipantID:       "left-user",
+					ExpectedAmountUWolo: "150",
+					WagerUWolo:          "100",
+					GuaranteeUWolo:      "50",
+				},
+				{
+					FundingTxHash:       rightFundingTx,
+					DepositorAddress:    rightAddress,
+					SettlementRunID:     runID,
+					ParticipantSide:     "right",
+					ParticipantID:       "right-user",
+					ExpectedAmountUWolo: "150",
+					WagerUWolo:          "100",
+					GuaranteeUWolo:      "50",
+				},
+			},
+			Transfers: []settlementChallengeTransferInput{
+				{ParticipantSide: "left", ParticipantID: "left-user", Bucket: "guarantee", Reason: "treasury", ToAddress: treasuryAddress, AmountUWolo: "50"},
+				{ParticipantSide: "right", ParticipantID: "right-user", Bucket: "guarantee", Reason: "treasury", ToAddress: treasuryAddress, AmountUWolo: "50"},
+				{ParticipantSide: "left", ParticipantID: "left-user", Bucket: "wager", Reason: "refund", ToAddress: leftAddress, AmountUWolo: "100"},
+				{ParticipantSide: "right", ParticipantID: "right-user", Bucket: "wager", Reason: "refund", ToAddress: rightAddress, AmountUWolo: "100"},
+			},
+		}
+	}
+
+	response, err := cfg.validateSettlementChallenge(t.Context(), buildRequest())
+	if err != nil {
+		t.Fatalf("validate double no-show challenge settlement: %v", err)
+	}
+	if !response.OK || response.Status != "validated" {
+		t.Fatalf("expected valid double no-show settlement plan, got %+v", response)
+	}
+	if response.Funding[0].SettlementRunID != runID || response.RequestedTotalUWolo != "300" {
+		t.Fatalf("expected settlement-run funding proof and full requested total, got %+v", response)
+	}
+
+	wrongWager := buildRequest()
+	wrongWager.Funding[0].WagerUWolo = "99"
+	mismatch, err := cfg.validateSettlementChallenge(t.Context(), wrongWager)
+	if err != nil {
+		t.Fatalf("validate mismatch challenge settlement: %v", err)
+	}
+	if mismatch.OK ||
+		mismatch.FailureCode != "INVALID_CHALLENGE" ||
+		len(mismatch.Funding) == 0 ||
+		!strings.Contains(mismatch.Funding[0].Detail, "wager_uwolo") {
+		t.Fatalf("expected wager funding expectation mismatch, got %+v", mismatch)
+	}
+
+	wrongTreasury := buildRequest()
+	wrongTreasury.Transfers[0].ToAddress = leftAddress
+	treasuryMismatch, err := cfg.validateSettlementChallenge(t.Context(), wrongTreasury)
+	if err != nil {
+		t.Fatalf("validate treasury mismatch challenge settlement: %v", err)
+	}
+	if treasuryMismatch.OK || treasuryMismatch.Transfers[0].FailureCode != "INVALID_TREASURY_ROUTE" {
+		t.Fatalf("expected explicit treasury route failure, got %+v", treasuryMismatch)
+	}
+}
+
 func TestValidateSettlementChallengePlayedMatchPlan(t *testing.T) {
 	t.Parallel()
 
@@ -268,8 +382,8 @@ func TestValidateSettlementChallengePlayedMatchPlan(t *testing.T) {
 		Transfers: []settlementChallengeTransferInput{
 			{ParticipantSide: "left", ParticipantID: "left-user", Bucket: "guarantee", Reason: "return", ToAddress: leftAddress, AmountUWolo: "50"},
 			{ParticipantSide: "right", ParticipantID: "right-user", Bucket: "guarantee", Reason: "return", ToAddress: rightAddress, AmountUWolo: "50"},
-			{ParticipantSide: "left", ParticipantID: "left-user", Bucket: "wager", Reason: "payout", ToAddress: leftAddress, AmountUWolo: "100"},
-			{ParticipantSide: "right", ParticipantID: "right-user", Bucket: "wager", Reason: "payout", ToAddress: leftAddress, AmountUWolo: "100"},
+			{ParticipantSide: "left", ParticipantID: "left-user", Bucket: "wager", Reason: "release", ToAddress: leftAddress, AmountUWolo: "100"},
+			{ParticipantSide: "right", ParticipantID: "right-user", Bucket: "wager", Reason: "release", ToAddress: leftAddress, AmountUWolo: "100"},
 		},
 	})
 	if err != nil {
@@ -434,7 +548,7 @@ func TestExecuteSettlementChallengeOneNoShowIdempotent(t *testing.T) {
 		},
 		Transfers: []settlementChallengeTransferInput{
 			{ParticipantSide: "left", ParticipantID: "left-user", Bucket: "guarantee", Reason: "return", ToAddress: leftAddress, AmountUWolo: "60", Memo: "left-guarantee-return"},
-			{ParticipantSide: "right", ParticipantID: "right-user", Bucket: "guarantee", Reason: "payout", ToAddress: leftAddress, AmountUWolo: "70", Memo: "right-guarantee-forfeit"},
+			{ParticipantSide: "right", ParticipantID: "right-user", Bucket: "guarantee", Reason: "forfeit", ToAddress: leftAddress, AmountUWolo: "70", Memo: "right-guarantee-forfeit"},
 			{ParticipantSide: "left", ParticipantID: "left-user", Bucket: "wager", Reason: "refund", ToAddress: leftAddress, AmountUWolo: "100", Memo: "left-wager-refund"},
 			{ParticipantSide: "right", ParticipantID: "right-user", Bucket: "wager", Reason: "refund", ToAddress: rightAddress, AmountUWolo: "100", Memo: "right-wager-refund"},
 		},
@@ -512,8 +626,15 @@ func newTestChallengeSettlementConfig(t *testing.T, payoutAddress string, escrow
 }
 
 func challengeFundingMemo(sourceApp, challengeID, sourceEventID, participantSide, participantID, wagerUWolo, guaranteeUWolo string) string {
+	return challengeFundingMemoWithSettlementRunID("", sourceApp, challengeID, sourceEventID, participantSide, participantID, wagerUWolo, guaranteeUWolo)
+}
+
+func challengeFundingMemoWithSettlementRunID(settlementRunID, sourceApp, challengeID, sourceEventID, participantSide, participantID, wagerUWolo, guaranteeUWolo string) string {
 	values := url.Values{}
 	values.Set("source_app", sourceApp)
+	if settlementRunID != "" {
+		values.Set("settlement_run_id", settlementRunID)
+	}
 	if challengeID != "" {
 		values.Set("challenge_id", challengeID)
 	}

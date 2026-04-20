@@ -6,6 +6,7 @@
     "deposit_found": true,
     "funding_tx_hash": "1111111111111111111111111111111111111111111111111111111111111111",
     "source_app": "aoe2hdbets",
+    "settlement_run_id": "aoe2hdbets:challenge-42:one-noshow:v1",
     "challenge_id": "challenge-42",
     "source_event_id": "match-2026-04-20-00042",
     "participant_side": "left",
@@ -18,7 +19,7 @@
     "wager_wolo": "1.000000",
     "guarantee_uwolo": "500000",
     "guarantee_wolo": "0.500000",
-    "memo": "wolo.challenge.funding.v1:source_app=aoe2hdbets&challenge_id=challenge-42&source_event_id=match-2026-04-20-00042&participant_side=left&participant_id=aoe2-user-left&wager_uwolo=1000000&guarantee_uwolo=500000&total_funded_uwolo=1500000",
+    "memo": "wolo.challenge.funding.v1:app=aoe2hdbets&sid=aoe2hdbets:challenge-42:one-noshow:v1&cid=challenge-42&eid=match-2026-04-20-00042&side=left&pid=aoe2-user-left&w=1000000&g=500000&t=1500000",
     "canonical_tx_lookup_preferred": "https://rest.aoe2hdbets.com/cosmos/tx/v1beta1/txs/1111111111111111111111111111111111111111111111111111111111111111"
   },
   "lookup": {
@@ -29,7 +30,7 @@
     "tx_success": true,
     "kind": "escrow_deposit",
     "height": "12345",
-    "memo": "wolo.challenge.funding.v1:source_app=aoe2hdbets&challenge_id=challenge-42&source_event_id=match-2026-04-20-00042&participant_side=left&participant_id=aoe2-user-left&wager_uwolo=1000000&guarantee_uwolo=500000&total_funded_uwolo=1500000",
+    "memo": "wolo.challenge.funding.v1:app=aoe2hdbets&sid=aoe2hdbets:challenge-42:one-noshow:v1&cid=challenge-42&eid=match-2026-04-20-00042&side=left&pid=aoe2-user-left&w=1000000&g=500000&t=1500000",
     "matched_expected": true,
     "matched_transfer": {
       "sender": "wolo1leftplayer0000000000000000000000000000",

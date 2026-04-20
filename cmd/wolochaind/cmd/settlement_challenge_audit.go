@@ -332,21 +332,26 @@ func (cfg settlementConfig) auditChallengeFunding(ctx context.Context, record se
 
 	for index, funding := range record.Request.Funding {
 		expected := settlementChallengeFundingExpectation{
-			Sender:          funding.DepositorAddress,
-			SourceApp:       record.Request.SourceApp,
-			ChallengeID:     record.Request.ChallengeID,
-			SourceEventID:   record.Request.SourceEventID,
-			ParticipantSide: funding.ParticipantSide,
-			ParticipantID:   funding.ParticipantID,
+			Sender:           funding.DepositorAddress,
+			SourceApp:        record.Request.SourceApp,
+			SettlementRunID:  funding.SettlementRunID,
+			ChallengeID:      record.Request.ChallengeID,
+			SourceEventID:    record.Request.SourceEventID,
+			ParticipantSide:  funding.ParticipantSide,
+			ParticipantID:    funding.ParticipantID,
+			TotalFundedUWolo: funding.ExpectedAmountUWolo,
+			WagerUWolo:       funding.WagerUWolo,
+			GuaranteeUWolo:   funding.GuaranteeUWolo,
 		}
 		var stored *settlementChallengeFundingResult
 		if index < len(record.Response.Funding) {
 			storedFunding := record.Response.Funding[index]
 			stored = &storedFunding
 			expected.Sender = firstNonEmpty(expected.Sender, storedFunding.Sender)
-			expected.TotalFundedUWolo = storedFunding.TotalFundedUWolo
-			expected.WagerUWolo = storedFunding.WagerUWolo
-			expected.GuaranteeUWolo = storedFunding.GuaranteeUWolo
+			expected.SettlementRunID = firstNonEmpty(expected.SettlementRunID, storedFunding.SettlementRunID)
+			expected.TotalFundedUWolo = firstNonEmpty(expected.TotalFundedUWolo, storedFunding.TotalFundedUWolo)
+			expected.WagerUWolo = firstNonEmpty(expected.WagerUWolo, storedFunding.WagerUWolo)
+			expected.GuaranteeUWolo = firstNonEmpty(expected.GuaranteeUWolo, storedFunding.GuaranteeUWolo)
 		}
 
 		verifyResponse, err := cfg.verifyChallengeFundingDeposit(ctx, funding.FundingTxHash, expected)
@@ -406,6 +411,7 @@ func compareStoredChallengeFunding(stored, verified settlementChallengeFundingRe
 	}{
 		{"funding_tx_hash", stored.FundingTxHash, verified.FundingTxHash},
 		{"source_app", stored.SourceApp, verified.SourceApp},
+		{"settlement_run_id", stored.SettlementRunID, verified.SettlementRunID},
 		{"challenge_id", stored.ChallengeID, verified.ChallengeID},
 		{"source_event_id", stored.SourceEventID, verified.SourceEventID},
 		{"participant_side", stored.ParticipantSide, verified.ParticipantSide},
