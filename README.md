@@ -115,6 +115,7 @@ This repo also exposes CLI settlement commands:
 - `wolochaind settlement challenge execute`
 - `wolochaind settlement challenge inspect`
 - `wolochaind settlement challenge recent`
+- `wolochaind settlement challenge audit`
 - `wolochaind settlement serve`
 
 Settlement execution supports:
@@ -136,6 +137,7 @@ Settlement execution supports:
 - optional escrow-to-payout shortfall top-up via `WOLO_SETTLEMENT_ESCROW_AUTO_TOP_UP_ENABLED`
 - stored challenge settlement inspection by `settlement_run_id`
 - recent challenge settlement summaries via `wolochaind settlement challenge recent --summary-only`
+- read-only challenge reconciliation via `wolochaind settlement challenge audit --settlement-id ...`
 
 Operator helpers in this repo:
 
@@ -144,6 +146,7 @@ Operator helpers in this repo:
 - [`scripts/run-settlement-alert-check.sh`](scripts/run-settlement-alert-check.sh): writes the latest alert JSON to `$HOME/wolochain-settlement-alerts/latest.json` by default and preserves the alert script exit code
 - [`scripts/install-settlement-alert-cron.sh`](scripts/install-settlement-alert-cron.sh): installs an idempotent `crontab` entry for the current user that runs the alert runner every 5 minutes by default
 - [`scripts/verify-live-settlement.sh`](scripts/verify-live-settlement.sh): waits for settlement health after restart, then verifies the live HTTP / CLI surface
+- [`scripts/e2e-local-challenge-settlement.sh`](scripts/e2e-local-challenge-settlement.sh): runs a real local-chain challenge settlement path from escrow funding through audit
 - [`scripts/clean-build-cache.sh`](scripts/clean-build-cache.sh): clears Go build cache, module cache, and temp directories only; it does not touch settlement state
 - [`scripts/backup-live-settlement.sh`](scripts/backup-live-settlement.sh): rollback-oriented backup with source-path and free-space sanity checks
 - [`scripts/restore-live-settlement.sh`](scripts/restore-live-settlement.sh): defaults to a shared-binary rollback that restarts node + settlement; `RESTORE_MODE=settlement-only` is the explicit env/state-only path
@@ -203,6 +206,20 @@ wolo.challenge.funding.v1:source_app=aoe2hdbets&challenge_id=challenge-42&partic
 ```
 
 AoE2HDBets should verify funding with `GET /settlement/v1/challenges/funding/txs/{tx_hash}` or `wolochaind settlement challenge funding verify`, then submit the explicit bucket moves to `POST /settlement/v1/challenges/validate` or `wolochaind settlement challenge validate` before calling `POST /settlement/v1/challenges` or `wolochaind settlement challenge execute`.
+
+After execution, operators can reconcile stored challenge state against chain reality with:
+
+```bash
+wolochaind settlement challenge audit --settlement-id aoe2hdbets:challenge-42:one-noshow:v1
+```
+
+The audit report re-checks escrow funding txs, wager and guarantee bucket totals, treasury routes, payout/refund tx hashes, grouped run state, per-transfer state, and escrow-to-payout top-ups when present.
+
+The machine-readable integration contract lives in [`docs/settlement-contracts`](docs/settlement-contracts):
+
+- [`challenge-settlement-request.schema.json`](docs/settlement-contracts/challenge-settlement-request.schema.json)
+- [`challenge-funding-memo.schema.json`](docs/settlement-contracts/challenge-funding-memo.schema.json)
+- example request payloads for one no-show, double no-show, played match, and canceled/refunded outcomes
 
 ## Grouped Run Flow
 

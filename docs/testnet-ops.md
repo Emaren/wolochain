@@ -689,6 +689,33 @@ Challenge-specific config:
 
 When top-up is enabled, challenge dry-run shows whether the payout signer is short, how much must move from escrow, and whether escrow can cover that shortfall. If top-up is disabled or impossible, dry-run fails early with a specific failure code instead of letting the later payout run die on an underfunded signer.
 
+Challenge reconciliation:
+
+```bash
+wolochaind settlement challenge audit \
+  --settlement-id aoe2hdbets:challenge-42:one-noshow:v1
+```
+
+The audit command is read-only. It reloads stored challenge state, verifies the state fingerprint, re-checks each funding tx against the escrow memo convention, recomputes `wager` and `guarantee` bucket totals, validates treasury routes, compares grouped run and per-transfer state files, and re-queries payout/refund/top-up tx hashes through REST.
+
+For local runtime coverage against a real node:
+
+```bash
+./scripts/reset-and-start-local.sh
+./scripts/e2e-local-challenge-settlement.sh
+```
+
+The E2E script creates disposable local test keys, sends one real escrow funding deposit per player, verifies funding, runs challenge dry-run, executes a one-no-show settlement, inspects stored state, and finishes with the audit command. Artifacts are written under `build/local-settlement-e2e/`.
+
+Machine-readable contracts and examples live under `docs/settlement-contracts/`:
+
+- `challenge-settlement-request.schema.json`
+- `challenge-funding-memo.schema.json`
+- `examples/challenge-one-noshow.json`
+- `examples/challenge-double-noshow.json`
+- `examples/challenge-played-match.json`
+- `examples/challenge-canceled-refund.json`
+
 ## Escrow Recovery Boundary
 
 The escrow helpers stay generic and read-only.

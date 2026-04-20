@@ -1,0 +1,66 @@
+{
+  "$schema": "../challenge-settlement-request.schema.json",
+  "settlement_run_id": "aoe2hdbets:challenge-44:played:v1",
+  "source_app": "aoe2hdbets",
+  "challenge_id": "challenge-44",
+  "source_event_id": "match-2026-04-20-00044",
+  "treasury_address": "wolo1treasury000000000000000000000000000000",
+  "note": "AoE2HDBets decided the match was played and left won",
+  "memo": "challenge-44 played left-wins",
+  "funding": [
+    {
+      "funding_tx_hash": "5555555555555555555555555555555555555555555555555555555555555555",
+      "depositor_address": "wolo1leftplayer0000000000000000000000000000",
+      "participant_side": "left",
+      "participant_id": "aoe2-user-left"
+    },
+    {
+      "funding_tx_hash": "6666666666666666666666666666666666666666666666666666666666666666",
+      "depositor_address": "wolo1rightplayer000000000000000000000000000",
+      "participant_side": "right",
+      "participant_id": "aoe2-user-right"
+    }
+  ],
+  "transfers": [
+    {
+      "request_id": "aoe2hdbets:challenge-44:left-guarantee-return",
+      "participant_side": "left",
+      "participant_id": "aoe2-user-left",
+      "bucket": "guarantee",
+      "reason": "return",
+      "to_address": "wolo1leftplayer0000000000000000000000000000",
+      "amount_uwolo": "500000",
+      "memo": "challenge-44 left guarantee return"
+    },
+    {
+      "request_id": "aoe2hdbets:challenge-44:right-guarantee-return",
+      "participant_side": "right",
+      "participant_id": "aoe2-user-right",
+      "bucket": "guarantee",
+      "reason": "return",
+      "to_address": "wolo1rightplayer000000000000000000000000000",
+      "amount_uwolo": "500000",
+      "memo": "challenge-44 right guarantee return"
+    },
+    {
+      "request_id": "aoe2hdbets:challenge-44:left-wager-payout",
+      "participant_side": "left",
+      "participant_id": "aoe2-user-left",
+      "bucket": "wager",
+      "reason": "payout",
+      "to_address": "wolo1leftplayer0000000000000000000000000000",
+      "amount_uwolo": "1000000",
+      "memo": "challenge-44 left wager payout"
+    },
+    {
+      "request_id": "aoe2hdbets:challenge-44:right-wager-payout",
+      "participant_side": "right",
+      "participant_id": "aoe2-user-right",
+      "bucket": "wager",
+      "reason": "payout",
+      "to_address": "wolo1leftplayer0000000000000000000000000000",
+      "amount_uwolo": "1000000",
+      "memo": "challenge-44 right wager payout"
+    }
+  ]
+}

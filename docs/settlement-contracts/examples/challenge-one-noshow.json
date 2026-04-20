@@ -1,0 +1,66 @@
+{
+  "$schema": "../challenge-settlement-request.schema.json",
+  "settlement_run_id": "aoe2hdbets:challenge-42:one-noshow:v1",
+  "source_app": "aoe2hdbets",
+  "challenge_id": "challenge-42",
+  "source_event_id": "match-2026-04-20-00042",
+  "treasury_address": "wolo1treasury000000000000000000000000000000",
+  "note": "AoE2HDBets decided left checked in and right no-showed",
+  "memo": "challenge-42 one-noshow",
+  "funding": [
+    {
+      "funding_tx_hash": "1111111111111111111111111111111111111111111111111111111111111111",
+      "depositor_address": "wolo1leftplayer0000000000000000000000000000",
+      "participant_side": "left",
+      "participant_id": "aoe2-user-left"
+    },
+    {
+      "funding_tx_hash": "2222222222222222222222222222222222222222222222222222222222222222",
+      "depositor_address": "wolo1rightplayer000000000000000000000000000",
+      "participant_side": "right",
+      "participant_id": "aoe2-user-right"
+    }
+  ],
+  "transfers": [
+    {
+      "request_id": "aoe2hdbets:challenge-42:left-guarantee-return",
+      "participant_side": "left",
+      "participant_id": "aoe2-user-left",
+      "bucket": "guarantee",
+      "reason": "return",
+      "to_address": "wolo1leftplayer0000000000000000000000000000",
+      "amount_uwolo": "500000",
+      "memo": "challenge-42 left guarantee return"
+    },
+    {
+      "request_id": "aoe2hdbets:challenge-42:right-guarantee-forfeit",
+      "participant_side": "right",
+      "participant_id": "aoe2-user-right",
+      "bucket": "guarantee",
+      "reason": "payout",
+      "to_address": "wolo1leftplayer0000000000000000000000000000",
+      "amount_uwolo": "500000",
+      "memo": "challenge-42 right no-show guarantee"
+    },
+    {
+      "request_id": "aoe2hdbets:challenge-42:left-wager-refund",
+      "participant_side": "left",
+      "participant_id": "aoe2-user-left",
+      "bucket": "wager",
+      "reason": "refund",
+      "to_address": "wolo1leftplayer0000000000000000000000000000",
+      "amount_uwolo": "1000000",
+      "memo": "challenge-42 left wager refund"
+    },
+    {
+      "request_id": "aoe2hdbets:challenge-42:right-wager-refund",
+      "participant_side": "right",
+      "participant_id": "aoe2-user-right",
+      "bucket": "wager",
+      "reason": "refund",
+      "to_address": "wolo1rightplayer000000000000000000000000000",
+      "amount_uwolo": "1000000",
+      "memo": "challenge-42 right wager refund"
+    }
+  ]
+}

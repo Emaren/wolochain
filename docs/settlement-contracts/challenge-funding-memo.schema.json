@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wolochain.local/schemas/challenge-funding-memo.schema.json",
+  "title": "WoloChain Challenge Funding Memo Fields",
+  "description": "Structured fields encoded after the wolo.challenge.funding.v1: memo prefix on one escrow funding deposit per participant.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["source_app", "wager_uwolo", "guarantee_uwolo"],
+  "properties": {
+    "source_app": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,63}$"
+    },
+    "challenge_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$"
+    },
+    "source_event_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$"
+    },
+    "participant_side": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 32,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,31}$"
+    },
+    "participant_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$"
+    },
+    "wager_uwolo": {
+      "$ref": "#/$defs/positive_uwolo"
+    },
+    "guarantee_uwolo": {
+      "$ref": "#/$defs/positive_uwolo"
+    },
+    "total_funded_uwolo": {
+      "$ref": "#/$defs/positive_uwolo"
+    }
+  },
+  "anyOf": [
+    { "required": ["challenge_id"] },
+    { "required": ["source_event_id"] }
+  ],
+  "anyOf": [
+    { "required": ["participant_side"] },
+    { "required": ["participant_id"] },
+    { "required": ["participant_side", "participant_id"] }
+  ],
+  "$defs": {
+    "positive_uwolo": {
+      "type": "string",
+      "pattern": "^[1-9][0-9]*$"
+    }
+  }
+}

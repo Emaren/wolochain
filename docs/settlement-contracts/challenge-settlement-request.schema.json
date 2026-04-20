@@ -1,0 +1,162 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wolochain.local/schemas/challenge-settlement-request.schema.json",
+  "title": "WoloChain Challenge Settlement Request",
+  "description": "Explicit bucket-aware challenge settlement payload accepted by WoloChain. Challenge outcome policy is owned by the caller.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["settlement_run_id", "source_app", "funding", "transfers"],
+  "properties": {
+    "settlement_run_id": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 96,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{2,95}$"
+    },
+    "source_app": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,63}$"
+    },
+    "challenge_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$"
+    },
+    "source_event_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$"
+    },
+    "treasury_address": {
+      "$ref": "#/$defs/wolo_address"
+    },
+    "note": {
+      "type": "string",
+      "maxLength": 280
+    },
+    "memo": {
+      "type": "string",
+      "maxLength": 180
+    },
+    "funding": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/funding"
+      }
+    },
+    "transfers": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/transfer"
+      }
+    }
+  },
+  "anyOf": [
+    { "required": ["challenge_id"] },
+    { "required": ["source_event_id"] }
+  ],
+  "$defs": {
+    "funding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["funding_tx_hash"],
+      "properties": {
+        "funding_tx_hash": {
+          "type": "string",
+          "pattern": "^[A-Fa-f0-9]{64}$"
+        },
+        "depositor_address": {
+          "$ref": "#/$defs/wolo_address"
+        },
+        "participant_side": {
+          "$ref": "#/$defs/participant_side"
+        },
+        "participant_id": {
+          "$ref": "#/$defs/metadata_id"
+        }
+      },
+      "anyOf": [
+        { "required": ["participant_side"] },
+        { "required": ["participant_id"] }
+      ]
+    },
+    "transfer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["bucket", "reason"],
+      "properties": {
+        "request_id": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{2,127}$"
+        },
+        "participant_side": {
+          "$ref": "#/$defs/participant_side"
+        },
+        "participant_id": {
+          "$ref": "#/$defs/metadata_id"
+        },
+        "bucket": {
+          "type": "string",
+          "enum": ["wager", "guarantee"]
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32,
+          "pattern": "^[a-z][a-z0-9_-]{0,31}$",
+          "examples": ["refund", "return", "payout", "treasury"]
+        },
+        "to_address": {
+          "$ref": "#/$defs/wolo_address"
+        },
+        "amount_uwolo": {
+          "$ref": "#/$defs/positive_uwolo"
+        },
+        "amount_wolo": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "memo": {
+          "type": "string",
+          "maxLength": 180
+        }
+      },
+      "anyOf": [
+        { "required": ["participant_side"] },
+        { "required": ["participant_id"] }
+      ],
+      "oneOf": [
+        { "required": ["amount_uwolo"], "not": { "required": ["amount_wolo"] } },
+        { "required": ["amount_wolo"], "not": { "required": ["amount_uwolo"] } }
+      ]
+    },
+    "metadata_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$"
+    },
+    "participant_side": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 32,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,31}$"
+    },
+    "positive_uwolo": {
+      "type": "string",
+      "pattern": "^[1-9][0-9]*$"
+    },
+    "wolo_address": {
+      "type": "string",
+      "pattern": "^wolo1[0-9a-z]{8,}$"
+    }
+  }
+}

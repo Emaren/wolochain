@@ -371,6 +371,7 @@ func newSettlementChallengeCmd() *cobra.Command {
 		newSettlementChallengeExecuteCmd(),
 		newSettlementChallengeInspectCmd(),
 		newSettlementChallengeRecentCmd(),
+		newSettlementChallengeAuditCmd(),
 	)
 
 	return cmd

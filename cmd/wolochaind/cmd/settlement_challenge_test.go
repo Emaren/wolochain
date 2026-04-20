@@ -467,6 +467,34 @@ func TestExecuteSettlementChallengeOneNoShowIdempotent(t *testing.T) {
 	if !replayed.OK || !replayed.IdempotentReplay || replayed.Status != "confirmed" {
 		t.Fatalf("expected idempotent replay, got %+v", replayed)
 	}
+
+	audit, err := cfg.auditSettlementChallenge(t.Context(), "challenge-noshow-run")
+	if err != nil {
+		t.Fatalf("audit challenge settlement: %v", err)
+	}
+	if !audit.OK {
+		t.Fatalf("expected successful challenge audit, got %+v", audit)
+	}
+	if audit.Summary.WagerFundedUWolo != "200" || audit.Summary.GuaranteeFundedUWolo != "130" || audit.Summary.TransferTxCheckedCount != 4 {
+		t.Fatalf("unexpected challenge audit summary: %+v", audit.Summary)
+	}
+
+	recordPath := cfg.challengeRecordPath("challenge-noshow-run")
+	stored, err := readSettlementChallengeStoredResult(recordPath)
+	if err != nil {
+		t.Fatalf("read stored challenge settlement: %v", err)
+	}
+	stored.Response.RequestedTotalUWolo = "999"
+	if err := writeSettlementChallengeStoredResult(recordPath, stored); err != nil {
+		t.Fatalf("write tampered challenge settlement: %v", err)
+	}
+	tamperedAudit, err := cfg.auditSettlementChallenge(t.Context(), "challenge-noshow-run")
+	if err != nil {
+		t.Fatalf("audit tampered challenge settlement: %v", err)
+	}
+	if tamperedAudit.OK || tamperedAudit.FailureCode != "REQUESTED_TOTAL_MISMATCH" {
+		t.Fatalf("expected requested total mismatch audit failure, got %+v", tamperedAudit)
+	}
 }
 
 func newTestChallengeSettlementConfig(t *testing.T, payoutAddress string, escrowAddress string, treasuryAddress string, balances map[string]string, txs map[string]mockSettlementTx, recipientTxHashes map[string]string) settlementConfig {
