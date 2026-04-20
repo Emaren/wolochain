@@ -33,9 +33,16 @@ require_fixed() {
   local needle="$1"
   local path="$2"
   local label="$3"
-  if ! rg -q --fixed-strings "$needle" "$path"; then
-    fail "$label"
+
+  if command -v rg >/dev/null 2>&1; then
+    if rg -q --fixed-strings "$needle" "$path"; then
+      return
+    fi
+  elif grep -Fq -- "$needle" "$path"; then
+    return
   fi
+
+  fail "$label"
 }
 
 scan_repo_pattern() {
@@ -43,7 +50,11 @@ scan_repo_pattern() {
   local label="$2"
   local hits
 
-  hits="$(rg -n -e "$pattern" "${TRACKED_FILES[@]}" || true)"
+  if command -v rg >/dev/null 2>&1; then
+    hits="$(rg -n -e "$pattern" "${TRACKED_FILES[@]}" || true)"
+  else
+    hits="$(grep -nE -- "$pattern" "${TRACKED_FILES[@]}" || true)"
+  fi
   if [[ -n "$hits" ]]; then
     printf '%s\n' "$hits"
     fail "$label"
@@ -52,7 +63,6 @@ scan_repo_pattern() {
 
 require_cmd git
 require_cmd python3
-require_cmd rg
 
 mapfile -t TRACKED_FILES < <(git ls-files -- README.md config.yml go.mod app cmd docs proto scripts)
 if (( ${#TRACKED_FILES[@]} == 0 )); then
@@ -71,7 +81,7 @@ echo "=== repo drift scan ==="
 scan_repo_pattern 'wolo-1|wolo-testnet-1' 'Legacy chain IDs are still present in tracked repo files.'
 scan_repo_pattern '\butoken\b|\bustake\b' 'Legacy scaffold denoms are still present in tracked repo files.'
 scan_repo_pattern 'tokenchain' 'Legacy scaffold chain naming is still present in tracked repo files.'
-scan_repo_pattern '\bcosmos(?:valoper|valcons)?1[0-9a-z]{10,}\b' 'Legacy cosmos bech32 addresses are still present in tracked repo files.'
+scan_repo_pattern '\bcosmos(valoper|valcons)?1[0-9a-z]{10,}\b' 'Legacy cosmos bech32 addresses are still present in tracked repo files.'
 scan_repo_pattern 'default_denom:[[:space:]]*stake' 'config-level stake defaults are still present in tracked repo files.'
 scan_repo_pattern 'bond_denom[^[:alnum:]]*stake|mint_denom[^[:alnum:]]*stake' 'Genesis or app denom defaults still drift to stake in tracked repo files.'
 
