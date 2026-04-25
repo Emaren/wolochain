@@ -1905,7 +1905,53 @@ func (cfg settlementConfig) executeSettlementRun(ctx context.Context, request se
 
 		response := validation
 		response.DryRun = false
-		if !validation.OK {
+		if !response.OK && shouldAttemptSettlementRunEscrowTopUp(response.FailureCode) && cfg.EscrowAutoTopUp {
+			topUpResponse, topUpErr := cfg.topUpPayoutSignerForSettlementRun(ctx, runID, response)
+			if topUpErr != nil {
+				return settlementRunResponse{}, topUpErr
+			}
+
+			if !topUpResponse.OK {
+				response.OK = false
+				response.Status = "failed"
+				response.FailureCode = topUpResponse.FailureCode
+				response.Retryable = topUpResponse.Retryable
+				response.Detail = "escrow auto-top-up failed: " + strings.TrimSpace(topUpResponse.Detail)
+				response.Warnings = append(response.Warnings, "escrow auto-top-up attempted before grouped payout execution")
+				response.Payouts = markRunReadyPayoutsRefused(response.Payouts, response.FailureCode, response.Detail, response.Retryable)
+				response = finalizeSettlementRunResponse(response)
+
+				if err := writeSettlementRunStoredResult(recordPath, settlementRunStoredResult{
+					Request:     normalized,
+					Fingerprint: fingerprint,
+					Response:    response,
+					UpdatedAt:   time.Now().UTC(),
+				}); err != nil {
+					return settlementRunResponse{}, err
+				}
+				return response, nil
+			}
+
+			topUpWarning := fmt.Sprintf(
+				"escrow auto-top-up confirmed %s uwolo (%s wolo) into payout signer",
+				topUpResponse.AmountUWolo,
+				topUpResponse.AmountWolo,
+			)
+			if topUpResponse.TxHash != "" {
+				topUpWarning = fmt.Sprintf("%s · tx %s", topUpWarning, topUpResponse.TxHash)
+			}
+
+			rebuiltNormalized, rebuiltResponse, rebuildErr := cfg.buildSettlementRunPlan(ctx, request)
+			if rebuildErr != nil {
+				return settlementRunResponse{}, rebuildErr
+			}
+			normalized = rebuiltNormalized
+			response = rebuiltResponse
+			response.DryRun = false
+			response.Warnings = append(response.Warnings, topUpWarning)
+		}
+
+		if !response.OK {
 			if err := writeSettlementRunStoredResult(recordPath, settlementRunStoredResult{
 				Request:     normalized,
 				Fingerprint: fingerprint,
@@ -2089,6 +2135,164 @@ func (cfg settlementConfig) buildSettlementRunPlan(ctx context.Context, request 
 	response.Status = "validated"
 	response.Detail = "settlement run validated"
 	return normalized, finalizeSettlementRunResponse(response), nil
+}
+
+func settlementRunTopUpRequestID(runID string) string {
+	normalized := strings.Map(func(r rune) rune {
+		if (r >= 'a' && r <= 'z') ||
+			(r >= 'A' && r <= 'Z') ||
+			(r >= '0' && r <= '9') ||
+			r == '.' || r == '_' || r == ':' || r == '-' {
+			return r
+		}
+		return '-'
+	}, strings.TrimSpace(runID))
+
+	normalized = strings.Trim(normalized, ".:-_")
+	if normalized == "" {
+		normalized = "run"
+	}
+
+	requestID := "escrow-top-up-" + normalized
+	if len(requestID) > 127 {
+		requestID = requestID[:127]
+	}
+	return requestID
+}
+
+func shouldAttemptSettlementRunEscrowTopUp(failureCode string) bool {
+	switch strings.TrimSpace(failureCode) {
+	case "PAYOUT_BALANCE_TOO_LOW", "PAYOUT_RESERVE_FLOOR_HIT", "PAYOUT_FEE_HEADROOM_TOO_LOW":
+		return true
+	default:
+		return false
+	}
+}
+
+func (cfg settlementConfig) topUpPayoutSignerForSettlementRun(ctx context.Context, runID string, response settlementRunResponse) (settlementExecuteResponse, error) {
+	baseFailure := settlementExecuteResponse{
+		OK:          false,
+		Status:      "failed",
+		Retryable:   true,
+		RequestID:   settlementRunTopUpRequestID(runID),
+		ChainID:     cfg.ChainID,
+		SignerRole:  "escrow",
+		ToAddress:   strings.TrimSpace(cfg.PayoutAddress),
+		AmountUWolo: "0",
+		AmountWolo:  formatDisplayAmount("0"),
+	}
+
+	if !cfg.EscrowAutoTopUp {
+		baseFailure.FailureCode = "ESCROW_TOP_UP_DISABLED"
+		baseFailure.Retryable = false
+		baseFailure.Detail = "WOLO_SETTLEMENT_ESCROW_AUTO_TOP_UP_ENABLED is not enabled"
+		return baseFailure, nil
+	}
+
+	health := cfg.buildHealthReport(ctx)
+	if !health.OK && !shouldAttemptSettlementRunEscrowTopUp(health.FailureCode) {
+		baseFailure.FailureCode = health.FailureCode
+		baseFailure.Retryable = health.FailureCode == "RPC_UNREACHABLE"
+		baseFailure.Detail = health.Detail
+		return baseFailure, nil
+	}
+
+	payoutAddress := strings.TrimSpace(health.PayoutAddress)
+	if payoutAddress == "" {
+		payoutAddress = strings.TrimSpace(cfg.PayoutAddress)
+	}
+	if payoutAddress == "" {
+		baseFailure.FailureCode = "PAYOUT_SIGNER_UNAVAILABLE"
+		baseFailure.Retryable = false
+		baseFailure.Detail = "payout signer address is unavailable for escrow top-up"
+		return baseFailure, nil
+	}
+	baseFailure.ToAddress = payoutAddress
+
+	requested, err := parseOptionalUWoloString(response.RequestedTotalUWolo)
+	if err != nil {
+		baseFailure.FailureCode = "INVALID_RUN"
+		baseFailure.Retryable = false
+		baseFailure.Detail = "requested_total_uwolo could not be parsed for escrow top-up"
+		return baseFailure, nil
+	}
+
+	balanceBefore, err := parseOptionalUWoloString(health.PayoutBalanceUWolo)
+	if err != nil {
+		baseFailure.FailureCode = "PAYOUT_BALANCE_LOOKUP_FAILED"
+		baseFailure.Retryable = true
+		baseFailure.Detail = "payout signer balance could not be parsed for escrow top-up"
+		return baseFailure, nil
+	}
+
+	requiredBalance := requested
+	reserveFloor := cfg.FeeHeadroomUWolo
+	if cfg.MinPayoutBalanceUWolo > reserveFloor {
+		reserveFloor = cfg.MinPayoutBalanceUWolo
+	}
+	if reserveFloor > 0 {
+		if requiredBalance > ^uint64(0)-reserveFloor {
+			baseFailure.FailureCode = "INVALID_RUN"
+			baseFailure.Retryable = false
+			baseFailure.Detail = "escrow top-up required balance overflowed uint64"
+			return baseFailure, nil
+		}
+		requiredBalance += reserveFloor
+	}
+
+	if response.EstimatedFeeTotalUWolo != "" {
+		if estimatedFee, feeErr := parseOptionalUWoloString(response.EstimatedFeeTotalUWolo); feeErr == nil && estimatedFee > 0 {
+			if requiredBalance > ^uint64(0)-estimatedFee {
+				baseFailure.FailureCode = "INVALID_RUN"
+				baseFailure.Retryable = false
+				baseFailure.Detail = "escrow top-up estimated fee overflowed uint64"
+				return baseFailure, nil
+			}
+			requiredBalance += estimatedFee
+		}
+	}
+
+	// Grouped settlement runs can execute multiple transfers after the escrow
+	// top-up. If fee estimation is unavailable, topping up to the exact reserve
+	// floor can still leave the final small payout short by dust/fee headroom.
+	// One WOLO is intentionally conservative and prevents operator retries for
+	// tiny reserve-floor misses.
+	const settlementRunTopUpSafetyBufferUWolo uint64 = 1_000_000
+	if requiredBalance > ^uint64(0)-settlementRunTopUpSafetyBufferUWolo {
+		baseFailure.FailureCode = "INVALID_RUN"
+		baseFailure.Retryable = false
+		baseFailure.Detail = "escrow top-up safety buffer overflowed uint64"
+		return baseFailure, nil
+	}
+	requiredBalance += settlementRunTopUpSafetyBufferUWolo
+
+	if balanceBefore >= requiredBalance {
+		return settlementExecuteResponse{
+			OK:            true,
+			Status:        "confirmed",
+			RequestID:     settlementRunTopUpRequestID(runID),
+			ChainID:       cfg.ChainID,
+			SignerRole:    "escrow",
+			ToAddress:     payoutAddress,
+			AmountUWolo:   "0",
+			AmountWolo:    formatDisplayAmount("0"),
+			Detail:        "payout signer already has enough balance after recalculation",
+			BroadcastMode: cfg.BroadcastMode,
+		}, nil
+	}
+
+	shortfall := requiredBalance - balanceBefore
+	topUpMemo := fmt.Sprintf("settlement run top-up %s", strings.TrimSpace(runID))
+	if len(topUpMemo) > 180 {
+		topUpMemo = topUpMemo[:180]
+	}
+
+	return cfg.executeEscrowTransfer(ctx, settlementExecuteRequest{
+		RequestID:   settlementRunTopUpRequestID(runID),
+		ToAddress:   payoutAddress,
+		AmountUWolo: strconv.FormatUint(shortfall, 10),
+		Memo:        topUpMemo,
+	})
 }
 
 func (cfg settlementConfig) preflightExecution(ctx context.Context, requestAmountUWolo string) (string, *settlementExecuteResponse) {
