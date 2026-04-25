@@ -1938,7 +1938,7 @@ func (cfg settlementConfig) executeEscrowTransfer(ctx context.Context, request s
 
 func (cfg settlementConfig) preflightEscrowTransfer(ctx context.Context, requestAmountUWolo string) (string, *settlementExecuteResponse) {
 	health := cfg.buildHealthReport(ctx)
-	if !health.OK {
+	if !health.OK && !shouldAttemptSettlementRunEscrowTopUp(health.FailureCode) {
 		return "", &settlementExecuteResponse{
 			OK:          false,
 			Status:      "failed",
