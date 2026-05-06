@@ -156,7 +156,7 @@ Operator helpers in this repo:
 WoloChain only owns the settlement rail:
 
 - validate payout recipients and amounts
-- execute payout sends from the configured payout signer
+- execute sends from the configured payout signer by default, or from the configured escrow signer when a grouped run explicitly sets `signer_role=escrow`
 - store idempotent request and run state
 - expose proof links and operator inspection surfaces
 
@@ -173,6 +173,7 @@ Grouped settlement runs are intentionally generic. The caller can attach generic
 - `settlement_run_id`
 - `note`
 - `memo`
+- `signer_role` (`payout` by default; `escrow` only when the caller intentionally wants the escrow signer)
 
 WoloChain does not infer meaning from those fields beyond validation, recording, and operator inspection.
 
@@ -231,7 +232,7 @@ The machine-readable integration contract lives in [`docs/settlement-contracts`]
 For one logical result with many payouts, the preferred flow is:
 
 1. Caller computes recipients and amounts outside WoloChain.
-2. Caller sends the grouped payload to `POST /settlement/v1/runs/validate` or `wolochaind settlement run validate`.
+2. Caller sends the grouped payload to `POST /settlement/v1/runs/validate` or `wolochaind settlement run validate`; escrow-signed runs must include `signer_role=escrow`.
 3. Operator confirms totals, reserve-floor impact, fee headroom impact, and any line-item warnings.
 4. Caller submits the same payload to `POST /settlement/v1/runs` or `wolochaind settlement run execute`.
 5. Operator inspects the run with `wolochaind settlement run inspect --run-id ...`.

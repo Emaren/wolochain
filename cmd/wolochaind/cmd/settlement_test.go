@@ -827,6 +827,108 @@ func TestValidateSettlementRunCapacityBoundariesAndPrecedence(t *testing.T) {
 	}
 }
 
+func TestValidateEscrowSettlementRunUsesEscrowBalance(t *testing.T) {
+	t.Parallel()
+
+	const (
+		payoutAddress    = "wolo1payoutaddress000000000000000000000000000"
+		escrowAddress    = "wolo1escrow000000000000000000000000000000000"
+		recipientAddress = "wolo1recipienta000000000000000000000000000000"
+	)
+
+	cfg := newTestChallengeSettlementConfig(t, payoutAddress, escrowAddress, "", map[string]string{
+		payoutAddress: "10",
+		escrowAddress: "5000",
+	}, nil, nil)
+	cfg.MinPayoutBalanceUWolo = 1000
+	cfg.FeeHeadroomUWolo = 1000
+
+	response, err := cfg.validateSettlementRun(t.Context(), settlementRunRequest{
+		SettlementRunID: "run-escrow-validate",
+		SignerRole:      settlementEscrowSignerRole,
+		Payouts: []settlementRunPayoutInput{
+			{ToAddress: recipientAddress, AmountUWolo: "3000"},
+		},
+	})
+	if err != nil {
+		t.Fatalf("validate escrow settlement run: %v", err)
+	}
+
+	if !response.OK || response.Status != "validated" || response.FailureCode != "" {
+		t.Fatalf("expected escrow run validation to pass despite low payout signer balance, got %+v", response)
+	}
+	if response.SignerRole != settlementEscrowSignerRole || response.SignerAddress != escrowAddress {
+		t.Fatalf("unexpected escrow signer fields: %+v", response)
+	}
+	if response.SignerBalanceBeforeUWolo != "5000" || response.ProjectedRemainingUWolo != "2000" {
+		t.Fatalf("expected escrow balance/projected fields, got %+v", response)
+	}
+	if response.PayoutBalanceBeforeUWolo != "" {
+		t.Fatalf("escrow run should not report payout signer balance as the source balance: %+v", response)
+	}
+	if len(response.Payouts) != 1 || response.Payouts[0].SignerRole != settlementEscrowSignerRole || response.Payouts[0].SignerAddress != escrowAddress {
+		t.Fatalf("unexpected escrow payout signer fields: %+v", response.Payouts)
+	}
+}
+
+func TestExecuteEscrowSettlementRunUsesEscrowSigner(t *testing.T) {
+	t.Parallel()
+
+	const (
+		payoutAddress    = "wolo1payoutaddress000000000000000000000000000"
+		escrowAddress    = "wolo1escrow000000000000000000000000000000000"
+		recipientAddress = "wolo1recipienta000000000000000000000000000000"
+	)
+
+	txHash := strings.Repeat("E", 64)
+	cfg := newTestChallengeSettlementConfig(t, payoutAddress, escrowAddress, "", map[string]string{
+		payoutAddress: "10",
+		escrowAddress: "5000",
+	}, map[string]mockSettlementTx{
+		txHash: {
+			Hash:        txHash,
+			Sender:      escrowAddress,
+			Recipient:   recipientAddress,
+			AmountUWolo: "300",
+			Memo:        "escrow memo",
+			Timestamp:   "2026-04-08T00:00:03Z",
+		},
+	}, map[string]string{
+		"escrow|" + recipientAddress + "|300uwolo|escrow memo": txHash,
+	})
+
+	response, err := cfg.executeSettlementRun(t.Context(), settlementRunRequest{
+		SettlementRunID: "run-escrow-confirmed",
+		SignerRole:      settlementEscrowSignerRole,
+		Memo:            "escrow memo",
+		Payouts: []settlementRunPayoutInput{
+			{ToAddress: recipientAddress, AmountUWolo: "300"},
+		},
+	})
+	if err != nil {
+		t.Fatalf("execute escrow settlement run: %v", err)
+	}
+
+	if !response.OK || response.Status != "confirmed" || response.ConfirmedPayoutCount != 1 {
+		t.Fatalf("unexpected escrow run execution response: %+v", response)
+	}
+	if len(response.Payouts) != 1 || response.Payouts[0].SignerRole != settlementEscrowSignerRole || response.Payouts[0].SignerAddress != escrowAddress || response.Payouts[0].TxHash != txHash {
+		t.Fatalf("unexpected escrow payout result: %+v", response.Payouts)
+	}
+
+	record, err := readSettlementRunStoredResult(cfg.runRecordPath("run-escrow-confirmed"))
+	if err != nil {
+		t.Fatalf("read stored escrow run record: %v", err)
+	}
+	if record.Request.SignerRole != settlementEscrowSignerRole {
+		t.Fatalf("expected stored run request to retain escrow signer role, got %+v", record.Request)
+	}
+	summary := summarizeSettlementRunStoredResult(record)
+	if summary.SignerRole != settlementEscrowSignerRole || summary.SignerAddress != escrowAddress {
+		t.Fatalf("unexpected escrow run summary signer fields: %+v", summary)
+	}
+}
+
 func TestSettlementHTTPRunAuthBehavior(t *testing.T) {
 	t.Parallel()
 

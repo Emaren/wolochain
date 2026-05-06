@@ -694,8 +694,8 @@ WoloChain owns:
 
 - validating addresses and amounts
 - deriving stable per-line request ids when omitted
-- checking payout balance, reserve floor, and fee headroom
-- executing sends from the payout signer
+- checking the selected signer balance; payout runs also enforce reserve floor and fee headroom
+- executing sends from the payout signer by default, or from escrow when the grouped run explicitly sets `signer_role=escrow`
 - storing run state and per-request state
 - exposing proof links and operator inspection surfaces
 

@@ -1869,6 +1869,7 @@ func (cfg settlementConfig) executeEscrowTransfer(ctx context.Context, request s
 			SignerRole:  "escrow",
 		}, nil
 	}
+	normalized.SignerRole = settlementEscrowSignerRole
 
 	recordPath := cfg.requestRecordPath(normalized.RequestID)
 	return cfg.withRequestLock(normalized.RequestID, func() (settlementExecuteResponse, error) {
@@ -1937,92 +1938,126 @@ func (cfg settlementConfig) executeEscrowTransfer(ctx context.Context, request s
 }
 
 func (cfg settlementConfig) preflightEscrowTransfer(ctx context.Context, requestAmountUWolo string) (string, *settlementExecuteResponse) {
-	health := cfg.buildHealthReport(ctx)
-	if !health.OK && !shouldAttemptSettlementRunEscrowTopUp(health.FailureCode) {
-		return "", &settlementExecuteResponse{
+	signerAddress, _, failure := cfg.preflightEscrowSigner(ctx, requestAmountUWolo)
+	return signerAddress, failure
+}
+
+func (cfg settlementConfig) preflightEscrowSigner(ctx context.Context, requestAmountUWolo string) (string, uint64, *settlementExecuteResponse) {
+	runtimeCtx := ctx
+	cancel := func() {}
+	if cfg.HealthTimeout > 0 {
+		runtimeCtx, cancel = context.WithTimeout(ctx, cfg.HealthTimeout)
+	}
+	defer cancel()
+
+	runtimeChainID, err := cfg.fetchRuntimeChainID(runtimeCtx)
+	if err != nil {
+		return "", 0, &settlementExecuteResponse{
 			OK:          false,
 			Status:      "failed",
-			FailureCode: health.FailureCode,
-			Retryable:   health.FailureCode == "RPC_UNREACHABLE",
+			FailureCode: "RPC_UNREACHABLE",
+			Retryable:   true,
 			ChainID:     cfg.ChainID,
-			SignerRole:  "escrow",
-			Detail:      health.Detail,
+			SignerRole:  settlementEscrowSignerRole,
+			Detail:      err.Error(),
+		}
+	}
+	if runtimeChainID != cfg.ChainID {
+		return "", 0, &settlementExecuteResponse{
+			OK:          false,
+			Status:      "failed",
+			FailureCode: "CHAIN_ID_MISMATCH",
+			Retryable:   false,
+			ChainID:     cfg.ChainID,
+			SignerRole:  settlementEscrowSignerRole,
+			Detail:      fmt.Sprintf("rpc reported %s, expected %s", runtimeChainID, cfg.ChainID),
+		}
+	}
+	if err := cfg.validateRESTInvariants(runtimeCtx); err != nil {
+		return "", 0, &settlementExecuteResponse{
+			OK:          false,
+			Status:      "failed",
+			FailureCode: "REST_DRIFT",
+			Retryable:   false,
+			ChainID:     cfg.ChainID,
+			SignerRole:  settlementEscrowSignerRole,
+			Detail:      err.Error(),
 		}
 	}
 	if cfg.EscrowKeyName == "" {
-		return "", &settlementExecuteResponse{
+		return "", 0, &settlementExecuteResponse{
 			OK:          false,
 			Status:      "failed",
 			FailureCode: "ESCROW_SIGNER_UNCONFIGURED",
 			Retryable:   false,
 			ChainID:     cfg.ChainID,
-			SignerRole:  "escrow",
+			SignerRole:  settlementEscrowSignerRole,
 			Detail:      "WOLO_SETTLEMENT_ESCROW_KEY_NAME is required for escrow transfers",
 		}
 	}
 
-	signerAddress, err := cfg.resolveEscrowAddress(ctx)
+	signerAddress, err := cfg.resolveEscrowAddress(runtimeCtx)
 	if err != nil {
 		failureCode := "ESCROW_SIGNER_UNAVAILABLE"
 		if strings.Contains(strings.ToLower(err.Error()), "expected") {
 			failureCode = "ESCROW_ADDRESS_MISMATCH"
 		}
-		return "", &settlementExecuteResponse{
+		return "", 0, &settlementExecuteResponse{
 			OK:          false,
 			Status:      "failed",
 			FailureCode: failureCode,
 			Retryable:   false,
 			ChainID:     cfg.ChainID,
-			SignerRole:  "escrow",
+			SignerRole:  settlementEscrowSignerRole,
 			Detail:      err.Error(),
 		}
 	}
 	requestAmount, err := strconv.ParseUint(strings.TrimSpace(requestAmountUWolo), 10, 64)
 	if err != nil {
-		return signerAddress, &settlementExecuteResponse{
+		return signerAddress, 0, &settlementExecuteResponse{
 			OK:            false,
 			Status:        "failed",
 			FailureCode:   "INVALID_REQUEST",
 			Retryable:     false,
 			ChainID:       cfg.ChainID,
-			SignerRole:    "escrow",
+			SignerRole:    settlementEscrowSignerRole,
 			SignerAddress: signerAddress,
 			Detail:        "amount_uwolo must be a positive integer",
 		}
 	}
-	balanceAmount, err := cfg.fetchAccountBalanceUWolo(ctx, signerAddress)
+	balanceAmount, err := cfg.fetchAccountBalanceUWolo(runtimeCtx, signerAddress)
 	if err != nil {
-		return signerAddress, &settlementExecuteResponse{
+		return signerAddress, 0, &settlementExecuteResponse{
 			OK:            false,
 			Status:        "failed",
 			FailureCode:   "ESCROW_BALANCE_LOOKUP_FAILED",
 			Retryable:     true,
 			ChainID:       cfg.ChainID,
-			SignerRole:    "escrow",
+			SignerRole:    settlementEscrowSignerRole,
 			SignerAddress: signerAddress,
 			Detail:        err.Error(),
 		}
 	}
 	if balanceAmount < requestAmount {
-		return signerAddress, &settlementExecuteResponse{
+		return signerAddress, balanceAmount, &settlementExecuteResponse{
 			OK:            false,
 			Status:        "failed",
 			FailureCode:   "ESCROW_BALANCE_TOO_LOW",
 			Retryable:     true,
 			ChainID:       cfg.ChainID,
-			SignerRole:    "escrow",
+			SignerRole:    settlementEscrowSignerRole,
 			SignerAddress: signerAddress,
 			Detail: fmt.Sprintf(
-				"escrow signer balance %s uwolo (%s wolo) is below requested transfer %s uwolo (%s wolo)",
-				strconv.FormatUint(balanceAmount, 10),
-				formatDisplayAmount(strconv.FormatUint(balanceAmount, 10)),
+				"run requests %s uwolo (%s wolo) but escrow signer balance is %s uwolo (%s wolo)",
 				strconv.FormatUint(requestAmount, 10),
 				formatDisplayAmount(strconv.FormatUint(requestAmount, 10)),
+				strconv.FormatUint(balanceAmount, 10),
+				formatDisplayAmount(strconv.FormatUint(balanceAmount, 10)),
 			),
 		}
 	}
 
-	return signerAddress, nil
+	return signerAddress, balanceAmount, nil
 }
 
 func (cfg settlementConfig) broadcastEscrowTransfer(ctx context.Context, request normalizedSettlementRequest, signerAddress string) settlementExecuteResponse {

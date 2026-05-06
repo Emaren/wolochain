@@ -37,6 +37,7 @@ const (
 	settlementDefaultREST           = "http://127.0.0.1:1317"
 	settlementDefaultListenAddr     = "127.0.0.1:8091"
 	settlementSignerRole            = "payout"
+	settlementEscrowSignerRole      = "escrow"
 	settlementMaxRunPayouts         = 250
 )
 
@@ -118,6 +119,7 @@ type normalizedSettlementRequest struct {
 	ToAddress   string `json:"to_address"`
 	AmountUWolo string `json:"amount_uwolo"`
 	Memo        string `json:"memo,omitempty"`
+	SignerRole  string `json:"signer_role,omitempty"`
 }
 
 type settlementExecuteResponse struct {
@@ -151,6 +153,7 @@ type settlementRunRequest struct {
 	SourceEventID   string                     `json:"source_event_id,omitempty"`
 	Note            string                     `json:"note,omitempty"`
 	Memo            string                     `json:"memo,omitempty"`
+	SignerRole      string                     `json:"signer_role,omitempty"`
 	Payouts         []settlementRunPayoutInput `json:"payouts"`
 }
 
@@ -168,6 +171,7 @@ type normalizedSettlementRunRequest struct {
 	SourceEventID   string                       `json:"source_event_id,omitempty"`
 	Note            string                       `json:"note,omitempty"`
 	Memo            string                       `json:"memo,omitempty"`
+	SignerRole      string                       `json:"signer_role,omitempty"`
 	Payouts         []normalizedSettlementPayout `json:"payouts"`
 }
 
@@ -225,6 +229,10 @@ type settlementRunResponse struct {
 	ReplayPayoutCount        int                         `json:"replay_payout_count"`
 	RequestedTotalUWolo      string                      `json:"requested_total_uwolo,omitempty"`
 	RequestedTotalWolo       string                      `json:"requested_total_wolo,omitempty"`
+	SignerRole               string                      `json:"signer_role,omitempty"`
+	SignerAddress            string                      `json:"signer_address,omitempty"`
+	SignerBalanceBeforeUWolo string                      `json:"signer_balance_before_uwolo,omitempty"`
+	SignerBalanceBeforeWolo  string                      `json:"signer_balance_before_wolo,omitempty"`
 	ExecutedTotalUWolo       string                      `json:"executed_total_uwolo,omitempty"`
 	ExecutedTotalWolo        string                      `json:"executed_total_wolo,omitempty"`
 	ConfirmedTotalUWolo      string                      `json:"confirmed_total_uwolo,omitempty"`
@@ -1755,6 +1763,7 @@ func (cfg settlementConfig) executeSettlement(ctx context.Context, request settl
 			SignerRole:  settlementSignerRole,
 		}, nil
 	}
+	normalized.SignerRole = settlementSignerRole
 
 	recordPath := cfg.requestRecordPath(normalized.RequestID)
 
@@ -1877,7 +1886,9 @@ func (cfg settlementConfig) executeSettlementRun(ctx context.Context, request se
 					SourceEventID:   validation.SourceEventID,
 					Note:            validation.Note,
 					Memo:            validation.Memo,
-					Detail:          "settlement_run_id already exists with different payout payload",
+					SignerRole:      validation.SignerRole,
+					SignerAddress:   validation.SignerAddress,
+					Detail:          "settlement_run_id already exists with different settlement payload",
 				}, nil
 			}
 
@@ -1899,13 +1910,15 @@ func (cfg settlementConfig) executeSettlementRun(ctx context.Context, request se
 				SourceEventID:   validation.SourceEventID,
 				Note:            validation.Note,
 				Memo:            validation.Memo,
+				SignerRole:      validation.SignerRole,
+				SignerAddress:   validation.SignerAddress,
 				Detail:          fmt.Sprintf("could not read settlement run state file: %v", readErr),
 			}, nil
 		}
 
 		response := validation
 		response.DryRun = false
-		if !response.OK && shouldAttemptSettlementRunEscrowTopUp(response.FailureCode) && cfg.EscrowAutoTopUp {
+		if normalized.SignerRole == settlementSignerRole && !response.OK && shouldAttemptSettlementRunEscrowTopUp(response.FailureCode) && cfg.EscrowAutoTopUp {
 			topUpResponse, topUpErr := cfg.topUpPayoutSignerForSettlementRun(ctx, runID, response)
 			if topUpErr != nil {
 				return settlementRunResponse{}, topUpErr
@@ -1965,12 +1978,19 @@ func (cfg settlementConfig) executeSettlementRun(ctx context.Context, request se
 
 		itemResults := make([]settlementRunPayoutResult, 0, len(normalized.Payouts))
 		for _, payout := range normalized.Payouts {
-			itemResponse, err := cfg.executeSettlement(ctx, settlementExecuteRequest{
+			itemRequest := settlementExecuteRequest{
 				RequestID:   payout.RequestID,
 				ToAddress:   payout.ToAddress,
 				AmountUWolo: payout.AmountUWolo,
 				Memo:        payout.Memo,
-			})
+			}
+			var itemResponse settlementExecuteResponse
+			var err error
+			if normalized.SignerRole == settlementEscrowSignerRole {
+				itemResponse, err = cfg.executeEscrowTransfer(ctx, itemRequest)
+			} else {
+				itemResponse, err = cfg.executeSettlement(ctx, itemRequest)
+			}
 			if err != nil {
 				return settlementRunResponse{}, err
 			}
@@ -2030,24 +2050,11 @@ func (cfg settlementConfig) buildSettlementRunPlan(ctx context.Context, request 
 		return normalized, finalizeSettlementRunResponse(response), nil
 	}
 
-	health := cfg.buildHealthReport(ctx)
-	response.PayoutBalanceBeforeUWolo = health.PayoutBalanceUWolo
-	response.PayoutBalanceBeforeWolo = health.PayoutBalanceWolo
 	if estimatedFeeUWolo, feeWarning := cfg.estimateSettlementRunFee(len(normalized.Payouts)); estimatedFeeUWolo != "" {
 		response.EstimatedFeeTotalUWolo = estimatedFeeUWolo
 		response.EstimatedFeeTotalWolo = formatDisplayAmount(estimatedFeeUWolo)
 	} else if feeWarning != "" {
 		response.Warnings = append(response.Warnings, feeWarning)
-	}
-
-	if !health.OK {
-		response.OK = false
-		response.Status = "failed"
-		response.FailureCode = health.FailureCode
-		response.Retryable = health.FailureCode == "RPC_UNREACHABLE"
-		response.Detail = health.Detail
-		response.Payouts = markRunReadyPayoutsRefused(response.Payouts, health.FailureCode, health.Detail, response.Retryable)
-		return normalized, finalizeSettlementRunResponse(response), nil
 	}
 
 	totalRequested, err := parseOptionalUWoloString(response.RequestedTotalUWolo)
@@ -2059,7 +2066,36 @@ func (cfg settlementConfig) buildSettlementRunPlan(ctx context.Context, request 
 		response.Payouts = markRunReadyPayoutsRefused(response.Payouts, response.FailureCode, response.Detail, false)
 		return normalized, finalizeSettlementRunResponse(response), nil
 	}
-	balanceBefore, err := parseOptionalUWoloString(health.PayoutBalanceUWolo)
+
+	if normalized.SignerRole == settlementEscrowSignerRole {
+		response = cfg.buildEscrowSettlementRunPlan(ctx, response, totalRequested)
+		return normalized, finalizeSettlementRunResponse(response), nil
+	}
+
+	response = cfg.buildPayoutSettlementRunPlan(ctx, response, totalRequested)
+	return normalized, finalizeSettlementRunResponse(response), nil
+}
+
+func (cfg settlementConfig) buildPayoutSettlementRunPlan(ctx context.Context, response settlementRunResponse, totalRequested uint64) settlementRunResponse {
+	health := cfg.buildHealthReport(ctx)
+	response.SignerRole = settlementSignerRole
+	response.SignerAddress = health.PayoutAddress
+	response.PayoutBalanceBeforeUWolo = health.PayoutBalanceUWolo
+	response.PayoutBalanceBeforeWolo = health.PayoutBalanceWolo
+	response.SignerBalanceBeforeUWolo = health.PayoutBalanceUWolo
+	response.SignerBalanceBeforeWolo = health.PayoutBalanceWolo
+	response.Payouts = markRunReadyPayoutsSigner(response.Payouts, settlementSignerRole, health.PayoutAddress)
+
+	if !health.OK {
+		response.OK = false
+		response.Status = "failed"
+		response.FailureCode = health.FailureCode
+		response.Retryable = health.FailureCode == "RPC_UNREACHABLE"
+		response.Detail = health.Detail
+		response.Payouts = markRunReadyPayoutsRefused(response.Payouts, health.FailureCode, health.Detail, response.Retryable)
+		return response
+	}
+	balanceBefore, err := parseOptionalUWoloString(response.SignerBalanceBeforeUWolo)
 	if err != nil {
 		response.OK = false
 		response.Status = "failed"
@@ -2067,7 +2103,7 @@ func (cfg settlementConfig) buildSettlementRunPlan(ctx context.Context, request 
 		response.Retryable = true
 		response.Detail = "payout signer balance could not be parsed"
 		response.Payouts = markRunReadyPayoutsRefused(response.Payouts, response.FailureCode, response.Detail, true)
-		return normalized, finalizeSettlementRunResponse(response), nil
+		return response
 	}
 
 	if totalRequested > balanceBefore {
@@ -2079,11 +2115,11 @@ func (cfg settlementConfig) buildSettlementRunPlan(ctx context.Context, request 
 			"run requests %s uwolo (%s wolo) but payout signer balance is %s uwolo (%s wolo)",
 			response.RequestedTotalUWolo,
 			response.RequestedTotalWolo,
-			health.PayoutBalanceUWolo,
-			health.PayoutBalanceWolo,
+			response.SignerBalanceBeforeUWolo,
+			response.SignerBalanceBeforeWolo,
 		)
 		response.Payouts = markRunReadyPayoutsRefused(response.Payouts, response.FailureCode, response.Detail, true)
-		return normalized, finalizeSettlementRunResponse(response), nil
+		return response
 	}
 
 	projectedRemaining := balanceBefore - totalRequested
@@ -2102,7 +2138,7 @@ func (cfg settlementConfig) buildSettlementRunPlan(ctx context.Context, request 
 			response.FeeHeadroomWolo,
 		)
 		response.Payouts = markRunReadyPayoutsRefused(response.Payouts, response.FailureCode, response.Detail, true)
-		return normalized, finalizeSettlementRunResponse(response), nil
+		return response
 	}
 	if cfg.MinPayoutBalanceUWolo > 0 && projectedRemaining < cfg.MinPayoutBalanceUWolo {
 		response.OK = false
@@ -2117,7 +2153,7 @@ func (cfg settlementConfig) buildSettlementRunPlan(ctx context.Context, request 
 			response.MinPayoutBalanceWolo,
 		)
 		response.Payouts = markRunReadyPayoutsRefused(response.Payouts, response.FailureCode, response.Detail, true)
-		return normalized, finalizeSettlementRunResponse(response), nil
+		return response
 	}
 
 	if response.EstimatedFeeTotalUWolo != "" {
@@ -2134,7 +2170,49 @@ func (cfg settlementConfig) buildSettlementRunPlan(ctx context.Context, request 
 	response.OK = true
 	response.Status = "validated"
 	response.Detail = "settlement run validated"
-	return normalized, finalizeSettlementRunResponse(response), nil
+	return response
+}
+
+func (cfg settlementConfig) buildEscrowSettlementRunPlan(ctx context.Context, response settlementRunResponse, totalRequested uint64) settlementRunResponse {
+	response.SignerRole = settlementEscrowSignerRole
+	signerAddress, balanceBefore, failure := cfg.preflightEscrowSigner(ctx, strconv.FormatUint(totalRequested, 10))
+	response.SignerAddress = signerAddress
+	if signerAddress == "" && failure != nil {
+		response.SignerAddress = failure.SignerAddress
+	}
+	if signerAddress != "" && (failure == nil || failure.FailureCode == "ESCROW_BALANCE_TOO_LOW") {
+		response.SignerBalanceBeforeUWolo = strconv.FormatUint(balanceBefore, 10)
+		response.SignerBalanceBeforeWolo = formatDisplayAmount(response.SignerBalanceBeforeUWolo)
+	}
+	response.Payouts = markRunReadyPayoutsSigner(response.Payouts, settlementEscrowSignerRole, response.SignerAddress)
+	if failure != nil {
+		response.OK = false
+		response.Status = "failed"
+		response.FailureCode = failure.FailureCode
+		response.Retryable = failure.Retryable
+		response.Detail = failure.Detail
+		response.Payouts = markRunReadyPayoutsRefused(response.Payouts, response.FailureCode, response.Detail, response.Retryable)
+		return response
+	}
+
+	projectedRemaining := balanceBefore - totalRequested
+	response.ProjectedRemainingUWolo = strconv.FormatUint(projectedRemaining, 10)
+	response.ProjectedRemainingWolo = formatDisplayAmount(response.ProjectedRemainingUWolo)
+	if response.EstimatedFeeTotalUWolo != "" {
+		estimatedFee, err := parseOptionalUWoloString(response.EstimatedFeeTotalUWolo)
+		if err == nil && projectedRemaining < estimatedFee {
+			response.Warnings = append(response.Warnings, fmt.Sprintf(
+				"projected escrow balance %s uwolo is below estimated configured fees %s uwolo; fixed-fee runs may still fail during execution",
+				response.ProjectedRemainingUWolo,
+				response.EstimatedFeeTotalUWolo,
+			))
+		}
+	}
+
+	response.OK = true
+	response.Status = "validated"
+	response.Detail = "settlement run validated from escrow signer"
+	return response
 }
 
 func settlementRunTopUpRequestID(runID string) string {
@@ -3313,6 +3391,7 @@ func prepareSettlementRunRequest(request settlementRunRequest) (normalizedSettle
 	sourceEventID := strings.TrimSpace(request.SourceEventID)
 	note := strings.TrimSpace(request.Note)
 	memo := strings.TrimSpace(request.Memo)
+	signerRole, signerRoleErr := normalizeSettlementRunSignerRole(request.SignerRole)
 
 	response := settlementRunResponse{
 		OK:              false,
@@ -3323,9 +3402,13 @@ func prepareSettlementRunRequest(request settlementRunRequest) (normalizedSettle
 		SourceEventID:   sourceEventID,
 		Note:            note,
 		Memo:            memo,
+		SignerRole:      signerRole,
 	}
 
 	validationErrors := make([]string, 0)
+	if signerRoleErr != nil {
+		validationErrors = append(validationErrors, signerRoleErr.Error())
+	}
 	if err := validateSettlementRunID(runID); err != nil {
 		validationErrors = append(validationErrors, err.Error())
 	}
@@ -3369,6 +3452,7 @@ func prepareSettlementRunRequest(request settlementRunRequest) (normalizedSettle
 		SourceEventID:   sourceEventID,
 		Note:            note,
 		Memo:            memo,
+		SignerRole:      signerRole,
 		Payouts:         make([]normalizedSettlementPayout, 0, len(request.Payouts)),
 	}
 
@@ -3396,7 +3480,7 @@ func prepareSettlementRunRequest(request settlementRunRequest) (normalizedSettle
 			Attempted:  false,
 			Status:     "failed",
 			Outcome:    "invalid",
-			SignerRole: settlementSignerRole,
+			SignerRole: signerRole,
 			Memo:       itemMemo,
 		}
 
@@ -3479,7 +3563,16 @@ func sameSettlementRequest(left, right normalizedSettlementRequest) bool {
 	return left.RequestID == right.RequestID &&
 		left.ToAddress == right.ToAddress &&
 		left.AmountUWolo == right.AmountUWolo &&
-		left.Memo == right.Memo
+		left.Memo == right.Memo &&
+		normalizeStoredSettlementSignerRole(left.SignerRole) == normalizeStoredSettlementSignerRole(right.SignerRole)
+}
+
+func normalizeStoredSettlementSignerRole(role string) string {
+	trimmed := strings.TrimSpace(strings.ToLower(role))
+	if trimmed == "" {
+		return settlementSignerRole
+	}
+	return trimmed
 }
 
 func settlementRunPayoutResultFromExecuteResponse(payout normalizedSettlementPayout, response settlementExecuteResponse) settlementRunPayoutResult {
@@ -3685,6 +3778,33 @@ func markRunReadyPayoutsRefused(payouts []settlementRunPayoutResult, failureCode
 	}
 
 	return out
+}
+
+func markRunReadyPayoutsSigner(payouts []settlementRunPayoutResult, signerRole, signerAddress string) []settlementRunPayoutResult {
+	out := make([]settlementRunPayoutResult, len(payouts))
+	copy(out, payouts)
+	for index, payout := range out {
+		if payout.Outcome != "ready" {
+			continue
+		}
+		payout.SignerRole = signerRole
+		payout.SignerAddress = signerAddress
+		out[index] = payout
+	}
+	return out
+}
+
+func normalizeSettlementRunSignerRole(role string) (string, error) {
+	normalized := strings.TrimSpace(strings.ToLower(role))
+	if normalized == "" {
+		return settlementSignerRole, nil
+	}
+	switch normalized {
+	case settlementSignerRole, settlementEscrowSignerRole:
+		return normalized, nil
+	default:
+		return normalized, fmt.Errorf("signer_role must be %q or %q", settlementSignerRole, settlementEscrowSignerRole)
+	}
 }
 
 func validateSettlementRunID(runID string) error {
