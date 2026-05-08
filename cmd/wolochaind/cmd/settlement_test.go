@@ -712,6 +712,43 @@ func TestPrepareSettlementRunRequestDerivesIDsAndWarnings(t *testing.T) {
 	}
 }
 
+func TestPrepareSettlementRunSignerRoleDefaultsAndRejectsUnknown(t *testing.T) {
+	t.Parallel()
+
+	normalized, response := prepareSettlementRunRequest(settlementRunRequest{
+		SettlementRunID: "run-default-role",
+		Payouts: []settlementRunPayoutInput{
+			{
+				ToAddress:   "wolo1recipienta000000000000000000000000000000",
+				AmountUWolo: "100",
+			},
+		},
+	})
+	if response.FailureCode != "" {
+		t.Fatalf("expected default-role run to validate structurally, got %+v", response)
+	}
+	if normalized.SignerRole != settlementSignerRole || response.SignerRole != settlementSignerRole || response.Payouts[0].SignerRole != settlementSignerRole {
+		t.Fatalf("expected omitted signer_role to default to payout, got normalized=%+v response=%+v", normalized, response)
+	}
+
+	_, rejected := prepareSettlementRunRequest(settlementRunRequest{
+		SettlementRunID: "run-unknown-role",
+		SignerRole:      "treasury",
+		Payouts: []settlementRunPayoutInput{
+			{
+				ToAddress:   "wolo1recipienta000000000000000000000000000000",
+				AmountUWolo: "100",
+			},
+		},
+	})
+	if rejected.FailureCode != "INVALID_RUN" || !strings.Contains(rejected.Detail, `signer_role must be "payout" or "escrow"`) {
+		t.Fatalf("expected unknown signer_role to be rejected, got %+v", rejected)
+	}
+	if rejected.SignerRole == settlementSignerRole {
+		t.Fatalf("unknown signer_role must not be silently treated as payout: %+v", rejected)
+	}
+}
+
 func TestValidateSettlementRunCapacityBoundariesAndPrecedence(t *testing.T) {
 	t.Parallel()
 
@@ -827,6 +864,37 @@ func TestValidateSettlementRunCapacityBoundariesAndPrecedence(t *testing.T) {
 	}
 }
 
+func TestValidatePayoutSettlementRunIgnoresEscrowBalance(t *testing.T) {
+	t.Parallel()
+
+	const (
+		payoutAddress    = "wolo1payoutaddress000000000000000000000000000"
+		escrowAddress    = "wolo1escrow000000000000000000000000000000000"
+		recipientAddress = "wolo1recipienta000000000000000000000000000000"
+	)
+
+	cfg := newTestChallengeSettlementConfig(t, payoutAddress, escrowAddress, "", map[string]string{
+		payoutAddress: "10",
+		escrowAddress: "5000000",
+	}, nil, nil)
+
+	response, err := cfg.validateSettlementRun(t.Context(), settlementRunRequest{
+		SettlementRunID: "run-payout-ignores-escrow",
+		Payouts: []settlementRunPayoutInput{
+			{ToAddress: recipientAddress, AmountUWolo: "1000"},
+		},
+	})
+	if err != nil {
+		t.Fatalf("validate payout settlement run: %v", err)
+	}
+	if response.OK || response.FailureCode != "PAYOUT_BALANCE_TOO_LOW" {
+		t.Fatalf("expected low payout balance to fail even with funded escrow, got %+v", response)
+	}
+	if response.SignerRole != settlementSignerRole || response.SignerAddress != payoutAddress {
+		t.Fatalf("expected payout signer fields, got %+v", response)
+	}
+}
+
 func TestValidateEscrowSettlementRunUsesEscrowBalance(t *testing.T) {
 	t.Parallel()
 
@@ -868,6 +936,83 @@ func TestValidateEscrowSettlementRunUsesEscrowBalance(t *testing.T) {
 	}
 	if len(response.Payouts) != 1 || response.Payouts[0].SignerRole != settlementEscrowSignerRole || response.Payouts[0].SignerAddress != escrowAddress {
 		t.Fatalf("unexpected escrow payout signer fields: %+v", response.Payouts)
+	}
+}
+
+func TestValidateEscrowSettlementRunBalanceAndHeadroom(t *testing.T) {
+	t.Parallel()
+
+	const (
+		payoutAddress    = "wolo1payoutaddress000000000000000000000000000"
+		escrowAddress    = "wolo1escrow000000000000000000000000000000000"
+		recipientAddress = "wolo1recipienta000000000000000000000000000000"
+	)
+
+	testCases := []struct {
+		name           string
+		escrowBalance  string
+		amountUWolo    string
+		minEscrow      uint64
+		escrowHeadroom uint64
+		wantFailure    string
+	}{
+		{
+			name:          "escrow-balance-too-low",
+			escrowBalance: "250",
+			amountUWolo:   "300",
+			wantFailure:   "ESCROW_BALANCE_TOO_LOW",
+		},
+		{
+			name:           "escrow-fee-headroom",
+			escrowBalance:  "1000",
+			amountUWolo:    "960",
+			escrowHeadroom: 50,
+			wantFailure:    "ESCROW_FEE_HEADROOM_TOO_LOW",
+		},
+		{
+			name:          "escrow-reserve-floor",
+			escrowBalance: "1000",
+			amountUWolo:   "850",
+			minEscrow:     200,
+			wantFailure:   "ESCROW_RESERVE_FLOOR_HIT",
+		},
+	}
+
+	for _, testCase := range testCases {
+		testCase := testCase
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			cfg := newTestChallengeSettlementConfig(t, payoutAddress, escrowAddress, "", map[string]string{
+				payoutAddress: "5000000",
+				escrowAddress: testCase.escrowBalance,
+			}, nil, nil)
+			cfg.MinEscrowBalanceUWolo = testCase.minEscrow
+			cfg.EscrowFeeHeadroomUWolo = testCase.escrowHeadroom
+
+			response, err := cfg.validateSettlementRun(t.Context(), settlementRunRequest{
+				SettlementRunID: "run-" + testCase.name,
+				SignerRole:      settlementEscrowSignerRole,
+				Payouts: []settlementRunPayoutInput{
+					{ToAddress: recipientAddress, AmountUWolo: testCase.amountUWolo},
+				},
+			})
+			if err != nil {
+				t.Fatalf("validate escrow settlement run: %v", err)
+			}
+			if response.OK || response.FailureCode != testCase.wantFailure {
+				t.Fatalf("expected %s, got %+v", testCase.wantFailure, response)
+			}
+			if response.SignerRole != settlementEscrowSignerRole || response.SignerAddress != escrowAddress {
+				t.Fatalf("unexpected signer fields: %+v", response)
+			}
+			if response.SignerBalanceBeforeUWolo != testCase.escrowBalance {
+				t.Fatalf("expected escrow signer balance %s, got %+v", testCase.escrowBalance, response)
+			}
+			if response.PayoutBalanceBeforeUWolo != "" {
+				t.Fatalf("escrow preflight must not report payout signer balance as source balance: %+v", response)
+			}
+		})
 	}
 }
 
@@ -1184,6 +1329,86 @@ func TestExecuteSettlementRunPartialAndRecentHistory(t *testing.T) {
 	}
 	if items[0].Summary.SignerAddress != payoutAddress || items[0].Summary.ExecutedTotalUWolo != "100" {
 		t.Fatalf("unexpected recent partial run summary: %+v", items[0].Summary)
+	}
+}
+
+func TestExecuteSettlementRunPartialRetryDoesNotResendConfirmedPayout(t *testing.T) {
+	t.Parallel()
+
+	const payoutAddress = "wolo1payoutaddress000000000000000000000000000"
+	const recipientA = "wolo1recipienta000000000000000000000000000000"
+	const recipientB = "wolo1recipientb000000000000000000000000000000"
+	txHashA := strings.Repeat("A", 64)
+	txHashB := strings.Repeat("B", 64)
+
+	cfg := newTestSettlementConfigWithTxs(
+		t,
+		payoutAddress,
+		map[string]string{payoutAddress: "5000"},
+		map[string]mockSettlementTx{
+			txHashA: {
+				Hash:        txHashA,
+				Sender:      payoutAddress,
+				Recipient:   recipientA,
+				AmountUWolo: "100",
+				Memo:        "retry memo",
+				Timestamp:   "2026-04-08T00:00:00Z",
+			},
+			txHashB: {
+				Hash:        txHashB,
+				Sender:      payoutAddress,
+				Recipient:   recipientB,
+				AmountUWolo: "200",
+				Memo:        "retry memo",
+				Timestamp:   "2026-04-08T00:00:01Z",
+			},
+		},
+		nil,
+	)
+	countsDir := t.TempDir()
+	cfg.ExecutablePath = writeRetryFakeSettlementExecutable(t, payoutAddress, recipientA, txHashA, recipientB, txHashB, countsDir)
+
+	request := settlementRunRequest{
+		SettlementRunID: "run-partial-retry",
+		Memo:            "retry memo",
+		Payouts: []settlementRunPayoutInput{
+			{ToAddress: recipientA, AmountUWolo: "100"},
+			{ToAddress: recipientB, AmountUWolo: "200"},
+		},
+	}
+
+	first, err := cfg.executeSettlementRun(t.Context(), request)
+	if err != nil {
+		t.Fatalf("execute first partial run: %v", err)
+	}
+	if first.OK || first.Status != "partial" || !first.Retryable || first.Payouts[1].FailureCode != "RPC_UNREACHABLE" {
+		t.Fatalf("expected retryable partial run, got %+v", first)
+	}
+	if got := readRetryFakeSendCount(t, countsDir, recipientA); got != 1 {
+		t.Fatalf("expected recipient A to be sent once after first run, got %d", got)
+	}
+	if got := readRetryFakeSendCount(t, countsDir, recipientB); got != 1 {
+		t.Fatalf("expected recipient B to be attempted once after first run, got %d", got)
+	}
+
+	second, err := cfg.executeSettlementRun(t.Context(), request)
+	if err != nil {
+		t.Fatalf("execute retry run: %v", err)
+	}
+	if !second.OK || second.Status != "confirmed" || second.ConfirmedPayoutCount != 2 {
+		t.Fatalf("expected retry to finish run, got %+v", second)
+	}
+	if !second.Payouts[0].IdempotentReplay || second.Payouts[0].TxHash != txHashA {
+		t.Fatalf("expected first payout to replay stored tx, got %+v", second.Payouts[0])
+	}
+	if second.Payouts[1].IdempotentReplay || second.Payouts[1].TxHash != txHashB {
+		t.Fatalf("expected second payout to execute on retry, got %+v", second.Payouts[1])
+	}
+	if got := readRetryFakeSendCount(t, countsDir, recipientA); got != 1 {
+		t.Fatalf("confirmed payout was resent on retry; count=%d", got)
+	}
+	if got := readRetryFakeSendCount(t, countsDir, recipientB); got != 2 {
+		t.Fatalf("expected failed payout to be retried once; count=%d", got)
 	}
 }
 
@@ -1549,4 +1774,55 @@ func writeFakeSettlementExecutableWithTxsAndKeys(t *testing.T, keyAddresses map[
 	}
 
 	return path
+}
+
+func writeRetryFakeSettlementExecutable(t *testing.T, payoutAddress, recipientA, txHashA, recipientB, txHashB, countsDir string) string {
+	t.Helper()
+
+	path := filepath.Join(t.TempDir(), "fake-wolochaind-retry.sh")
+	script := "#!/bin/sh\n" +
+		"counts_dir=" + strconv.Quote(countsDir) + "\n" +
+		"if [ \"$1\" = \"keys\" ] && [ \"$2\" = \"show\" ]; then\n" +
+		"  case \"$3\" in\n" +
+		"    \"payout\") printf '%s\\n' '" + payoutAddress + "'; exit 0 ;;\n" +
+		"  esac\n" +
+		"fi\n" +
+		"if [ \"$1\" = \"tx\" ] && [ \"$2\" = \"bank\" ] && [ \"$3\" = \"send\" ]; then\n" +
+		"  recipient=\"$5\"\n" +
+		"  count_file=\"$counts_dir/$recipient.count\"\n" +
+		"  count=0\n" +
+		"  if [ -f \"$count_file\" ]; then count=$(cat \"$count_file\"); fi\n" +
+		"  count=$((count + 1))\n" +
+		"  printf '%s\\n' \"$count\" > \"$count_file\"\n" +
+		"  case \"$recipient\" in\n" +
+		"    \"" + recipientA + "\") printf '{\"height\":\"0\",\"txhash\":\"" + txHashA + "\",\"code\":0,\"codespace\":\"\",\"raw_log\":\"\"}\\n'; exit 0 ;;\n" +
+		"    \"" + recipientB + "\")\n" +
+		"      if [ \"$count\" -eq 1 ]; then printf 'rpc error: timed out\\n' >&2; exit 1; fi\n" +
+		"      printf '{\"height\":\"0\",\"txhash\":\"" + txHashB + "\",\"code\":0,\"codespace\":\"\",\"raw_log\":\"\"}\\n'; exit 0 ;;\n" +
+		"  esac\n" +
+		"fi\n" +
+		"printf 'unexpected command: %s\\n' \"$*\" >&2\n" +
+		"exit 1\n"
+	if err := os.WriteFile(path, []byte(script), 0o755); err != nil {
+		t.Fatalf("write retry fake settlement executable: %v", err)
+	}
+
+	return path
+}
+
+func readRetryFakeSendCount(t *testing.T, countsDir, recipient string) int {
+	t.Helper()
+
+	data, err := os.ReadFile(filepath.Join(countsDir, recipient+".count"))
+	if err != nil {
+		if os.IsNotExist(err) {
+			return 0
+		}
+		t.Fatalf("read retry fake send count: %v", err)
+	}
+	count, err := strconv.Atoi(strings.TrimSpace(string(data)))
+	if err != nil {
+		t.Fatalf("parse retry fake send count %q: %v", string(data), err)
+	}
+	return count
 }

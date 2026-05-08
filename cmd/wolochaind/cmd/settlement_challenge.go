@@ -1872,7 +1872,7 @@ func (cfg settlementConfig) executeEscrowTransfer(ctx context.Context, request s
 	normalized.SignerRole = settlementEscrowSignerRole
 
 	recordPath := cfg.requestRecordPath(normalized.RequestID)
-	return cfg.withRequestLock(normalized.RequestID, func() (settlementExecuteResponse, error) {
+	return cfg.withRequestLock(normalized.RequestID, settlementEscrowSignerRole, func() (settlementExecuteResponse, error) {
 		stored, readErr := readSettlementStoredResult(recordPath)
 		if readErr == nil {
 			if !sameSettlementRequest(stored.Request, normalized) {
@@ -2038,22 +2038,16 @@ func (cfg settlementConfig) preflightEscrowSigner(ctx context.Context, requestAm
 			Detail:        err.Error(),
 		}
 	}
-	if balanceAmount < requestAmount {
+	if code, detail, failed := cfg.checkEscrowCapacity(balanceAmount, requestAmount); failed {
 		return signerAddress, balanceAmount, &settlementExecuteResponse{
 			OK:            false,
 			Status:        "failed",
-			FailureCode:   "ESCROW_BALANCE_TOO_LOW",
+			FailureCode:   code,
 			Retryable:     true,
 			ChainID:       cfg.ChainID,
 			SignerRole:    settlementEscrowSignerRole,
 			SignerAddress: signerAddress,
-			Detail: fmt.Sprintf(
-				"run requests %s uwolo (%s wolo) but escrow signer balance is %s uwolo (%s wolo)",
-				strconv.FormatUint(requestAmount, 10),
-				formatDisplayAmount(strconv.FormatUint(requestAmount, 10)),
-				strconv.FormatUint(balanceAmount, 10),
-				formatDisplayAmount(strconv.FormatUint(balanceAmount, 10)),
-			),
+			Detail:        detail,
 		}
 	}
 

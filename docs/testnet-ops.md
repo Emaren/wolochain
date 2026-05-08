@@ -34,6 +34,8 @@ Settlement env:
   - `WOLO_SETTLEMENT_ESCROW_ADDRESS=wolo1t4jq7wd4x030t9f0yfqfq74pt4pmaep5nu67y4`
   - `WOLO_SETTLEMENT_MIN_PAYOUT_BALANCE_UWOLO=1000000000`
   - `WOLO_SETTLEMENT_FEE_HEADROOM_UWOLO=10000000`
+  - `WOLO_SETTLEMENT_MIN_ESCROW_BALANCE_UWOLO=10000000`
+  - `WOLO_SETTLEMENT_ESCROW_FEE_HEADROOM_UWOLO=10000000`
   - `WOLO_SETTLEMENT_LISTEN_ADDR=127.0.0.1:8091`
   - `WOLO_SETTLEMENT_STATE_DIR=/mnt/HC_Volume_105319120/wolochain/settlement-state`
   - `WOLO_SETTLEMENT_AUTH_TOKEN` is set in the live env but should stay masked in docs and operator output
@@ -41,14 +43,29 @@ Settlement env:
 
 Role semantics:
 
-- `WOLO_SETTLEMENT_PAYOUT_KEY_NAME` is the signer WoloChain uses for settlement sends.
-- `WOLO_SETTLEMENT_ESCROW_ADDRESS` affects proof classification and operator warnings; it does not create escrow semantics by itself.
+- `signer_role=payout` is the default for grouped settlement runs and for legacy callers that omit `signer_role`.
+- `signer_role=escrow` must be explicit; unknown roles are rejected as `INVALID_RUN` and are not silently treated as payout.
+- Normal AoE2HDBets bet/player payouts use `payout`.
+- AoE2HDBets staking Treasury payouts use `payout`.
+- AoE2HDBets scheduled-match escrow settlements use `escrow`.
+- `WOLO_SETTLEMENT_PAYOUT_KEY_NAME` is the payout signer key.
+- `WOLO_SETTLEMENT_ESCROW_KEY_NAME` is the escrow signer key used by escrow-signed grouped runs and challenge auto-top-up.
+- `WOLO_SETTLEMENT_ESCROW_ADDRESS` affects proof classification, address mismatch checks, and operator warnings; it does not create escrow semantics by itself.
 - WoloChain does not create market semantics by config alone; the app must actually send stakes to escrow and interpret them.
 - On April 9, 2026 the live test keyring contains `faucetgrowth`, `payout`, and `escrow`.
 - The live dedicated payout address is `wolo1cy04t5af0mr9d8n6rrzgr8e9j4vuf42nfg02q5`.
 - The live dedicated escrow address is `wolo1t4jq7wd4x030t9f0yfqfq74pt4pmaep5nu67y4`.
 - The live payout address has `2000000000uwolo` available, with reserve floor and fee headroom enforced by the settlement service.
 - The `payout.info` and `escrow.info` files are only readable by `wolo` unless the operator runs checks as root or `sudo -u wolo`.
+
+Reserve / headroom semantics:
+
+- `WOLO_SETTLEMENT_MIN_PAYOUT_BALANCE_UWOLO`: payout signer reserve floor after a payout-signed run.
+- `WOLO_SETTLEMENT_FEE_HEADROOM_UWOLO`: payout signer fee headroom after a payout-signed run.
+- `WOLO_SETTLEMENT_MIN_ESCROW_BALANCE_UWOLO`: escrow signer reserve floor after an escrow-signed run.
+- `WOLO_SETTLEMENT_ESCROW_FEE_HEADROOM_UWOLO`: escrow signer fee headroom after an escrow-signed run.
+- Payout dry-runs never use escrow funds to pass capacity checks.
+- Escrow dry-runs never use payout signer health to pass or fail capacity checks.
 
 Operator defaults currently in live use:
 
@@ -65,6 +82,8 @@ WOLO_SETTLEMENT_ESCROW_ADDRESS=wolo1t4jq7wd4x030t9f0yfqfq74pt4pmaep5nu67y4
 WOLO_SETTLEMENT_FEES=
 WOLO_SETTLEMENT_MIN_PAYOUT_BALANCE_UWOLO=1000000000
 WOLO_SETTLEMENT_FEE_HEADROOM_UWOLO=10000000
+WOLO_SETTLEMENT_MIN_ESCROW_BALANCE_UWOLO=10000000
+WOLO_SETTLEMENT_ESCROW_FEE_HEADROOM_UWOLO=10000000
 WOLO_SETTLEMENT_AUTH_TOKEN=<masked-live-secret>
 WOLO_SETTLEMENT_LISTEN_ADDR=127.0.0.1:8091
 WOLO_SETTLEMENT_STATE_DIR=/mnt/HC_Volume_105319120/wolochain/settlement-state
@@ -224,6 +243,8 @@ Settlement health:
 
 ```bash
 curl -sS http://127.0.0.1:8091/settlement/v1/health
+curl -sS http://127.0.0.1:8091/settlement/v1/health \
+  | jq '{ok,failure_code,payout_address,payout_balance_uwolo,escrow_signer_address,escrow_balance_uwolo,min_payout_balance_uwolo,fee_headroom_uwolo,min_escrow_balance_uwolo,escrow_fee_headroom_uwolo}'
 ```
 
 Systemd:
@@ -233,14 +254,18 @@ systemctl status wolochaind-testnet
 systemctl status wolochain-settlement
 journalctl -u wolochaind-testnet -n 100 --no-pager
 journalctl -u wolochain-settlement -n 100 --no-pager
+journalctl -u wolochain-settlement -n 100 --no-pager \
+  | grep 'settlement_run_' || true
 ```
+
+Settlement run logs are JSON lines on stderr. They include `signer_role`, `signer_address`, `settlement_run_id`, `source_event_id`, `requested_total_uwolo`, `failure_code` / `refusal_reason`, and `tx_hashes` when a run executes. They must never include mnemonics, auth tokens, or key material.
 
 Env inspection:
 
 ```bash
 systemctl show -p EnvironmentFiles wolochain-settlement.service
 ENV_FILE=$(systemctl show -p EnvironmentFiles --value wolochain-settlement.service | awk '{print $1}' | sed 's/^-//')
-sudo grep -E '^(WOLO_SETTLEMENT_(KEY_NAME|KEYRING_BACKEND|PAYOUT_ADDRESS|ESCROW_ADDRESS|TREASURY_ADDRESS|AUTH_TOKEN|STATE_DIR|PUBLIC_REST_URL|MIN_PAYOUT_BALANCE_UWOLO|FEE_HEADROOM_UWOLO|ESCROW_AUTO_TOP_UP_ENABLED)|WOLO_(CHAIN_ID|NODE|HOME))=' "$ENV_FILE" \
+sudo grep -E '^(WOLO_SETTLEMENT_((PAYOUT|ESCROW)_KEY_NAME|KEYRING_BACKEND|PAYOUT_ADDRESS|ESCROW_ADDRESS|TREASURY_ADDRESS|AUTH_TOKEN|STATE_DIR|PUBLIC_REST_URL|MIN_PAYOUT_BALANCE_UWOLO|FEE_HEADROOM_UWOLO|MIN_ESCROW_BALANCE_UWOLO|ESCROW_FEE_HEADROOM_UWOLO|ESCROW_AUTO_TOP_UP_ENABLED)|WOLO_(CHAIN_ID|NODE|HOME))=' "$ENV_FILE" \
   | sed -E 's#^(WOLO_SETTLEMENT_AUTH_TOKEN)=.*#\1=***MASKED***#'
 ```
 
@@ -291,6 +316,26 @@ curl -sS \
     ]
   }' \
   http://127.0.0.1:8091/settlement/v1/runs/validate
+```
+
+Dry-run an escrow-signed grouped settlement run:
+
+```bash
+curl -sS \
+  -H "authorization: Bearer $WOLO_SETTLEMENT_AUTH_TOKEN" \
+  -H 'content-type: application/json' \
+  -d '{
+    "settlement_run_id":"escrow-probe-2026-05-06",
+    "source_app":"aoe2hdbets",
+    "source_event_id":"scheduled-match-probe",
+    "signer_role":"escrow",
+    "memo":"escrow dry-run probe",
+    "payouts":[
+      {"request_id":"escrow-probe-2026-05-06:item-001","to_address":"wolo1recipienta000000000000000000000000000000","amount_uwolo":"1"}
+    ]
+  }' \
+  http://127.0.0.1:8091/settlement/v1/runs/validate \
+  | jq '{ok,status,failure_code,signer_role,signer_address,signer_balance_before_uwolo,requested_total_uwolo,projected_remaining_uwolo}'
 ```
 
 Execute grouped settlement run:
@@ -694,7 +739,7 @@ WoloChain owns:
 
 - validating addresses and amounts
 - deriving stable per-line request ids when omitted
-- checking the selected signer balance; payout runs also enforce reserve floor and fee headroom
+- checking the selected signer balance and only that signer's reserve/headroom settings
 - executing sends from the payout signer by default, or from escrow when the grouped run explicitly sets `signer_role=escrow`
 - storing run state and per-request state
 - exposing proof links and operator inspection surfaces
@@ -716,6 +761,17 @@ Safe operator flow:
 5. Operator inspects the grouped run and, if needed, the per-request records.
 
 If `WOLO_SETTLEMENT_FEES` is unset, grouped dry-runs still validate reserve / headroom math but return a warning that deterministic fee estimates are unavailable.
+
+Signer role safety rules:
+
+- Omitted `signer_role` means `payout`.
+- Accepted explicit values are `payout` and `escrow`.
+- Any other `signer_role` fails validation with `INVALID_RUN`.
+- The response `signer_role` and `signer_address` are the actual selected signer.
+- Payout runs check the payout signer balance, `WOLO_SETTLEMENT_MIN_PAYOUT_BALANCE_UWOLO`, and `WOLO_SETTLEMENT_FEE_HEADROOM_UWOLO`.
+- Escrow runs check the escrow signer balance, `WOLO_SETTLEMENT_MIN_ESCROW_BALANCE_UWOLO`, and `WOLO_SETTLEMENT_ESCROW_FEE_HEADROOM_UWOLO`.
+- Escrow runs are not blocked by a low payout signer.
+- Payout runs do not borrow escrow funds.
 
 Challenge-specific config:
 
@@ -822,6 +878,27 @@ The script intentionally avoids live payout execution. It uses:
 - an invalid tx hash against the escrow verify route
 - a read-only escrow recent query
 - missing request / run ids for inspect checks
+
+After a settlement-service hardening deploy, run explicit live dry-run probes for both signer roles:
+
+```bash
+auth_header=(-H "authorization: Bearer $WOLO_SETTLEMENT_AUTH_TOKEN" -H 'content-type: application/json')
+
+curl -sS "${auth_header[@]}" \
+  -d '{"settlement_run_id":"deploy-payout-probe-2026-05-06","source_app":"ops","source_event_id":"deploy-payout-probe","payouts":[{"request_id":"deploy-payout-probe-2026-05-06:item-001","to_address":"wolo1recipienta000000000000000000000000000000","amount_uwolo":"1"}]}' \
+  http://127.0.0.1:8091/settlement/v1/runs/validate \
+  | jq '{ok,status,failure_code,signer_role,signer_address,requested_total_uwolo}'
+
+curl -sS "${auth_header[@]}" \
+  -d '{"settlement_run_id":"deploy-escrow-probe-2026-05-06","source_app":"ops","source_event_id":"deploy-escrow-probe","signer_role":"escrow","payouts":[{"request_id":"deploy-escrow-probe-2026-05-06:item-001","to_address":"wolo1recipienta000000000000000000000000000000","amount_uwolo":"1"}]}' \
+  http://127.0.0.1:8091/settlement/v1/runs/validate \
+  | jq '{ok,status,failure_code,signer_role,signer_address,requested_total_uwolo}'
+```
+
+Expected signer fields:
+
+- payout probe: `signer_role="payout"` and `signer_address` equal to the payout signer address
+- escrow probe: `signer_role="escrow"` and `signer_address` equal to the escrow signer address
 
 Machine-readable alerts:
 

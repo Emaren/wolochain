@@ -123,7 +123,9 @@ Settlement execution supports:
 - separate internal and public proof URLs via `WOLO_SETTLEMENT_PUBLIC_REST_URL`
 - preferred proof links via `canonical_tx_lookup_preferred`
 - payout reserve-floor enforcement via `WOLO_SETTLEMENT_MIN_PAYOUT_BALANCE_UWOLO`
-- fee headroom enforcement via `WOLO_SETTLEMENT_FEE_HEADROOM_UWOLO`
+- payout fee headroom enforcement via `WOLO_SETTLEMENT_FEE_HEADROOM_UWOLO`
+- escrow reserve-floor enforcement via `WOLO_SETTLEMENT_MIN_ESCROW_BALANCE_UWOLO`
+- escrow fee headroom enforcement via `WOLO_SETTLEMENT_ESCROW_FEE_HEADROOM_UWOLO`
 - read-only escrow deposit verification by tx hash
 - read-only escrow deposit discovery for recent transfers into the configured escrow address
 - stored request inspection by `request_id`
@@ -176,6 +178,13 @@ Grouped settlement runs are intentionally generic. The caller can attach generic
 - `signer_role` (`payout` by default; `escrow` only when the caller intentionally wants the escrow signer)
 
 WoloChain does not infer meaning from those fields beyond validation, recording, and operator inspection.
+
+Grouped run signer roles are explicit:
+
+- `payout`: default for legacy callers; used by normal bet/player payouts and staking Treasury payouts from AoE2HDBets.
+- `escrow`: must be requested with `signer_role=escrow`; used by scheduled-match escrow settlements from AoE2HDBets.
+
+Unknown `signer_role` values are rejected as `INVALID_RUN`; they are never silently treated as payout. Responses and stored records report the actual `signer_role` and `signer_address` selected for the run and each transfer line.
 
 Generic refunds or reversals do not need a special WoloChain abstraction. The existing single-payout and grouped-run rails already cover that operator path as long as the caller provides the recipient, amount, and metadata.
 
@@ -233,7 +242,7 @@ For one logical result with many payouts, the preferred flow is:
 
 1. Caller computes recipients and amounts outside WoloChain.
 2. Caller sends the grouped payload to `POST /settlement/v1/runs/validate` or `wolochaind settlement run validate`; escrow-signed runs must include `signer_role=escrow`.
-3. Operator confirms totals, reserve-floor impact, fee headroom impact, and any line-item warnings.
+3. Operator confirms totals, selected `signer_role`, `signer_address`, signer balance, reserve-floor impact, fee headroom impact, and any line-item warnings.
 4. Caller submits the same payload to `POST /settlement/v1/runs` or `wolochaind settlement run execute`.
 5. Operator inspects the run with `wolochaind settlement run inspect --run-id ...`.
 6. If needed, operator drills into individual request ids with `wolochaind settlement inspect --request-id ...`.
@@ -252,6 +261,8 @@ For one logical result with many payouts, the preferred flow is:
 - `WOLO_SETTLEMENT_ESCROW_KEY_NAME` and `WOLO_SETTLEMENT_ESCROW_ADDRESS` are both required if you want challenge auto-top-up from escrow.
 - `WOLO_SETTLEMENT_TREASURY_ADDRESS` sets the default challenge treasury route, but callers can still pass an explicit `treasury_address` per challenge request.
 - `WOLO_SETTLEMENT_ESCROW_AUTO_TOP_UP_ENABLED=true` lets challenge execution move only the shortfall needed to make the payout signer whole before the grouped payout run starts.
+- Payout-signed runs use only the payout signer balance and enforce `WOLO_SETTLEMENT_MIN_PAYOUT_BALANCE_UWOLO` plus `WOLO_SETTLEMENT_FEE_HEADROOM_UWOLO`.
+- Escrow-signed runs use only the escrow signer balance and enforce `WOLO_SETTLEMENT_MIN_ESCROW_BALANCE_UWOLO` plus `WOLO_SETTLEMENT_ESCROW_FEE_HEADROOM_UWOLO`.
 - Set `WOLO_SETTLEMENT_FEES` if you want dry-run grouped runs to return a deterministic fee estimate in `uwolo`.
 - Use [`scripts/install-settlement-alert-cron.sh`](scripts/install-settlement-alert-cron.sh) as the repo-owned cron installer for [`scripts/run-settlement-alert-check.sh`](scripts/run-settlement-alert-check.sh).
 - [`scripts/run-settlement-alert-check.sh`](scripts/run-settlement-alert-check.sh) overwrites the latest JSON on each run and preserves the underlying alert exit code.

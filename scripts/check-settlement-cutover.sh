@@ -36,7 +36,9 @@ for item in \
   WOLO_SETTLEMENT_PUBLIC_REST_URL \
   WOLO_SETTLEMENT_AUTH_TOKEN \
   WOLO_SETTLEMENT_MIN_PAYOUT_BALANCE_UWOLO \
-  WOLO_SETTLEMENT_FEE_HEADROOM_UWOLO; do
+  WOLO_SETTLEMENT_FEE_HEADROOM_UWOLO \
+  WOLO_SETTLEMENT_MIN_ESCROW_BALANCE_UWOLO \
+  WOLO_SETTLEMENT_ESCROW_FEE_HEADROOM_UWOLO; do
   if [[ -n "${!item:-}" ]]; then
     HAS_INTENDED_CONFIG=1
     if [[ -z "$SETTLEMENT_ENV_FILE" ]]; then
@@ -61,6 +63,8 @@ WOLO_SETTLEMENT_PUBLIC_REST_URL="${WOLO_SETTLEMENT_PUBLIC_REST_URL:-}"
 WOLO_SETTLEMENT_AUTH_TOKEN="${WOLO_SETTLEMENT_AUTH_TOKEN:-}"
 WOLO_SETTLEMENT_MIN_PAYOUT_BALANCE_UWOLO="${WOLO_SETTLEMENT_MIN_PAYOUT_BALANCE_UWOLO:-}"
 WOLO_SETTLEMENT_FEE_HEADROOM_UWOLO="${WOLO_SETTLEMENT_FEE_HEADROOM_UWOLO:-}"
+WOLO_SETTLEMENT_MIN_ESCROW_BALANCE_UWOLO="${WOLO_SETTLEMENT_MIN_ESCROW_BALANCE_UWOLO:-}"
+WOLO_SETTLEMENT_ESCROW_FEE_HEADROOM_UWOLO="${WOLO_SETTLEMENT_ESCROW_FEE_HEADROOM_UWOLO:-}"
 
 failures=0
 warnings=0
@@ -97,11 +101,14 @@ run_wolochaind() {
       WOLO_SETTLEMENT_ADDRESS_PREFIX="$WOLO_SETTLEMENT_ADDRESS_PREFIX" \
       WOLO_SETTLEMENT_PAYOUT_KEY_NAME="$WOLO_SETTLEMENT_PAYOUT_KEY_NAME" \
       WOLO_SETTLEMENT_PAYOUT_ADDRESS="$WOLO_SETTLEMENT_PAYOUT_ADDRESS" \
+      WOLO_SETTLEMENT_ESCROW_KEY_NAME="$WOLO_SETTLEMENT_ESCROW_KEY_NAME" \
       WOLO_SETTLEMENT_ESCROW_ADDRESS="$WOLO_SETTLEMENT_ESCROW_ADDRESS" \
       WOLO_SETTLEMENT_PUBLIC_REST_URL="$WOLO_SETTLEMENT_PUBLIC_REST_URL" \
       WOLO_SETTLEMENT_AUTH_TOKEN="$WOLO_SETTLEMENT_AUTH_TOKEN" \
       WOLO_SETTLEMENT_MIN_PAYOUT_BALANCE_UWOLO="$WOLO_SETTLEMENT_MIN_PAYOUT_BALANCE_UWOLO" \
       WOLO_SETTLEMENT_FEE_HEADROOM_UWOLO="$WOLO_SETTLEMENT_FEE_HEADROOM_UWOLO" \
+      WOLO_SETTLEMENT_MIN_ESCROW_BALANCE_UWOLO="$WOLO_SETTLEMENT_MIN_ESCROW_BALANCE_UWOLO" \
+      WOLO_SETTLEMENT_ESCROW_FEE_HEADROOM_UWOLO="$WOLO_SETTLEMENT_ESCROW_FEE_HEADROOM_UWOLO" \
       "$WOLOCHAIND_BIN" "$@"
     return
   fi
@@ -116,11 +123,14 @@ run_wolochaind() {
     WOLO_SETTLEMENT_ADDRESS_PREFIX="$WOLO_SETTLEMENT_ADDRESS_PREFIX" \
     WOLO_SETTLEMENT_PAYOUT_KEY_NAME="$WOLO_SETTLEMENT_PAYOUT_KEY_NAME" \
     WOLO_SETTLEMENT_PAYOUT_ADDRESS="$WOLO_SETTLEMENT_PAYOUT_ADDRESS" \
+    WOLO_SETTLEMENT_ESCROW_KEY_NAME="$WOLO_SETTLEMENT_ESCROW_KEY_NAME" \
     WOLO_SETTLEMENT_ESCROW_ADDRESS="$WOLO_SETTLEMENT_ESCROW_ADDRESS" \
     WOLO_SETTLEMENT_PUBLIC_REST_URL="$WOLO_SETTLEMENT_PUBLIC_REST_URL" \
     WOLO_SETTLEMENT_AUTH_TOKEN="$WOLO_SETTLEMENT_AUTH_TOKEN" \
     WOLO_SETTLEMENT_MIN_PAYOUT_BALANCE_UWOLO="$WOLO_SETTLEMENT_MIN_PAYOUT_BALANCE_UWOLO" \
     WOLO_SETTLEMENT_FEE_HEADROOM_UWOLO="$WOLO_SETTLEMENT_FEE_HEADROOM_UWOLO" \
+    WOLO_SETTLEMENT_MIN_ESCROW_BALANCE_UWOLO="$WOLO_SETTLEMENT_MIN_ESCROW_BALANCE_UWOLO" \
+    WOLO_SETTLEMENT_ESCROW_FEE_HEADROOM_UWOLO="$WOLO_SETTLEMENT_ESCROW_FEE_HEADROOM_UWOLO" \
     "$WOLOCHAIND_BIN" "$@"
 }
 
@@ -260,7 +270,9 @@ if [[ "$HAS_INTENDED_CONFIG" -eq 1 ]]; then
     WOLO_SETTLEMENT_PUBLIC_REST_URL \
     WOLO_SETTLEMENT_AUTH_TOKEN \
     WOLO_SETTLEMENT_MIN_PAYOUT_BALANCE_UWOLO \
-    WOLO_SETTLEMENT_FEE_HEADROOM_UWOLO; do
+    WOLO_SETTLEMENT_FEE_HEADROOM_UWOLO \
+    WOLO_SETTLEMENT_MIN_ESCROW_BALANCE_UWOLO \
+    WOLO_SETTLEMENT_ESCROW_FEE_HEADROOM_UWOLO; do
     value="${!item:-}"
     if [[ -n "$value" ]]; then
       record_ok "$item is set"
@@ -309,6 +321,18 @@ if [[ "$HAS_INTENDED_CONFIG" -eq 1 ]]; then
     record_ok "fee headroom is set to a positive integer"
   else
     record_failure "WOLO_SETTLEMENT_FEE_HEADROOM_UWOLO must be a positive integer"
+  fi
+
+  if is_positive_integer "$WOLO_SETTLEMENT_MIN_ESCROW_BALANCE_UWOLO"; then
+    record_ok "escrow reserve floor is set to a positive integer"
+  else
+    record_failure "WOLO_SETTLEMENT_MIN_ESCROW_BALANCE_UWOLO must be a positive integer"
+  fi
+
+  if is_positive_integer "$WOLO_SETTLEMENT_ESCROW_FEE_HEADROOM_UWOLO"; then
+    record_ok "escrow fee headroom is set to a positive integer"
+  else
+    record_failure "WOLO_SETTLEMENT_ESCROW_FEE_HEADROOM_UWOLO must be a positive integer"
   fi
 else
   record_warning "no readable settlement env file or explicit shell overrides were provided; skipping intended-config assertions"
@@ -438,6 +462,8 @@ if [[ "$CHECK_SERVICE" != "0" ]]; then
   live_auth_token_set="$(extract_json_bool auth_token_set "$live_health_body")"
   live_min_payout_balance="$(extract_json_string min_payout_balance_uwolo "$live_health_body")"
   live_fee_headroom="$(extract_json_string fee_headroom_uwolo "$live_health_body")"
+  live_min_escrow_balance="$(extract_json_string min_escrow_balance_uwolo "$live_health_body")"
+  live_escrow_fee_headroom="$(extract_json_string escrow_fee_headroom_uwolo "$live_health_body")"
 
   if [[ "$HAS_INTENDED_CONFIG" -eq 1 ]]; then
     compare_live_value "payout address" "$WOLO_SETTLEMENT_PAYOUT_ADDRESS" "$live_payout_address"
@@ -445,6 +471,8 @@ if [[ "$CHECK_SERVICE" != "0" ]]; then
     compare_live_value "public REST URL" "$WOLO_SETTLEMENT_PUBLIC_REST_URL" "$live_public_rest_url"
     compare_live_value "reserve floor" "$WOLO_SETTLEMENT_MIN_PAYOUT_BALANCE_UWOLO" "$live_min_payout_balance"
     compare_live_value "fee headroom" "$WOLO_SETTLEMENT_FEE_HEADROOM_UWOLO" "$live_fee_headroom"
+    compare_live_value "escrow reserve floor" "$WOLO_SETTLEMENT_MIN_ESCROW_BALANCE_UWOLO" "$live_min_escrow_balance"
+    compare_live_value "escrow fee headroom" "$WOLO_SETTLEMENT_ESCROW_FEE_HEADROOM_UWOLO" "$live_escrow_fee_headroom"
 
     expected_auth_enabled="false"
     if [[ -n "$WOLO_SETTLEMENT_AUTH_TOKEN" ]]; then

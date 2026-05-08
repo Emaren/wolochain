@@ -40,6 +40,8 @@ WOLO_SETTLEMENT_ESCROW_KEY_NAME="${WOLO_SETTLEMENT_ESCROW_KEY_NAME:-escrow}"
 WOLO_SETTLEMENT_PAYOUT_ADDRESS="${WOLO_SETTLEMENT_PAYOUT_ADDRESS:-}"
 WOLO_SETTLEMENT_ESCROW_ADDRESS="${WOLO_SETTLEMENT_ESCROW_ADDRESS:-}"
 WOLO_SETTLEMENT_AUTH_TOKEN="${WOLO_SETTLEMENT_AUTH_TOKEN:-}"
+WOLO_SETTLEMENT_MIN_ESCROW_BALANCE_UWOLO="${WOLO_SETTLEMENT_MIN_ESCROW_BALANCE_UWOLO:-}"
+WOLO_SETTLEMENT_ESCROW_FEE_HEADROOM_UWOLO="${WOLO_SETTLEMENT_ESCROW_FEE_HEADROOM_UWOLO:-}"
 
 HAS_INTENDED_CONFIG=0
 CONFIG_SOURCE="unavailable"
@@ -90,8 +92,11 @@ run_wolochaind() {
       WOLO_SETTLEMENT_ADDRESS_PREFIX="$WOLO_SETTLEMENT_ADDRESS_PREFIX" \
       WOLO_SETTLEMENT_PAYOUT_KEY_NAME="$WOLO_SETTLEMENT_PAYOUT_KEY_NAME" \
       WOLO_SETTLEMENT_PAYOUT_ADDRESS="$WOLO_SETTLEMENT_PAYOUT_ADDRESS" \
+      WOLO_SETTLEMENT_ESCROW_KEY_NAME="$WOLO_SETTLEMENT_ESCROW_KEY_NAME" \
       WOLO_SETTLEMENT_ESCROW_ADDRESS="$WOLO_SETTLEMENT_ESCROW_ADDRESS" \
       WOLO_SETTLEMENT_AUTH_TOKEN="$WOLO_SETTLEMENT_AUTH_TOKEN" \
+      WOLO_SETTLEMENT_MIN_ESCROW_BALANCE_UWOLO="$WOLO_SETTLEMENT_MIN_ESCROW_BALANCE_UWOLO" \
+      WOLO_SETTLEMENT_ESCROW_FEE_HEADROOM_UWOLO="$WOLO_SETTLEMENT_ESCROW_FEE_HEADROOM_UWOLO" \
       "$WOLOCHAIND_BIN" "$@"
     return
   fi
@@ -106,8 +111,11 @@ run_wolochaind() {
     WOLO_SETTLEMENT_ADDRESS_PREFIX="$WOLO_SETTLEMENT_ADDRESS_PREFIX" \
     WOLO_SETTLEMENT_PAYOUT_KEY_NAME="$WOLO_SETTLEMENT_PAYOUT_KEY_NAME" \
     WOLO_SETTLEMENT_PAYOUT_ADDRESS="$WOLO_SETTLEMENT_PAYOUT_ADDRESS" \
+    WOLO_SETTLEMENT_ESCROW_KEY_NAME="$WOLO_SETTLEMENT_ESCROW_KEY_NAME" \
     WOLO_SETTLEMENT_ESCROW_ADDRESS="$WOLO_SETTLEMENT_ESCROW_ADDRESS" \
     WOLO_SETTLEMENT_AUTH_TOKEN="$WOLO_SETTLEMENT_AUTH_TOKEN" \
+    WOLO_SETTLEMENT_MIN_ESCROW_BALANCE_UWOLO="$WOLO_SETTLEMENT_MIN_ESCROW_BALANCE_UWOLO" \
+    WOLO_SETTLEMENT_ESCROW_FEE_HEADROOM_UWOLO="$WOLO_SETTLEMENT_ESCROW_FEE_HEADROOM_UWOLO" \
     "$WOLOCHAIND_BIN" "$@"
 }
 
@@ -261,6 +269,8 @@ export WOLO_SETTLEMENT_PAYOUT_KEY_NAME
 export WOLO_SETTLEMENT_ESCROW_KEY_NAME
 export WOLO_SETTLEMENT_PAYOUT_ADDRESS
 export WOLO_SETTLEMENT_ESCROW_ADDRESS
+export WOLO_SETTLEMENT_MIN_ESCROW_BALANCE_UWOLO
+export WOLO_SETTLEMENT_ESCROW_FEE_HEADROOM_UWOLO
 export CONFIG_SOURCE
 export HAS_INTENDED_CONFIG
 export WOLO_ALERT_ROOT_PATH
@@ -597,6 +607,11 @@ result = {
         "public_rest_url": public_rest_url or None,
         "payout_balance_uwolo": health.get("payout_balance_uwolo") or doctor.get("payout_balance_uwolo"),
         "min_payout_balance_uwolo": health.get("min_payout_balance_uwolo") or doctor.get("min_payout_balance_uwolo"),
+        "fee_headroom_uwolo": health.get("fee_headroom_uwolo") or doctor.get("fee_headroom_uwolo"),
+        "escrow_signer_address": health.get("escrow_signer_address") or doctor.get("escrow_signer_address"),
+        "escrow_balance_uwolo": health.get("escrow_balance_uwolo") or doctor.get("escrow_balance_uwolo"),
+        "min_escrow_balance_uwolo": health.get("min_escrow_balance_uwolo") or doctor.get("min_escrow_balance_uwolo"),
+        "escrow_fee_headroom_uwolo": health.get("escrow_fee_headroom_uwolo") or doctor.get("escrow_fee_headroom_uwolo"),
         "warnings": warnings,
         "warning_count": len(warnings),
     },

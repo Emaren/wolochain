@@ -45,65 +45,75 @@ var settlementRequestIDPattern = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._:-]
 var settlementSourceEventPattern = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$`)
 
 type settlementConfig struct {
-	ExecutablePath        string
-	HomeDir               string
-	KeyringBackend        string
-	KeyringDir            string
-	NodeAddr              string
-	RPCHTTP               string
-	RESTURL               string
-	PublicRESTURL         string
-	ChainID               string
-	BaseDenom             string
-	DisplayDenom          string
-	AddressPrefix         string
-	PayoutKeyName         string
-	PayoutAddress         string
-	EscrowKeyName         string
-	EscrowAddress         string
-	TreasuryAddress       string
-	EscrowAutoTopUp       bool
-	BroadcastMode         string
-	Gas                   string
-	GasAdjustment         string
-	GasPrices             string
-	Fees                  string
-	MinPayoutBalanceUWolo uint64
-	FeeHeadroomUWolo      uint64
-	StateDir              string
-	ListenAddr            string
-	AuthToken             string
-	RequestLockTTL        time.Duration
-	RequestTimeout        time.Duration
-	LookupTimeout         time.Duration
-	HealthTimeout         time.Duration
-	ConfirmTimeout        time.Duration
-	ConfirmInterval       time.Duration
+	ExecutablePath         string
+	HomeDir                string
+	KeyringBackend         string
+	KeyringDir             string
+	NodeAddr               string
+	RPCHTTP                string
+	RESTURL                string
+	PublicRESTURL          string
+	ChainID                string
+	BaseDenom              string
+	DisplayDenom           string
+	AddressPrefix          string
+	PayoutKeyName          string
+	PayoutAddress          string
+	EscrowKeyName          string
+	EscrowAddress          string
+	TreasuryAddress        string
+	EscrowAutoTopUp        bool
+	BroadcastMode          string
+	Gas                    string
+	GasAdjustment          string
+	GasPrices              string
+	Fees                   string
+	MinPayoutBalanceUWolo  uint64
+	FeeHeadroomUWolo       uint64
+	MinEscrowBalanceUWolo  uint64
+	EscrowFeeHeadroomUWolo uint64
+	StateDir               string
+	ListenAddr             string
+	AuthToken              string
+	RequestLockTTL         time.Duration
+	RequestTimeout         time.Duration
+	LookupTimeout          time.Duration
+	HealthTimeout          time.Duration
+	ConfirmTimeout         time.Duration
+	ConfirmInterval        time.Duration
 }
 
 type settlementHealthResponse struct {
-	OK                    bool     `json:"ok"`
-	FailureCode           string   `json:"failure_code,omitempty"`
-	Detail                string   `json:"detail,omitempty"`
-	ChainID               string   `json:"chain_id"`
-	RuntimeChainID        string   `json:"runtime_chain_id,omitempty"`
-	RPCURL                string   `json:"rpc_url"`
-	RESTURL               string   `json:"rest_url"`
-	PublicRESTURL         string   `json:"public_rest_url,omitempty"`
-	HomeDir               string   `json:"home_dir"`
-	KeyringBackend        string   `json:"keyring_backend"`
-	PayoutKeyName         string   `json:"payout_key_name,omitempty"`
-	PayoutAddress         string   `json:"payout_address,omitempty"`
-	EscrowAddress         string   `json:"escrow_address,omitempty"`
-	PayoutBalanceUWolo    string   `json:"payout_balance_uwolo,omitempty"`
-	PayoutBalanceWolo     string   `json:"payout_balance_wolo,omitempty"`
-	MinPayoutBalanceUWolo string   `json:"min_payout_balance_uwolo,omitempty"`
-	MinPayoutBalanceWolo  string   `json:"min_payout_balance_wolo,omitempty"`
-	FeeHeadroomUWolo      string   `json:"fee_headroom_uwolo,omitempty"`
-	FeeHeadroomWolo       string   `json:"fee_headroom_wolo,omitempty"`
-	Warnings              []string `json:"warnings,omitempty"`
-	LoopbackOnly          bool     `json:"loopback_only"`
-	AuthTokenSet          bool     `json:"auth_token_set"`
+	OK                     bool     `json:"ok"`
+	FailureCode            string   `json:"failure_code,omitempty"`
+	Detail                 string   `json:"detail,omitempty"`
+	ChainID                string   `json:"chain_id"`
+	RuntimeChainID         string   `json:"runtime_chain_id,omitempty"`
+	RPCURL                 string   `json:"rpc_url"`
+	RESTURL                string   `json:"rest_url"`
+	PublicRESTURL          string   `json:"public_rest_url,omitempty"`
+	HomeDir                string   `json:"home_dir"`
+	KeyringBackend         string   `json:"keyring_backend"`
+	PayoutKeyName          string   `json:"payout_key_name,omitempty"`
+	PayoutAddress          string   `json:"payout_address,omitempty"`
+	EscrowKeyName          string   `json:"escrow_key_name,omitempty"`
+	EscrowAddress          string   `json:"escrow_address,omitempty"`
+	EscrowSignerAddress    string   `json:"escrow_signer_address,omitempty"`
+	PayoutBalanceUWolo     string   `json:"payout_balance_uwolo,omitempty"`
+	PayoutBalanceWolo      string   `json:"payout_balance_wolo,omitempty"`
+	EscrowBalanceUWolo     string   `json:"escrow_balance_uwolo,omitempty"`
+	EscrowBalanceWolo      string   `json:"escrow_balance_wolo,omitempty"`
+	MinPayoutBalanceUWolo  string   `json:"min_payout_balance_uwolo,omitempty"`
+	MinPayoutBalanceWolo   string   `json:"min_payout_balance_wolo,omitempty"`
+	FeeHeadroomUWolo       string   `json:"fee_headroom_uwolo,omitempty"`
+	FeeHeadroomWolo        string   `json:"fee_headroom_wolo,omitempty"`
+	MinEscrowBalanceUWolo  string   `json:"min_escrow_balance_uwolo,omitempty"`
+	MinEscrowBalanceWolo   string   `json:"min_escrow_balance_wolo,omitempty"`
+	EscrowFeeHeadroomUWolo string   `json:"escrow_fee_headroom_uwolo,omitempty"`
+	EscrowFeeHeadroomWolo  string   `json:"escrow_fee_headroom_wolo,omitempty"`
+	Warnings               []string `json:"warnings,omitempty"`
+	LoopbackOnly           bool     `json:"loopback_only"`
+	AuthTokenSet           bool     `json:"auth_token_set"`
 }
 
 type settlementExecuteRequest struct {
@@ -253,6 +263,10 @@ type settlementRunResponse struct {
 	MinPayoutBalanceWolo     string                      `json:"min_payout_balance_wolo,omitempty"`
 	FeeHeadroomUWolo         string                      `json:"fee_headroom_uwolo,omitempty"`
 	FeeHeadroomWolo          string                      `json:"fee_headroom_wolo,omitempty"`
+	MinEscrowBalanceUWolo    string                      `json:"min_escrow_balance_uwolo,omitempty"`
+	MinEscrowBalanceWolo     string                      `json:"min_escrow_balance_wolo,omitempty"`
+	EscrowFeeHeadroomUWolo   string                      `json:"escrow_fee_headroom_uwolo,omitempty"`
+	EscrowFeeHeadroomWolo    string                      `json:"escrow_fee_headroom_wolo,omitempty"`
 	Warnings                 []string                    `json:"warnings,omitempty"`
 	Detail                   string                      `json:"detail,omitempty"`
 	Payouts                  []settlementRunPayoutResult `json:"payouts,omitempty"`
@@ -1533,41 +1547,51 @@ func loadSettlementConfig() (settlementConfig, error) {
 	if err != nil {
 		return settlementConfig{}, err
 	}
+	minEscrowBalanceUWolo, err := parseOptionalUWoloEnv("WOLO_SETTLEMENT_MIN_ESCROW_BALANCE_UWOLO")
+	if err != nil {
+		return settlementConfig{}, err
+	}
+	escrowFeeHeadroomUWolo, err := parseOptionalUWoloEnv("WOLO_SETTLEMENT_ESCROW_FEE_HEADROOM_UWOLO")
+	if err != nil {
+		return settlementConfig{}, err
+	}
 
 	cfg := settlementConfig{
-		ExecutablePath:        executablePath,
-		HomeDir:               homeDir,
-		KeyringBackend:        getenvDefault("WOLO_SETTLEMENT_KEYRING_BACKEND", "os"),
-		KeyringDir:            expandHome(os.Getenv("WOLO_SETTLEMENT_KEYRING_DIR")),
-		NodeAddr:              getenvDefault("WOLO_SETTLEMENT_NODE", settlementDefaultNode),
-		RPCHTTP:               rpcHTTP,
-		RESTURL:               restURL,
-		PublicRESTURL:         publicRESTURL,
-		ChainID:               getenvDefault("WOLO_SETTLEMENT_CHAIN_ID", settlementCanonicalChainID),
-		BaseDenom:             getenvDefault("WOLO_SETTLEMENT_BASE_DENOM", settlementCanonicalBaseDenom),
-		DisplayDenom:          getenvDefault("WOLO_SETTLEMENT_DISPLAY_DENOM", settlementCanonicalDisplayDenom),
-		AddressPrefix:         getenvDefault("WOLO_SETTLEMENT_ADDRESS_PREFIX", settlementCanonicalPrefix),
-		PayoutKeyName:         strings.TrimSpace(os.Getenv("WOLO_SETTLEMENT_PAYOUT_KEY_NAME")),
-		PayoutAddress:         strings.TrimSpace(os.Getenv("WOLO_SETTLEMENT_PAYOUT_ADDRESS")),
-		EscrowKeyName:         strings.TrimSpace(getenvDefault("WOLO_SETTLEMENT_ESCROW_KEY_NAME", "escrow")),
-		EscrowAddress:         strings.TrimSpace(getenvFirst("WOLO_SETTLEMENT_ESCROW_ADDRESS", "WOLO_BET_ESCROW_ADDRESS")),
-		TreasuryAddress:       strings.TrimSpace(os.Getenv("WOLO_SETTLEMENT_TREASURY_ADDRESS")),
-		EscrowAutoTopUp:       parseBoolEnv("WOLO_SETTLEMENT_ESCROW_AUTO_TOP_UP_ENABLED"),
-		BroadcastMode:         getenvDefault("WOLO_SETTLEMENT_BROADCAST_MODE", "sync"),
-		Gas:                   getenvDefault("WOLO_SETTLEMENT_GAS", "auto"),
-		GasAdjustment:         getenvDefault("WOLO_SETTLEMENT_GAS_ADJUSTMENT", "1.5"),
-		GasPrices:             getenvDefault("WOLO_SETTLEMENT_GAS_PRICES", settlementDefaultGasPrices),
-		Fees:                  strings.TrimSpace(os.Getenv("WOLO_SETTLEMENT_FEES")),
-		MinPayoutBalanceUWolo: minPayoutBalanceUWolo,
-		FeeHeadroomUWolo:      feeHeadroomUWolo,
-		ListenAddr:            getenvDefault("WOLO_SETTLEMENT_LISTEN_ADDR", settlementDefaultListenAddr),
-		AuthToken:             strings.TrimSpace(os.Getenv("WOLO_SETTLEMENT_AUTH_TOKEN")),
-		RequestLockTTL:        2 * time.Minute,
-		RequestTimeout:        30 * time.Second,
-		LookupTimeout:         10 * time.Second,
-		HealthTimeout:         5 * time.Second,
-		ConfirmTimeout:        12 * time.Second,
-		ConfirmInterval:       250 * time.Millisecond,
+		ExecutablePath:         executablePath,
+		HomeDir:                homeDir,
+		KeyringBackend:         getenvDefault("WOLO_SETTLEMENT_KEYRING_BACKEND", "os"),
+		KeyringDir:             expandHome(os.Getenv("WOLO_SETTLEMENT_KEYRING_DIR")),
+		NodeAddr:               getenvDefault("WOLO_SETTLEMENT_NODE", settlementDefaultNode),
+		RPCHTTP:                rpcHTTP,
+		RESTURL:                restURL,
+		PublicRESTURL:          publicRESTURL,
+		ChainID:                getenvDefault("WOLO_SETTLEMENT_CHAIN_ID", settlementCanonicalChainID),
+		BaseDenom:              getenvDefault("WOLO_SETTLEMENT_BASE_DENOM", settlementCanonicalBaseDenom),
+		DisplayDenom:           getenvDefault("WOLO_SETTLEMENT_DISPLAY_DENOM", settlementCanonicalDisplayDenom),
+		AddressPrefix:          getenvDefault("WOLO_SETTLEMENT_ADDRESS_PREFIX", settlementCanonicalPrefix),
+		PayoutKeyName:          strings.TrimSpace(os.Getenv("WOLO_SETTLEMENT_PAYOUT_KEY_NAME")),
+		PayoutAddress:          strings.TrimSpace(os.Getenv("WOLO_SETTLEMENT_PAYOUT_ADDRESS")),
+		EscrowKeyName:          strings.TrimSpace(getenvDefault("WOLO_SETTLEMENT_ESCROW_KEY_NAME", "escrow")),
+		EscrowAddress:          strings.TrimSpace(getenvFirst("WOLO_SETTLEMENT_ESCROW_ADDRESS", "WOLO_BET_ESCROW_ADDRESS")),
+		TreasuryAddress:        strings.TrimSpace(os.Getenv("WOLO_SETTLEMENT_TREASURY_ADDRESS")),
+		EscrowAutoTopUp:        parseBoolEnv("WOLO_SETTLEMENT_ESCROW_AUTO_TOP_UP_ENABLED"),
+		BroadcastMode:          getenvDefault("WOLO_SETTLEMENT_BROADCAST_MODE", "sync"),
+		Gas:                    getenvDefault("WOLO_SETTLEMENT_GAS", "auto"),
+		GasAdjustment:          getenvDefault("WOLO_SETTLEMENT_GAS_ADJUSTMENT", "1.5"),
+		GasPrices:              getenvDefault("WOLO_SETTLEMENT_GAS_PRICES", settlementDefaultGasPrices),
+		Fees:                   strings.TrimSpace(os.Getenv("WOLO_SETTLEMENT_FEES")),
+		MinPayoutBalanceUWolo:  minPayoutBalanceUWolo,
+		FeeHeadroomUWolo:       feeHeadroomUWolo,
+		MinEscrowBalanceUWolo:  minEscrowBalanceUWolo,
+		EscrowFeeHeadroomUWolo: escrowFeeHeadroomUWolo,
+		ListenAddr:             getenvDefault("WOLO_SETTLEMENT_LISTEN_ADDR", settlementDefaultListenAddr),
+		AuthToken:              strings.TrimSpace(os.Getenv("WOLO_SETTLEMENT_AUTH_TOKEN")),
+		RequestLockTTL:         2 * time.Minute,
+		RequestTimeout:         30 * time.Second,
+		LookupTimeout:          10 * time.Second,
+		HealthTimeout:          5 * time.Second,
+		ConfirmTimeout:         12 * time.Second,
+		ConfirmInterval:        250 * time.Millisecond,
 	}
 
 	cfg.StateDir = expandHome(getenvDefault("WOLO_SETTLEMENT_STATE_DIR", filepath.Join(cfg.HomeDir, "settlement")))
@@ -1584,21 +1608,26 @@ func loadSettlementConfig() (settlementConfig, error) {
 
 func (cfg settlementConfig) buildHealthReport(ctx context.Context) settlementHealthResponse {
 	report := settlementHealthResponse{
-		OK:                    true,
-		ChainID:               cfg.ChainID,
-		RPCURL:                cfg.RPCHTTP,
-		RESTURL:               cfg.RESTURL,
-		PublicRESTURL:         cfg.PublicRESTURL,
-		HomeDir:               cfg.HomeDir,
-		KeyringBackend:        cfg.KeyringBackend,
-		PayoutKeyName:         cfg.PayoutKeyName,
-		EscrowAddress:         cfg.EscrowAddress,
-		MinPayoutBalanceUWolo: formatOptionalUWolo(cfg.MinPayoutBalanceUWolo),
-		MinPayoutBalanceWolo:  formatOptionalDisplayAmount(cfg.MinPayoutBalanceUWolo),
-		FeeHeadroomUWolo:      formatOptionalUWolo(cfg.FeeHeadroomUWolo),
-		FeeHeadroomWolo:       formatOptionalDisplayAmount(cfg.FeeHeadroomUWolo),
-		LoopbackOnly:          cfg.listenAddrIsLoopback(),
-		AuthTokenSet:          cfg.AuthToken != "",
+		OK:                     true,
+		ChainID:                cfg.ChainID,
+		RPCURL:                 cfg.RPCHTTP,
+		RESTURL:                cfg.RESTURL,
+		PublicRESTURL:          cfg.PublicRESTURL,
+		HomeDir:                cfg.HomeDir,
+		KeyringBackend:         cfg.KeyringBackend,
+		PayoutKeyName:          cfg.PayoutKeyName,
+		EscrowKeyName:          cfg.EscrowKeyName,
+		EscrowAddress:          cfg.EscrowAddress,
+		MinPayoutBalanceUWolo:  formatOptionalUWolo(cfg.MinPayoutBalanceUWolo),
+		MinPayoutBalanceWolo:   formatOptionalDisplayAmount(cfg.MinPayoutBalanceUWolo),
+		FeeHeadroomUWolo:       formatOptionalUWolo(cfg.FeeHeadroomUWolo),
+		FeeHeadroomWolo:        formatOptionalDisplayAmount(cfg.FeeHeadroomUWolo),
+		MinEscrowBalanceUWolo:  formatOptionalUWolo(cfg.MinEscrowBalanceUWolo),
+		MinEscrowBalanceWolo:   formatOptionalDisplayAmount(cfg.MinEscrowBalanceUWolo),
+		EscrowFeeHeadroomUWolo: formatOptionalUWolo(cfg.EscrowFeeHeadroomUWolo),
+		EscrowFeeHeadroomWolo:  formatOptionalDisplayAmount(cfg.EscrowFeeHeadroomUWolo),
+		LoopbackOnly:           cfg.listenAddrIsLoopback(),
+		AuthTokenSet:           cfg.AuthToken != "",
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, cfg.HealthTimeout)
@@ -1653,6 +1682,15 @@ func (cfg settlementConfig) buildHealthReport(ctx context.Context) settlementHea
 	if cfg.EscrowAddress == "" {
 		report.Warnings = append(report.Warnings, "WOLO_SETTLEMENT_ESCROW_ADDRESS is empty; escrow proof/discovery helpers are disabled")
 	}
+	if cfg.EscrowKeyName == "" {
+		report.Warnings = append(report.Warnings, "WOLO_SETTLEMENT_ESCROW_KEY_NAME is empty; escrow-signed grouped runs are disabled")
+	}
+	if cfg.MinEscrowBalanceUWolo == 0 {
+		report.Warnings = append(report.Warnings, "WOLO_SETTLEMENT_MIN_ESCROW_BALANCE_UWOLO is zero; escrow reserve-floor refusal is disabled")
+	}
+	if cfg.EscrowFeeHeadroomUWolo == 0 {
+		report.Warnings = append(report.Warnings, "WOLO_SETTLEMENT_ESCROW_FEE_HEADROOM_UWOLO is zero; escrow fee-headroom refusal is disabled")
+	}
 	if cfg.EscrowAutoTopUp && cfg.EscrowKeyName == "" {
 		report.Warnings = append(report.Warnings, "WOLO_SETTLEMENT_ESCROW_AUTO_TOP_UP_ENABLED is on but WOLO_SETTLEMENT_ESCROW_KEY_NAME is empty")
 	}
@@ -1705,6 +1743,25 @@ func (cfg settlementConfig) buildHealthReport(ctx context.Context) settlementHea
 		report.OK = false
 		report.FailureCode = "INVALID_ESCROW_ADDRESS"
 		report.Detail = "WOLO_SETTLEMENT_ESCROW_ADDRESS does not match the wolo prefix"
+	}
+
+	if cfg.EscrowKeyName != "" {
+		escrowSignerAddress, err := cfg.resolveEscrowAddress(ctx)
+		if err != nil {
+			report.Warnings = append(report.Warnings, err.Error())
+		} else if escrowSignerAddress != "" {
+			report.EscrowSignerAddress = escrowSignerAddress
+			escrowBalanceUWolo, balanceErr := cfg.fetchAccountBalanceUWolo(ctx, escrowSignerAddress)
+			if balanceErr != nil {
+				report.Warnings = append(report.Warnings, balanceErr.Error())
+			} else {
+				report.EscrowBalanceUWolo = strconv.FormatUint(escrowBalanceUWolo, 10)
+				report.EscrowBalanceWolo = formatDisplayAmount(report.EscrowBalanceUWolo)
+				if _, detail, failed := cfg.checkEscrowReserveHealth(escrowBalanceUWolo); failed {
+					report.Warnings = append(report.Warnings, detail)
+				}
+			}
+		}
 	}
 
 	return report
@@ -1767,7 +1824,7 @@ func (cfg settlementConfig) executeSettlement(ctx context.Context, request settl
 
 	recordPath := cfg.requestRecordPath(normalized.RequestID)
 
-	response, err := cfg.withRequestLock(normalized.RequestID, func() (settlementExecuteResponse, error) {
+	response, err := cfg.withRequestLock(normalized.RequestID, settlementSignerRole, func() (settlementExecuteResponse, error) {
 		stored, readErr := readSettlementStoredResult(recordPath)
 		if readErr == nil {
 			if !sameSettlementRequest(stored.Request, normalized) {
@@ -1853,6 +1910,7 @@ func (cfg settlementConfig) validateSettlementRun(ctx context.Context, request s
 	}
 
 	response.DryRun = true
+	cfg.logSettlementRunResponse("validate", response)
 	return response, nil
 }
 
@@ -1871,7 +1929,7 @@ func (cfg settlementConfig) executeSettlementRun(ctx context.Context, request se
 	recordPath := cfg.runRecordPath(runID)
 	fingerprint := hashSettlementRunRequest(normalized)
 
-	response, err := cfg.withRunLock(runID, func() (settlementRunResponse, error) {
+	response, err := cfg.withRunLock(runID, validation.SignerRole, func() (settlementRunResponse, error) {
 		stored, readErr := readSettlementRunStoredResult(recordPath)
 		if readErr == nil {
 			if stored.Fingerprint != fingerprint {
@@ -2036,16 +2094,13 @@ func (cfg settlementConfig) executeSettlementRun(ctx context.Context, request se
 		return settlementRunResponse{}, err
 	}
 
+	cfg.logSettlementRunResponse("execute", response)
 	return response, nil
 }
 
 func (cfg settlementConfig) buildSettlementRunPlan(ctx context.Context, request settlementRunRequest) (normalizedSettlementRunRequest, settlementRunResponse, error) {
 	normalized, response := prepareSettlementRunRequest(request)
 	response.DryRun = true
-	response.MinPayoutBalanceUWolo = formatOptionalUWolo(cfg.MinPayoutBalanceUWolo)
-	response.MinPayoutBalanceWolo = formatOptionalDisplayAmount(cfg.MinPayoutBalanceUWolo)
-	response.FeeHeadroomUWolo = formatOptionalUWolo(cfg.FeeHeadroomUWolo)
-	response.FeeHeadroomWolo = formatOptionalDisplayAmount(cfg.FeeHeadroomUWolo)
 	if !runResponseHasReadyPayouts(response) {
 		return normalized, finalizeSettlementRunResponse(response), nil
 	}
@@ -2084,6 +2139,10 @@ func (cfg settlementConfig) buildPayoutSettlementRunPlan(ctx context.Context, re
 	response.PayoutBalanceBeforeWolo = health.PayoutBalanceWolo
 	response.SignerBalanceBeforeUWolo = health.PayoutBalanceUWolo
 	response.SignerBalanceBeforeWolo = health.PayoutBalanceWolo
+	response.MinPayoutBalanceUWolo = formatOptionalUWolo(cfg.MinPayoutBalanceUWolo)
+	response.MinPayoutBalanceWolo = formatOptionalDisplayAmount(cfg.MinPayoutBalanceUWolo)
+	response.FeeHeadroomUWolo = formatOptionalUWolo(cfg.FeeHeadroomUWolo)
+	response.FeeHeadroomWolo = formatOptionalDisplayAmount(cfg.FeeHeadroomUWolo)
 	response.Payouts = markRunReadyPayoutsSigner(response.Payouts, settlementSignerRole, health.PayoutAddress)
 
 	if !health.OK {
@@ -2093,6 +2152,24 @@ func (cfg settlementConfig) buildPayoutSettlementRunPlan(ctx context.Context, re
 		response.Retryable = health.FailureCode == "RPC_UNREACHABLE"
 		response.Detail = health.Detail
 		response.Payouts = markRunReadyPayoutsRefused(response.Payouts, health.FailureCode, health.Detail, response.Retryable)
+		return response
+	}
+	if cfg.PayoutKeyName == "" {
+		response.OK = false
+		response.Status = "failed"
+		response.FailureCode = "PAYOUT_SIGNER_UNCONFIGURED"
+		response.Retryable = false
+		response.Detail = "WOLO_SETTLEMENT_PAYOUT_KEY_NAME is required for payout-signed settlement runs"
+		response.Payouts = markRunReadyPayoutsRefused(response.Payouts, response.FailureCode, response.Detail, false)
+		return response
+	}
+	if response.SignerAddress == "" {
+		response.OK = false
+		response.Status = "failed"
+		response.FailureCode = "PAYOUT_SIGNER_UNAVAILABLE"
+		response.Retryable = false
+		response.Detail = fmt.Sprintf("payout signer key %q could not be resolved; check WOLO_SETTLEMENT_PAYOUT_KEY_NAME, WOLO_SETTLEMENT_HOME, and WOLO_SETTLEMENT_KEYRING_BACKEND", cfg.PayoutKeyName)
+		response.Payouts = markRunReadyPayoutsRefused(response.Payouts, response.FailureCode, response.Detail, false)
 		return response
 	}
 	balanceBefore, err := parseOptionalUWoloString(response.SignerBalanceBeforeUWolo)
@@ -2175,12 +2252,16 @@ func (cfg settlementConfig) buildPayoutSettlementRunPlan(ctx context.Context, re
 
 func (cfg settlementConfig) buildEscrowSettlementRunPlan(ctx context.Context, response settlementRunResponse, totalRequested uint64) settlementRunResponse {
 	response.SignerRole = settlementEscrowSignerRole
+	response.MinEscrowBalanceUWolo = formatOptionalUWolo(cfg.MinEscrowBalanceUWolo)
+	response.MinEscrowBalanceWolo = formatOptionalDisplayAmount(cfg.MinEscrowBalanceUWolo)
+	response.EscrowFeeHeadroomUWolo = formatOptionalUWolo(cfg.EscrowFeeHeadroomUWolo)
+	response.EscrowFeeHeadroomWolo = formatOptionalDisplayAmount(cfg.EscrowFeeHeadroomUWolo)
 	signerAddress, balanceBefore, failure := cfg.preflightEscrowSigner(ctx, strconv.FormatUint(totalRequested, 10))
 	response.SignerAddress = signerAddress
 	if signerAddress == "" && failure != nil {
 		response.SignerAddress = failure.SignerAddress
 	}
-	if signerAddress != "" && (failure == nil || failure.FailureCode == "ESCROW_BALANCE_TOO_LOW") {
+	if signerAddress != "" && (failure == nil || escrowFailureHasBalance(failure.FailureCode)) {
 		response.SignerBalanceBeforeUWolo = strconv.FormatUint(balanceBefore, 10)
 		response.SignerBalanceBeforeWolo = formatDisplayAmount(response.SignerBalanceBeforeUWolo)
 	}
@@ -2408,7 +2489,7 @@ func (cfg settlementConfig) preflightExecution(ctx context.Context, requestAmoun
 			Retryable:   false,
 			ChainID:     cfg.ChainID,
 			SignerRole:  settlementSignerRole,
-			Detail:      "payout signer could not be resolved from the configured keyring",
+			Detail:      fmt.Sprintf("payout signer key %q could not be resolved; check WOLO_SETTLEMENT_PAYOUT_KEY_NAME, WOLO_SETTLEMENT_HOME, and WOLO_SETTLEMENT_KEYRING_BACKEND", cfg.PayoutKeyName),
 		}
 	}
 
@@ -3084,7 +3165,85 @@ func (cfg settlementConfig) checkPayoutCapacity(balanceUWolo, requestUWolo uint6
 	return "", "", false
 }
 
-func (cfg settlementConfig) withRequestLock(requestID string, fn func() (settlementExecuteResponse, error)) (settlementExecuteResponse, error) {
+func (cfg settlementConfig) checkEscrowReserveHealth(balanceUWolo uint64) (string, string, bool) {
+	if cfg.EscrowFeeHeadroomUWolo > 0 && balanceUWolo < cfg.EscrowFeeHeadroomUWolo {
+		return "ESCROW_FEE_HEADROOM_TOO_LOW",
+			fmt.Sprintf(
+				"escrow signer balance %s uwolo (%s wolo) is below configured escrow fee headroom %s uwolo (%s wolo)",
+				strconv.FormatUint(balanceUWolo, 10),
+				formatDisplayAmount(strconv.FormatUint(balanceUWolo, 10)),
+				strconv.FormatUint(cfg.EscrowFeeHeadroomUWolo, 10),
+				formatDisplayAmount(strconv.FormatUint(cfg.EscrowFeeHeadroomUWolo, 10)),
+			),
+			true
+	}
+	if cfg.MinEscrowBalanceUWolo > 0 && balanceUWolo < cfg.MinEscrowBalanceUWolo {
+		return "ESCROW_RESERVE_FLOOR_HIT",
+			fmt.Sprintf(
+				"escrow signer balance %s uwolo (%s wolo) is below configured escrow reserve floor %s uwolo (%s wolo)",
+				strconv.FormatUint(balanceUWolo, 10),
+				formatDisplayAmount(strconv.FormatUint(balanceUWolo, 10)),
+				strconv.FormatUint(cfg.MinEscrowBalanceUWolo, 10),
+				formatDisplayAmount(strconv.FormatUint(cfg.MinEscrowBalanceUWolo, 10)),
+			),
+			true
+	}
+
+	return "", "", false
+}
+
+func (cfg settlementConfig) checkEscrowCapacity(balanceUWolo, requestUWolo uint64) (string, string, bool) {
+	if balanceUWolo < requestUWolo {
+		return "ESCROW_BALANCE_TOO_LOW",
+			fmt.Sprintf(
+				"escrow signer balance %s uwolo (%s wolo) is below requested escrow transfer total %s uwolo (%s wolo)",
+				strconv.FormatUint(balanceUWolo, 10),
+				formatDisplayAmount(strconv.FormatUint(balanceUWolo, 10)),
+				strconv.FormatUint(requestUWolo, 10),
+				formatDisplayAmount(strconv.FormatUint(requestUWolo, 10)),
+			),
+			true
+	}
+
+	remaining := balanceUWolo - requestUWolo
+	if cfg.EscrowFeeHeadroomUWolo > 0 && remaining < cfg.EscrowFeeHeadroomUWolo {
+		return "ESCROW_FEE_HEADROOM_TOO_LOW",
+			fmt.Sprintf(
+				"escrow transfer would leave %s uwolo (%s wolo), below configured escrow fee headroom %s uwolo (%s wolo)",
+				strconv.FormatUint(remaining, 10),
+				formatDisplayAmount(strconv.FormatUint(remaining, 10)),
+				strconv.FormatUint(cfg.EscrowFeeHeadroomUWolo, 10),
+				formatDisplayAmount(strconv.FormatUint(cfg.EscrowFeeHeadroomUWolo, 10)),
+			),
+			true
+	}
+	if cfg.MinEscrowBalanceUWolo > 0 && remaining < cfg.MinEscrowBalanceUWolo {
+		return "ESCROW_RESERVE_FLOOR_HIT",
+			fmt.Sprintf(
+				"escrow transfer would leave %s uwolo (%s wolo), below configured escrow reserve floor %s uwolo (%s wolo)",
+				strconv.FormatUint(remaining, 10),
+				formatDisplayAmount(strconv.FormatUint(remaining, 10)),
+				strconv.FormatUint(cfg.MinEscrowBalanceUWolo, 10),
+				formatDisplayAmount(strconv.FormatUint(cfg.MinEscrowBalanceUWolo, 10)),
+			),
+			true
+	}
+
+	return "", "", false
+}
+
+func escrowFailureHasBalance(failureCode string) bool {
+	switch strings.TrimSpace(failureCode) {
+	case "ESCROW_BALANCE_TOO_LOW", "ESCROW_FEE_HEADROOM_TOO_LOW", "ESCROW_RESERVE_FLOOR_HIT":
+		return true
+	default:
+		return false
+	}
+}
+
+func (cfg settlementConfig) withRequestLock(requestID, signerRole string, fn func() (settlementExecuteResponse, error)) (settlementExecuteResponse, error) {
+	signerRole, _ = normalizeSettlementRunSignerRole(signerRole)
+
 	lockPath := cfg.requestLockPath(requestID)
 	if err := os.MkdirAll(filepath.Dir(lockPath), 0o755); err != nil {
 		return settlementExecuteResponse{}, err
@@ -3096,7 +3255,7 @@ func (cfg settlementConfig) withRequestLock(requestID string, fn func() (settlem
 			info, statErr := os.Stat(lockPath)
 			if statErr == nil && time.Since(info.ModTime()) > cfg.RequestLockTTL {
 				_ = os.Remove(lockPath)
-				return cfg.withRequestLock(requestID, fn)
+				return cfg.withRequestLock(requestID, signerRole, fn)
 			}
 			return settlementExecuteResponse{
 				OK:          false,
@@ -3105,7 +3264,7 @@ func (cfg settlementConfig) withRequestLock(requestID string, fn func() (settlem
 				Retryable:   true,
 				RequestID:   requestID,
 				ChainID:     cfg.ChainID,
-				SignerRole:  settlementSignerRole,
+				SignerRole:  signerRole,
 				Detail:      "another settlement attempt with this request id is already running",
 			}, nil
 		}
@@ -3119,7 +3278,9 @@ func (cfg settlementConfig) withRequestLock(requestID string, fn func() (settlem
 	return fn()
 }
 
-func (cfg settlementConfig) withRunLock(runID string, fn func() (settlementRunResponse, error)) (settlementRunResponse, error) {
+func (cfg settlementConfig) withRunLock(runID, signerRole string, fn func() (settlementRunResponse, error)) (settlementRunResponse, error) {
+	signerRole, _ = normalizeSettlementRunSignerRole(signerRole)
+
 	lockPath := cfg.runLockPath(runID)
 	if err := os.MkdirAll(filepath.Dir(lockPath), 0o755); err != nil {
 		return settlementRunResponse{}, err
@@ -3131,7 +3292,7 @@ func (cfg settlementConfig) withRunLock(runID string, fn func() (settlementRunRe
 			info, statErr := os.Stat(lockPath)
 			if statErr == nil && time.Since(info.ModTime()) > cfg.RequestLockTTL {
 				_ = os.Remove(lockPath)
-				return cfg.withRunLock(runID, fn)
+				return cfg.withRunLock(runID, signerRole, fn)
 			}
 			return settlementRunResponse{
 				OK:              false,
@@ -3140,6 +3301,7 @@ func (cfg settlementConfig) withRunLock(runID string, fn func() (settlementRunRe
 				FailureCode:     "RUN_IN_PROGRESS",
 				Retryable:       true,
 				SettlementRunID: runID,
+				SignerRole:      signerRole,
 				Detail:          "another settlement run attempt with this settlement_run_id is already running",
 			}, nil
 		}
@@ -4317,6 +4479,73 @@ func writeJSONResponse(w http.ResponseWriter, statusCode int, value any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
 	_ = writeJSON(w, value)
+}
+
+func (cfg settlementConfig) logSettlementRunResponse(event string, response settlementRunResponse) {
+	txHashes := make([]string, 0, len(response.Payouts))
+	seen := map[string]struct{}{}
+	for _, payout := range response.Payouts {
+		txHash := strings.TrimSpace(payout.TxHash)
+		if txHash == "" {
+			continue
+		}
+		if _, exists := seen[txHash]; exists {
+			continue
+		}
+		seen[txHash] = struct{}{}
+		txHashes = append(txHashes, txHash)
+	}
+
+	refusalReason := strings.TrimSpace(response.FailureCode)
+	if refusalReason == "" && !response.OK {
+		refusalReason = strings.TrimSpace(response.Detail)
+	}
+
+	payload := struct {
+		Event                string   `json:"event"`
+		At                   string   `json:"at"`
+		ChainID              string   `json:"chain_id"`
+		DryRun               bool     `json:"dry_run"`
+		Status               string   `json:"status,omitempty"`
+		OK                   bool     `json:"ok"`
+		Retryable            bool     `json:"retryable"`
+		IdempotentReplay     bool     `json:"idempotent_replay"`
+		SignerRole           string   `json:"signer_role,omitempty"`
+		SignerAddress        string   `json:"signer_address,omitempty"`
+		SettlementRunID      string   `json:"settlement_run_id,omitempty"`
+		SourceApp            string   `json:"source_app,omitempty"`
+		SourceEventID        string   `json:"source_event_id,omitempty"`
+		RequestedPayoutCount int      `json:"requested_payout_count"`
+		RequestedTotalUWolo  string   `json:"requested_total_uwolo,omitempty"`
+		FailureCode          string   `json:"failure_code,omitempty"`
+		RefusalReason        string   `json:"refusal_reason,omitempty"`
+		TxHashes             []string `json:"tx_hashes,omitempty"`
+	}{
+		Event:                "settlement_run_" + strings.TrimSpace(event),
+		At:                   time.Now().UTC().Format(time.RFC3339Nano),
+		ChainID:              cfg.ChainID,
+		DryRun:               response.DryRun,
+		Status:               response.Status,
+		OK:                   response.OK,
+		Retryable:            response.Retryable,
+		IdempotentReplay:     response.IdempotentReplay,
+		SignerRole:           response.SignerRole,
+		SignerAddress:        response.SignerAddress,
+		SettlementRunID:      response.SettlementRunID,
+		SourceApp:            response.SourceApp,
+		SourceEventID:        response.SourceEventID,
+		RequestedPayoutCount: response.RequestedPayoutCount,
+		RequestedTotalUWolo:  response.RequestedTotalUWolo,
+		FailureCode:          response.FailureCode,
+		RefusalReason:        refusalReason,
+		TxHashes:             txHashes,
+	}
+
+	data, err := json.Marshal(payload)
+	if err != nil {
+		return
+	}
+	fmt.Fprintf(os.Stderr, "%s\n", data)
 }
 
 func optionalSettlementRecord(summaryOnly bool, record *settlementStoredResult) *settlementStoredResult {

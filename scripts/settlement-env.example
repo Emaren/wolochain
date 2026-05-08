@@ -41,8 +41,13 @@ export WOLO_SETTLEMENT_GAS_ADJUSTMENT="1.5"
 export WOLO_SETTLEMENT_GAS_PRICES="0.025uwolo"
 # Leave fixed fees unset unless you want deterministic grouped-run fee estimates.
 export WOLO_SETTLEMENT_FEES=""
+# Payout-signed grouped runs must leave both the payout reserve floor and fee headroom.
 export WOLO_SETTLEMENT_MIN_PAYOUT_BALANCE_UWOLO="1000000000"
 export WOLO_SETTLEMENT_FEE_HEADROOM_UWOLO="10000000"
+# Escrow-signed grouped runs use separate escrow reserve/headroom values so payout health
+# cannot block escrow settlements and payout runs cannot borrow escrow funds.
+export WOLO_SETTLEMENT_MIN_ESCROW_BALANCE_UWOLO="10000000"
+export WOLO_SETTLEMENT_ESCROW_FEE_HEADROOM_UWOLO="10000000"
 
 # Localhost API server
 export WOLO_SETTLEMENT_LISTEN_ADDR="127.0.0.1:8091"
