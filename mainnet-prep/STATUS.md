@@ -130,3 +130,29 @@ Next steps:
 3. Add VPSSentry/Traffic visibility for mainnet health.
 4. Delay Osmosis liquidity until wallet and explorer surfaces are stable.
 
+## Osmosis Relayer Staging Update
+
+WoloChain mainnet Osmosis Hermes relayer staging is documented.
+
+Confirmed:
+
+- Dedicated config staged on the VPS:
+  - `/etc/wolochain-mainnet/hermes-osmosis.toml`
+- Dedicated service unit staged on the VPS:
+  - `/etc/systemd/system/wolochain-mainnet-osmosis-relayer.service`
+- Dedicated relayer home staged on the VPS:
+  - `/var/lib/wolochain-mainnet-relayer`
+- Hermes config validation passed.
+- Systemd unit validation passed.
+- `wolochain-mainnet-osmosis-relayer.service` remains inactive and was not started.
+- `tokenchain-relayer.service` remains active and was not modified.
+- No IBC clients, connections, or channels have been created.
+- No WOLO transfer, liquidity action, or WOLO/USDC pool creation has happened.
+
+Next steps:
+
+1. Review `mainnet-prep/HERMES_OSMOSIS_RELAYER_STAGING.md`.
+2. Review `mainnet-prep/RELAYER_KEYS_AND_FUNDING_CHECKLIST.md`.
+3. Create/import dedicated relayer gas keys only after Tony confirms.
+4. Fund only the dedicated relayer gas wallets with small `uwolo` and `uosmo` amounts.
+5. Stop before Phase 3 IBC path creation until Tony explicitly confirms.
