@@ -161,6 +161,63 @@ shred -u \
 
 Only run cleanup after Tony confirms the mnemonic material is backed up safely elsewhere.
 
+## Phase 2.85 Private Mnemonic Files
+
+Creation date: 2026-05-25 UTC.
+
+Private relayer mnemonic files were created on the VPS outside git. Mnemonic contents were not displayed, printed, echoed, catted, or copied into this repo.
+
+Command support confirmed:
+
+```bash
+/usr/local/bin/wolochaind-mainnet keys mnemonic --help
+```
+
+Private directory:
+
+```txt
+/root/wolo-1-mainnet-prep-markers/private-relayer-key-material
+```
+
+Directory metadata:
+
+```txt
+permissions: 0700
+owner: root
+group: root
+```
+
+Mnemonic files:
+
+```txt
+/root/wolo-1-mainnet-prep-markers/private-relayer-key-material/wolo-relayer.mnemonic
+/root/wolo-1-mainnet-prep-markers/private-relayer-key-material/osmosis-relayer.mnemonic
+```
+
+File metadata:
+
+```txt
+wolo-relayer.mnemonic: permissions 0600, owner root, group root, word count 24
+osmosis-relayer.mnemonic: permissions 0600, owner root, group root, word count 24
+```
+
+Safety confirmations:
+
+- These mnemonic files are for relayer gas wallets only.
+- They are not liquidity wallets.
+- They are not Founder Cold.
+- They are not Community Treasury.
+- They are not the WOLO DEX Liquidity Reserve.
+- They have not been imported into Hermes yet.
+- No relayer addresses exist yet.
+- No funds have been sent to these future relayer wallets yet.
+- No IBC clients, connections, or channels were created.
+- No transfers, liquidity, or pool creation happened.
+
+Next step:
+
+Phase 2.9 should import these mnemonic files into Hermes, then record the Wolo and Osmosis relayer gas wallet addresses.
+
 ## Command Prefix
 
 Use the dedicated WoloChain mainnet relayer home and config:

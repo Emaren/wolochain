@@ -215,3 +215,37 @@ Next steps:
 3. Record the Wolo and Osmosis relayer gas addresses.
 4. Fund only those relayer gas wallets with small `uwolo` and `uosmo` amounts.
 5. Stop before Phase 3 IBC path creation until Tony explicitly confirms.
+
+## Private Relayer Mnemonic File Update
+
+Fresh relayer-only mnemonic files were created privately on the VPS outside git.
+
+Confirmed:
+
+- Mnemonic command exists:
+  - `/usr/local/bin/wolochaind-mainnet keys mnemonic`
+- Private directory:
+  - `/root/wolo-1-mainnet-prep-markers/private-relayer-key-material`
+- Directory permissions:
+  - `0700 root:root`
+- Wolo relayer mnemonic file:
+  - `/root/wolo-1-mainnet-prep-markers/private-relayer-key-material/wolo-relayer.mnemonic`
+  - permissions: `0600 root:root`
+  - word count: `24`
+- Osmosis relayer mnemonic file:
+  - `/root/wolo-1-mainnet-prep-markers/private-relayer-key-material/osmosis-relayer.mnemonic`
+  - permissions: `0600 root:root`
+  - word count: `24`
+- Mnemonic contents were not displayed, printed, echoed, catted, or copied into the repo.
+- These are relayer gas wallet mnemonics only.
+- They are not liquidity wallets, Founder Cold, Community Treasury, or DEX Liquidity Reserve.
+- No keys were imported into Hermes.
+- No relayer addresses are available yet.
+- `wolochain-mainnet-osmosis-relayer.service` remains inactive and was not started.
+- `tokenchain-relayer.service` remains active and was not modified.
+- No IBC clients, connections, or channels have been created.
+- No WOLO transfer, OSMO transfer, liquidity action, or WOLO/USDC pool creation has happened.
+
+Next step:
+
+Phase 2.9 should import the mnemonic files into Hermes, list the resulting relayer addresses, and stop before gas funding or Phase 3 unless Tony explicitly confirms.
