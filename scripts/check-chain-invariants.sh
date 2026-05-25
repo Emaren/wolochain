@@ -74,9 +74,22 @@ for path in "${TRACKED_FILES[@]}"; do
   case "$path" in
     scripts/check-chain-invariants.sh)
       ;;
-    docs/mainnet-template.md)
-      # This planning doc is the only tracked location allowed to name the
-      # future mainnet chain id. Runtime defaults must remain wolo-testnet.
+    scripts/check-mainnet-prep.sh)
+      # Mainnet prep validation intentionally names the future chain id and
+      # non-conflicting mainnet ports. It must stay read-only.
+      ;;
+    scripts/render-mainnet-allocation.sh)
+      # Mainnet allocation rendering is a read-only prep helper. It may name
+      # wolo-1 but must only write ignored draft artifacts under build/.
+      ;;
+    scripts/check-mainnet-genesis-readiness.sh)
+      # Mainnet genesis readiness is a read-only gate helper. It may name
+      # wolo-1 but must only write ignored reports under build/.
+      ;;
+    docs/mainnet-*.md)
+      # Mainnet planning docs are allowed to name the future chain id.
+      # Runtime defaults, scripts, examples, and generated outputs must remain
+      # pinned to wolo-testnet until there is a deliberate launch cutover.
       ;;
     *)
       filtered_files+=("$path")
@@ -86,7 +99,7 @@ done
 TRACKED_FILES=("${filtered_files[@]}")
 
 echo "=== repo drift scan ==="
-scan_repo_pattern 'wolo-1|wolo-testnet-1' 'Mainnet or legacy chain IDs are still present outside the explicit mainnet planning doc.'
+scan_repo_pattern 'wolo-1|wolo-testnet-1' 'Mainnet or legacy chain IDs are still present outside explicit mainnet planning docs.'
 scan_repo_pattern 'rpc[.]aoe2hdbets[.]com|rest[.]aoe2hdbets[.]com|explorer[.]testnet[.]aoe2hdbets[.]com' 'Stale public Wolo endpoint hosts are still present in tracked repo files.'
 scan_repo_pattern '\butoken\b|\bustake\b' 'Legacy scaffold denoms are still present in tracked repo files.'
 scan_repo_pattern 'tokenchain' 'Legacy scaffold chain naming is still present in tracked repo files.'

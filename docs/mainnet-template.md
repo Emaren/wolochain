@@ -2,6 +2,21 @@
 
 This report is a planning template only. It must not be used to launch mainnet, reset testnet, clone validator state, or create liquidity.
 
+Core rule: clone the architecture, not the state.
+
+## Planning Package
+
+- [Mainnet launch plan](mainnet-launch-plan.md)
+- [Tony decision checklist](mainnet-decision-checklist.md)
+- [Genesis allocation template](mainnet-genesis-allocation-template.md)
+- [Wallet and key plan](mainnet-wallets.md)
+- [Services and ports](mainnet-services-and-ports.md)
+- [DNS, nginx, and TLS](mainnet-dns-nginx-tls.md)
+- [Keplr and explorer metadata](mainnet-keplr-explorer.md)
+- [IBC and Osmosis plan](mainnet-ibc-osmosis.md)
+- [Cutover checklist](mainnet-cutover-checklist.md)
+- [Prep templates](../mainnet-prep/README.md)
+
 ## Confirmed Testnet Values
 
 - Chain ID: `wolo-testnet`
@@ -43,15 +58,23 @@ The testnet settlement state is operator truth for request and grouped-run histo
 - Decimals: `6`
 - Address prefix: `wolo`
 - Supply model: fixed supply, no silent inflation
-- Chain home: separate mainnet home, not `/var/lib/wolochaind-testnet`
-- Node service: separate mainnet systemd service, not `wolochaind-testnet.service`
-- Settlement service: separate mainnet settlement service, not `wolochain-settlement.service`
-- Ports: separate RPC, REST, P2P, and settlement ports from testnet
-- Public endpoints: separate mainnet RPC, REST, and explorer URLs
+- Chain home: `/var/lib/wolochaind-mainnet`
+- Node service: `wolochaind-mainnet.service`
+- Settlement service: `wolochain-mainnet-settlement.service`
+- P2P: `0.0.0.0:27656`
+- RPC: `127.0.0.1:27657`
+- REST: `127.0.0.1:1318`
+- Settlement API: `127.0.0.1:8092`
+- Public RPC: `https://rpc.wolo.aoe2war.com`
+- Public REST: `https://rest.wolo.aoe2war.com`
+- Public explorer: `https://explorer.wolo.aoe2war.com`
+- Settlement/operator state: `/mnt/HC_Volume_105319120/wolochain-mainnet/settlement-state`
 - Validator keys: fresh mainnet validator keys
 - Genesis: fresh mainnet genesis
 - Allocations: fresh mainnet allocation table
 - Balances: no automatic migration from `wolo-testnet`
+- Recommended local prep clone: `/Users/tonyblum/projects/WoloChain-wolo-1`
+- Recommended prep branch: `wolo-1-mainnet-prep`
 
 The future mainnet should use WoloChain as the reference implementation, not as copied state. Do not reuse testnet validator keys, chain home, settlement state, or balances.
 
