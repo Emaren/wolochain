@@ -49,3 +49,27 @@ VPS launch-host staging:
 5. Generate the validator gentx.
 6. Validate final genesis.
 7. Stop before starting mainnet services until final review.
+
+## Launch Update
+
+`wolo-1` mainnet was launched on the VPS.
+
+Confirmed:
+
+- `wolochaind-mainnet.service` is active.
+- RPC is listening on `127.0.0.1:27657`.
+- REST is listening on `127.0.0.1:1318`.
+- P2P is listening on `0.0.0.0:27656`.
+- Chain ID is `wolo-1`.
+- Blocks are being produced.
+- Validator voting power is `1000`.
+- `wolochaind-testnet.service` remained active.
+- `wolochain-settlement.service` remained active.
+
+Next steps:
+
+1. Clean pprof/log warnings.
+2. Add public Nginx routes for mainnet RPC/REST.
+3. Update AoE2War/Keplr/explorer configs.
+4. Add monitoring checks.
+5. Do not create Osmosis liquidity until public endpoints and explorer are stable.
