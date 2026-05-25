@@ -185,3 +185,33 @@ Next steps:
 3. Record the Wolo and Osmosis relayer gas wallet addresses.
 4. Fund those gas wallets only with small `uwolo` and `uosmo` amounts.
 5. Stop before Phase 3 IBC path creation until Tony explicitly confirms.
+
+## Secure Relayer Key Import Plan Update
+
+WoloChain mainnet Osmosis relayer key creation/import planning is documented.
+
+Confirmed:
+
+- Hermes supports importing a relayer key from a mnemonic file.
+- Hermes supports importing a relayer key from a Comet keyring JSON file.
+- The installed Hermes CLI does not expose an internal fresh-key generation command that avoids supplying private key material.
+- No relayer keys were created or imported.
+- No mnemonics or private keys were displayed.
+- Prepared private-material directory path:
+  - `/root/wolo-1-mainnet-prep-markers/private-relayer-key-material`
+- Prepared Wolo mnemonic placeholder:
+  - `/root/wolo-1-mainnet-prep-markers/private-relayer-key-material/wolo-relayer.mnemonic`
+- Prepared Osmosis mnemonic placeholder:
+  - `/root/wolo-1-mainnet-prep-markers/private-relayer-key-material/osmosis-relayer.mnemonic`
+- `wolochain-mainnet-osmosis-relayer.service` remains inactive and was not started.
+- `tokenchain-relayer.service` remains active and was not modified.
+- No IBC clients, connections, or channels have been created.
+- No WOLO transfer, OSMO transfer, liquidity action, or WOLO/USDC pool creation has happened.
+
+Next steps:
+
+1. Tony explicitly confirms the mnemonic-file or key-file import workflow.
+2. Create/import the two dedicated relayer gas keys without exposing private material.
+3. Record the Wolo and Osmosis relayer gas addresses.
+4. Fund only those relayer gas wallets with small `uwolo` and `uosmo` amounts.
+5. Stop before Phase 3 IBC path creation until Tony explicitly confirms.
