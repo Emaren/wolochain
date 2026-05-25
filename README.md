@@ -261,6 +261,7 @@ For one logical result with many payouts, the preferred flow is:
 - Treat grouped run state as operator data too; it lives beside request state under the settlement state dir.
 - Treat testnet balances as testnet-only data. They do not automatically migrate to any future mainnet.
 - Future mainnet planning must use a separate fresh chain. See [`docs/mainnet-template.md`](docs/mainnet-template.md) before touching any mainnet-facing config.
+- The mainnet planning package starts at [`docs/mainnet-template.md`](docs/mainnet-template.md) and includes launch plan, allocation, wallets, services, DNS/TLS, Keplr/explorer, IBC/Osmosis, and cutover checklist docs.
 - Prefer keeping `WOLO_SETTLEMENT_AUTH_TOKEN` enabled even for localhost-only POSTs and have callers send bearer auth.
 - `WOLO_SETTLEMENT_ESCROW_ADDRESS` only affects proof classification and operator warnings; it does not create escrow semantics by itself.
 - `WOLO_SETTLEMENT_ESCROW_KEY_NAME` and `WOLO_SETTLEMENT_ESCROW_ADDRESS` are both required if you want challenge auto-top-up from escrow.
