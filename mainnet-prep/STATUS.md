@@ -327,3 +327,22 @@ Operational note:
 Next step:
 
 Phase 4 should perform only a tiny 1 WOLO test transfer, base amount `1000000uwolo`, over Wolo channel `channel-0` after Tony explicitly confirms.
+
+## Phase 4 Test Transfer Update
+
+A tiny WoloChain mainnet to Osmosis test transfer completed successfully.
+
+Confirmed:
+
+- Amount: `1000000uwolo` / `1 WOLO`
+- Source chain: `wolo-1`
+- Destination chain: `osmosis-1`
+- Wolo channel: `channel-0`
+- Osmosis channel: `channel-110224`
+- Receiver: `osmo1yyuu097eppte7qya48r3dth86smdl3sjyx7qc6`
+- Tx hash: `63877698D884CE7BC92002F97A24333102DB21F52E8343C3997F9E8D5BBB5C08`
+- Packet sequence: `1`
+- Osmosis denom: `ibc/D09120C7085DFA412DF77608DAD3A4797F5F097A038DA0C2E1D1426FC9CD836D`
+- Relay acknowledgement completed.
+
+No liquidity transfer or pool creation has happened yet.
