@@ -156,3 +156,32 @@ Next steps:
 3. Create/import dedicated relayer gas keys only after Tony confirms.
 4. Fund only the dedicated relayer gas wallets with small `uwolo` and `uosmo` amounts.
 5. Stop before Phase 3 IBC path creation until Tony explicitly confirms.
+
+## Relayer Keys and Funding Prep Update
+
+WoloChain mainnet Osmosis relayer key state was inspected using the dedicated Hermes home and config.
+
+Confirmed:
+
+- Dedicated Hermes home used:
+  - `/var/lib/wolochain-mainnet-relayer`
+- Dedicated Hermes config used:
+  - `/etc/wolochain-mainnet/hermes-osmosis.toml`
+- `wolo-mainnet-osmosis-relayer` is not present yet.
+- `osmosis-mainnet-wolo-relayer` is not present yet.
+- No relayer addresses are available yet.
+- `uwolo` balance check is blocked by the missing Wolo relayer key.
+- `uosmo` balance check is blocked by the missing Osmosis relayer key.
+- No relayer keys were generated or imported.
+- `wolochain-mainnet-osmosis-relayer.service` remains inactive and was not started.
+- `tokenchain-relayer.service` remains active and was not modified.
+- No IBC clients, connections, or channels have been created.
+- No WOLO transfer, OSMO transfer, liquidity action, or WOLO/USDC pool creation has happened.
+
+Next steps:
+
+1. Tony confirms the secure relayer key creation/import method.
+2. Import dedicated relayer gas keys into Hermes without exposing private material.
+3. Record the Wolo and Osmosis relayer gas wallet addresses.
+4. Fund those gas wallets only with small `uwolo` and `uosmo` amounts.
+5. Stop before Phase 3 IBC path creation until Tony explicitly confirms.
