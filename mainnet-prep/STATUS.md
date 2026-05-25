@@ -362,3 +362,22 @@ Confirmed:
 - Osmosis denom: `ibc/D09120C7085DFA412DF77608DAD3A4797F5F097A038DA0C2E1D1426FC9CD836D`
 
 No WOLO/USDC pool has been created yet.
+
+## Phase 6 Osmosis Pool Launch Update
+
+The first WOLO/USDC Osmosis pool is live.
+
+Confirmed:
+
+- Pool ID: `3461`
+- Pool URL: `https://app.osmosis.zone/pool/3461`
+- Pool address: `osmo1kt0m5gfjunhgd2z7emnqqejrygwcuw7h5w39rqtq3ykzc55m09nqyzt5yj`
+- WOLO amount: `200000000000uwolo` / `200,000 WOLO`
+- USDC amount: `20 USDC`
+- WOLO denom: `ibc/D09120C7085DFA412DF77608DAD3A4797F5F097A038DA0C2E1D1426FC9CD836D`
+- USDC denom: `ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4`
+- Swap fee: `0.2%`
+- Launch price: `1 WOLO = 0.0001 USDC`
+
+WOLO is now live on Osmosis.
+
