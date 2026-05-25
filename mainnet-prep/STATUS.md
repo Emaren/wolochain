@@ -1,6 +1,6 @@
 # WoloChain wolo-1 Mainnet Prep Status
 
-Status: WoloChain mainnet is live; WoloChain mainnet to Osmosis mainnet IBC path is open; no WOLO transfer, liquidity action, or WOLO/USDC pool creation has happened.
+Status: WoloChain mainnet is live; WOLO is bridged to Osmosis; WOLO/USDC Pool `3461` is live; post-launch metadata polish is pending.
 
 ## Completed
 
@@ -29,16 +29,13 @@ Status: WoloChain mainnet is live; WoloChain mainnet to Osmosis mainnet IBC path
 
 ## Remaining Not Done
 
-- No WOLO transfer over IBC has been performed.
-- No Osmosis-side WOLO denom trace has been recorded.
-- No 200,000 WOLO liquidity transfer has been performed.
-- No Osmosis liquidity has been created.
-- No WOLO/USDC Osmosis pool has been created.
+- Osmosis/Chain Registry metadata still needs to be prepared so the Osmosis frontend can display `WOLO` instead of the raw IBC denom.
+- AoE2War `/wolo` can use local known metadata as an immediate display workaround.
 - `wolo-testnet` has not been touched.
 
 ## Next Phase
 
-Phase 4 should be a tiny 1 WOLO test transfer only, after Tony explicitly confirms.
+Prepare Chain Registry and Osmosis assetlist metadata. No funds, transfers, relayer changes, genesis changes, validator changes, new pool creation, or additional liquidity are required for metadata polish.
 
 ## Launch Update
 
@@ -381,3 +378,12 @@ Confirmed:
 
 WOLO is now live on Osmosis.
 
+## Post-Launch Metadata Update
+
+Osmosis Pool `3461` is live, but the Osmosis frontend may temporarily display WOLO as the raw IBC denom until Chain Registry and Osmosis assetlist metadata propagate.
+
+Metadata plan:
+
+- `mainnet-prep/WOLO_OSMOSIS_METADATA_PLAN.md`
+
+No additional liquidity, new pool, new IBC transfer, relayer/service change, genesis change, or validator change is required for this metadata polish.
