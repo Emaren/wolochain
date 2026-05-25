@@ -30,7 +30,7 @@ WOLO_SETTLEMENT_ESCROW_ADDRESS="${WOLO_SETTLEMENT_ESCROW_ADDRESS:-}"
 WOLO_SETTLEMENT_MIN_ESCROW_BALANCE_UWOLO="${WOLO_SETTLEMENT_MIN_ESCROW_BALANCE_UWOLO:-}"
 WOLO_SETTLEMENT_ESCROW_FEE_HEADROOM_UWOLO="${WOLO_SETTLEMENT_ESCROW_FEE_HEADROOM_UWOLO:-}"
 VERIFY_REQUEST_ID="${VERIFY_REQUEST_ID:-verify-live-auth-check}"
-VERIFY_RUN_ID="${VERIFY_RUN_ID:-verify-live-run-check}"
+VERIFY_RUN_ID="${VERIFY_RUN_ID:-settlement-health-probe-verify}"
 VERIFY_CHALLENGE_RUN_ID="${VERIFY_CHALLENGE_RUN_ID:-verify-live-challenge-check}"
 VERIFY_WAIT_FOR_READY="${VERIFY_WAIT_FOR_READY:-1}"
 VERIFY_READY_TIMEOUT_SEC="${VERIFY_READY_TIMEOUT_SEC:-60}"
@@ -297,10 +297,10 @@ run_body="$tmpdir/run.json"
 cat >"$run_body" <<EOF
 {
   "settlement_run_id": "$VERIFY_RUN_ID",
-  "source_app": "verify-live-settlement",
-  "source_event_id": "verify-$(date -u +%Y%m%dT%H%M%SZ)",
-  "note": "dry-run only",
-  "memo": "dry-run verify",
+  "source_app": "settlement-health-probe",
+  "source_event_id": "health-probe-verify-$(date -u +%Y%m%dT%H%M%SZ)",
+  "note": "health probe only; dry-run route validation",
+  "memo": "health_probe_verify",
   "payouts": [
     {
       "to_address": "$payout_address",

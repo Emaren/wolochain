@@ -227,11 +227,11 @@ fi
 run_body="$tmpdir/run.json"
 cat >"$run_body" <<EOF
 {
-  "settlement_run_id": "alert-check-run",
-  "source_app": "settlement-alert-check",
-  "source_event_id": "alert-check",
-  "note": "dry-run only",
-  "memo": "dry-run alert",
+  "settlement_run_id": "settlement-health-probe-alert",
+  "source_app": "settlement-health-probe",
+  "source_event_id": "health-probe-alert-check",
+  "note": "health probe only; dry-run route validation",
+  "memo": "health_probe_alert",
   "payouts": [
     {
       "to_address": "$payout_address",

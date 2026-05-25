@@ -156,6 +156,14 @@ Operator helpers in this repo:
 - [`scripts/backup-live-settlement.sh`](scripts/backup-live-settlement.sh): rollback-oriented backup with source-path and free-space sanity checks
 - [`scripts/restore-live-settlement.sh`](scripts/restore-live-settlement.sh): defaults to a shared-binary rollback that restarts node + settlement; `RESTORE_MODE=settlement-only` is the explicit env/state-only path
 
+Settlement run stderr logs use explicit event names:
+
+- `health_probe_ok` / `health_probe_failed` for dry settlement capability probes from operator health scripts.
+- `settlement_validation_ok` / `settlement_validation_failed` for real dry-run settlement validation requests.
+- `payout_execution_ok` / `payout_execution_failed` for actual grouped payout execution attempts.
+
+Health probes are always marked with `dry_run=true`, `health_probe=true`, and `probe_kind=dry_settlement_run_validate`; real validation and payout failures remain loud.
+
 ## Settlement Boundary
 
 WoloChain only owns the settlement rail:

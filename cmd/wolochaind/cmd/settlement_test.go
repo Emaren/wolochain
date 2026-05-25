@@ -1412,6 +1412,94 @@ func TestExecuteSettlementRunPartialRetryDoesNotResendConfirmedPayout(t *testing
 	}
 }
 
+func TestSettlementRunLogEventClassification(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name      string
+		operation string
+		response  settlementRunResponse
+		wantEvent string
+		wantProbe bool
+	}{
+		{
+			name:      "health probe ok",
+			operation: "validate",
+			response: settlementRunResponse{
+				OK:              true,
+				DryRun:          true,
+				SettlementRunID: "settlement-health-probe-alert",
+				SourceApp:       "settlement-health-probe",
+			},
+			wantEvent: "health_probe_ok",
+			wantProbe: true,
+		},
+		{
+			name:      "health probe failed",
+			operation: "validate",
+			response: settlementRunResponse{
+				OK:              false,
+				DryRun:          true,
+				SettlementRunID: "settlement-health-probe-verify",
+				SourceEventID:   "health-probe-verify-20260525T000000Z",
+				FailureCode:     "PAYOUT_RESERVE_FLOOR_HIT",
+			},
+			wantEvent: "health_probe_failed",
+			wantProbe: true,
+		},
+		{
+			name:      "real validation failed",
+			operation: "validate",
+			response: settlementRunResponse{
+				OK:              false,
+				DryRun:          true,
+				SettlementRunID: "aoe2hdbets:match-42",
+				SourceApp:       "aoe2hdbets",
+				FailureCode:     "INVALID_RUN",
+			},
+			wantEvent: "settlement_validation_failed",
+			wantProbe: false,
+		},
+		{
+			name:      "execution ok",
+			operation: "execute",
+			response: settlementRunResponse{
+				OK:              true,
+				DryRun:          false,
+				SettlementRunID: "aoe2hdbets:match-42",
+				SourceApp:       "aoe2hdbets",
+			},
+			wantEvent: "payout_execution_ok",
+			wantProbe: false,
+		},
+		{
+			name:      "execution failed",
+			operation: "execute",
+			response: settlementRunResponse{
+				OK:              false,
+				DryRun:          false,
+				SettlementRunID: "aoe2hdbets:match-42",
+				SourceApp:       "aoe2hdbets",
+				FailureCode:     "PAYOUT_BALANCE_TOO_LOW",
+			},
+			wantEvent: "payout_execution_failed",
+			wantProbe: false,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			gotEvent, gotProbe := settlementRunLogEvent(tt.operation, tt.response)
+			if gotEvent != tt.wantEvent || gotProbe != tt.wantProbe {
+				t.Fatalf("unexpected log event: event=%s probe=%v", gotEvent, gotProbe)
+			}
+		})
+	}
+}
+
 func TestExecuteSettlementStoresRetryableRefusal(t *testing.T) {
 	t.Parallel()
 

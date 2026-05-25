@@ -4501,10 +4501,20 @@ func (cfg settlementConfig) logSettlementRunResponse(event string, response sett
 		refusalReason = strings.TrimSpace(response.Detail)
 	}
 
+	operation := strings.TrimSpace(event)
+	logEvent, healthProbe := settlementRunLogEvent(operation, response)
+	probeKind := ""
+	if healthProbe {
+		probeKind = "dry_settlement_run_validate"
+	}
+
 	payload := struct {
 		Event                string   `json:"event"`
 		At                   string   `json:"at"`
 		ChainID              string   `json:"chain_id"`
+		Operation            string   `json:"operation,omitempty"`
+		HealthProbe          bool     `json:"health_probe,omitempty"`
+		ProbeKind            string   `json:"probe_kind,omitempty"`
 		DryRun               bool     `json:"dry_run"`
 		Status               string   `json:"status,omitempty"`
 		OK                   bool     `json:"ok"`
@@ -4521,9 +4531,12 @@ func (cfg settlementConfig) logSettlementRunResponse(event string, response sett
 		RefusalReason        string   `json:"refusal_reason,omitempty"`
 		TxHashes             []string `json:"tx_hashes,omitempty"`
 	}{
-		Event:                "settlement_run_" + strings.TrimSpace(event),
+		Event:                logEvent,
 		At:                   time.Now().UTC().Format(time.RFC3339Nano),
 		ChainID:              cfg.ChainID,
+		Operation:            operation,
+		HealthProbe:          healthProbe,
+		ProbeKind:            probeKind,
 		DryRun:               response.DryRun,
 		Status:               response.Status,
 		OK:                   response.OK,
@@ -4546,6 +4559,62 @@ func (cfg settlementConfig) logSettlementRunResponse(event string, response sett
 		return
 	}
 	fmt.Fprintf(os.Stderr, "%s\n", data)
+}
+
+func settlementRunLogEvent(operation string, response settlementRunResponse) (string, bool) {
+	operation = strings.TrimSpace(operation)
+	if operation == "" {
+		operation = "unknown"
+	}
+
+	if isSettlementRunHealthProbe(response) {
+		if response.OK {
+			return "health_probe_ok", true
+		}
+		return "health_probe_failed", true
+	}
+
+	switch operation {
+	case "validate":
+		if response.OK {
+			return "settlement_validation_ok", false
+		}
+		return "settlement_validation_failed", false
+	case "execute":
+		if response.OK {
+			return "payout_execution_ok", false
+		}
+		return "payout_execution_failed", false
+	default:
+		if response.OK {
+			return "settlement_" + operation + "_ok", false
+		}
+		return "settlement_" + operation + "_failed", false
+	}
+}
+
+func isSettlementRunHealthProbe(response settlementRunResponse) bool {
+	if !response.DryRun {
+		return false
+	}
+
+	sourceApp := strings.ToLower(strings.TrimSpace(response.SourceApp))
+	switch sourceApp {
+	case "settlement-health-probe", "settlement-alert-check", "verify-live-settlement":
+		return true
+	}
+
+	runID := strings.ToLower(strings.TrimSpace(response.SettlementRunID))
+	switch runID {
+	case "settlement-health-probe", "settlement-health-probe-alert", "settlement-health-probe-verify", "alert-check-run", "verify-live-run-check":
+		return true
+	}
+	if strings.HasPrefix(runID, "settlement-health-probe") {
+		return true
+	}
+
+	sourceEventID := strings.ToLower(strings.TrimSpace(response.SourceEventID))
+	return strings.HasPrefix(sourceEventID, "health-probe")
 }
 
 func optionalSettlementRecord(summaryOnly bool, record *settlementStoredResult) *settlementStoredResult {
