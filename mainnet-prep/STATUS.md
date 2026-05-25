@@ -73,3 +73,28 @@ Next steps:
 3. Update AoE2War/Keplr/explorer configs.
 4. Add monitoring checks.
 5. Do not create Osmosis liquidity until public endpoints and explorer are stable.
+
+## Public Endpoint Update
+
+Public HTTPS endpoints are live:
+
+- RPC: `https://rpc-mainnet.aoe2war.com/status`
+- REST: `https://rest-mainnet.aoe2war.com/cosmos/base/tendermint/v1beta1/node_info`
+
+Confirmed:
+
+- RPC reports network `wolo-1`.
+- RPC block height is increasing.
+- RPC reports `catching_up: false`.
+- Validator voting power is `1000`.
+- REST reports network `wolo-1`.
+- Nginx is active.
+- `wolochaind-mainnet.service` is active.
+
+Next steps:
+
+1. Add mainnet endpoint monitoring.
+2. Update Keplr config for `wolo-1`.
+3. Update explorer config for `wolo-1`.
+4. Update AoE2War app wallet/network surfaces.
+5. Delay Osmosis liquidity until explorer and wallet UX are confirmed stable.
