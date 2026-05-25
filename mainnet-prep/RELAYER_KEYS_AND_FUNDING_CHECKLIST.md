@@ -218,6 +218,77 @@ Next step:
 
 Phase 2.9 should import these mnemonic files into Hermes, then record the Wolo and Osmosis relayer gas wallet addresses.
 
+## Phase 2.9 Hermes Key Import
+
+Import date: 2026-05-25 UTC.
+
+The private mnemonic files were imported into the dedicated Hermes home. Mnemonic contents were not displayed, printed, echoed, catted, logged, or copied into this repo.
+
+Import commands run:
+
+```bash
+HOME=/var/lib/wolochain-mainnet-relayer \
+/usr/local/bin/hermes --config /etc/wolochain-mainnet/hermes-osmosis.toml \
+  keys add \
+  --chain wolo-1 \
+  --key-name wolo-mainnet-osmosis-relayer \
+  --mnemonic-file /root/wolo-1-mainnet-prep-markers/private-relayer-key-material/wolo-relayer.mnemonic
+```
+
+```bash
+HOME=/var/lib/wolochain-mainnet-relayer \
+/usr/local/bin/hermes --config /etc/wolochain-mainnet/hermes-osmosis.toml \
+  keys add \
+  --chain osmosis-1 \
+  --key-name osmosis-mainnet-wolo-relayer \
+  --mnemonic-file /root/wolo-1-mainnet-prep-markers/private-relayer-key-material/osmosis-relayer.mnemonic
+```
+
+Imported relayer gas keys:
+
+```txt
+wolo-1 key name: wolo-mainnet-osmosis-relayer
+wolo-1 relayer address: wolo1m8qzq92hkktgqp47aewzylkatk6c22vc8c4vgj
+osmosis-1 key name: osmosis-mainnet-wolo-relayer
+osmosis-1 relayer address: osmo1tu4gfazupfyhf7zcxmtzvkuynaclgkaavhj4g7
+```
+
+Hermes key storage:
+
+```txt
+Hermes home: /var/lib/wolochain-mainnet-relayer
+Wolo key file: /var/lib/wolochain-mainnet-relayer/.hermes/keys/wolo-1/keyring-test/wolo-mainnet-osmosis-relayer.json
+Osmosis key file: /var/lib/wolochain-mainnet-relayer/.hermes/keys/osmosis-1/keyring-test/osmosis-mainnet-wolo-relayer.json
+Key file permissions: 0600 root:root
+```
+
+Balance checks run:
+
+```bash
+HOME=/var/lib/wolochain-mainnet-relayer \
+/usr/local/bin/hermes --config /etc/wolochain-mainnet/hermes-osmosis.toml \
+  keys balance --chain wolo-1 --denom uwolo
+```
+
+```bash
+HOME=/var/lib/wolochain-mainnet-relayer \
+/usr/local/bin/hermes --config /etc/wolochain-mainnet/hermes-osmosis.toml \
+  keys balance --chain osmosis-1 --denom uosmo
+```
+
+Balance result:
+
+```txt
+wolo-mainnet-osmosis-relayer: 0 uwolo
+osmosis-mainnet-wolo-relayer: 0 uosmo
+```
+
+Phase 3 blocker:
+
+- Fund `wolo1m8qzq92hkktgqp47aewzylkatk6c22vc8c4vgj` with a small `uwolo` gas amount.
+- Fund `osmo1tu4gfazupfyhf7zcxmtzvkuynaclgkaavhj4g7` with a small `uosmo` gas amount.
+- Stop before IBC path creation until Tony explicitly confirms Phase 3.
+
 ## Command Prefix
 
 Use the dedicated WoloChain mainnet relayer home and config:
@@ -302,10 +373,10 @@ Fund only the relayer gas wallets:
 - WoloChain relayer wallet: a small amount of `uwolo` for WoloChain relayer fees.
 - Osmosis relayer wallet: a small amount of `uosmo` for Osmosis relayer fees.
 
-Funding status as of Phase 2.75:
+Funding status as of Phase 2.9:
 
-- `uwolo`: not funded; Wolo relayer address is not available yet.
-- `uosmo`: not funded; Osmosis relayer address is not available yet.
+- `uwolo`: not funded; Wolo relayer balance is `0 uwolo`.
+- `uosmo`: not funded; Osmosis relayer balance is `0 uosmo`.
 
 Prepared funding instructions, NOT RUN:
 
@@ -319,7 +390,7 @@ Example WoloChain gas funding command, NOT RUN:
 ```bash
 /usr/local/bin/wolochaind-mainnet tx bank send \
   <approved-wolo-gas-source-key-or-address> \
-  <wolo-relayer-address> \
+  wolo1m8qzq92hkktgqp47aewzylkatk6c22vc8c4vgj \
   <small-amount>uwolo \
   --chain-id wolo-1 \
   --home /var/lib/wolochaind-mainnet \
@@ -332,7 +403,7 @@ Example Osmosis gas funding command from an operator machine with `osmosisd`, NO
 ```bash
 osmosisd tx bank send \
   <approved-osmosis-gas-source-key-or-address> \
-  <osmosis-relayer-address> \
+  osmo1tu4gfazupfyhf7zcxmtzvkuynaclgkaavhj4g7 \
   <small-amount>uosmo \
   --chain-id osmosis-1 \
   --node https://rpc.osmosis.zone:443 \

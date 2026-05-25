@@ -249,3 +249,41 @@ Confirmed:
 Next step:
 
 Phase 2.9 should import the mnemonic files into Hermes, list the resulting relayer addresses, and stop before gas funding or Phase 3 unless Tony explicitly confirms.
+
+## Relayer Key Import Update
+
+Relayer-only gas keys were imported into the dedicated WoloChain mainnet Osmosis Hermes home.
+
+Confirmed:
+
+- Hermes home:
+  - `/var/lib/wolochain-mainnet-relayer`
+- Wolo relayer key name:
+  - `wolo-mainnet-osmosis-relayer`
+- Wolo relayer address:
+  - `wolo1m8qzq92hkktgqp47aewzylkatk6c22vc8c4vgj`
+- Osmosis relayer key name:
+  - `osmosis-mainnet-wolo-relayer`
+- Osmosis relayer address:
+  - `osmo1tu4gfazupfyhf7zcxmtzvkuynaclgkaavhj4g7`
+- Wolo key file:
+  - `/var/lib/wolochain-mainnet-relayer/.hermes/keys/wolo-1/keyring-test/wolo-mainnet-osmosis-relayer.json`
+- Osmosis key file:
+  - `/var/lib/wolochain-mainnet-relayer/.hermes/keys/osmosis-1/keyring-test/osmosis-mainnet-wolo-relayer.json`
+- Key file permissions:
+  - `0600 root:root`
+- Mnemonic contents were not displayed, printed, echoed, catted, logged, or copied into the repo.
+- Wolo relayer balance:
+  - `0 uwolo`
+- Osmosis relayer balance:
+  - `0 uosmo`
+- These are relayer gas wallets only.
+- They are not liquidity wallets, Founder Cold, Community Treasury, or DEX Liquidity Reserve.
+- `wolochain-mainnet-osmosis-relayer.service` remains inactive and was not started.
+- `tokenchain-relayer.service` remains active and was not modified.
+- No IBC clients, connections, or channels have been created.
+- No WOLO transfer, OSMO transfer, liquidity action, or WOLO/USDC pool creation has happened.
+
+Next step:
+
+Fund only the relayer gas wallets with small `uwolo` and `uosmo` amounts, then stop before Phase 3 IBC path creation until Tony explicitly confirms.
