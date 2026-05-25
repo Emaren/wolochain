@@ -98,3 +98,35 @@ Next steps:
 3. Update explorer config for `wolo-1`.
 4. Update AoE2War app wallet/network surfaces.
 5. Delay Osmosis liquidity until explorer and wallet UX are confirmed stable.
+
+## Monitoring Update
+
+Mainnet health monitoring is installed.
+
+Confirmed:
+
+- `/usr/local/bin/check-wolo-mainnet-health` exists.
+- `wolo-mainnet-health.timer` is enabled and active.
+- `wolo-mainnet-health.service` runs successfully.
+- Health check validates:
+  - `wolochaind-mainnet.service` is active.
+  - Nginx is active.
+  - Public HTTPS RPC responds.
+  - Public HTTPS REST responds.
+  - Chain ID is `wolo-1`.
+  - `catching_up` is false.
+  - Block height is increasing.
+
+Latest observed health output:
+
+```txt
+OK: wolo-1 healthy height=138 catching_up=False
+```
+
+Next steps:
+
+1. Wire mainnet into Keplr/AoE2War wallet UX.
+2. Add explorer mainnet config.
+3. Add VPSSentry/Traffic visibility for mainnet health.
+4. Delay Osmosis liquidity until wallet and explorer surfaces are stable.
+
