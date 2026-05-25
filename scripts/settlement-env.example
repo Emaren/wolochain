@@ -3,14 +3,14 @@
 # Copy these into the environment for `wolochaind settlement ...` or the
 # localhost settlement server. Keep secrets out of git.
 #
-# These defaults reflect the current live WoloChain testnet posture as of
-# April 9, 2026, except for the auth token which must remain secret.
+# These defaults reflect the current WoloChain testnet public routing posture
+# as of May 24, 2026, except for the auth token which must remain secret.
 
 export WOLO_SETTLEMENT_HOME="/var/lib/wolochaind-testnet"
 export WOLO_SETTLEMENT_NODE="tcp://127.0.0.1:26657"
 export WOLO_SETTLEMENT_RPC_HTTP="http://127.0.0.1:26657"
 export WOLO_SETTLEMENT_REST_URL="http://127.0.0.1:1317"
-export WOLO_SETTLEMENT_PUBLIC_REST_URL="https://rest.aoe2hdbets.com"
+export WOLO_SETTLEMENT_PUBLIC_REST_URL="https://aoe2war.com/rest"
 
 export WOLO_SETTLEMENT_CHAIN_ID="wolo-testnet"
 export WOLO_SETTLEMENT_BASE_DENOM="uwolo"
@@ -51,7 +51,7 @@ export WOLO_SETTLEMENT_ESCROW_FEE_HEADROOM_UWOLO="10000000"
 
 # Localhost API server
 export WOLO_SETTLEMENT_LISTEN_ADDR="127.0.0.1:8091"
-# AoE2HDBets and other callers should send `Authorization: Bearer ...`
+# AoE2War / AoE2HDBets and other callers should send `Authorization: Bearer ...`
 export WOLO_SETTLEMENT_AUTH_TOKEN="replace-with-long-random-secret"
 
 # Settlement request and grouped-run state.

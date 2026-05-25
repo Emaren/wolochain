@@ -79,7 +79,7 @@
       "broadcast_mode": "sync",
       "tx_hash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
       "detail": "escrow transfer confirmed on WoloChain",
-      "canonical_tx_lookup_preferred": "https://rest.aoe2hdbets.com/cosmos/tx/v1beta1/txs/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+      "canonical_tx_lookup_preferred": "https://aoe2war.com/rest/cosmos/tx/v1beta1/txs/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
     }
   },
   "detail": "all 4 challenge transfers confirmed on WoloChain",
@@ -104,7 +104,7 @@
       "wager_wolo": "1.000000",
       "guarantee_uwolo": "500000",
       "guarantee_wolo": "0.500000",
-      "canonical_tx_lookup_preferred": "https://rest.aoe2hdbets.com/cosmos/tx/v1beta1/txs/1111111111111111111111111111111111111111111111111111111111111111"
+      "canonical_tx_lookup_preferred": "https://aoe2war.com/rest/cosmos/tx/v1beta1/txs/1111111111111111111111111111111111111111111111111111111111111111"
     },
     {
       "index": 1,
@@ -126,7 +126,7 @@
       "wager_wolo": "1.000000",
       "guarantee_uwolo": "500000",
       "guarantee_wolo": "0.500000",
-      "canonical_tx_lookup_preferred": "https://rest.aoe2hdbets.com/cosmos/tx/v1beta1/txs/2222222222222222222222222222222222222222222222222222222222222222"
+      "canonical_tx_lookup_preferred": "https://aoe2war.com/rest/cosmos/tx/v1beta1/txs/2222222222222222222222222222222222222222222222222222222222222222"
     }
   ],
   "transfers": [
@@ -151,7 +151,7 @@
       "memo": "challenge-42 left guarantee return",
       "tx_hash": "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
       "detail": "payout confirmed on WoloChain",
-      "canonical_tx_lookup_preferred": "https://rest.aoe2hdbets.com/cosmos/tx/v1beta1/txs/BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+      "canonical_tx_lookup_preferred": "https://aoe2war.com/rest/cosmos/tx/v1beta1/txs/BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
     },
     {
       "index": 1,
@@ -174,7 +174,7 @@
       "memo": "challenge-42 right no-show guarantee",
       "tx_hash": "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
       "detail": "payout confirmed on WoloChain",
-      "canonical_tx_lookup_preferred": "https://rest.aoe2hdbets.com/cosmos/tx/v1beta1/txs/CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"
+      "canonical_tx_lookup_preferred": "https://aoe2war.com/rest/cosmos/tx/v1beta1/txs/CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"
     },
     {
       "index": 2,
@@ -197,7 +197,7 @@
       "memo": "challenge-42 left wager refund",
       "tx_hash": "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
       "detail": "payout confirmed on WoloChain",
-      "canonical_tx_lookup_preferred": "https://rest.aoe2hdbets.com/cosmos/tx/v1beta1/txs/DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD"
+      "canonical_tx_lookup_preferred": "https://aoe2war.com/rest/cosmos/tx/v1beta1/txs/DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD"
     },
     {
       "index": 3,
@@ -220,7 +220,7 @@
       "memo": "challenge-42 right wager refund",
       "tx_hash": "EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
       "detail": "payout confirmed on WoloChain",
-      "canonical_tx_lookup_preferred": "https://rest.aoe2hdbets.com/cosmos/tx/v1beta1/txs/EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE"
+      "canonical_tx_lookup_preferred": "https://aoe2war.com/rest/cosmos/tx/v1beta1/txs/EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE"
     }
   ],
   "run": {

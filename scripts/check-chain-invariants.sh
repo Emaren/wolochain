@@ -71,14 +71,23 @@ fi
 
 filtered_files=()
 for path in "${TRACKED_FILES[@]}"; do
-  if [[ "$path" != "scripts/check-chain-invariants.sh" ]]; then
-    filtered_files+=("$path")
-  fi
+  case "$path" in
+    scripts/check-chain-invariants.sh)
+      ;;
+    docs/mainnet-template.md)
+      # This planning doc is the only tracked location allowed to name the
+      # future mainnet chain id. Runtime defaults must remain wolo-testnet.
+      ;;
+    *)
+      filtered_files+=("$path")
+      ;;
+  esac
 done
 TRACKED_FILES=("${filtered_files[@]}")
 
 echo "=== repo drift scan ==="
-scan_repo_pattern 'wolo-1|wolo-testnet-1' 'Legacy chain IDs are still present in tracked repo files.'
+scan_repo_pattern 'wolo-1|wolo-testnet-1' 'Mainnet or legacy chain IDs are still present outside the explicit mainnet planning doc.'
+scan_repo_pattern 'rpc[.]aoe2hdbets[.]com|rest[.]aoe2hdbets[.]com|explorer[.]testnet[.]aoe2hdbets[.]com' 'Stale public Wolo endpoint hosts are still present in tracked repo files.'
 scan_repo_pattern '\butoken\b|\bustake\b' 'Legacy scaffold denoms are still present in tracked repo files.'
 scan_repo_pattern 'tokenchain' 'Legacy scaffold chain naming is still present in tracked repo files.'
 scan_repo_pattern '\bcosmos(valoper|valcons)?1[0-9a-z]{10,}\b' 'Legacy cosmos bech32 addresses are still present in tracked repo files.'

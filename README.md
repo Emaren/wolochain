@@ -33,7 +33,7 @@ WoloChain does not own:
 
 ## Current Live State
 
-Verified on April 9, 2026.
+Verified on May 24, 2026.
 
 - VPS node service: `wolochaind-testnet.service`
 - VPS settlement service: `wolochain-settlement.service`
@@ -41,8 +41,9 @@ Verified on April 9, 2026.
 - Runtime chain ID: `wolo-testnet`
 - Settlement health: `ok=true`
 - Current VPS peer count: `0`
-- Public RPC host: `https://rpc.aoe2hdbets.com`
-- Public REST host: `https://rest.aoe2hdbets.com`
+- Public RPC route: `https://aoe2war.com/rpc/`
+- Public REST route: `https://aoe2war.com/rest/`
+- Public explorer route: `https://aoe2war.com/wolo-testnet`
 
 Current live settlement posture:
 
@@ -61,6 +62,7 @@ Current live caveats:
 
 - The VPS validator is currently isolated with `0` peers.
 - Settlement still uses the `test` keyring backend on the VPS.
+- Settlement proof links use `WOLO_SETTLEMENT_PUBLIC_REST_URL=https://aoe2war.com/rest`; keep live settlement health aligned after env changes.
 - The highest-value WoloChain work right now is restart reliability, operator truthfulness, monitoring, backup / restore ergonomics, and doc accuracy — not new chain features.
 
 ## Local Workflow
@@ -71,6 +73,7 @@ Current live caveats:
 - Clean local bring-up: `./scripts/reset-and-start-local.sh`
 - Local balances snapshot: `./scripts/write-local-balances-json.sh`
 - Chain invariant check: `./scripts/check-chain-invariants.sh`
+- Public endpoint check: `./scripts/check-public-endpoints.sh`
 
 ## Settlement Surfaces
 
@@ -250,12 +253,14 @@ For one logical result with many payouts, the preferred flow is:
 ## Production Notes
 
 - Do not commit compiled binaries or validator home data.
-- The live VPS extra volume is now a real `30G` ext4 filesystem. Verify that truth with `lsblk -o NAME,SIZE,FSTYPE,FSAVAIL,FSUSE%,MOUNTPOINTS` and `df -h / /mnt/HC_Volume_105319120` before large builds or backups.
+- The live VPS extra volume is now a real `50G` ext4 filesystem. Verify that truth with `lsblk -o NAME,SIZE,FSTYPE,FSAVAIL,FSUSE%,MOUNTPOINTS` and `df -h / /mnt/HC_Volume_105319120` before large builds or backups.
 - The preferred production build venue is now the VPS itself, using the resized extra volume for `GOTMPDIR`, `GOCACHE`, and the build-helper default `GOPATH` / `GOMODCACHE`.
 - Before the first local VPS build, precreate `/mnt/HC_Volume_105319120/wolochain/go`, `/mnt/HC_Volume_105319120/wolochain/go/bin`, `/mnt/HC_Volume_105319120/wolochain/go-cache`, and `/mnt/HC_Volume_105319120/wolochain/go-tmp` for the build user.
 - If Hetzner expands the volume again later, the guest still needs the on-host filesystem step. For the current ext4 layout that means `sudo resize2fs /dev/sdb`, then re-check `df -h /mnt/HC_Volume_105319120`.
 - Treat settlement request state as operator data; it lives on the VPS extra volume.
 - Treat grouped run state as operator data too; it lives beside request state under the settlement state dir.
+- Treat testnet balances as testnet-only data. They do not automatically migrate to any future mainnet.
+- Future mainnet planning must use a separate fresh chain. See [`docs/mainnet-template.md`](docs/mainnet-template.md) before touching any mainnet-facing config.
 - Prefer keeping `WOLO_SETTLEMENT_AUTH_TOKEN` enabled even for localhost-only POSTs and have callers send bearer auth.
 - `WOLO_SETTLEMENT_ESCROW_ADDRESS` only affects proof classification and operator warnings; it does not create escrow semantics by itself.
 - `WOLO_SETTLEMENT_ESCROW_KEY_NAME` and `WOLO_SETTLEMENT_ESCROW_ADDRESS` are both required if you want challenge auto-top-up from escrow.

@@ -522,7 +522,7 @@ func TestSettlementDoctorWarningsAndPayoutAddressMismatch(t *testing.T) {
 		})
 		cfg.PayoutAddress = "wolo1differentpayout0000000000000000000000000"
 		cfg.EscrowAddress = "wolo1escrow000000000000000000000000000000000"
-		cfg.PublicRESTURL = "https://rest.aoe2hdbets.com"
+		cfg.PublicRESTURL = "https://aoe2war.com/rest"
 		cfg.AuthToken = "secret-token"
 		cfg.MinPayoutBalanceUWolo = 1000000000
 		cfg.FeeHeadroomUWolo = 10000000

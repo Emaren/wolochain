@@ -1,6 +1,6 @@
 # WoloChain Testnet Ops
 
-Verified against the live VPS on April 9, 2026.
+Verified against the live VPS on May 24, 2026.
 
 ## Current Services
 
@@ -22,11 +22,11 @@ Settlement env:
 
 - `/etc/wolochain-settlement.env`
 - root-owned and not readable by the unprivileged `tony` user
-- verified from root-level env inspection plus live service health:
+- verified current env values for the public Wolo testnet route:
   - `WOLO_SETTLEMENT_HOME=/var/lib/wolochaind-testnet`
   - `WOLO_SETTLEMENT_RPC_HTTP=http://127.0.0.1:26657`
   - `WOLO_SETTLEMENT_REST_URL=http://127.0.0.1:1317`
-  - `WOLO_SETTLEMENT_PUBLIC_REST_URL=https://rest.aoe2hdbets.com`
+  - `WOLO_SETTLEMENT_PUBLIC_REST_URL=https://aoe2war.com/rest`
   - `WOLO_SETTLEMENT_CHAIN_ID=wolo-testnet`
   - `WOLO_SETTLEMENT_KEYRING_BACKEND=test`
   - `WOLO_SETTLEMENT_PAYOUT_KEY_NAME=payout`
@@ -40,6 +40,8 @@ Settlement env:
   - `WOLO_SETTLEMENT_STATE_DIR=/mnt/HC_Volume_105319120/wolochain/settlement-state`
   - `WOLO_SETTLEMENT_AUTH_TOKEN` is set in the live env but should stay masked in docs and operator output
 - `WOLO_SETTLEMENT_FEES` is currently optional and may remain unset
+
+If `GET http://127.0.0.1:8091/settlement/v1/health` reports a different `public_rest_url`, the live settlement env is stale. Updating that env requires a deliberate settlement deploy/restart window; it does not require a chain reset.
 
 Role semantics:
 
@@ -67,13 +69,13 @@ Reserve / headroom semantics:
 - Payout dry-runs never use escrow funds to pass capacity checks.
 - Escrow dry-runs never use payout signer health to pass or fail capacity checks.
 
-Operator defaults currently in live use:
+Operator defaults for the current public route:
 
 ```bash
 WOLO_SETTLEMENT_HOME=/var/lib/wolochaind-testnet
 WOLO_SETTLEMENT_RPC_HTTP=http://127.0.0.1:26657
 WOLO_SETTLEMENT_REST_URL=http://127.0.0.1:1317
-WOLO_SETTLEMENT_PUBLIC_REST_URL=https://rest.aoe2hdbets.com
+WOLO_SETTLEMENT_PUBLIC_REST_URL=https://aoe2war.com/rest
 WOLO_SETTLEMENT_CHAIN_ID=wolo-testnet
 WOLO_SETTLEMENT_KEYRING_BACKEND=test
 WOLO_SETTLEMENT_PAYOUT_KEY_NAME=payout
@@ -116,22 +118,24 @@ Operational note:
 - the extra volume has already been used hard enough that space pressure matters
 - verify `df -h / /mnt/HC_Volume_105319120` before large backups, rebuilds, or moving more live state there
 - if the extra-volume backup target is too full, use a fallback backup root such as `/home/tony/wolochain-settlement-backups`
-- on April 9, 2026 Hetzner exposed `/dev/sdb` as `30G`, but the guest still needed `sudo resize2fs /dev/sdb` before the mounted ext4 filesystem actually grew from about `10G` to `30G`
-- after that live resize, `/mnt/HC_Volume_105319120` had about `21G` free and became a trustworthy local build scratch volume again
+- on May 24, 2026 the mounted filesystem was live at `50G`, with about `12G` free
+- if Hetzner expands the volume again, the guest may still need `sudo resize2fs /dev/sdb` before the mounted ext4 filesystem shows the new size
 
 The extra volume is part of production reality, not an optional optimization.
 
 ## Verified Runtime State
 
-Checked live on April 9, 2026:
+Checked live on May 24, 2026:
 
 - chain ID: `wolo-testnet`
 - moniker: `wolo-testnet-validator-1`
 - settlement health: `ok=true`
 - node service state: `active`
 - settlement service state: `active`
-- public REST host responds: `https://rest.aoe2hdbets.com`
-- public RPC host responds: `https://rpc.aoe2hdbets.com`
+- public REST route responds: `https://aoe2war.com/rest/`
+- public RPC route responds: `https://aoe2war.com/rpc/`
+- public explorer route responds: `https://aoe2war.com/wolo-testnet`
+- current total supply: `100000000000000uwolo`
 - current peer count: `0`
 - grouped validate route is live and bearer-protected
 - escrow recent / verify routes are live
@@ -142,6 +146,7 @@ Current live caveats:
 
 - the VPS validator still has `0` peers
 - settlement still uses the `test` keyring backend
+- settlement proof links use `WOLO_SETTLEMENT_PUBLIC_REST_URL=https://aoe2war.com/rest`; keep live settlement health aligned after env changes
 - the highest-value chain-ops work right now is restart reliability, monitoring, backup / restore ergonomics, and doc accuracy; peer isolation remains a separate caveat
 
 ## Build And Deploy
@@ -173,7 +178,7 @@ Why this path exists:
 
 - raw Linux `amd64` builds hit a `sonic` native-loader mismatch
 - [`scripts/build-linux-amd64.sh`](../scripts/build-linux-amd64.sh) forces the safe compat path
-- the live `30G` extra volume now has enough headroom for calm local builds once the mounted ext4 filesystem has been resized
+- the live `50G` extra volume currently has enough headroom for calm local builds, but it is still space-sensitive enough to check before large builds
 - [`scripts/build-linux-amd64.sh`](../scripts/build-linux-amd64.sh) now defaults `GOPATH` / `GOMODCACHE` onto `/mnt/HC_Volume_105319120/wolochain/go` when that shared build path exists, so module downloads do not quietly eat `/home`
 - the current `tony` sudo policy requires an interactive password and does not allow `sudo -n`; use explicit `sudo install`, `sudo systemctl`, and `sudo -u wolo ...` commands during live work
 - if the node binary on disk is replaced, restart the node service so it does not keep running a deleted in-memory binary
@@ -225,6 +230,7 @@ For live truth after deploy or restart, prefer this sequence:
 cd /var/www/WoloChain
 sudo ./scripts/verify-live-settlement.sh
 ./scripts/check-settlement-alerts.sh
+./scripts/check-public-endpoints.sh
 curl -s http://127.0.0.1:26657/net_info | jq '{listening:.result.listening,n_peers:.result.n_peers,peers:[.result.peers[].node_info.moniker]}'
 systemctl status --no-pager wolochaind-testnet.service wolochain-settlement.service
 ```
