@@ -1,6 +1,6 @@
 # WoloChain wolo-1 Mainnet Prep Status
 
-Status: local prep complete through draft genesis validation.
+Status: WoloChain mainnet is live; WoloChain mainnet to Osmosis mainnet IBC path is open; no WOLO transfer, liquidity action, or WOLO/USDC pool creation has happened.
 
 ## Completed
 
@@ -27,28 +27,18 @@ Status: local prep complete through draft genesis validation.
 - Go tests pass.
 - Go build passes.
 
-## Not Done Yet
+## Remaining Not Done
 
-- Mainnet has not launched.
-- Final genesis has not been installed.
-- No VPS mainnet service has been started.
-- No validator key has been created.
-- No validator gentx has been created.
-- No IBC channels have been created.
+- No WOLO transfer over IBC has been performed.
+- No Osmosis-side WOLO denom trace has been recorded.
+- No 200,000 WOLO liquidity transfer has been performed.
 - No Osmosis liquidity has been created.
+- No WOLO/USDC Osmosis pool has been created.
 - `wolo-testnet` has not been touched.
 
 ## Next Phase
 
-VPS launch-host staging:
-
-1. Sync this prep branch to the VPS in a separate path.
-2. Build the mainnet binary there.
-3. Prepare `/var/lib/wolochaind-mainnet`.
-4. Create/import the fresh mainnet validator key on the VPS.
-5. Generate the validator gentx.
-6. Validate final genesis.
-7. Stop before starting mainnet services until final review.
+Phase 4 should be a tiny 1 WOLO test transfer only, after Tony explicitly confirms.
 
 ## Launch Update
 
@@ -287,3 +277,53 @@ Confirmed:
 Next step:
 
 Fund only the relayer gas wallets with small `uwolo` and `uosmo` amounts, then stop before Phase 3 IBC path creation until Tony explicitly confirms.
+
+## WoloChain Osmosis IBC Path Update
+
+WoloChain mainnet `wolo-1` is now connected to Osmosis mainnet `osmosis-1` for ICS-20 transfer.
+
+Confirmed:
+
+- Hermes config:
+  - `/etc/wolochain-mainnet/hermes-osmosis.toml`
+- Hermes home:
+  - `/var/lib/wolochain-mainnet-relayer`
+- Wolo client ID:
+  - `07-tendermint-0`
+- Osmosis client ID:
+  - `07-tendermint-3705`
+- Wolo connection ID:
+  - `connection-0`
+- Osmosis connection ID:
+  - `connection-11058`
+- Wolo transfer channel ID:
+  - `channel-0`
+- Osmosis transfer channel ID:
+  - `channel-110224`
+- Channel state is open on both sides.
+- Port is `transfer` on both sides.
+- Ordering is `unordered`.
+- Channel version is `ics20-1`.
+- Wolo relayer balance after path creation:
+  - `99998485uwolo`
+- Osmosis relayer balance after path creation:
+  - `199266uosmo`
+- Marker written on the VPS:
+  - `/root/wolo-1-mainnet-prep-markers/wolo-osmosis-ibc-path-20260525T070440Z.txt`
+- `wolochain-mainnet-osmosis-relayer.service` remains inactive and was not started.
+- `tokenchain-relayer.service` remains active and was not stopped or modified.
+- `/etc/tokenchain/hermes.toml` was not touched.
+- No WOLO transfer, OSMO transfer, 200,000 WOLO liquidity transfer, liquidity action, or WOLO/USDC pool creation happened.
+
+Operational note:
+
+- Osmosis primary RPC `https://rpc.osmosis.zone` returned HTTP 429 during proof-bearing Hermes steps.
+- The isolated WoloChain Hermes config was backed up before each Osmosis endpoint fallback.
+- Current Osmosis RPC in the WoloChain Hermes config:
+  - `https://osmosis.rpc.kjnodes.com`
+- Current Osmosis gRPC in the WoloChain Hermes config:
+  - `https://grpc.osmosis.validatus.com:443`
+
+Next step:
+
+Phase 4 should perform only a tiny 1 WOLO test transfer, base amount `1000000uwolo`, over Wolo channel `channel-0` after Tony explicitly confirms.

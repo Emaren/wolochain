@@ -1,6 +1,6 @@
 # WoloChain Mainnet Osmosis Hermes Relayer Staging
 
-Status: Phase 2 staging complete. Do not create IBC clients, connections, channels, transfers, liquidity, or pools from this document without Tony's explicit confirmation.
+Status: Phase 2 staging complete and Phase 3 IBC path live. Do not transfer WOLO, create liquidity, or create pools from this document without Tony's explicit confirmation.
 
 ## Operational Paths
 
@@ -92,6 +92,16 @@ trusting_period = '9days'
 trust_threshold = { numerator = '1', denominator = '3' }
 ```
 
+Current `osmosis-1` endpoint values after Phase 3 fallback handling:
+
+```toml
+rpc_addr = 'https://osmosis.rpc.kjnodes.com'
+grpc_addr = 'https://grpc.osmosis.validatus.com:443'
+event_source = { mode = 'push', url = 'wss://osmosis.rpc.kjnodes.com/websocket', batch_delay = '500ms' }
+```
+
+The Osmosis primary RPC `https://rpc.osmosis.zone` returned HTTP 429 during proof-bearing Hermes steps. The isolated WoloChain Hermes config was backed up before each endpoint fallback. `/etc/tokenchain/hermes.toml` was not touched.
+
 ## Safety Confirmations
 
 - TokenChain relayer was not touched.
@@ -99,17 +109,15 @@ trust_threshold = { numerator = '1', denominator = '3' }
 - `/var/www/tokenchain-ops/relayer/hermes-config.toml` was not modified.
 - `tokenchain-relayer.service` remains active and was not stopped or modified.
 - `wolochain-mainnet-osmosis-relayer.service` is inactive and was not started.
-- No IBC clients were created.
-- No IBC connections were created.
-- No IBC channels were created.
+- IBC clients, connections, and channels were created only for the approved Phase 3 `wolo-1` to `osmosis-1` path.
 - No WOLO transfers happened.
 - No OSMO transfers happened.
 - No liquidity was created.
 - No WOLO/USDC pool was created.
 
-## Prepared Phase 3 Command
+## Phase 3 Commands
 
-NOT RUN:
+Initial command run. This created the client pair and Wolo `connection-0`, then stopped before completing the connection because the Osmosis primary RPC returned HTTP 429:
 
 ```bash
 HOME=/var/lib/wolochain-mainnet-relayer \
@@ -125,13 +133,72 @@ HOME=/var/lib/wolochain-mainnet-relayer \
   --yes
 ```
 
-## Blockers Before Phase 3
+Connection handshake completion commands run:
 
-- `wolo-1` relayer key is missing.
-- `osmosis-1` relayer key is missing.
-- Relayer wallets need funded with small gas balances:
-  - `uwolo` for WoloChain relayer fees.
-  - `uosmo` for Osmosis relayer fees.
+```bash
+HOME=/var/lib/wolochain-mainnet-relayer \
+/usr/local/bin/hermes --config /etc/wolochain-mainnet/hermes-osmosis.toml \
+  tx conn-try \
+  --dst-chain osmosis-1 \
+  --src-chain wolo-1 \
+  --dst-client 07-tendermint-3705 \
+  --src-client 07-tendermint-0 \
+  --src-connection connection-0
+
+HOME=/var/lib/wolochain-mainnet-relayer \
+/usr/local/bin/hermes --config /etc/wolochain-mainnet/hermes-osmosis.toml \
+  tx conn-ack \
+  --dst-chain wolo-1 \
+  --src-chain osmosis-1 \
+  --dst-client 07-tendermint-0 \
+  --src-client 07-tendermint-3705 \
+  --dst-connection connection-0 \
+  --src-connection connection-11058
+
+HOME=/var/lib/wolochain-mainnet-relayer \
+/usr/local/bin/hermes --config /etc/wolochain-mainnet/hermes-osmosis.toml \
+  tx conn-confirm \
+  --dst-chain osmosis-1 \
+  --src-chain wolo-1 \
+  --dst-client 07-tendermint-3705 \
+  --src-client 07-tendermint-0 \
+  --dst-connection connection-11058 \
+  --src-connection connection-0
+```
+
+Transfer channel creation over the existing open connection:
+
+```bash
+HOME=/var/lib/wolochain-mainnet-relayer \
+/usr/local/bin/hermes --config /etc/wolochain-mainnet/hermes-osmosis.toml \
+  create channel \
+  --a-chain wolo-1 \
+  --a-connection connection-0 \
+  --a-port transfer \
+  --b-port transfer \
+  --order unordered \
+  --channel-version ics20-1
+```
+
+## Phase 3 Result
+
+- Wolo client ID: `07-tendermint-0`
+- Osmosis client ID: `07-tendermint-3705`
+- Wolo connection ID: `connection-0`
+- Osmosis connection ID: `connection-11058`
+- Wolo transfer channel ID: `channel-0`
+- Osmosis transfer channel ID: `channel-110224`
+- Channel state: `Open` on both sides.
+- Port: `transfer` on both sides.
+- Ordering: `unordered`.
+- Channel version: `ics20-1`.
+- Wolo relayer balance after creation: `99998485uwolo`.
+- Osmosis relayer balance after creation: `199266uosmo`.
+- Marker: `/root/wolo-1-mainnet-prep-markers/wolo-osmosis-ibc-path-20260525T070440Z.txt`
+
+## Remaining Blockers Before Phase 4
+
 - `systemctl daemon-reload` has not been run for the staged service unit.
 - `wolochain-mainnet-osmosis-relayer.service` has not been started.
-
+- Tony has not yet confirmed the tiny Phase 4 test transfer.
+- No WOLO denom trace has been verified on Osmosis yet.
