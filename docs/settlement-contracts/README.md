@@ -4,6 +4,8 @@ Machine-readable WoloChain settlement contract files for AoE2HDBets challenge se
 
 WoloChain validates and executes explicit money movements. AoE2HDBets owns challenge outcome decisions and sends the already-decided transfer plan.
 
+The checked-in response examples are testnet-shaped. Do not copy their `wolo-testnet` chain ID, `https://aoe2war.com/rest` proof links, sample tx hashes, or sample `wolo1...` addresses into the live AoE2WAR mainnet app.
+
 ## Files
 
 - `challenge-funding-memo.schema.json`: fields encoded after the `wolo.challenge.funding.v1:` escrow deposit memo prefix.

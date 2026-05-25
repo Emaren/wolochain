@@ -31,9 +31,9 @@ WoloChain does not own:
 - explorer UI bugs or Ping route presentation
 - market math, pool math, refund policy, or entitlement logic
 
-## Current Live State
+## Current Testnet State
 
-Verified on May 24, 2026.
+Verified on May 24, 2026. This section describes the public WoloChain testnet only; do not copy these routes or caveats into the live AoE2WAR mainnet app.
 
 - VPS node service: `wolochaind-testnet.service`
 - VPS settlement service: `wolochain-settlement.service`
@@ -41,9 +41,9 @@ Verified on May 24, 2026.
 - Runtime chain ID: `wolo-testnet`
 - Settlement health: `ok=true`
 - Current VPS peer count: `0`
-- Public RPC route: `https://aoe2war.com/rpc/`
-- Public REST route: `https://aoe2war.com/rest/`
-- Public explorer route: `https://aoe2war.com/wolo-testnet`
+- Public testnet RPC route: `https://aoe2war.com/rpc/`
+- Public testnet REST route: `https://aoe2war.com/rest/`
+- Public testnet explorer route: `https://aoe2war.com/wolo-testnet`
 
 Current live settlement posture:
 
@@ -259,8 +259,8 @@ For one logical result with many payouts, the preferred flow is:
 - If Hetzner expands the volume again later, the guest still needs the on-host filesystem step. For the current ext4 layout that means `sudo resize2fs /dev/sdb`, then re-check `df -h /mnt/HC_Volume_105319120`.
 - Treat settlement request state as operator data; it lives on the VPS extra volume.
 - Treat grouped run state as operator data too; it lives beside request state under the settlement state dir.
-- Treat testnet balances as testnet-only data. They do not automatically migrate to any future mainnet.
-- Future mainnet planning must use a separate fresh chain. See [`docs/mainnet-template.md`](docs/mainnet-template.md) before touching any mainnet-facing config.
+- Treat testnet balances as testnet-only data. They do not migrate to mainnet.
+- Keep testnet/mainnet boundaries explicit. See [`docs/mainnet-template.md`](docs/mainnet-template.md) before touching any mainnet-facing config or app copy.
 - Prefer keeping `WOLO_SETTLEMENT_AUTH_TOKEN` enabled even for localhost-only POSTs and have callers send bearer auth.
 - `WOLO_SETTLEMENT_ESCROW_ADDRESS` only affects proof classification and operator warnings; it does not create escrow semantics by itself.
 - `WOLO_SETTLEMENT_ESCROW_KEY_NAME` and `WOLO_SETTLEMENT_ESCROW_ADDRESS` are both required if you want challenge auto-top-up from escrow.

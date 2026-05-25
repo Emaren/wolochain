@@ -1,6 +1,6 @@
 # WoloChain Testnet Ops
 
-Verified against the live VPS on May 24, 2026.
+Verified against the live testnet VPS on May 24, 2026. These endpoints, service names, faucet assumptions, and operator caveats are testnet-only and must not be copied into the live AoE2WAR mainnet app.
 
 ## Current Services
 
@@ -132,9 +132,9 @@ Checked live on May 24, 2026:
 - settlement health: `ok=true`
 - node service state: `active`
 - settlement service state: `active`
-- public REST route responds: `https://aoe2war.com/rest/`
-- public RPC route responds: `https://aoe2war.com/rpc/`
-- public explorer route responds: `https://aoe2war.com/wolo-testnet`
+- public testnet REST route responds: `https://aoe2war.com/rest/`
+- public testnet RPC route responds: `https://aoe2war.com/rpc/`
+- public testnet explorer route responds: `https://aoe2war.com/wolo-testnet`
 - current total supply: `100000000000000uwolo`
 - current peer count: `0`
 - grouped validate route is live and bearer-protected
