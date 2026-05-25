@@ -346,3 +346,19 @@ Confirmed:
 - Relay acknowledgement completed.
 
 No liquidity transfer or pool creation has happened yet.
+
+## Phase 5 Liquidity Transfer Update
+
+The WOLO DEX Liquidity Reserve transferred `200000000000uwolo` / `200,000 WOLO` to Osmosis.
+
+Confirmed:
+
+- Source: `wolo1kwsmr9nzujwul6wmu4hqr90lel4ca4uy3l06en`
+- Receiver: `osmo1yyuu097eppte7qya48r3dth86smdl3sjyx7qc6`
+- Wolo channel: `channel-0`
+- Osmosis channel: `channel-110224`
+- Tx hash: `6A324B8070FF558B0188F3B0DD3E290BA8594A94E3C3500757D35808BB9C81D5`
+- Packet sequence: `2`
+- Osmosis denom: `ibc/D09120C7085DFA412DF77608DAD3A4797F5F097A038DA0C2E1D1426FC9CD836D`
+
+No WOLO/USDC pool has been created yet.
