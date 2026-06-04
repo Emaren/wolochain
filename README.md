@@ -58,7 +58,7 @@ Current mainnet settlement posture:
 - Mainnet tx lookup by hash is live through RPC and REST.
 - `wolochain-settlement.service` on the VPS remains the old testnet settlement service.
 - `wolochain-mainnet-settlement.service` is the only intended mainnet settlement service and must bind `127.0.0.1:8092`.
-- AoE2HDBets mainnet settlement, staking reward, and Community Treasury payout calls must use only the verified `127.0.0.1:8092` `wolo-1` service after its payout/escrow signers are funded.
+- AoE2HDBets mainnet settlement, staking reward, and Community Treasury payout calls must use only the verified `127.0.0.1:8092` `wolo-1` service with the funded June 4, 2026 payout/escrow signers.
 - Do not point mainnet callers at `127.0.0.1:8091`; that is the old `wolo-testnet` settlement service.
 - AoE2HDBets app-side mainnet signer operations use the separate app keyring home `/var/lib/aoe2hdbets-wolo-mainnet`; do not point app signer env at `/var/lib/wolochaind-testnet` or grant the web app access to the validator/node config under `/var/lib/wolochaind-mainnet`.
 

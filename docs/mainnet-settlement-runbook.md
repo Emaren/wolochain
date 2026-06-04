@@ -80,14 +80,21 @@ Generate fresh mainnet signer keys with `--keyring-dir /var/lib/wolochain-mainne
 
 ## Funding Gate
 
-Before app cutover, fund the fresh signers from an approved funded mainnet wallet. The VPS does not currently have the funded Faucet Hot Wallet key `wolo1dshyzxffd0jj39k7gj9tq9hgsx96ylxamyp5g0`; do not use old testnet `faucetgrowth`.
+The fresh signers were funded on June 4, 2026 from the approved mainnet Faucet Hot Wallet `wolo1dshyzxffd0jj39k7gj9tq9hgsx96ylxamyp5g0`. The VPS does not currently have that faucet key; do not use old testnet `faucetgrowth`.
 
-Recommended first balances:
+Current seeded balances:
 
 ```text
 Bet Payout Signer: 5000 WOLO
 Bet Escrow Signer: 500 WOLO
 ```
+
+Funding txs:
+
+| Purpose | Tx Hash |
+| --- | --- |
+| Seed Bet Payout Signer with `5000 WOLO` | `F9BBCD8439538E23181F8EC7F43FF6FCA705CB5675C35B2FFA84030DB5DB304C` |
+| Seed Bet Escrow Signer with `500 WOLO` | `1FD8AE967608737E3FDD8F8D9E473C1D1FE3D638A221E6C1892284BA26564233` |
 
 The service must refuse live payouts when the payout signer would fall below `1000 WOLO` plus fee headroom. It must refuse escrow-signed runs when escrow would fall below `100 WOLO` plus fee headroom.
 
@@ -102,6 +109,8 @@ sudo SETTLEMENT_ENV_FILE=/etc/wolochain-mainnet-settlement.env \
   /var/www/WoloChain-wolo-1/scripts/verify-live-settlement.sh
 ```
 
+As of the June 4 funding check, `/settlement/v1/health` must report `ok=true`, `chain_id=wolo-1`, and funded payout and escrow signer balances above their configured reserve floors.
+
 Every grouped app run should be submitted to `POST /settlement/v1/runs/validate` first. Execute the matching `POST /settlement/v1/runs` only after the dry-run response confirms:
 
 - `chain_id` is `wolo-1`
@@ -112,7 +121,7 @@ Every grouped app run should be submitted to `POST /settlement/v1/runs/validate`
 
 ## AoE2HDBets Cutover Values
 
-Use these values in the separate AoE2HDBets app pass only after funding and health are green:
+Use these values in the separate AoE2HDBets app pass now that funding and health are green:
 
 ```bash
 WOLO_SETTLEMENT_URL=http://127.0.0.1:8092

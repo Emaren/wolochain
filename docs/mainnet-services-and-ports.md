@@ -44,6 +44,7 @@ The verified public node reports:
 - `tx_index=on`
 - earliest block time `2026-05-25T03:54:33Z`
 - `catching_up=false`
+- mainnet REST tx search uses the `query=` parameter, for example `query=transfer.recipient='wolo1...'`
 
 ## Mainnet Settlement Env Shape
 
@@ -104,7 +105,7 @@ WOLO_FAUCET_CHAIN_ID=wolo-1
 WOLO_FAUCET_NODE_RPC=http://127.0.0.1:27657
 ```
 
-`WOLO_SETTLEMENT_URL` should be set only after `wolochain-mainnet-settlement.service` is deliberately deployed on `127.0.0.1:8092`, verified against `wolo-1`, and the payout/escrow signers are funded above their reserve floors.
+`WOLO_SETTLEMENT_URL` is ready to set after the June 4, 2026 funding check: `wolochain-mainnet-settlement.service` is deployed on `127.0.0.1:8092`, verified against `wolo-1`, and the payout/escrow signers are funded above their reserve floors.
 
 ```bash
 WOLO_SETTLEMENT_URL=http://127.0.0.1:8092
@@ -125,7 +126,7 @@ Current mainnet holder aliases from the June 4, 2026 holder audit:
 | Validator Ops | `wolo1nalsh7y0hzp33j996c90yxqgerxxvgpqtumfjt` | `4998898.99 WOLO` |
 | Founder Operating / Emaren | `wolo1wue7vyque2pssskgdrww0fcadlq9ps6mtn605e` | `4998837.972012 WOLO` |
 | Ecosystem Bounties | `wolo1dmj5dnm7g9hmj005yzy5e5xcygudyt7wxzpxjq` | `3000000 WOLO` |
-| Faucet Hot Wallet | `wolo1dshyzxffd0jj39k7gj9tq9hgsx96ylxamyp5g0` | `498999.996989 WOLO` |
+| Faucet Hot Wallet | `wolo1dshyzxffd0jj39k7gj9tq9hgsx96ylxamyp5g0` | `493499.991819 WOLO` |
 | IBC Escrow: transfer/channel-0 to Osmosis | `wolo1a53udazy8ayufvy0s434pfwjcedzqv347h8lzn` | `200001 WOLO` |
 | Jim | `wolo10zspyrrphzctrpysh6l9dsqj4wcwmj3tk660sz` | `1000 WOLO` |
 | Validator Ops Reserve | `wolo1fl48vsnmsdzcv85q5d2q4z5ajdha8yu3aqv4s2` | `1000 WOLO` |
@@ -139,8 +140,15 @@ Fresh settlement signers created on June 4, 2026:
 
 | Role | Address | Balance |
 | --- | --- | ---: |
-| Bet Payout Signer | `wolo1zfa9ssu2gpgqg7yzvhmjt4w66mza07qr2a4rwu` | fund before cutover |
-| Bet Escrow Signer | `wolo1zygwt232ymc4h2g52yvkntffhmd5alx2kglw7p` | fund before cutover |
+| Bet Payout Signer | `wolo1zfa9ssu2gpgqg7yzvhmjt4w66mza07qr2a4rwu` | `5000 WOLO` |
+| Bet Escrow Signer | `wolo1zygwt232ymc4h2g52yvkntffhmd5alx2kglw7p` | `500 WOLO` |
+
+Funding txs from Faucet Hot Wallet on June 4, 2026:
+
+| Purpose | Tx Hash |
+| --- | --- |
+| Seed Bet Payout Signer with `5000 WOLO` | `F9BBCD8439538E23181F8EC7F43FF6FCA705CB5675C35B2FFA84030DB5DB304C` |
+| Seed Bet Escrow Signer with `500 WOLO` | `1FD8AE967608737E3FDD8F8D9E473C1D1FE3D638A221E6C1892284BA26564233` |
 
 Previously configured zero-balance signer retained only for historical operator context:
 
