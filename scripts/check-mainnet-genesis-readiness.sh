@@ -232,7 +232,7 @@ if settlement_env.is_file():
         require_text(settlement_env, needle, label, blockers)
 
 if node_service.is_file():
-    require_text(node_service, "ExecStart=/var/www/WoloChain-mainnet/build/wolochaind start", "mainnet node service exec", blockers)
+    require_text(node_service, "ExecStart=/usr/local/bin/wolochaind-mainnet start", "mainnet node service exec", blockers)
 
 if settlement_service.is_file():
     require_text(settlement_service, "Description=WoloChain mainnet settlement service", "mainnet settlement service description", blockers)

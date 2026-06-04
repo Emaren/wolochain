@@ -19,6 +19,30 @@ Every mainnet key must be fresh. Testnet equivalents must not be reused.
 | Osmosis LP wallet | Custodies WOLO intended for Osmosis liquidity operations. | yes or funded later | cold until liquidity operation | yes during pool creation | yes | never |
 | Emergency / reserve | Recovery, incident response, and reserve custody. | yes | cold or multisig | rarely | yes | never |
 
+## Current Mainnet Address Labels
+
+Use these labels when app or explorer surfaces render `wolo-1` holder and transfer tables.
+
+| Label | Address | Notes |
+| --- | --- | --- |
+| Founder Cold | `wolo1r8kvt7me33rsv9ldaczj03xjrld4yumx0c0jkg` | Long-term founder reserve. |
+| Community Treasury | `wolo1hlfvzuv4dc46ngvh3zlteuegx0xga20hj20zd2` | Protocol treasury and community reserve. |
+| DEX Liquidity Reserve | `wolo1kwsmr9nzujwul6wmu4hqr90lel4ca4uy3l06en` | Osmosis and future liquidity reserve. |
+| Faucet Growth Reserve | `wolo12c009ektp58rr0gkjz3nk8f4kgvfpfzwfk86l3` | Onboarding and growth reserve. |
+| Validator Ops | `wolo1nalsh7y0hzp33j996c90yxqgerxxvgpqtumfjt` | Validator operations and self-delegation reserve. |
+| Founder Operating / Emaren | `wolo1wue7vyque2pssskgdrww0fcadlq9ps6mtn605e` | Founder operating and shipping budget. |
+| Ecosystem Bounties | `wolo1dmj5dnm7g9hmj005yzy5e5xcygudyt7wxzpxjq` | Contributor rewards, tools, and bug bounties. |
+| Faucet Hot Wallet | `wolo1dshyzxffd0jj39k7gj9tq9hgsx96ylxamyp5g0` | App-facing faucet wallet. |
+| IBC Escrow: transfer/channel-0 to Osmosis | `wolo1a53udazy8ayufvy0s434pfwjcedzqv347h8lzn` | WoloChain-side ICS-20 escrow for the live Osmosis path. |
+| Jim | `wolo10zspyrrphzctrpysh6l9dsqj4wcwmj3tk660sz` | Player wallet. |
+| Validator Ops Reserve | `wolo1fl48vsnmsdzcv85q5d2q4z5ajdha8yu3aqv4s2` | Validator ops reserve wallet. |
+| Sniper | `wolo1mcmckkr360n47wyc408xmlsv4tzw95kkczvfp9` | Player wallet. |
+| Staking Wallet | `wolo1rmr39nd5gnnv5y5f66qtq367xfwvx9jt5w7ucr` | AoE2HDBets staking custody wallet. |
+| Wolo-Osmosis Relayer Gas | `wolo1m8qzq92hkktgqp47aewzylkatk6c22vc8c4vgj` | Wolo side relayer gas wallet. |
+| Bet Escrow | `wolo1t4jq7wd4x030t9f0yfqfq74pt4pmaep5nu67y4` | AoE2HDBets bet escrow wallet. |
+| Bet Payout | `wolo1cy04t5af0mr9d8n6rrzgr8e9j4vuf42nfg02q5` | Configured payout signer; currently zero-balance unless funded. |
+| Faucet/Test Wallet 10 | `wolo1jv65s3grqf6v6jl3dp4t6c9t9rk99cd80ypxqz` | Small legacy faucet/test balance. |
+
 ## Operational Notes
 
 - Mainnet validator private keys must be generated fresh for `wolo-1`.

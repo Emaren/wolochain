@@ -1,6 +1,6 @@
 # WoloChain Mainnet Launch Plan
 
-This is a planning document only. It does not launch mainnet, start a new chain, reset testnet, create IBC channels, or create Osmosis liquidity.
+This is a historical planning document. `wolo-1` is now live; use `README.md`, `docs/mainnet-services-and-ports.md`, and `docs/mainnet-keplr-explorer.md` for current endpoint and wallet truth.
 
 Mainnet must clone the WoloChain architecture, not the `wolo-testnet` state.
 

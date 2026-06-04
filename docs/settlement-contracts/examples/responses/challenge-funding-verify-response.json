@@ -20,12 +20,12 @@
     "guarantee_uwolo": "500000",
     "guarantee_wolo": "0.500000",
     "memo": "wolo.challenge.funding.v1:app=aoe2hdbets&sid=aoe2hdbets:challenge-42:one-noshow:v1&cid=challenge-42&eid=match-2026-04-20-00042&side=left&pid=aoe2-user-left&w=1000000&g=500000&t=1500000",
-    "canonical_tx_lookup_preferred": "https://aoe2war.com/rest/cosmos/tx/v1beta1/txs/1111111111111111111111111111111111111111111111111111111111111111"
+    "canonical_tx_lookup_preferred": "https://rest-mainnet.aoe2war.com/cosmos/tx/v1beta1/txs/1111111111111111111111111111111111111111111111111111111111111111"
   },
   "lookup": {
     "ok": true,
     "found": true,
-    "chain_id": "wolo-testnet",
+    "chain_id": "wolo-1",
     "tx_hash": "1111111111111111111111111111111111111111111111111111111111111111",
     "tx_success": true,
     "kind": "escrow_deposit",

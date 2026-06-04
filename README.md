@@ -5,11 +5,12 @@ WoloChain is the fixed-supply Cosmos chain for the AoE2HDBets ecosystem.
 ## Canonical Identity
 
 - Chain name: `WoloChain`
-- Binary: `wolochaind`
-- Chain ID: `wolo-testnet`
+- Mainnet binary/service: `wolochaind-mainnet`
+- Chain ID: `wolo-1`
 - Address prefix: `wolo`
 - Base denom: `uwolo`
-- Display denom: `wolo`
+- On-chain display denom: `wolo`
+- Human display symbol: `WOLO`
 - Symbol: `WOLO`
 - Decimals: `6`
 
@@ -17,53 +18,56 @@ WoloChain is the fixed-supply Cosmos chain for the AoE2HDBets ecosystem.
 
 WoloChain owns:
 
-- chain identity
+- chain identity and public endpoint truth
 - balances and transfers
-- settlement execution rails
+- signed transaction truth, including tx hash lookup and chain-indexed transfer proof
+- settlement execution rails when a WoloChain settlement service is intentionally deployed for the target chain
 - genesis and denom metadata
-- node / bootstrap / testnet operations
+- node / bootstrap / mainnet operations
 - integration-facing proof and status primitives
 
 WoloChain does not own:
 
 - AoE2HDBets betting rules
 - AoE2HDBets UX and operator presentation
+- AoE2HDBets app-side wager, profile, staking, or display filters
 - explorer UI bugs or Ping route presentation
 - market math, pool math, refund policy, or entitlement logic
 
-## Current Live State
+## Current Mainnet State
 
-Verified on May 24, 2026.
+Verified on June 2, 2026.
 
-- VPS node service: `wolochaind-testnet.service`
-- VPS settlement service: `wolochain-settlement.service`
-- VPS moniker: `wolo-testnet-validator-1`
-- Runtime chain ID: `wolo-testnet`
-- Settlement health: `ok=true`
-- Current VPS peer count: `0`
-- Public RPC route: `https://aoe2war.com/rpc/`
-- Public REST route: `https://aoe2war.com/rest/`
-- Public explorer route: `https://aoe2war.com/wolo-testnet`
+- VPS node service: `wolochaind-mainnet.service`
+- VPS moniker: `wolo-mainnet-hel1`
+- Runtime chain ID: `wolo-1`
+- Public RPC: `https://rpc-mainnet.aoe2war.com`
+- Public REST: `https://rest-mainnet.aoe2war.com`
+- Path aliases: `https://aoe2war.com/rpc-mainnet/` and `https://aoe2war.com/rest-mainnet/`
+- Browser CORS: `https://aoe2war.com` is allowed on the public mainnet RPC/REST hosts for wallet reads and broadcasts.
+- Chain start boundary: first block at `2026-05-25T03:54:33Z`
+- Fixed supply: `100000000000000uwolo`
+- Tx indexing: `on`
+- Bank metadata: base `uwolo`, display unit `wolo`, symbol `WOLO`, exponent `6`
 
-Current live settlement posture:
+The old routes `https://aoe2war.com/rpc/`, `https://aoe2war.com/rest/`, and `https://aoe2war.com/wolo-testnet` are testnet-era surfaces only. Do not present them as current mainnet truth.
 
-- Settlement uses the dedicated `payout` signer.
-- Payout address: `wolo1cy04t5af0mr9d8n6rrzgr8e9j4vuf42nfg02q5`
-- Escrow address: `wolo1t4jq7wd4x030t9f0yfqfq74pt4pmaep5nu67y4`
-- Payout and escrow are distinct live addresses.
-- `WOLO_SETTLEMENT_AUTH_TOKEN` is set.
-- Settlement POST routes reject missing bearer auth.
-- `POST /settlement/v1/runs/validate` is live and auth-protected.
-- Grouped settlement CLI surfaces are live.
-- Escrow discovery and escrow verification routes are live.
-- Settlement request / grouped-run state lives on the VPS extra volume.
+Current mainnet settlement posture:
 
-Current live caveats:
+- The mainnet node is live and healthy.
+- Mainnet tx lookup by hash is live through RPC and REST.
+- `wolochain-settlement.service` on the VPS remains the old testnet settlement service.
+- A separate `wolochain-mainnet-settlement.service` is not currently part of the verified live mainnet surface.
+- AoE2HDBets mainnet stake verification should use the mainnet RPC/REST tx lookup path unless a deliberately deployed mainnet settlement service on `127.0.0.1:8092` is configured.
+- AoE2HDBets app-side mainnet signer operations use the separate app keyring home `/var/lib/aoe2hdbets-wolo-mainnet`; do not point app signer env at `/var/lib/wolochaind-testnet` or grant the web app access to the validator/node config under `/var/lib/wolochaind-mainnet`.
 
-- The VPS validator is currently isolated with `0` peers.
-- Settlement still uses the `test` keyring backend on the VPS.
-- Settlement proof links use `WOLO_SETTLEMENT_PUBLIC_REST_URL=https://aoe2war.com/rest`; keep live settlement health aligned after env changes.
-- The highest-value WoloChain work right now is restart reliability, operator truthfulness, monitoring, backup / restore ergonomics, and doc accuracy — not new chain features.
+Current WoloChain / AoE2HDBets boundary:
+
+- WoloChain owns whether `wolo-1` exists, is healthy, indexes txs, and can prove a signed mainnet tx by hash.
+- WoloChain owns canonical denom, display, bech32, supply, and public endpoint truth.
+- WoloChain owns signed transfer truth and custody-address bank balances as reported by `wolo-1`.
+- AoE2HDBets owns app-side display windows, profile ledgers, staking filters, wager visibility, and hiding old app-only/testnet rows from mainnet-facing pages.
+- AoE2HDBets must not treat old testnet database rows as chain truth without a `wolo-1` tx hash that verifies against the mainnet endpoints above.
 
 ## Local Workflow
 

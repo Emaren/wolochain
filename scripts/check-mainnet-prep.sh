@@ -72,7 +72,7 @@ require_fixed "CHAIN_ID=$EXPECTED_CHAIN_ID" mainnet-prep/config/wolo-1-node.env.
 require_fixed "WOLO_HOME=/var/lib/wolochaind-mainnet" mainnet-prep/config/wolo-1-node.env.example "node env uses mainnet home"
 require_fixed "WOLO_SETTLEMENT_CHAIN_ID=$EXPECTED_CHAIN_ID" mainnet-prep/config/wolo-1-settlement.env.example "settlement env uses wolo-1"
 require_fixed "WOLO_SETTLEMENT_STATE_DIR=/mnt/HC_Volume_105319120/wolochain-mainnet/settlement-state" mainnet-prep/config/wolo-1-settlement.env.example "settlement env uses mainnet state dir"
-require_fixed "ExecStart=/var/www/WoloChain-mainnet/build/wolochaind start" mainnet-prep/systemd/wolochaind-mainnet.service.example "node service uses mainnet binary path"
+require_fixed "ExecStart=/usr/local/bin/wolochaind-mainnet start" mainnet-prep/systemd/wolochaind-mainnet.service.example "node service uses verified mainnet binary path"
 require_fixed "Requires=wolochaind-mainnet.service" mainnet-prep/systemd/wolochain-mainnet-settlement.service.example "settlement service depends on mainnet node"
 
 require_absent_regex '/var/lib/wolochaind-testnet|wolochaind-testnet[.]service|wolochain-settlement[.]service|127[.]0[.]0[.]1:26657|127[.]0[.]0[.]1:1317|127[.]0[.]0[.]1:8091' mainnet-prep/config mainnet-prep/systemd "mainnet env/service templates do not point at live testnet homes/services/ports"

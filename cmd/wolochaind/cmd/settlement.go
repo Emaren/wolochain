@@ -22,20 +22,21 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-
-	"github.com/emaren/wolochain/app"
 )
 
 const (
-	settlementCanonicalChainID      = "wolo-testnet"
+	settlementCanonicalChainID      = "wolo-1"
 	settlementCanonicalBaseDenom    = "uwolo"
 	settlementCanonicalDisplayDenom = "wolo"
 	settlementCanonicalPrefix       = "wolo"
 	settlementDefaultGasPrices      = "0.025uwolo"
-	settlementDefaultRPC            = "http://127.0.0.1:26657"
-	settlementDefaultNode           = "tcp://127.0.0.1:26657"
-	settlementDefaultREST           = "http://127.0.0.1:1317"
-	settlementDefaultListenAddr     = "127.0.0.1:8091"
+	settlementDefaultHome           = "/var/lib/wolochaind-mainnet"
+	settlementDefaultRPC            = "http://127.0.0.1:27657"
+	settlementDefaultNode           = "tcp://127.0.0.1:27657"
+	settlementDefaultREST           = "http://127.0.0.1:1318"
+	settlementDefaultPublicREST     = "https://rest-mainnet.aoe2war.com"
+	settlementDefaultListenAddr     = "127.0.0.1:8092"
+	settlementDefaultEscrowKeyName  = "mainnet-escrow"
 	settlementSignerRole            = "payout"
 	settlementEscrowSignerRole      = "escrow"
 	settlementMaxRunPayouts         = 250
@@ -1529,13 +1530,13 @@ func loadSettlementConfig() (settlementConfig, error) {
 
 	homeDir := getenvFirst("WOLO_SETTLEMENT_HOME", "WOLO_HOME")
 	if homeDir == "" {
-		homeDir = app.DefaultNodeHome
+		homeDir = settlementDefaultHome
 	}
 	homeDir = expandHome(homeDir)
 
 	rpcHTTP := normalizeHTTPURL(getenvFirst("WOLO_SETTLEMENT_RPC_HTTP", "WOLO_SETTLEMENT_RPC_URL", "WOLO_RPC_URL"), settlementDefaultRPC)
 	restURL := normalizeHTTPURL(getenvFirst("WOLO_SETTLEMENT_REST_URL", "WOLO_REST_URL"), settlementDefaultREST)
-	publicRESTURL := strings.TrimSpace(getenvFirst("WOLO_SETTLEMENT_PUBLIC_REST_URL", "WOLO_PUBLIC_REST_URL"))
+	publicRESTURL := strings.TrimSpace(getenvDefault("WOLO_SETTLEMENT_PUBLIC_REST_URL", getenvDefault("WOLO_PUBLIC_REST_URL", settlementDefaultPublicREST)))
 	if publicRESTURL != "" {
 		publicRESTURL = normalizeHTTPURL(publicRESTURL, "")
 	}
@@ -1571,7 +1572,7 @@ func loadSettlementConfig() (settlementConfig, error) {
 		AddressPrefix:          getenvDefault("WOLO_SETTLEMENT_ADDRESS_PREFIX", settlementCanonicalPrefix),
 		PayoutKeyName:          strings.TrimSpace(os.Getenv("WOLO_SETTLEMENT_PAYOUT_KEY_NAME")),
 		PayoutAddress:          strings.TrimSpace(os.Getenv("WOLO_SETTLEMENT_PAYOUT_ADDRESS")),
-		EscrowKeyName:          strings.TrimSpace(getenvDefault("WOLO_SETTLEMENT_ESCROW_KEY_NAME", "escrow")),
+		EscrowKeyName:          strings.TrimSpace(getenvDefault("WOLO_SETTLEMENT_ESCROW_KEY_NAME", settlementDefaultEscrowKeyName)),
 		EscrowAddress:          strings.TrimSpace(getenvFirst("WOLO_SETTLEMENT_ESCROW_ADDRESS", "WOLO_BET_ESCROW_ADDRESS")),
 		TreasuryAddress:        strings.TrimSpace(os.Getenv("WOLO_SETTLEMENT_TREASURY_ADDRESS")),
 		EscrowAutoTopUp:        parseBoolEnv("WOLO_SETTLEMENT_ESCROW_AUTO_TOP_UP_ENABLED"),

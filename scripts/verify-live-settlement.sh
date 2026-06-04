@@ -4,7 +4,7 @@ set -euo pipefail
 
 SETTLEMENT_ENV_FILE="${SETTLEMENT_ENV_FILE:-}"
 if [[ -z "$SETTLEMENT_ENV_FILE" ]] && command -v systemctl >/dev/null 2>&1; then
-  SETTLEMENT_ENV_FILE="$(systemctl show -p EnvironmentFiles --value wolochain-settlement.service 2>/dev/null | awk '{print $1}' | sed 's/^-//')"
+  SETTLEMENT_ENV_FILE="$(systemctl show -p EnvironmentFiles --value wolochain-mainnet-settlement.service 2>/dev/null | awk '{print $1}' | sed 's/^-//')"
 fi
 if [[ -n "$SETTLEMENT_ENV_FILE" && -r "$SETTLEMENT_ENV_FILE" ]]; then
   set -a
@@ -13,19 +13,19 @@ if [[ -n "$SETTLEMENT_ENV_FILE" && -r "$SETTLEMENT_ENV_FILE" ]]; then
   set +a
 fi
 
-SETTLEMENT_BASE_URL="${SETTLEMENT_BASE_URL:-http://127.0.0.1:8091}"
+SETTLEMENT_BASE_URL="${SETTLEMENT_BASE_URL:-http://127.0.0.1:8092}"
 WOLOCHAIND_BIN="${WOLOCHAIND_BIN:-./build/wolochaind}"
 WOLOCHAIND_SUDO_USER="${WOLOCHAIND_SUDO_USER:-}"
-WOLO_SETTLEMENT_HOME="${WOLO_SETTLEMENT_HOME:-/var/lib/wolochaind-testnet}"
-WOLO_SETTLEMENT_STATE_DIR="${WOLO_SETTLEMENT_STATE_DIR:-/mnt/HC_Volume_105319120/wolochain/settlement-state}"
-WOLO_SETTLEMENT_KEYRING_BACKEND="${WOLO_SETTLEMENT_KEYRING_BACKEND:-test}"
-WOLO_SETTLEMENT_CHAIN_ID="${WOLO_SETTLEMENT_CHAIN_ID:-wolo-testnet}"
+WOLO_SETTLEMENT_HOME="${WOLO_SETTLEMENT_HOME:-/var/lib/wolochaind-mainnet}"
+WOLO_SETTLEMENT_STATE_DIR="${WOLO_SETTLEMENT_STATE_DIR:-/mnt/HC_Volume_105319120/wolochain-mainnet/settlement-state}"
+WOLO_SETTLEMENT_KEYRING_BACKEND="${WOLO_SETTLEMENT_KEYRING_BACKEND:-os}"
+WOLO_SETTLEMENT_CHAIN_ID="${WOLO_SETTLEMENT_CHAIN_ID:-wolo-1}"
 WOLO_SETTLEMENT_BASE_DENOM="${WOLO_SETTLEMENT_BASE_DENOM:-uwolo}"
 WOLO_SETTLEMENT_DISPLAY_DENOM="${WOLO_SETTLEMENT_DISPLAY_DENOM:-wolo}"
 WOLO_SETTLEMENT_ADDRESS_PREFIX="${WOLO_SETTLEMENT_ADDRESS_PREFIX:-wolo}"
 WOLO_SETTLEMENT_PAYOUT_ADDRESS="${WOLO_SETTLEMENT_PAYOUT_ADDRESS:-}"
-WOLO_SETTLEMENT_PAYOUT_KEY_NAME="${WOLO_SETTLEMENT_PAYOUT_KEY_NAME:-payout}"
-WOLO_SETTLEMENT_ESCROW_KEY_NAME="${WOLO_SETTLEMENT_ESCROW_KEY_NAME:-escrow}"
+WOLO_SETTLEMENT_PAYOUT_KEY_NAME="${WOLO_SETTLEMENT_PAYOUT_KEY_NAME:-mainnet-payout}"
+WOLO_SETTLEMENT_ESCROW_KEY_NAME="${WOLO_SETTLEMENT_ESCROW_KEY_NAME:-mainnet-escrow}"
 WOLO_SETTLEMENT_ESCROW_ADDRESS="${WOLO_SETTLEMENT_ESCROW_ADDRESS:-}"
 WOLO_SETTLEMENT_MIN_ESCROW_BALANCE_UWOLO="${WOLO_SETTLEMENT_MIN_ESCROW_BALANCE_UWOLO:-}"
 WOLO_SETTLEMENT_ESCROW_FEE_HEADROOM_UWOLO="${WOLO_SETTLEMENT_ESCROW_FEE_HEADROOM_UWOLO:-}"
@@ -253,12 +253,18 @@ payout_address="$(extract_json_string payout_address "$health_body")"
 escrow_address="$(extract_json_string escrow_address "$health_body")"
 auth_token_set="$(extract_json_bool auth_token_set "$health_body")"
 if [ -z "$payout_address" ]; then
-  payout_address="${WOLO_SETTLEMENT_PAYOUT_ADDRESS:-wolo1jx4n3n2ey6uzfq28kplkmpd2am98xsmcn0nerx}"
+  payout_address="${WOLO_SETTLEMENT_PAYOUT_ADDRESS:-}"
+fi
+grouped_probe_ready=1
+if [ -z "$payout_address" ]; then
+  grouped_probe_ready=0
+  record_failure "payout address is not configured on the target service or in WOLO_SETTLEMENT_PAYOUT_ADDRESS"
+else
+  printf 'Payout address: %s\n' "$payout_address"
 fi
 if [ -z "$escrow_address" ]; then
   printf 'Escrow address is not configured on the target service.\n'
 else
-  printf 'Payout address: %s\n' "$payout_address"
   printf 'Escrow address: %s\n' "$escrow_address"
 fi
 
@@ -294,7 +300,8 @@ esac
 
 note "Grouped Dry-Run Route"
 run_body="$tmpdir/run.json"
-cat >"$run_body" <<EOF
+if [ "$grouped_probe_ready" = "1" ]; then
+  cat >"$run_body" <<EOF
 {
   "settlement_run_id": "$VERIFY_RUN_ID",
   "source_app": "settlement-health-probe",
@@ -310,16 +317,24 @@ cat >"$run_body" <<EOF
 }
 EOF
 
-run_check_body="$tmpdir/run-check.json"
-run_check_code="000"
-if ! run_check_code="$(http_request POST "$SETTLEMENT_BASE_URL/settlement/v1/runs/validate" "$run_check_body" \
-  -H 'content-type: application/json' \
-  --data @"$run_body")"; then
-  :
+  run_check_body="$tmpdir/run-check.json"
+  run_check_code="000"
+  if ! run_check_code="$(http_request POST "$SETTLEMENT_BASE_URL/settlement/v1/runs/validate" "$run_check_body" \
+    -H 'content-type: application/json' \
+    --data @"$run_body")"; then
+    :
+  fi
+  printf 'HTTP %s\n' "$run_check_code"
+else
+  run_check_body="$tmpdir/run-check.json"
+  run_check_code="000"
+  : >"$run_check_body"
+  printf 'Skipping grouped dry-run because no payout address is configured.\n'
 fi
-printf 'HTTP %s\n' "$run_check_code"
 
-if [ "$run_check_code" = "404" ]; then
+if [ "$grouped_probe_ready" != "1" ]; then
+  :
+elif [ "$run_check_code" = "404" ]; then
   print_response "$run_check_body" always
   record_failure "grouped dry-run route is not deployed on this service"
 elif [ "$run_check_code" = "401" ]; then
@@ -333,7 +348,7 @@ else
   record_failure "unexpected grouped dry-run HTTP status $run_check_code"
 fi
 
-if [ "${auth_token_set:-false}" = "true" ] && [ -n "${WOLO_SETTLEMENT_AUTH_TOKEN:-}" ] && [ "$run_check_code" != "404" ]; then
+if [ "$grouped_probe_ready" = "1" ] && [ "${auth_token_set:-false}" = "true" ] && [ -n "${WOLO_SETTLEMENT_AUTH_TOKEN:-}" ] && [ "$run_check_code" != "404" ]; then
   note "Authorized Grouped Dry-Run"
   run_auth_body="$tmpdir/run-auth.json"
   run_auth_code="000"

@@ -44,12 +44,13 @@ This is a planning checklist only. It is intentionally split into gates so mainn
 
 - Mainnet chain home is `/var/lib/wolochaind-mainnet`.
 - Mainnet node service is `wolochaind-mainnet.service`.
-- Mainnet settlement service is `wolochain-mainnet-settlement.service`.
+- Mainnet settlement service is `wolochain-mainnet-settlement.service` only if deliberately deployed and verified; otherwise mainnet app verification uses RPC/REST tx lookup.
 - Mainnet RPC binds `127.0.0.1:27657`.
 - Mainnet REST binds `127.0.0.1:1318`.
 - Mainnet P2P binds `0.0.0.0:27656`.
 - Mainnet settlement API binds `127.0.0.1:8092`.
 - Mainnet settlement state is separate from testnet.
+- AoE2HDBets app signer home, if used, is mainnet-labeled and separate from the node home, for example `/var/lib/aoe2hdbets-wolo-mainnet`.
 - Testnet services remain unchanged.
 
 ## Gate 5: Public Surface
@@ -58,6 +59,7 @@ This is a planning checklist only. It is intentionally split into gates so mainn
 - TLS certs exist for mainnet hosts.
 - Nginx proxies mainnet RPC to mainnet RPC port.
 - Nginx proxies mainnet REST to mainnet REST port.
+- Nginx returns CORS headers for `Origin: https://aoe2war.com` on mainnet RPC/REST.
 - Explorer serves mainnet config.
 - Keplr config points to mainnet endpoints.
 - No mainnet endpoint reports `wolo-testnet`.
@@ -67,11 +69,15 @@ This is a planning checklist only. It is intentionally split into gates so mainn
 Run only after approved launch:
 
 ```bash
-curl -fsS https://rpc.wolo.aoe2war.com/status
-curl -fsS https://rest.wolo.aoe2war.com/cosmos/base/tendermint/v1beta1/node_info
-curl -fsS 'https://rest.wolo.aoe2war.com/cosmos/bank/v1beta1/supply/by_denom?denom=uwolo'
-curl -fsS https://rest.wolo.aoe2war.com/cosmos/bank/v1beta1/denoms_metadata/uwolo
-curl -fsSI https://explorer.wolo.aoe2war.com
+curl -fsS https://rpc-mainnet.aoe2war.com/status
+curl -fsS https://rest-mainnet.aoe2war.com/cosmos/base/tendermint/v1beta1/node_info
+curl -fsS 'https://rest-mainnet.aoe2war.com/cosmos/bank/v1beta1/supply/by_denom?denom=uwolo'
+curl -fsS https://rest-mainnet.aoe2war.com/cosmos/bank/v1beta1/denoms_metadata/uwolo
+curl -fsS https://rest-mainnet.aoe2war.com/cosmos/tx/v1beta1/txs/3D660226EF33143B62F5BFE922DB84FC8FF224938DD49166A5ABC27DD8874EDD
+curl -i -X OPTIONS https://rpc-mainnet.aoe2war.com/ \
+  -H 'Origin: https://aoe2war.com' \
+  -H 'Access-Control-Request-Method: POST' \
+  -H 'Access-Control-Request-Headers: content-type'
 ```
 
 Expected:
@@ -82,6 +88,7 @@ Expected:
 - metadata display: `wolo`
 - metadata symbol: `WOLO`
 - decimals: `6`
+- CORS preflight returns `204` with `Access-Control-Allow-Origin: https://aoe2war.com`
 
 ## Rollback Boundary
 
@@ -95,4 +102,3 @@ If mainnet launch fails before public use:
 - do not change AoE2War app endpoints until mainnet is healthy
 
 There is no rollback path that converts testnet into mainnet. They are separate chains.
-

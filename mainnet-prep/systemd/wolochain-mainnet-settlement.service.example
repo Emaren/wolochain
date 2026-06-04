@@ -4,15 +4,14 @@ After=network-online.target wolochaind-mainnet.service
 Requires=wolochaind-mainnet.service
 
 [Service]
-User=wolo
-Group=wolo
-WorkingDirectory=/var/www/WoloChain-mainnet
+User=root
+Group=root
+WorkingDirectory=/var/www/WoloChain-wolo-1
 EnvironmentFile=/etc/wolochain-mainnet-settlement.env
-ExecStart=/var/www/WoloChain-mainnet/build/wolochaind settlement serve
+ExecStart=/usr/local/bin/wolochaind-mainnet settlement serve
 Restart=always
 RestartSec=5
 LimitNOFILE=65535
 
 [Install]
 WantedBy=multi-user.target
-

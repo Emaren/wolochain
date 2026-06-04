@@ -64,7 +64,10 @@ scan_repo_pattern() {
 require_cmd git
 require_cmd python3
 
-mapfile -t TRACKED_FILES < <(git ls-files -- README.md config.yml go.mod app cmd docs proto scripts)
+TRACKED_FILES=()
+while IFS= read -r path; do
+  TRACKED_FILES+=("$path")
+done < <(git ls-files -- README.md config.yml go.mod app cmd docs proto scripts)
 if (( ${#TRACKED_FILES[@]} == 0 )); then
   fail "Unable to collect tracked repo files for invariant scanning."
 fi
@@ -87,9 +90,8 @@ for path in "${TRACKED_FILES[@]}"; do
       # wolo-1 but must only write ignored reports under build/.
       ;;
     docs/mainnet-*.md)
-      # Mainnet planning docs are allowed to name the future chain id.
-      # Runtime defaults, scripts, examples, and generated outputs must remain
-      # pinned to wolo-testnet until there is a deliberate launch cutover.
+      # Mainnet docs are allowed to name the live chain id and historical
+      # testnet boundary.
       ;;
     *)
       filtered_files+=("$path")
@@ -99,7 +101,7 @@ done
 TRACKED_FILES=("${filtered_files[@]}")
 
 echo "=== repo drift scan ==="
-scan_repo_pattern 'wolo-1|wolo-testnet-1' 'Mainnet or legacy chain IDs are still present outside explicit mainnet planning docs.'
+scan_repo_pattern 'wolo-testnet-1' 'Legacy chain IDs are still present outside explicit mainnet planning docs.'
 scan_repo_pattern 'rpc[.]aoe2hdbets[.]com|rest[.]aoe2hdbets[.]com|explorer[.]testnet[.]aoe2hdbets[.]com' 'Stale public Wolo endpoint hosts are still present in tracked repo files.'
 scan_repo_pattern '\butoken\b|\bustake\b' 'Legacy scaffold denoms are still present in tracked repo files.'
 scan_repo_pattern 'tokenchain' 'Legacy scaffold chain naming is still present in tracked repo files.'
@@ -122,20 +124,29 @@ require_fixed '"base": "uwolo"' scripts/bootstrap-local.sh 'bootstrap-local.sh m
 require_fixed '"display": "wolo"' scripts/bootstrap-local.sh 'bootstrap-local.sh must publish wolo as the display denom.'
 require_fixed 'export WOLO_CHAIN_ID_FALLBACK="${WOLO_CHAIN_ID:-wolo-testnet}"' scripts/query-local-balances-json.sh 'query-local-balances-json.sh must fall back to wolo-testnet.'
 require_fixed '"denom": {"base": "uwolo", "display": "wolo", "decimals": 6},' scripts/query-local-balances-json.sh 'query-local-balances-json.sh must publish canonical WOLO denom metadata.'
-require_fixed 'settlementCanonicalChainID      = "wolo-testnet"' cmd/wolochaind/cmd/settlement.go 'settlement.go must keep wolo-testnet as the canonical chain ID.'
+require_fixed 'settlementCanonicalChainID      = "wolo-1"' cmd/wolochaind/cmd/settlement.go 'settlement.go must use wolo-1 as the canonical settlement chain ID.'
 require_fixed 'settlementCanonicalBaseDenom    = "uwolo"' cmd/wolochaind/cmd/settlement.go 'settlement.go must keep uwolo as the canonical base denom.'
 require_fixed 'settlementCanonicalDisplayDenom = "wolo"' cmd/wolochaind/cmd/settlement.go 'settlement.go must keep wolo as the canonical display denom.'
 require_fixed 'settlementCanonicalPrefix       = "wolo"' cmd/wolochaind/cmd/settlement.go 'settlement.go must keep wolo as the canonical address prefix.'
 require_fixed 'settlementDefaultGasPrices      = "0.025uwolo"' cmd/wolochaind/cmd/settlement.go 'settlement.go must keep uwolo in the default gas price setting.'
-require_fixed 'WOLO_SETTLEMENT_CHAIN_ID="${WOLO_SETTLEMENT_CHAIN_ID:-wolo-testnet}"' scripts/check-settlement-cutover.sh 'check-settlement-cutover.sh must default to wolo-testnet.'
+require_fixed 'settlementDefaultHome           = "/var/lib/wolochaind-mainnet"' cmd/wolochaind/cmd/settlement.go 'settlement.go must default to the mainnet home.'
+require_fixed 'settlementDefaultRPC            = "http://127.0.0.1:27657"' cmd/wolochaind/cmd/settlement.go 'settlement.go must default to mainnet RPC.'
+require_fixed 'settlementDefaultREST           = "http://127.0.0.1:1318"' cmd/wolochaind/cmd/settlement.go 'settlement.go must default to mainnet REST.'
+require_fixed 'settlementDefaultPublicREST     = "https://rest-mainnet.aoe2war.com"' cmd/wolochaind/cmd/settlement.go 'settlement.go must default proof links to mainnet REST.'
+require_fixed 'settlementDefaultListenAddr     = "127.0.0.1:8092"' cmd/wolochaind/cmd/settlement.go 'settlement.go must default to the mainnet settlement port.'
+require_fixed 'settlementDefaultEscrowKeyName  = "mainnet-escrow"' cmd/wolochaind/cmd/settlement.go 'settlement.go must default to the mainnet escrow key name.'
+require_fixed 'SETTLEMENT_BASE_URL="${SETTLEMENT_BASE_URL:-http://127.0.0.1:8092}"' scripts/check-settlement-cutover.sh 'check-settlement-cutover.sh must default to the mainnet settlement port.'
+require_fixed 'WOLO_SETTLEMENT_CHAIN_ID="${WOLO_SETTLEMENT_CHAIN_ID:-wolo-1}"' scripts/check-settlement-cutover.sh 'check-settlement-cutover.sh must default to wolo-1.'
 require_fixed 'WOLO_SETTLEMENT_BASE_DENOM="${WOLO_SETTLEMENT_BASE_DENOM:-uwolo}"' scripts/check-settlement-cutover.sh 'check-settlement-cutover.sh must default to uwolo.'
 require_fixed 'WOLO_SETTLEMENT_DISPLAY_DENOM="${WOLO_SETTLEMENT_DISPLAY_DENOM:-wolo}"' scripts/check-settlement-cutover.sh 'check-settlement-cutover.sh must default to wolo.'
 require_fixed 'WOLO_SETTLEMENT_ADDRESS_PREFIX="${WOLO_SETTLEMENT_ADDRESS_PREFIX:-wolo}"' scripts/check-settlement-cutover.sh 'check-settlement-cutover.sh must default to the wolo prefix.'
-require_fixed 'WOLO_SETTLEMENT_CHAIN_ID="${WOLO_SETTLEMENT_CHAIN_ID:-wolo-testnet}"' scripts/check-settlement-alerts.sh 'check-settlement-alerts.sh must default to wolo-testnet.'
+require_fixed 'SETTLEMENT_BASE_URL="${SETTLEMENT_BASE_URL:-http://127.0.0.1:8092}"' scripts/check-settlement-alerts.sh 'check-settlement-alerts.sh must default to the mainnet settlement port.'
+require_fixed 'WOLO_SETTLEMENT_CHAIN_ID="${WOLO_SETTLEMENT_CHAIN_ID:-wolo-1}"' scripts/check-settlement-alerts.sh 'check-settlement-alerts.sh must default to wolo-1.'
 require_fixed 'WOLO_SETTLEMENT_BASE_DENOM="${WOLO_SETTLEMENT_BASE_DENOM:-uwolo}"' scripts/check-settlement-alerts.sh 'check-settlement-alerts.sh must default to uwolo.'
 require_fixed 'WOLO_SETTLEMENT_DISPLAY_DENOM="${WOLO_SETTLEMENT_DISPLAY_DENOM:-wolo}"' scripts/check-settlement-alerts.sh 'check-settlement-alerts.sh must default to wolo.'
 require_fixed 'WOLO_SETTLEMENT_ADDRESS_PREFIX="${WOLO_SETTLEMENT_ADDRESS_PREFIX:-wolo}"' scripts/check-settlement-alerts.sh 'check-settlement-alerts.sh must default to the wolo prefix.'
-require_fixed 'WOLO_SETTLEMENT_CHAIN_ID="${WOLO_SETTLEMENT_CHAIN_ID:-wolo-testnet}"' scripts/verify-live-settlement.sh 'verify-live-settlement.sh must default to wolo-testnet.'
+require_fixed 'SETTLEMENT_BASE_URL="${SETTLEMENT_BASE_URL:-http://127.0.0.1:8092}"' scripts/verify-live-settlement.sh 'verify-live-settlement.sh must default to the mainnet settlement port.'
+require_fixed 'WOLO_SETTLEMENT_CHAIN_ID="${WOLO_SETTLEMENT_CHAIN_ID:-wolo-1}"' scripts/verify-live-settlement.sh 'verify-live-settlement.sh must default to wolo-1.'
 require_fixed 'WOLO_SETTLEMENT_BASE_DENOM="${WOLO_SETTLEMENT_BASE_DENOM:-uwolo}"' scripts/verify-live-settlement.sh 'verify-live-settlement.sh must default to uwolo.'
 require_fixed 'WOLO_SETTLEMENT_DISPLAY_DENOM="${WOLO_SETTLEMENT_DISPLAY_DENOM:-wolo}"' scripts/verify-live-settlement.sh 'verify-live-settlement.sh must default to wolo.'
 require_fixed 'WOLO_SETTLEMENT_ADDRESS_PREFIX="${WOLO_SETTLEMENT_ADDRESS_PREFIX:-wolo}"' scripts/verify-live-settlement.sh 'verify-live-settlement.sh must default to the wolo prefix.'

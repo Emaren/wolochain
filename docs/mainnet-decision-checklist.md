@@ -1,6 +1,6 @@
 # WoloChain Mainnet Tony Decision Checklist
 
-This checklist is for planning only. It must not be used to launch mainnet, create keys, create wallets, generate genesis, deploy services, create IBC channels, or create Osmosis liquidity.
+This checklist began as launch planning context. `wolo-1` is now live; use it for historical decisions, not as the current endpoint or deployment source of truth.
 
 Recommended posture: decide the irreversible identity and custody questions early, defer public launch and liquidity questions until the chain has been generated and verified, and keep `wolo-testnet` untouched throughout.
 
@@ -20,7 +20,7 @@ These decisions shape the prep branch and should be settled before creating `/Us
 | Chain home | `/var/lib/wolochaind-mainnet` | Never `/var/lib/wolochaind-testnet`. |
 | Port plan | P2P `27656`, RPC `27657`, REST `1318`, settlement `8092` | Non-conflicting with testnet. |
 | Endpoint style | dedicated subdomains | Prefer wallet/relayer-friendly origins over path rewrites. |
-| Public endpoints | `rpc.wolo.aoe2war.com`, `rest.wolo.aoe2war.com`, `explorer.wolo.aoe2war.com` | DNS may not exist yet. |
+| Public endpoints | `rpc-mainnet.aoe2war.com`, `rest-mainnet.aoe2war.com` | Verified live on June 1, 2026. A separate mainnet explorer route is not verified yet. |
 | Day-one settlement posture | prepare infra, delay app cutover | Run chain first; cut over production settlement after observation. |
 | Binary isolation | prefer versioned mainnet binary path | Avoid coupling testnet and mainnet restarts during launch. |
 
