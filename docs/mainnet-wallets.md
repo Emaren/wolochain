@@ -44,6 +44,7 @@ Use these labels when app or explorer surfaces render `wolo-1` holder and transf
 | Bet Payout Signer | `wolo1zfa9ssu2gpgqg7yzvhmjt4w66mza07qr2a4rwu` | Fresh mainnet payout signer in `/var/lib/wolochain-mainnet-settlement/keyring`; funded June 4, 2026. |
 | Bet Escrow Signer | `wolo1zygwt232ymc4h2g52yvkntffhmd5alx2kglw7p` | Fresh mainnet escrow signer in `/var/lib/wolochain-mainnet-settlement/keyring`; route new app escrow deposits here after cutover. |
 | Faucet/Test Wallet 10 | `wolo1jv65s3grqf6v6jl3dp4t6c9t9rk99cd80ypxqz` | Small legacy faucet/test balance. |
+| Legacy app `faucetgrowth` key | `wolo1jx4n3n2ey6uzfq28kplkmpd2am98xsmcn0nerx` | Present in `/var/lib/aoe2hdbets-wolo-mainnet` but not the funded mainnet Faucet Hot Wallet. |
 
 ## Operational Notes
 
@@ -92,7 +93,37 @@ Initial funding completed June 4, 2026:
 | Bet Payout Signer | `5000 WOLO` | `F9BBCD8439538E23181F8EC7F43FF6FCA705CB5675C35B2FFA84030DB5DB304C` |
 | Bet Escrow Signer | `500 WOLO` | `1FD8AE967608737E3FDD8F8D9E473C1D1FE3D638A221E6C1892284BA26564233` |
 
-The VPS currently does not hold the funded Faucet Hot Wallet key `wolo1dshyzxffd0jj39k7gj9tq9hgsx96ylxamyp5g0`. Do not use the old testnet `faucetgrowth` key as a fallback; it resolves to `wolo1jx4n3n2ey6uzfq28kplkmpd2am98xsmcn0nerx` and is not a funded mainnet settlement source.
+The app-facing mainnet faucet source is the funded Faucet Hot Wallet `wolo1dshyzxffd0jj39k7gj9tq9hgsx96ylxamyp5g0`. Restore or import that key into `/var/lib/aoe2hdbets-wolo-mainnet` under a mainnet-specific name such as `faucet-hot-mainnet`, then set `WOLO_FAUCET_FROM=faucet-hot-mainnet` in AoE2HDBets. Do not use the old testnet `faucetgrowth` key as a fallback; it resolves on the VPS to `wolo1jx4n3n2ey6uzfq28kplkmpd2am98xsmcn0nerx` and currently has `0 WOLO`.
+
+## June 4, 2026 Mainnet Faucet Gate
+
+AoE2HDBets app-prod commit `7a706ee` configured the faucet route with `WOLO_FAUCET_FROM=faucetgrowth`. The chain-side audit found that this key exists in `/var/lib/aoe2hdbets-wolo-mainnet`, but it is not the funded mainnet Faucet Hot Wallet:
+
+| Key name | Address | Balance | Status |
+| --- | --- | ---: | --- |
+| `faucetgrowth` | `wolo1jx4n3n2ey6uzfq28kplkmpd2am98xsmcn0nerx` | `0 WOLO` | legacy app/test key, do not use for current mainnet faucet claims |
+| `faucet-hot-mainnet` | `wolo1dshyzxffd0jj39k7gj9tq9hgsx96ylxamyp5g0` | `493499.991819 WOLO` | intended funded mainnet Faucet Hot Wallet after secure key restore |
+
+There is no new funding tx to document when the app is switched to the existing funded Faucet Hot Wallet. If Tony instead chooses to keep `faucetgrowth` as a separate app hot faucet signer, fund it intentionally from the Faucet Hot Wallet and document that new tx hash here.
+
+Safe restore pattern for the intended Faucet Hot Wallet:
+
+```bash
+sudo install -d -m 0700 /var/lib/aoe2hdbets-wolo-mainnet
+sudo /usr/local/bin/wolochaind-mainnet keys add faucet-hot-mainnet \
+  --recover \
+  --home /var/lib/aoe2hdbets-wolo-mainnet \
+  --keyring-backend test
+sudo /usr/local/bin/wolochaind-mainnet keys show faucet-hot-mainnet \
+  --home /var/lib/aoe2hdbets-wolo-mainnet \
+  --keyring-backend test -a
+sudo /usr/local/bin/wolochaind-mainnet query bank balances \
+  wolo1dshyzxffd0jj39k7gj9tq9hgsx96ylxamyp5g0 \
+  --node tcp://127.0.0.1:27657 \
+  --output json
+```
+
+Paste the mnemonic interactively only when explicitly restoring the key. Never place the mnemonic in shell history, docs, env files, screenshots, or tickets.
 
 ## Backup Requirements
 

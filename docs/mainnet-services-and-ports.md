@@ -101,9 +101,13 @@ WOLO_STAKING_CHAIN_ID=wolo-1
 WOLO_STAKING_NODE_RPC=http://127.0.0.1:27657
 WOLO_FAUCET_CLI=/usr/local/bin/wolochaind-mainnet
 WOLO_FAUCET_HOME=/var/lib/aoe2hdbets-wolo-mainnet
+WOLO_FAUCET_FROM=faucet-hot-mainnet
 WOLO_FAUCET_CHAIN_ID=wolo-1
 WOLO_FAUCET_NODE_RPC=http://127.0.0.1:27657
+WOLO_FAUCET_KEYRING_BACKEND=test
 ```
+
+`WOLO_FAUCET_FROM` must resolve inside `/var/lib/aoe2hdbets-wolo-mainnet` to the funded Faucet Hot Wallet `wolo1dshyzxffd0jj39k7gj9tq9hgsx96ylxamyp5g0`. The suggested key name is `faucet-hot-mainnet` so it cannot be confused with the old `faucetgrowth` key. As of the June 4, 2026 faucet audit after AoE2HDBets app-prod `7a706ee`, the VPS key `faucetgrowth` resolves to `wolo1jx4n3n2ey6uzfq28kplkmpd2am98xsmcn0nerx` and has `0 WOLO`; do not use it as the mainnet faucet unless Tony deliberately funds that legacy signer as a separate app faucet account.
 
 `WOLO_SETTLEMENT_URL` is ready to set after the June 4, 2026 funding check: `wolochain-mainnet-settlement.service` is deployed on `127.0.0.1:8092`, verified against `wolo-1`, and the payout/escrow signers are funded above their reserve floors.
 
@@ -135,6 +139,7 @@ Current mainnet holder aliases from the June 4, 2026 holder audit:
 | Wolo-Osmosis Relayer Gas | `wolo1m8qzq92hkktgqp47aewzylkatk6c22vc8c4vgj` | `99.997730 WOLO` |
 | Legacy Bet Escrow | `wolo1t4jq7wd4x030t9f0yfqfq74pt4pmaep5nu67y4` | `52 WOLO` |
 | Faucet/Test Wallet 10 | `wolo1jv65s3grqf6v6jl3dp4t6c9t9rk99cd80ypxqz` | `0.048269 WOLO` |
+| Legacy app `faucetgrowth` key | `wolo1jx4n3n2ey6uzfq28kplkmpd2am98xsmcn0nerx` | `0 WOLO` |
 
 Fresh settlement signers created on June 4, 2026:
 
@@ -156,7 +161,7 @@ Previously configured zero-balance signer retained only for historical operator 
 | --- | --- | ---: |
 | Retired Bet Payout | `wolo1cy04t5af0mr9d8n6rrzgr8e9j4vuf42nfg02q5` | `0 WOLO` |
 
-Do not show a zero-balance signer as funded. If faucet claims or payout execution should run on mainnet, fund the configured signer or switch the app env to a reviewed funded signer; do not fall back to `wolo-testnet`.
+Do not show a zero-balance signer as funded. If faucet claims or payout execution should run on mainnet, use the reviewed funded signer for that role; do not fall back to `wolo-testnet`.
 
 ## Service Safety Rules
 
@@ -165,4 +170,5 @@ Do not show a zero-balance signer as funded. If faucet claims or payout executio
 - Do not set AoE2HDBets `WOLO_SETTLEMENT_URL` to the old `127.0.0.1:8091` testnet service for mainnet betting.
 - Do not retry mainnet payout, staking reward, or Community Treasury calls against `127.0.0.1:8091`; that port is `wolo-testnet`.
 - Do not set AoE2HDBets `WOLO_STAKING_HOME` or `WOLO_FAUCET_HOME` to `/var/lib/wolochaind-testnet` for mainnet.
+- Do not set AoE2HDBets `WOLO_FAUCET_FROM=faucetgrowth` for mainnet unless that legacy app key is intentionally funded and documented as a new hot faucet signer. The funded current Faucet Hot Wallet is `wolo1dshyzxffd0jj39k7gj9tq9hgsx96ylxamyp5g0`.
 - Use mainnet RPC/REST tx lookup for AoE2HDBets stake verification unless `wolochain-mainnet-settlement.service` is deployed and verified against `wolo-1`.
