@@ -1,6 +1,6 @@
 # WoloChain Mainnet Services And Ports
 
-This document records the verified `wolo-1` service shape as of June 2, 2026, plus the reserved mainnet settlement port if a separate settlement service is intentionally deployed later.
+This document records the verified `wolo-1` service shape as of June 4, 2026, including the dedicated mainnet settlement service shape on `127.0.0.1:8092`.
 
 ## Verified Live Runtime
 
@@ -27,7 +27,7 @@ The old `wolochaind-testnet.service`, `wolochain-settlement.service`, `/var/lib/
 | P2P | `27656` | Public node gossip. |
 | RPC | `27657` | Proxied by `https://rpc-mainnet.aoe2war.com`. |
 | REST | `1318` | Proxied by `https://rest-mainnet.aoe2war.com`. |
-| Settlement API | `8092` | Reserved for a future mainnet settlement service. Not part of the verified live surface today. |
+| Settlement API | `8092` | Mainnet-only loopback settlement service. Never point mainnet callers at old testnet `8091`. |
 
 ## Mainnet Node Env Shape
 
@@ -47,7 +47,7 @@ The verified public node reports:
 
 ## Mainnet Settlement Env Shape
 
-Use this only when deploying a separate mainnet settlement service. Do not point AoE2HDBets at the old testnet settlement service for mainnet stake verification.
+Use this only for the dedicated mainnet settlement service. Do not point AoE2HDBets at the old testnet settlement service for mainnet stake verification or payouts.
 
 ```bash
 WOLO_SETTLEMENT_HOME=/var/lib/wolochaind-mainnet
@@ -59,7 +59,9 @@ WOLO_SETTLEMENT_CHAIN_ID=wolo-1
 WOLO_SETTLEMENT_BASE_DENOM=uwolo
 WOLO_SETTLEMENT_DISPLAY_DENOM=wolo
 WOLO_SETTLEMENT_ADDRESS_PREFIX=wolo
-WOLO_SETTLEMENT_KEYRING_BACKEND=os
+WOLO_SETTLEMENT_KEYRING_BACKEND=file
+WOLO_SETTLEMENT_KEYRING_DIR=/var/lib/wolochain-mainnet-settlement/keyring
+WOLO_SETTLEMENT_KEYRING_PASSPHRASE_FILE=/etc/wolochain-mainnet-settlement.keyring-passphrase
 WOLO_SETTLEMENT_LISTEN_ADDR=127.0.0.1:8092
 WOLO_SETTLEMENT_STATE_DIR=/mnt/HC_Volume_105319120/wolochain-mainnet/settlement-state
 ```
@@ -68,12 +70,14 @@ Wallet-specific values must come from fresh mainnet keys:
 
 ```bash
 WOLO_SETTLEMENT_PAYOUT_KEY_NAME=mainnet-payout
-WOLO_SETTLEMENT_PAYOUT_ADDRESS=wolo1_REPLACE_ME
+WOLO_SETTLEMENT_PAYOUT_ADDRESS=wolo1zfa9ssu2gpgqg7yzvhmjt4w66mza07qr2a4rwu
 WOLO_SETTLEMENT_ESCROW_KEY_NAME=mainnet-escrow
-WOLO_SETTLEMENT_ESCROW_ADDRESS=wolo1_REPLACE_ME
-WOLO_SETTLEMENT_TREASURY_ADDRESS=wolo1_REPLACE_ME
+WOLO_SETTLEMENT_ESCROW_ADDRESS=wolo1zygwt232ymc4h2g52yvkntffhmd5alx2kglw7p
+WOLO_SETTLEMENT_TREASURY_ADDRESS=wolo1hlfvzuv4dc46ngvh3zlteuegx0xga20hj20zd2
 WOLO_SETTLEMENT_AUTH_TOKEN=<secret outside git>
 ```
+
+The signer keyring is separate from the node home keyring. Do not replace `/var/lib/wolochaind-mainnet/keyring-file`; it contains older operational keyring data. Store the mainnet settlement file-keyring passphrase only in `/etc/wolochain-mainnet-settlement.keyring-passphrase` with root-only permissions.
 
 ## AoE2HDBets Mainnet App Env Shape
 
@@ -100,7 +104,15 @@ WOLO_FAUCET_CHAIN_ID=wolo-1
 WOLO_FAUCET_NODE_RPC=http://127.0.0.1:27657
 ```
 
-`WOLO_SETTLEMENT_URL` should remain empty for AoE2HDBets mainnet unless `wolochain-mainnet-settlement.service` is deliberately deployed on `127.0.0.1:8092` and verified against `wolo-1`.
+`WOLO_SETTLEMENT_URL` should be set only after `wolochain-mainnet-settlement.service` is deliberately deployed on `127.0.0.1:8092`, verified against `wolo-1`, and the payout/escrow signers are funded above their reserve floors.
+
+```bash
+WOLO_SETTLEMENT_URL=http://127.0.0.1:8092
+WOLO_SETTLEMENT_AUTH_TOKEN=<copy from /etc/wolochain-mainnet-settlement.env on the VPS>
+WOLO_BET_PAYOUT_ADDRESS=wolo1zfa9ssu2gpgqg7yzvhmjt4w66mza07qr2a4rwu
+WOLO_BET_ESCROW_ADDRESS=wolo1zygwt232ymc4h2g52yvkntffhmd5alx2kglw7p
+WOLO_COMMUNITY_TREASURY_ADDRESS=wolo1hlfvzuv4dc46ngvh3zlteuegx0xga20hj20zd2
+```
 
 Current mainnet holder aliases from the June 4, 2026 holder audit:
 
@@ -120,14 +132,21 @@ Current mainnet holder aliases from the June 4, 2026 holder audit:
 | Sniper | `wolo1mcmckkr360n47wyc408xmlsv4tzw95kkczvfp9` | `1000 WOLO` |
 | Staking Wallet | `wolo1rmr39nd5gnnv5y5f66qtq367xfwvx9jt5w7ucr` | `110 WOLO` |
 | Wolo-Osmosis Relayer Gas | `wolo1m8qzq92hkktgqp47aewzylkatk6c22vc8c4vgj` | `99.997730 WOLO` |
-| Bet Escrow | `wolo1t4jq7wd4x030t9f0yfqfq74pt4pmaep5nu67y4` | `52 WOLO` |
+| Legacy Bet Escrow | `wolo1t4jq7wd4x030t9f0yfqfq74pt4pmaep5nu67y4` | `52 WOLO` |
 | Faucet/Test Wallet 10 | `wolo1jv65s3grqf6v6jl3dp4t6c9t9rk99cd80ypxqz` | `0.048269 WOLO` |
 
-Configured zero-balance signer to keep visible in operator surfaces:
+Fresh settlement signers created on June 4, 2026:
 
 | Role | Address | Balance |
 | --- | --- | ---: |
-| Bet Payout | `wolo1cy04t5af0mr9d8n6rrzgr8e9j4vuf42nfg02q5` | `0 WOLO` |
+| Bet Payout Signer | `wolo1zfa9ssu2gpgqg7yzvhmjt4w66mza07qr2a4rwu` | fund before cutover |
+| Bet Escrow Signer | `wolo1zygwt232ymc4h2g52yvkntffhmd5alx2kglw7p` | fund before cutover |
+
+Previously configured zero-balance signer retained only for historical operator context:
+
+| Role | Address | Balance |
+| --- | --- | ---: |
+| Retired Bet Payout | `wolo1cy04t5af0mr9d8n6rrzgr8e9j4vuf42nfg02q5` | `0 WOLO` |
 
 Do not show a zero-balance signer as funded. If faucet claims or payout execution should run on mainnet, fund the configured signer or switch the app env to a reviewed funded signer; do not fall back to `wolo-testnet`.
 
@@ -136,5 +155,6 @@ Do not show a zero-balance signer as funded. If faucet claims or payout executio
 - Do not stop or repoint testnet services while updating mainnet docs/config.
 - Do not reuse `/var/lib/wolochaind-testnet` or testnet settlement state for mainnet.
 - Do not set AoE2HDBets `WOLO_SETTLEMENT_URL` to the old `127.0.0.1:8091` testnet service for mainnet betting.
+- Do not retry mainnet payout, staking reward, or Community Treasury calls against `127.0.0.1:8091`; that port is `wolo-testnet`.
 - Do not set AoE2HDBets `WOLO_STAKING_HOME` or `WOLO_FAUCET_HOME` to `/var/lib/wolochaind-testnet` for mainnet.
 - Use mainnet RPC/REST tx lookup for AoE2HDBets stake verification unless `wolochain-mainnet-settlement.service` is deployed and verified against `wolo-1`.

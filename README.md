@@ -36,7 +36,7 @@ WoloChain does not own:
 
 ## Current Mainnet State
 
-Verified on June 2, 2026.
+Verified on June 4, 2026.
 
 - VPS node service: `wolochaind-mainnet.service`
 - VPS moniker: `wolo-mainnet-hel1`
@@ -57,8 +57,9 @@ Current mainnet settlement posture:
 - The mainnet node is live and healthy.
 - Mainnet tx lookup by hash is live through RPC and REST.
 - `wolochain-settlement.service` on the VPS remains the old testnet settlement service.
-- A separate `wolochain-mainnet-settlement.service` is not currently part of the verified live mainnet surface.
-- AoE2HDBets mainnet stake verification should use the mainnet RPC/REST tx lookup path unless a deliberately deployed mainnet settlement service on `127.0.0.1:8092` is configured.
+- `wolochain-mainnet-settlement.service` is the only intended mainnet settlement service and must bind `127.0.0.1:8092`.
+- AoE2HDBets mainnet settlement, staking reward, and Community Treasury payout calls must use only the verified `127.0.0.1:8092` `wolo-1` service after its payout/escrow signers are funded.
+- Do not point mainnet callers at `127.0.0.1:8091`; that is the old `wolo-testnet` settlement service.
 - AoE2HDBets app-side mainnet signer operations use the separate app keyring home `/var/lib/aoe2hdbets-wolo-mainnet`; do not point app signer env at `/var/lib/wolochaind-testnet` or grant the web app access to the validator/node config under `/var/lib/wolochaind-mainnet`.
 
 Current WoloChain / AoE2HDBets boundary:
@@ -138,6 +139,7 @@ Settlement execution supports:
 - stored request inspection by `request_id`
 - grouped settlement runs over the same request-level idempotent payout rail
 - dry-run validation before grouped execution, including requested totals and reserve / headroom impact
+- noninteractive `file` keyring signing through `WOLO_SETTLEMENT_KEYRING_DIR` plus root-only `WOLO_SETTLEMENT_KEYRING_PASSPHRASE_FILE`
 - stored grouped-run inspection by `settlement_run_id`
 - recent failure / refusal summaries via `wolochaind settlement recent --summary-only`
 - recent grouped-run summaries via `wolochaind settlement run recent --summary-only`
@@ -150,6 +152,7 @@ Settlement execution supports:
 
 Operator helpers in this repo:
 
+- [`docs/mainnet-settlement-runbook.md`](docs/mainnet-settlement-runbook.md): exact `wolo-1` env, keyring, service, funding, dry-run, and AoE2HDBets cutover steps
 - [`scripts/check-settlement-cutover.sh`](scripts/check-settlement-cutover.sh): separates intended config checks, local CLI doctor truth, live service truth, and operator warnings
 - [`scripts/check-settlement-alerts.sh`](scripts/check-settlement-alerts.sh): machine-readable settlement JSON with separate live / local / operator / storage scopes and exit codes for cron or VPSSentry
 - [`scripts/run-settlement-alert-check.sh`](scripts/run-settlement-alert-check.sh): writes the latest alert JSON to `$HOME/wolochain-settlement-alerts/latest.json` by default and preserves the alert script exit code
@@ -275,6 +278,7 @@ For one logical result with many payouts, the preferred flow is:
 - Future mainnet planning must use a separate fresh chain. See [`docs/mainnet-template.md`](docs/mainnet-template.md) before touching any mainnet-facing config.
 - The mainnet planning package starts at [`docs/mainnet-template.md`](docs/mainnet-template.md) and includes launch plan, allocation, wallets, services, DNS/TLS, Keplr/explorer, IBC/Osmosis, and cutover checklist docs.
 - Prefer keeping `WOLO_SETTLEMENT_AUTH_TOKEN` enabled even for localhost-only POSTs and have callers send bearer auth.
+- For mainnet, keep payout and escrow signers in `/var/lib/wolochain-mainnet-settlement/keyring` with `WOLO_SETTLEMENT_KEYRING_BACKEND=file` and `WOLO_SETTLEMENT_KEYRING_PASSPHRASE_FILE=/etc/wolochain-mainnet-settlement.keyring-passphrase`.
 - `WOLO_SETTLEMENT_ESCROW_ADDRESS` only affects proof classification and operator warnings; it does not create escrow semantics by itself.
 - `WOLO_SETTLEMENT_ESCROW_KEY_NAME` and `WOLO_SETTLEMENT_ESCROW_ADDRESS` are both required if you want challenge auto-top-up from escrow.
 - `WOLO_SETTLEMENT_TREASURY_ADDRESS` sets the default challenge treasury route, but callers can still pass an explicit `treasury_address` per challenge request.
@@ -291,7 +295,7 @@ For one logical result with many payouts, the preferred flow is:
 - Run [`scripts/clean-build-cache.sh`](scripts/clean-build-cache.sh) before retrying VPS builds under disk pressure; it only clears Go build/module cache and temp paths.
 - If the VPS still fails a fresh build after cleanup, stop and re-check the mounted extra-volume size and free space before falling back to an off-box build.
 - Prefer `BACKUP_ROOT=/home/tony/wolochain-settlement-backups ./scripts/backup-live-settlement.sh` when the extra volume is tight on free space.
-- Use [`scripts/restore-live-settlement.sh`](scripts/restore-live-settlement.sh) if the live service comes up wrong and you need to return to the last known-good backup quickly. The default restore mode is `shared-binary`, because the live node and settlement services both execute `/var/www/WoloChain/build/wolochaind`.
+- Use [`scripts/restore-live-settlement.sh`](scripts/restore-live-settlement.sh) if the live service comes up wrong and you need to return to the last known-good backup quickly. The default restore mode is `shared-binary`; for `wolo-1`, that targets `/usr/local/bin/wolochaind-mainnet` and `wolochain-mainnet-settlement.service`.
 - Use `wolochaind settlement escrow verify` or `GET /settlement/v1/escrow/txs/{tx_hash}` when an app / operator needs to prove a deposit really hit the configured escrow address.
 - Use `wolochaind settlement escrow recent` or `GET /settlement/v1/escrow/deposits` to recover from partial app-side state loss without adding market logic to WoloChain.
 - Use `wolochaind settlement challenge funding verify` or `GET /settlement/v1/challenges/funding/txs/{tx_hash}` when AoE2HDBets needs a challenge-aware proof surface for escrow funding.

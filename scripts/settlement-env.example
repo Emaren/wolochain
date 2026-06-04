@@ -20,7 +20,9 @@ export WOLO_SETTLEMENT_ADDRESS_PREFIX="wolo"
 
 # Payout signer: dedicated mainnet settlement sender, not a faucet key.
 export WOLO_SETTLEMENT_PAYOUT_KEY_NAME="mainnet-payout"
-export WOLO_SETTLEMENT_KEYRING_BACKEND="os"
+export WOLO_SETTLEMENT_KEYRING_BACKEND="file"
+export WOLO_SETTLEMENT_KEYRING_DIR="/var/lib/wolochain-mainnet-settlement/keyring"
+export WOLO_SETTLEMENT_KEYRING_PASSPHRASE_FILE="/etc/wolochain-mainnet-settlement.keyring-passphrase"
 export WOLO_SETTLEMENT_PAYOUT_ADDRESS="wolo1_REPLACE_WITH_FRESH_MAINNET_PAYOUT"
 
 # Escrow signer and classification address used by proof / discovery helpers.
@@ -29,7 +31,7 @@ export WOLO_SETTLEMENT_ESCROW_KEY_NAME="mainnet-escrow"
 # The app must actually send challenge deposits here for funding verification to see them.
 export WOLO_SETTLEMENT_ESCROW_ADDRESS="wolo1_REPLACE_WITH_FRESH_MAINNET_ESCROW"
 # Optional default treasury route for challenge guarantee forfeits.
-export WOLO_SETTLEMENT_TREASURY_ADDRESS="wolo1_REPLACE_WITH_FRESH_MAINNET_TREASURY"
+export WOLO_SETTLEMENT_TREASURY_ADDRESS="wolo1hlfvzuv4dc46ngvh3zlteuegx0xga20hj20zd2"
 # When enabled, challenge settlement can move only the required shortfall from escrow into
 # the payout signer before executing the payout run.
 export WOLO_SETTLEMENT_ESCROW_AUTO_TOP_UP_ENABLED="true"
@@ -46,7 +48,7 @@ export WOLO_SETTLEMENT_MIN_PAYOUT_BALANCE_UWOLO="1000000000"
 export WOLO_SETTLEMENT_FEE_HEADROOM_UWOLO="10000000"
 # Escrow-signed grouped runs use separate escrow reserve/headroom values so payout health
 # cannot block escrow settlements and payout runs cannot borrow escrow funds.
-export WOLO_SETTLEMENT_MIN_ESCROW_BALANCE_UWOLO="10000000"
+export WOLO_SETTLEMENT_MIN_ESCROW_BALANCE_UWOLO="100000000"
 export WOLO_SETTLEMENT_ESCROW_FEE_HEADROOM_UWOLO="10000000"
 
 # Localhost API server

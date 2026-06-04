@@ -12,6 +12,11 @@ ExecStart=/usr/local/bin/wolochaind-mainnet settlement serve
 Restart=always
 RestartSec=5
 LimitNOFILE=65535
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=false
+ReadWritePaths=/var/lib/wolochaind-mainnet /var/lib/wolochain-mainnet-settlement /mnt/HC_Volume_105319120/wolochain-mainnet/settlement-state /tmp
 
 [Install]
 WantedBy=multi-user.target

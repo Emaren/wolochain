@@ -2,13 +2,13 @@
 
 set -euo pipefail
 
-BACKUP_ROOT="${BACKUP_ROOT:-/mnt/HC_Volume_105319120/wolochain/settlement-backups}"
-SETTLEMENT_STATE_DIR="${WOLO_SETTLEMENT_STATE_DIR:-/mnt/HC_Volume_105319120/wolochain/settlement-state}"
-SETTLEMENT_ENV_PATH="${SETTLEMENT_ENV_PATH:-/etc/wolochain-settlement.env}"
-SETTLEMENT_BIN_PATH="${SETTLEMENT_BIN_PATH:-/var/www/WoloChain/build/wolochaind}"
-NODE_SERVICE_NAME="${NODE_SERVICE_NAME:-wolochaind-testnet.service}"
-SETTLEMENT_SERVICE_NAME="${SETTLEMENT_SERVICE_NAME:-wolochain-settlement.service}"
-SETTLEMENT_BASE_URL="${SETTLEMENT_BASE_URL:-http://127.0.0.1:8091}"
+BACKUP_ROOT="${BACKUP_ROOT:-/mnt/HC_Volume_105319120/wolochain-mainnet/settlement-backups}"
+SETTLEMENT_STATE_DIR="${WOLO_SETTLEMENT_STATE_DIR:-/mnt/HC_Volume_105319120/wolochain-mainnet/settlement-state}"
+SETTLEMENT_ENV_PATH="${SETTLEMENT_ENV_PATH:-/etc/wolochain-mainnet-settlement.env}"
+SETTLEMENT_BIN_PATH="${SETTLEMENT_BIN_PATH:-/usr/local/bin/wolochaind-mainnet}"
+NODE_SERVICE_NAME="${NODE_SERVICE_NAME:-wolochaind-mainnet.service}"
+SETTLEMENT_SERVICE_NAME="${SETTLEMENT_SERVICE_NAME:-wolochain-mainnet-settlement.service}"
+SETTLEMENT_BASE_URL="${SETTLEMENT_BASE_URL:-http://127.0.0.1:8092}"
 BACKUP_FREE_HEADROOM_KB="${BACKUP_FREE_HEADROOM_KB:-262144}"
 BACKUP_SKIP_SPACE_CHECK="${BACKUP_SKIP_SPACE_CHECK:-0}"
 

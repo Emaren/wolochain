@@ -39,8 +39,10 @@ Use these labels when app or explorer surfaces render `wolo-1` holder and transf
 | Sniper | `wolo1mcmckkr360n47wyc408xmlsv4tzw95kkczvfp9` | Player wallet. |
 | Staking Wallet | `wolo1rmr39nd5gnnv5y5f66qtq367xfwvx9jt5w7ucr` | AoE2HDBets staking custody wallet. |
 | Wolo-Osmosis Relayer Gas | `wolo1m8qzq92hkktgqp47aewzylkatk6c22vc8c4vgj` | Wolo side relayer gas wallet. |
-| Bet Escrow | `wolo1t4jq7wd4x030t9f0yfqfq74pt4pmaep5nu67y4` | AoE2HDBets bet escrow wallet. |
-| Bet Payout | `wolo1cy04t5af0mr9d8n6rrzgr8e9j4vuf42nfg02q5` | Configured payout signer; currently zero-balance unless funded. |
+| Legacy Bet Escrow | `wolo1t4jq7wd4x030t9f0yfqfq74pt4pmaep5nu67y4` | Historical AoE2HDBets escrow wallet with no current mainnet settlement signer configured. |
+| Retired Bet Payout | `wolo1cy04t5af0mr9d8n6rrzgr8e9j4vuf42nfg02q5` | Historical configured payout signer; zero-balance and not used for the June 4 mainnet settlement service. |
+| Bet Payout Signer | `wolo1zfa9ssu2gpgqg7yzvhmjt4w66mza07qr2a4rwu` | Fresh mainnet payout signer in `/var/lib/wolochain-mainnet-settlement/keyring`; fund before app cutover. |
+| Bet Escrow Signer | `wolo1zygwt232ymc4h2g52yvkntffhmd5alx2kglw7p` | Fresh mainnet escrow signer in `/var/lib/wolochain-mainnet-settlement/keyring`; route new app escrow deposits here after cutover. |
 | Faucet/Test Wallet 10 | `wolo1jv65s3grqf6v6jl3dp4t6c9t9rk99cd80ypxqz` | Small legacy faucet/test balance. |
 
 ## Operational Notes
@@ -60,7 +62,7 @@ If Tony wants settlement ready at launch:
 
 - include fresh payout and escrow signers in the wallet plan
 - fund them through explicit genesis allocation or a post-genesis treasury transfer
-- use `WOLO_SETTLEMENT_KEYRING_BACKEND=os` or a stronger production backend, not the testnet `test` backend
+- use `WOLO_SETTLEMENT_KEYRING_BACKEND=file` with a dedicated keyring dir and root-only passphrase file, or a stronger production backend; never use the testnet `test` backend
 - keep `WOLO_SETTLEMENT_AUTH_TOKEN` enabled
 - set reserve floors before any app calls production routes
 - verify dry-run settlement requests before enabling execution from app systems
@@ -71,6 +73,26 @@ If Tony wants a quieter launch:
 - leave settlement service stopped or operator-only
 - fund payout and escrow signers later from treasury
 - switch AoE2War only after Tony approves a cutover window
+
+## June 4, 2026 Mainnet Settlement Signers
+
+The deployed `wolo-1` settlement service shape uses these fresh signer roles:
+
+| Role | Key name | Address | Keyring |
+| --- | --- | --- | --- |
+| Bet Payout Signer | `mainnet-payout` | `wolo1zfa9ssu2gpgqg7yzvhmjt4w66mza07qr2a4rwu` | `/var/lib/wolochain-mainnet-settlement/keyring` |
+| Bet Escrow Signer | `mainnet-escrow` | `wolo1zygwt232ymc4h2g52yvkntffhmd5alx2kglw7p` | `/var/lib/wolochain-mainnet-settlement/keyring` |
+
+The file-keyring passphrase path is `/etc/wolochain-mainnet-settlement.keyring-passphrase`; keep it root-only and outside git. The signer mnemonic JSON backups are root-only under `/root/wolochain-mainnet-settlement-keys`; never print or copy those into docs, tickets, shell history, screenshots, or app config.
+
+Recommended first funding before app cutover:
+
+| Role | Minimum operating balance |
+| --- | ---: |
+| Bet Payout Signer | `5000 WOLO` initial balance, with `1000 WOLO` reserve floor plus fee headroom |
+| Bet Escrow Signer | `500 WOLO` initial balance, with `100 WOLO` reserve floor plus fee headroom |
+
+The VPS currently does not hold the funded Faucet Hot Wallet key `wolo1dshyzxffd0jj39k7gj9tq9hgsx96ylxamyp5g0`. Do not use the old testnet `faucetgrowth` key as a fallback; it resolves to `wolo1jx4n3n2ey6uzfq28kplkmpd2am98xsmcn0nerx` and is not a funded mainnet settlement source.
 
 ## Backup Requirements
 

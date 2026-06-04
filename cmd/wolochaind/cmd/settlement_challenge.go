@@ -1835,6 +1835,7 @@ func (cfg settlementConfig) resolveEscrowAddress(ctx context.Context) (string, e
 	}
 
 	cmd := exec.CommandContext(ctx, cfg.ExecutablePath, args...)
+	cfg.attachKeyringPassphrase(cmd)
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
 	output, err := cmd.Output()
@@ -2089,6 +2090,7 @@ func (cfg settlementConfig) broadcastEscrowTransfer(ctx context.Context, request
 	}
 
 	cmd := exec.CommandContext(ctx, cfg.ExecutablePath, args...)
+	cfg.attachKeyringPassphrase(cmd)
 	output, err := cmd.CombinedOutput()
 
 	response := settlementExecuteResponse{

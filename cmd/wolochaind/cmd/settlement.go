@@ -50,6 +50,7 @@ type settlementConfig struct {
 	HomeDir                string
 	KeyringBackend         string
 	KeyringDir             string
+	KeyringPassphrase      string
 	NodeAddr               string
 	RPCHTTP                string
 	RESTURL                string
@@ -95,6 +96,8 @@ type settlementHealthResponse struct {
 	PublicRESTURL          string   `json:"public_rest_url,omitempty"`
 	HomeDir                string   `json:"home_dir"`
 	KeyringBackend         string   `json:"keyring_backend"`
+	KeyringDir             string   `json:"keyring_dir,omitempty"`
+	StateDir               string   `json:"state_dir"`
 	PayoutKeyName          string   `json:"payout_key_name,omitempty"`
 	PayoutAddress          string   `json:"payout_address,omitempty"`
 	EscrowKeyName          string   `json:"escrow_key_name,omitempty"`
@@ -1556,12 +1559,17 @@ func loadSettlementConfig() (settlementConfig, error) {
 	if err != nil {
 		return settlementConfig{}, err
 	}
+	keyringPassphrase, err := readSettlementSecretFile(os.Getenv("WOLO_SETTLEMENT_KEYRING_PASSPHRASE_FILE"))
+	if err != nil {
+		return settlementConfig{}, err
+	}
 
 	cfg := settlementConfig{
 		ExecutablePath:         executablePath,
 		HomeDir:                homeDir,
 		KeyringBackend:         getenvDefault("WOLO_SETTLEMENT_KEYRING_BACKEND", "os"),
 		KeyringDir:             expandHome(os.Getenv("WOLO_SETTLEMENT_KEYRING_DIR")),
+		KeyringPassphrase:      keyringPassphrase,
 		NodeAddr:               getenvDefault("WOLO_SETTLEMENT_NODE", settlementDefaultNode),
 		RPCHTTP:                rpcHTTP,
 		RESTURL:                restURL,
@@ -1607,6 +1615,33 @@ func loadSettlementConfig() (settlementConfig, error) {
 	return cfg, nil
 }
 
+func readSettlementSecretFile(path string) (string, error) {
+	trimmed := strings.TrimSpace(path)
+	if trimmed == "" {
+		return "", nil
+	}
+
+	content, err := os.ReadFile(expandHome(trimmed))
+	if err != nil {
+		return "", fmt.Errorf("read settlement secret file %s: %w", trimmed, err)
+	}
+
+	secret := strings.TrimRight(string(content), "\r\n")
+	if strings.TrimSpace(secret) == "" {
+		return "", fmt.Errorf("settlement secret file %s is empty", trimmed)
+	}
+
+	return secret, nil
+}
+
+func (cfg settlementConfig) attachKeyringPassphrase(cmd *exec.Cmd) {
+	if cfg.KeyringPassphrase == "" {
+		return
+	}
+
+	cmd.Stdin = strings.NewReader(cfg.KeyringPassphrase + "\n")
+}
+
 func (cfg settlementConfig) buildHealthReport(ctx context.Context) settlementHealthResponse {
 	report := settlementHealthResponse{
 		OK:                     true,
@@ -1616,6 +1651,8 @@ func (cfg settlementConfig) buildHealthReport(ctx context.Context) settlementHea
 		PublicRESTURL:          cfg.PublicRESTURL,
 		HomeDir:                cfg.HomeDir,
 		KeyringBackend:         cfg.KeyringBackend,
+		KeyringDir:             cfg.KeyringDir,
+		StateDir:               cfg.StateDir,
 		PayoutKeyName:          cfg.PayoutKeyName,
 		EscrowKeyName:          cfg.EscrowKeyName,
 		EscrowAddress:          cfg.EscrowAddress,
@@ -1666,6 +1703,9 @@ func (cfg settlementConfig) buildHealthReport(ctx context.Context) settlementHea
 
 	if cfg.KeyringBackend == "test" {
 		report.Warnings = append(report.Warnings, "test keyring backend is enabled; use only for local/dev or explicitly accepted ops")
+	}
+	if cfg.KeyringBackend == "file" && cfg.KeyringPassphrase == "" {
+		report.Warnings = append(report.Warnings, "file keyring backend is enabled but WOLO_SETTLEMENT_KEYRING_PASSPHRASE_FILE is not configured")
 	}
 
 	if cfg.AuthToken == "" {
@@ -2169,7 +2209,7 @@ func (cfg settlementConfig) buildPayoutSettlementRunPlan(ctx context.Context, re
 		response.Status = "failed"
 		response.FailureCode = "PAYOUT_SIGNER_UNAVAILABLE"
 		response.Retryable = false
-		response.Detail = fmt.Sprintf("payout signer key %q could not be resolved; check WOLO_SETTLEMENT_PAYOUT_KEY_NAME, WOLO_SETTLEMENT_HOME, and WOLO_SETTLEMENT_KEYRING_BACKEND", cfg.PayoutKeyName)
+		response.Detail = fmt.Sprintf("payout signer key %q could not be resolved; check WOLO_SETTLEMENT_PAYOUT_KEY_NAME, WOLO_SETTLEMENT_HOME, WOLO_SETTLEMENT_KEYRING_BACKEND, WOLO_SETTLEMENT_KEYRING_DIR, and WOLO_SETTLEMENT_KEYRING_PASSPHRASE_FILE", cfg.PayoutKeyName)
 		response.Payouts = markRunReadyPayoutsRefused(response.Payouts, response.FailureCode, response.Detail, false)
 		return response
 	}
@@ -2490,7 +2530,7 @@ func (cfg settlementConfig) preflightExecution(ctx context.Context, requestAmoun
 			Retryable:   false,
 			ChainID:     cfg.ChainID,
 			SignerRole:  settlementSignerRole,
-			Detail:      fmt.Sprintf("payout signer key %q could not be resolved; check WOLO_SETTLEMENT_PAYOUT_KEY_NAME, WOLO_SETTLEMENT_HOME, and WOLO_SETTLEMENT_KEYRING_BACKEND", cfg.PayoutKeyName),
+			Detail:      fmt.Sprintf("payout signer key %q could not be resolved; check WOLO_SETTLEMENT_PAYOUT_KEY_NAME, WOLO_SETTLEMENT_HOME, WOLO_SETTLEMENT_KEYRING_BACKEND, WOLO_SETTLEMENT_KEYRING_DIR, and WOLO_SETTLEMENT_KEYRING_PASSPHRASE_FILE", cfg.PayoutKeyName),
 		}
 	}
 
@@ -2572,6 +2612,7 @@ func (cfg settlementConfig) broadcastPayout(ctx context.Context, request normali
 	}
 
 	cmd := exec.CommandContext(ctx, cfg.ExecutablePath, args...)
+	cfg.attachKeyringPassphrase(cmd)
 	output, err := cmd.CombinedOutput()
 
 	response := settlementExecuteResponse{
@@ -3005,6 +3046,7 @@ func (cfg settlementConfig) resolvePayoutAddress(ctx context.Context) (string, e
 	}
 
 	cmd := exec.CommandContext(ctx, cfg.ExecutablePath, args...)
+	cfg.attachKeyringPassphrase(cmd)
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
 	output, err := cmd.Output()
