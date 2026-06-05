@@ -80,7 +80,7 @@ Generate fresh mainnet signer keys with `--keyring-dir /var/lib/wolochain-mainne
 
 ## Funding Gate
 
-The fresh signers were funded on June 4, 2026 from the approved mainnet Faucet Hot Wallet `wolo1dshyzxffd0jj39k7gj9tq9hgsx96ylxamyp5g0`. The VPS does not currently have that faucet key; do not use old testnet `faucetgrowth`.
+The fresh signers were funded on June 4, 2026 from the approved mainnet Faucet Hot Wallet `wolo1dshyzxffd0jj39k7gj9tq9hgsx96ylxamyp5g0`. Tony restored that Faucet Hot Wallet into the AoE2HDBets app keyring at `/var/lib/aoe2hdbets-wolo-mainnet` as `faucet-hot-mainnet`; do not use old testnet `faucetgrowth` for mainnet faucet claims.
 
 Current seeded balances:
 

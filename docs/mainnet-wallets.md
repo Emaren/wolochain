@@ -35,6 +35,7 @@ Use these labels when app or explorer surfaces render `wolo-1` holder and transf
 | Faucet Hot Wallet | `wolo1dshyzxffd0jj39k7gj9tq9hgsx96ylxamyp5g0` | App-facing faucet wallet. |
 | IBC Escrow: transfer/channel-0 to Osmosis | `wolo1a53udazy8ayufvy0s434pfwjcedzqv347h8lzn` | WoloChain-side ICS-20 escrow for the live Osmosis path. |
 | Jim | `wolo10zspyrrphzctrpysh6l9dsqj4wcwmj3tk660sz` | Player wallet. |
+| Julio Alvarez | `wolo1n0yg6ltqxl05ljaqftvvtgec5qavf9a3uh090h` | Player wallet. |
 | Validator Ops Reserve | `wolo1fl48vsnmsdzcv85q5d2q4z5ajdha8yu3aqv4s2` | Validator ops reserve wallet. |
 | Sniper | `wolo1mcmckkr360n47wyc408xmlsv4tzw95kkczvfp9` | Player wallet. |
 | Staking Wallet | `wolo1rmr39nd5gnnv5y5f66qtq367xfwvx9jt5w7ucr` | AoE2HDBets staking custody wallet. |
@@ -136,6 +137,29 @@ sudo /usr/local/bin/wolochaind-mainnet keys show faucet-hot-mainnet \
 The output must be exactly `wolo1dshyzxffd0jj39k7gj9tq9hgsx96ylxamyp5g0` before restarting `aoe2hdbets-web.service`.
 
 Lower-risk alternative: keep the large Faucet Hot Wallet mnemonic off the web VPS, fund a small app signer intentionally, and point `WOLO_FAUCET_FROM` plus `WOLO_FAUCET_ADDRESS` at that signer instead. The existing app key `faucetgrowth` resolves to `wolo1jx4n3n2ey6uzfq28kplkmpd2am98xsmcn0nerx`; only use it for mainnet if it is deliberately funded as a limited hot faucet signer and the funding tx is documented.
+
+June 4, 2026 follow-up: Tony restored the intended Faucet Hot Wallet into `/var/lib/aoe2hdbets-wolo-mainnet` under `faucet-hot-mainnet`. The non-secret app env must remain:
+
+```bash
+WOLO_FAUCET_FROM=faucet-hot-mainnet
+WOLO_FAUCET_ADDRESS=wolo1dshyzxffd0jj39k7gj9tq9hgsx96ylxamyp5g0
+```
+
+Chain-side verification used a generate-only bank send and confirmed the signer resolves to `wolo1dshyzxffd0jj39k7gj9tq9hgsx96ylxamyp5g0`; no live faucet tx was broadcast during that verification.
+
+## Supply And Known-Address Coverage
+
+`wolo-1` fixed supply remains `100000000000000 uwolo` (`100,000,000 WOLO`). App tables that sum "known addresses" must not be treated as total supply unless they include every current holder and module account.
+
+On June 4, 2026, `https://aoe2war.com/api/wolo/network?format=table` reported `99,998,993 WOLO` across known addresses because Julio Alvarez was omitted from the network list. The chain and holder endpoint already showed `Julio Alvarez` / `wolo1n0yg6ltqxl05ljaqftvvtgec5qavf9a3uh090h` with `1,007 WOLO`; adding that row reconciles known-address coverage back to `100,000,000 WOLO`.
+
+AoE2HDBets should display:
+
+```text
+Julio Alvarez  wolo1n0yg6ltqxl05ljaqftvvtgec5qavf9a3uh090h  USER
+```
+
+and should show Founder Operating / Emaren direct sends to Julio in public activity and the sender profile ledger.
 
 ## Backup Requirements
 

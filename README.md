@@ -61,7 +61,7 @@ Current mainnet settlement posture:
 - AoE2HDBets mainnet settlement, staking reward, and Community Treasury payout calls must use only the verified `127.0.0.1:8092` `wolo-1` service with the funded June 4, 2026 payout/escrow signers.
 - Do not point mainnet callers at `127.0.0.1:8091`; that is the old `wolo-testnet` settlement service.
 - AoE2HDBets app-side mainnet signer operations use the separate app keyring home `/var/lib/aoe2hdbets-wolo-mainnet`; do not point app signer env at `/var/lib/wolochaind-testnet` or grant the web app access to the validator/node config under `/var/lib/wolochaind-mainnet`.
-- AoE2HDBets mainnet faucet claims should use the funded Faucet Hot Wallet `wolo1dshyzxffd0jj39k7gj9tq9hgsx96ylxamyp5g0`. Do not treat the old app key name `faucetgrowth` as the mainnet faucet wallet; on the VPS it resolves to `wolo1jx4n3n2ey6uzfq28kplkmpd2am98xsmcn0nerx`, which is a zero-balance legacy/test faucet key.
+- AoE2HDBets mainnet faucet claims should use the funded Faucet Hot Wallet `wolo1dshyzxffd0jj39k7gj9tq9hgsx96ylxamyp5g0`, restored in the app keyring as `faucet-hot-mainnet`. Do not treat the old app key name `faucetgrowth` as the mainnet faucet wallet; on the VPS it resolves to `wolo1jx4n3n2ey6uzfq28kplkmpd2am98xsmcn0nerx`, which is a zero-balance legacy/test faucet key.
 
 Current WoloChain / AoE2HDBets boundary:
 

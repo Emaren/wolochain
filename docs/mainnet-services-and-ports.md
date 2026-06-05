@@ -133,6 +133,7 @@ Current mainnet holder aliases from the June 4, 2026 holder audit:
 | Faucet Hot Wallet | `wolo1dshyzxffd0jj39k7gj9tq9hgsx96ylxamyp5g0` | `493499.991819 WOLO` |
 | IBC Escrow: transfer/channel-0 to Osmosis | `wolo1a53udazy8ayufvy0s434pfwjcedzqv347h8lzn` | `200001 WOLO` |
 | Jim | `wolo10zspyrrphzctrpysh6l9dsqj4wcwmj3tk660sz` | `1000 WOLO` |
+| Julio Alvarez | `wolo1n0yg6ltqxl05ljaqftvvtgec5qavf9a3uh090h` | `1007 WOLO` |
 | Validator Ops Reserve | `wolo1fl48vsnmsdzcv85q5d2q4z5ajdha8yu3aqv4s2` | `1000 WOLO` |
 | Sniper | `wolo1mcmckkr360n47wyc408xmlsv4tzw95kkczvfp9` | `1000 WOLO` |
 | Staking Wallet | `wolo1rmr39nd5gnnv5y5f66qtq367xfwvx9jt5w7ucr` | `110 WOLO` |
@@ -140,6 +141,8 @@ Current mainnet holder aliases from the June 4, 2026 holder audit:
 | Legacy Bet Escrow | `wolo1t4jq7wd4x030t9f0yfqfq74pt4pmaep5nu67y4` | `52 WOLO` |
 | Faucet/Test Wallet 10 | `wolo1jv65s3grqf6v6jl3dp4t6c9t9rk99cd80ypxqz` | `0.048269 WOLO` |
 | Legacy app `faucetgrowth` key | `wolo1jx4n3n2ey6uzfq28kplkmpd2am98xsmcn0nerx` | `0 WOLO` |
+
+Fixed supply is `100000000000000 uwolo` (`100,000,000 WOLO`). Any app surface that reports less than this as "known addresses" is missing at least one holder row; on June 4, 2026 the app network table was short by Julio Alvarez's `1,007 WOLO` until `wolo1n0yg6ltqxl05ljaqftvvtgec5qavf9a3uh090h` is included.
 
 Fresh settlement signers created on June 4, 2026:
 
