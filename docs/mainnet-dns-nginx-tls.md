@@ -34,6 +34,16 @@ Access-Control-Allow-Methods: GET, POST, OPTIONS
 
 This is required for Keplr/CosmJS browser wallet broadcasts to `https://rpc-mainnet.aoe2war.com` and browser REST reads from `https://rest-mainnet.aoe2war.com`.
 
+RPC WebSocket subscriptions must also preserve HTTP/1.1 upgrade headers when nginx proxies to CometBFT:
+
+```nginx
+proxy_http_version 1.1;
+proxy_set_header Upgrade $http_upgrade;
+proxy_set_header Connection $connection_upgrade;
+```
+
+Without those headers, valid browser or wallet clients can reach CometBFT's `/websocket` endpoint as plain HTTP and trigger noisy daemon logs like `websocket: the client is not using the websocket protocol`.
+
 The old paths below are testnet-era surfaces and must not be presented as `wolo-1`:
 
 ```text
@@ -54,6 +64,11 @@ curl -i -X OPTIONS https://rpc-mainnet.aoe2war.com/ \
   -H 'Origin: https://aoe2war.com' \
   -H 'Access-Control-Request-Method: POST' \
   -H 'Access-Control-Request-Headers: content-type'
+curl --http1.1 -i --max-time 3 https://rpc-mainnet.aoe2war.com/websocket \
+  -H 'Connection: Upgrade' \
+  -H 'Upgrade: websocket' \
+  -H 'Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==' \
+  -H 'Sec-WebSocket-Version: 13'
 ```
 
 Expected mainnet chain ID is `wolo-1`. Do not accept `wolo-testnet` on mainnet endpoints. RPC `other.tx_index` must remain `on` so AoE2HDBets can verify signed mainnet stake and escrow transactions by hash.
