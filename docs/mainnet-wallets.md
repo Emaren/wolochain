@@ -93,7 +93,7 @@ Initial funding completed June 4, 2026:
 | Bet Payout Signer | `5000 WOLO` | `F9BBCD8439538E23181F8EC7F43FF6FCA705CB5675C35B2FFA84030DB5DB304C` |
 | Bet Escrow Signer | `500 WOLO` | `1FD8AE967608737E3FDD8F8D9E473C1D1FE3D638A221E6C1892284BA26564233` |
 
-The app-facing mainnet faucet source is the funded Faucet Hot Wallet `wolo1dshyzxffd0jj39k7gj9tq9hgsx96ylxamyp5g0`. Restore or import that key into `/var/lib/aoe2hdbets-wolo-mainnet` under a mainnet-specific name such as `faucet-hot-mainnet`, then set `WOLO_FAUCET_FROM=faucet-hot-mainnet` in AoE2HDBets. Do not use the old testnet `faucetgrowth` key as a fallback; it resolves on the VPS to `wolo1jx4n3n2ey6uzfq28kplkmpd2am98xsmcn0nerx` and currently has `0 WOLO`.
+The app-facing mainnet faucet source is the funded Faucet Hot Wallet `wolo1dshyzxffd0jj39k7gj9tq9hgsx96ylxamyp5g0`. Restore or import that key into `/var/lib/aoe2hdbets-wolo-mainnet` under a mainnet-specific name such as `faucet-hot-mainnet`, then set `WOLO_FAUCET_FROM=faucet-hot-mainnet` and `WOLO_FAUCET_ADDRESS=wolo1dshyzxffd0jj39k7gj9tq9hgsx96ylxamyp5g0` in AoE2HDBets. Do not use the old testnet `faucetgrowth` key as a fallback; it resolves on the VPS to `wolo1jx4n3n2ey6uzfq28kplkmpd2am98xsmcn0nerx` and currently has `0 WOLO`.
 
 ## June 4, 2026 Mainnet Faucet Gate
 
@@ -124,6 +124,18 @@ sudo /usr/local/bin/wolochaind-mainnet query bank balances \
 ```
 
 Paste the mnemonic interactively only when explicitly restoring the key. Never place the mnemonic in shell history, docs, env files, screenshots, or tickets.
+
+If the faucet route returns `faucet-hot-mainnet.info: key not found`, the app env is pointing at the intended key name but the key has not been restored into `/var/lib/aoe2hdbets-wolo-mainnet` yet. Verify after restore:
+
+```bash
+sudo /usr/local/bin/wolochaind-mainnet keys show faucet-hot-mainnet \
+  --home /var/lib/aoe2hdbets-wolo-mainnet \
+  --keyring-backend test -a
+```
+
+The output must be exactly `wolo1dshyzxffd0jj39k7gj9tq9hgsx96ylxamyp5g0` before restarting `aoe2hdbets-web.service`.
+
+Lower-risk alternative: keep the large Faucet Hot Wallet mnemonic off the web VPS, fund a small app signer intentionally, and point `WOLO_FAUCET_FROM` plus `WOLO_FAUCET_ADDRESS` at that signer instead. The existing app key `faucetgrowth` resolves to `wolo1jx4n3n2ey6uzfq28kplkmpd2am98xsmcn0nerx`; only use it for mainnet if it is deliberately funded as a limited hot faucet signer and the funding tx is documented.
 
 ## Backup Requirements
 
