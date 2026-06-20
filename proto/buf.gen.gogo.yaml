@@ -5,7 +5,12 @@
 #
 version: v2
 plugins:
-  - local: ["go", "tool", "github.com/cosmos/gogoproto/protoc-gen-gocosmos"]
+  - local:
+      [
+        "go",
+        "run",
+        "github.com/cosmos/gogoproto/protoc-gen-gocosmos@v1.7.0",
+      ]
     out: .
     opt:
       - plugins=grpc
@@ -15,8 +20,8 @@ plugins:
   - local:
       [
         "go",
-        "tool",
-        "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway",
+        "run",
+        "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway@v1.16.0",
       ]
     out: .
     opt:

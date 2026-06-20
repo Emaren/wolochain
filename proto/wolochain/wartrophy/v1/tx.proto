@@ -1,0 +1,122 @@
+syntax = "proto3";
+package wolochain.wartrophy.v1;
+
+import "amino/amino.proto";
+import "cosmos/msg/v1/msg.proto";
+import "cosmos_proto/cosmos.proto";
+
+option go_package = "github.com/emaren/wolochain/x/wartrophy/types";
+
+// Msg defines authority-gated Warbound trophy mutations.
+service Msg {
+  option (cosmos.msg.v1.service) = true;
+
+  // RegisterTrophy creates a draft trophy definition.
+  rpc RegisterTrophy(MsgRegisterTrophy) returns (MsgRegisterTrophyResponse);
+  // MintTrophy activates a registered trophy.
+  rpc MintTrophy(MsgMintTrophy) returns (MsgMintTrophyResponse);
+  // AssignTrophy assigns a vacant active trophy.
+  rpc AssignTrophy(MsgAssignTrophy) returns (MsgAssignTrophyResponse);
+  // ReassignTrophy moves entitlement between holders.
+  rpc ReassignTrophy(MsgReassignTrophy) returns (MsgReassignTrophyResponse);
+  // RetireTrophy permanently retires a trophy and clears its owner.
+  rpc RetireTrophy(MsgRetireTrophy) returns (MsgRetireTrophyResponse);
+  // UpdateTrophyMetadata changes display and URI metadata.
+  rpc UpdateTrophyMetadata(MsgUpdateTrophyMetadata) returns (MsgUpdateTrophyMetadataResponse);
+  // SetTrophyAuthority rotates the authority signer.
+  rpc SetTrophyAuthority(MsgSetTrophyAuthority) returns (MsgSetTrophyAuthorityResponse);
+}
+
+// MsgRegisterTrophy defines a trophy registration request.
+message MsgRegisterTrophy {
+  option (cosmos.msg.v1.signer) = "authority";
+  option (amino.name) = "wartrophy/MsgRegisterTrophy";
+
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string trophy_id = 2;
+  string display_name = 3;
+  string metadata_uri = 4;
+  string image_uri = 5;
+  uint64 tribute_per_day_uwolo = 6;
+  uint64 bounty_growth_per_day_uwolo = 7;
+}
+
+// MsgRegisterTrophyResponse is returned after registration.
+message MsgRegisterTrophyResponse {}
+
+// MsgMintTrophy defines a trophy activation request.
+message MsgMintTrophy {
+  option (cosmos.msg.v1.signer) = "authority";
+  option (amino.name) = "wartrophy/MsgMintTrophy";
+
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string trophy_id = 2;
+}
+
+// MsgMintTrophyResponse is returned after minting.
+message MsgMintTrophyResponse {}
+
+// MsgAssignTrophy defines an initial assignment request.
+message MsgAssignTrophy {
+  option (cosmos.msg.v1.signer) = "authority";
+  option (amino.name) = "wartrophy/MsgAssignTrophy";
+
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string trophy_id = 2;
+  string owner = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgAssignTrophyResponse is returned after assignment.
+message MsgAssignTrophyResponse {}
+
+// MsgReassignTrophy defines an authority-controlled reassignment request.
+message MsgReassignTrophy {
+  option (cosmos.msg.v1.signer) = "authority";
+  option (amino.name) = "wartrophy/MsgReassignTrophy";
+
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string trophy_id = 2;
+  string new_owner = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgReassignTrophyResponse is returned after reassignment.
+message MsgReassignTrophyResponse {}
+
+// MsgRetireTrophy defines a permanent retirement request.
+message MsgRetireTrophy {
+  option (cosmos.msg.v1.signer) = "authority";
+  option (amino.name) = "wartrophy/MsgRetireTrophy";
+
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string trophy_id = 2;
+}
+
+// MsgRetireTrophyResponse is returned after retirement.
+message MsgRetireTrophyResponse {}
+
+// MsgUpdateTrophyMetadata defines a metadata update request.
+message MsgUpdateTrophyMetadata {
+  option (cosmos.msg.v1.signer) = "authority";
+  option (amino.name) = "wartrophy/MsgUpdateTrophyMetadata";
+
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string trophy_id = 2;
+  string display_name = 3;
+  string metadata_uri = 4;
+  string image_uri = 5;
+}
+
+// MsgUpdateTrophyMetadataResponse is returned after a metadata update.
+message MsgUpdateTrophyMetadataResponse {}
+
+// MsgSetTrophyAuthority defines an authority rotation request.
+message MsgSetTrophyAuthority {
+  option (cosmos.msg.v1.signer) = "authority";
+  option (amino.name) = "wartrophy/MsgSetTrophyAuthority";
+
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string new_authority = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgSetTrophyAuthorityResponse is returned after authority rotation.
+message MsgSetTrophyAuthorityResponse {}

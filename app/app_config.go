@@ -1,7 +1,7 @@
 package app
 
 import (
-			"time"
+	"time"
 
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
@@ -68,6 +68,9 @@ import (
 	ibctransfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
 	ibcexported "github.com/cosmos/ibc-go/v10/modules/core/exported"
 	"google.golang.org/protobuf/types/known/durationpb"
+
+	_ "github.com/emaren/wolochain/x/wartrophy/module"
+	wartrophymodulev1 "github.com/emaren/wolochain/x/wartrophy/types"
 )
 
 var (
@@ -124,7 +127,7 @@ var (
 						// ibc modules
 						ibcexported.ModuleName,
 						// chain modules
-// this line is used by starport scaffolding # stargate/app/beginBlockers
+						// this line is used by starport scaffolding # stargate/app/beginBlockers
 					},
 					EndBlockers: []string{
 						govtypes.ModuleName,
@@ -132,7 +135,7 @@ var (
 						feegrant.ModuleName,
 						group.ModuleName,
 						// chain modules
-// this line is used by starport scaffolding # stargate/app/endBlockers
+						// this line is used by starport scaffolding # stargate/app/endBlockers
 					},
 					// The following is mostly only needed when ModuleName != StoreKey name.
 					OverrideStoreKeys: []*runtimev1alpha1.StoreKeyConfig{
@@ -163,12 +166,13 @@ var (
 						upgradetypes.ModuleName,
 						circuittypes.ModuleName,
 						epochstypes.ModuleName,
+						wartrophymodulev1.ModuleName,
 						// ibc modules
 						ibcexported.ModuleName,
 						ibctransfertypes.ModuleName,
 						icatypes.ModuleName,
 						// chain modules
-// this line is used by starport scaffolding # stargate/app/initGenesis
+						// this line is used by starport scaffolding # stargate/app/initGenesis
 					},
 				}),
 			},
@@ -264,7 +268,11 @@ var (
 				Name:   epochstypes.ModuleName,
 				Config: appconfig.WrapAny(&epochsmodulev1.Module{}),
 			},
-// this line is used by starport scaffolding # stargate/app/moduleConfig
+			{
+				Name:   wartrophymodulev1.ModuleName,
+				Config: appconfig.WrapAny(&wartrophymodulev1.Module{}),
+			},
+			// this line is used by starport scaffolding # stargate/app/moduleConfig
 		},
 	})
 )

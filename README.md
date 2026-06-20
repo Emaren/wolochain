@@ -81,6 +81,17 @@ Current WoloChain / AoE2HDBets boundary:
 - Chain invariant check: `./scripts/check-chain-invariants.sh`
 - Public endpoint check: `./scripts/check-public-endpoints.sh`
 
+## Warbound Trophies
+
+The local `x/wartrophy` first pass provides authority-gated, non-transferable
+AoE2WAR trophy entitlement state. It is not deployed on `wolo-1`, and it does
+not yet mint holder-owned `x/nft` assets because standard NFT sends would bypass
+the Warbound restriction.
+
+See [`docs/warbound-trophies.md`](docs/warbound-trophies.md) for the NFT audit,
+CLI/query surface, app boundary, test flow, and required coordinated mainnet
+upgrade work.
+
 ## Settlement Surfaces
 
 The chain-owned settlement server exposes loopback HTTP endpoints:

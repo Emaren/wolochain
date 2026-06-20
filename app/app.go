@@ -46,7 +46,8 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v10/modules/core/keeper"
 
 	"github.com/emaren/wolochain/docs"
-	)
+	wartrophykeeper "github.com/emaren/wolochain/x/wartrophy/keeper"
+)
 
 const (
 	Name                 = "WoloChain"
@@ -80,12 +81,12 @@ type App struct {
 	ConsensusParamsKeeper consensuskeeper.Keeper
 	CircuitBreakerKeeper  circuitkeeper.Keeper
 	ParamsKeeper          paramskeeper.Keeper
+	WarTrophyKeeper       wartrophykeeper.Keeper
 
 	IBCKeeper           *ibckeeper.Keeper
 	ICAControllerKeeper icacontrollerkeeper.Keeper
 	ICAHostKeeper       icahostkeeper.Keeper
 	TransferKeeper      ibctransferkeeper.Keeper
-
 
 	sm *module.SimulationManager
 }
@@ -154,6 +155,7 @@ func New(
 		&app.ConsensusParamsKeeper,
 		&app.CircuitBreakerKeeper,
 		&app.ParamsKeeper,
+		&app.WarTrophyKeeper,
 	); err != nil {
 		panic(err)
 	}
