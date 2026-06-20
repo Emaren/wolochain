@@ -168,6 +168,10 @@ func New(
 		panic(err)
 	}
 
+	if err := app.setupUpgradeHandlers(); err != nil {
+		panic(err)
+	}
+
 	overrideModules := map[string]module.AppModuleSimulation{
 		authtypes.ModuleName: auth.NewAppModule(app.appCodec, app.AuthKeeper, authsims.RandomGenesisAccounts, nil),
 	}
