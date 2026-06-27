@@ -1,47 +1,36 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://wolochain.local/schemas/challenge-funding-memo.schema.json",
-  "title": "WoloChain Challenge Funding Memo Fields",
-  "description": "Normalized structured fields encoded after the wolo.challenge.funding.v1: memo prefix on one escrow funding deposit per participant. Compact on-chain aliases such as app, sid, cid, eid, side, pid, w, g, and t are accepted and normalized to these fields.",
+  "title": "AoE2HDBets WoloChain Challenge Funding Memo Fields",
+  "description": "Normalized fields for the strict app=aoe2hdbets compact memo contract encoded after wolo.challenge.funding.v1:. The raw memo must contain exactly app, sid, cid, side, w, g, and t once each. sid must also equal aoe2hdbets:challenge-<challenge_id>:v1; that cross-field invariant is enforced by WoloChain code.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["source_app", "wager_uwolo", "guarantee_uwolo"],
+  "required": [
+    "source_app",
+    "settlement_run_id",
+    "challenge_id",
+    "participant_side",
+    "wager_uwolo",
+    "guarantee_uwolo",
+    "total_funded_uwolo"
+  ],
   "properties": {
     "source_app": {
       "type": "string",
-      "minLength": 1,
-      "maxLength": 64,
-      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,63}$"
+      "const": "aoe2hdbets"
     },
     "challenge_id": {
       "type": "string",
-      "minLength": 1,
-      "maxLength": 128,
-      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$"
-    },
-    "source_event_id": {
-      "type": "string",
-      "minLength": 1,
-      "maxLength": 128,
-      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$"
+      "pattern": "^[1-9][0-9]*$"
     },
     "settlement_run_id": {
       "type": "string",
-      "minLength": 3,
       "maxLength": 96,
-      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{2,95}$"
+      "pattern": "^aoe2hdbets:challenge-[1-9][0-9]*:v1$"
     },
     "participant_side": {
       "type": "string",
-      "minLength": 1,
-      "maxLength": 32,
-      "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,31}$"
-    },
-    "participant_id": {
-      "type": "string",
-      "minLength": 1,
-      "maxLength": 128,
-      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$"
+      "enum": ["left", "right"]
     },
     "wager_uwolo": {
       "$ref": "#/$defs/positive_uwolo"
@@ -53,20 +42,6 @@
       "$ref": "#/$defs/positive_uwolo"
     }
   },
-  "allOf": [
-    {
-      "anyOf": [
-        { "required": ["challenge_id"] },
-        { "required": ["source_event_id"] }
-      ]
-    },
-    {
-      "anyOf": [
-        { "required": ["participant_side"] },
-        { "required": ["participant_id"] }
-      ]
-    }
-  ],
   "$defs": {
     "positive_uwolo": {
       "type": "string",

@@ -25,11 +25,13 @@ const (
 	settlementChallengeFundingMemoPrefix = "wolo.challenge.funding.v1:"
 	settlementChallengeBucketWager       = "wager"
 	settlementChallengeBucketGuarantee   = "guarantee"
+	settlementAoE2HDBetsSourceApp        = "aoe2hdbets"
 )
 
 var (
 	settlementChallengeParticipantSidePattern = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_-]{0,31}$`)
 	settlementChallengeReasonPattern          = regexp.MustCompile(`^[a-z][a-z0-9_-]{0,31}$`)
+	settlementAoE2HDBetsChallengeIDPattern    = regexp.MustCompile(`^[1-9][0-9]*$`)
 )
 
 type settlementChallengeFundingExpectation struct {
@@ -52,6 +54,11 @@ type settlementChallengeFundingResult struct {
 	Detail                     string `json:"detail,omitempty"`
 	DepositFound               bool   `json:"deposit_found"`
 	FundingTxHash              string `json:"funding_tx_hash,omitempty"`
+	ChainID                    string `json:"chain_id,omitempty"`
+	TxSuccess                  bool   `json:"tx_success"`
+	Height                     string `json:"height,omitempty"`
+	Code                       uint32 `json:"code,omitempty"`
+	Timestamp                  string `json:"timestamp,omitempty"`
 	SourceApp                  string `json:"source_app,omitempty"`
 	SettlementRunID            string `json:"settlement_run_id,omitempty"`
 	ChallengeID                string `json:"challenge_id,omitempty"`
@@ -846,6 +853,17 @@ func (cfg settlementConfig) buildSettlementChallengePlan(ctx context.Context, re
 	if challengeID == "" && sourceEventID == "" {
 		validationErrors = append(validationErrors, "challenge_id or source_event_id is required")
 	}
+	if strings.EqualFold(sourceApp, settlementAoE2HDBetsSourceApp) &&
+		settlementAoE2HDBetsChallengeIDPattern.MatchString(challengeID) {
+		expectedSettlementID := aoE2HDBetsChallengeSettlementRunID(challengeID)
+		if settlementID != expectedSettlementID {
+			validationErrors = append(validationErrors, fmt.Sprintf(
+				"settlement_run_id must be %q for AoE2HDBets challenge_id %q",
+				expectedSettlementID,
+				challengeID,
+			))
+		}
+	}
 	if treasuryAddress != "" && !isWoloAddress(treasuryAddress, cfg.AddressPrefix) {
 		validationErrors = append(validationErrors, "treasury_address must be a valid WOLO address")
 	}
@@ -1189,10 +1207,17 @@ func validateVerifiedChallengeFundingParticipants(funding []verifiedSettlementCh
 	errorsOut := make([]string, 0)
 	seenSides := map[string]string{}
 	seenIDs := map[string]string{}
+	seenTxHashes := map[string]string{}
 	for _, item := range funding {
 		side := strings.TrimSpace(item.Result.ParticipantSide)
 		id := strings.TrimSpace(item.Result.ParticipantID)
 		label := challengeFundingLabel(item.Result.ParticipantSide, item.Result.ParticipantID, item.Result.FundingTxHash)
+		txHash := normalizeTxHash(item.Result.FundingTxHash)
+		if existing, ok := seenTxHashes[txHash]; ok {
+			errorsOut = append(errorsOut, fmt.Sprintf("funding_tx_hash %q appears more than once (%s and %s)", txHash, existing, label))
+		} else {
+			seenTxHashes[txHash] = label
+		}
 		if side != "" {
 			lower := strings.ToLower(side)
 			if existing, ok := seenSides[lower]; ok {
@@ -1461,6 +1486,18 @@ func (cfg settlementConfig) verifyChallengeFundingDeposit(ctx context.Context, t
 		response.Funding.Detail = response.Detail
 		return response, nil
 	}
+	if !lookup.TxSuccess {
+		response.FailureCode = "TX_FAILED"
+		response.Detail = fmt.Sprintf("tx failed on WoloChain with code %d", lookup.Code)
+		response.Funding.FailureCode = response.FailureCode
+		response.Funding.Detail = response.Detail
+		response.Funding.ChainID = lookup.ChainID
+		response.Funding.FundingTxHash = lookup.TxHash
+		response.Funding.Height = lookup.Height
+		response.Funding.Code = lookup.Code
+		response.Funding.Timestamp = lookup.Timestamp
+		return response, nil
+	}
 	if lookup.Kind != "escrow_deposit" {
 		response.FailureCode = "NOT_ESCROW_DEPOSIT"
 		response.Detail = "tx did not deliver a WOLO transfer into the configured escrow address"
@@ -1512,6 +1549,7 @@ func validateChallengeFundingExpectation(expectation settlementChallengeFundingE
 	if sender := strings.TrimSpace(expectation.Sender); sender != "" && !isWoloAddress(sender, addressPrefix) {
 		return errors.New("expected_sender must be a valid WOLO address")
 	}
+	sourceApp := strings.TrimSpace(expectation.SourceApp)
 	if sourceApp := strings.TrimSpace(expectation.SourceApp); sourceApp != "" {
 		if _, err := normalizeSettlementRunMetadataID("source_app", sourceApp, 64, settlementRequestIDPattern); err != nil {
 			return err
@@ -1525,6 +1563,21 @@ func validateChallengeFundingExpectation(expectation settlementChallengeFundingE
 	if challengeID := strings.TrimSpace(expectation.ChallengeID); challengeID != "" {
 		if _, err := normalizeSettlementRunMetadataID("challenge_id", challengeID, 128, settlementSourceEventPattern); err != nil {
 			return err
+		}
+		if strings.EqualFold(sourceApp, settlementAoE2HDBetsSourceApp) &&
+			settlementAoE2HDBetsChallengeIDPattern.MatchString(challengeID) {
+			if settlementRunID := strings.TrimSpace(expectation.SettlementRunID); settlementRunID != "" &&
+				settlementRunID != aoE2HDBetsChallengeSettlementRunID(challengeID) {
+				return fmt.Errorf(
+					"settlement_run_id must be %q for AoE2HDBets challenge_id %q",
+					aoE2HDBetsChallengeSettlementRunID(challengeID),
+					challengeID,
+				)
+			}
+			if participantSide := strings.TrimSpace(expectation.ParticipantSide); participantSide != "" &&
+				participantSide != "left" && participantSide != "right" {
+				return errors.New("participant_side must be left or right for an AoE2HDBets challenge")
+			}
 		}
 	}
 	if sourceEventID := strings.TrimSpace(expectation.SourceEventID); sourceEventID != "" {
@@ -1565,6 +1618,11 @@ func parseChallengeFundingResult(transfer settlementTransfer, lookup settlementL
 	values, err := url.ParseQuery(strings.TrimPrefix(memo, settlementChallengeFundingMemoPrefix))
 	if err != nil {
 		return settlementChallengeFundingResult{}, fmt.Errorf("memo query string is invalid: %w", err)
+	}
+	if strings.EqualFold(values.Get("app"), settlementAoE2HDBetsSourceApp) {
+		if err := validateCanonicalAoE2HDBetsFundingMemo(values); err != nil {
+			return settlementChallengeFundingResult{}, err
+		}
 	}
 
 	getValue := func(keys ...string) string {
@@ -1657,6 +1715,11 @@ func parseChallengeFundingResult(transfer settlementTransfer, lookup settlementL
 		OK:                         true,
 		DepositFound:               true,
 		FundingTxHash:              lookup.TxHash,
+		ChainID:                    lookup.ChainID,
+		TxSuccess:                  lookup.TxSuccess,
+		Height:                     lookup.Height,
+		Code:                       lookup.Code,
+		Timestamp:                  lookup.Timestamp,
 		SourceApp:                  sourceApp,
 		SettlementRunID:            settlementRunID,
 		ChallengeID:                challengeID,
@@ -1677,6 +1740,62 @@ func parseChallengeFundingResult(transfer settlementTransfer, lookup settlementL
 		CanonicalTxLookupInternal:  lookup.CanonicalTxLookupInternal,
 		CanonicalTxLookupPublic:    lookup.CanonicalTxLookupPublic,
 	}, nil
+}
+
+func validateCanonicalAoE2HDBetsFundingMemo(values url.Values) error {
+	requiredKeys := []string{"app", "sid", "cid", "side", "w", "g", "t"}
+	if len(values) != len(requiredKeys) {
+		return errors.New("AoE2HDBets funding memo must contain exactly app, sid, cid, side, w, g, and t")
+	}
+	for _, key := range requiredKeys {
+		entries, ok := values[key]
+		if !ok || len(entries) != 1 || strings.TrimSpace(entries[0]) == "" {
+			return fmt.Errorf("AoE2HDBets funding memo must contain exactly one non-empty %s value", key)
+		}
+	}
+	if values.Get("app") != settlementAoE2HDBetsSourceApp {
+		return errors.New("AoE2HDBets funding memo app must be exactly aoe2hdbets")
+	}
+
+	challengeID := values.Get("cid")
+	if !settlementAoE2HDBetsChallengeIDPattern.MatchString(challengeID) {
+		return errors.New("AoE2HDBets funding memo cid must be a canonical positive integer")
+	}
+	expectedSettlementRunID := aoE2HDBetsChallengeSettlementRunID(challengeID)
+	if values.Get("sid") != expectedSettlementRunID {
+		return fmt.Errorf(
+			"AoE2HDBets funding memo sid=%q must equal %q for cid=%q",
+			values.Get("sid"),
+			expectedSettlementRunID,
+			challengeID,
+		)
+	}
+	if side := values.Get("side"); side != "left" && side != "right" {
+		return errors.New("AoE2HDBets funding memo side must be left or right")
+	}
+	for _, key := range []string{"w", "g", "t"} {
+		if !isCanonicalPositiveInteger(values.Get(key)) {
+			return fmt.Errorf("AoE2HDBets funding memo %s must be a canonical positive uwolo integer", key)
+		}
+	}
+	return nil
+}
+
+func aoE2HDBetsChallengeSettlementRunID(challengeID string) string {
+	return settlementAoE2HDBetsSourceApp + ":challenge-" + challengeID + ":v1"
+}
+
+func isCanonicalPositiveInteger(value string) bool {
+	if value == "" || value[0] < '1' || value[0] > '9' {
+		return false
+	}
+	for index := 1; index < len(value); index++ {
+		if value[index] < '0' || value[index] > '9' {
+			return false
+		}
+	}
+	_, err := strconv.ParseUint(value, 10, 64)
+	return err == nil
 }
 
 func parseChallengeMemoAmount(fieldName, raw string) (uint64, error) {

@@ -424,36 +424,23 @@ WoloChain owns:
 Canonical challenge funding memo for actual funding transactions:
 
 ```text
-wolo.challenge.funding.v1:app=aoe2hdbets&sid=aoe2hdbets:challenge-42:one-noshow:v1&cid=challenge-42&side=left&pid=user-1&w=1000000&g=500000&t=1500000
+wolo.challenge.funding.v1:app=aoe2hdbets&sid=aoe2hdbets:challenge-42:v1&cid=42&side=left&w=1000000&g=500000&t=1500000
 ```
 
-Use the compact aliases on chain so the memo stays under the chain memo limit. WoloChain proof responses normalize those aliases back to the expanded field names.
-
-Accepted funding memo aliases:
-
-- `app` for `source_app`
-- `run_id` or `sid` for `settlement_run_id`
-- `cid` for `challenge_id`
-- `event_id` or `eid` for `source_event_id`
-- `side` for `participant_side`
-- `pid` for `participant_id`
-- `w` for `wager_uwolo`
-- `g` for `guarantee_uwolo`
-- optional `total_funded_uwolo`, `total_uwolo`, `total`, or `t`
+Canonical AoE2HDBets memos contain exactly `app`, `sid`, `cid`, `side`, `w`, `g`, and `t`. WoloChain requires `sid=aoe2hdbets:challenge-<cid>:v1`, `side=left|right`, positive canonical uwolo amounts, and `w + g = t =` the successful transfer to the configured escrow. Expanded aliases remain available only for legacy/noncanonical integrations.
 
 Read-only funding verification:
 
 ```bash
 curl -sS \
-  "http://127.0.0.1:8091/settlement/v1/challenges/funding/txs/TX_HASH?source_app=aoe2hdbets&settlement_run_id=aoe2hdbets:challenge-42:one-noshow:v1&challenge_id=challenge-42&participant_side=left&participant_id=user-1&expected_amount_uwolo=1500000&wager_uwolo=1000000&guarantee_uwolo=500000"
+  "http://127.0.0.1:8091/settlement/v1/challenges/funding/txs/TX_HASH?expected_sender=WOLO_ADDRESS&source_app=aoe2hdbets&settlement_run_id=aoe2hdbets:challenge-42:v1&challenge_id=42&participant_side=left&expected_amount_uwolo=1500000&wager_uwolo=1000000&guarantee_uwolo=500000"
 
 build/wolochaind settlement challenge funding verify \
   --tx-hash TX_HASH \
   --source-app aoe2hdbets \
-  --settlement-run-id aoe2hdbets:challenge-42:one-noshow:v1 \
-  --challenge-id challenge-42 \
+  --settlement-run-id aoe2hdbets:challenge-42:v1 \
+  --challenge-id 42 \
   --participant-side left \
-  --participant-id user-1 \
   --expected-amount-uwolo 1500000 \
   --wager-uwolo 1000000 \
   --guarantee-uwolo 500000
@@ -462,8 +449,8 @@ build/wolochaind settlement challenge funding verify \
 Recent challenge funding discovery:
 
 ```bash
-curl -sS "http://127.0.0.1:8091/settlement/v1/challenges/funding/deposits?limit=20&source_app=aoe2hdbets&settlement_run_id=aoe2hdbets:challenge-42:one-noshow:v1&challenge_id=challenge-42"
-build/wolochaind settlement challenge funding recent --limit 20 --source-app aoe2hdbets --settlement-run-id aoe2hdbets:challenge-42:one-noshow:v1 --challenge-id challenge-42
+curl -sS "http://127.0.0.1:8091/settlement/v1/challenges/funding/deposits?limit=20&sender=WOLO_ADDRESS&source_app=aoe2hdbets&settlement_run_id=aoe2hdbets:challenge-42:v1&challenge_id=42&participant_side=left"
+build/wolochaind settlement challenge funding recent --limit 20 --sender WOLO_ADDRESS --source-app aoe2hdbets --settlement-run-id aoe2hdbets:challenge-42:v1 --challenge-id 42 --participant-side left
 ```
 
 Dry-run and execute use the same JSON body. Dry-run first:
@@ -791,7 +778,7 @@ Challenge reconciliation:
 
 ```bash
 wolochaind settlement challenge audit \
-  --settlement-id aoe2hdbets:challenge-42:one-noshow:v1
+  --settlement-id aoe2hdbets:challenge-42:v1
 ```
 
 The audit command is read-only. It reloads stored challenge state, verifies the state fingerprint, re-checks each funding tx against the escrow memo convention, recomputes `wager` and `guarantee` bucket totals, validates treasury routes, compares grouped run and per-transfer state files, and re-queries payout/refund/top-up tx hashes through REST.
@@ -823,7 +810,7 @@ Machine-readable contracts and examples live under `docs/settlement-contracts/`:
 For AoE2HDBets automatic funding detection, use the recent funding route as read-only WoloChain truth:
 
 ```bash
-curl -sS "http://127.0.0.1:8091/settlement/v1/challenges/funding/deposits?source_app=aoe2hdbets&challenge_id=challenge-42&limit=20"
+curl -sS "http://127.0.0.1:8091/settlement/v1/challenges/funding/deposits?sender=WOLO_ADDRESS&source_app=aoe2hdbets&settlement_run_id=aoe2hdbets:challenge-42:v1&challenge_id=42&participant_side=left&limit=20"
 ```
 
 Then verify each candidate tx hash with the expected participant and bucket fields before building the challenge settlement request. WoloChain proves escrow/bucket/tx state; AoE2HDBets still owns whether that proof means the challenge is funded, canceled, won, no-showed, or ready to settle.

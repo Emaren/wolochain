@@ -96,6 +96,12 @@ Funding txs:
 | Seed Bet Payout Signer with `5000 WOLO` | `F9BBCD8439538E23181F8EC7F43FF6FCA705CB5675C35B2FFA84030DB5DB304C` |
 | Seed Bet Escrow Signer with `500 WOLO` | `1FD8AE967608737E3FDD8F8D9E473C1D1FE3D638A221E6C1892284BA26564233` |
 
+On June 27, 2026, normal payout activity reduced the payout signer to `999.750000 WOLO`, correctly tripping `PAYOUT_RESERVE_FLOOR_HIT`. The floor remained at `1000 WOLO`. The approved Faucet Hot Wallet replenished `4000.250000 WOLO`, restoring the signer to the documented `5000 WOLO` operating target:
+
+| Purpose | Tx Hash | Height | Result |
+| --- | --- | --- | --- |
+| Restore Bet Payout Signer to `5000 WOLO` | `16E19830351313A983BA1FD08C66658C213ECCD7C73CE3B17FDAC246FD8DD56B` | `580909` | `code=0`; `/settlement/v1/health` returned `ok=true` |
+
 The service must refuse live payouts when the payout signer would fall below `1000 WOLO` plus fee headroom. It must refuse escrow-signed runs when escrow would fall below `100 WOLO` plus fee headroom.
 
 ## Validation
@@ -110,6 +116,35 @@ sudo SETTLEMENT_ENV_FILE=/etc/wolochain-mainnet-settlement.env \
 ```
 
 As of the June 4 funding check, `/settlement/v1/health` must report `ok=true`, `chain_id=wolo-1`, and funded payout and escrow signer balances above their configured reserve floors.
+
+For AoE2HDBets challenge funding, use the exact compact memo:
+
+```text
+wolo.challenge.funding.v1:app=aoe2hdbets&sid=aoe2hdbets:challenge-<id>:v1&cid=<id>&side=<left|right>&w=<uwolo>&g=<uwolo>&t=<uwolo>
+```
+
+Verify with all identity filters, not just `source_app`:
+
+```bash
+curl -sS "http://127.0.0.1:8092/settlement/v1/challenges/funding/deposits?sender=<wallet>&source_app=aoe2hdbets&settlement_run_id=aoe2hdbets:challenge-<id>:v1&challenge_id=<id>&participant_side=<left|right>"
+```
+
+Only successful `wolo-1` transfers to the configured escrow are eligible. WoloChain binds `sid` to `cid`, limits the side to `left|right`, proves `w + g = t =` the escrow transfer, rejects duplicate funding tx hashes, and uses the same `sid` as the immutable challenge settlement idempotency key.
+
+The June 27 production proof used a deliberately unique operator challenge ID and the approved Faucet Hot Wallet as the exact sender:
+
+| Field | Proof |
+| --- | --- |
+| Tx hash | `50D5D6A59085A47EBA5C42F1E29BFC1611F813938A744EAFD696CD21F18CDF71` |
+| Height / status | `581100` / `code=0`, `tx_success=true` |
+| Sender | `wolo1dshyzxffd0jj39k7gj9tq9hgsx96ylxamyp5g0` |
+| Canonical escrow | `wolo1zygwt232ymc4h2g52yvkntffhmd5alx2kglw7p` |
+| Challenge / side | `20260627230359` / `left` |
+| Settlement ID | `aoe2hdbets:challenge-20260627230359:v1` |
+| Buckets | `w=1000000`, `g=1000000`, `t=2000000` uwolo |
+| Discovery replay | two identical responses; SHA-256 `7f464768d2e0e513e6eae621a90bac324d344a897257c6abc80fbfcc460b825b` |
+
+The exact-filter discovery route returned `count=1`. Wrong side and cross-challenge `sid` filters returned HTTP `400`; an incorrect expected sender on the tx route returned HTTP `409`.
 
 Every grouped app run should be submitted to `POST /settlement/v1/runs/validate` first. Execute the matching `POST /settlement/v1/runs` only after the dry-run response confirms:
 

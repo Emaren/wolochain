@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -118,6 +119,220 @@ func TestVerifyChallengeFundingDepositAndRecentRoutes(t *testing.T) {
 	}
 	if !recentBody.OK || len(recentBody.Funding) != 1 || recentBody.Funding[0].FundingTxHash != rightFundingTx {
 		t.Fatalf("unexpected challenge funding recent body: %+v", recentBody)
+	}
+}
+
+func TestCanonicalAoE2HDBetsFundingMemoProofAndRejections(t *testing.T) {
+	t.Parallel()
+
+	const (
+		payoutAddress = "wolo1payoutaddress000000000000000000000000000"
+		escrowAddress = "wolo1escrow000000000000000000000000000000000"
+		senderAddress = "wolo1leftplayer000000000000000000000000000000"
+		otherAddress  = "wolo1rightplayer00000000000000000000000000000"
+		runID         = "aoe2hdbets:challenge-42:v1"
+	)
+
+	validTx := strings.Repeat("1", 64)
+	wrongSIDTx := strings.Repeat("2", 64)
+	wrongSideTx := strings.Repeat("3", 64)
+	wrongBucketTx := strings.Repeat("4", 64)
+	extraFieldTx := strings.Repeat("5", 64)
+	failedTx := strings.Repeat("6", 64)
+	wrongEscrowTx := strings.Repeat("7", 64)
+	cfg := newTestChallengeSettlementConfig(t, payoutAddress, escrowAddress, "", map[string]string{
+		payoutAddress: "5000",
+		escrowAddress: "5000",
+	}, map[string]mockSettlementTx{
+		validTx: {
+			Hash:        validTx,
+			Sender:      senderAddress,
+			Recipient:   escrowAddress,
+			AmountUWolo: "35000000",
+			Memo:        canonicalAoE2HDBetsChallengeFundingMemo("42", "left", "25000000", "10000000"),
+			Timestamp:   "2026-06-27T20:00:00Z",
+		},
+		wrongSIDTx: {
+			Hash:        wrongSIDTx,
+			Sender:      senderAddress,
+			Recipient:   escrowAddress,
+			AmountUWolo: "35000000",
+			Memo:        "wolo.challenge.funding.v1:app=aoe2hdbets&sid=aoe2hdbets:challenge-41:v1&cid=42&side=left&w=25000000&g=10000000&t=35000000",
+			Timestamp:   "2026-06-27T19:59:00Z",
+		},
+		wrongSideTx: {
+			Hash:        wrongSideTx,
+			Sender:      senderAddress,
+			Recipient:   escrowAddress,
+			AmountUWolo: "35000000",
+			Memo:        "wolo.challenge.funding.v1:app=aoe2hdbets&sid=aoe2hdbets:challenge-42:v1&cid=42&side=creator&w=25000000&g=10000000&t=35000000",
+			Timestamp:   "2026-06-27T19:58:00Z",
+		},
+		wrongBucketTx: {
+			Hash:        wrongBucketTx,
+			Sender:      senderAddress,
+			Recipient:   escrowAddress,
+			AmountUWolo: "35000000",
+			Memo:        "wolo.challenge.funding.v1:app=aoe2hdbets&sid=aoe2hdbets:challenge-42:v1&cid=42&side=left&w=25000000&g=9999999&t=35000000",
+			Timestamp:   "2026-06-27T19:57:00Z",
+		},
+		extraFieldTx: {
+			Hash:        extraFieldTx,
+			Sender:      senderAddress,
+			Recipient:   escrowAddress,
+			AmountUWolo: "35000000",
+			Memo:        canonicalAoE2HDBetsChallengeFundingMemo("42", "left", "25000000", "10000000") + "&pid=not-in-v1-contract",
+			Timestamp:   "2026-06-27T19:56:00Z",
+		},
+		failedTx: {
+			Hash:        failedTx,
+			Sender:      senderAddress,
+			Recipient:   escrowAddress,
+			AmountUWolo: "35000000",
+			Memo:        canonicalAoE2HDBetsChallengeFundingMemo("42", "left", "25000000", "10000000"),
+			Code:        7,
+			RawLog:      "mock failed tx",
+			Timestamp:   "2026-06-27T19:55:00Z",
+		},
+		wrongEscrowTx: {
+			Hash:        wrongEscrowTx,
+			Sender:      senderAddress,
+			Recipient:   otherAddress,
+			AmountUWolo: "35000000",
+			Memo:        canonicalAoE2HDBetsChallengeFundingMemo("42", "left", "25000000", "10000000"),
+			Timestamp:   "2026-06-27T19:54:00Z",
+		},
+	}, nil)
+
+	expectation := settlementChallengeFundingExpectation{
+		Sender:           senderAddress,
+		SourceApp:        settlementAoE2HDBetsSourceApp,
+		SettlementRunID:  runID,
+		ChallengeID:      "42",
+		ParticipantSide:  "left",
+		TotalFundedUWolo: "35000000",
+		WagerUWolo:       "25000000",
+		GuaranteeUWolo:   "10000000",
+	}
+	verified, err := cfg.verifyChallengeFundingDeposit(t.Context(), validTx, expectation)
+	if err != nil {
+		t.Fatalf("verify canonical funding: %v", err)
+	}
+	if !verified.OK || verified.Funding == nil {
+		t.Fatalf("expected canonical funding proof, got %+v", verified)
+	}
+	proof := verified.Funding
+	if !proof.TxSuccess ||
+		proof.ChainID != settlementCanonicalChainID ||
+		proof.FundingTxHash != validTx ||
+		proof.Sender != senderAddress ||
+		proof.EscrowAddress != escrowAddress ||
+		proof.TotalFundedUWolo != "35000000" ||
+		proof.WagerUWolo != "25000000" ||
+		proof.GuaranteeUWolo != "10000000" ||
+		proof.ChallengeID != "42" ||
+		proof.ParticipantSide != "left" ||
+		proof.SettlementRunID != runID {
+		t.Fatalf("canonical funding proof omitted or changed a contract field: %+v", proof)
+	}
+
+	rejections := []struct {
+		name        string
+		txHash      string
+		expectation settlementChallengeFundingExpectation
+		failureCode string
+	}{
+		{name: "wrong sender", txHash: validTx, expectation: settlementChallengeFundingExpectation{Sender: otherAddress}, failureCode: "CHALLENGE_FUNDING_MISMATCH"},
+		{name: "wrong settlement id", txHash: wrongSIDTx, failureCode: "INVALID_CHALLENGE_FUNDING_MEMO"},
+		{name: "unsupported side", txHash: wrongSideTx, failureCode: "INVALID_CHALLENGE_FUNDING_MEMO"},
+		{name: "bucket total mismatch", txHash: wrongBucketTx, failureCode: "INVALID_CHALLENGE_FUNDING_MEMO"},
+		{name: "extra memo field", txHash: extraFieldTx, failureCode: "INVALID_CHALLENGE_FUNDING_MEMO"},
+		{name: "failed transaction", txHash: failedTx, failureCode: "TX_FAILED"},
+		{name: "noncanonical escrow", txHash: wrongEscrowTx, failureCode: "NOT_ESCROW_DEPOSIT"},
+	}
+	for _, tc := range rejections {
+		t.Run(tc.name, func(t *testing.T) {
+			response, err := cfg.verifyChallengeFundingDeposit(t.Context(), tc.txHash, tc.expectation)
+			if err != nil {
+				t.Fatalf("verify rejected funding: %v", err)
+			}
+			if response.OK || response.FailureCode != tc.failureCode {
+				t.Fatalf("expected %s, got %+v", tc.failureCode, response)
+			}
+		})
+	}
+
+	filters := settlementChallengeFundingRecentFilters{
+		Limit:           20,
+		Sender:          senderAddress,
+		SourceApp:       settlementAoE2HDBetsSourceApp,
+		SettlementRunID: runID,
+		ChallengeID:     "42",
+		ParticipantSide: "left",
+	}
+	first, err := cfg.listRecentChallengeFundingDeposits(t.Context(), filters)
+	if err != nil {
+		t.Fatalf("first canonical discovery: %v", err)
+	}
+	second, err := cfg.listRecentChallengeFundingDeposits(t.Context(), filters)
+	if err != nil {
+		t.Fatalf("replayed canonical discovery: %v", err)
+	}
+	firstJSON, _ := json.Marshal(first)
+	secondJSON, _ := json.Marshal(second)
+	if string(firstJSON) != string(secondJSON) {
+		t.Fatalf("read-only discovery replay changed response:\nfirst=%s\nsecond=%s", firstJSON, secondJSON)
+	}
+	if !first.OK || first.Count != 1 || len(first.Funding) != 1 || first.Funding[0].FundingTxHash != validTx {
+		t.Fatalf("expected discovery to return only the fully valid canonical deposit, got %+v", first)
+	}
+
+	for _, invalidFilters := range []settlementChallengeFundingRecentFilters{
+		{Limit: 1, SourceApp: settlementAoE2HDBetsSourceApp, SettlementRunID: "aoe2hdbets:challenge-41:v1", ChallengeID: "42"},
+		{Limit: 1, SourceApp: settlementAoE2HDBetsSourceApp, SettlementRunID: runID, ChallengeID: "42", ParticipantSide: "creator"},
+	} {
+		rejected, err := cfg.listRecentChallengeFundingDeposits(t.Context(), invalidFilters)
+		if err != nil {
+			t.Fatalf("validate canonical discovery filters: %v", err)
+		}
+		if rejected.OK || rejected.FailureCode != "INVALID_CHALLENGE" {
+			t.Fatalf("expected invalid canonical discovery filters to be rejected, got %+v", rejected)
+		}
+	}
+}
+
+func TestAoE2HDBetsCanonicalRunIDAndDuplicateFundingAreReplaySafe(t *testing.T) {
+	t.Parallel()
+
+	const payoutAddress = "wolo1payoutaddress000000000000000000000000000"
+	const escrowAddress = "wolo1escrow000000000000000000000000000000000"
+	cfg := newTestChallengeSettlementConfig(t, payoutAddress, escrowAddress, "", map[string]string{
+		payoutAddress: "5000",
+		escrowAddress: "5000",
+	}, nil, nil)
+
+	plan, err := cfg.buildSettlementChallengePlan(t.Context(), settlementChallengeRequest{
+		SettlementRunID: "aoe2hdbets:challenge-42:second-run:v1",
+		SourceApp:       settlementAoE2HDBetsSourceApp,
+		ChallengeID:     "42",
+		Funding:         []settlementChallengeFundingInput{{FundingTxHash: strings.Repeat("8", 64)}},
+		Transfers:       []settlementChallengeTransferInput{{ParticipantSide: "left", Bucket: "wager", Reason: "refund", ToAddress: payoutAddress, AmountUWolo: "1"}},
+	})
+	if err != nil {
+		t.Fatalf("build challenge plan: %v", err)
+	}
+	if plan.Response.OK || plan.Response.FailureCode != "INVALID_CHALLENGE" ||
+		!strings.Contains(plan.Response.Detail, `settlement_run_id must be "aoe2hdbets:challenge-42:v1"`) {
+		t.Fatalf("expected canonical idempotency-key refusal, got %+v", plan.Response)
+	}
+
+	duplicateTx := strings.Repeat("9", 64)
+	participantErrors := validateVerifiedChallengeFundingParticipants([]verifiedSettlementChallengeFunding{
+		{Result: settlementChallengeFundingResult{FundingTxHash: duplicateTx, ParticipantSide: "left"}},
+		{Result: settlementChallengeFundingResult{FundingTxHash: duplicateTx, ParticipantSide: "right"}},
+	})
+	if len(participantErrors) == 0 || !strings.Contains(strings.Join(participantErrors, "; "), "funding_tx_hash") {
+		t.Fatalf("expected duplicate funding tx refusal, got %v", participantErrors)
 	}
 }
 
@@ -650,4 +865,17 @@ func challengeFundingMemoWithSettlementRunID(settlementRunID, sourceApp, challen
 	values.Set("wager_uwolo", wagerUWolo)
 	values.Set("guarantee_uwolo", guaranteeUWolo)
 	return settlementChallengeFundingMemoPrefix + values.Encode()
+}
+
+func canonicalAoE2HDBetsChallengeFundingMemo(challengeID, participantSide, wagerUWolo, guaranteeUWolo string) string {
+	wager, _ := strconv.ParseUint(wagerUWolo, 10, 64)
+	guarantee, _ := strconv.ParseUint(guaranteeUWolo, 10, 64)
+	return settlementChallengeFundingMemoPrefix +
+		"app=aoe2hdbets" +
+		"&sid=" + aoE2HDBetsChallengeSettlementRunID(challengeID) +
+		"&cid=" + challengeID +
+		"&side=" + participantSide +
+		"&w=" + wagerUWolo +
+		"&g=" + guaranteeUWolo +
+		"&t=" + strconv.FormatUint(wager+guarantee, 10)
 }

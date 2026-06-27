@@ -242,19 +242,19 @@ AoE2HDBets still owns:
 The canonical funding memo convention is:
 
 ```text
-wolo.challenge.funding.v1:app=aoe2hdbets&sid=aoe2hdbets:challenge-42:one-noshow:v1&cid=challenge-42&side=left&pid=user-1&w=1000000&g=500000&t=1500000
+wolo.challenge.funding.v1:app=aoe2hdbets&sid=aoe2hdbets:challenge-42:v1&cid=42&side=left&w=1000000&g=500000&t=1500000
 ```
 
-Use the compact aliases on actual funding transactions so the memo stays under the chain memo limit. WoloChain normalizes them to `source_app`, `settlement_run_id`, `challenge_id`, `participant_side`, `participant_id`, `wager_uwolo`, `guarantee_uwolo`, and `total_funded_uwolo` in proof responses.
+For canonical AoE2HDBets deposits, WoloChain requires exactly one each of `app`, `sid`, `cid`, `side`, `w`, `g`, and `t`; `app=aoe2hdbets`; a positive decimal `cid`; `sid=aoe2hdbets:challenge-<cid>:v1`; `side=left|right`; positive canonical uwolo bucket values; and `w + g = t =` the successful transfer into the configured escrow. Proof responses also expose the exact sender, canonical escrow, chain, transaction status, height, timestamp, tx hash, and normalized bucket fields.
 
 AoE2HDBets should verify funding with `GET /settlement/v1/challenges/funding/txs/{tx_hash}` or `wolochaind settlement challenge funding verify`, then submit the explicit bucket moves to `POST /settlement/v1/challenges/validate` or `wolochaind settlement challenge validate` before calling `POST /settlement/v1/challenges` or `wolochaind settlement challenge execute`.
 
-For automatic funding detection, AoE2HDBets can poll `GET /settlement/v1/challenges/funding/deposits?source_app=aoe2hdbets&settlement_run_id=...&challenge_id=...` or run `wolochaind settlement challenge funding recent`. That read-only surface proves which escrow deposits WoloChain can see; AoE2HDBets still decides whether a challenge is ready to lock, cancel, or settle.
+For automatic funding detection, AoE2HDBets should poll `GET /settlement/v1/challenges/funding/deposits?sender=<wallet>&source_app=aoe2hdbets&settlement_run_id=aoe2hdbets:challenge-<id>:v1&challenge_id=<id>&participant_side=<left|right>` or run `wolochaind settlement challenge funding recent` with the equivalent filters. The route is read-only and deterministic; invalid, failed, non-escrow, cross-challenge, wrong-side, or bucket-mismatched transactions are not returned. Challenge settlement stores one immutable request fingerprint under the same canonical `settlement_run_id`, replays the stored result for the same payload, rejects a changed payload, and rejects duplicate funding tx hashes.
 
 After execution, operators can reconcile stored challenge state against chain reality with:
 
 ```bash
-wolochaind settlement challenge audit --settlement-id aoe2hdbets:challenge-42:one-noshow:v1
+wolochaind settlement challenge audit --settlement-id aoe2hdbets:challenge-42:v1
 ```
 
 The audit report re-checks escrow funding txs, wager and guarantee bucket totals, treasury routes, payout/refund tx hashes, grouped run state, per-transfer state, and escrow-to-payout top-ups when present.

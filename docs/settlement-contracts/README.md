@@ -32,15 +32,26 @@ AoE2HDBets supplies:
 - the explicit `wager` and `guarantee` bucket transfer list
 - optional `treasury_address` for caller-decided forfeits
 
+Canonical AoE2HDBets funding memo:
+
+```text
+wolo.challenge.funding.v1:app=aoe2hdbets&sid=aoe2hdbets:challenge-42:v1&cid=42&side=left&w=1000000&g=500000&t=1500000
+```
+
 WoloChain verifies:
 
-- each funding tx sent `uwolo` into the configured escrow address
-- the memo has the expected app, settlement-run, challenge/event, and participant fields when supplied
-- funded totals split cleanly into `wager_uwolo` and `guarantee_uwolo`
+- the transaction succeeded on `wolo-1`
+- the exact sender sent one `uwolo` funding amount into the configured canonical escrow
+- the canonical memo contains exactly `app`, `sid`, `cid`, `side`, `w`, `g`, and `t`, once each
+- `app` is exactly `aoe2hdbets`
+- `cid` is a canonical positive integer and `sid` is exactly `aoe2hdbets:challenge-<cid>:v1`
+- `side` is exactly `left` or `right`
+- `w`, `g`, and `t` are positive canonical uwolo integers and `w + g = t =` the escrow transfer
 - the settlement request allocates every verified participant bucket exactly once
+- the settlement request uses the same canonical `sid` as its idempotency key and does not repeat a funding tx hash
 - executed refund/payout/treasury/top-up tx hashes reconcile with stored state
 
-Use compact aliases in actual funding tx memos to stay under the chain memo limit: `app`, `sid`, `cid`, `eid`, `side`, `pid`, `w`, `g`, and `t`. WoloChain normalizes them to the expanded contract fields in verification, inspect, and audit responses.
+The parser retains expanded legacy aliases for noncanonical historical integrations. AoE2HDBets memos emitted with `app=aoe2hdbets` take the strict path above.
 
 Canonical transfer reasons are caller-supplied proof labels:
 
@@ -65,12 +76,12 @@ Use real tx hashes and real `wolo1...` addresses before submitting an example pa
 
 ## App Integration Flow
 
-1. Watch or poll `GET /settlement/v1/challenges/funding/deposits?source_app=aoe2hdbets&settlement_run_id=<settlement_run_id>&challenge_id=<challenge_id>` for automatic funding detection.
+1. Watch or poll `GET /settlement/v1/challenges/funding/deposits?sender=<wallet>&source_app=aoe2hdbets&settlement_run_id=aoe2hdbets:challenge-<id>:v1&challenge_id=<id>&participant_side=<left|right>` for automatic funding detection.
 2. Verify each candidate deposit with `GET /settlement/v1/challenges/funding/txs/{tx_hash}` and expected source/settlement/challenge/participant/bucket fields.
 3. Submit the caller-decided transfer plan to `POST /settlement/v1/challenges/validate`.
 4. Execute the exact same payload with `POST /settlement/v1/challenges`.
 5. Show app users `canonical_tx_lookup_preferred` links from funding and transfer responses.
-6. Use `GET /settlement/v1/challenges/{settlement_run_id}?summary_only=1` for stored run status and proof display.
+6. Use `GET /settlement/v1/challenges/{settlement_run_id}?summary_only=1` for stored run status and proof display. Repeating the same execution payload returns the stored idempotent result; changing a payload under the same ID returns an idempotency conflict.
 7. Use `wolochaind settlement challenge audit --settlement-id <settlement_run_id>` for read-only operator reconciliation.
 
 The read-only funding, inspect, recent, and audit surfaces are WoloChain truth. Challenge disposition fields such as no-show, winner, refund reason, or treasury policy remain caller-supplied AoE2HDBets truth.
