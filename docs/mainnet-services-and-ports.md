@@ -119,7 +119,7 @@ WOLO_BET_ESCROW_ADDRESS=wolo1zygwt232ymc4h2g52yvkntffhmd5alx2kglw7p
 WOLO_COMMUNITY_TREASURY_ADDRESS=wolo1hlfvzuv4dc46ngvh3zlteuegx0xga20hj20zd2
 ```
 
-Current mainnet holder aliases from the June 4, 2026 holder audit:
+Mainnet holder aliases from the June 4, 2026 holder audit, with staking-role corrections through June 28:
 
 | Role | Address | Balance |
 | --- | --- | ---: |
@@ -136,7 +136,8 @@ Current mainnet holder aliases from the June 4, 2026 holder audit:
 | Julio Alvarez | `wolo1n0yg6ltqxl05ljaqftvvtgec5qavf9a3uh090h` | `1007 WOLO` |
 | Validator Ops Reserve | `wolo1fl48vsnmsdzcv85q5d2q4z5ajdha8yu3aqv4s2` | `1000 WOLO` |
 | Sniper | `wolo1mcmckkr360n47wyc408xmlsv4tzw95kkczvfp9` | `1000 WOLO` |
-| Staking Wallet | `wolo1rmr39nd5gnnv5y5f66qtq367xfwvx9jt5w7ucr` | `110 WOLO` |
+| Staking Wallet | `wolo18v9ugfdrnz2ll2ah5z2yqzm5kzlg3e7l7jy6rn` | `323848.985 WOLO` (June 28) |
+| Retired Staking Wallet | `wolo1rmr39nd5gnnv5y5f66qtq367xfwvx9jt5w7ucr` | `0 WOLO` (June 28) |
 | Wolo-Osmosis Relayer Gas | `wolo1m8qzq92hkktgqp47aewzylkatk6c22vc8c4vgj` | `99.997730 WOLO` |
 | Legacy Bet Escrow | `wolo1t4jq7wd4x030t9f0yfqfq74pt4pmaep5nu67y4` | `52 WOLO` |
 | Faucet/Test Wallet 10 | `wolo1jv65s3grqf6v6jl3dp4t6c9t9rk99cd80ypxqz` | `0.048269 WOLO` |

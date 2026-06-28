@@ -69,6 +69,8 @@ Current WoloChain / AoE2HDBets boundary:
 - WoloChain owns canonical denom, display, bech32, supply, and public endpoint truth.
 - WoloChain owns signed transfer truth and custody-address bank balances as reported by `wolo-1`.
 - AoE2HDBets owns app-side display windows, profile ledgers, staking filters, wager visibility, and hiding old app-only/testnet rows from mainnet-facing pages.
+- AoE2HDBets owns staking deposit/top-up classification and staking liabilities. WoloChain records the underlying bank transfer and treats an operational staking memo as opaque metadata, not a consensus rule.
+- Direct staking reserve top-ups must target the current staking wallet from an app-approved reserve source; they must not use the settlement payout signer, module accounts, or retired wallet addresses.
 - AoE2HDBets must not treat old testnet database rows as chain truth without a `wolo-1` tx hash that verifies against the mainnet endpoints above.
 
 ## Local Workflow
@@ -213,6 +215,8 @@ Grouped run signer roles are explicit:
 
 - `payout`: default for legacy callers; used by normal bet/player payouts and staking Treasury payouts from AoE2HDBets.
 - `escrow`: must be requested with `signer_role=escrow`; used by scheduled-match escrow settlements from AoE2HDBets.
+
+An app-requested staking Treasury payout is distinct from a direct staking reserve top-up. Reserve top-ups are ordinary bank sends into the current staking wallet and must not be routed through the settlement payout signer.
 
 Unknown `signer_role` values are rejected as `INVALID_RUN`; they are never silently treated as payout. Responses and stored records report the actual `signer_role` and `signer_address` selected for the run and each transfer line.
 

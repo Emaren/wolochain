@@ -38,7 +38,8 @@ Use these labels when app or explorer surfaces render `wolo-1` holder and transf
 | Julio Alvarez | `wolo1n0yg6ltqxl05ljaqftvvtgec5qavf9a3uh090h` | Player wallet. |
 | Validator Ops Reserve | `wolo1fl48vsnmsdzcv85q5d2q4z5ajdha8yu3aqv4s2` | Validator ops reserve wallet. |
 | Sniper | `wolo1mcmckkr360n47wyc408xmlsv4tzw95kkczvfp9` | Player wallet. |
-| Staking Wallet | `wolo1rmr39nd5gnnv5y5f66qtq367xfwvx9jt5w7ucr` | AoE2HDBets staking custody wallet. |
+| Staking Wallet | `wolo18v9ugfdrnz2ll2ah5z2yqzm5kzlg3e7l7jy6rn` | Current AoE2HDBets staking custody and operating-reserve wallet. |
+| Retired Staking Wallet | `wolo1rmr39nd5gnnv5y5f66qtq367xfwvx9jt5w7ucr` | Historical staking wallet; zero balance on June 28, 2026. Do not fund or reuse. |
 | Wolo-Osmosis Relayer Gas | `wolo1m8qzq92hkktgqp47aewzylkatk6c22vc8c4vgj` | Wolo side relayer gas wallet. |
 | Legacy Bet Escrow | `wolo1t4jq7wd4x030t9f0yfqfq74pt4pmaep5nu67y4` | Historical AoE2HDBets escrow wallet with no current mainnet settlement signer configured. |
 | Retired Bet Payout | `wolo1cy04t5af0mr9d8n6rrzgr8e9j4vuf42nfg02q5` | Historical configured payout signer; zero-balance and not used for the June 4 mainnet settlement service. |
@@ -55,6 +56,16 @@ Use these labels when app or explorer surfaces render `wolo-1` holder and transf
 - Hot wallets should have reserve floors and alerting before production app traffic depends on them.
 - Cold wallets should have a tested restore procedure before launch.
 - Any multisig policy must be documented before funds are placed in genesis.
+
+## Staking Reserve Boundary
+
+- WoloChain records standard `MsgSend` transfers and their opaque memo text. It does not classify a transfer as a staking deposit, reserve top-up, reward liability, or withdrawal.
+- AoE2HDBets owns staking classification, user/account attribution, reserve targets, and staking liabilities.
+- Memos such as `staking-wallet-reserve-top-up:...` and `staking-wallet-operating-reserve-top-up:...` are app/operator accounting conventions, not chain consensus rules.
+- Direct reserve top-ups must be normal bank sends to `wolo18v9ugfdrnz2ll2ah5z2yqzm5kzlg3e7l7jy6rn` from an approved reserve wallet. Do not use the settlement payout signer or escrow signer for reserve funding.
+- Do not send staking funds to module accounts, `wolo1rmr39nd5gnnv5y5f66qtq367xfwvx9jt5w7ucr`, or any other retired account.
+
+June 28 verification confirmed recent reserve top-ups are successful `/cosmos.bank.v1beta1.MsgSend` transactions, including `B318F2BEDC1D675A76C269002EDCE4E1CF242592A608A6D433EEED2C7C2EBC7A` for `10000 WOLO`. No WoloChain module or settlement-specific handling is involved.
 
 ## Day-One Settlement Posture
 
