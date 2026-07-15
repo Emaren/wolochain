@@ -2098,10 +2098,38 @@ func (cfg settlementConfig) executeSettlementRun(ctx context.Context, request se
 	return response, nil
 }
 
+func requiresEscrowSignerForSettlementRun(request normalizedSettlementRunRequest) bool {
+	sourceApp := strings.ToLower(strings.TrimSpace(request.SourceApp))
+	sourceEventID := strings.ToLower(strings.TrimSpace(request.SourceEventID))
+	runID := strings.ToLower(strings.TrimSpace(request.SettlementRunID))
+
+	isAoE2BetMarketRun :=
+		sourceApp == "aoe2hdbets" &&
+			(strings.HasPrefix(sourceEventID, "bet-market-") ||
+				strings.HasPrefix(runID, "aoe2-bet-market-"))
+
+	return isAoE2BetMarketRun && request.SignerRole != settlementEscrowSignerRole
+}
+
 func (cfg settlementConfig) buildSettlementRunPlan(ctx context.Context, request settlementRunRequest) (normalizedSettlementRunRequest, settlementRunResponse, error) {
 	normalized, response := prepareSettlementRunRequest(request)
 	response.DryRun = true
 	if !runResponseHasReadyPayouts(response) {
+		return normalized, finalizeSettlementRunResponse(response), nil
+	}
+
+	if requiresEscrowSignerForSettlementRun(normalized) {
+		response.OK = false
+		response.Status = "failed"
+		response.FailureCode = "ESCROW_SIGNER_REQUIRED"
+		response.Retryable = false
+		response.Detail = "AoE2HDBets escrow-backed bet-market settlement runs must use signer_role=escrow; payout signer reserves cannot fund market obligations"
+		response.Payouts = markRunReadyPayoutsRefused(
+			response.Payouts,
+			response.FailureCode,
+			response.Detail,
+			false,
+		)
 		return normalized, finalizeSettlementRunResponse(response), nil
 	}
 
@@ -2319,13 +2347,16 @@ func settlementRunTopUpRequestID(runID string) string {
 	return requestID
 }
 
+// shouldAttemptSettlementRunEscrowTopUp intentionally fails closed.
+//
+// Escrow-backed obligations must execute directly from the escrow signer.
+// Pooled escrow must never be transferred into the payout signer merely
+// because the payout wallet has insufficient balance or reserve headroom.
+// This prevents pre-funded payout reserves from becoming shared market
+// settlement capital.
 func shouldAttemptSettlementRunEscrowTopUp(failureCode string) bool {
-	switch strings.TrimSpace(failureCode) {
-	case "PAYOUT_BALANCE_TOO_LOW", "PAYOUT_RESERVE_FLOOR_HIT", "PAYOUT_FEE_HEADROOM_TOO_LOW":
-		return true
-	default:
-		return false
-	}
+	_ = failureCode
+	return false
 }
 
 func (cfg settlementConfig) topUpPayoutSignerForSettlementRun(ctx context.Context, runID string, response settlementRunResponse) (settlementExecuteResponse, error) {

@@ -1826,3 +1826,77 @@ func readRetryFakeSendCount(t *testing.T, countsDir, recipient string) int {
 	}
 	return count
 }
+
+func TestRequiresEscrowSignerForAoE2BetMarketRun(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		request normalizedSettlementRunRequest
+		want    bool
+	}{
+		{
+			name: "AoE2 bet market payout signer is rejected",
+			request: normalizedSettlementRunRequest{
+				SettlementRunID: "aoe2-bet-market-345524",
+				SourceApp:       "aoe2hdbets",
+				SourceEventID:   "bet-market-345524",
+				SignerRole:      settlementSignerRole,
+			},
+			want: true,
+		},
+		{
+			name: "AoE2 bet market escrow signer is accepted",
+			request: normalizedSettlementRunRequest{
+				SettlementRunID: "aoe2-bet-market-345524",
+				SourceApp:       "aoe2hdbets",
+				SourceEventID:   "bet-market-345524",
+				SignerRole:      settlementEscrowSignerRole,
+			},
+			want: false,
+		},
+		{
+			name: "non bet payout run is not forced to escrow",
+			request: normalizedSettlementRunRequest{
+				SettlementRunID: "staking-treasury-2026-07-15",
+				SourceApp:       "aoe2hdbets",
+				SourceEventID:   "staking-treasury-2026-07-15",
+				SignerRole:      settlementSignerRole,
+			},
+			want: false,
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			got := requiresEscrowSignerForSettlementRun(test.request)
+			if got != test.want {
+				t.Fatalf(
+					"requiresEscrowSignerForSettlementRun() = %v, want %v",
+					got,
+					test.want,
+				)
+			}
+		})
+	}
+}
+
+func TestSettlementRunEscrowAutoTopUpDisabledByPolicy(t *testing.T) {
+	t.Parallel()
+
+	for _, failureCode := range []string{
+		"PAYOUT_BALANCE_TOO_LOW",
+		"PAYOUT_RESERVE_FLOOR_HIT",
+		"PAYOUT_FEE_HEADROOM_TOO_LOW",
+	} {
+		if shouldAttemptSettlementRunEscrowTopUp(failureCode) {
+			t.Fatalf(
+				"escrow auto-top-up must remain disabled for %s",
+				failureCode,
+			)
+		}
+	}
+}
