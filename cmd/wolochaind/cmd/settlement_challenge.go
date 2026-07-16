@@ -1953,7 +1953,8 @@ func (cfg settlementConfig) resolveEscrowAddress(ctx context.Context) (string, e
 		args = append(args, "--keyring-dir", cfg.KeyringDir)
 	}
 
-	cmd := exec.CommandContext(ctx, cfg.ExecutablePath, args...)
+	executablePath, commandArgs := cfg.executableCommand(args)
+	cmd := exec.CommandContext(ctx, executablePath, commandArgs...)
 	cfg.attachKeyringPassphrase(cmd)
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
@@ -2208,7 +2209,8 @@ func (cfg settlementConfig) broadcastEscrowTransfer(ctx context.Context, request
 		args = append(args, "--note", request.Memo)
 	}
 
-	cmd := exec.CommandContext(ctx, cfg.ExecutablePath, args...)
+	executablePath, commandArgs := cfg.executableCommand(args)
+	cmd := exec.CommandContext(ctx, executablePath, commandArgs...)
 	cfg.attachKeyringPassphrase(cmd)
 	output, err := cmd.CombinedOutput()
 
