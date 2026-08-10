@@ -1,3 +1,18 @@
+---
+id: "aoe2war.wolochain.osmosis-metadata-plan"
+title: "WOLO Osmosis Metadata Plan"
+type: "working"
+status: "draft"
+owner: "wolochain-ops"
+systems: ["wolochain","aoe2war"]
+audience: ["developers","operators","ai-agents"]
+source_of_truth: "git"
+authority: "post-launch-osmosis-metadata-plan"
+reviewed_at: "2026-08-10"
+review_interval_days: 30
+sensitivity: "public"
+---
+
 # WOLO Osmosis Metadata Plan
 
 Status: post-launch metadata planning only. Pool `3461` is live; this document does not require touching funds, relayers, services, genesis, validators, or chain state.

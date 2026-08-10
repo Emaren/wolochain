@@ -1,3 +1,18 @@
+---
+id: "aoe2war.wolochain.settlement-contracts"
+title: "Settlement Contracts"
+type: "reference"
+status: "active"
+owner: "wolochain-ops"
+systems: ["wolochain","aoe2war"]
+audience: ["developers","operators","ai-agents"]
+source_of_truth: "git"
+authority: "machine-readable-settlement-contract-index"
+reviewed_at: "2026-08-10"
+review_interval_days: 30
+sensitivity: "public"
+---
+
 # Settlement Contracts
 
 Machine-readable WoloChain settlement contract files for AoE2HDBets challenge settlement integration.

@@ -1,3 +1,18 @@
+---
+id: "aoe2war.wolochain.mainnet-keplr-explorer"
+title: "WoloChain Mainnet Keplr And Explorer Metadata"
+type: "reference"
+status: "active"
+owner: "wolochain-ops"
+systems: ["wolochain","aoe2war"]
+audience: ["developers","operators","ai-agents"]
+source_of_truth: "runtime-evidence"
+authority: "mainnet-wallet-registry-metadata"
+reviewed_at: "2026-08-10"
+review_interval_days: 30
+sensitivity: "public"
+---
+
 # WoloChain Mainnet Keplr And Explorer Metadata
 
 This document records the current `wolo-1` mainnet metadata that wallets, registries, explorers, and AoE2HDBets should treat as chain truth.

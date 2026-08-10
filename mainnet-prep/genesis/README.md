@@ -1,3 +1,18 @@
+---
+id: "aoe2war.wolochain.mainnet-genesis-prep"
+title: "Mainnet Genesis Prep"
+type: "historical"
+status: "historical"
+owner: "wolochain-ops"
+systems: ["wolochain","aoe2war"]
+audience: ["developers","operators","ai-agents"]
+source_of_truth: "historical-evidence"
+authority: "prelaunch-genesis-scaffold"
+reviewed_at: "2026-08-10"
+review_interval_days: 0
+sensitivity: "internal"
+---
+
 # Mainnet Genesis Prep
 
 This directory is a scaffold only. It does not contain final genesis.

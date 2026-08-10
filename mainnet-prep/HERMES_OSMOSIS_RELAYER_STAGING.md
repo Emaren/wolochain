@@ -1,3 +1,18 @@
+---
+id: "aoe2war.wolochain.hermes-osmosis-relayer-staging"
+title: "WoloChain Mainnet Osmosis Hermes Relayer Staging"
+type: "reference"
+status: "active"
+owner: "wolochain-ops"
+systems: ["wolochain","aoe2war"]
+audience: ["developers","operators","ai-agents"]
+source_of_truth: "runtime-evidence"
+authority: "ibc-relayer-operating-reference"
+reviewed_at: "2026-08-10"
+review_interval_days: 30
+sensitivity: "restricted"
+---
+
 # WoloChain Mainnet Osmosis Hermes Relayer Staging
 
 Status: Phase 2 staging complete and Phase 3 IBC path live. Do not transfer WOLO, create liquidity, or create pools from this document without Tony's explicit confirmation.

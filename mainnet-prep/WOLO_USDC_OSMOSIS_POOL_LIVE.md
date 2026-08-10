@@ -1,3 +1,18 @@
+---
+id: "aoe2war.wolochain.osmosis-pool-live"
+title: "WOLO/USDC Osmosis Pool"
+type: "reference"
+status: "active"
+owner: "wolochain-ops"
+systems: ["wolochain","aoe2war"]
+audience: ["developers","operators","ai-agents"]
+source_of_truth: "runtime-evidence"
+authority: "live-osmosis-pool-receipt"
+reviewed_at: "2026-08-10"
+review_interval_days: 30
+sensitivity: "public"
+---
+
 # WOLO/USDC Osmosis Pool
 
 Status: live.

@@ -1,3 +1,18 @@
+---
+id: "aoe2war.wolochain.validator-gentx-checklist"
+title: "WoloChain Mainnet Validator Gentx Checklist"
+type: "historical"
+status: "historical"
+owner: "wolochain-ops"
+systems: ["wolochain","aoe2war"]
+audience: ["developers","operators","ai-agents"]
+source_of_truth: "historical-evidence"
+authority: "prelaunch-validator-gentx-evidence"
+reviewed_at: "2026-08-10"
+review_interval_days: 0
+sensitivity: "internal"
+---
+
 # WoloChain Mainnet Validator Gentx Checklist
 
 Status: planning only. No validator keys have been created by this prep package.

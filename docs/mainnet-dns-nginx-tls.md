@@ -1,3 +1,18 @@
+---
+id: "aoe2war.wolochain.mainnet-dns-nginx-tls"
+title: "WoloChain Mainnet DNS, Nginx, And TLS"
+type: "reference"
+status: "active"
+owner: "wolochain-ops"
+systems: ["wolochain","aoe2war"]
+audience: ["developers","operators","ai-agents"]
+source_of_truth: "runtime-evidence"
+authority: "mainnet-public-endpoint-routing"
+reviewed_at: "2026-08-10"
+review_interval_days: 30
+sensitivity: "internal"
+---
+
 # WoloChain Mainnet DNS, Nginx, And TLS
 
 The currently verified mainnet public endpoints are:

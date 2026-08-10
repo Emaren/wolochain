@@ -1,3 +1,18 @@
+---
+id: "aoe2war.wolochain.mainnet-settlement-runbook"
+title: "WoloChain Mainnet Settlement Runbook"
+type: "runbook"
+status: "active"
+owner: "wolochain-ops"
+systems: ["wolochain","aoe2war"]
+audience: ["developers","operators","ai-agents"]
+source_of_truth: "runtime-evidence"
+authority: "mainnet-settlement-operations"
+reviewed_at: "2026-08-10"
+review_interval_days: 14
+sensitivity: "restricted"
+---
+
 # WoloChain Mainnet Settlement Runbook
 
 This runbook is for `wolo-1` mainnet settlement only. Do not reuse the old testnet service, state, signer keys, or port.

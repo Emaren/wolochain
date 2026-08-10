@@ -1,3 +1,18 @@
+---
+id: "aoe2war.wolochain.mainnet-ibc-osmosis"
+title: "WoloChain Mainnet IBC And Osmosis Plan"
+type: "historical"
+status: "historical"
+owner: "wolochain-ops"
+systems: ["wolochain","aoe2war"]
+audience: ["developers","operators","ai-agents"]
+source_of_truth: "historical-evidence"
+authority: "pre-ibc-osmosis-planning-evidence"
+reviewed_at: "2026-08-10"
+review_interval_days: 0
+sensitivity: "internal"
+---
+
 # WoloChain Mainnet IBC And Osmosis Plan
 
 This is a planning checklist only. Do not create IBC channels, start relayers, transfer liquidity, or create an Osmosis pool from this doc.
@@ -98,4 +113,3 @@ Prepare but do not publish until mainnet launch facts are final:
 - explorer URL
 - peer and seed data if public
 - IBC path data after channel creation
-

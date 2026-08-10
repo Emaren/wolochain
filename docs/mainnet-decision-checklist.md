@@ -1,3 +1,18 @@
+---
+id: "aoe2war.wolochain.mainnet-decision-checklist"
+title: "WoloChain Mainnet Tony Decision Checklist"
+type: "historical"
+status: "historical"
+owner: "wolochain-ops"
+systems: ["wolochain","aoe2war"]
+audience: ["developers","operators","ai-agents"]
+source_of_truth: "historical-evidence"
+authority: "mainnet-launch-decision-evidence"
+reviewed_at: "2026-08-10"
+review_interval_days: 0
+sensitivity: "internal"
+---
+
 # WoloChain Mainnet Tony Decision Checklist
 
 This checklist began as launch planning context. `wolo-1` is now live; use it for historical decisions, not as the current endpoint or deployment source of truth.

@@ -1,3 +1,18 @@
+---
+id: "aoe2war.wolochain.osmosis-pool-launch-plan"
+title: "WOLO Osmosis Pool Launch Plan"
+type: "historical"
+status: "historical"
+owner: "wolochain-ops"
+systems: ["wolochain","aoe2war"]
+audience: ["developers","operators","ai-agents"]
+source_of_truth: "historical-evidence"
+authority: "pre-pool-launch-plan-evidence"
+reviewed_at: "2026-08-10"
+review_interval_days: 0
+sensitivity: "internal"
+---
+
 # WOLO Osmosis Pool Launch Plan
 
 Status: planning packet only. Do not execute IBC, pool creation, or liquidity transactions from this document alone.

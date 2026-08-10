@@ -1,3 +1,18 @@
+---
+id: "aoe2war.wolochain.readme"
+title: "WoloChain"
+type: "reference"
+status: "active"
+owner: "wolochain-ops"
+systems: ["wolochain","aoe2war"]
+audience: ["developers","operators","ai-agents"]
+source_of_truth: "git"
+authority: "chain-repository-entrypoint"
+reviewed_at: "2026-08-10"
+review_interval_days: 14
+sensitivity: "public"
+---
+
 # WoloChain
 
 WoloChain is the fixed-supply Cosmos chain for the AoE2HDBets ecosystem.
@@ -318,3 +333,22 @@ For one logical result with many payouts, the preferred flow is:
 - Use `wolochaind settlement challenge recent --summary-only` or `GET /settlement/v1/challenges?summary_only=1` for operator visibility into challenge settlement replays, partial failures, and top-up history.
 
 For the live VPS layout and deploy runbook, see [docs/testnet-ops.md](docs/testnet-ops.md).
+
+## Documentation Control
+
+Repository documentation is federated through:
+
+- [`docs/DOCUMENTATION_CONTROL_PLANE.md`](docs/DOCUMENTATION_CONTROL_PLANE.md)
+- [`docs/BRANCH_AUTHORITY.md`](docs/BRANCH_AUTHORITY.md)
+- [`docs/document-registry.json`](docs/document-registry.json)
+
+Validate the repository documentation contract with:
+
+```bash
+python3 scripts/docs_v2_check.py
+```
+
+The registry keeps the implementation baseline separate from later
+documentation-only commits. WoloChain runtime, consensus, balances, and
+settlement truth remain owned by WoloChain; the central AoE2WAR documentation
+portal indexes that authority without replacing it.

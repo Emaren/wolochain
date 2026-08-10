@@ -1,3 +1,18 @@
+---
+id: "aoe2war.wolochain.mainnet-prep-readme"
+title: "WoloChain wolo-1 Prep Templates"
+type: "reference"
+status: "active"
+owner: "wolochain-ops"
+systems: ["wolochain","aoe2war"]
+audience: ["developers","operators","ai-agents"]
+source_of_truth: "git"
+authority: "mainnet-prep-artifact-index"
+reviewed_at: "2026-08-10"
+review_interval_days: 60
+sensitivity: "internal"
+---
+
 # WoloChain wolo-1 Prep Templates
 
 This directory contains launch artifacts and current templates. Nothing here launches services, creates keys, edits nginx, creates IBC channels, or creates Osmosis liquidity by itself.

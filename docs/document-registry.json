@@ -1,0 +1,748 @@
+{
+  "documents": [
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "chain-repository-entrypoint",
+      "id": "aoe2war.wolochain.readme",
+      "owner": "wolochain-ops",
+      "path": "README.md",
+      "review_interval_days": 14,
+      "reviewed_at": "2026-08-10",
+      "sensitivity": "public",
+      "sha256": "d8108507fc4f3b6c39482c95120edde92bd3861310ab91823c28ce73686ede1c",
+      "source_of_truth": "git",
+      "status": "active",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "WoloChain",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "git-branch-authority-contract",
+      "id": "aoe2war.wolochain.branch-authority",
+      "owner": "wolochain-ops",
+      "path": "docs/BRANCH_AUTHORITY.md",
+      "review_interval_days": 14,
+      "reviewed_at": "2026-08-10",
+      "sensitivity": "internal",
+      "sha256": "130733494f8de88ddfad9afc83ccf6a05b9ff978383bcbca6bd3bfbfaa9d7cd1",
+      "source_of_truth": "git",
+      "status": "active",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "WoloChain Branch Authority",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "repository-documentation-index",
+      "id": "aoe2war.wolochain.documentation-control-plane",
+      "owner": "wolochain-ops",
+      "path": "docs/DOCUMENTATION_CONTROL_PLANE.md",
+      "review_interval_days": 30,
+      "reviewed_at": "2026-08-10",
+      "sensitivity": "internal",
+      "sha256": "5797b753581e24e048a16abd33d122e00902657d2f03e114a750a2ec50659a64",
+      "source_of_truth": "git",
+      "status": "active",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "WoloChain Documentation Index",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "mainnet-launch-cutover-evidence",
+      "id": "aoe2war.wolochain.mainnet-cutover-checklist",
+      "owner": "wolochain-ops",
+      "path": "docs/mainnet-cutover-checklist.md",
+      "review_interval_days": 0,
+      "reviewed_at": "2026-08-10",
+      "sensitivity": "internal",
+      "sha256": "b253a94a429f77ae656c4275be3e2fa7f14ee2980dfc2ffb8a7db190d493146f",
+      "source_of_truth": "historical-evidence",
+      "status": "historical",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "WoloChain Mainnet Cutover Checklist",
+      "type": "historical"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "mainnet-launch-decision-evidence",
+      "id": "aoe2war.wolochain.mainnet-decision-checklist",
+      "owner": "wolochain-ops",
+      "path": "docs/mainnet-decision-checklist.md",
+      "review_interval_days": 0,
+      "reviewed_at": "2026-08-10",
+      "sensitivity": "internal",
+      "sha256": "3fb10d6f249a28fc314b0fa452d3eda775bf0e4784c3adb8a1b9a5e43cd559b1",
+      "source_of_truth": "historical-evidence",
+      "status": "historical",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "WoloChain Mainnet Tony Decision Checklist",
+      "type": "historical"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "mainnet-public-endpoint-routing",
+      "id": "aoe2war.wolochain.mainnet-dns-nginx-tls",
+      "owner": "wolochain-ops",
+      "path": "docs/mainnet-dns-nginx-tls.md",
+      "review_interval_days": 30,
+      "reviewed_at": "2026-08-10",
+      "sensitivity": "internal",
+      "sha256": "b76c885b35c78bea4ab0b0582b043b1ba5c8e5432fa21047afec3e97575424fe",
+      "source_of_truth": "runtime-evidence",
+      "status": "active",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "WoloChain Mainnet DNS, Nginx, And TLS",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "prelaunch-genesis-allocation-template",
+      "id": "aoe2war.wolochain.mainnet-genesis-allocation-template",
+      "owner": "wolochain-ops",
+      "path": "docs/mainnet-genesis-allocation-template.md",
+      "review_interval_days": 0,
+      "reviewed_at": "2026-08-10",
+      "sensitivity": "internal",
+      "sha256": "762816b90d45bbb255f7f06766f5ffffa02df36f22d1389a9e96331760bd957e",
+      "source_of_truth": "historical-evidence",
+      "status": "historical",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "WoloChain Mainnet Genesis Allocation Template",
+      "type": "historical"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "pre-ibc-osmosis-planning-evidence",
+      "id": "aoe2war.wolochain.mainnet-ibc-osmosis",
+      "owner": "wolochain-ops",
+      "path": "docs/mainnet-ibc-osmosis.md",
+      "review_interval_days": 0,
+      "reviewed_at": "2026-08-10",
+      "sensitivity": "internal",
+      "sha256": "3126e62e757e5cc763c800811926db2bcdfeb00e9d60744678a703bb787c29a4",
+      "source_of_truth": "historical-evidence",
+      "status": "historical",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "WoloChain Mainnet IBC And Osmosis Plan",
+      "type": "historical"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "mainnet-wallet-registry-metadata",
+      "id": "aoe2war.wolochain.mainnet-keplr-explorer",
+      "owner": "wolochain-ops",
+      "path": "docs/mainnet-keplr-explorer.md",
+      "review_interval_days": 30,
+      "reviewed_at": "2026-08-10",
+      "sensitivity": "public",
+      "sha256": "1b8b52f8dd0ac59d905c73e60eabfc05cf83c25a4055b6e78f324814234881b3",
+      "source_of_truth": "runtime-evidence",
+      "status": "active",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "WoloChain Mainnet Keplr And Explorer Metadata",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "mainnet-launch-plan-evidence",
+      "id": "aoe2war.wolochain.mainnet-launch-plan",
+      "owner": "wolochain-ops",
+      "path": "docs/mainnet-launch-plan.md",
+      "review_interval_days": 0,
+      "reviewed_at": "2026-08-10",
+      "sensitivity": "internal",
+      "sha256": "9a1379ad0b4e903069d78024ab1d1504f1333568142e97caff9039c9f41d11fb",
+      "source_of_truth": "historical-evidence",
+      "status": "historical",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "WoloChain Mainnet Launch Plan",
+      "type": "historical"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "mainnet-service-and-port-contract",
+      "id": "aoe2war.wolochain.mainnet-services-and-ports",
+      "owner": "wolochain-ops",
+      "path": "docs/mainnet-services-and-ports.md",
+      "review_interval_days": 14,
+      "reviewed_at": "2026-08-10",
+      "sensitivity": "internal",
+      "sha256": "01f50c24201939f6de13e47c3f8091798c42a67336414c005927c7e6efa13a31",
+      "source_of_truth": "runtime-evidence",
+      "status": "active",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "WoloChain Mainnet Services And Ports",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "mainnet-settlement-operations",
+      "id": "aoe2war.wolochain.mainnet-settlement-runbook",
+      "owner": "wolochain-ops",
+      "path": "docs/mainnet-settlement-runbook.md",
+      "review_interval_days": 14,
+      "reviewed_at": "2026-08-10",
+      "sensitivity": "restricted",
+      "sha256": "4ee94606e91bfec18dc974da8d8203b4b27c05afae6bd852cdc14eb220be037f",
+      "source_of_truth": "runtime-evidence",
+      "status": "active",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "WoloChain Mainnet Settlement Runbook",
+      "type": "runbook"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "mainnet-preparation-template-evidence",
+      "id": "aoe2war.wolochain.mainnet-template",
+      "owner": "wolochain-ops",
+      "path": "docs/mainnet-template.md",
+      "review_interval_days": 0,
+      "reviewed_at": "2026-08-10",
+      "sensitivity": "internal",
+      "sha256": "21a2ce4a82178d5622411108beebabc761fa2daa3feee2c6bc6b485ae61fc8cd",
+      "source_of_truth": "historical-evidence",
+      "status": "historical",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "WoloChain Mainnet Template Report",
+      "type": "historical"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "mainnet-wallet-role-and-custody-map",
+      "id": "aoe2war.wolochain.mainnet-wallets",
+      "owner": "wolochain-ops",
+      "path": "docs/mainnet-wallets.md",
+      "review_interval_days": 14,
+      "reviewed_at": "2026-08-10",
+      "sensitivity": "restricted",
+      "sha256": "c763ac0c39d0339d6de705917f2caebc24678ef14fe0a7fe3576d336b5bba0e5",
+      "source_of_truth": "runtime-evidence",
+      "status": "active",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "WoloChain Mainnet Wallet And Key Plan",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "machine-readable-settlement-contract-index",
+      "id": "aoe2war.wolochain.settlement-contracts",
+      "owner": "wolochain-ops",
+      "path": "docs/settlement-contracts/README.md",
+      "review_interval_days": 30,
+      "reviewed_at": "2026-08-10",
+      "sensitivity": "public",
+      "sha256": "1be8e75905a7e10f29b953bcf5e01335e4c48602574dfc0efad82dda89557769",
+      "source_of_truth": "git",
+      "status": "active",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "Settlement Contracts",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "legacy-testnet-operations",
+      "id": "aoe2war.wolochain.testnet-ops",
+      "owner": "wolochain-ops",
+      "path": "docs/testnet-ops.md",
+      "review_interval_days": 60,
+      "reviewed_at": "2026-08-10",
+      "sensitivity": "restricted",
+      "sha256": "0d89582fecf6181f22af02083c38bc2b9d30e72fffb8082a2a751d019d682c4b",
+      "source_of_truth": "runtime-evidence",
+      "status": "active",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "WoloChain Testnet Ops",
+      "type": "runbook"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "undeployed-warbound-module-design",
+      "id": "aoe2war.wolochain.warbound-trophies",
+      "owner": "wolochain-ops",
+      "path": "docs/warbound-trophies.md",
+      "review_interval_days": 30,
+      "reviewed_at": "2026-08-10",
+      "sensitivity": "internal",
+      "sha256": "a5d13d76c04c32c876f1af5814fa8f0a7ccff60bc791f23725b6000c4e3b7576",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "AoE2WAR Warbound Trophies",
+      "type": "working"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "ibc-mission-prompt-evidence",
+      "id": "aoe2war.wolochain.codex-osmosis-ibc-mission",
+      "owner": "wolochain-ops",
+      "path": "mainnet-prep/CODEX_OSMOSIS_IBC_MISSION.md",
+      "review_interval_days": 0,
+      "reviewed_at": "2026-08-10",
+      "sensitivity": "internal",
+      "sha256": "515c6acbc9c2bbb522c600185ea9b06c9a0935fc88737a883d10db6a5976a3f6",
+      "source_of_truth": "historical-evidence",
+      "status": "historical",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "Codex Mission: WoloChain Mainnet \u2194 Osmosis IBC Prep",
+      "type": "historical"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "ibc-relayer-operating-reference",
+      "id": "aoe2war.wolochain.hermes-osmosis-relayer-staging",
+      "owner": "wolochain-ops",
+      "path": "mainnet-prep/HERMES_OSMOSIS_RELAYER_STAGING.md",
+      "review_interval_days": 30,
+      "reviewed_at": "2026-08-10",
+      "sensitivity": "restricted",
+      "sha256": "3687511d86e5174f010b5cdedd45d82d4a42650e65674eb860cfb65334046c7d",
+      "source_of_truth": "runtime-evidence",
+      "status": "active",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "WoloChain Mainnet Osmosis Hermes Relayer Staging",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "pre-ibc-reconnaissance-evidence",
+      "id": "aoe2war.wolochain.ibc-recon-summary",
+      "owner": "wolochain-ops",
+      "path": "mainnet-prep/IBC_RECON_SUMMARY.md",
+      "review_interval_days": 0,
+      "reviewed_at": "2026-08-10",
+      "sensitivity": "internal",
+      "sha256": "ebdff9b2c0657ec6346657cf7cae1934c8e6ad30aac60d630d85a8a1d7031813",
+      "source_of_truth": "historical-evidence",
+      "status": "historical",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "WoloChain Mainnet IBC Recon Summary",
+      "type": "historical"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "live-ibc-path-receipt",
+      "id": "aoe2war.wolochain.ibc-wolo-osmosis-live",
+      "owner": "wolochain-ops",
+      "path": "mainnet-prep/IBC_WOLO_OSMOSIS_LIVE.md",
+      "review_interval_days": 30,
+      "reviewed_at": "2026-08-10",
+      "sensitivity": "internal",
+      "sha256": "d05102427fd62114e4754384cffabd051f426203444c9b6663efe73ccac5e5fa",
+      "source_of_truth": "runtime-evidence",
+      "status": "active",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "WoloChain Mainnet Osmosis IBC Path Live",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "mainnet-prep-artifact-index",
+      "id": "aoe2war.wolochain.mainnet-prep-readme",
+      "owner": "wolochain-ops",
+      "path": "mainnet-prep/README.md",
+      "review_interval_days": 60,
+      "reviewed_at": "2026-08-10",
+      "sensitivity": "internal",
+      "sha256": "310f0bb79a881d8ce21994e655267bdd525b1a65cedfede0e7fc1f788d154048",
+      "source_of_truth": "git",
+      "status": "active",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "WoloChain wolo-1 Prep Templates",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "relayer-key-funding-preparation-evidence",
+      "id": "aoe2war.wolochain.relayer-keys-and-funding-checklist",
+      "owner": "wolochain-ops",
+      "path": "mainnet-prep/RELAYER_KEYS_AND_FUNDING_CHECKLIST.md",
+      "review_interval_days": 0,
+      "reviewed_at": "2026-08-10",
+      "sensitivity": "internal",
+      "sha256": "db4e925f6ac25142972abae7dbc9f16987c877bc38e0bc983f5a4e97c9dac7fe",
+      "source_of_truth": "historical-evidence",
+      "status": "historical",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "Relayer Keys and Funding Checklist",
+      "type": "historical"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "mainnet-prep-chronological-handoff",
+      "id": "aoe2war.wolochain.mainnet-prep-status",
+      "owner": "wolochain-ops",
+      "path": "mainnet-prep/STATUS.md",
+      "review_interval_days": 14,
+      "reviewed_at": "2026-08-10",
+      "sensitivity": "restricted",
+      "sha256": "7d434b2f0a56ef7ff44210d87c963c28a27ff991ca9841c1abcd4f4cb0d312f6",
+      "source_of_truth": "runtime-evidence",
+      "status": "active",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "WoloChain wolo-1 Mainnet Prep Status",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "liquidity-transfer-receipt",
+      "id": "aoe2war.wolochain.osmosis-liquidity-transfer",
+      "owner": "wolochain-ops",
+      "path": "mainnet-prep/WOLO_OSMOSIS_LIQUIDITY_TRANSFER.md",
+      "review_interval_days": 0,
+      "reviewed_at": "2026-08-10",
+      "sensitivity": "internal",
+      "sha256": "7d55c2bf36fd2d3581941e9440be23eae6185c3d8f9d4de00454c6c68cf5764b",
+      "source_of_truth": "historical-evidence",
+      "status": "historical",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "WoloChain Mainnet \u2192 Osmosis Liquidity Transfer",
+      "type": "historical"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "post-launch-osmosis-metadata-plan",
+      "id": "aoe2war.wolochain.osmosis-metadata-plan",
+      "owner": "wolochain-ops",
+      "path": "mainnet-prep/WOLO_OSMOSIS_METADATA_PLAN.md",
+      "review_interval_days": 30,
+      "reviewed_at": "2026-08-10",
+      "sensitivity": "public",
+      "sha256": "36a241c03bed731413ccd9c2455776d2d1f31114cf8e578df5a0c724c50b6455",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "WOLO Osmosis Metadata Plan",
+      "type": "working"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "pre-pool-launch-plan-evidence",
+      "id": "aoe2war.wolochain.osmosis-pool-launch-plan",
+      "owner": "wolochain-ops",
+      "path": "mainnet-prep/WOLO_OSMOSIS_POOL_LAUNCH.md",
+      "review_interval_days": 0,
+      "reviewed_at": "2026-08-10",
+      "sensitivity": "internal",
+      "sha256": "cecf8674d0a98b3a08b461a81a93b866c7200656da0462987091bb08dd861954",
+      "source_of_truth": "historical-evidence",
+      "status": "historical",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "WOLO Osmosis Pool Launch Plan",
+      "type": "historical"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "ibc-test-transfer-receipt",
+      "id": "aoe2war.wolochain.osmosis-test-transfer",
+      "owner": "wolochain-ops",
+      "path": "mainnet-prep/WOLO_OSMOSIS_TEST_TRANSFER.md",
+      "review_interval_days": 0,
+      "reviewed_at": "2026-08-10",
+      "sensitivity": "internal",
+      "sha256": "0e4fb9bd50af84cfc8341d9f128a20a7024524abe85d66f9387428d4a4323ffd",
+      "source_of_truth": "historical-evidence",
+      "status": "historical",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "WoloChain Mainnet \u2192 Osmosis Test Transfer",
+      "type": "historical"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "live-osmosis-pool-receipt",
+      "id": "aoe2war.wolochain.osmosis-pool-live",
+      "owner": "wolochain-ops",
+      "path": "mainnet-prep/WOLO_USDC_OSMOSIS_POOL_LIVE.md",
+      "review_interval_days": 30,
+      "reviewed_at": "2026-08-10",
+      "sensitivity": "public",
+      "sha256": "c3ca2edb0a3aea65b7a03982941af3f65142e0400bdec04a58b447473975736f",
+      "source_of_truth": "runtime-evidence",
+      "status": "active",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "WOLO/USDC Osmosis Pool",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "prelaunch-genesis-scaffold",
+      "id": "aoe2war.wolochain.mainnet-genesis-prep",
+      "owner": "wolochain-ops",
+      "path": "mainnet-prep/genesis/README.md",
+      "review_interval_days": 0,
+      "reviewed_at": "2026-08-10",
+      "sensitivity": "internal",
+      "sha256": "94b8ff53d101f71033d16f910b5ec298afd129712fbc35312976fc78778b71c4",
+      "source_of_truth": "historical-evidence",
+      "status": "historical",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "Mainnet Genesis Prep",
+      "type": "historical"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "prelaunch-validator-gentx-evidence",
+      "id": "aoe2war.wolochain.validator-gentx-checklist",
+      "owner": "wolochain-ops",
+      "path": "mainnet-prep/genesis/VALIDATOR_GENTX_CHECKLIST.md",
+      "review_interval_days": 0,
+      "reviewed_at": "2026-08-10",
+      "sensitivity": "internal",
+      "sha256": "391f91d5c70a5afbb0800616ab3e49444e72f4659a56f69d0250430a692487a9",
+      "source_of_truth": "historical-evidence",
+      "status": "historical",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "WoloChain Mainnet Validator Gentx Checklist",
+      "type": "historical"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "mainnet-nginx-routing-reference",
+      "id": "aoe2war.wolochain.mainnet-nginx-notes",
+      "owner": "wolochain-ops",
+      "path": "mainnet-prep/nginx/README.md",
+      "review_interval_days": 30,
+      "reviewed_at": "2026-08-10",
+      "sensitivity": "internal",
+      "sha256": "0c3f6ffa9fc460c2f052400b95a16655b294c80626f7c8abc01bd68d5f85f1bb",
+      "source_of_truth": "runtime-evidence",
+      "status": "active",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "WoloChain Mainnet Nginx Notes",
+      "type": "reference"
+    }
+  ],
+  "generated_at": "2026-08-10T15:48:36.946892+00:00",
+  "implementation_baseline": {
+    "branch": "wolo-1-mainnet-prep",
+    "commit": "d5dea8d6f1a2b0b57489a5e468dd21e34246891e"
+  },
+  "owner": "wolochain-ops",
+  "repo": "wolochain",
+  "schema_version": "2.1.0"
+}

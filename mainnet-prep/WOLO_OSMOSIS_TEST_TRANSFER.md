@@ -1,3 +1,18 @@
+---
+id: "aoe2war.wolochain.osmosis-test-transfer"
+title: "WoloChain Mainnet → Osmosis Test Transfer"
+type: "historical"
+status: "historical"
+owner: "wolochain-ops"
+systems: ["wolochain","aoe2war"]
+audience: ["developers","operators","ai-agents"]
+source_of_truth: "historical-evidence"
+authority: "ibc-test-transfer-receipt"
+reviewed_at: "2026-08-10"
+review_interval_days: 0
+sensitivity: "internal"
+---
+
 # WoloChain Mainnet → Osmosis Test Transfer
 
 Status: complete.

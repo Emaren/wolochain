@@ -1,3 +1,18 @@
+---
+id: "aoe2war.wolochain.mainnet-wallets"
+title: "WoloChain Mainnet Wallet And Key Plan"
+type: "reference"
+status: "active"
+owner: "wolochain-ops"
+systems: ["wolochain","aoe2war"]
+audience: ["developers","operators","ai-agents"]
+source_of_truth: "runtime-evidence"
+authority: "mainnet-wallet-role-and-custody-map"
+reviewed_at: "2026-08-10"
+review_interval_days: 14
+sensitivity: "restricted"
+---
+
 # WoloChain Mainnet Wallet And Key Plan
 
 This is a planning document only. Do not generate mnemonics in this repo and do not expose mnemonics in terminal output, docs, commits, screenshots, or tickets.

@@ -1,0 +1,12 @@
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: wolochain
+  title: WoloChain
+  annotations:
+    backstage.io/techdocs-ref: dir:.
+spec:
+  type: blockchain
+  lifecycle: production
+  owner: group:default/wolochain-ops
+  system: aoe2war

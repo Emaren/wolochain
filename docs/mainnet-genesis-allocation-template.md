@@ -1,3 +1,18 @@
+---
+id: "aoe2war.wolochain.mainnet-genesis-allocation-template"
+title: "WoloChain Mainnet Genesis Allocation Template"
+type: "historical"
+status: "historical"
+owner: "wolochain-ops"
+systems: ["wolochain","aoe2war"]
+audience: ["developers","operators","ai-agents"]
+source_of_truth: "historical-evidence"
+authority: "prelaunch-genesis-allocation-template"
+reviewed_at: "2026-08-10"
+review_interval_days: 0
+sensitivity: "internal"
+---
+
 # WoloChain Mainnet Genesis Allocation Template
 
 This is a planning template only. It is not a final allocation table and must not be used to launch mainnet without Tony's explicit review.
@@ -65,4 +80,3 @@ The validator/operator reserve must include enough WOLO for:
 - a reserve floor that keeps the validator account usable after launch
 
 The exact self-delegation amount is a launch decision.
-

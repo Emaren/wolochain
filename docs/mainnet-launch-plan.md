@@ -1,3 +1,18 @@
+---
+id: "aoe2war.wolochain.mainnet-launch-plan"
+title: "WoloChain Mainnet Launch Plan"
+type: "historical"
+status: "historical"
+owner: "wolochain-ops"
+systems: ["wolochain","aoe2war"]
+audience: ["developers","operators","ai-agents"]
+source_of_truth: "historical-evidence"
+authority: "mainnet-launch-plan-evidence"
+reviewed_at: "2026-08-10"
+review_interval_days: 0
+sensitivity: "internal"
+---
+
 # WoloChain Mainnet Launch Plan
 
 This is a historical planning document. `wolo-1` is now live; use `README.md`, `docs/mainnet-services-and-ports.md`, and `docs/mainnet-keplr-explorer.md` for current endpoint and wallet truth.

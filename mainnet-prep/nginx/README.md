@@ -1,3 +1,18 @@
+---
+id: "aoe2war.wolochain.mainnet-nginx-notes"
+title: "WoloChain Mainnet Nginx Notes"
+type: "reference"
+status: "active"
+owner: "wolochain-ops"
+systems: ["wolochain","aoe2war"]
+audience: ["developers","operators","ai-agents"]
+source_of_truth: "runtime-evidence"
+authority: "mainnet-nginx-routing-reference"
+reviewed_at: "2026-08-10"
+review_interval_days: 30
+sensitivity: "internal"
+---
+
 # WoloChain Mainnet Nginx Notes
 
 Verified public mainnet routing:

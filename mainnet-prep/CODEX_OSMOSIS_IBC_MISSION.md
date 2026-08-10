@@ -1,3 +1,18 @@
+---
+id: "aoe2war.wolochain.codex-osmosis-ibc-mission"
+title: "Codex Mission: WoloChain Mainnet ↔ Osmosis IBC Prep"
+type: "historical"
+status: "historical"
+owner: "wolochain-ops"
+systems: ["wolochain","aoe2war"]
+audience: ["developers","operators","ai-agents"]
+source_of_truth: "historical-evidence"
+authority: "ibc-mission-prompt-evidence"
+reviewed_at: "2026-08-10"
+review_interval_days: 0
+sensitivity: "internal"
+---
+
 # Codex Mission: WoloChain Mainnet ↔ Osmosis IBC Prep
 
 Status: mission prompt only. Do not execute irreversible transactions from this document alone.

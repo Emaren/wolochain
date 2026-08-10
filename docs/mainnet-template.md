@@ -1,3 +1,18 @@
+---
+id: "aoe2war.wolochain.mainnet-template"
+title: "WoloChain Mainnet Template Report"
+type: "historical"
+status: "historical"
+owner: "wolochain-ops"
+systems: ["wolochain","aoe2war"]
+audience: ["developers","operators","ai-agents"]
+source_of_truth: "historical-evidence"
+authority: "mainnet-preparation-template-evidence"
+reviewed_at: "2026-08-10"
+review_interval_days: 0
+sensitivity: "internal"
+---
+
 # WoloChain Mainnet Template Report
 
 This report began as a planning template. `wolo-1` is now live; use the current mainnet docs for endpoint and wallet truth, and treat the testnet section below as legacy context only.

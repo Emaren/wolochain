@@ -1,3 +1,18 @@
+---
+id: "aoe2war.wolochain.warbound-trophies"
+title: "AoE2WAR Warbound Trophies"
+type: "working"
+status: "draft"
+owner: "wolochain-ops"
+systems: ["wolochain","aoe2war"]
+audience: ["developers","operators","ai-agents"]
+source_of_truth: "git"
+authority: "undeployed-warbound-module-design"
+reviewed_at: "2026-08-10"
+review_interval_days: 30
+sensitivity: "internal"
+---
+
 # AoE2WAR Warbound Trophies
 
 Status: local first implementation pass. This module is not deployed on `wolo-1`.

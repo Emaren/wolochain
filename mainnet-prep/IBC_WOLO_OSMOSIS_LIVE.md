@@ -1,3 +1,18 @@
+---
+id: "aoe2war.wolochain.ibc-wolo-osmosis-live"
+title: "WoloChain Mainnet Osmosis IBC Path Live"
+type: "reference"
+status: "active"
+owner: "wolochain-ops"
+systems: ["wolochain","aoe2war"]
+audience: ["developers","operators","ai-agents"]
+source_of_truth: "runtime-evidence"
+authority: "live-ibc-path-receipt"
+reviewed_at: "2026-08-10"
+review_interval_days: 30
+sensitivity: "internal"
+---
+
 # WoloChain Mainnet Osmosis IBC Path Live
 
 Status: Phase 3 complete. The `wolo-1` to `osmosis-1` ICS-20 transfer path is open. Do not transfer WOLO, create liquidity, or create a WOLO/USDC pool from this document without Tony's explicit confirmation.

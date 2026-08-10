@@ -1,3 +1,18 @@
+---
+id: "aoe2war.wolochain.mainnet-cutover-checklist"
+title: "WoloChain Mainnet Cutover Checklist"
+type: "historical"
+status: "historical"
+owner: "wolochain-ops"
+systems: ["wolochain","aoe2war"]
+audience: ["developers","operators","ai-agents"]
+source_of_truth: "historical-evidence"
+authority: "mainnet-launch-cutover-evidence"
+reviewed_at: "2026-08-10"
+review_interval_days: 0
+sensitivity: "internal"
+---
+
 # WoloChain Mainnet Cutover Checklist
 
 This is a planning checklist only. It is intentionally split into gates so mainnet is not launched accidentally.

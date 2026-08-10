@@ -1,3 +1,18 @@
+---
+id: "aoe2war.wolochain.testnet-ops"
+title: "WoloChain Testnet Ops"
+type: "runbook"
+status: "active"
+owner: "wolochain-ops"
+systems: ["wolochain","aoe2war"]
+audience: ["developers","operators","ai-agents"]
+source_of_truth: "runtime-evidence"
+authority: "legacy-testnet-operations"
+reviewed_at: "2026-08-10"
+review_interval_days: 60
+sensitivity: "restricted"
+---
+
 # WoloChain Testnet Ops
 
 Verified against the live VPS on May 24, 2026.

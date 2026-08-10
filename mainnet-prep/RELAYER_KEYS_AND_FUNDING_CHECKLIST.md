@@ -1,3 +1,18 @@
+---
+id: "aoe2war.wolochain.relayer-keys-and-funding-checklist"
+title: "Relayer Keys and Funding Checklist"
+type: "historical"
+status: "historical"
+owner: "wolochain-ops"
+systems: ["wolochain","aoe2war"]
+audience: ["developers","operators","ai-agents"]
+source_of_truth: "historical-evidence"
+authority: "relayer-key-funding-preparation-evidence"
+reviewed_at: "2026-08-10"
+review_interval_days: 0
+sensitivity: "internal"
+---
+
 # Relayer Keys and Funding Checklist
 
 Status: preparation checklist only. Do not create keys, fund wallets, create IBC clients/channels, transfer WOLO, transfer OSMO, create liquidity, or create the WOLO/USDC pool without Tony's explicit confirmation.

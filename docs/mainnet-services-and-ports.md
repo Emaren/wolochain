@@ -1,3 +1,18 @@
+---
+id: "aoe2war.wolochain.mainnet-services-and-ports"
+title: "WoloChain Mainnet Services And Ports"
+type: "reference"
+status: "active"
+owner: "wolochain-ops"
+systems: ["wolochain","aoe2war"]
+audience: ["developers","operators","ai-agents"]
+source_of_truth: "runtime-evidence"
+authority: "mainnet-service-and-port-contract"
+reviewed_at: "2026-08-10"
+review_interval_days: 14
+sensitivity: "internal"
+---
+
 # WoloChain Mainnet Services And Ports
 
 This document records the verified `wolo-1` service shape as of June 4, 2026, including the dedicated mainnet settlement service shape on `127.0.0.1:8092`.

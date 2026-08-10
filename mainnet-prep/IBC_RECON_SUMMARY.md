@@ -1,3 +1,18 @@
+---
+id: "aoe2war.wolochain.ibc-recon-summary"
+title: "WoloChain Mainnet IBC Recon Summary"
+type: "historical"
+status: "historical"
+owner: "wolochain-ops"
+systems: ["wolochain","aoe2war"]
+audience: ["developers","operators","ai-agents"]
+source_of_truth: "historical-evidence"
+authority: "pre-ibc-reconnaissance-evidence"
+reviewed_at: "2026-08-10"
+review_interval_days: 0
+sensitivity: "internal"
+---
+
 # WoloChain Mainnet IBC Recon Summary
 
 Status: read-only reconnaissance summary. No IBC path, transfer, or pool was created by this recon.

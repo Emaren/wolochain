@@ -1,3 +1,18 @@
+---
+id: "aoe2war.wolochain.mainnet-prep-status"
+title: "WoloChain wolo-1 Mainnet Prep Status"
+type: "reference"
+status: "active"
+owner: "wolochain-ops"
+systems: ["wolochain","aoe2war"]
+audience: ["developers","operators","ai-agents"]
+source_of_truth: "runtime-evidence"
+authority: "mainnet-prep-chronological-handoff"
+reviewed_at: "2026-08-10"
+review_interval_days: 14
+sensitivity: "restricted"
+---
+
 # WoloChain wolo-1 Mainnet Prep Status
 
 Status: WoloChain mainnet is live; WOLO is bridged to Osmosis; WOLO/USDC Pool `3461` is live; post-launch metadata polish is pending.
