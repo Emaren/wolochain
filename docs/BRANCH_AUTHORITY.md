@@ -8,14 +8,14 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "git-branch-authority-contract"
-reviewed_at: "2026-08-10"
+reviewed_at: "2026-08-25"
 review_interval_days: 14
 sensitivity: "internal"
 ---
 
 # WoloChain Branch Authority
 
-Reviewed: 2026-08-10
+Reviewed: 2026-08-25
 
 ## Current federation source
 

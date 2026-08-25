@@ -8,7 +8,7 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "runtime-evidence"
 authority: "mainnet-settlement-operations"
-reviewed_at: "2026-08-10"
+reviewed_at: "2026-08-25"
 review_interval_days: 14
 sensitivity: "restricted"
 ---
