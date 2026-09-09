@@ -8,7 +8,7 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "runtime-evidence"
 authority: "mainnet-settlement-operations"
-reviewed_at: "2026-08-25"
+reviewed_at: "2026-09-09"
 review_interval_days: 14
 sensitivity: "restricted"
 ---
@@ -16,6 +16,25 @@ sensitivity: "restricted"
 # WoloChain Mainnet Settlement Runbook
 
 This runbook is for `wolo-1` mainnet settlement only. Do not reuse the old testnet service, state, signer keys, or port.
+
+## Review Renewal — 2026-09-09 UTC
+
+A read-only production review confirmed `wolochaind-mainnet.service` and
+`wolochain-mainnet-settlement.service` active, loopback settlement on `8092`,
+chain ID `wolo-1`, and `ok=true` from `/settlement/v1/health`. The live payout
+and escrow signer addresses still match this runbook.
+
+The live payout reserve policy has tightened since the June operating notes:
+`WOLO_SETTLEMENT_MIN_PAYOUT_BALANCE_UWOLO=250000000000` (`250,000 WOLO`) plus
+`10 WOLO` fee headroom. The escrow reserve remains `100 WOLO` plus `10 WOLO`
+fee headroom. At the review observation the payout signer held `417,051.500000
+WOLO` and the escrow signer held `1,913,217.500000 WOLO`; those balances are
+point-in-time evidence, not static targets.
+
+This review changed documentation only. It did not alter the live environment,
+keyring, balances, settlement state, chain, validator, or Wolo transfers. Dated
+June funding/floor events below remain historical evidence and are not rewritten
+as if their then-current reserve policy still governs production.
 
 ## Hard Rules
 
@@ -71,7 +90,7 @@ WOLO_SETTLEMENT_GAS=auto
 WOLO_SETTLEMENT_GAS_ADJUSTMENT=1.5
 WOLO_SETTLEMENT_GAS_PRICES=0.025uwolo
 WOLO_SETTLEMENT_BROADCAST_MODE=sync
-WOLO_SETTLEMENT_MIN_PAYOUT_BALANCE_UWOLO=1000000000
+WOLO_SETTLEMENT_MIN_PAYOUT_BALANCE_UWOLO=250000000000
 WOLO_SETTLEMENT_FEE_HEADROOM_UWOLO=10000000
 WOLO_SETTLEMENT_MIN_ESCROW_BALANCE_UWOLO=100000000
 WOLO_SETTLEMENT_ESCROW_FEE_HEADROOM_UWOLO=10000000
@@ -97,7 +116,7 @@ Generate fresh mainnet signer keys with `--keyring-dir /var/lib/wolochain-mainne
 
 The fresh signers were funded on June 4, 2026 from the approved mainnet Faucet Hot Wallet `wolo1dshyzxffd0jj39k7gj9tq9hgsx96ylxamyp5g0`. Tony restored that Faucet Hot Wallet into the AoE2HDBets app keyring at `/var/lib/aoe2hdbets-wolo-mainnet` as `faucet-hot-mainnet`; do not use old testnet `faucetgrowth` for mainnet faucet claims.
 
-Current seeded balances:
+Initial seeded balances (historical June 4 funding):
 
 ```text
 Bet Payout Signer: 5000 WOLO
@@ -117,7 +136,7 @@ On June 27, 2026, normal payout activity reduced the payout signer to `999.75000
 | --- | --- | --- | --- |
 | Restore Bet Payout Signer to `5000 WOLO` | `16E19830351313A983BA1FD08C66658C213ECCD7C73CE3B17FDAC246FD8DD56B` | `580909` | `code=0`; `/settlement/v1/health` returned `ok=true` |
 
-The service must refuse live payouts when the payout signer would fall below `1000 WOLO` plus fee headroom. It must refuse escrow-signed runs when escrow would fall below `100 WOLO` plus fee headroom.
+The current production service must refuse live payouts when the payout signer would fall below `250,000 WOLO` plus fee headroom. It must refuse escrow-signed runs when escrow would fall below `100 WOLO` plus fee headroom.
 
 ## Validation
 

@@ -264,9 +264,9 @@
       "owner": "wolochain-ops",
       "path": "docs/mainnet-settlement-runbook.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-08-25",
+      "reviewed_at": "2026-09-09",
       "sensitivity": "restricted",
-      "sha256": "6c1c0a7e3db7de7aba556e7ceda68aa1bd457f2c9aad9b91ff7935eecaeee8db",
+      "sha256": "8fbca08d8752c765cf3e78b04153842c14f69ca87c97563d4c984c2c4672829e",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -310,9 +310,9 @@
       "owner": "wolochain-ops",
       "path": "docs/mainnet-wallets.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-08-25",
+      "reviewed_at": "2026-09-09",
       "sensitivity": "restricted",
-      "sha256": "ed7904da2577d7f17cb190382881e9c5b9f8235163895910cdb849ba838505d7",
+      "sha256": "16413834cab66b978ea3e8fb97aa67f4ac238c2b6b618f943d6cde30362acf37",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [

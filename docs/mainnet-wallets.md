@@ -8,16 +8,32 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "runtime-evidence"
 authority: "mainnet-wallet-role-and-custody-map"
-reviewed_at: "2026-08-25"
+reviewed_at: "2026-09-09"
 review_interval_days: 14
 sensitivity: "restricted"
 ---
 
 # WoloChain Mainnet Wallet And Key Plan
 
-This is a planning document only. Do not generate mnemonics in this repo and do not expose mnemonics in terminal output, docs, commits, screenshots, or tickets.
+This is the mainnet wallet role and custody reference. It began as launch planning, but the current address table now documents live `wolo-1` roles. Do not generate mnemonics in this repo and do not expose mnemonics in terminal output, docs, commits, screenshots, or tickets.
 
 Every mainnet key must be fresh. Testnet equivalents must not be reused.
+
+## Review Renewal — 2026-09-09 UTC
+
+Read-only chain evidence reconfirmed fixed supply at exactly
+`100000000000000uwolo` (`100,000,000 WOLO`). The live settlement health route
+reconfirmed the documented payout signer
+`wolo1zfa9ssu2gpgqg7yzvhmjt4w66mza07qr2a4rwu` and escrow signer
+`wolo1zygwt232ymc4h2g52yvkntffhmd5alx2kglw7p`; a public bank query also
+reconfirmed Community Treasury
+`wolo1hlfvzuv4dc46ngvh3zlteuegx0xga20hj20zd2`. Protected settlement listeners
+`8092` and `8093` were both present.
+
+Balances and funding figures in dated June sections remain point-in-time evidence.
+This review validates the current role/address boundary without claiming every
+historical balance is current, and it performs no key, wallet, transfer, chain,
+settlement, or custody mutation.
 
 ## Wallet Inventory
 
@@ -82,7 +98,7 @@ Use these labels when app or explorer surfaces render `wolo-1` holder and transf
 
 June 28 verification confirmed recent reserve top-ups are successful `/cosmos.bank.v1beta1.MsgSend` transactions, including `B318F2BEDC1D675A76C269002EDCE4E1CF242592A608A6D433EEED2C7C2EBC7A` for `10000 WOLO`. No WoloChain module or settlement-specific handling is involved.
 
-## Day-One Settlement Posture
+## Historical Day-One Settlement Posture
 
 Recommended default: prepare mainnet settlement infrastructure for day one, but do not switch AoE2War production payouts to mainnet until the chain, explorer, public REST, wallet backups, and hot-wallet alerting have survived a short observation window.
 
@@ -208,7 +224,7 @@ Do not store mnemonics in:
 - screenshots
 - issue trackers
 
-## Launch Gate
+## Historical Launch Gate
 
 Before launch, Tony must approve:
 
