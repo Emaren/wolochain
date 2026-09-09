@@ -8,7 +8,7 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "chain-repository-entrypoint"
-reviewed_at: "2026-08-25"
+reviewed_at: "2026-09-09"
 review_interval_days: 14
 sensitivity: "public"
 ---
@@ -51,7 +51,14 @@ WoloChain does not own:
 
 ## Current Mainnet State
 
-Verified on June 4, 2026.
+The launch baseline below was verified on June 4, 2026. A read-only review on
+September 9, 2026 reconfirmed the canonical `wolo-1` identity, fixed supply,
+public RPC/REST metadata, active mainnet node and settlement service, and protected
+mainnet settlement port `8092`. The running node binary reports implementation
+commit `d5dea8d6f1a2b0b57489a5e468dd21e34246891e`; `catching_up=false` and tx
+indexing remains on. Legacy testnet node/settlement services were inactive at the
+review observation. No runtime or Wolo mutation was performed by the review.
+
 
 - VPS node service: `wolochaind-mainnet.service`
 - VPS moniker: `wolo-mainnet-hel1`

@@ -8,12 +8,20 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "runtime-evidence"
 authority: "mainnet-nginx-routing-reference"
-reviewed_at: "2026-08-10"
+reviewed_at: "2026-09-09"
 review_interval_days: 30
 sensitivity: "internal"
 ---
 
 # WoloChain Mainnet Nginx Notes
+
+## Review Renewal — 2026-09-09 UTC
+
+Read-only smoke checks reconfirmed `rpc-mainnet.aoe2war.com` and
+`rest-mainnet.aoe2war.com` serving `wolo-1`. RPC CORS returned the explicit
+AoE2WAR origin and REST returned a permissive wildcard; both accept
+`https://aoe2war.com`. Nginx remained active. No proxy, TLS, DNS, or runtime
+configuration was changed.
 
 Verified public mainnet routing:
 

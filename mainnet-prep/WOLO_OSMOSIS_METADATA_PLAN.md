@@ -8,12 +8,20 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "post-launch-osmosis-metadata-plan"
-reviewed_at: "2026-08-10"
+reviewed_at: "2026-09-09"
 review_interval_days: 30
 sensitivity: "public"
 ---
 
 # WOLO Osmosis Metadata Plan
+
+## Review Renewal — 2026-09-09 UTC
+
+Pool `3461` remained live and queryable at the documented pool address and
+`0.2%` swap fee. The expected Cosmos Chain Registry paths `wolo/chain.json` and
+`wolo/assetlist.json` returned `404` from the current registry `master` branch at
+review time, so the metadata task remains genuinely open. This review did not
+transfer funds, alter the relayer, create a pool, or mutate chain state.
 
 Status: post-launch metadata planning only. Pool `3461` is live; this document does not require touching funds, relayers, services, genesis, validators, or chain state.
 

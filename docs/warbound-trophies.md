@@ -8,14 +8,20 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "undeployed-warbound-module-design"
-reviewed_at: "2026-08-10"
+reviewed_at: "2026-09-09"
 review_interval_days: 30
 sensitivity: "internal"
 ---
 
 # AoE2WAR Warbound Trophies
 
-Status: local first implementation pass. This module is not deployed on `wolo-1`.
+Status: the Warbound implementation and AutoCLI query surface are compiled into
+the currently running mainnet binary at implementation commit
+`d5dea8d6f1a2b0b57489a5e468dd21e34246891e`, but the live `wolo-1` chain has
+not activated Warbound module query state. Read-only CLI queries return
+`unknown query path` and REST probes under `/wolochain/wartrophy/v1` return
+`501 Not Implemented`. Treat Warbound as **not live chain state** until a
+coordinated upgrade activates and proves the module.
 
 ## Boundary
 
@@ -194,7 +200,10 @@ Only after one option is enforced in code and tested should `x/wartrophy` mint/l
 
 ## Mainnet upgrade and migration requirements
 
-This change requires a coordinated `wolo-1` binary upgrade. It must not be copied over the live binary and restarted ad hoc.
+Activating Warbound on the existing `wolo-1` chain requires a coordinated chain
+upgrade even though the current binary already contains the implementation/CLI
+code. Binary presence is not module activation. Do not copy over the live binary
+or infer live state from the command surface alone.
 
 Required before mainnet:
 

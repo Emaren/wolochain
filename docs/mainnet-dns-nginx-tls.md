@@ -8,12 +8,23 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "runtime-evidence"
 authority: "mainnet-public-endpoint-routing"
-reviewed_at: "2026-08-10"
+reviewed_at: "2026-09-09"
 review_interval_days: 30
 sensitivity: "internal"
 ---
 
 # WoloChain Mainnet DNS, Nginx, And TLS
+
+## Review Renewal — 2026-09-09 UTC
+
+Read-only smoke checks reconfirmed both public mainnet hosts, runtime chain ID
+`wolo-1`, and `tx_index=on`. RPC preflight returned `204` with
+`Access-Control-Allow-Origin: https://aoe2war.com`; REST preflight returned `204`
+with permissive `Access-Control-Allow-Origin: *`, which still permits the AoE2WAR
+browser origin. The earlier candidate hosts `rpc.wolo.aoe2war.com`,
+`rest.wolo.aoe2war.com`, `explorer.wolo.aoe2war.com`, and
+`explorer-mainnet.aoe2war.com` did not resolve at review time. No DNS, TLS,
+Nginx, or runtime mutation was performed.
 
 The currently verified mainnet public endpoints are:
 

@@ -8,12 +8,21 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "runtime-evidence"
 authority: "mainnet-wallet-registry-metadata"
-reviewed_at: "2026-08-10"
+reviewed_at: "2026-09-09"
 review_interval_days: 30
 sensitivity: "public"
 ---
 
 # WoloChain Mainnet Keplr And Explorer Metadata
+
+## Review Renewal — 2026-09-09 UTC
+
+Public RPC/REST reconfirmed `wolo-1`, base denom `uwolo`, display denom `wolo`,
+symbol `WOLO`, exponent `6`, fixed supply `100000000000000uwolo`, and tx indexing
+enabled. No separate mainnet explorer host was verified: the candidate explorer
+hostnames remained unresolved. The metadata below therefore remains current, and
+the legacy testnet explorer must remain distinct. No wallet, registry, DNS, or
+chain mutation was performed.
 
 This document records the current `wolo-1` mainnet metadata that wallets, registries, explorers, and AoE2HDBets should treat as chain truth.
 

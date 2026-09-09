@@ -8,25 +8,30 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "git-branch-authority-contract"
-reviewed_at: "2026-08-25"
+reviewed_at: "2026-09-09"
 review_interval_days: 14
 sensitivity: "internal"
 ---
 
 # WoloChain Branch Authority
 
-Reviewed: 2026-08-25
+Reviewed: 2026-09-09
 
 ## Current federation source
 
-The documentation federation for the live `wolo-1` mainnet work is sourced
-from:
+The documentation federation for live `wolo-1` mainnet work is sourced from
+the clean remote-exact `wolo-1-mainnet-prep` branch. The implementation baseline
+described by this documentation remains:
 
 ```text
-wolo-1-mainnet-prep@d5dea8d6f1a2b0b57489a5e468dd21e34246891e
+d5dea8d6f1a2b0b57489a5e468dd21e34246891e
 ```
 
-The remote branch is byte-identical at the federation boundary.
+Do not confuse that implementation baseline with later documentation-only branch
+HEADs. At the September 9, 2026 pre-review observation, local and remote prep HEAD
+were exact at `8b2563b50d410a52c511ef7cdc3a7821e4546747`, while `origin/main`
+remained `a2fba6bfd98d7b28fb113badbadf23ec9096a4af`; current divergence was
+`2` main-only / `39` prep-only. This review did not reconcile the branches.
 
 The repository default/main line remains separately present at:
 

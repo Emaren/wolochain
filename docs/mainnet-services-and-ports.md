@@ -8,14 +8,25 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "runtime-evidence"
 authority: "mainnet-service-and-port-contract"
-reviewed_at: "2026-08-25"
+reviewed_at: "2026-09-09"
 review_interval_days: 14
 sensitivity: "internal"
 ---
 
 # WoloChain Mainnet Services And Ports
 
-This document records the verified `wolo-1` service shape as of June 4, 2026, including the dedicated mainnet settlement service shape on `127.0.0.1:8092`.
+This document records the verified `wolo-1` service and port contract. The
+June 4 launch shape remains historical baseline; a September 9, 2026 read-only
+renewal reconfirmed `wolochaind-mainnet.service` and
+`wolochain-mainnet-settlement.service` active, P2P `27656`, RPC `27657`, REST
+`1318`, and mainnet settlement `8092`. The legacy testnet node and settlement
+services were inactive at that observation. The running mainnet binary reports
+commit `d5dea8d6f1a2b0b57489a5e468dd21e34246891e`. No service or runtime
+mutation was performed by this review.
+
+An additional protected listener on `8093` was observed by AoE2WAR estate checks;
+it is not the `8092` mainnet settlement API defined by this contract and must not
+be substituted for it.
 
 ## Verified Live Runtime
 

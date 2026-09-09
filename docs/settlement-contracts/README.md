@@ -8,12 +8,22 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "machine-readable-settlement-contract-index"
-reviewed_at: "2026-08-10"
+reviewed_at: "2026-09-09"
 review_interval_days: 30
 sensitivity: "public"
 ---
 
 # Settlement Contracts
+
+## Review Renewal — 2026-09-09 UTC
+
+The canonical challenge memo/request schemas and example payloads remain present in
+source, and the settlement implementation still exposes the documented challenge
+funding, validate, execute, inspect, and audit route family. Live mainnet settlement
+health returned `ok=true`, `chain_id=wolo-1`, and the documented payout/escrow
+signers. The contract boundary remains unchanged: WoloChain validates and executes
+explicit money movement; AoE2HDBets decides gameplay outcomes. No settlement
+execution or Wolo mutation was performed by this review.
 
 Machine-readable WoloChain settlement contract files for AoE2HDBets challenge settlement integration.
 

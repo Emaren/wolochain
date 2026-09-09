@@ -8,14 +8,17 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "runtime-evidence"
 authority: "live-ibc-path-receipt"
-reviewed_at: "2026-08-10"
+reviewed_at: "2026-09-09"
 review_interval_days: 30
 sensitivity: "internal"
 ---
 
 # WoloChain Mainnet Osmosis IBC Path Live
 
-Status: Phase 3 complete. The `wolo-1` to `osmosis-1` ICS-20 transfer path is open. Do not transfer WOLO, create liquidity, or create a WOLO/USDC pool from this document without Tony's explicit confirmation.
+Status: the `wolo-1` to `osmosis-1` ICS-20 path remains open and has since been
+used by the separately authorized test transfer and liquidity launch that created
+Pool `3461`. This receipt does not authorize additional transfers, liquidity, or
+pool creation.
 
 ## Summary
 
@@ -161,19 +164,30 @@ Backups created:
 - `/root/wolo-1-mainnet-prep-markers/hermes-osmosis.toml.pre-freshstaking-rpc-fallback-20260525T065520Z.bak`
 - `/root/wolo-1-mainnet-prep-markers/hermes-osmosis.toml.pre-kjnodes-fallback-20260525T070134Z.bak`
 
-## Safety Confirmations
+## Review Renewal — 2026-09-09 UTC
+
+Direct REST queries reconfirmed both channel ends `STATE_OPEN`, unordered
+`ics20-1`, with Wolo `channel-0` ↔ Osmosis `channel-110224` and connection hops
+`connection-0` / `connection-11058`. Pool `3461` also remained queryable on
+Osmosis. No IBC, relayer, liquidity, or Wolo mutation was performed by this
+review.
+
+## Phase 3 Safety Confirmations — historical
 
 - `wolo-testnet` was not touched.
 - No testnet channel was reused.
 - `/etc/tokenchain/hermes.toml` was not touched.
 - `tokenchain-relayer.service` was not stopped or modified.
 - `wolochain-mainnet-osmosis-relayer.service` remains inactive and was not started.
-- No WOLO transfer happened.
-- No OSMO transfer happened.
-- The 200,000 WOLO liquidity transfer did not happen.
-- No liquidity was created.
-- No WOLO/USDC pool was created.
+- At Phase 3 close, no WOLO or OSMO transfer had happened.
+- At Phase 3 close, the 200,000-WOLO liquidity transfer and pool launch had not
+  happened.
+- Later authorized phases superseded those historical negatives and are recorded
+  in the dedicated transfer/pool receipts.
 
-## Next Step
+## Current Next Step
 
-Phase 4 should perform only a tiny 1 WOLO test transfer, base amount `1000000uwolo`, over Wolo channel `channel-0` after Tony explicitly confirms.
+The transfer and pool-launch phases are complete. The remaining post-launch work
+is metadata/visibility: preserve the live IBC path and Pool `3461`, and complete
+Chain Registry/Osmosis asset metadata without moving funds merely to improve
+frontend labeling.
