@@ -8,7 +8,7 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "runtime-evidence"
 authority: "mainnet-prep-chronological-handoff"
-reviewed_at: "2026-08-25"
+reviewed_at: "2026-09-09"
 review_interval_days: 14
 sensitivity: "restricted"
 ---
@@ -16,6 +16,20 @@ sensitivity: "restricted"
 # WoloChain wolo-1 Mainnet Prep Status
 
 Status: WoloChain mainnet is live; WOLO is bridged to Osmosis; WOLO/USDC Pool `3461` is live; post-launch metadata polish is pending.
+
+## Review Renewal — 2026-09-09 UTC
+
+This living handoff was renewed against current read-only runtime evidence. Public
+RPC reported network `wolo-1`, block height `1835896`, `catching_up=false`, and
+validator voting power `2000`; public REST reported the preserved consensus
+runtime version `wolo-1-mainnet-prep-d3bd62414a047a492a3814b7d3baa2717d64db2e`.
+AoE2WAR release status independently reported protected settlement listeners
+`8092=UP` and `8093=UP`.
+
+This review performed no chain, validator, keyring, relayer, liquidity, settlement,
+or Wolo mutation. The dated launch/IBC/pool sections below remain chronological
+evidence; their historical point-in-time heights and voting-power observations
+are not rewritten as current runtime authority.
 
 ## Completed
 

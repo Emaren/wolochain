@@ -540,9 +540,9 @@
       "owner": "wolochain-ops",
       "path": "mainnet-prep/STATUS.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-08-25",
+      "reviewed_at": "2026-09-09",
       "sensitivity": "restricted",
-      "sha256": "cc7e83585eccfd482ddd2f6286ef2ef5a82aadd3161a8fef5a7c6536566d4aa7",
+      "sha256": "18e57aa1bdb5d7bdaa5fbe8286937c91fa6d956addbe1940e3c052ef49e9770e",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
