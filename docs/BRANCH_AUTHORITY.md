@@ -8,14 +8,14 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "git-branch-authority-contract"
-reviewed_at: "2026-09-09"
+reviewed_at: "2026-09-22"
 review_interval_days: 14
 sensitivity: "internal"
 ---
 
 # WoloChain Branch Authority
 
-Reviewed: 2026-09-09
+Reviewed: 2026-09-22
 
 ## Current federation source
 
@@ -28,10 +28,16 @@ d5dea8d6f1a2b0b57489a5e468dd21e34246891e
 ```
 
 Do not confuse that implementation baseline with later documentation-only branch
-HEADs. At the September 9, 2026 pre-review observation, local and remote prep HEAD
-were exact at `8b2563b50d410a52c511ef7cdc3a7821e4546747`, while `origin/main`
-remained `a2fba6bfd98d7b28fb113badbadf23ec9096a4af`; current divergence was
-`2` main-only / `39` prep-only. This review did not reconcile the branches.
+HEADs. A GitHub-authority review on September 22, 2026 observed
+`wolo-1-mainnet-prep@de81f3502c9c7d8e81783afcdfa0f800af9111cd` and
+`main@a2fba6bfd98d7b28fb113badbadf23ec9096a4af`. The branches remain
+intentionally diverged at `2` main-only / `40` prep-only commits, with merge
+base `b746c22341567df373be2cbcef3843e965961f72`. This Git-only review made no
+runtime claim and did not reconcile the branches.
+
+The prior September 9 pre-review observation recorded prep HEAD
+`8b2563b50d410a52c511ef7cdc3a7821e4546747` at `2 / 39` divergence. That
+dated observation remains useful history but is not current branch identity.
 
 The repository default/main line remains separately present at:
 
