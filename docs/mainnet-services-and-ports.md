@@ -8,12 +8,32 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "runtime-evidence"
 authority: "mainnet-service-and-port-contract"
-reviewed_at: "2026-09-09"
+reviewed_at: "2026-09-22"
 review_interval_days: 14
 sensitivity: "internal"
 ---
 
 # WoloChain Mainnet Services And Ports
+
+## Review Renewal — 2026-09-22 UTC
+
+A read-only VPS context capture at `2026-09-22T04:35:41Z` reconfirmed the
+mainnet service/port contract without restarting or mutating anything.
+`wolochaind-mainnet.service` and `wolochain-mainnet-settlement.service` were
+active and running. The mainnet health check exited `0/SUCCESS` with
+`OK: wolo-1 healthy height=2061334 catching_up=False`; node logs immediately
+afterward showed committed/indexed height `2061341`.
+
+The socket snapshot reconfirmed P2P `27656`, loopback RPC `27657`, REST
+`1318`, settlement `8092`, and the separate protected `8093` listener.
+The unit inventory showed `wolochaind-testnet.service` and
+`wolochain-settlement.service` disabled, while only the mainnet node and
+mainnet settlement units were active. AoE2WAR's captured certification also
+reported `wolo8092=1` and `wolo8093=1`.
+
+This capture did not execute a fresh binary-version/Git-commit probe, so the
+September 9 binary-commit observation below remains the latest explicit evidence
+for that specific identity.
 
 This document records the verified `wolo-1` service and port contract. The
 June 4 launch shape remains historical baseline; a September 9, 2026 read-only

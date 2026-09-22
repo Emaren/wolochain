@@ -8,7 +8,7 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "chain-repository-entrypoint"
-reviewed_at: "2026-09-09"
+reviewed_at: "2026-09-22"
 review_interval_days: 14
 sensitivity: "public"
 ---
@@ -50,6 +50,22 @@ WoloChain does not own:
 - market math, pool math, refund policy, or entitlement logic
 
 ## Current Mainnet State
+
+A read-only VPS context capture at `2026-09-22T04:35:41Z` renewed the live
+operational boundary. `wolochaind-mainnet.service` and
+`wolochain-mainnet-settlement.service` were active; the health timer completed
+successfully at height `2061334` with `catching_up=false`, and the node then
+logged committed/indexed height `2061341`. The socket snapshot showed public
+P2P `27656` plus loopback RPC `27657`, REST `1318`, settlement `8092`,
+and protected listener `8093`. Settlement logs on September 21–22 recorded
+successful `wolo-1` validation/execution with the documented payout and escrow
+signers. AoE2WAR certification evidence independently reported
+`wolo8092=1` and `wolo8093=1`.
+
+This September 22 review did **not** re-prove fixed supply, bank metadata,
+historical funding balances, or the deployed binary's Git commit. Those facts
+remain tied to the dated evidence stated below rather than being silently
+promoted to a newer observation.
 
 The launch baseline below was verified on June 4, 2026. A read-only review on
 September 9, 2026 reconfirmed the canonical `wolo-1` identity, fixed supply,
