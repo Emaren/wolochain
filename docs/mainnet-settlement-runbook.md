@@ -8,7 +8,7 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "runtime-evidence"
 authority: "mainnet-settlement-operations"
-reviewed_at: "2026-09-09"
+reviewed_at: "2026-09-22"
 review_interval_days: 14
 sensitivity: "restricted"
 ---
@@ -16,6 +16,27 @@ sensitivity: "restricted"
 # WoloChain Mainnet Settlement Runbook
 
 This runbook is for `wolo-1` mainnet settlement only. Do not reuse the old testnet service, state, signer keys, or port.
+
+## Review Renewal — 2026-09-22 UTC
+
+A read-only VPS context capture at `2026-09-22T04:35:41Z` reconfirmed the
+operational settlement boundary. The node and mainnet settlement services were
+active, `127.0.0.1:8092` was listening, and the mainnet health check reported
+`wolo-1` healthy with `catching_up=false`.
+
+Settlement logs from September 21–22 contain successful validation and confirmed
+execution events for both configured signer roles. A payout-signed staking
+Treasury run used
+`wolo1zfa9ssu2gpgqg7yzvhmjt4w66mza07qr2a4rwu`; escrow-signed betting and
+staking runs used
+`wolo1zygwt232ymc4h2g52yvkntffhmd5alx2kglw7p`. The separate protected
+`8093` listener was also present, but it is not the `8092` settlement API.
+
+The capture did not expose the secret-bearing environment file, perform fresh
+bank-balance queries, or re-evaluate reserve floors. The September 9 reserve
+policy and point-in-time signer balances below therefore remain dated evidence,
+not claims re-proved by this review. No chain, keyring, balance, service, or
+settlement mutation was performed.
 
 ## Review Renewal — 2026-09-09 UTC
 
