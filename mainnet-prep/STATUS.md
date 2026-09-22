@@ -8,7 +8,7 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "runtime-evidence"
 authority: "mainnet-prep-chronological-handoff"
-reviewed_at: "2026-09-09"
+reviewed_at: "2026-09-22"
 review_interval_days: 14
 sensitivity: "restricted"
 ---
@@ -16,6 +16,25 @@ sensitivity: "restricted"
 # WoloChain wolo-1 Mainnet Prep Status
 
 Status: WoloChain mainnet is live; WOLO is bridged to Osmosis; WOLO/USDC Pool `3461` is live; post-launch metadata polish is pending.
+
+## Review Renewal — 2026-09-22 UTC
+
+A read-only VPS context capture at `2026-09-22T04:35:41Z` reconfirmed current
+mainnet liveness. The scheduled health check completed successfully with
+`OK: wolo-1 healthy height=2061334 catching_up=False`, and node logs shortly
+afterward showed committed/indexed height `2061341`.
+`wolochaind-mainnet.service` and
+`wolochain-mainnet-settlement.service` were active; P2P `27656`, RPC
+`27657`, REST `1318`, settlement `8092`, and protected `8093` were
+present. The legacy testnet node and settlement units were disabled. AoE2WAR
+certification evidence independently recorded `wolo8092=1` and
+`wolo8093=1`.
+
+This snapshot did not re-query validator voting power, consensus runtime version,
+IBC/Osmosis path state, pool state, or metadata publication. The September 9 and
+dated launch/IBC/pool sections remain the latest explicit evidence for those
+specific facts. No chain, validator, keyring, relayer, liquidity, settlement, or
+Wolo mutation was performed.
 
 ## Review Renewal — 2026-09-09 UTC
 
