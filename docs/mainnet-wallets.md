@@ -8,7 +8,7 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "runtime-evidence"
 authority: "mainnet-wallet-role-and-custody-map"
-reviewed_at: "2026-09-09"
+reviewed_at: "2026-09-22"
 review_interval_days: 14
 sensitivity: "restricted"
 ---
@@ -18,6 +18,22 @@ sensitivity: "restricted"
 This is the mainnet wallet role and custody reference. It began as launch planning, but the current address table now documents live `wolo-1` roles. Do not generate mnemonics in this repo and do not expose mnemonics in terminal output, docs, commits, screenshots, or tickets.
 
 Every mainnet key must be fresh. Testnet equivalents must not be reused.
+
+## Review Renewal — 2026-09-22 UTC
+
+A read-only VPS context capture at `2026-09-22T04:35:41Z` reconfirmed the live
+settlement signer-role boundary. The running mainnet settlement service logged a
+successful payout-role execution using
+`wolo1zfa9ssu2gpgqg7yzvhmjt4w66mza07qr2a4rwu` and repeated successful
+escrow-role executions using
+`wolo1zygwt232ymc4h2g52yvkntffhmd5alx2kglw7p`. Protected listeners
+`8092` and `8093` were present, and the chain health check reported
+`wolo-1` healthy with `catching_up=false`.
+
+This capture did not include a new total-supply query, Community Treasury bank
+query, or complete wallet-balance census. The September 9 evidence below remains
+the latest explicit proof for those specific facts. This review changed no key,
+wallet, transfer, chain, settlement, or custody state.
 
 ## Review Renewal — 2026-09-09 UTC
 
