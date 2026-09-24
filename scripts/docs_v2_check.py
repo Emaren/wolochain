@@ -77,6 +77,9 @@ CATALOG_SPECS = {
     },
 }
 DOCUMENTATION_OWNED_EXACT = {
+    # CI policy is source governance, not deployed chain implementation identity.
+    # Keep this narrow: release/build workflows remain implementation-significant.
+    ".github/workflows/ci.yml",
     "catalog-info.yaml",
     "docs/document-registry.json",
     "scripts/docs_v2_check.py",
