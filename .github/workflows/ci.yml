@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - main
+      - wolo-1-mainnet-prep
 
 permissions:
   contents: read
