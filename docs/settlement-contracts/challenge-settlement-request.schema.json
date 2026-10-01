@@ -93,7 +93,7 @@
           "$ref": "#/$defs/positive_uwolo"
         },
         "guarantee_uwolo": {
-          "$ref": "#/$defs/positive_uwolo"
+          "$ref": "#/$defs/non_negative_uwolo"
         }
       },
       "anyOf": [
@@ -168,6 +168,10 @@
     "positive_uwolo": {
       "type": "string",
       "pattern": "^[1-9][0-9]*$"
+    },
+    "non_negative_uwolo": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)$"
     },
     "wolo_address": {
       "type": "string",

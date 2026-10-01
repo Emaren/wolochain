@@ -1596,7 +1596,6 @@ func validateChallengeFundingExpectation(expectation settlementChallengeFundingE
 	for field, value := range map[string]string{
 		"expected_amount_uwolo": strings.TrimSpace(expectation.TotalFundedUWolo),
 		"wager_uwolo":           strings.TrimSpace(expectation.WagerUWolo),
-		"guarantee_uwolo":       strings.TrimSpace(expectation.GuaranteeUWolo),
 	} {
 		if value == "" {
 			continue
@@ -1604,6 +1603,11 @@ func validateChallengeFundingExpectation(expectation settlementChallengeFundingE
 		parsed, err := strconv.ParseUint(value, 10, 64)
 		if err != nil || parsed == 0 {
 			return fmt.Errorf("%s must be a positive integer", field)
+		}
+	}
+	if value := strings.TrimSpace(expectation.GuaranteeUWolo); value != "" {
+		if !isCanonicalNonNegativeInteger(value) {
+			return errors.New("guarantee_uwolo must be a canonical non-negative integer")
 		}
 	}
 	return nil
@@ -1687,11 +1691,11 @@ func parseChallengeFundingResult(transfer settlementTransfer, lookup settlementL
 		return settlementChallengeFundingResult{}, errors.New("memo is missing participant_side or participant_id")
 	}
 
-	wagerUWolo, err := parseChallengeMemoAmount("wager_uwolo", getValue("wager_uwolo", "w"))
+	wagerUWolo, err := parseChallengeMemoAmount("wager_uwolo", getValue("wager_uwolo", "w"), false)
 	if err != nil {
 		return settlementChallengeFundingResult{}, err
 	}
-	guaranteeUWolo, err := parseChallengeMemoAmount("guarantee_uwolo", getValue("guarantee_uwolo", "g"))
+	guaranteeUWolo, err := parseChallengeMemoAmount("guarantee_uwolo", getValue("guarantee_uwolo", "g"), true)
 	if err != nil {
 		return settlementChallengeFundingResult{}, err
 	}
@@ -1773,10 +1777,13 @@ func validateCanonicalAoE2HDBetsFundingMemo(values url.Values) error {
 	if side := values.Get("side"); side != "left" && side != "right" {
 		return errors.New("AoE2HDBets funding memo side must be left or right")
 	}
-	for _, key := range []string{"w", "g", "t"} {
+	for _, key := range []string{"w", "t"} {
 		if !isCanonicalPositiveInteger(values.Get(key)) {
 			return fmt.Errorf("AoE2HDBets funding memo %s must be a canonical positive uwolo integer", key)
 		}
+	}
+	if !isCanonicalNonNegativeInteger(values.Get("g")) {
+		return errors.New("AoE2HDBets funding memo g must be a canonical non-negative uwolo integer")
 	}
 	return nil
 }
@@ -1798,13 +1805,23 @@ func isCanonicalPositiveInteger(value string) bool {
 	return err == nil
 }
 
-func parseChallengeMemoAmount(fieldName, raw string) (uint64, error) {
+func isCanonicalNonNegativeInteger(value string) bool {
+	if value == "0" {
+		return true
+	}
+	return isCanonicalPositiveInteger(value)
+}
+
+func parseChallengeMemoAmount(fieldName, raw string, allowZero bool) (uint64, error) {
 	raw = strings.TrimSpace(raw)
 	if raw == "" {
 		return 0, fmt.Errorf("memo is missing %s", fieldName)
 	}
 	value, err := strconv.ParseUint(raw, 10, 64)
-	if err != nil || value == 0 {
+	if err != nil {
+		return 0, fmt.Errorf("%s must be an integer", fieldName)
+	}
+	if !allowZero && value == 0 {
 		return 0, fmt.Errorf("%s must be a positive integer", fieldName)
 	}
 	return value, nil

@@ -71,7 +71,7 @@ WoloChain verifies:
 - `app` is exactly `aoe2hdbets`
 - `cid` is a canonical positive integer and `sid` is exactly `aoe2hdbets:challenge-<cid>:v1`
 - `side` is exactly `left` or `right`
-- `w`, `g`, and `t` are positive canonical uwolo integers and `w + g = t =` the escrow transfer
+- `w` and `t` are positive canonical uwolo integers; `g` is canonical non-negative (including `g=0` for Championship V2); and `w + g = t =` the escrow transfer
 - the settlement request allocates every verified participant bucket exactly once
 - the settlement request uses the same canonical `sid` as its idempotency key and does not repeat a funding tx hash
 - executed refund/payout/treasury/top-up tx hashes reconcile with stored state

@@ -140,6 +140,7 @@ func TestCanonicalAoE2HDBetsFundingMemoProofAndRejections(t *testing.T) {
 	extraFieldTx := strings.Repeat("5", 64)
 	failedTx := strings.Repeat("6", 64)
 	wrongEscrowTx := strings.Repeat("7", 64)
+	zeroGuaranteeTx := strings.Repeat("8", 64)
 	cfg := newTestChallengeSettlementConfig(t, payoutAddress, escrowAddress, "", map[string]string{
 		payoutAddress: "5000",
 		escrowAddress: "5000",
@@ -202,6 +203,14 @@ func TestCanonicalAoE2HDBetsFundingMemoProofAndRejections(t *testing.T) {
 			Memo:        canonicalAoE2HDBetsChallengeFundingMemo("42", "left", "25000000", "10000000"),
 			Timestamp:   "2026-06-27T19:54:00Z",
 		},
+		zeroGuaranteeTx: {
+			Hash:        zeroGuaranteeTx,
+			Sender:      otherAddress,
+			Recipient:   escrowAddress,
+			AmountUWolo: "25000000",
+			Memo:        canonicalAoE2HDBetsChallengeFundingMemo("42", "right", "25000000", "0"),
+			Timestamp:   "2026-06-27T19:53:00Z",
+		},
 	}, nil)
 
 	expectation := settlementChallengeFundingExpectation{
@@ -234,6 +243,25 @@ func TestCanonicalAoE2HDBetsFundingMemoProofAndRejections(t *testing.T) {
 		proof.ParticipantSide != "left" ||
 		proof.SettlementRunID != runID {
 		t.Fatalf("canonical funding proof omitted or changed a contract field: %+v", proof)
+	}
+
+	zeroGuarantee, err := cfg.verifyChallengeFundingDeposit(t.Context(), zeroGuaranteeTx, settlementChallengeFundingExpectation{
+		Sender:           otherAddress,
+		SourceApp:        settlementAoE2HDBetsSourceApp,
+		SettlementRunID:  runID,
+		ChallengeID:      "42",
+		ParticipantSide:  "right",
+		TotalFundedUWolo: "25000000",
+		WagerUWolo:       "25000000",
+		GuaranteeUWolo:   "0",
+	})
+	if err != nil {
+		t.Fatalf("verify zero-guarantee championship funding: %v", err)
+	}
+	if !zeroGuarantee.OK || zeroGuarantee.Funding == nil ||
+		zeroGuarantee.Funding.GuaranteeUWolo != "0" ||
+		zeroGuarantee.Funding.TotalFundedUWolo != "25000000" {
+		t.Fatalf("expected canonical zero-guarantee funding proof, got %+v", zeroGuarantee)
 	}
 
 	rejections := []struct {

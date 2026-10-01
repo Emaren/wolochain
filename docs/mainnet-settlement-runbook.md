@@ -184,7 +184,7 @@ Verify with all identity filters, not just `source_app`:
 curl -sS "http://127.0.0.1:8092/settlement/v1/challenges/funding/deposits?sender=<wallet>&source_app=aoe2hdbets&settlement_run_id=aoe2hdbets:challenge-<id>:v1&challenge_id=<id>&participant_side=<left|right>"
 ```
 
-Only successful `wolo-1` transfers to the configured escrow are eligible. WoloChain binds `sid` to `cid`, limits the side to `left|right`, proves `w + g = t =` the escrow transfer, rejects duplicate funding tx hashes, and uses the same `sid` as the immutable challenge settlement idempotency key.
+Only successful `wolo-1` transfers to the configured escrow are eligible. WoloChain binds `sid` to `cid`, limits the side to `left|right`, requires positive `w` and `t`, permits canonical `g=0` for Championship V2, proves `w + g = t =` the escrow transfer, rejects duplicate funding tx hashes, and uses the same `sid` as the immutable challenge settlement idempotency key.
 
 The June 27 production proof used a deliberately unique operator challenge ID and the approved Faucet Hot Wallet as the exact sender:
 

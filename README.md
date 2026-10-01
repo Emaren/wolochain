@@ -287,7 +287,7 @@ The canonical funding memo convention is:
 wolo.challenge.funding.v1:app=aoe2hdbets&sid=aoe2hdbets:challenge-42:v1&cid=42&side=left&w=1000000&g=500000&t=1500000
 ```
 
-For canonical AoE2HDBets deposits, WoloChain requires exactly one each of `app`, `sid`, `cid`, `side`, `w`, `g`, and `t`; `app=aoe2hdbets`; a positive decimal `cid`; `sid=aoe2hdbets:challenge-<cid>:v1`; `side=left|right`; positive canonical uwolo bucket values; and `w + g = t =` the successful transfer into the configured escrow. Proof responses also expose the exact sender, canonical escrow, chain, transaction status, height, timestamp, tx hash, and normalized bucket fields.
+For canonical AoE2HDBets deposits, WoloChain requires exactly one each of `app`, `sid`, `cid`, `side`, `w`, `g`, and `t`; `app=aoe2hdbets`; a positive decimal `cid`; `sid=aoe2hdbets:challenge-<cid>:v1`; `side=left|right`; positive canonical `w` and `t`; canonical non-negative `g` (Championship V2 deliberately uses `g=0`); and `w + g = t =` the successful transfer into the configured escrow. Proof responses also expose the exact sender, canonical escrow, chain, transaction status, height, timestamp, tx hash, and normalized bucket fields.
 
 AoE2HDBets should verify funding with `GET /settlement/v1/challenges/funding/txs/{tx_hash}` or `wolochaind settlement challenge funding verify`, then submit the explicit bucket moves to `POST /settlement/v1/challenges/validate` or `wolochaind settlement challenge validate` before calling `POST /settlement/v1/challenges` or `wolochaind settlement challenge execute`.
 
