@@ -46,44 +46,48 @@ var settlementRequestIDPattern = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._:-]
 var settlementSourceEventPattern = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$`)
 
 type settlementConfig struct {
-	ExecutablePath         string
-	ExecutableInterpreter  string
-	HomeDir                string
-	KeyringBackend         string
-	KeyringDir             string
-	KeyringPassphrase      string
-	NodeAddr               string
-	RPCHTTP                string
-	RESTURL                string
-	PublicRESTURL          string
-	ChainID                string
-	BaseDenom              string
-	DisplayDenom           string
-	AddressPrefix          string
-	PayoutKeyName          string
-	PayoutAddress          string
-	EscrowKeyName          string
-	EscrowAddress          string
-	TreasuryAddress        string
-	EscrowAutoTopUp        bool
-	BroadcastMode          string
-	Gas                    string
-	GasAdjustment          string
-	GasPrices              string
-	Fees                   string
-	MinPayoutBalanceUWolo  uint64
-	FeeHeadroomUWolo       uint64
-	MinEscrowBalanceUWolo  uint64
-	EscrowFeeHeadroomUWolo uint64
-	StateDir               string
-	ListenAddr             string
-	AuthToken              string
-	RequestLockTTL         time.Duration
-	RequestTimeout         time.Duration
-	LookupTimeout          time.Duration
-	HealthTimeout          time.Duration
-	ConfirmTimeout         time.Duration
-	ConfirmInterval        time.Duration
+	ExecutablePath            string
+	ExecutableInterpreter     string
+	HomeDir                   string
+	KeyringBackend            string
+	KeyringDir                string
+	KeyringPassphrase         string
+	NodeAddr                  string
+	RPCHTTP                   string
+	RESTURL                   string
+	PublicRESTURL             string
+	ChainID                   string
+	BaseDenom                 string
+	DisplayDenom              string
+	AddressPrefix             string
+	PayoutKeyName             string
+	PayoutAddress             string
+	EscrowKeyName             string
+	EscrowAddress             string
+	BetCustodyKeyName         string
+	BetCustodyAddress         string
+	BetCustodyStateDir        string
+	BetCustodyMaxBalanceUWolo uint64
+	TreasuryAddress           string
+	EscrowAutoTopUp           bool
+	BroadcastMode             string
+	Gas                       string
+	GasAdjustment             string
+	GasPrices                 string
+	Fees                      string
+	MinPayoutBalanceUWolo     uint64
+	FeeHeadroomUWolo          uint64
+	MinEscrowBalanceUWolo     uint64
+	EscrowFeeHeadroomUWolo    uint64
+	StateDir                  string
+	ListenAddr                string
+	AuthToken                 string
+	RequestLockTTL            time.Duration
+	RequestTimeout            time.Duration
+	LookupTimeout             time.Duration
+	HealthTimeout             time.Duration
+	ConfirmTimeout            time.Duration
+	ConfirmInterval           time.Duration
 }
 
 func (cfg settlementConfig) executableCommand(args []string) (string, []string) {
@@ -1508,6 +1512,8 @@ func (cfg settlementConfig) newSettlementHTTPHandler() http.Handler {
 		}
 	})
 
+	cfg.registerBetCustodyHTTPHandlers(mux)
+
 	mux.HandleFunc("/settlement/v1/txs/", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			writeJSONResponse(w, http.StatusMethodNotAllowed, map[string]string{"detail": "method not allowed"})
@@ -1572,51 +1578,65 @@ func loadSettlementConfig() (settlementConfig, error) {
 	if err != nil {
 		return settlementConfig{}, err
 	}
+	betCustodyMaxBalanceUWolo, err := parseOptionalUWoloEnv("WOLO_SETTLEMENT_BET_CUSTODY_MAX_BALANCE_UWOLO")
+	if err != nil {
+		return settlementConfig{}, err
+	}
+	if betCustodyMaxBalanceUWolo == 0 {
+		betCustodyMaxBalanceUWolo = betCustodyDefaultMaxCreditedBalanceUWolo
+	}
 	keyringPassphrase, err := readSettlementSecretFile(os.Getenv("WOLO_SETTLEMENT_KEYRING_PASSPHRASE_FILE"))
 	if err != nil {
 		return settlementConfig{}, err
 	}
 
 	cfg := settlementConfig{
-		ExecutablePath:         executablePath,
-		HomeDir:                homeDir,
-		KeyringBackend:         getenvDefault("WOLO_SETTLEMENT_KEYRING_BACKEND", "os"),
-		KeyringDir:             expandHome(os.Getenv("WOLO_SETTLEMENT_KEYRING_DIR")),
-		KeyringPassphrase:      keyringPassphrase,
-		NodeAddr:               getenvDefault("WOLO_SETTLEMENT_NODE", settlementDefaultNode),
-		RPCHTTP:                rpcHTTP,
-		RESTURL:                restURL,
-		PublicRESTURL:          publicRESTURL,
-		ChainID:                getenvDefault("WOLO_SETTLEMENT_CHAIN_ID", settlementCanonicalChainID),
-		BaseDenom:              getenvDefault("WOLO_SETTLEMENT_BASE_DENOM", settlementCanonicalBaseDenom),
-		DisplayDenom:           getenvDefault("WOLO_SETTLEMENT_DISPLAY_DENOM", settlementCanonicalDisplayDenom),
-		AddressPrefix:          getenvDefault("WOLO_SETTLEMENT_ADDRESS_PREFIX", settlementCanonicalPrefix),
-		PayoutKeyName:          strings.TrimSpace(os.Getenv("WOLO_SETTLEMENT_PAYOUT_KEY_NAME")),
-		PayoutAddress:          strings.TrimSpace(os.Getenv("WOLO_SETTLEMENT_PAYOUT_ADDRESS")),
-		EscrowKeyName:          strings.TrimSpace(getenvDefault("WOLO_SETTLEMENT_ESCROW_KEY_NAME", settlementDefaultEscrowKeyName)),
-		EscrowAddress:          strings.TrimSpace(getenvFirst("WOLO_SETTLEMENT_ESCROW_ADDRESS", "WOLO_BET_ESCROW_ADDRESS")),
-		TreasuryAddress:        strings.TrimSpace(os.Getenv("WOLO_SETTLEMENT_TREASURY_ADDRESS")),
-		EscrowAutoTopUp:        parseBoolEnv("WOLO_SETTLEMENT_ESCROW_AUTO_TOP_UP_ENABLED"),
-		BroadcastMode:          getenvDefault("WOLO_SETTLEMENT_BROADCAST_MODE", "sync"),
-		Gas:                    getenvDefault("WOLO_SETTLEMENT_GAS", "auto"),
-		GasAdjustment:          getenvDefault("WOLO_SETTLEMENT_GAS_ADJUSTMENT", "1.5"),
-		GasPrices:              getenvDefault("WOLO_SETTLEMENT_GAS_PRICES", settlementDefaultGasPrices),
-		Fees:                   strings.TrimSpace(os.Getenv("WOLO_SETTLEMENT_FEES")),
-		MinPayoutBalanceUWolo:  minPayoutBalanceUWolo,
-		FeeHeadroomUWolo:       feeHeadroomUWolo,
-		MinEscrowBalanceUWolo:  minEscrowBalanceUWolo,
-		EscrowFeeHeadroomUWolo: escrowFeeHeadroomUWolo,
-		ListenAddr:             getenvDefault("WOLO_SETTLEMENT_LISTEN_ADDR", settlementDefaultListenAddr),
-		AuthToken:              strings.TrimSpace(os.Getenv("WOLO_SETTLEMENT_AUTH_TOKEN")),
-		RequestLockTTL:         2 * time.Minute,
-		RequestTimeout:         30 * time.Second,
-		LookupTimeout:          10 * time.Second,
-		HealthTimeout:          5 * time.Second,
-		ConfirmTimeout:         12 * time.Second,
-		ConfirmInterval:        250 * time.Millisecond,
+		ExecutablePath:            executablePath,
+		HomeDir:                   homeDir,
+		KeyringBackend:            getenvDefault("WOLO_SETTLEMENT_KEYRING_BACKEND", "os"),
+		KeyringDir:                expandHome(os.Getenv("WOLO_SETTLEMENT_KEYRING_DIR")),
+		KeyringPassphrase:         keyringPassphrase,
+		NodeAddr:                  getenvDefault("WOLO_SETTLEMENT_NODE", settlementDefaultNode),
+		RPCHTTP:                   rpcHTTP,
+		RESTURL:                   restURL,
+		PublicRESTURL:             publicRESTURL,
+		ChainID:                   getenvDefault("WOLO_SETTLEMENT_CHAIN_ID", settlementCanonicalChainID),
+		BaseDenom:                 getenvDefault("WOLO_SETTLEMENT_BASE_DENOM", settlementCanonicalBaseDenom),
+		DisplayDenom:              getenvDefault("WOLO_SETTLEMENT_DISPLAY_DENOM", settlementCanonicalDisplayDenom),
+		AddressPrefix:             getenvDefault("WOLO_SETTLEMENT_ADDRESS_PREFIX", settlementCanonicalPrefix),
+		PayoutKeyName:             strings.TrimSpace(os.Getenv("WOLO_SETTLEMENT_PAYOUT_KEY_NAME")),
+		PayoutAddress:             strings.TrimSpace(os.Getenv("WOLO_SETTLEMENT_PAYOUT_ADDRESS")),
+		EscrowKeyName:             strings.TrimSpace(getenvDefault("WOLO_SETTLEMENT_ESCROW_KEY_NAME", settlementDefaultEscrowKeyName)),
+		EscrowAddress:             strings.TrimSpace(getenvFirst("WOLO_SETTLEMENT_ESCROW_ADDRESS", "WOLO_BET_ESCROW_ADDRESS")),
+		BetCustodyKeyName:         strings.TrimSpace(os.Getenv("WOLO_SETTLEMENT_BET_CUSTODY_KEY_NAME")),
+		BetCustodyAddress:         strings.TrimSpace(os.Getenv("WOLO_SETTLEMENT_BET_CUSTODY_ADDRESS")),
+		BetCustodyMaxBalanceUWolo: betCustodyMaxBalanceUWolo,
+		TreasuryAddress:           strings.TrimSpace(os.Getenv("WOLO_SETTLEMENT_TREASURY_ADDRESS")),
+		EscrowAutoTopUp:           parseBoolEnv("WOLO_SETTLEMENT_ESCROW_AUTO_TOP_UP_ENABLED"),
+		BroadcastMode:             getenvDefault("WOLO_SETTLEMENT_BROADCAST_MODE", "sync"),
+		Gas:                       getenvDefault("WOLO_SETTLEMENT_GAS", "auto"),
+		GasAdjustment:             getenvDefault("WOLO_SETTLEMENT_GAS_ADJUSTMENT", "1.5"),
+		GasPrices:                 getenvDefault("WOLO_SETTLEMENT_GAS_PRICES", settlementDefaultGasPrices),
+		Fees:                      strings.TrimSpace(os.Getenv("WOLO_SETTLEMENT_FEES")),
+		MinPayoutBalanceUWolo:     minPayoutBalanceUWolo,
+		FeeHeadroomUWolo:          feeHeadroomUWolo,
+		MinEscrowBalanceUWolo:     minEscrowBalanceUWolo,
+		EscrowFeeHeadroomUWolo:    escrowFeeHeadroomUWolo,
+		ListenAddr:                getenvDefault("WOLO_SETTLEMENT_LISTEN_ADDR", settlementDefaultListenAddr),
+		AuthToken:                 strings.TrimSpace(os.Getenv("WOLO_SETTLEMENT_AUTH_TOKEN")),
+		RequestLockTTL:            2 * time.Minute,
+		RequestTimeout:            30 * time.Second,
+		LookupTimeout:             10 * time.Second,
+		HealthTimeout:             5 * time.Second,
+		ConfirmTimeout:            12 * time.Second,
+		ConfirmInterval:           250 * time.Millisecond,
 	}
 
 	cfg.StateDir = expandHome(getenvDefault("WOLO_SETTLEMENT_STATE_DIR", filepath.Join(cfg.HomeDir, "settlement")))
+	cfg.BetCustodyStateDir = expandHome(getenvDefault(
+		"WOLO_SETTLEMENT_BET_CUSTODY_STATE_DIR",
+		filepath.Join(cfg.StateDir, "bet-custody"),
+	))
 
 	if cfg.BaseDenom != settlementCanonicalBaseDenom ||
 		cfg.DisplayDenom != settlementCanonicalDisplayDenom ||
