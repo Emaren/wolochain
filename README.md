@@ -8,7 +8,7 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "chain-repository-entrypoint"
-reviewed_at: "2026-09-22"
+reviewed_at: "2026-10-07"
 review_interval_days: 14
 sensitivity: "public"
 ---

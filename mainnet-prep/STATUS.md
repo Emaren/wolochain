@@ -8,12 +8,27 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "runtime-evidence"
 authority: "mainnet-prep-chronological-handoff"
-reviewed_at: "2026-09-22"
+reviewed_at: "2026-10-07"
 review_interval_days: 14
 sensitivity: "restricted"
 ---
 
 # WoloChain wolo-1 Mainnet Prep Status
+
+
+## Review Renewal — 2026-10-07 UTC
+
+A bounded read-only review against the October 6 VPS context reconfirmed the
+live `wolo-1` operating boundary. The scheduled mainnet health check completed
+successfully at height `2313501` with `catching_up=False`; the mainnet node and
+mainnet settlement service were active, and recent settlement validation /
+execution evidence remained bound to chain `wolo-1`.
+
+This documentation renewal performs no chain, validator, keyring, wallet,
+transfer, relayer, liquidity, settlement, or Wolo mutation. It does not
+silently re-prove total supply, every wallet balance, validator voting power,
+IBC/Osmosis state, pool state, or other dated historical claims; those remain
+bound to their explicitly dated evidence below.
 
 Status: WoloChain mainnet is live; WOLO is bridged to Osmosis; WOLO/USDC Pool `3461` is live; post-launch metadata polish is pending.
 
