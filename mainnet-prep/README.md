@@ -8,12 +8,18 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "mainnet-prep-artifact-index"
-reviewed_at: "2026-08-10"
+reviewed_at: "2026-10-10"
 review_interval_days: 60
 sensitivity: "internal"
 ---
 
 # WoloChain wolo-1 Prep Templates
+
+## Review Scope — 2026-10-10 UTC
+
+Reviewed as a source preparation index. Referenced templates and runtime configuration were not independently revalidated.
+
+No runtime, wallet, liquidity, settlement, or chain mutation was performed during this documentation review.
 
 This directory contains launch artifacts and current templates. Nothing here launches services, creates keys, edits nginx, creates IBC channels, or creates Osmosis liquidity by itself.
 

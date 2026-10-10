@@ -8,12 +8,18 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "machine-readable-settlement-contract-index"
-reviewed_at: "2026-09-09"
+reviewed_at: "2026-10-10"
 review_interval_days: 30
 sensitivity: "public"
 ---
 
 # Settlement Contracts
+
+## Review Scope — 2026-10-10 UTC
+
+Source contract boundaries reviewed. Live settlement signers, balances and execution endpoints were not independently reverified.
+
+No runtime, wallet, liquidity, settlement, or chain mutation was performed during this documentation review.
 
 ## Review Renewal — 2026-09-09 UTC
 

@@ -8,12 +8,18 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "runtime-evidence"
 authority: "ibc-relayer-operating-reference"
-reviewed_at: "2026-09-09"
+reviewed_at: "2026-10-10"
 review_interval_days: 30
 sensitivity: "restricted"
 ---
 
 # WoloChain Mainnet Osmosis Hermes Relayer Staging
+
+## Review Scope — 2026-10-10 UTC
+
+Public IBC channel state reconfirmed. Hermes service health and local relayer configuration were not independently inspected.
+
+No runtime, wallet, liquidity, settlement, or chain mutation was performed during this documentation review.
 
 Status: the staged Hermes configuration remains the operating reference and the
 `wolo-1` ↔ `osmosis-1` ICS-20 path is live. Later authorized phases already

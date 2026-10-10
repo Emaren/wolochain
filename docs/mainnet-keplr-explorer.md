@@ -8,12 +8,18 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "runtime-evidence"
 authority: "mainnet-wallet-registry-metadata"
-reviewed_at: "2026-09-09"
+reviewed_at: "2026-10-10"
 review_interval_days: 30
 sensitivity: "public"
 ---
 
 # WoloChain Mainnet Keplr And Explorer Metadata
+
+## Review Scope — 2026-10-10 UTC
+
+Mainnet identity and WOLO denomination metadata reconfirmed. Explorer availability, supply and historical transaction lookup were not reverified.
+
+No runtime, wallet, liquidity, settlement, or chain mutation was performed during this documentation review.
 
 ## Review Renewal — 2026-09-09 UTC
 

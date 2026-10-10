@@ -8,12 +8,18 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "runtime-evidence"
 authority: "live-osmosis-pool-receipt"
-reviewed_at: "2026-09-09"
+reviewed_at: "2026-10-10"
 review_interval_days: 30
 sensitivity: "public"
 ---
 
 # WOLO/USDC Osmosis Pool
+
+## Review Scope — 2026-10-10 UTC
+
+Pool 3461, 0.2 percent fee and both IBC asset denoms reconfirmed. Launch balances are historical; current reserves were not measured.
+
+No runtime, wallet, liquidity, settlement, or chain mutation was performed during this documentation review.
 
 Status: live. The launch amounts below are historical creation receipts, not
 fixed current reserves.

@@ -8,12 +8,18 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "runtime-evidence"
 authority: "mainnet-nginx-routing-reference"
-reviewed_at: "2026-09-09"
+reviewed_at: "2026-10-10"
 review_interval_days: 30
 sensitivity: "internal"
 ---
 
 # WoloChain Mainnet Nginx Notes
+
+## Review Scope — 2026-10-10 UTC
+
+Public RPC/REST identity and CORS reconfirmed. Internal proxy target configuration was not independently inspected.
+
+No runtime, wallet, liquidity, settlement, or chain mutation was performed during this documentation review.
 
 ## Review Renewal — 2026-09-09 UTC
 

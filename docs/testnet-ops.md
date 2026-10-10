@@ -8,12 +8,18 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "runtime-evidence"
 authority: "legacy-testnet-operations"
-reviewed_at: "2026-08-10"
+reviewed_at: "2026-10-10"
 review_interval_days: 60
 sensitivity: "restricted"
 ---
 
 # WoloChain Testnet Ops
+
+## Review Scope — 2026-10-10 UTC
+
+Reviewed as a legacy testnet operating reference. Current testnet services and credentials were not independently verified.
+
+No runtime, wallet, liquidity, settlement, or chain mutation was performed during this documentation review.
 
 Verified against the live VPS on May 24, 2026.
 

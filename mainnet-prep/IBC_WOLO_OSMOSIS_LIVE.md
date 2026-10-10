@@ -8,12 +8,18 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "runtime-evidence"
 authority: "live-ibc-path-receipt"
-reviewed_at: "2026-09-09"
+reviewed_at: "2026-10-10"
 review_interval_days: 30
 sensitivity: "internal"
 ---
 
 # WoloChain Mainnet Osmosis IBC Path Live
+
+## Review Scope — 2026-10-10 UTC
+
+Public channel-0 is STATE_OPEN, counterparty channel-110224, version ics20-1. Relayer process health was not checked.
+
+No runtime, wallet, liquidity, settlement, or chain mutation was performed during this documentation review.
 
 Status: the `wolo-1` to `osmosis-1` ICS-20 path remains open and has since been
 used by the separately authorized test transfer and liquidity launch that created

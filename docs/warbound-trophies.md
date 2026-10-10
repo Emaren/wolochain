@@ -8,12 +8,18 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "undeployed-warbound-module-design"
-reviewed_at: "2026-09-09"
+reviewed_at: "2026-10-10"
 review_interval_days: 30
 sensitivity: "internal"
 ---
 
 # AoE2WAR Warbound Trophies
+
+## Review Scope — 2026-10-10 UTC
+
+Draft architecture reviewed. No live Warbound module activation was verified; this remains a draft.
+
+No runtime, wallet, liquidity, settlement, or chain mutation was performed during this documentation review.
 
 Status: the Warbound implementation and AutoCLI query surface are compiled into
 the currently running mainnet binary at implementation commit
