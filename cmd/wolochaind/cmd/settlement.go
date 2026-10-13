@@ -2933,12 +2933,31 @@ func (cfg settlementConfig) verifyEscrowDeposit(ctx context.Context, txHash, exp
 	}
 
 	response.DepositFound = true
-	if lookup.MatchedExpected {
+	// Generic lookup permits every bank denomination. A foreign-coin transfer
+	// must never prove the requested uwolo amount just because another uwolo
+	// transfer in the same tx makes its overall kind an escrow deposit.
+	for _, transfer := range lookup.Transfers {
+		if !strings.EqualFold(transfer.Recipient, cfg.EscrowAddress) || transfer.Denom != cfg.BaseDenom {
+			continue
+		}
+		if expectedSender != "" && !strings.EqualFold(transfer.Sender, expectedSender) {
+			continue
+		}
+		if expectedAmountUWolo != "" && transfer.Amount != expectedAmountUWolo {
+			continue
+		}
+		match := transfer
+		lookup.MatchedTransfer = &match
+		lookup.MatchedExpected = true
+		response.Lookup = &lookup
 		response.OK = true
 		response.Detail = "tx delivered a WOLO transfer into the configured escrow address"
 		return response, nil
 	}
-
+	// A generic foreign-denom match is not valid WOLO proof.
+	lookup.MatchedExpected = false
+	lookup.MatchedTransfer = nil
+	response.Lookup = &lookup
 	response.FailureCode = "ESCROW_DEPOSIT_MISMATCH"
 	response.Detail = "tx reached the configured escrow address but did not match the expected sender and/or amount"
 	return response, nil
