@@ -596,6 +596,62 @@ func TestVerifyEscrowDepositAndHTTPRoute(t *testing.T) {
 	}
 }
 
+func TestVerifyEscrowDepositRejectsFailedTransaction(t *testing.T) {
+	t.Parallel()
+
+	const payoutAddress = "wolo1payoutaddress000000000000000000000000000"
+	const escrowAddress = "wolo1escrow000000000000000000000000000000000"
+	const depositorAddress = "wolo1sender000000000000000000000000000000000"
+	txHash := strings.Repeat("F", 64)
+
+	// Even a matching transfer event from a failed tx is never spendable funds.
+	cfg := newTestSettlementConfigWithTxs(
+		t,
+		payoutAddress,
+		map[string]string{payoutAddress: "5000"},
+		map[string]mockSettlementTx{
+			txHash: {
+				Hash:        txHash,
+				Sender:      depositorAddress,
+				Recipient:   escrowAddress,
+				AmountUWolo: "700",
+				Memo:        "failed escrow transfer",
+				Code:        5,
+				Codespace:   "bank",
+				RawLog:      "insufficient funds",
+				Timestamp:   "2026-04-08T00:00:03Z",
+			},
+		},
+		nil,
+	)
+	cfg.EscrowAddress = escrowAddress
+
+	response, err := cfg.verifyEscrowDeposit(t.Context(), txHash, depositorAddress, "700")
+	if err != nil {
+		t.Fatalf("verify failed escrow deposit: %v", err)
+	}
+	if response.OK || response.DepositFound || response.FailureCode != "TX_EXECUTION_FAILED" {
+		t.Fatalf("failed transaction must never be certified as escrow-funded: %+v", response)
+	}
+	if response.Lookup == nil || response.Lookup.TxSuccess || response.Lookup.Code != 5 || !response.Lookup.MatchedExpected {
+		t.Fatalf("negative control must be a matched transfer event inside a failed tx: %+v", response.Lookup)
+	}
+
+	request := httptest.NewRequest(http.MethodGet, "/settlement/v1/escrow/txs/"+txHash+"?expected_sender="+depositorAddress+"&expected_amount_uwolo=700", nil)
+	recorder := httptest.NewRecorder()
+	cfg.newSettlementHTTPHandler().ServeHTTP(recorder, request)
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("expected structured refusal response, got %d: %s", recorder.Code, recorder.Body.String())
+	}
+	var httpResponse settlementEscrowVerifyResponse
+	if err := json.Unmarshal(recorder.Body.Bytes(), &httpResponse); err != nil {
+		t.Fatalf("decode escrow verifier response: %v", err)
+	}
+	if httpResponse.OK || httpResponse.DepositFound || httpResponse.FailureCode != "TX_EXECUTION_FAILED" {
+		t.Fatalf("HTTP verification must reject matched events from failed transactions: %+v", httpResponse)
+	}
+}
+
 func TestListRecentEscrowDepositsAndHTTPRoute(t *testing.T) {
 	t.Parallel()
 
