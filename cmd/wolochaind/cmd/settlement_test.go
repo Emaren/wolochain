@@ -640,8 +640,8 @@ func TestVerifyEscrowDepositRejectsFailedTransaction(t *testing.T) {
 	request := httptest.NewRequest(http.MethodGet, "/settlement/v1/escrow/txs/"+txHash+"?expected_sender="+depositorAddress+"&expected_amount_uwolo=700", nil)
 	recorder := httptest.NewRecorder()
 	cfg.newSettlementHTTPHandler().ServeHTTP(recorder, request)
-	if recorder.Code != http.StatusOK {
-		t.Fatalf("expected structured refusal response, got %d: %s", recorder.Code, recorder.Body.String())
+	if recorder.Code != http.StatusConflict {
+		t.Fatalf("expected HTTP 409 with a structured custody refusal, got %d: %s", recorder.Code, recorder.Body.String())
 	}
 	var httpResponse settlementEscrowVerifyResponse
 	if err := json.Unmarshal(recorder.Body.Bytes(), &httpResponse); err != nil {
