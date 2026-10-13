@@ -652,6 +652,34 @@ func TestVerifyEscrowDepositRejectsFailedTransaction(t *testing.T) {
 	}
 }
 
+func TestVerifyEscrowDepositRequiresMatchedUwoloDenom(t *testing.T) {
+	t.Parallel()
+	const payout = "wolo1payoutaddress000000000000000000000000000"
+	const escrow = "wolo1escrow000000000000000000000000000000000"
+	const sender = "wolo1sender000000000000000000000000000000000"
+	badHash := strings.Repeat("1", 64)
+	goodHash := strings.Repeat("2", 64)
+	cfg := newTestSettlementConfigWithTxs(t, payout, map[string]string{payout: "5000"}, map[string]mockSettlementTx{
+		badHash: {Hash: badHash, Sender: sender, Recipient: escrow, AmountUWolo: "700", TransferCoins: "700ufake,1uwolo"},
+		goodHash: {Hash: goodHash, Sender: sender, Recipient: escrow, AmountUWolo: "700", TransferCoins: "700ufake,700uwolo"},
+	}, nil)
+	cfg.EscrowAddress = escrow
+
+	bad, err := cfg.verifyEscrowDeposit(t.Context(), badHash, sender, "700")
+	if err != nil { t.Fatal(err) }
+	if bad.OK || !bad.DepositFound || bad.FailureCode != "ESCROW_DEPOSIT_MISMATCH" ||
+		bad.Lookup == nil || bad.Lookup.MatchedExpected || bad.Lookup.MatchedTransfer != nil {
+		t.Fatalf("foreign-denom 700 cannot be credited as uwolo when only 1uwolo was transferred: %+v", bad)
+	}
+	good, err := cfg.verifyEscrowDeposit(t.Context(), goodHash, sender, "700")
+	if err != nil { t.Fatal(err) }
+	if !good.OK || !good.DepositFound || good.Lookup == nil || !good.Lookup.MatchedExpected ||
+		good.Lookup.MatchedTransfer == nil || good.Lookup.MatchedTransfer.Denom != "uwolo" ||
+		good.Lookup.MatchedTransfer.Amount != "700" {
+		t.Fatalf("genuine uwolo match must be used despite foreign-denom decoy: %+v", good)
+	}
+}
+
 func TestListRecentEscrowDepositsAndHTTPRoute(t *testing.T) {
 	t.Parallel()
 
@@ -1611,6 +1639,7 @@ type mockSettlementTx struct {
 	Sender      string
 	Recipient   string
 	AmountUWolo string
+	TransferCoins string
 	Memo        string
 	Code        uint32
 	Codespace   string
@@ -1765,7 +1794,7 @@ func newMockSettlementChainHandlerWithTxs(balances map[string]string, txs map[st
 						"attributes": []map[string]string{
 							{"key": "sender", "value": hit.tx.Sender},
 							{"key": "recipient", "value": hit.tx.Recipient},
-							{"key": "amount", "value": hit.tx.AmountUWolo + settlementCanonicalBaseDenom},
+							{"key": "amount", "value": firstNonEmpty(hit.tx.TransferCoins, hit.tx.AmountUWolo + settlementCanonicalBaseDenom)},
 						},
 					},
 				},
@@ -1809,7 +1838,7 @@ func newMockSettlementChainHandlerWithTxs(balances map[string]string, txs map[st
 						"attributes": []map[string]string{
 							{"key": "sender", "value": tx.Sender},
 							{"key": "recipient", "value": tx.Recipient},
-							{"key": "amount", "value": tx.AmountUWolo + settlementCanonicalBaseDenom},
+							{"key": "amount", "value": firstNonEmpty(tx.TransferCoins, tx.AmountUWolo + settlementCanonicalBaseDenom)},
 						},
 					},
 				},
