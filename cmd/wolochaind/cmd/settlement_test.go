@@ -680,6 +680,54 @@ func TestVerifyEscrowDepositRequiresMatchedUwoloDenom(t *testing.T) {
 	}
 }
 
+func TestVerifyEscrowDepositUniqueTransferOrdinal(t *testing.T) {
+	t.Parallel()
+	const payout = "wolo1payoutaddress000000000000000000000000000"
+	const escrow = "wolo1escrow000000000000000000000000000000000"
+	const sender = "wolo1sender000000000000000000000000000000000"
+	oneHash := strings.Repeat("3", 64)
+	ambiguousHash := strings.Repeat("4", 64)
+	cfg := newTestSettlementConfigWithTxs(t, payout, map[string]string{payout: "5000"}, map[string]mockSettlementTx{
+		oneHash: {
+			Hash: oneHash, Sender: sender, Recipient: escrow,
+			AmountUWolo: "700", TransferCoins: "700ufake,700uwolo",
+		},
+		ambiguousHash: {
+			Hash: ambiguousHash, Sender: sender, Recipient: escrow,
+			AmountUWolo: "700", TransferCoins: "700uwolo,700uwolo",
+		},
+	}, nil)
+	cfg.EscrowAddress = escrow
+
+	unique, err := cfg.verifyEscrowDeposit(t.Context(), oneHash, sender, "700")
+	if err != nil { t.Fatal(err) }
+	if !unique.OK || unique.Lookup == nil || unique.Lookup.MatchingTransferCount != 1 ||
+		unique.Lookup.MatchedTransferIndex == nil || *unique.Lookup.MatchedTransferIndex != 1 ||
+		unique.Lookup.MatchedTransfer == nil || unique.Lookup.MatchedTransfer.Denom != "uwolo" {
+		t.Fatalf("only the exact WOLO transfer index 1 is a single-match receipt: %+v", unique)
+	}
+
+	ambiguous, err := cfg.verifyEscrowDeposit(t.Context(), ambiguousHash, sender, "700")
+	if err != nil { t.Fatal(err) }
+	if !ambiguous.OK || ambiguous.Lookup == nil || ambiguous.Lookup.MatchingTransferCount != 2 ||
+		ambiguous.Lookup.MatchedTransferIndex != nil {
+		t.Fatalf("two identical transfers must not expose a unique creditable index: %+v", ambiguous)
+	}
+
+	handler := cfg.newSettlementHTTPHandler()
+	request := httptest.NewRequest(http.MethodGet, "/settlement/v1/escrow/txs/"+oneHash+
+		"?expected_sender="+sender+"&expected_amount_uwolo=700", nil)
+	recorder := httptest.NewRecorder()
+	handler.ServeHTTP(recorder, request)
+	if recorder.Code != http.StatusOK { t.Fatalf("verification route: %d %s", recorder.Code, recorder.Body.String()) }
+	var decoded settlementEscrowVerifyResponse
+	if err := json.Unmarshal(recorder.Body.Bytes(), &decoded); err != nil { t.Fatal(err) }
+	if decoded.Lookup == nil || decoded.Lookup.MatchedTransferIndex == nil ||
+		*decoded.Lookup.MatchedTransferIndex != 1 || decoded.Lookup.MatchingTransferCount != 1 {
+		t.Fatalf("HTTP response lost immutable transfer ordinal: %+v", decoded)
+	}
+}
+
 func TestListRecentEscrowDepositsAndHTTPRoute(t *testing.T) {
 	t.Parallel()
 
