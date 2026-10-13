@@ -2919,6 +2919,13 @@ func (cfg settlementConfig) verifyEscrowDeposit(ctx context.Context, txHash, exp
 		response.Detail = "tx hash not found on WoloChain REST"
 		return response, nil
 	}
+	// A failed transaction may still carry attempted transfer events. Event
+	// matching is not bank custody: never certify a nonzero execution code.
+	if !lookup.TxSuccess || lookup.Code != 0 {
+		response.FailureCode = "TX_EXECUTION_FAILED"
+		response.Detail = "tx execution failed; transfer events are not escrow deposit proof"
+		return response, nil
+	}
 	if lookup.Kind != "escrow_deposit" {
 		response.FailureCode = "NOT_ESCROW_DEPOSIT"
 		response.Detail = "tx did not deliver a WOLO transfer into the configured escrow address"
