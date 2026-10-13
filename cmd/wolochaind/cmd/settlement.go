@@ -325,6 +325,10 @@ type settlementLookupResponse struct {
 	Transfers                  []settlementTransfer `json:"transfers,omitempty"`
 	MatchedExpected            bool                 `json:"matched_expected"`
 	MatchedTransfer            *settlementTransfer  `json:"matched_transfer,omitempty"`
+	// A unique ordinal in the canonical flattened transfer-event list. Nil for
+	// zero or multiple matching transfers; neither case is Satchel credit proof.
+	MatchedTransferIndex       *int                 `json:"matched_transfer_index,omitempty"`
+	MatchingTransferCount      int                  `json:"matching_transfer_count"`
 }
 
 type settlementEscrowVerifyResponse struct {
@@ -2919,6 +2923,13 @@ func (cfg settlementConfig) verifyEscrowDeposit(ctx context.Context, txHash, exp
 		response.Detail = "tx hash not found on WoloChain REST"
 		return response, nil
 	}
+	// A failed transaction may still carry attempted transfer events. Event
+	// matching is not bank custody: never certify a nonzero execution code.
+	if !lookup.TxSuccess || lookup.Code != 0 {
+		response.FailureCode = "TX_EXECUTION_FAILED"
+		response.Detail = "tx execution failed; transfer events are not escrow deposit proof"
+		return response, nil
+	}
 	if lookup.Kind != "escrow_deposit" {
 		response.FailureCode = "NOT_ESCROW_DEPOSIT"
 		response.Detail = "tx did not deliver a WOLO transfer into the configured escrow address"
@@ -2926,12 +2937,42 @@ func (cfg settlementConfig) verifyEscrowDeposit(ctx context.Context, txHash, exp
 	}
 
 	response.DepositFound = true
-	if lookup.MatchedExpected {
+	// Generic lookup permits every bank denomination. A foreign-coin transfer
+	// must never prove the requested uwolo amount just because another uwolo
+	// transfer in the same tx makes its overall kind an escrow deposit.
+	for transferIndex, transfer := range lookup.Transfers {
+		if !strings.EqualFold(transfer.Recipient, cfg.EscrowAddress) || transfer.Denom != cfg.BaseDenom {
+			continue
+		}
+		if expectedSender != "" && !strings.EqualFold(transfer.Sender, expectedSender) {
+			continue
+		}
+		if expectedAmountUWolo != "" && transfer.Amount != expectedAmountUWolo {
+			continue
+		}
+		lookup.MatchingTransferCount++
+		if lookup.MatchingTransferCount == 1 {
+			match := transfer
+			index := transferIndex
+			lookup.MatchedTransfer = &match
+			lookup.MatchedTransferIndex = &index
+		} else {
+			// Keep existing manual verification behavior but never present an
+			// ambiguous ordinal as one creditable Satchel transfer receipt.
+			lookup.MatchedTransferIndex = nil
+		}
+	}
+	if lookup.MatchingTransferCount > 0 {
+		lookup.MatchedExpected = true
+		response.Lookup = &lookup
 		response.OK = true
 		response.Detail = "tx delivered a WOLO transfer into the configured escrow address"
 		return response, nil
 	}
-
+	// A generic foreign-denom match is not valid WOLO proof.
+	lookup.MatchedExpected = false
+	lookup.MatchedTransfer = nil
+	response.Lookup = &lookup
 	response.FailureCode = "ESCROW_DEPOSIT_MISMATCH"
 	response.Detail = "tx reached the configured escrow address but did not match the expected sender and/or amount"
 	return response, nil

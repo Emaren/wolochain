@@ -596,6 +596,138 @@ func TestVerifyEscrowDepositAndHTTPRoute(t *testing.T) {
 	}
 }
 
+func TestVerifyEscrowDepositRejectsFailedTransaction(t *testing.T) {
+	t.Parallel()
+
+	const payoutAddress = "wolo1payoutaddress000000000000000000000000000"
+	const escrowAddress = "wolo1escrow000000000000000000000000000000000"
+	const depositorAddress = "wolo1sender000000000000000000000000000000000"
+	txHash := strings.Repeat("F", 64)
+
+	// Even a matching transfer event from a failed tx is never spendable funds.
+	cfg := newTestSettlementConfigWithTxs(
+		t,
+		payoutAddress,
+		map[string]string{payoutAddress: "5000"},
+		map[string]mockSettlementTx{
+			txHash: {
+				Hash:        txHash,
+				Sender:      depositorAddress,
+				Recipient:   escrowAddress,
+				AmountUWolo: "700",
+				Memo:        "failed escrow transfer",
+				Code:        5,
+				Codespace:   "bank",
+				RawLog:      "insufficient funds",
+				Timestamp:   "2026-04-08T00:00:03Z",
+			},
+		},
+		nil,
+	)
+	cfg.EscrowAddress = escrowAddress
+
+	response, err := cfg.verifyEscrowDeposit(t.Context(), txHash, depositorAddress, "700")
+	if err != nil {
+		t.Fatalf("verify failed escrow deposit: %v", err)
+	}
+	if response.OK || response.DepositFound || response.FailureCode != "TX_EXECUTION_FAILED" {
+		t.Fatalf("failed transaction must never be certified as escrow-funded: %+v", response)
+	}
+	if response.Lookup == nil || response.Lookup.TxSuccess || response.Lookup.Code != 5 || !response.Lookup.MatchedExpected {
+		t.Fatalf("negative control must be a matched transfer event inside a failed tx: %+v", response.Lookup)
+	}
+
+	request := httptest.NewRequest(http.MethodGet, "/settlement/v1/escrow/txs/"+txHash+"?expected_sender="+depositorAddress+"&expected_amount_uwolo=700", nil)
+	recorder := httptest.NewRecorder()
+	cfg.newSettlementHTTPHandler().ServeHTTP(recorder, request)
+	if recorder.Code != http.StatusConflict {
+		t.Fatalf("expected HTTP 409 with a structured custody refusal, got %d: %s", recorder.Code, recorder.Body.String())
+	}
+	var httpResponse settlementEscrowVerifyResponse
+	if err := json.Unmarshal(recorder.Body.Bytes(), &httpResponse); err != nil {
+		t.Fatalf("decode escrow verifier response: %v", err)
+	}
+	if httpResponse.OK || httpResponse.DepositFound || httpResponse.FailureCode != "TX_EXECUTION_FAILED" {
+		t.Fatalf("HTTP verification must reject matched events from failed transactions: %+v", httpResponse)
+	}
+}
+
+func TestVerifyEscrowDepositRequiresMatchedUwoloDenom(t *testing.T) {
+	t.Parallel()
+	const payout = "wolo1payoutaddress000000000000000000000000000"
+	const escrow = "wolo1escrow000000000000000000000000000000000"
+	const sender = "wolo1sender000000000000000000000000000000000"
+	badHash := strings.Repeat("1", 64)
+	goodHash := strings.Repeat("2", 64)
+	cfg := newTestSettlementConfigWithTxs(t, payout, map[string]string{payout: "5000"}, map[string]mockSettlementTx{
+		badHash: {Hash: badHash, Sender: sender, Recipient: escrow, AmountUWolo: "700", TransferCoins: "700ufake,1uwolo"},
+		goodHash: {Hash: goodHash, Sender: sender, Recipient: escrow, AmountUWolo: "700", TransferCoins: "700ufake,700uwolo"},
+	}, nil)
+	cfg.EscrowAddress = escrow
+
+	bad, err := cfg.verifyEscrowDeposit(t.Context(), badHash, sender, "700")
+	if err != nil { t.Fatal(err) }
+	if bad.OK || !bad.DepositFound || bad.FailureCode != "ESCROW_DEPOSIT_MISMATCH" ||
+		bad.Lookup == nil || bad.Lookup.MatchedExpected || bad.Lookup.MatchedTransfer != nil {
+		t.Fatalf("foreign-denom 700 cannot be credited as uwolo when only 1uwolo was transferred: %+v", bad)
+	}
+	good, err := cfg.verifyEscrowDeposit(t.Context(), goodHash, sender, "700")
+	if err != nil { t.Fatal(err) }
+	if !good.OK || !good.DepositFound || good.Lookup == nil || !good.Lookup.MatchedExpected ||
+		good.Lookup.MatchedTransfer == nil || good.Lookup.MatchedTransfer.Denom != "uwolo" ||
+		good.Lookup.MatchedTransfer.Amount != "700" {
+		t.Fatalf("genuine uwolo match must be used despite foreign-denom decoy: %+v", good)
+	}
+}
+
+func TestVerifyEscrowDepositUniqueTransferOrdinal(t *testing.T) {
+	t.Parallel()
+	const payout = "wolo1payoutaddress000000000000000000000000000"
+	const escrow = "wolo1escrow000000000000000000000000000000000"
+	const sender = "wolo1sender000000000000000000000000000000000"
+	oneHash := strings.Repeat("3", 64)
+	ambiguousHash := strings.Repeat("4", 64)
+	cfg := newTestSettlementConfigWithTxs(t, payout, map[string]string{payout: "5000"}, map[string]mockSettlementTx{
+		oneHash: {
+			Hash: oneHash, Sender: sender, Recipient: escrow,
+			AmountUWolo: "700", TransferCoins: "700ufake,700uwolo",
+		},
+		ambiguousHash: {
+			Hash: ambiguousHash, Sender: sender, Recipient: escrow,
+			AmountUWolo: "700", TransferCoins: "700uwolo,700uwolo",
+		},
+	}, nil)
+	cfg.EscrowAddress = escrow
+
+	unique, err := cfg.verifyEscrowDeposit(t.Context(), oneHash, sender, "700")
+	if err != nil { t.Fatal(err) }
+	if !unique.OK || unique.Lookup == nil || unique.Lookup.MatchingTransferCount != 1 ||
+		unique.Lookup.MatchedTransferIndex == nil || *unique.Lookup.MatchedTransferIndex != 1 ||
+		unique.Lookup.MatchedTransfer == nil || unique.Lookup.MatchedTransfer.Denom != "uwolo" {
+		t.Fatalf("only the exact WOLO transfer index 1 is a single-match receipt: %+v", unique)
+	}
+
+	ambiguous, err := cfg.verifyEscrowDeposit(t.Context(), ambiguousHash, sender, "700")
+	if err != nil { t.Fatal(err) }
+	if !ambiguous.OK || ambiguous.Lookup == nil || ambiguous.Lookup.MatchingTransferCount != 2 ||
+		ambiguous.Lookup.MatchedTransferIndex != nil {
+		t.Fatalf("two identical transfers must not expose a unique creditable index: %+v", ambiguous)
+	}
+
+	handler := cfg.newSettlementHTTPHandler()
+	request := httptest.NewRequest(http.MethodGet, "/settlement/v1/escrow/txs/"+oneHash+
+		"?expected_sender="+sender+"&expected_amount_uwolo=700", nil)
+	recorder := httptest.NewRecorder()
+	handler.ServeHTTP(recorder, request)
+	if recorder.Code != http.StatusOK { t.Fatalf("verification route: %d %s", recorder.Code, recorder.Body.String()) }
+	var decoded settlementEscrowVerifyResponse
+	if err := json.Unmarshal(recorder.Body.Bytes(), &decoded); err != nil { t.Fatal(err) }
+	if decoded.Lookup == nil || decoded.Lookup.MatchedTransferIndex == nil ||
+		*decoded.Lookup.MatchedTransferIndex != 1 || decoded.Lookup.MatchingTransferCount != 1 {
+		t.Fatalf("HTTP response lost immutable transfer ordinal: %+v", decoded)
+	}
+}
+
 func TestListRecentEscrowDepositsAndHTTPRoute(t *testing.T) {
 	t.Parallel()
 
@@ -1555,6 +1687,7 @@ type mockSettlementTx struct {
 	Sender      string
 	Recipient   string
 	AmountUWolo string
+	TransferCoins string
 	Memo        string
 	Code        uint32
 	Codespace   string
@@ -1709,7 +1842,7 @@ func newMockSettlementChainHandlerWithTxs(balances map[string]string, txs map[st
 						"attributes": []map[string]string{
 							{"key": "sender", "value": hit.tx.Sender},
 							{"key": "recipient", "value": hit.tx.Recipient},
-							{"key": "amount", "value": hit.tx.AmountUWolo + settlementCanonicalBaseDenom},
+							{"key": "amount", "value": firstNonEmpty(hit.tx.TransferCoins, hit.tx.AmountUWolo + settlementCanonicalBaseDenom)},
 						},
 					},
 				},
@@ -1753,7 +1886,7 @@ func newMockSettlementChainHandlerWithTxs(balances map[string]string, txs map[st
 						"attributes": []map[string]string{
 							{"key": "sender", "value": tx.Sender},
 							{"key": "recipient", "value": tx.Recipient},
-							{"key": "amount", "value": tx.AmountUWolo + settlementCanonicalBaseDenom},
+							{"key": "amount", "value": firstNonEmpty(tx.TransferCoins, tx.AmountUWolo + settlementCanonicalBaseDenom)},
 						},
 					},
 				},
