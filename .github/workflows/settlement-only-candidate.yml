@@ -6,6 +6,7 @@ on:
       - ".github/workflows/settlement-only-candidate.yml"
       - "scripts/settlement-only-provenance.sh"
       - "scripts/settlement-dual-service-snapshot.sh"
+      - "scripts/settlement-dual-service-release-preflight.sh"
       - "docs/mainnet-settlement-runbook.md"
   workflow_dispatch:
 
@@ -26,6 +27,12 @@ jobs:
           set -euo pipefail
           bash -n scripts/settlement-only-provenance.sh
           bash -n scripts/settlement-dual-service-snapshot.sh
+          bash -n scripts/settlement-dual-service-release-preflight.sh
+          ! grep -Eiq 'systemctl[[:space:]]+(restart|stop|start|reload|daemon-reload)' scripts/settlement-dual-service-release-preflight.sh
+          ! grep -Eq '[[:space:]]+(cp|mv|rm|install|tee|touch)[[:space:]]' scripts/settlement-dual-service-release-preflight.sh
+          grep -q 'wolochain-founder-rewards-settlement.service' scripts/settlement-dual-service-release-preflight.sh
+          grep -q 'RECEIPT.txt' scripts/settlement-dual-service-release-preflight.sh
+          grep -q 'founder_addr' scripts/settlement-dual-service-release-preflight.sh
           test "$(grep -c 'check_env ' scripts/settlement-dual-service-snapshot.sh)" -ge 2
           test "$(grep -c 'check_state ' scripts/settlement-dual-service-snapshot.sh)" -ge 4
           ! grep -Eiq 'systemctl[[:space:]]+(restart|stop|start|reload|daemon-reload)' scripts/settlement-dual-service-snapshot.sh

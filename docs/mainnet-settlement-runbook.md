@@ -15,6 +15,58 @@ sensitivity: "restricted"
 
 # WoloChain Mainnet Settlement Runbook
 
+## Production two-lane release preflight and rollback limits (October 14, 2026)
+
+The operator's live backup receipt for
+`20261014T091735Z-two-settlement-node-untouched` was rechecked **after**
+creation. Both config/unit checksum manifests and both state-tree checksum
+manifests passed. The two actual systemd unit files each have exactly
+`ExecStart=/usr/local/bin/wolochaind-mainnet settlement serve`, with no
+settlement drop-ins; only the **consensus node** has its own preserved binary
+override. The mounted WoloChain volume is `rw,relatime,discard` (no
+`noexec` flag was reported). The backup covers two distinct root:root 0600
+environment files and independent state directories.
+
+Run `scripts/settlement-dual-service-release-preflight.sh` in an
+independently verified version-pinned copy as root, in a child shell. This
+tool does **not** write to the VPS. It fails closed unless all of these
+remain true:
+
+- Original and staged executable hashes, clean legacy VPS checkout and all
+  three active runtime executable fingerprints match their established pins.
+- Both settlement units still have their exact original executable and
+  `settlement serve` invocation, with **no unreviewed drop-ins**.
+- Private October 14 backup is root:root 0700, does not have an
+  `INCOMPLETE` marker, and passes checksum validation for both unit/env
+  copies and both historical state copies.
+- The two 0600 env files contain distinct loopback bind addresses. The
+  primary is required to use `127.0.0.1:8092`; live unauthenticated health
+  probes of both settlement services must succeed. State directories must
+  have no observed in-flight `*.lock` files.
+
+Source comparison from the old VPS revision
+`78c25985420ee41a6678c42fab8ea8d6c3b1b519` to the candidate source
+`3ea79363695dd93be5f0a5e8a5121cf6e31d27b8` is 11 ancestry commits
+and implementation changes limited to
+`cmd/wolochaind/cmd/settlement.go` plus tests. Other changed files are
+documentation. This is nevertheless **not proof of a drained payout
+pipeline** or that old and new binaries have identical runtime behavior.
+
+A separate reviewed switch/rollback procedure is still mandatory. Intended
+mechanics: install **two service-specific** `ExecStart` overrides that
+point to the already verified versioned candidate, coordinate both
+settlement-only service stops/starts, retain existing live request/run state,
+and verify current binary hashes and HTTP health on both lanes. An error
+must trigger a rollback to the *untouched* original shared binary for both
+settlement services, retaining **current** live request state. Do not
+change the source checkout baseline, the node binary or the node unit as
+part of that action. Avoid `systemctl restart` on the node. Require a
+quiet/pending-settlement drain confirmation from the app and the chain,
+and a protected release window, before ever allowing an activation action.
+
+Runbook statuses: **backup verified and candidate staged**; source-side
+preflight under review; **no live release authorized or performed**.
+
 ## Two-service private snapshot and state continuity (October 14, 2026)
 
 The live primary and founder-rewards settlement units use **different**
