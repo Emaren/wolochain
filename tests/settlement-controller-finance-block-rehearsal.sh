@@ -117,6 +117,10 @@ if [[ "$*" == *"--wait"* ]]; then
  echo FINANCE_AUDIT_BLOCKED >> "$SIM_ROOT/actions.log"
  exit 3
 fi
+if [[ "$*" != *"--on-active=900s"* || "$*" != *"--on-unit-inactive=60s"* ]]; then
+  echo BAD_WATCHDOG_CADENCE >> "$SIM_ROOT/actions.log"
+  exit 3
+fi
 echo ARMED_RESCUE_TIMER >> "$SIM_ROOT/actions.log"
 exit 0
 SH
