@@ -91,7 +91,7 @@ check_legacy_pids() {
     echo "PASS $name running original SHA"
   done
 }
-mode="\${1:---inspect}"
+mode="${1:---inspect}"
 case "$mode" in
   --inspect|--rollback) ;;
   *) printf 'usage: sudo bash %s [--inspect|--rollback]\n' "$0" >&2; exit 2 ;;
