@@ -7,6 +7,7 @@ on:
       - "scripts/settlement-only-provenance.sh"
       - "scripts/settlement-dual-service-snapshot.sh"
       - "scripts/settlement-dual-service-release-preflight.sh"
+      - "scripts/settlement-two-service-code-rollback.sh"
       - "docs/mainnet-settlement-runbook.md"
   workflow_dispatch:
 
@@ -28,6 +29,15 @@ jobs:
           bash -n scripts/settlement-only-provenance.sh
           bash -n scripts/settlement-dual-service-snapshot.sh
           bash -n scripts/settlement-dual-service-release-preflight.sh
+          bash -n scripts/settlement-two-service-code-rollback.sh
+          # Code-only rescuer must NEVER operate the consensus unit, restore
+          # historic state, or replace the shared settlement executable.
+          grep -q -- '--rescue' scripts/settlement-two-service-code-rollback.sh
+          grep -q -- 'ROLLBACK_PASS' scripts/settlement-two-service-code-rollback.sh
+          grep -q 'wolochain-founder-rewards-settlement.service' scripts/settlement-two-service-code-rollback.sh
+          ! grep -Eq 'systemctl[[:space:]]+(stop|start|restart)[[:space:]]+\$NODE' scripts/settlement-two-service-code-rollback.sh
+          ! grep -Eq '([[:space:]]cp[[:space:]]|[[:space:]]rsync[[:space:]]|[[:space:]]restore-live-settlement.sh)' scripts/settlement-two-service-code-rollback.sh
+          test "$(grep -c 'timeout 40s systemctl' scripts/settlement-two-service-code-rollback.sh)" -ge 2
           ! grep -Eiq 'systemctl[[:space:]]+(restart|stop|start|reload|daemon-reload)' scripts/settlement-dual-service-release-preflight.sh
           ! grep -Eq '[[:space:]]+(cp|mv|rm|install|tee|touch)[[:space:]]' scripts/settlement-dual-service-release-preflight.sh
           grep -q 'wolochain-founder-rewards-settlement.service' scripts/settlement-dual-service-release-preflight.sh
