@@ -155,6 +155,11 @@ for unit in "$PRIMARY" "$FOUNDER"; do
 done
 if (( owned == 0 )); then
   echo "INFO: no owned new-executable overrides; avoiding unnecessary settlement bounce"
+  for name in "$PRIMARY" "$FOUNDER"; do
+    if ! systemctl is-active --quiet "$name"; then
+      timeout 40s systemctl start "$name" || fail "could not start original $name"
+    fi
+  done
   check_legacy_pids
 else
   echo "ROLLBACK: returning both settlement units to original shared executable"
