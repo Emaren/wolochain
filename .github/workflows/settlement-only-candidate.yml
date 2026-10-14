@@ -12,6 +12,22 @@ permissions:
   contents: read
 
 jobs:
+  operator-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout preflight tools under review
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Verify read-only script syntax and help contract
+        run: |
+          set -euo pipefail
+          bash -n scripts/settlement-only-provenance.sh
+          bash scripts/settlement-only-provenance.sh --help | grep -q 'Read-only'
+          ! grep -Eiq '\\bsystemctl[[:space:]]+(restart|stop|start|reload)\\b' scripts/settlement-only-provenance.sh
+          ! grep -Eq '[[:space:]]+(cp|mv|rm|install)[[:space:]]' scripts/settlement-only-provenance.sh
+
   settlement-candidate:
     runs-on: ubuntu-latest
     timeout-minutes: 50
