@@ -46,7 +46,7 @@ jobs:
           grep -Fq 'EXPECTED_AUDIT_SHA256' scripts/settlement-two-lane-watchdog-controller.sh
           grep -Fq 'EXPECTED_RESCUE_SHA256' scripts/settlement-two-lane-watchdog-controller.sh
           grep -Fq 'PROMOTION_ACK' scripts/settlement-two-lane-watchdog-controller.sh
-          grep -Fq 'on-active=240s' scripts/settlement-two-lane-watchdog-controller.sh
+          grep -Fq 'on-active=900s' scripts/settlement-two-lane-watchdog-controller.sh
           grep -Fq -- '--rescue' scripts/settlement-two-lane-watchdog-controller.sh
           grep -Fq 'stop_ingress' scripts/settlement-two-lane-watchdog-controller.sh
           grep -Fq 'verify_drain' scripts/settlement-two-lane-watchdog-controller.sh
