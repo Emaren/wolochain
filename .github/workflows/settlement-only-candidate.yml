@@ -15,6 +15,8 @@ jobs:
   settlement-candidate:
     runs-on: ubuntu-latest
     timeout-minutes: 50
+    env:
+      CANDIDATE_DIR: ${{ runner.temp }}/wolo-settlement-3ea79363
     steps:
       # Do not compile PR-head code. The audited 3ea79363 source is the candidate.
       - name: Checkout exact reviewed implementation
@@ -47,14 +49,15 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p candidate
-          GOOS=linux GOARCH=amd64 go build -trimpath=false -tags go1.27 -o candidate/wolochaind-settlement-only-linux-amd64 ./cmd/wolochaind
-          go version -m candidate/wolochaind-settlement-only-linux-amd64 | tee candidate/go-build-metadata.txt
-          grep -Eq 'vcs.revision=3ea79363695dd93be5f0a5e8a5121cf6e31d27b8$' candidate/go-build-metadata.txt
-          grep -Eq 'vcs.modified=false$' candidate/go-build-metadata.txt
-          sha256sum candidate/wolochaind-settlement-only-linux-amd64 | tee candidate/SHA256SUMS
-          printf 'reviewed_source_commit=3ea79363695dd93be5f0a5e8a5121cf6e31d27b8\n' > candidate/SOURCE.txt
-          printf 'production_authorized=false\nconsensus_upgrade_authorized=false\n' >> candidate/SOURCE.txt
+          # Build outside the Git checkout: untracked output must not mark VCS dirty.
+          mkdir -p "$CANDIDATE_DIR"
+          GOOS=linux GOARCH=amd64 go build -tags go1.27 -o "$CANDIDATE_DIR/wolochaind-settlement-only-linux-amd64" ./cmd/wolochaind
+          go version -m "$CANDIDATE_DIR/wolochaind-settlement-only-linux-amd64" | tee "$CANDIDATE_DIR/go-build-metadata.txt"
+          grep -Eq 'vcs.revision=3ea79363695dd93be5f0a5e8a5121cf6e31d27b8$' "$CANDIDATE_DIR/go-build-metadata.txt"
+          grep -Eq 'vcs.modified=false$' "$CANDIDATE_DIR/go-build-metadata.txt"
+          ( cd "$CANDIDATE_DIR" && sha256sum wolochaind-settlement-only-linux-amd64 > SHA256SUMS )
+          printf 'reviewed_source_commit=3ea79363695dd93be5f0a5e8a5121cf6e31d27b8\n' > "$CANDIDATE_DIR/SOURCE.txt"
+          printf 'production_authorized=false\nconsensus_upgrade_authorized=false\n' >> "$CANDIDATE_DIR/SOURCE.txt"
 
       # Artifacts are transient, non-executable release candidates, not a
       # production deployment or a certification of live custody.
@@ -62,6 +65,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: wolo-settlement-3ea79363-linux-amd64-UNDEPLOYED
-          path: candidate/
+          path: ${{ env.CANDIDATE_DIR }}/
           if-no-files-found: error
           retention-days: 14
