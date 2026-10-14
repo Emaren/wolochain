@@ -9,6 +9,7 @@ on:
       - "scripts/settlement-dual-service-release-preflight.sh"
       - "scripts/settlement-two-service-code-rollback.sh"
       - "scripts/settlement-two-lane-watchdog-controller.sh"
+      - "scripts/settlement-release-helper-stage.sh"
       - "docs/mainnet-settlement-runbook.md"
   workflow_dispatch:
 
@@ -32,6 +33,13 @@ jobs:
           bash -n scripts/settlement-dual-service-release-preflight.sh
           bash -n scripts/settlement-two-service-code-rollback.sh
           bash -n scripts/settlement-two-lane-watchdog-controller.sh
+          bash -n scripts/settlement-release-helper-stage.sh
+          grep -Fq 'mode=--inspect' scripts/settlement-release-helper-stage.sh
+          grep -Fq 'RESCUE_BLOB=8bf03c7f90d7566b06575927cf5f92b5aa69a499' scripts/settlement-release-helper-stage.sh
+          grep -Fq 'AUDIT_BLOB=f8372e27fb0cad13fecbdcb42ca2457dbf4caabb' scripts/settlement-release-helper-stage.sh
+          ! grep -Eq 'systemctl[[:space:]]+(stop|restart|start)' scripts/settlement-release-helper-stage.sh
+          grep -Fq 'run_finance_scan' scripts/settlement-two-lane-watchdog-controller.sh
+          grep -Fq 'flock -n 9' scripts/settlement-two-lane-watchdog-controller.sh
           # Inspection is the only default. Promotion cannot occur without an
           # independent timed rollback and a zero-unresolved activity scan.
           grep -Fq 'mode="--inspect"' scripts/settlement-two-lane-watchdog-controller.sh
