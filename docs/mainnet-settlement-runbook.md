@@ -84,6 +84,24 @@ Production release is NOT complete. A verified code-only rescue mechanism is
 necessary but does not, by itself, establish an atomic payout drain or mainnet
 solvency.
 
+**Repeatability correction (source-only; October 14):** The independent
+transient timer now combines `--on-active=900s` with
+`--on-unit-inactive=60s`. If a watchdog invocation times out waiting for the
+controller's bounded handoff mutex, exits with an error, or fails an initial
+recovery attempt, the armed timer schedules another invocation after the last
+attempt becomes inactive. The controller explicitly stops that repeating
+timer only after a verified commit or completed immediate rescue. The watchdog
+gate rechecks the durable COMMITTED/RESCUED marker under the mutex, so an
+already finished transition is not rolled back on the next tick.
+Synthetic promotion CI refuses a return to single-fire timers.
+
+**This still is not live authorization.** The initial 15-minute recovery
+delay, the watchdog's 150-second mutex wait, on-host `systemd-run` timer
+behavior, and intervention on a permanently hung controller require a
+disposable systemd transaction rehearsal and documented downtime objective.
+The founder claim #889 and independently verified financial drain remain
+separate, unresolved activation gates.
+
 ## Draft watchdog handoff correction — source rehearsal only (October 14, 2026)
 
 The earlier dual-settlement controller had a real race: it reopened
