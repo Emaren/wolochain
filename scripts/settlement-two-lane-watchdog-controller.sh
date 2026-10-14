@@ -141,7 +141,9 @@ prepare_private_manifest() {
   local tmp unit
   tmp="$(mktemp "$RUN/restore-units.XXXXXXXX")" || fail "manifest temp unavailable"
   for unit in $PRODUCERS; do
-    systemctl is-active --quiet "$unit" && printf '%s\n' "$unit" >> "$tmp"
+    if systemctl is-active --quiet "$unit"; then
+      printf '%s\n' "$unit" >> "$tmp"
+    fi
   done
   chmod 0600 "$tmp"
   mv -T -- "$tmp" "$RUN/restore-units" || fail "manifest publication failed"
