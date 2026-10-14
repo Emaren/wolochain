@@ -8,12 +8,65 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "runtime-evidence"
 authority: "mainnet-settlement-operations"
-reviewed_at: "2026-10-07"
+reviewed_at: "2026-10-14"
 review_interval_days: 14
 sensitivity: "restricted"
 ---
 
 # WoloChain Mainnet Settlement Runbook
+
+## Two-service private snapshot and state continuity (October 14, 2026)
+
+The live primary and founder-rewards settlement units use **different**
+root:root mode-600 environment files:
+`/etc/wolochain-mainnet-settlement.env` and
+`/etc/wolochain-founder-rewards-settlement.env`. Their persistent state
+roots are **also separate**:
+`/mnt/HC_Volume_105319120/wolochain-mainnet/settlement-state` and
+`/mnt/HC_Volume_105319120/wolochain-mainnet/founder-rewards-settlement-state`.
+Both services currently execute the exact older
+`/usr/local/bin/wolochaind-mainnet` binary; the consensus node executes a
+different dedicated override, `wolochaind-mainnet-node-prewartrophy`.
+
+`scripts/settlement-dual-service-snapshot.sh` provides two constrained modes
+for this explicitly pinned candidate and existing live binaries:
+
+- `sudo bash scripts/settlement-dual-service-snapshot.sh --inspect` checks
+  the clean VPS source checkout, three active processes and their SHA-256
+  fingerprints, installed and staged binary hashes, private env file modes,
+  both state directories, lock files and mounted-volume free space, without
+  writing a file.
+- `sudo bash scripts/settlement-dual-service-snapshot.sh --snapshot` repeats
+  the checks and creates a **new root-owned 0700 directory** inside
+  `wolochain-mainnet/settlement-backups`. The backup contains the old
+  settlement executable, both 0600 env files, both settlement unit files,
+  effective node unit evidence, and a separate copy plus sorted SHA-256
+  file manifest for each state tree. It fails closed if live files drift
+  during the copy, if a lock file is present, or if the expected running
+  executables have changed. Failed backups retain an `INCOMPLETE` marker
+  and must never be restored. No systemd mutations occur.
+- A passing snapshot captures an observed state interval, **not a logically
+  atomic transaction across simultaneous on-chain payouts**. Operator
+  maintenance must still reconcile in-flight and pending operations.
+
+**High-stakes rollback constraint:** restoring a historical settlement request
+or run record after new chain payouts can re-enable a previously consumed
+request. The normal rollback must switch **both settlement services** back
+to the original, untouched shared executable (by removing only their
+versioned `ExecStart` override drop-ins), while preserving authoritative
+*current* live request/run state and both live env files. Historical state
+snapshots are disaster-recovery evidence only; their restore requires a
+separate transaction-by-transaction chain reconciliation. Never use
+`scripts/restore-live-settlement.sh` in its default `shared-binary` mode:
+it restarts the consensus node. Its existing `settlement-only` path does not
+coordinate the founder service. Neither generic restore path is the approved
+two-service rollback.
+
+The live observer on October 14 verified ~5.0 GiB free on root, ~56 GiB on
+the mounted volume, primary state ~7 MiB, and protected staging candidate
+SHA-256 `af18e18bd32ef5763d3e414a37dd7886fe4065b640bb5a89ae742ee860fb9b87`.
+The snapshot script makes no claim of a post-deployment result and does not
+authorize signing, settlement execution, balance movement, or consensus changes.
 
 ## Settlement-only verifier candidate — source-controlled proof lane (October 14, 2026)
 
