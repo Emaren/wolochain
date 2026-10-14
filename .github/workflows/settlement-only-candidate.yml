@@ -32,7 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 50
     env:
-      CANDIDATE_DIR: ${{ runner.temp }}/wolo-settlement-3ea79363
+      CANDIDATE_DIR: /tmp/wolo-settlement-3ea79363
     steps:
       # Do not compile PR-head code. The audited 3ea79363 source is the candidate.
       - name: Checkout exact reviewed implementation
@@ -81,6 +81,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: wolo-settlement-3ea79363-linux-amd64-UNDEPLOYED
-          path: ${{ env.CANDIDATE_DIR }}/
+          path: /tmp/wolo-settlement-3ea79363/
           if-no-files-found: error
           retention-days: 14
