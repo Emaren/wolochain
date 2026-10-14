@@ -22,6 +22,7 @@ APP=/var/www/AoE2HDBets/app-prodn
 ENV_FILE=/etc/aoe2hdbets/aoe2hdbets-web.env
 AUDIT=/usr/local/libexec/aoe2war-wolo/wolo-maintenance-drain-readonly.mjs
 RECOVERY=/usr/local/libexec/aoe2war-wolo/settlement-two-service-code-rollback.sh
+WATCHDOG_GATE=/usr/local/libexec/aoe2war-wolo/settlement-two-lane-watchdog-gate.sh
 RUN=/run/aoe2war-wolo-two-service-cutover
 WATCHDOG=aoe2war-wolo-two-settlement-rescue-3ea79363
 OVERLAY=50-aoe2war-settlement-3ea79363.conf
@@ -93,34 +94,74 @@ approved_tools() {
   [[ -n "$EXPECTED_AUDIT_SHA256" ]] || fail "pinned finance source fingerprint absent"
   [[ "$(sha "$AUDIT")" == "$EXPECTED_AUDIT_SHA256" ]] || fail "finance source mismatch"
   [[ "$(stat -c '%u:%g:%a' "$AUDIT")" == 0:0:444 ]] || fail "auditor not root-owned read-only 0444"
+  [[ -f "$WATCHDOG_GATE" && ! -L "$WATCHDOG_GATE" ]] ||
+    fail "pinned watchdog rendezvous helper missing"
+  [[ "$(stat -c '%u:%g:%a' "$WATCHDOG_GATE")" == 0:0:500 ]] ||
+    fail "watchdog gate not root-owned private 0500"
+  [[ -n "$EXPECTED_WATCHDOG_SHA256" ]] || fail "watchdog gate fingerprint absent"
+  [[ "$(sha "$WATCHDOG_GATE")" == "$EXPECTED_WATCHDOG_SHA256" ]] ||
+    fail "watchdog gate digest mismatches reviewed source"
   [[ "$(stat -c '%u:%g:%a' "$ENV_FILE")" == 0:0:600 ]] || fail "private prod env permissions changed"
+}
+mark_finished() {
+  local label="$1" tmp
+  [[ ! -e "$RUN/COMMITTED" && ! -L "$RUN/COMMITTED" ]] ||
+    fail "release state marker exists unexpectedly"
+  tmp="$(mktemp "$RUN/COMMITTED.XXXXXXXX")" || fail "unable to stage atomic marker"
+  printf '%s\n' "$label" > "$tmp"
+  chmod 0600 "$tmp"
+  mv -T -- "$tmp" "$RUN/COMMITTED" || fail "could not commit release outcome"
 }
 on_exit() {
   local result="$1"
   if (( armed == 1 && done_promotion == 0 )); then
+    if [[ -f "$RUN/COMMITTED" &&
+          "$(cat "$RUN/COMMITTED")" == "COMMITTED-3EA79363" ]]; then
+      echo "COMMITTED: no rollback on late cleanup failure" >&2
+      return
+    fi
     echo "RELEASE INTERRUPTED rc=$result: invoking immediate code-only rescue ..." >&2
-    bash "$RECOVERY" --rescue ||
+    if bash "$RECOVERY" --rescue; then
+      if [[ ! -e "$RUN/COMMITTED" ]]; then
+        mark_finished "RESCUED-3EA79363"
+      fi
+      systemctl stop "$WATCHDOG.timer" ||
+        echo "WARN: rescue succeeded; timer may redundantly inspect RESCUED marker" >&2
+    else
       echo "CRITICAL: immediate rescue failed; independent rescue TIMER REMAINS ARMED" >&2
+    fi
   fi
 }
+prepare_private_manifest() {
+  # Publish the COMPLETE owner-only manifest BEFORE scheduling any rescue.
+  # A later crash leaves the independent timer enough information to restore.
+  [[ ! -e "$RUN" && ! -L "$RUN" ]] ||
+    fail "previous release state exists: requires review before another attempt"
+  install -d -o root -g root -m 0700 "$RUN"
+  local tmp unit
+  tmp="$(mktemp "$RUN/restore-units.XXXXXXXX")" || fail "manifest temp unavailable"
+  for unit in $PRODUCERS; do
+    systemctl is-active --quiet "$unit" && printf '%s\n' "$unit" >> "$tmp"
+  done
+  chmod 0600 "$tmp"
+  mv -T -- "$tmp" "$RUN/restore-units" || fail "manifest publication failed"
+  [[ -f "$RUN/restore-units" && ! -L "$RUN/restore-units" &&
+     "$(stat -c '%u:%g:%a' "$RUN/restore-units")" == "0:0:600" ]] ||
+    fail "published manifest not root:root 0600"
+}
+
 arm_rescue() {
   # 900s is the current serial timeout envelope, NOT the 240s originally
   # advertised. Independent rehearsals must prove this timer cannot fire
   # during a legitimate slow release; draft controller is NOT deployable.
   systemd-run --quiet --unit="$WATCHDOG" --on-active=900s \
-    /usr/bin/bash "$RECOVERY" --rescue || fail "could not arm independent timer"
+    /usr/bin/bash "$WATCHDOG_GATE" --watchdog || fail "could not arm independent timer"
   systemctl is-active --quiet "$WATCHDOG.timer" || fail "independent rescue timer not active"
   armed=1
   echo "PASS independently scheduled rescue (survives SSH disconnect)"
 }
 stop_ingress() {
-  install -d -o root -g root -m 0700 "$RUN"
-  : > "$RUN/restore-units"
-  chmod 0600 "$RUN/restore-units"
   local unit
-  for unit in $PRODUCERS; do
-    systemctl is-active --quiet "$unit" && printf '%s\n' "$unit" >> "$RUN/restore-units"
-  done
   for unit in $PRODUCERS; do
     case "$unit" in *.timer) timeout 35s systemctl stop "$unit" || fail "cannot freeze $unit" ;; esac
   done
@@ -195,6 +236,11 @@ promote() {
   # Catch known historical ambiguity (e.g. founder claim #889) BEFORE any
   # maintenance outage; recheck after freezing new ingress for race safety.
   run_finance_scan
+  prepare_private_manifest
+  # Mutex held from BEFORE the first stop through commit + watchdog disarm.
+  # Timed watchdog waits for process exit and checks the durable outcome.
+  exec 8>"$RUN/handoff.lock"
+  flock -n 8 || fail "another rescue/promotion holds handoff lock"
   arm_rescue
   trap 'on_exit "$?"' EXIT
   stop_ingress
@@ -211,9 +257,12 @@ promote() {
   health 8093
   pid_hash "$NODE" "$NODE_BIN" "$NODE_SHA"
   restore_producers
+  # Under the same handoff mutex: no watchdog may roll back a committed
+  # release after the website and payout producers have been resumed.
+  mark_finished "COMMITTED-3EA79363"
+  done_promotion=1
   systemctl stop "$WATCHDOG.timer" || fail "unable to disarm rescue timer"
   armed=0
-  done_promotion=1
   echo "PROMOTION_PASS: two settlement services verified, original consensus untouched"
   echo "SOURCE_CHECKOUT_UNCHANGED: release source drift must be separately reconciled"
 }
@@ -230,6 +279,7 @@ case "$mode" in
     EXPECTED_RESCUE_SHA256="$(printenv EXPECTED_RESCUE_SHA256 || true)"
     EXPECTED_AUDIT_SHA256="$(printenv EXPECTED_AUDIT_SHA256 || true)"
     PROMOTION_ACK="$(printenv PROMOTION_ACK || true)"
+    EXPECTED_WATCHDOG_SHA256="$(printenv EXPECTED_WATCHDOG_SHA256 || true)"
     preflight
     promote
     ;;
