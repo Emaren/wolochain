@@ -21,8 +21,10 @@ touch "$work/original" "$work/node" "$work/app.env" \
  "$work/volume/wolochain-mainnet/settlement-candidates/3ea79363/wolochaind-settlement-only-linux-amd64"
 printf '#!/bin/bash\nif [[ "$1" == "--rescue" ]]; then echo RESCUE_INVOKED >> "$SIM_ROOT/actions.log"; fi\nexit 0\n' > "$work/helpers/settlement-two-service-code-rollback.sh"
 printf '// test finance audit\n' > "$work/helpers/wolo-maintenance-drain-readonly.mjs"
+printf '#!/bin/bash\nexit 0\n' > "$work/helpers/settlement-two-lane-watchdog-gate.sh"
 chmod 0500 "$work/helpers/settlement-two-service-code-rollback.sh"
 chmod 0444 "$work/helpers/wolo-maintenance-drain-readonly.mjs"
+chmod 0500 "$work/helpers/settlement-two-lane-watchdog-gate.sh"
 chmod 0600 "$work/app.env"
 
 python3 - "$work" <<'PY'
@@ -39,6 +41,7 @@ updates = {
  "ENV_FILE=/etc/aoe2hdbets/aoe2hdbets-web.env": f"ENV_FILE={root}/app.env",
  "AUDIT=/usr/local/libexec/aoe2war-wolo/wolo-maintenance-drain-readonly.mjs": f"AUDIT={root}/helpers/wolo-maintenance-drain-readonly.mjs",
  "RECOVERY=/usr/local/libexec/aoe2war-wolo/settlement-two-service-code-rollback.sh": f"RECOVERY={root}/helpers/settlement-two-service-code-rollback.sh",
+ "WATCHDOG_GATE=/usr/local/libexec/aoe2war-wolo/settlement-two-lane-watchdog-gate.sh": f"WATCHDOG_GATE={root}/helpers/settlement-two-lane-watchdog-gate.sh",
  "RUN=/run/aoe2war-wolo-two-service-cutover": f"RUN={root}/run",
  "exec 9>/run/lock/aoe2war-wolo-two-settlement-promotion.lock": f"exec 9>{root}/lock",
 }
@@ -121,9 +124,10 @@ chmod 0755 "$work/bin/"*
 
 rescue_sha="$(/usr/bin/sha256sum "$work/helpers/settlement-two-service-code-rollback.sh" | cut -d' ' -f1)"
 audit_sha="$(/usr/bin/sha256sum "$work/helpers/wolo-maintenance-drain-readonly.mjs" | cut -d' ' -f1)"
+gate_sha="$(/usr/bin/sha256sum "$work/helpers/settlement-two-lane-watchdog-gate.sh" | cut -d' ' -f1)"
 rc=0
 PATH="$work/bin:$PATH" \
- EXPECTED_RESCUE_SHA256="$rescue_sha" EXPECTED_AUDIT_SHA256="$audit_sha" \
+ EXPECTED_RESCUE_SHA256="$rescue_sha" EXPECTED_AUDIT_SHA256="$audit_sha" EXPECTED_WATCHDOG_SHA256="$gate_sha" \
  PROMOTION_ACK="REVIEWED-DUAL-SERVICE-3EA79363" \
  bash "$work/controller.sh" --promote > "$work/output.log" 2>&1 || rc=$?
 
@@ -146,7 +150,7 @@ echo "CUTOVER_FINANCE_BLOCK_PASS: no service action or rescue timer before zero-
 : > "$work/actions.log"
 rc=0
 SIM_FINANCE_CODE=0 PATH="$work/bin:$PATH" \
- EXPECTED_RESCUE_SHA256="$rescue_sha" EXPECTED_AUDIT_SHA256="$audit_sha" \
+ EXPECTED_RESCUE_SHA256="$rescue_sha" EXPECTED_AUDIT_SHA256="$audit_sha" EXPECTED_WATCHDOG_SHA256="$gate_sha" \
  PROMOTION_ACK="REVIEWED-DUAL-SERVICE-3EA79363" \
  bash "$work/controller.sh" --promote > "$work/output-rescue.log" 2>&1 || rc=$?
 if [[ "$rc" == 0 ]]; then
