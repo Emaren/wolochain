@@ -9,8 +9,10 @@ on:
       - "scripts/settlement-dual-service-release-preflight.sh"
       - "scripts/settlement-two-service-code-rollback.sh"
       - "scripts/settlement-two-lane-watchdog-controller.sh"
+      - "scripts/settlement-two-lane-watchdog-gate.sh"
       - "scripts/settlement-release-helper-stage.sh"
       - "tests/settlement-controller-finance-block-rehearsal.sh"
+      - "tests/settlement-watchdog-rendezvous-rehearsal.sh"
       - "docs/mainnet-settlement-runbook.md"
   workflow_dispatch:
 
@@ -97,6 +99,17 @@ jobs:
           persist-credentials: false
       - name: Run isolated fake-systemd financial denial rehearsal
         run: sudo env GITHUB_ACTIONS=true bash tests/settlement-controller-finance-block-rehearsal.sh
+
+  watchdog-rendezvous-rehearsal:
+    name: Synthetic watchdog commit, crash and replay race checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Run temporary root-only fake-node watchdog rendezvous
+        run: sudo env GITHUB_ACTIONS=true bash tests/settlement-watchdog-rendezvous-rehearsal.sh
 
   settlement-candidate:
     runs-on: ubuntu-latest
