@@ -15,6 +15,59 @@ sensitivity: "restricted"
 
 # WoloChain Mainnet Settlement Runbook
 
+## Watchdog-gated dual-service promotion controller (October 14, 2026)
+
+`scripts/settlement-two-lane-watchdog-controller.sh` is **SOURCE ONLY**. It
+has not been installed, activated or executed against the VPS, and has not
+been certified by a real maintenance-window recovery rehearsal. Its **default
+`--inspect` mode is read-only**. No other process, app release or administrator
+is authorized to set `--promote` until a separate operations approval gate is
+recorded on Wolo issue #5.
+
+The guarded `--promote` plan requires the exact old executable, candidate
+SHA-256, unchanged consensus executable, private two-service backup receipts,
+both preexisting original unit definitions, root-pinned installed independent
+rescue script and verified read-only application finance auditor, and an
+explicitly scoped operator acknowledgement. It takes a nonblocking exclusive
+flock, **runs the financial audit before causing downtime**, and refuses to
+start maintenance while unresolved historical claims (including #889) exist.
+
+Only if that first financial scan is zero does it arm a **systemd monotonic
+240-second independent rescue timer** (which survives SSH disconnection), record
+which producer units were initially active, pause the specifically enumerated
+six automatic payment/replay timers and the AoE2WAR web/API request ingress, and
+wait for any running timer jobs to finish/stop. It then re-runs the live
+read-only finance scan, verifies no active state locks and no established
+connections on 8092/8093. If anything is ambiguous, the rescue script
+restores original *code* for both settlement units and resumes the original
+web/API/timer set from a root-private manifest. The validation may require a
+brief site maintenance interruption; it never touches consensus units, chain
+files, keys, wallets, historical primary/founder state or the shared original
+settlement binary.
+
+Only following a successful second drain can it stop **the two settlement
+services only**, install exactly the versioned candidate `ExecStart` override
+for each, reload systemd configuration, restart the two settlement processes,
+verify exact running SHA-256 and healthy loopback APIs, recheck the consensus
+executable, restore the originally active app ingress/timers, and disarm the
+independent timer. An error leaves the timer armed and tries immediate rescue.
+The original Wolo VPS **source checkout is deliberately not modified**;
+a separate post-cutover source/runtime attestation and protected checkout
+review are still required before the app's P1 Wolo source-drift gate can pass.
+
+**Hard pending blockers:** The source of the installed rescue and financial
+audit must be independently pinned and root-owned; they are NOT currently
+installed as controller dependencies. The live finance scan returned
+`bet_claim_payout_attempt_without_proof=1`, legacy founder claim #889.
+This must be proved against authoritative chain history or otherwise
+resolved by a separately reviewed financial correction before an actual
+activation is allowed. No bypass, status forgery, manual blind refund,
+historical state rewind, or consensus restart is authorized.
+
+Production release is NOT complete. A verified code-only rescue mechanism is
+necessary but does not, by itself, establish an atomic payout drain or mainnet
+solvency.
+
 ## Emergency code-only two-service rollback (October 14, 2026)
 
 `scripts/settlement-two-service-code-rollback.sh` is a separately audited
