@@ -156,7 +156,10 @@ arm_rescue() {
   # 900s is the current serial timeout envelope, NOT the 240s originally
   # advertised. Independent rehearsals must prove this timer cannot fire
   # during a legitimate slow release; draft controller is NOT deployable.
-  systemd-run --quiet --unit="$WATCHDOG" --on-active=900s \
+  # The 900s initial window avoids overlapping the bounded rollout. Retry
+  # failed or lock-timed-out watchdog invocations every 60s while armed:
+  # a one-shot fire that cannot acquire handoff.lock is NOT safe recovery.
+  systemd-run --quiet --unit="$WATCHDOG" --on-active=900s --on-unit-inactive=60s \
     /usr/bin/bash "$WATCHDOG_GATE" --watchdog || fail "could not arm independent timer"
   systemctl is-active --quiet "$WATCHDOG.timer" || fail "independent rescue timer not active"
   armed=1
