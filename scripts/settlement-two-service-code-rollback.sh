@@ -93,15 +93,17 @@ check_legacy_pids() {
 }
 mode="${1:---inspect}"
 case "$mode" in
-  --inspect|--rollback) ;;
-  *) printf 'usage: sudo bash %s [--inspect|--rollback]\n' "$0" >&2; exit 2 ;;
+  --inspect|--rollback|--rescue) ;;
+  *) printf 'usage: sudo bash %s [--inspect|--rollback|--rescue]\n' "$0" >&2; exit 2 ;;
 esac
 (( EUID == 0 )) || fail "root required for process inspection and optional rollback"
 echo "=== TWO-SETTLEMENT CODE-ONLY ROLLBACK ($mode) ==="
 assert_hash "$OLD" "$OLD_SHA"
 assert_hash "$NODE_BIN" "$NODE_SHA"
 check_consensus
-check_backup
+if [[ "$mode" == "--inspect" ]]; then
+  check_backup
+fi
 check_old_config
 inspect_override "$PRIMARY"
 inspect_override "$FOUNDER"
@@ -110,26 +112,73 @@ if [[ "$mode" == "--inspect" ]]; then
   exit 0
 fi
 
-# Explicitly never restore previous payout state or env files.
-# Operator may use this after error, or the separately armed timeout supervisor.
-echo "ROLLBACK: returning both settlement units to the intact original binary."
-for name in "$PRIMARY" "$FOUNDER"; do
-  timeout 40s systemctl stop "$name" || fail "could not stop $name; manual operator required"
-done
-for name in "$PRIMARY" "$FOUNDER"; do
-  file="$(dropin "$name")"
-  if [[ -f "$file" ]]; then
-    rm -- "$file"
-    echo "Removed only our exact reviewed override for $name"
+# Recovery supervisor may be called by an independent monotonic systemd timer
+# after SSH disconnect or a partial code promotion.
+resume_producers() {
+  local manifest=/run/aoe2war-wolo-two-service-cutover/restore-units unit
+  if [[ ! -e "$manifest" ]]; then
+    echo "INFO: no operator service-resume manifest exists"
+    return 0
   fi
+  [[ -f "$manifest" && ! -L "$manifest" ]] || fail "restore manifest invalid"
+  [[ "$(stat -c '%u:%g:%a' "$manifest")" == "0:0:600" ]] ||
+    fail "service-resume manifest is not root:root 0600"
+  while IFS= read -r unit; do
+    case "$unit" in
+      aoe2hdbets-web.service|aoe2hdbets-api.service|aoe2hdbets-challenge-reconcile.timer|aoe2hdbets-bet-stake-reconcile.timer|aoe2hdbets-replay-auto-recovery.timer|aoe2hdbets-trophy-tributes.timer|aoe2hdbets-staking-rewards.timer|aoe2-wolo-transfer-heartbeat.timer) ;;
+      *) fail "unsafe resume unit: $unit" ;;
+    esac
+  done < "$manifest"
+  # Web and API must return before callers and automated timers.
+  for unit in aoe2hdbets-api.service aoe2hdbets-web.service; do
+    grep -Fxq "$unit" "$manifest" || continue
+    timeout 60s systemctl start "$unit" || fail "could not resume $unit"
+    systemctl is-active --quiet "$unit" || fail "$unit did not become active"
+    echo "PASS resumed $unit"
+  done
+  while IFS= read -r unit; do
+    case "$unit" in
+      *.timer)
+        timeout 30s systemctl start "$unit" || fail "could not resume $unit"
+        systemctl is-active --quiet "$unit" || fail "$unit not active"
+        echo "PASS resumed $unit" ;;
+    esac
+  done < "$manifest"
+  echo "PRODUCERS_RESTORED: initial active web/API/timer inventory restored"
+}
+
+# Explicitly never restore previous payout state or env files.
+# No shared binary or consensus executable is replaced.
+owned=0
+for unit in "$PRIMARY" "$FOUNDER"; do
+  [[ -f "$(dropin "$unit")" ]] && owned=$((owned + 1))
 done
-timeout 30s systemctl daemon-reload || fail "systemd reload failed"
-for name in "$PRIMARY" "$FOUNDER"; do
-  timeout 40s systemctl start "$name" || fail "could not start $name; manual operator required"
-done
-check_legacy_pids
+if (( owned == 0 )); then
+  echo "INFO: no owned new-executable overrides; avoiding unnecessary settlement bounce"
+  check_legacy_pids
+else
+  echo "ROLLBACK: returning both settlement units to original shared executable"
+  for name in "$PRIMARY" "$FOUNDER"; do
+    timeout 40s systemctl stop "$name" || fail "could not stop $name; manual operator required"
+  done
+  for name in "$PRIMARY" "$FOUNDER"; do
+    file="$(dropin "$name")"
+    if [[ -f "$file" ]]; then
+      rm -- "$file"
+      echo "Removed only our exact reviewed override for $name"
+    fi
+  done
+  timeout 30s systemctl daemon-reload || fail "systemd reload failed"
+  for name in "$PRIMARY" "$FOUNDER"; do
+    timeout 40s systemctl start "$name" || fail "could not start $name; manual operator required"
+  done
+  check_legacy_pids
+fi
 health 8092 primary
 health 8093 founder
 check_consensus
 echo "ROLLBACK_PASS: both original settlement binaries active; live state preserved"
-echo "NODE_UNTOUCHED: do not call the generic shared-binary restore script"
+if [[ "$mode" == "--rescue" ]]; then
+  resume_producers
+fi
+echo "NODE_UNTOUCHED: generic shared-binary restore script never called"
