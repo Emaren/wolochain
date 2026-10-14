@@ -55,6 +55,20 @@ The original Wolo VPS **source checkout is deliberately not modified**;
 a separate post-cutover source/runtime attestation and protected checkout
 review are still required before the app's P1 Wolo source-drift gate can pass.
 
+**Separate helper staging:** `scripts/settlement-release-helper-stage.sh`
+defaults to read-only `--inspect`. An explicitly approved `--stage`
+downloads the immutable Wolo rescue source at Wolo merge
+`f547b5d6e25d0bf843fb6b83c8b88b4a3d1d5cbb` and app read-only
+financial audit at app merge
+`3ecc28bd983bd517f4e82b982ef5726f3f33eaf7`, independently checks both
+pinned Git blob hashes, and installs root-controlled files outside both live
+Git worktrees in `/usr/local/libexec/aoe2war-wolo`.
+The rescue is mode 0500 root-only; the nonsecret auditor is mode 0444 and
+can load production PostgreSQL access only through the private transient
+systemd EnvironmentFile. Staging prints both SHA-256 digests to allow an
+independent activation pin. **Staging is not activation**; it never stops
+services or transmits WOLO.
+
 **Hard pending blockers:** The source of the installed rescue and financial
 audit must be independently pinned and root-owned; they are NOT currently
 installed as controller dependencies. The live finance scan returned
