@@ -40,12 +40,22 @@ fi
 
 exec 8>"$GATE_LOCK"
 flock -w 150 8 || fail "operator controller failed to release bounded handoff lock"
-if [[ -f "$COMMITTED" && ! -L "$COMMITTED" ]] &&
-   [[ "$(cat "$COMMITTED")" == "COMMITTED-3EA79363" ]]; then
-  echo "WATCHDOG_SKIP: committed release and producer recovery already complete"
-  exit 0
+if [[ -f "$COMMITTED" && ! -L "$COMMITTED" ]]; then
+  case "$(cat "$COMMITTED")" in
+    COMMITTED-3EA79363)
+      echo "WATCHDOG_SKIP: committed release and producer recovery already complete"
+      exit 0 ;;
+    RESCUED-3EA79363)
+      echo "WATCHDOG_SKIP: original binary and producer recovery already verified"
+      exit 0 ;;
+    *) fail "unknown/partial release outcome marker" ;;
+  esac
 fi
-[[ ! -e "$COMMITTED" ]] || fail "unknown/partial commit marker"
-echo "WATCHDOG_RECOVER: no committed release; verify and rescue BOTH settlement lanes"
+[[ ! -e "$COMMITTED" ]] || fail "unknown/partial release outcome marker"
+echo "WATCHDOG_RECOVER: no committed release; rescue BOTH settlement lanes"
 bash "$RESCUE" --rescue
-echo "WATCHDOG_RECOVERY_PASS: legacy binaries/health and producer resume verified"
+tmp="$(mktemp "$RUN/COMMITTED.XXXXXXXX")" || fail "unable to stage rescue outcome"
+printf '%s\n' "RESCUED-3EA79363" > "$tmp"
+chmod 0600 "$tmp"
+mv -T -- "$tmp" "$COMMITTED" || fail "unable to commit verified rescue"
+echo "WATCHDOG_RECOVERY_PASS: original binaries and producers restored"
