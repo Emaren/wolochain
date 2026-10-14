@@ -15,6 +15,75 @@ sensitivity: "restricted"
 
 # WoloChain Mainnet Settlement Runbook
 
+## Settlement-only verifier candidate — source-controlled proof lane (October 14, 2026)
+
+**Source identity has been verified, but the security patch has not yet been deployed.**
+At `2026-10-14T03:32:39Z`, the active mainnet settlement and founder-rewards
+settlement processes were both running a SHA-256
+`040126a2884946caf1651a50b7d8115c5a6fb2d5aa94fcbbe150694602d451a5`
+binary with embedded `vcs.revision=78c25985420ee41a6678c42fab8ea8d6c3b1b519`
+and `vcs.modified=false`. The VPS checkout is clean at this exact source.
+
+The *consensus node*, separately, runs
+`/usr/local/bin/wolochaind-mainnet-node-prewartrophy` with SHA-256
+`4b77f622191db7550cb87cafb8f1886a0aadebee3eb6565f9f90036f809e61d3`,
+embedded source `d3bd62414a047a492a3814b7d3baa2717d64db2e`,
+and `vcs.modified=true`. The node executable is **intentionally distinct**.
+Never replace, restart, or repoint it as part of this settlement-only campaign.
+
+Newer implementation `3ea79363695dd93be5f0a5e8a5121cf6e31d27b8`
+([settlement PR #4](https://github.com/Emaren/wolochain/pull/4)) strengthens
+escrow verification of failed transactions, wrong-denomination transfers, and
+unique matched transfer ordinal. WoloChain Go CI passed, but its existing generic
+release workflow is a conditional prerelease workflow and **is not proof of a
+built production artifact or live installation**. The settlement-only candidate
+workflow addresses that missing evidence by compiling the *exact reviewed source*
+from a pinned, clean checkout and retaining the Linux/amd64 binary with a
+SHA-256 and embedded Go VCS manifest. Artifacts are UNDEPLOYED by construction.
+They do not grant permission to fund the War Satchel or enable auto betting.
+
+### Operator gates (explicit human-controlled deployment)
+
+1. Confirm the `Settlement-only candidate (NO DEPLOY)` GitHub Actions run is
+   successful and download `wolo-settlement-3ea79363-linux-amd64-UNDEPLOYED`.
+   Verify artifact's `SHA256SUMS`, `SOURCE.txt`, `go-build-metadata.txt` and
+   exact `3ea79363` VCS inside the binary. Never assume the conditional generic
+   release workflow produced this artifact.
+2. Transfer the binary only into **non-live staging storage** with enough free
+   space. Run the separately reviewed, read-only
+   `scripts/settlement-only-provenance.sh --candidate PATH --sha256 DIGEST`
+   as a privileged inspection. This command checks both live settlement
+   processes, node SHA, clean old VPS Git checkout, and the staged candidate.
+   It does not copy, install, restart, or update anything.
+3. Independently prove real-time active settlement health, pending requests,
+   signer reserve floors, escrow liabilities, rollback restore points, staging
+   storage capacity and consistency. Do not print secret environment files,
+   auth headers, keyring material, or wallet credentials. Require positive and
+   negative escrow verification, duplicate event, old manual ticket, and
+   founder reward compatibility tests. A healthy HTTP endpoint alone is not
+   semantic parity.
+4. Approve a specific maintenance window with rollback operator and receipt.
+   The two settlement units **share** the same live binary, so treat both as one
+   coordinated deployment while keeping the consensus node PID, binary,
+   chain home and block state untouched. Choose an independently verified
+   versioned settlement executable path / unit override and safe rollback;
+   never use the general `shared-binary` recovery path that restarts the node.
+5. After settlement-only promotion, prove new running PID executable hashes and
+   Go VCS `3ea79363`, unchanged running node SHA, chain `wolo-1` progress,
+   `8092` and protected founder listener health, auth rejection, historical
+   idempotency and exact transfer semantics. On regression, use the separately
+   rehearsed **settlement-only** rollback, not a consensus restart.
+6. Only after execution evidence is captured, advance the VPS source checkout
+   to the approved SHA and reconcile central documentation. Then retry the
+   web-only `aoe2war finish --dry-run` without bypassing its P1 gate.
+
+**Authority separation:** Git source, binary provenance, live chain runtime,
+settlement API, central documentation baseline and Satchel custody certification
+are six independent identities. A release that changes one does not implicitly
+certify the others. See [WoloChain ops #5](https://github.com/Emaren/wolochain/issues/5)
+and [Kingdom Shepherd #554](https://github.com/Emaren/app-prodn/issues/554).
+
+
 
 ## Review Renewal — 2026-10-07 UTC
 
