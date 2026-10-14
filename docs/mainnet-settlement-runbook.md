@@ -84,6 +84,42 @@ Production release is NOT complete. A verified code-only rescue mechanism is
 necessary but does not, by itself, establish an atomic payout drain or mainnet
 solvency.
 
+## Draft watchdog handoff correction — source rehearsal only (October 14, 2026)
+
+The earlier dual-settlement controller had a real race: it reopened
+aoe2war web/API and payment timers **before** disarming its independent
+one-shot rollback timer. If the timer had already fired and was waiting to
+run, it could revert both newly healthy settlement executables *after*
+financial ingress reopened. **That version must never be run on mainnet.**
+
+The revised draft introduces `scripts/settlement-two-lane-watchdog-gate.sh`.
+The operator must separately source-pin this third private helper before any
+promotion is even considered. The controller now:
+
+1. Captures the original producer roster in a complete root-only file and
+   atomically publishes it **before** arming the independent timer.
+2. Holds a dedicated `handoff.lock` from **before the first producer stop**
+   through verified service health, producer resumption, an atomically
+   written `COMMITTED-3EA79363` outcome and disarming the timer.
+3. Schedules the watchdog *gate*, not the raw code rollback. The gate waits
+   for the same lock and inspects the outcome: committed release => no action;
+   verified prior rescue => no action; otherwise run exact pinned two-service
+   `--rescue` and persist `RESCUED-3EA79363`.
+4. On a trapped normal failure, attempts immediate code-only rescue under
+   the same controller-held lock. The timer remains a disconnected-session
+   contingency and cannot misread an already committed outcome.
+
+Isolated tests must exercise a timer already waiting at commit, operator
+crash before commit, idempotent duplicate wakeup, invalid marker and
+unsafe/incomplete roster. **Synthetic tests cannot certify behavior during a
+real Linux power loss, hung controller, network interruption or failed
+systemd service transaction.** The watchdog still has a bounded 900-second
+delay plus a 150-second lock wait, and on lock timeout cannot guarantee
+automated restoration. A protected disposable systemd fault-injection
+rehearsal, audited helper staging, app payout-drain proof and explicit
+maintenance authorization remain required. This PR stays DRAFT;
+`--promote` is **not authorized**.
+
 ## Emergency code-only two-service rollback (October 14, 2026)
 
 `scripts/settlement-two-service-code-rollback.sh` is a separately audited
