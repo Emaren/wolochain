@@ -8,12 +8,16 @@ umask 077
 DIR=/usr/local/libexec/aoe2war-wolo
 RESCUE=settlement-two-service-code-rollback.sh
 AUDIT=wolo-maintenance-drain-readonly.mjs
+GATE=settlement-two-lane-watchdog-gate.sh
 RESCUE_REF=f547b5d6e25d0bf843fb6b83c8b88b4a3d1d5cbb
 AUDIT_REF=3ecc28bd983bd517f4e82b982ef5726f3f33eaf7
+GATE_REF=32305e6d9a6bf4d0dd9b85700d9c17d6ae340bc1
 RESCUE_BLOB=8bf03c7f90d7566b06575927cf5f92b5aa69a499
 AUDIT_BLOB=f8372e27fb0cad13fecbdcb42ca2457dbf4caabb
+GATE_BLOB=514984222c4c854522144ac5d5fa490055c14baa
 RESCUE_URL="https://raw.githubusercontent.com/Emaren/wolochain/$RESCUE_REF/scripts/$RESCUE"
 AUDIT_URL="https://raw.githubusercontent.com/Emaren/app-prodn/$AUDIT_REF/scripts/$AUDIT"
+GATE_URL="https://raw.githubusercontent.com/Emaren/wolochain/$GATE_REF/scripts/$GATE"
 fail() { echo "BLOCKED: $*" >&2; exit 2; }
 verify_existing() {
   local name="$1" blob="$2" mode="$3" p="$DIR/$1"
@@ -31,6 +35,7 @@ case "$mode" in
   --inspect)
     verify_existing "$RESCUE" "$RESCUE_BLOB" 500
     verify_existing "$AUDIT" "$AUDIT_BLOB" 444
+    verify_existing "$GATE" "$GATE_BLOB" 500
     echo "INSPECT_PASS: no file or service changes"
     ;;
   --stage)
@@ -40,7 +45,7 @@ case "$mode" in
     }
     [[ "$(stat -c '%u:%g:%a' "$DIR")" == 0:0:755 ]] ||
       fail "helper directory ownership/mode drift"
-    for file in "$DIR/$RESCUE" "$DIR/$AUDIT"; do
+    for file in "$DIR/$RESCUE" "$DIR/$AUDIT" "$DIR/$GATE"; do
       [[ ! -L "$file" ]] || fail "refusing symlink target $file"
     done
     work="$(mktemp -d /tmp/wolo-pinned-helpers.XXXXXXXX)" || fail "temporary workspace"
@@ -49,11 +54,15 @@ case "$mode" in
       fail "could not retrieve exact rescue source"
     curl -fsSL --connect-timeout 10 --max-time 40 "$AUDIT_URL" -o "$work/$AUDIT" ||
       fail "could not retrieve exact financial audit source"
+    curl -fsSL --connect-timeout 10 --max-time 40 "$GATE_URL" -o "$work/$GATE" ||
+      fail "could not retrieve exact watchdog gate source"
     [[ "$(git hash-object "$work/$RESCUE")" == "$RESCUE_BLOB" ]] ||
       fail "downloaded rescue source mismatches pinned Git blob"
     [[ "$(git hash-object "$work/$AUDIT")" == "$AUDIT_BLOB" ]] ||
       fail "downloaded finance source mismatches pinned Git blob"
-    for spec in "$RESCUE:$RESCUE_BLOB:500" "$AUDIT:$AUDIT_BLOB:444"; do
+    [[ "$(git hash-object "$work/$GATE")" == "$GATE_BLOB" ]] ||
+      fail "downloaded watchdog gate mismatches pinned Git blob"
+    for spec in "$RESCUE:$RESCUE_BLOB:500" "$AUDIT:$AUDIT_BLOB:444" "$GATE:$GATE_BLOB:500"; do
       name="$(printf '%s' "$spec" | cut -d: -f1)"
       blob="$(printf '%s' "$spec" | cut -d: -f2)"
       if [[ -e "$DIR/$name" ]]; then
@@ -63,8 +72,10 @@ case "$mode" in
     done
     install -o root -g root -m 0500 "$work/$RESCUE" "$DIR/$RESCUE"
     install -o root -g root -m 0444 "$work/$AUDIT" "$DIR/$AUDIT"
+    install -o root -g root -m 0500 "$work/$GATE" "$DIR/$GATE"
     verify_existing "$RESCUE" "$RESCUE_BLOB" 500
     verify_existing "$AUDIT" "$AUDIT_BLOB" 444
+    verify_existing "$GATE" "$GATE_BLOB" 500
     echo "STAGE_PASS: helper files only; no website/settlement/node changes"
     echo "Operator: retain the printed SHA-256 fingerprints for separately gated controller."
     ;;
