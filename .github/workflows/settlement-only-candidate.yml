@@ -5,6 +5,7 @@ on:
     paths:
       - ".github/workflows/settlement-only-candidate.yml"
       - "scripts/settlement-only-provenance.sh"
+      - "scripts/settlement-dual-service-snapshot.sh"
       - "docs/mainnet-settlement-runbook.md"
   workflow_dispatch:
 
@@ -24,6 +25,10 @@ jobs:
         run: |
           set -euo pipefail
           bash -n scripts/settlement-only-provenance.sh
+          bash -n scripts/settlement-dual-service-snapshot.sh
+          test "$(grep -c 'check_env ' scripts/settlement-dual-service-snapshot.sh)" -ge 2
+          test "$(grep -c 'check_state ' scripts/settlement-dual-service-snapshot.sh)" -ge 4
+          ! grep -Eiq 'systemctl[[:space:]]+(restart|stop|start|reload|daemon-reload)' scripts/settlement-dual-service-snapshot.sh
           bash scripts/settlement-only-provenance.sh --help | grep -q 'Read-only'
           ! grep -Eiq 'systemctl[[:space:]]+(restart|stop|start|reload)' scripts/settlement-only-provenance.sh
           ! grep -Eq '[[:space:]]+(cp|mv|rm|install)[[:space:]]' scripts/settlement-only-provenance.sh
