@@ -8,7 +8,7 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "git-branch-authority-contract"
-reviewed_at: "2026-10-07"
+reviewed_at: "2026-10-14"
 review_interval_days: 14
 sensitivity: "internal"
 ---
@@ -20,10 +20,11 @@ Reviewed: 2026-10-14
 ## Current federation source
 
 The documentation federation for `wolo-1` mainnet work is sourced from
-the clean remote-exact `wolo-1-mainnet-prep` branch. The new operator-only
-settlement-candidate preparation workflow and read-only audit tools advance
-the **repository source/documentation baseline** to
-`c686ece3c1c619566c8d2071498e19edede89494`. This is NOT a new
+the clean remote-exact `wolo-1-mainnet-prep` branch. The
+settlement-candidate workflow, exact-source provenance tooling, and new
+root-private two-service snapshot preparation tool advance the
+**repository source/documentation baseline** to
+`805156ee9440d62368d29e86a38f8b08e6b1d413`. This is NOT a new
 settlement build or consensus module revision. The reviewed settlement
 verifier code itself is `3ea79363695dd93be5f0a5e8a5121cf6e31d27b8`.
 
