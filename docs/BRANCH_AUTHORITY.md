@@ -23,7 +23,7 @@ The documentation federation for `wolo-1` mainnet work is sourced from
 the clean remote-exact `wolo-1-mainnet-prep` branch. The new operator-only
 settlement-candidate preparation workflow and read-only audit tools advance
 the **repository source/documentation baseline** to
-`4387d4fb8fdf4c47b2643b8637c34a3ceccc6ef2`. This is NOT a new
+`bca6768696463a8f97ddbd0f1a739e2f8ca17233`. This is NOT a new
 settlement build or consensus module revision. The reviewed settlement
 verifier code itself is `3ea79363695dd93be5f0a5e8a5121cf6e31d27b8`.
 
