@@ -15,6 +15,158 @@ sensitivity: "restricted"
 
 # WoloChain Mainnet Settlement Runbook
 
+## Parallel WOLO financial ingress and actual systemd rehearsal (October 14, 2026)
+
+The October 14 VPS service inventory also showed
+`aoe2dewarwagers-web.service` and `aoe2dewarwagers-api.service`
+**active**. These are not part of the currently allowlisted stop/resume
+manifest. Source in the separate `Emaren/aoe2dewarwagers-web` repository
+contains executable endpoints for WOLO claims, scheduled settlement and
+staking rewards. It has **not** been proven that the live instances do not
+share a signer, database, or payout transport with AoE2WAR.
+
+The draft controller therefore **blocks before the first service stop or
+timer arm** if either parallel unit remains active. Never disable that
+check merely to force deployment; instead independently establish the
+live unit source/financial authority and design an explicit scoped ingress
+pause and recovery, or show with source and runtime evidence that the
+service cannot reach the affected signer. Other remote payout ingress
+also requires proof of isolation before the maintenance window.
+
+CI now includes `tests/settlement-watchdog-real-systemd-ci.sh` in its own
+ephemeral Ubuntu runner, with a temporary synthetic node and rescuer,
+sandbox-only files and uniquely named transient systemd timers. It
+rehearses watchdog lock timeout and independent retry, watchdog skipping
+a committed release, and already-rescued idempotency. It never invokes
+any AoE2WAR production unit, wallet, chain endpoint, or executable.
+**Even a passing runner integration test cannot certify the real VPS
+recovery deadline, a hard-hung controller, detached SSH session or power
+loss.** Keep PR #11 **draft** until operator-reviewed disposable-systemd
+VPS rehearsal and complete financial quiescence proofs exist.
+
+## Watchdog-gated dual-service promotion controller (October 14, 2026)
+
+`scripts/settlement-two-lane-watchdog-controller.sh` is **SOURCE ONLY**. It
+has not been installed, activated or executed against the VPS, and has not
+been certified by a real maintenance-window recovery rehearsal. Its **default
+`--inspect` mode is read-only**. No other process, app release or administrator
+is authorized to set `--promote` until a separate operations approval gate is
+recorded on Wolo issue #5.
+
+The guarded `--promote` plan requires the exact old executable, candidate
+SHA-256, unchanged consensus executable, private two-service backup receipts,
+both preexisting original unit definitions, root-pinned installed independent
+rescue script and verified read-only application finance auditor, and an
+explicitly scoped operator acknowledgement. It takes a nonblocking exclusive
+flock, **runs the financial audit before causing downtime**, and refuses to
+start maintenance while unresolved historical claims (including #889) exist.
+
+Only if that first financial scan is zero does it arm a **systemd monotonic
+900-second (15-minute) independent rescue timer** (which survives SSH disconnection), record
+which producer units were initially active, pause the specifically enumerated
+six automatic payment/replay timers and the AoE2WAR web/API request ingress, and
+wait for any running timer jobs to finish/stop. It then re-runs the live
+read-only finance scan, verifies no active state locks and no established
+connections on 8092/8093. If anything is ambiguous, the rescue script
+restores original *code* for both settlement units and resumes the original
+web/API/timer set from a root-private manifest. The validation may require a
+brief site maintenance interruption; it never touches consensus units, chain
+files, keys, wallets, historical primary/founder state or the shared original
+settlement binary.
+
+Only following a successful second drain can it stop **the two settlement
+services only**, install exactly the versioned candidate `ExecStart` override
+for each, reload systemd configuration, restart the two settlement processes,
+verify exact running SHA-256 and healthy loopback APIs, recheck the consensus
+executable, restore the originally active app ingress/timers, and disarm the
+independent timer. An error leaves the timer armed and tries immediate rescue.
+The original Wolo VPS **source checkout is deliberately not modified**;
+a separate post-cutover source/runtime attestation and protected checkout
+review are still required before the app's P1 Wolo source-drift gate can pass.
+
+**Separate helper staging:** `scripts/settlement-release-helper-stage.sh`
+defaults to read-only `--inspect`. An explicitly approved `--stage`
+downloads the immutable Wolo rescue source at Wolo merge
+`f547b5d6e25d0bf843fb6b83c8b88b4a3d1d5cbb` and app read-only
+financial audit at app merge
+`3ecc28bd983bd517f4e82b982ef5726f3f33eaf7`, independently checks both
+pinned Git blob hashes, and installs root-controlled files outside both live
+Git worktrees in `/usr/local/libexec/aoe2war-wolo`.
+The rescue is mode 0500 root-only; the nonsecret auditor is mode 0444 and
+can load production PostgreSQL access only through the private transient
+systemd EnvironmentFile. Staging prints both SHA-256 digests to allow an
+independent activation pin. **Staging is not activation**; it never stops
+services or transmits WOLO.
+
+**Hard pending blockers:** The source of the installed rescue and financial
+audit must be independently pinned and root-owned; they are NOT currently
+installed as controller dependencies. The live finance scan returned
+`bet_claim_payout_attempt_without_proof=1`, legacy founder claim #889.
+This must be proved against authoritative chain history or otherwise
+resolved by a separately reviewed financial correction before an actual
+activation is allowed. No bypass, status forgery, manual blind refund,
+historical state rewind, or consensus restart is authorized.
+
+The longer independent fallback interval avoids interrupting a still-running bounded multi-unit transition, but implies up to 15 minutes of unattended recovery delay after a hard SSH/process failure. A live rehearsal must prove both normal-window duration and immediate error-triggered rescue before approval.
+
+Production release is NOT complete. A verified code-only rescue mechanism is
+necessary but does not, by itself, establish an atomic payout drain or mainnet
+solvency.
+
+**Repeatability correction (source-only; October 14):** The independent
+transient timer now combines `--on-active=900s` with
+`--on-unit-inactive=60s`. If a watchdog invocation times out waiting for the
+controller's bounded handoff mutex, exits with an error, or fails an initial
+recovery attempt, the armed timer schedules another invocation after the last
+attempt becomes inactive. The controller explicitly stops that repeating
+timer only after a verified commit or completed immediate rescue. The watchdog
+gate rechecks the durable COMMITTED/RESCUED marker under the mutex, so an
+already finished transition is not rolled back on the next tick.
+Synthetic promotion CI refuses a return to single-fire timers.
+
+**This still is not live authorization.** The initial 15-minute recovery
+delay, the watchdog's 150-second mutex wait, on-host `systemd-run` timer
+behavior, and intervention on a permanently hung controller require a
+disposable systemd transaction rehearsal and documented downtime objective.
+The founder claim #889 and independently verified financial drain remain
+separate, unresolved activation gates.
+
+## Draft watchdog handoff correction — source rehearsal only (October 14, 2026)
+
+The earlier dual-settlement controller had a real race: it reopened
+aoe2war web/API and payment timers **before** disarming its independent
+one-shot rollback timer. If the timer had already fired and was waiting to
+run, it could revert both newly healthy settlement executables *after*
+financial ingress reopened. **That version must never be run on mainnet.**
+
+The revised draft introduces `scripts/settlement-two-lane-watchdog-gate.sh`.
+The operator must separately source-pin this third private helper before any
+promotion is even considered. The controller now:
+
+1. Captures the original producer roster in a complete root-only file and
+   atomically publishes it **before** arming the independent timer.
+2. Holds a dedicated `handoff.lock` from **before the first producer stop**
+   through verified service health, producer resumption, an atomically
+   written `COMMITTED-3EA79363` outcome and disarming the timer.
+3. Schedules the watchdog *gate*, not the raw code rollback. The gate waits
+   for the same lock and inspects the outcome: committed release => no action;
+   verified prior rescue => no action; otherwise run exact pinned two-service
+   `--rescue` and persist `RESCUED-3EA79363`.
+4. On a trapped normal failure, attempts immediate code-only rescue under
+   the same controller-held lock. The timer remains a disconnected-session
+   contingency and cannot misread an already committed outcome.
+
+Isolated tests must exercise a timer already waiting at commit, operator
+crash before commit, idempotent duplicate wakeup, invalid marker and
+unsafe/incomplete roster. **Synthetic tests cannot certify behavior during a
+real Linux power loss, hung controller, network interruption or failed
+systemd service transaction.** The watchdog still has a bounded 900-second
+delay plus a 150-second lock wait, and on lock timeout cannot guarantee
+automated restoration. A protected disposable systemd fault-injection
+rehearsal, audited helper staging, app payout-drain proof and explicit
+maintenance authorization remain required. This PR stays DRAFT;
+`--promote` is **not authorized**.
+
 ## Emergency code-only two-service rollback (October 14, 2026)
 
 `scripts/settlement-two-service-code-rollback.sh` is a separately audited

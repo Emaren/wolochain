@@ -8,6 +8,12 @@ on:
       - "scripts/settlement-dual-service-snapshot.sh"
       - "scripts/settlement-dual-service-release-preflight.sh"
       - "scripts/settlement-two-service-code-rollback.sh"
+      - "scripts/settlement-two-lane-watchdog-controller.sh"
+      - "scripts/settlement-two-lane-watchdog-gate.sh"
+      - "scripts/settlement-release-helper-stage.sh"
+      - "tests/settlement-controller-finance-block-rehearsal.sh"
+      - "tests/settlement-watchdog-rendezvous-rehearsal.sh"
+      - "tests/settlement-watchdog-real-systemd-ci.sh"
       - "docs/mainnet-settlement-runbook.md"
   workflow_dispatch:
 
@@ -15,6 +21,18 @@ permissions:
   contents: read
 
 jobs:
+  real-systemd-rescue:
+    name: Isolated real systemd watchdog retry and commit proof
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Checkout immutable under-review source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Run production-gate code against synthetic sandbox only
+        run: sudo env GITHUB_ACTIONS=true bash tests/settlement-watchdog-real-systemd-ci.sh
+
   operator-contract:
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -30,6 +48,42 @@ jobs:
           bash -n scripts/settlement-dual-service-snapshot.sh
           bash -n scripts/settlement-dual-service-release-preflight.sh
           bash -n scripts/settlement-two-service-code-rollback.sh
+          bash -n scripts/settlement-two-lane-watchdog-controller.sh
+          bash -n scripts/settlement-two-lane-watchdog-gate.sh
+          bash -n scripts/settlement-release-helper-stage.sh
+          bash -n tests/settlement-controller-finance-block-rehearsal.sh
+          bash -n tests/settlement-watchdog-rendezvous-rehearsal.sh
+          bash -n tests/settlement-watchdog-real-systemd-ci.sh
+          grep -Fq 'mode=--inspect' scripts/settlement-release-helper-stage.sh
+          grep -Fq 'RESCUE_BLOB=8bf03c7f90d7566b06575927cf5f92b5aa69a499' scripts/settlement-release-helper-stage.sh
+          grep -Fq 'AUDIT_BLOB=f8372e27fb0cad13fecbdcb42ca2457dbf4caabb' scripts/settlement-release-helper-stage.sh
+          grep -Fq 'GATE_BLOB=514984222c4c854522144ac5d5fa490055c14baa' scripts/settlement-release-helper-stage.sh
+          ! grep -Eq 'systemctl[[:space:]]+(stop|restart|start)' scripts/settlement-release-helper-stage.sh
+          # A malformed transient unit can silently prevent a finance scan.
+          grep -Fq -- '--unit="aoe2war-wolo-drain-${RANDOM}-$$"' scripts/settlement-two-lane-watchdog-controller.sh
+          ! grep -Fq -- '--unit="aoe2war-wolo-drain-$RANDOM-$"' scripts/settlement-two-lane-watchdog-controller.sh
+          grep -Fq 'run_finance_scan' scripts/settlement-two-lane-watchdog-controller.sh
+          grep -Fq 'flock -n 9' scripts/settlement-two-lane-watchdog-controller.sh
+          # Inspection is the only default. Promotion cannot occur without an
+          # independent timed rollback and a zero-unresolved activity scan.
+          grep -Fq 'mode="--inspect"' scripts/settlement-two-lane-watchdog-controller.sh
+          grep -Fq 'EXPECTED_AUDIT_SHA256' scripts/settlement-two-lane-watchdog-controller.sh
+          grep -Fq 'EXPECTED_RESCUE_SHA256' scripts/settlement-two-lane-watchdog-controller.sh
+          grep -Fq 'PROMOTION_ACK' scripts/settlement-two-lane-watchdog-controller.sh
+          grep -Fq 'on-active=900s' scripts/settlement-two-lane-watchdog-controller.sh
+          grep -Fq 'on-unit-inactive=60s' scripts/settlement-two-lane-watchdog-controller.sh
+          grep -Fq 'prepare_private_manifest' scripts/settlement-two-lane-watchdog-controller.sh
+          grep -Fq 'EXPECTED_WATCHDOG_SHA256' scripts/settlement-two-lane-watchdog-controller.sh
+          grep -Fq 'exec 8>"$RUN/handoff.lock"' scripts/settlement-two-lane-watchdog-controller.sh
+          grep -Fq 'mark_finished "COMMITTED-3EA79363"' scripts/settlement-two-lane-watchdog-controller.sh
+          grep -Fq 'flock -w 150 8' scripts/settlement-two-lane-watchdog-gate.sh
+          grep -Fq -- '--rescue' scripts/settlement-two-lane-watchdog-controller.sh
+          grep -Fq 'stop_ingress' scripts/settlement-two-lane-watchdog-controller.sh
+          grep -Fq 'verify_drain' scripts/settlement-two-lane-watchdog-controller.sh
+          grep -Fq 'restore_producers' scripts/settlement-two-lane-watchdog-controller.sh
+          grep -Fq 'pid_hash "$NODE" "$NODE_BIN" "$NODE_SHA"' scripts/settlement-two-lane-watchdog-controller.sh
+          ! grep -Eq 'systemctl[[:space:]]+(start|stop|restart)[[:space:]]+["$]*NODE' scripts/settlement-two-lane-watchdog-controller.sh
+          ! grep -Eq '([[:space:]]rsync[[:space:]]|[[:space:]]restore-live-settlement.sh)' scripts/settlement-two-lane-watchdog-controller.sh
           # Code-only rescuer must NEVER operate the consensus unit, restore
           # historic state, or replace the shared settlement executable.
           grep -q -- '--rescue' scripts/settlement-two-service-code-rollback.sh
@@ -49,6 +103,28 @@ jobs:
           bash scripts/settlement-only-provenance.sh --help | grep -q 'Read-only'
           ! grep -Eiq 'systemctl[[:space:]]+(restart|stop|start|reload)' scripts/settlement-only-provenance.sh
           ! grep -Eq '[[:space:]]+(cp|mv|rm|install)[[:space:]]' scripts/settlement-only-provenance.sh
+
+  finance-failclosed-rehearsal:
+    name: Simulated financial block refuses service changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Run isolated fake-systemd financial denial rehearsal
+        run: sudo env GITHUB_ACTIONS=true bash tests/settlement-controller-finance-block-rehearsal.sh
+
+  watchdog-rendezvous-rehearsal:
+    name: Synthetic watchdog commit, crash and replay race checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Run temporary root-only fake-node watchdog rendezvous
+        run: sudo env GITHUB_ACTIONS=true bash tests/settlement-watchdog-rendezvous-rehearsal.sh
 
   settlement-candidate:
     runs-on: ubuntu-latest
