@@ -15,6 +15,35 @@ sensitivity: "restricted"
 
 # WoloChain Mainnet Settlement Runbook
 
+## Parallel WOLO financial ingress and actual systemd rehearsal (October 14, 2026)
+
+The October 14 VPS service inventory also showed
+`aoe2dewarwagers-web.service` and `aoe2dewarwagers-api.service`
+**active**. These are not part of the currently allowlisted stop/resume
+manifest. Source in the separate `Emaren/aoe2dewarwagers-web` repository
+contains executable endpoints for WOLO claims, scheduled settlement and
+staking rewards. It has **not** been proven that the live instances do not
+share a signer, database, or payout transport with AoE2WAR.
+
+The draft controller therefore **blocks before the first service stop or
+timer arm** if either parallel unit remains active. Never disable that
+check merely to force deployment; instead independently establish the
+live unit source/financial authority and design an explicit scoped ingress
+pause and recovery, or show with source and runtime evidence that the
+service cannot reach the affected signer. Other remote payout ingress
+also requires proof of isolation before the maintenance window.
+
+CI now includes `tests/settlement-watchdog-real-systemd-ci.sh` in its own
+ephemeral Ubuntu runner, with a temporary synthetic node and rescuer,
+sandbox-only files and uniquely named transient systemd timers. It
+rehearses watchdog lock timeout and independent retry, watchdog skipping
+a committed release, and already-rescued idempotency. It never invokes
+any AoE2WAR production unit, wallet, chain endpoint, or executable.
+**Even a passing runner integration test cannot certify the real VPS
+recovery deadline, a hard-hung controller, detached SSH session or power
+loss.** Keep PR #11 **draft** until operator-reviewed disposable-systemd
+VPS rehearsal and complete financial quiescence proofs exist.
+
 ## Watchdog-gated dual-service promotion controller (October 14, 2026)
 
 `scripts/settlement-two-lane-watchdog-controller.sh` is **SOURCE ONLY**. It
