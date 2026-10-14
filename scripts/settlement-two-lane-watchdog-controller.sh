@@ -130,10 +130,10 @@ stop_ingress() {
     if systemctl is-active --quiet "$unit"; then fail "financial job in progress: $unit"; fi
   done
 }
-verify_drain() {
+run_finance_scan() {
   local code=0
   timeout 70s systemd-run --quiet --wait --pipe --collect \
-    --unit="aoe2war-wolo-drain-$RANDOM-$$" \
+    --unit="aoe2war-wolo-drain-$RANDOM-$" \
     --property=User=tony \
     --property=WorkingDirectory="$APP" \
     --property=EnvironmentFile="$ENV_FILE" \
@@ -143,6 +143,9 @@ verify_drain() {
     --setenv="AOE2WAR_PACKAGE_JSON=$APP/package.json" \
     /usr/bin/node "$AUDIT" || code=$?
   [[ "$code" == 0 ]] || fail "unresolved financial evidence (code=$code); leave funds untouched"
+}
+verify_drain() {
+  run_finance_scan
   for dir in "$VOLUME/wolochain-mainnet/settlement-state" "$VOLUME/wolochain-mainnet/founder-rewards-settlement-state"; do
     [[ -z "$(find "$dir" -type f -name '*.lock' -print -quit)" ]] || fail "settlement lock still exists"
   done
@@ -179,9 +182,15 @@ restore_producers() {
   done < "$RUN/restore-units"
 }
 promote() {
+  # Prevent two concurrent operator windows from racing watchdogs/overrides.
+  exec 9>/run/lock/aoe2war-wolo-two-settlement-promotion.lock
+  flock -n 9 || fail "another settlement promotion is in progress"
   [[ "$PROMOTION_ACK" == "REVIEWED-DUAL-SERVICE-3EA79363" ]] ||
     fail "explicit operator approval absent"
   approved_tools
+  # Catch known historical ambiguity (e.g. founder claim #889) BEFORE any
+  # maintenance outage; recheck after freezing new ingress for race safety.
+  run_finance_scan
   arm_rescue
   trap 'on_exit "$?"' EXIT
   stop_ingress
