@@ -8,6 +8,7 @@ on:
       - "scripts/settlement-dual-service-snapshot.sh"
       - "scripts/settlement-dual-service-release-preflight.sh"
       - "scripts/settlement-two-service-code-rollback.sh"
+      - "scripts/settlement-two-lane-watchdog-controller.sh"
       - "docs/mainnet-settlement-runbook.md"
   workflow_dispatch:
 
@@ -30,6 +31,21 @@ jobs:
           bash -n scripts/settlement-dual-service-snapshot.sh
           bash -n scripts/settlement-dual-service-release-preflight.sh
           bash -n scripts/settlement-two-service-code-rollback.sh
+          bash -n scripts/settlement-two-lane-watchdog-controller.sh
+          # Inspection is the only default. Promotion cannot occur without an
+          # independent timed rollback and a zero-unresolved activity scan.
+          grep -Fq 'mode="--inspect"' scripts/settlement-two-lane-watchdog-controller.sh
+          grep -Fq 'EXPECTED_AUDIT_SHA256' scripts/settlement-two-lane-watchdog-controller.sh
+          grep -Fq 'EXPECTED_RESCUE_SHA256' scripts/settlement-two-lane-watchdog-controller.sh
+          grep -Fq 'PROMOTION_ACK' scripts/settlement-two-lane-watchdog-controller.sh
+          grep -Fq 'on-active=240s' scripts/settlement-two-lane-watchdog-controller.sh
+          grep -Fq -- '--rescue' scripts/settlement-two-lane-watchdog-controller.sh
+          grep -Fq 'stop_ingress' scripts/settlement-two-lane-watchdog-controller.sh
+          grep -Fq 'verify_drain' scripts/settlement-two-lane-watchdog-controller.sh
+          grep -Fq 'restore_producers' scripts/settlement-two-lane-watchdog-controller.sh
+          grep -Fq 'pid_hash "$NODE" "$NODE_BIN" "$NODE_SHA"' scripts/settlement-two-lane-watchdog-controller.sh
+          ! grep -Eq 'systemctl[[:space:]]+(start|stop|restart)[[:space:]]+["$]*NODE' scripts/settlement-two-lane-watchdog-controller.sh
+          ! grep -Eq '([[:space:]]rsync[[:space:]]|[[:space:]]restore-live-settlement.sh)' scripts/settlement-two-lane-watchdog-controller.sh
           # Code-only rescuer must NEVER operate the consensus unit, restore
           # historic state, or replace the shared settlement executable.
           grep -q -- '--rescue' scripts/settlement-two-service-code-rollback.sh
