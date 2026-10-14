@@ -25,7 +25,7 @@ jobs:
           set -euo pipefail
           bash -n scripts/settlement-only-provenance.sh
           bash scripts/settlement-only-provenance.sh --help | grep -q 'Read-only'
-          ! grep -Eiq '\\bsystemctl[[:space:]]+(restart|stop|start|reload)\\b' scripts/settlement-only-provenance.sh
+          ! grep -Eiq 'systemctl[[:space:]]+(restart|stop|start|reload)' scripts/settlement-only-provenance.sh
           ! grep -Eq '[[:space:]]+(cp|mv|rm|install)[[:space:]]' scripts/settlement-only-provenance.sh
 
   settlement-candidate:
