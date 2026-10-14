@@ -57,6 +57,7 @@ jobs:
           grep -Fq 'EXPECTED_RESCUE_SHA256' scripts/settlement-two-lane-watchdog-controller.sh
           grep -Fq 'PROMOTION_ACK' scripts/settlement-two-lane-watchdog-controller.sh
           grep -Fq 'on-active=900s' scripts/settlement-two-lane-watchdog-controller.sh
+          grep -Fq 'on-unit-inactive=60s' scripts/settlement-two-lane-watchdog-controller.sh
           grep -Fq 'prepare_private_manifest' scripts/settlement-two-lane-watchdog-controller.sh
           grep -Fq 'EXPECTED_WATCHDOG_SHA256' scripts/settlement-two-lane-watchdog-controller.sh
           grep -Fq 'exec 8>"$RUN/handoff.lock"' scripts/settlement-two-lane-watchdog-controller.sh
