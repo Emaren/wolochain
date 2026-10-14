@@ -104,7 +104,7 @@ on_exit() {
   fi
 }
 arm_rescue() {
-  systemd-run --quiet --unit="$WATCHDOG" --on-active=240s \
+  systemd-run --quiet --unit="$WATCHDOG" --on-active=900s \
     /usr/bin/bash "$RECOVERY" --rescue || fail "could not arm independent timer"
   systemctl is-active --quiet "$WATCHDOG.timer" || fail "independent rescue timer not active"
   armed=1
