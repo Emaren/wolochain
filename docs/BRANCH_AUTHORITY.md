@@ -15,13 +15,30 @@ sensitivity: "internal"
 
 # WoloChain Branch Authority
 
-Reviewed: 2026-09-22
+Reviewed: 2026-10-14
 
 ## Current federation source
 
-The documentation federation for live `wolo-1` mainnet work is sourced from
-the clean remote-exact `wolo-1-mainnet-prep` branch. The implementation baseline
-described by this documentation remains:
+The documentation federation for `wolo-1` mainnet work is sourced from
+the clean remote-exact `wolo-1-mainnet-prep` branch. The new operator-only
+settlement-candidate preparation workflow and read-only audit tools advance
+the **repository source/documentation baseline** to
+`c686ece3c1c619566c8d2071498e19edede89494`. This is NOT a new
+settlement build or consensus module revision. The reviewed settlement
+verifier code itself is `3ea79363695dd93be5f0a5e8a5121cf6e31d27b8`.
+
+**Observed live operating identities (2026-10-14T03:32:39Z):** settlement
+services compiled from `78c25985420ee41a6678c42fab8ea8d6c3b1b519`,
+SHA-256 `040126a2884946caf1651a50b7d8115c5a6fb2d5aa94fcbbe150694602d451a5`.
+The consensus node uses the separate unchanged
+`wolochaind-mainnet-node-prewartrophy` executable with source
+`d3bd62414a047a492a3814b7d3baa2717d64db2e`, locally modified
+at build time, SHA-256
+`4b77f622191db7550cb87cafb8f1886a0aadebee3eb6565f9f90036f809e61d3`.
+Deployment of `3ea79363` is a separate, protected settlement-only operation;
+none of these observation dates authorizes touching the consensus node.
+
+**Historical implementation baseline (September 22):**
 
 ```text
 d5dea8d6f1a2b0b57489a5e468dd21e34246891e
@@ -45,7 +62,7 @@ The repository default/main line remains separately present at:
 main@a2fba6bfd98d7b28fb113badbadf23ec9096a4af
 ```
 
-At the implementation baseline
+At the September 22 historical implementation baseline
 `d5dea8d6f1a2b0b57489a5e468dd21e34246891e`, the branch relationship was:
 
 ```text

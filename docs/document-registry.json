@@ -36,7 +36,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-07",
       "sensitivity": "internal",
-      "sha256": "71414cfa64789faa2cabd68468dc490cc81ce0ce04eb4cd6bc772f87f08ae924",
+      "sha256": "de636e8a3a3376e9e5e2cf46c76930c7243228c5f32dca97d1e5297405a1fd54",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "306b8ea25b0eaa2b2374fdcdbabe99183a0b6deab35b6dd18b6330147a3d58bb",
+      "sha256": "6869c1da14b091dd6291448cc5e1196c5c6a38bd89009c35f2efaed9afad4463",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -266,7 +266,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-07",
       "sensitivity": "restricted",
-      "sha256": "57ca5ee093ef4a57df51f7ef3db2c93490d9360e8e86a2c2f379b946173421ca",
+      "sha256": "563e688bdd3ff71d0d25af6fb27da91f2e21c3337dba27163051fd2fce898e12",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -411,7 +411,7 @@
         "wolochain",
         "aoe2war"
       ],
-      "title": "Codex Mission: WoloChain Mainnet \u2194 Osmosis IBC Prep",
+      "title": "Codex Mission: WoloChain Mainnet ↔ Osmosis IBC Prep",
       "type": "historical"
     },
     {
@@ -572,7 +572,7 @@
         "wolochain",
         "aoe2war"
       ],
-      "title": "WoloChain Mainnet \u2192 Osmosis Liquidity Transfer",
+      "title": "WoloChain Mainnet → Osmosis Liquidity Transfer",
       "type": "historical"
     },
     {
@@ -641,7 +641,7 @@
         "wolochain",
         "aoe2war"
       ],
-      "title": "WoloChain Mainnet \u2192 Osmosis Test Transfer",
+      "title": "WoloChain Mainnet → Osmosis Test Transfer",
       "type": "historical"
     },
     {
@@ -740,7 +740,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "wolo-1-mainnet-prep",
-    "commit": "3ea79363695dd93be5f0a5e8a5121cf6e31d27b8"
+    "commit": "c686ece3c1c619566c8d2071498e19edede89494"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

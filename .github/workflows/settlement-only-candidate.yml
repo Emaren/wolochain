@@ -1,0 +1,86 @@
+name: Settlement-only candidate (NO DEPLOY)
+on:
+  pull_request:
+    branches: [wolo-1-mainnet-prep]
+    paths:
+      - ".github/workflows/settlement-only-candidate.yml"
+      - "scripts/settlement-only-provenance.sh"
+      - "docs/mainnet-settlement-runbook.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  operator-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout preflight tools under review
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Verify read-only script syntax and help contract
+        run: |
+          set -euo pipefail
+          bash -n scripts/settlement-only-provenance.sh
+          bash scripts/settlement-only-provenance.sh --help | grep -q 'Read-only'
+          ! grep -Eiq 'systemctl[[:space:]]+(restart|stop|start|reload)' scripts/settlement-only-provenance.sh
+          ! grep -Eq '[[:space:]]+(cp|mv|rm|install)[[:space:]]' scripts/settlement-only-provenance.sh
+
+  settlement-candidate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    env:
+      CANDIDATE_DIR: /tmp/wolo-settlement-3ea79363
+    steps:
+      # Do not compile PR-head code. The audited 3ea79363 source is the candidate.
+      - name: Checkout exact reviewed implementation
+        uses: actions/checkout@v4
+        with:
+          ref: 3ea79363695dd93be5f0a5e8a5121cf6e31d27b8
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Prove exact source and clean worktree
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "3ea79363695dd93be5f0a5e8a5121cf6e31d27b8"
+          test -z "$(git status --porcelain)"
+
+      - name: Install pinned Go toolchain
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Test settlement verification
+        shell: bash
+        run: |
+          set -euo pipefail
+          go test -tags go1.27 ./cmd/wolochaind/cmd -count=1
+
+      - name: Build audited linux/amd64 candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Build outside the Git checkout: untracked output must not mark VCS dirty.
+          mkdir -p "$CANDIDATE_DIR"
+          GOOS=linux GOARCH=amd64 go build -tags go1.27 -o "$CANDIDATE_DIR/wolochaind-settlement-only-linux-amd64" ./cmd/wolochaind
+          go version -m "$CANDIDATE_DIR/wolochaind-settlement-only-linux-amd64" | tee "$CANDIDATE_DIR/go-build-metadata.txt"
+          grep -Eq 'vcs.revision=3ea79363695dd93be5f0a5e8a5121cf6e31d27b8$' "$CANDIDATE_DIR/go-build-metadata.txt"
+          grep -Eq 'vcs.modified=false$' "$CANDIDATE_DIR/go-build-metadata.txt"
+          ( cd "$CANDIDATE_DIR" && sha256sum wolochaind-settlement-only-linux-amd64 > SHA256SUMS )
+          printf 'reviewed_source_commit=3ea79363695dd93be5f0a5e8a5121cf6e31d27b8\n' > "$CANDIDATE_DIR/SOURCE.txt"
+          printf 'production_authorized=false\nconsensus_upgrade_authorized=false\n' >> "$CANDIDATE_DIR/SOURCE.txt"
+
+      # Artifacts are transient, non-executable release candidates, not a
+      # production deployment or a certification of live custody.
+      - name: Retain candidate and provenance for operator review
+        uses: actions/upload-artifact@v4
+        with:
+          name: wolo-settlement-3ea79363-linux-amd64-UNDEPLOYED
+          path: /tmp/wolo-settlement-3ea79363/
+          if-no-files-found: error
+          retention-days: 14
