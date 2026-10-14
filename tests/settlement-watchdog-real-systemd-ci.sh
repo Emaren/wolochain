@@ -50,6 +50,10 @@ for old,new in changes.items():
 (root/"watchdog.sh").write_text(source)
 PY
 chmod 0500 "$work/watchdog.sh"
+# GitHub runner journal storage is not a reliable observer of transient unit
+# stdout. Wrap only the synthetic watchdog in a sandbox-local transcript.
+printf '#!/usr/bin/env bash\nexec /usr/bin/bash "%s/watchdog.sh" --watchdog >> "%s/timer.log" 2>&1\n' "$work" "$work" > "$work/launch.sh"
+chmod 0500 "$work/launch.sh"
 
 wait_for() {
   local file="$1" pattern="$2" max="${3:-25}" i
@@ -63,7 +67,7 @@ start_timer() {
   local name="$1"
   units+=("$name")
   systemd-run --quiet --unit="$name" --on-active=2s --on-unit-inactive=3s \
-    /usr/bin/bash "$work/watchdog.sh" --watchdog
+    /usr/bin/bash "$work/launch.sh"
   systemctl is-active --quiet "$name.timer" || {
     echo "BLOCKED: disposable systemd timer not armed"; exit 3;
   }
@@ -93,10 +97,11 @@ start_timer "$prefix-commit"
 sleep 5
 [[ "$(grep -c '^RESCUE_CALLED$' "$work/actions")" == 1 ]] ||
   { echo "FAIL late watchdog reverted committed release"; exit 3; }
-journalctl -u "$prefix-commit.service" --no-pager -n 20 |
-  grep -Fq WATCHDOG_SKIP || {
-    echo "FAIL committed release timer did not execute"; exit 3;
-  }
+wait_for "$work/timer.log" "WATCHDOG_SKIP: committed release" 10 || {
+  echo "FAIL committed release timer did not execute, transcript follows" >&2
+  cat "$work/timer.log" >&2 || true
+  exit 3
+}
 systemctl stop "$prefix-commit.timer" >/dev/null
 echo "SYSTEMD_WATCHDOG_COMMITTED_HANDOFF_PASS"
 
