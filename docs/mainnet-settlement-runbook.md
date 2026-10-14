@@ -15,6 +15,44 @@ sensitivity: "restricted"
 
 # WoloChain Mainnet Settlement Runbook
 
+## Emergency code-only two-service rollback (October 14, 2026)
+
+`scripts/settlement-two-service-code-rollback.sh` is a separately audited
+**rollback-only** implementation. It does NOT activate the candidate and cannot
+be used as evidence of a completed production promotion.
+
+- `--inspect` verifies the pinned original binary, dedicated running
+  consensus executable, root-private backup receipts, original settlement unit
+  identities and, if they exist, the **exact** versioned override bytes.
+  Inspection does not write or restart anything.
+- `--rollback` switches the two settlement units back to the original,
+  **unchanged** `/usr/local/bin/wolochaind-mainnet` executable. It removes
+  only its exactly matching `50-aoe2war-settlement-3ea79363.conf` override
+  from **each settlement unit**; any unexpected file/symlink aborts. It does
+  not stop, restart or reload the consensus unit. It never copies historical
+  payout records or old environment files into the live state paths.
+- `--rescue` first performs that same code-only recovery and checks health
+  on loopback 8092 and 8093. **Only after settlement recovery passes**, it
+  can resume the allowlisted web/API services and timers recorded in a
+  root-owned 0600 maintenance manifest at
+  `/run/aoe2war-wolo-two-service-cutover/restore-units`. No manifest means
+  no automatic producer restart. Unknown service names fail closed.
+
+This rescue helper must be present in a pinned, root-owned path before
+any separate activation controller stops application ingress. Run it under
+an independent transient systemd timer so it survives an interrupted SSH
+session. The helper **does not arm a watchdog itself**; do not mistake its
+presence for active timeout recovery. A cutover remains BLOCKED until the
+operator can prove the watchdog is armed and can safely resume the right
+site services, and the application financial-drain checks are complete.
+
+**Irreversibility boundary:** A historic online state copy is useful for
+disaster evidence, but restoring it after new chain payouts can cause duplicate
+transfers. Revert code only, preserving the current live primary and founder
+request/run state. Should code rollback itself fail, keep payout ingress
+paused and escalate rather than trying the generic shared-binary restore
+(that can restart the validator).
+
 ## Production two-lane release preflight and rollback limits (October 14, 2026)
 
 The operator's live backup receipt for
