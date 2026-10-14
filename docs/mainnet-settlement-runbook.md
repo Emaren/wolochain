@@ -33,7 +33,7 @@ flock, **runs the financial audit before causing downtime**, and refuses to
 start maintenance while unresolved historical claims (including #889) exist.
 
 Only if that first financial scan is zero does it arm a **systemd monotonic
-240-second independent rescue timer** (which survives SSH disconnection), record
+900-second (15-minute) independent rescue timer** (which survives SSH disconnection), record
 which producer units were initially active, pause the specifically enumerated
 six automatic payment/replay timers and the AoE2WAR web/API request ingress, and
 wait for any running timer jobs to finish/stop. It then re-runs the live
@@ -77,6 +77,8 @@ This must be proved against authoritative chain history or otherwise
 resolved by a separately reviewed financial correction before an actual
 activation is allowed. No bypass, status forgery, manual blind refund,
 historical state rewind, or consensus restart is authorized.
+
+The longer independent fallback interval avoids interrupting a still-running bounded multi-unit transition, but implies up to 15 minutes of unattended recovery delay after a hard SSH/process failure. A live rehearsal must prove both normal-window duration and immediate error-triggered rescue before approval.
 
 Production release is NOT complete. A verified code-only rescue mechanism is
 necessary but does not, by itself, establish an atomic payout drain or mainnet
