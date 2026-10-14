@@ -22,9 +22,9 @@ Reviewed: 2026-10-14
 The documentation federation for `wolo-1` mainnet work is sourced from
 the clean remote-exact `wolo-1-mainnet-prep` branch. The
 settlement-candidate workflow, exact-source provenance tooling, and new
-root-private two-service snapshot preparation tool advance the
+root-private two-service snapshot and read-only cutover preflight tools advance the
 **repository source/documentation baseline** to
-`805156ee9440d62368d29e86a38f8b08e6b1d413`. This is NOT a new
+`47892320a4935583630e595142388edc267533c3`. This is NOT a new
 settlement build or consensus module revision. The reviewed settlement
 verifier code itself is `3ea79363695dd93be5f0a5e8a5121cf6e31d27b8`.
 
