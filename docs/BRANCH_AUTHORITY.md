@@ -24,7 +24,7 @@ the clean remote-exact `wolo-1-mainnet-prep` branch. The
 settlement-candidate workflow, exact-source provenance tooling, and new
 root-private two-service snapshot, read-only cutover preflight and code-only rescue tools advance the
 **repository source/documentation baseline** to
-`c0dd839822179817923dab20961eb04e4a731ab0`. This is NOT a new
+`41870e791938dc7aea45e80269c665a76306d89a`. This is NOT a new
 settlement build or consensus module revision. The reviewed settlement
 verifier code itself is `3ea79363695dd93be5f0a5e8a5121cf6e31d27b8`.
 
