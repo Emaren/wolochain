@@ -61,7 +61,13 @@ esac
 SH
 cat > "$work/bin/systemctl" <<'SH'
 #!/bin/bash
-if [[ "$1" == "is-active" ]]; then exit 0; fi
+if [[ "$1" == "is-active" ]]; then
+  case "$*" in
+    *aoe2dewarwagers-web.service*|*aoe2dewarwagers-api.service*)
+      [[ "${SIM_PARALLEL_ACTIVE:-0}" == 1 ]] && exit 0 || exit 3 ;;
+    *) exit 0 ;;
+  esac
+fi
 if [[ "$1" == "show" && "$2" == "-P" ]]; then
  case "$3" in
  MainPID)
@@ -180,3 +186,24 @@ awk '
  exit 3
 }
 echo "CUTOVER_STOP_FAILURE_PASS: watchdog precedes stop, immediate rescue invoked"
+
+# THIRD scenario: a separate running WOLO-capable web/API process must
+# prevent the cutover BEFORE timer arming or any service stoppage, regardless
+# of a clean internal finance audit. The rescue manifest does not cover it.
+: > "$work/actions.log"
+rc=0
+SIM_FINANCE_CODE=0 SIM_PARALLEL_ACTIVE=1 PATH="$work/bin:$PATH" \
+ EXPECTED_RESCUE_SHA256="$rescue_sha" EXPECTED_AUDIT_SHA256="$audit_sha" EXPECTED_WATCHDOG_SHA256="$gate_sha" \
+ PROMOTION_ACK="REVIEWED-DUAL-SERVICE-3EA79363" \
+ bash "$work/controller.sh" --promote > "$work/output-parallel.log" 2>&1 || rc=$?
+if [[ "$rc" == 0 ]] || ! grep -Fq "unclassified parallel financial ingress" "$work/output-parallel.log"; then
+  echo "FAIL: alternate WOLO-capable app ingress was accepted" >&2
+  cat "$work/output-parallel.log" >&2
+  exit 3
+fi
+if [[ -s "$work/actions.log" ]]; then
+  echo "FAIL: parallel app gate allowed mutation/auditing before blocking" >&2
+  cat "$work/actions.log" >&2
+  exit 3
+fi
+echo "CUTOVER_PARALLEL_INGRESS_BLOCK_PASS: no timer or service mutations"
