@@ -36,7 +36,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-07",
       "sensitivity": "internal",
-      "sha256": "5294536c04af989adf0c7bb53fe860df0430464c46c6be69f9ab189887353156",
+      "sha256": "de636e8a3a3376e9e5e2cf46c76930c7243228c5f32dca97d1e5297405a1fd54",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "56eda0954c9a7b78780ff51f6be703e1947ea1f8aace6850bf3054a0afd7d172",
+      "sha256": "6869c1da14b091dd6291448cc5e1196c5c6a38bd89009c35f2efaed9afad4463",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -740,7 +740,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "wolo-1-mainnet-prep",
-    "commit": "bca6768696463a8f97ddbd0f1a739e2f8ca17233"
+    "commit": "c686ece3c1c619566c8d2071498e19edede89494"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
