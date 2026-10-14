@@ -104,6 +104,9 @@ on_exit() {
   fi
 }
 arm_rescue() {
+  # 900s is the current serial timeout envelope, NOT the 240s originally
+  # advertised. Independent rehearsals must prove this timer cannot fire
+  # during a legitimate slow release; draft controller is NOT deployable.
   systemd-run --quiet --unit="$WATCHDOG" --on-active=900s \
     /usr/bin/bash "$RECOVERY" --rescue || fail "could not arm independent timer"
   systemctl is-active --quiet "$WATCHDOG.timer" || fail "independent rescue timer not active"
@@ -134,7 +137,7 @@ stop_ingress() {
 run_finance_scan() {
   local code=0
   timeout 70s systemd-run --quiet --wait --pipe --collect \
-    --unit="aoe2war-wolo-drain-$RANDOM-$" \
+    --unit="aoe2war-wolo-drain-${RANDOM}-$$" \
     --property=User=tony \
     --property=WorkingDirectory="$APP" \
     --property=EnvironmentFile="$ENV_FILE" \
