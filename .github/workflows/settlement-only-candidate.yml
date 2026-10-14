@@ -13,6 +13,7 @@ on:
       - "scripts/settlement-release-helper-stage.sh"
       - "tests/settlement-controller-finance-block-rehearsal.sh"
       - "tests/settlement-watchdog-rendezvous-rehearsal.sh"
+      - "tests/settlement-watchdog-real-systemd-ci.sh"
       - "docs/mainnet-settlement-runbook.md"
   workflow_dispatch:
 
@@ -20,6 +21,18 @@ permissions:
   contents: read
 
 jobs:
+  real-systemd-rescue:
+    name: Isolated real systemd watchdog retry and commit proof
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Checkout immutable under-review source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Run production-gate code against synthetic sandbox only
+        run: sudo env GITHUB_ACTIONS=true bash tests/settlement-watchdog-real-systemd-ci.sh
+
   operator-contract:
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -40,6 +53,7 @@ jobs:
           bash -n scripts/settlement-release-helper-stage.sh
           bash -n tests/settlement-controller-finance-block-rehearsal.sh
           bash -n tests/settlement-watchdog-rendezvous-rehearsal.sh
+          bash -n tests/settlement-watchdog-real-systemd-ci.sh
           grep -Fq 'mode=--inspect' scripts/settlement-release-helper-stage.sh
           grep -Fq 'RESCUE_BLOB=8bf03c7f90d7566b06575927cf5f92b5aa69a499' scripts/settlement-release-helper-stage.sh
           grep -Fq 'AUDIT_BLOB=f8372e27fb0cad13fecbdcb42ca2457dbf4caabb' scripts/settlement-release-helper-stage.sh
