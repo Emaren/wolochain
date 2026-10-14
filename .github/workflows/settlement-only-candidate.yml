@@ -39,7 +39,7 @@ jobs:
           grep -Fq 'AUDIT_BLOB=f8372e27fb0cad13fecbdcb42ca2457dbf4caabb' scripts/settlement-release-helper-stage.sh
           ! grep -Eq 'systemctl[[:space:]]+(stop|restart|start)' scripts/settlement-release-helper-stage.sh
           # A malformed transient unit can silently prevent a finance scan.
-          grep -Fq -- '--unit="aoe2war-wolo-drain-${RANDOM}-$"' scripts/settlement-two-lane-watchdog-controller.sh
+          grep -Fq -- '--unit="aoe2war-wolo-drain-${RANDOM}-$$"' scripts/settlement-two-lane-watchdog-controller.sh
           ! grep -Fq -- '--unit="aoe2war-wolo-drain-$RANDOM-$"' scripts/settlement-two-lane-watchdog-controller.sh
           grep -Fq 'run_finance_scan' scripts/settlement-two-lane-watchdog-controller.sh
           grep -Fq 'flock -n 9' scripts/settlement-two-lane-watchdog-controller.sh
