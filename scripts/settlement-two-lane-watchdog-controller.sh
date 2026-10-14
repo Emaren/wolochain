@@ -84,6 +84,19 @@ preflight() {
   health 8093
   echo "PRECHECK_PASS: old settlement services + node + candidate + backup"
 }
+verify_parallel_financial_ingress() {
+  # Two live, separately deployed AoE2DEWarWagers services were observed on
+  # the same VPS. Their source exposes WOLO claim, staking and settlement
+  # execution endpoints. They are NOT in the rescue manifest allowlist.
+  # Never assume their signers/DB/ingress are independent without live proof.
+  local unit
+  for unit in aoe2dewarwagers-web.service aoe2dewarwagers-api.service; do
+    if systemctl is-active --quiet "$unit"; then
+      fail "unclassified parallel financial ingress $unit active: independent isolation/quiescence proof required"
+    fi
+  done
+  echo "PASS no active unclassified parallel financial web/API ingress observed"
+}
 approved_tools() {
   [[ -f "$RECOVERY" && ! -L "$RECOVERY" ]] || fail "root-installed rescue unavailable"
   [[ "$(stat -c '%u:%g:%a' "$RECOVERY")" == 0:0:500 ]] || fail "rescue must be root-only mode 0500"
@@ -237,6 +250,8 @@ promote() {
   flock -n 9 || fail "another settlement promotion is in progress"
   [[ "$PROMOTION_ACK" == "REVIEWED-DUAL-SERVICE-3EA79363" ]] ||
     fail "explicit operator approval absent"
+  # No site/service stop or timer is allowed before this proof.
+  verify_parallel_financial_ingress
   approved_tools
   # Catch known historical ambiguity (e.g. founder claim #889) BEFORE any
   # maintenance outage; recheck after freezing new ingress for race safety.
