@@ -19,7 +19,7 @@ touch "$backup/proof/RECEIPT.txt" "$backup/proof/config-files.sha256" \
  "$backup/proof/primary-files.sha256" "$backup/proof/founder-files.sha256"
 touch "$work/original" "$work/node" "$work/app.env" \
  "$work/volume/wolochain-mainnet/settlement-candidates/3ea79363/wolochaind-settlement-only-linux-amd64"
-printf '#!/bin/bash\nexit 0\n' > "$work/helpers/settlement-two-service-code-rollback.sh"
+printf '#!/bin/bash\nif [[ "$1" == "--rescue" ]]; then echo RESCUE_INVOKED >> "$SIM_ROOT/actions.log"; fi\nexit 0\n' > "$work/helpers/settlement-two-service-code-rollback.sh"
 printf '// test finance audit\n' > "$work/helpers/wolo-maintenance-drain-readonly.mjs"
 chmod 0500 "$work/helpers/settlement-two-service-code-rollback.sh"
 chmod 0444 "$work/helpers/wolo-maintenance-drain-readonly.mjs"
@@ -107,11 +107,15 @@ SH
 cat > "$work/bin/systemd-run" <<'SH'
 #!/bin/bash
 if [[ "$*" == *"--wait"* ]]; then
+ if [[ "$SIM_FINANCE_CODE" == 0 ]]; then
+  echo FINANCE_AUDIT_CLEAR >> "$SIM_ROOT/actions.log"
+  exit 0
+ fi
  echo FINANCE_AUDIT_BLOCKED >> "$SIM_ROOT/actions.log"
  exit 3
 fi
-echo "UNSAFE_WATCHDOG_ARMED" >> "$SIM_ROOT/actions.log"
-exit 3
+echo ARMED_RESCUE_TIMER >> "$SIM_ROOT/actions.log"
+exit 0
 SH
 chmod 0755 "$work/bin/"*
 
@@ -129,9 +133,42 @@ if [[ "$rc" == 0 ]] || ! grep -Fq "unresolved financial evidence" "$work/output.
  exit 3
 fi
 grep -Fxq FINANCE_AUDIT_BLOCKED "$work/actions.log"
-if grep -Eq "UNSAFE_SERVICE_ACTION|UNSAFE_WATCHDOG_ARMED" "$work/actions.log"; then
+if grep -Eq "UNSAFE_SERVICE_ACTION|ARMED_RESCUE_TIMER" "$work/actions.log"; then
  echo "FAIL: production-like mutation before financial proof!" >&2
  cat "$work/actions.log" >&2
  exit 3
 fi
 echo "CUTOVER_FINANCE_BLOCK_PASS: no service action or rescue timer before zero-drain proof"
+
+
+# SECOND scenario: a clear initial audit arms the timer but the first
+# fake timer/service stop fails. The rescue trap must run immediately.
+: > "$work/actions.log"
+rc=0
+SIM_FINANCE_CODE=0 PATH="$work/bin:$PATH" \
+ EXPECTED_RESCUE_SHA256="$rescue_sha" EXPECTED_AUDIT_SHA256="$audit_sha" \
+ PROMOTION_ACK="REVIEWED-DUAL-SERVICE-3EA79363" \
+ bash "$work/controller.sh" --promote > "$work/output-rescue.log" 2>&1 || rc=$?
+if [[ "$rc" == 0 ]]; then
+ echo "FAIL: simulated service-stop failure unexpectedly passed" >&2
+ exit 3
+fi
+for event in FINANCE_AUDIT_CLEAR ARMED_RESCUE_TIMER RESCUE_INVOKED; do
+ grep -Fxq "$event" "$work/actions.log" || {
+  echo "FAIL: missing watchdog/rollback event $event" >&2
+  cat "$work/output-rescue.log" "$work/actions.log" >&2
+  exit 3
+ }
+done
+awk '
+ $0=="FINANCE_AUDIT_CLEAR" {a=NR}
+ $0=="ARMED_RESCUE_TIMER" {b=NR}
+ /^UNSAFE_SERVICE_ACTION / && c==0 {c=NR}
+ $0=="RESCUE_INVOKED" {d=NR}
+ END {if (!(a>0 && b>a && c>b && d>c)) exit 3}
+' "$work/actions.log" || {
+ echo "FAIL: financial proof, watchdog, failure and rescue ordering incorrect" >&2
+ cat "$work/actions.log" >&2
+ exit 3
+}
+echo "CUTOVER_STOP_FAILURE_PASS: watchdog precedes stop, immediate rescue invoked"
