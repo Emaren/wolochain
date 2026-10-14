@@ -20,7 +20,7 @@ REPO=/var/www/WoloChain-wolo-1
 BACKUP="$VOLUME/wolochain-mainnet/settlement-backups/20261014T091735Z-two-settlement-node-untouched"
 APP=/var/www/AoE2HDBets/app-prodn
 ENV_FILE=/etc/aoe2hdbets/aoe2hdbets-web.env
-AUDIT="$APP/scripts/wolo-maintenance-drain-readonly.mjs"
+AUDIT=/usr/local/libexec/aoe2war-wolo/wolo-maintenance-drain-readonly.mjs
 RECOVERY=/usr/local/libexec/aoe2war-wolo/settlement-two-service-code-rollback.sh
 RUN=/run/aoe2war-wolo-two-service-cutover
 WATCHDOG=aoe2war-wolo-two-settlement-rescue-3ea79363
@@ -92,6 +92,7 @@ approved_tools() {
   [[ -f "$AUDIT" && ! -L "$AUDIT" ]] || fail "protected database auditor unavailable"
   [[ -n "$EXPECTED_AUDIT_SHA256" ]] || fail "pinned finance source fingerprint absent"
   [[ "$(sha "$AUDIT")" == "$EXPECTED_AUDIT_SHA256" ]] || fail "finance source mismatch"
+  [[ "$(stat -c '%u:%g:%a' "$AUDIT")" == 0:0:444 ]] || fail "auditor not root-owned read-only 0444"
   [[ "$(stat -c '%u:%g:%a' "$ENV_FILE")" == 0:0:600 ]] || fail "private prod env permissions changed"
 }
 on_exit() {
