@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "1541753507f77b3d68b260337f3ec748c756077821cdf4c29fedde8da17aab98",
+      "sha256": "2958ea9cfb9c6781e06b473b3974b274f745258fc7242379f42eac1efe9fa9da",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -266,7 +266,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-14",
       "sensitivity": "restricted",
-      "sha256": "60eeae748e377122cd06125eda1a3081c545653fa695945641cad5fc4cdfd828",
+      "sha256": "bfef2385c117659b558b72c99530b78ef1e02cec3d6b1ca6512e798e8918ca49",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -739,8 +739,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "forensics/founder15-root-private-request-inspection-20261015",
-    "commit": "c4128ef77a634ae6315dbaf7f7557f619ce7d35c"
+    "branch": "release/settlement-two-service-watchdog-on-founder-proof-20261015",
+    "commit": "a98cd8bf4a688e91e997907d1949b1c1629ad9d5"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
