@@ -15,6 +15,44 @@ sensitivity: "restricted"
 
 # WoloChain Mainnet Settlement Runbook
 
+## Original request-record forensics for founder bonus #15 (October 15, 2026)
+
+Two independently observed mainnet read-only settlement preflights succeeded:
+original shared settlement executable, independently staged candidate,
+separate unchanged consensus executable, both active 8092/8093 services,
+root-private immutable snapshot integrity, healthy loopback ports and no
+observed locks. These do **not** authorize protected service cutover.
+
+App claim #889 remains `pending` with a recorded attempted payout, no
+confirmed transaction hash. Three cached same-amount `wolo-1` transfers were
+verified independently against public canonical transaction REST at heights
+324458, 322609 and 1468795: all successful transfers, but none carries the
+deterministic Founder bonus #15 payout memo. The app cache is incomplete;
+absence of an exact-memo candidate in that cache **does not prove nonpayment**.
+
+`scripts/settlement-founder15-state-readonly.py --inspect` adds a more direct
+on-VPS evidence check against the two existing **root-private live**
+settlement request stores, without copying private files into chat. It
+reads only bounded `aoe2-founder-15-*.json` records, verifies stored request
+identity, rejects symlinks/oversize/malformed files, and prints only a
+hashed request fingerprint, lane, sanitized status, boolean memo/failure
+flags and any publicly checkable transaction hash. It never prints private
+addresses, raw memo, amounts, signer credentials, file paths or errors.
+No records found is an inconclusive result—not evidence of zero payouts.
+Record presence is not proof of a canonical transaction unless independently
+reconciled with correct recipient, signer, chain success and complete history.
+It always returns exit **3**, reports **releaseAuthorized=false** and
+**retryAuthorized=false**, and never changes a file, environment, process,
+wallet, validator or database. Exit 2 means evidence unavailable or unsafe.
+
+Operator use (read only, from a source-verified clean checkout):
+`sudo python3 scripts/settlement-founder15-state-readonly.py --inspect`.
+Do not activate either financial service, replay claim #889, rewind stored
+request state, or make `aoe2war finish` green by faking the VPS source SHA.
+The current Wolo settlement binary and repository authorities must be
+reconciled only after independent full finance drain, signer boundaries and
+live recovery rehearsal are certified.
+
 ## October 15 read-only signer coverage correction
 
 The 2026-10-15 DE process inventory found active web and API services,
