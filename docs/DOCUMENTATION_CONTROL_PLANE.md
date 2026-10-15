@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `wolo-1-mainnet-prep` at `75989e19349ce0cdb4c9940f6c0cca87c6f4e409`
+Implementation baseline: `wolo-1-mainnet-prep` at `f7a5b0ec412e35ce12508a652cd8a7ac3561c938`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
