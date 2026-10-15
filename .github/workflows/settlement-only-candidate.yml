@@ -8,6 +8,8 @@ on:
       - "scripts/settlement-dual-service-snapshot.sh"
       - "scripts/settlement-dual-service-release-preflight.sh"
       - "scripts/settlement-two-service-code-rollback.sh"
+      - "scripts/settlement-parallel-de-authority-inventory.py"
+      - "tests/test_parallel_de_authority_inventory.py"
       - "docs/mainnet-settlement-runbook.md"
   workflow_dispatch:
 
@@ -30,6 +32,10 @@ jobs:
           bash -n scripts/settlement-dual-service-snapshot.sh
           bash -n scripts/settlement-dual-service-release-preflight.sh
           bash -n scripts/settlement-two-service-code-rollback.sh
+          python3 -m py_compile scripts/settlement-parallel-de-authority-inventory.py
+          python3 -m unittest discover -s tests -p 'test_parallel_de_authority_inventory.py' -v
+          ! grep -Eiq 'systemctl[[:space:]]+(start|stop|restart|reload|daemon-reload)' scripts/settlement-parallel-de-authority-inventory.py
+          grep -q 'NOT_CERTIFIED_FOR_SHARED_WOLO_SETTLEMENT_DOWNTIME' scripts/settlement-parallel-de-authority-inventory.py
           # Code-only rescuer must NEVER operate the consensus unit, restore
           # historic state, or replace the shared settlement executable.
           grep -q -- '--rescue' scripts/settlement-two-service-code-rollback.sh

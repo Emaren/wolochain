@@ -15,6 +15,38 @@ sensitivity: "restricted"
 
 # WoloChain Mainnet Settlement Runbook
 
+## DE sister-site payout authority — read-only classification (October 14, 2026)
+
+The two WoloChain settlement services operate on a VPS which also hosts
+`aoe2dewarwagers-web.service` and `aoe2dewarwagers-api.service`. Those
+separate active services cannot be assumed inert merely because HD payment
+timers and web/API are paused. The DE web code has independently callable
+WOLO claim and staking operations, including a possible CLI keyring signer
+that would **not** require a mnemonic to appear in its process environment.
+
+`scripts/settlement-parallel-de-authority-inventory.py` is a strictly
+read-only, root-scoped inventory of both DE process environments, bounded
+local app dotenv **key names** and DE service/timer names. It reports the
+*presence* of allowlisted signing, CLI keyring, remote settlement and
+database configuration names, **never their values**, paths to wallet homes,
+addresses, wallet seeds, DB URLs or money amounts. It does not open keyring
+files, send HTTP requests, modify services or print raw unit/environment
+contents. Missing or empty configuration keys are not proof that a payout
+cannot occur: app-loaded environment, keyring fallback, scheduled jobs,
+other signers and live request ingress must also be considered.
+
+The result **always ends** with
+`NOT_CERTIFIED_FOR_SHARED_WOLO_SETTLEMENT_DOWNTIME` and exit code 3
+(or exit 2 when metadata cannot be safely inspected). It is never a
+promotion/maintenance authorization, and it does not remove the DE gate in
+the draft two-service watchdog controller. The next engineering decision
+must either prove independent immutable signer isolation *and* no shared
+settlement use, or prepare a separately reviewed DE ingress freeze and
+recovery manifest. Any such future change must protect DE users and avoid
+touching DE services without explicit approval. The existing historical
+founder claim #889 also independently blocks financial drain clearance.
+
+
 ## Emergency code-only two-service rollback (October 14, 2026)
 
 `scripts/settlement-two-service-code-rollback.sh` is a separately audited
