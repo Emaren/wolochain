@@ -41,6 +41,40 @@ class ReadOnlyInventoryTests(unittest.TestCase):
         self.assertEqual(grouped["signing_secrets"], ["WOLO_BET_PAYOUT_MNEMONIC"])
         self.assertFalse("WOLO_FAUCET_CLI" in grouped["external_keyring_signers"])
 
+    def test_actual_de_staking_signer_paths_are_classified_without_secret_values(self):
+        raw = (
+            b"WOLO_STAKING_WALLET_MNEMONIC=SECRET MNEMONIC NEVER OUTPUT"
+            b"\x00WOLO_STAKING_ALLOW_PAYOUT_MNEMONIC_FALLBACK=1"
+            b"\x00WOLO_STAKING_DISABLE_KEYRING_SIGNER=1"
+            b"\x00WOLO_STAKING_KEY_NAME=staking"
+            b"\x00WOLO_STAKING_KEYRING_BACKEND=test"
+            b"\x00WOLO_FAUCET_FROM=faucet-key"
+            b"\x00WOLO_STAKING_NODE_RPC=http://private-endpoint"
+            b"\x00WOLO_STAKING_WALLET_ADDRESS=wolo1private"
+        )
+        groups = mod.summarize_keys(mod.parse_process_env(raw))
+        self.assertEqual(groups["signing_secrets"], ["WOLO_STAKING_WALLET_MNEMONIC"])
+        self.assertEqual(
+            groups["signing_controls"],
+            ["WOLO_STAKING_ALLOW_PAYOUT_MNEMONIC_FALLBACK",
+             "WOLO_STAKING_DISABLE_KEYRING_SIGNER"],
+        )
+        self.assertIn("WOLO_STAKING_KEY_NAME", groups["external_keyring_signers"])
+        self.assertIn("WOLO_FAUCET_FROM", groups["external_keyring_signers"])
+        self.assertIn("WOLO_STAKING_NODE_RPC", groups["signer_network_configuration"])
+        self.assertIn("WOLO_STAKING_WALLET_ADDRESS", groups["payout_account_configuration"])
+        output = json.dumps(groups)
+        for forbidden in ("SECRET MNEMONIC", "staking\"",
+                          "faucet-key", "private-endpoint", "wolo1private"):
+            self.assertNotIn(forbidden, output)
+
+    def test_classification_covers_de_staking_code_and_never_grants_clearance(self):
+        self.assertIn("WOLO_STAKING_WALLET_MNEMONIC", mod.GROUPS["signing_secrets"])
+        self.assertIn("WOLO_STAKING_ALLOW_PAYOUT_MNEMONIC_FALLBACK", mod.GROUPS["signing_controls"])
+        self.assertIn("WOLO_STAKING_DISABLE_KEYRING_SIGNER", mod.GROUPS["signing_controls"])
+        self.assertIn("WOLO_STAKING_CLI", mod.GROUPS["external_keyring_signers"])
+        self.assertIn("WOLO_FAUCET_CLI", mod.GROUPS["external_keyring_signers"])
+
     def test_app_local_env_ignores_comments_and_redacts(self):
         raw = b"""# WOLO_FAUCET_CLI=/do/not/count
           export WOLO_FAUCET_HOME=/root/highly-sensitive
