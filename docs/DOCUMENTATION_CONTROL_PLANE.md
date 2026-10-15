@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `forensics/founder15-root-private-request-inspection-20261015` at `c4128ef77a634ae6315dbaf7f7557f619ce7d35c`
+Implementation baseline: `release/settlement-two-service-watchdog-on-founder-proof-20261015` at `a98cd8bf4a688e91e997907d1949b1c1629ad9d5`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
