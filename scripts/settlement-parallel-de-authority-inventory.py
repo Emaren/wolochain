@@ -25,16 +25,32 @@ DE_UNITS = (
 GROUPS = {
     "signing_secrets": (
         "WOLO_BET_PAYOUT_MNEMONIC",
+        "WOLO_STAKING_WALLET_MNEMONIC",
         "WOLO_STAKING_MNEMONIC",
         "WOLO_FAUCET_MNEMONIC",
         "WOLO_PAYOUT_MNEMONIC",
+    ),
+    "signing_controls": (
         "WOLO_LOCAL_PAYOUT_SIGNER_FALLBACK",
+        "WOLO_STAKING_ALLOW_PAYOUT_MNEMONIC_FALLBACK",
+        "WOLO_STAKING_DISABLE_KEYRING_SIGNER",
     ),
     "external_keyring_signers": (
         "WOLO_STAKING_CLI",
         "WOLO_STAKING_HOME",
+        "WOLO_STAKING_KEY_NAME",
+        "WOLO_STAKING_KEYRING_BACKEND",
         "WOLO_FAUCET_CLI",
         "WOLO_FAUCET_HOME",
+        "WOLO_FAUCET_FROM",
+        "WOLO_FAUCET_KEYRING_BACKEND",
+    ),
+    "signer_network_configuration": (
+        "WOLO_STAKING_NODE_RPC",
+        "WOLO_FAUCET_NODE_RPC",
+        "WOLO_INTERNAL_RPC_URL",
+        "WOLO_STAKING_CHAIN_ID",
+        "WOLO_FAUCET_CHAIN_ID",
     ),
     "remote_settlement_authority": (
         "WOLO_SETTLEMENT_URL",
@@ -47,6 +63,9 @@ GROUPS = {
         "WOLO_STAKING_ADDRESS",
         "WOLO_FAUCET_ADDRESS",
         "WOLO_MAINNET_PAYOUT_ADDRESS",
+        "WOLO_STAKING_WALLET_ADDRESS",
+        "NEXT_PUBLIC_WOLO_STAKING_WALLET_ADDRESS",
+        "WOLO_FAUCET_ADDRESS",
     ),
     "database_authority": ("DATABASE_URL", "DIRECT_URL"),
 }
