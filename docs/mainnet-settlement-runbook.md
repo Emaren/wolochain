@@ -15,6 +15,26 @@ sensitivity: "restricted"
 
 # WoloChain Mainnet Settlement Runbook
 
+## October 15 read-only signer coverage correction
+
+The 2026-10-15 DE process inventory found active web and API services,
+`WOLO_BET_PAYOUT_ADDRESS` on web and database authorities on both.
+It found no sampled process keys for the **first** signing allowlist, and
+reported NOT_CERTIFIED (exit 3). That first allowlist omitted the live DE
+source's `WOLO_STAKING_WALLET_MNEMONIC` and fallback/keyring settings.
+Absence from that historical report is **not** evidence of no signer.
+
+The corrected inventory now includes staking-wallet mnemonic, payout mnemonic
+fallback, keyring disable/selector, faucet sender, chain and RPC selectors,
+and staking wallet address. It still prints **only allowlisted key names**,
+not values, URLs, wallet addresses, keyring homes, or tokens; it still
+returns exit 3 and grants no service-stop or financial authority.
+DE code includes public staking/unstake and faucet claims plus admin
+scheduled-settlement and treasury-execute paths; runtime authorization and
+signer state require a separate reviewed active-process and DB drain proof.
+Never treat an empty startup environment as evidence that separately loaded
+dotenv or other signer material is absent.
+
 ## DE sister-site payout authority — read-only classification (October 14, 2026)
 
 The two WoloChain settlement services operate on a VPS which also hosts
