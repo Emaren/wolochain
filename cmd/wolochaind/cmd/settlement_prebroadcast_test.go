@@ -122,3 +122,48 @@ func TestPrebroadcastWriterSyncsFileAndContainingDirectory(t *testing.T) {
 		}
 	}
 }
+
+func TestUncertainBroadcastNeverReopensPaymentRetry(t *testing.T) {
+	t.Parallel()
+	for _, state := range []settlementExecuteResponse{
+		{Status: "failed", Retryable: true, FailureCode: "RPC_UNREACHABLE"},
+		{Status: "failed", Retryable: true, FailureCode: "BROADCAST_ERROR"},
+		{Status: "failed", Retryable: false, FailureCode: "UNKNOWN_ERROR"},
+	} {
+		got := preserveUnresolvedSettlementBroadcast(state)
+		if got.OK || got.Retryable || got.TxHash != "" ||
+			got.Status != "unverifiable" || got.ConfirmationStatus != "unverifiable" ||
+			got.FailureCode != "BROADCAST_OUTCOME_UNRECORDED" {
+			t.Fatalf("ambiguous CLI result must remain held after signer command: %+v", got)
+		}
+	}
+}
+
+func TestKnownBroadcastHashStillCannotBeRetried(t *testing.T) {
+	t.Parallel()
+	hash := strings.Repeat("A", 64)
+	confirmed := preserveUnresolvedSettlementBroadcast(settlementExecuteResponse{
+		Status: "accepted", OK: true, Retryable: true, TxHash: hash,
+		ConfirmationStatus: "pending",
+	})
+	if !confirmed.OK || confirmed.Retryable || confirmed.TxHash != hash ||
+		confirmed.Status != "accepted" || confirmed.ConfirmationStatus != "pending" {
+		t.Fatalf("canonical accepted hash altered unexpectedly: %+v", confirmed)
+	}
+}
+
+func TestBothBankBroadcastersPreserveUncertainResultBeforeFinalStorage(t *testing.T) {
+	t.Parallel()
+	for _, name := range []string{"settlement.go", "settlement_challenge.go"} {
+		raw, err := os.ReadFile(name)
+		if err != nil {
+			t.Fatal(err)
+		}
+		source := string(raw)
+		a := strings.Index(source, "result = preserveUnresolvedSettlementBroadcast(result)")
+		b := strings.Index(source, "if err := cfg.writeSettlementRecord(recordPath, normalized, signerAddress, result); err != nil {")
+		if a < 0 || b <= a {
+			t.Fatalf("%s must preserve a nonretryable unknown outcome before storing", name)
+		}
+	}
+}
