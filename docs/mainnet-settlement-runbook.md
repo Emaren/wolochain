@@ -15,6 +15,36 @@ sensitivity: "restricted"
 
 # WoloChain Mainnet Settlement Runbook
 
+## October 16, 2026 — canonical payout amount and int64 conversion boundary
+
+Source-level audit found `normalizeAmountUWolo(amount_uwolo, amount_wolo)`
+could multiply a positive `int64` whole-WOLO input by 1,000,000 without
+an overflow guard. A large malformed request could wrap its requested
+base units before hashing/settlement validation. The micro-WOLO text path
+also used unsigned parsing, accepted leading-zero decimal aliases and
+could pass `uint64` values that cannot be represented by the signed
+integer format and downstream `formatDisplayAmount` path.
+
+The corrected validator accepts only canonical decimal-positive
+`int64` micro-unit text, rejects padded zeros, plus signs, zero,
+negative values, oversized values and mixed whole/micro input—even if
+the whole-WOLO field is negative. The whole-WOLO path now checks
+`amount_wolo <= MaxInt64 / 1_000_000` before multiplication. Focused
+tests cover the exact representable maximum, the first overflowing
+value, maximal signed whole input, padded-zero input, uint64-only micro
+values, and mixed representations.
+
+This is **source-only hardening** of request normalization, not an
+assertion that such a request occurred in production. It changes no
+existing payout records, account balance, signer, vault, or consensus
+executable and does not authorize a settlement cutover. Existing Wolo
+liabilities, historical founder claim #889, private service separation
+and the dedicated Satchel vault/consensus trust holds remain unchanged.
+Any deployment still requires independent protected financial proof,
+review of previously persisted request shapes and release-controller
+approval.
+
+
 ## Original request-record forensics for founder bonus #15 (October 15, 2026)
 
 Two independently observed mainnet read-only settlement preflights succeeded:
