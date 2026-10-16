@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/settlement-prebroadcast-durable-hold-c5-20261016` at `5c0cded522a79a97b540043f5323ee5f2fd2d4b6`
+Implementation baseline: `fix/settlement-prebroadcast-durable-hold-c5-20261016` at `bdbce253c524d6faac14f61cd129ac5072287c3f`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
