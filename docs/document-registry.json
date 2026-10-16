@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "e1a8b4b3ac9e0f1d4ecef2f7f760305869f8e16728f4469196afd17a0422557d",
+      "sha256": "091a4cbda3956b5fa71b55412c6cdeb46d6d96c36645f43620034a0a72fe9d0b",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -289,7 +289,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-16",
       "sensitivity": "restricted",
-      "sha256": "0975b365b58085b7ff3fd9ca5c7b0f8bdb856a971bfa5ea70a11dfd62255b39b",
+      "sha256": "510fa15f6b6bc6b285b2095b18d57105fc9ed753f7370fd9dc3431b7524ba783",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -809,7 +809,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "fix/settlement-prebroadcast-durable-hold-c5-20261016",
-    "commit": "5c0cded522a79a97b540043f5323ee5f2fd2d4b6"
+    "commit": "bdbce253c524d6faac14f61cd129ac5072287c3f"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
