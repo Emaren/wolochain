@@ -660,7 +660,7 @@ func TestBuildAndExecuteChallengeTopUp(t *testing.T) {
 		escrowAddress = "wolo1escrow000000000000000000000000000000000"
 	)
 
-	topUpTxHash := strings.Repeat("9", 64)
+	topUpTxHash := mockSettlementHash(escrowAddress, payoutAddress, "290", "challenge top-up challenge-topup-run")
 	cfg := newTestChallengeSettlementConfig(t, payoutAddress, escrowAddress, "", map[string]string{
 		payoutAddress: "10",
 		escrowAddress: "500",
@@ -715,10 +715,10 @@ func TestExecuteSettlementChallengeOneNoShowIdempotent(t *testing.T) {
 
 	leftFundingTx := strings.Repeat("1", 64)
 	rightFundingTx := strings.Repeat("2", 64)
-	leftGuaranteeTx := strings.Repeat("3", 64)
-	rightGuaranteeTx := strings.Repeat("4", 64)
-	leftRefundTx := strings.Repeat("5", 64)
-	rightRefundTx := strings.Repeat("6", 64)
+	leftGuaranteeTx := mockSettlementHash(payoutAddress, leftAddress, "60", "left-guarantee-return")
+	rightGuaranteeTx := mockSettlementHash(payoutAddress, leftAddress, "70", "right-guarantee-forfeit")
+	leftRefundTx := mockSettlementHash(payoutAddress, leftAddress, "100", "left-wager-refund")
+	rightRefundTx := mockSettlementHash(payoutAddress, rightAddress, "100", "right-wager-refund")
 	cfg := newTestChallengeSettlementConfig(t, payoutAddress, escrowAddress, treasuryAddress, map[string]string{
 		payoutAddress: "1000",
 		escrowAddress: "1000",

@@ -152,6 +152,7 @@ type normalizedSettlementRequest struct {
 }
 
 type settlementExecuteResponse struct {
+	ConfirmationStatus         string `json:"confirmation_status,omitempty"`
 	OK                         bool   `json:"ok"`
 	Status                     string `json:"status"`
 	FailureCode                string `json:"failure_code,omitempty"`
@@ -213,6 +214,7 @@ type normalizedSettlementPayout struct {
 }
 
 type settlementRunPayoutResult struct {
+	ConfirmationStatus         string   `json:"confirmation_status,omitempty"`
 	Index                      int      `json:"index"`
 	RequestID                  string   `json:"request_id"`
 	Attempted                  bool     `json:"attempted"`
@@ -306,6 +308,7 @@ type settlementRunStoredResult struct {
 }
 
 type settlementLookupResponse struct {
+	Status                     string               `json:"status"`
 	OK                         bool                 `json:"ok"`
 	FailureCode                string               `json:"failure_code,omitempty"`
 	Detail                     string               `json:"detail,omitempty"`
@@ -329,7 +332,10 @@ type settlementLookupResponse struct {
 	MatchedTransfer            *settlementTransfer  `json:"matched_transfer,omitempty"`
 	// A unique ordinal in the canonical flattened transfer-event list. Nil for
 	// zero or multiple matching transfers; neither case is Satchel credit proof.
-	MatchedTransferIndex  *int `json:"matched_transfer_index,omitempty"`
+	MatchedTransferIndex *int `json:"matched_transfer_index,omitempty"`
+	// Strict payout v1 has exactly one MsgSend/coin. Its stable receipt effect
+	// index is 0 regardless of optional log/fee event representations.
+	ReceiptTransferIndex  *int `json:"receipt_transfer_index,omitempty"`
 	MatchingTransferCount int  `json:"matching_transfer_count"`
 }
 
@@ -397,6 +403,7 @@ type settlementRecentItem struct {
 }
 
 type settlementRecordSummary struct {
+	ConfirmationStatus         string    `json:"confirmation_status,omitempty"`
 	RequestID                  string    `json:"request_id"`
 	UpdatedAt                  time.Time `json:"updated_at,omitempty"`
 	Outcome                    string    `json:"outcome"`
@@ -504,9 +511,13 @@ type settlementRunRecentSummary struct {
 }
 
 type settlementLookupExpectations struct {
-	Sender      string
-	Recipient   string
-	AmountUWolo string
+	Denom         string
+	Memo          string
+	RequireMemo   bool
+	RequirePayout bool
+	Sender        string
+	Recipient     string
+	AmountUWolo   string
 }
 
 type tenderStatusResponse struct {
@@ -2680,31 +2691,8 @@ func (cfg settlementConfig) broadcastPayout(ctx context.Context, request normali
 			response.CanonicalTxLookupInternal = cfg.txLookupURL(broadcast.TxHash)
 			response.CanonicalTxLookupPublic = cfg.publicTxLookupURL(broadcast.TxHash)
 			if broadcast.Code == 0 {
-				confirmed, confirmErr := cfg.waitForTxConfirmation(ctx, broadcast.TxHash)
-				if confirmErr == nil && confirmed != nil {
-					response.Code = confirmed.Code
-					response.Codespace = confirmed.Codespace
-					response.RawLog = confirmed.RawLog
-					if confirmed.TxSuccess {
-						response.OK = true
-						response.Status = "confirmed"
-						response.Detail = "payout confirmed on WoloChain"
-						return response
-					}
-
-					response.FailureCode = classifyRejectedTx(confirmed.RawLog, confirmed.Code)
-					response.Detail = fmt.Sprintf("tx failed with code %d", confirmed.Code)
-					response.Retryable = false
-					return response
-				}
-
-				response.OK = true
-				response.Status = "accepted"
-				if confirmErr != nil {
-					response.Detail = "payout broadcast accepted; final confirmation check failed"
-				} else {
-					response.Detail = "payout broadcast accepted; final confirmation pending"
-				}
+				confirmed, confirmErr := cfg.waitForTxConfirmation(ctx, broadcast.TxHash, payoutConfirmationExpectations(request, signerAddress))
+				cfg.applySettlementConfirmation(ctx, &response, request, signerAddress, confirmed, confirmErr)
 				return response
 			}
 
@@ -2735,11 +2723,17 @@ func extractJSONPayload(output []byte) []byte {
 	return bytes.TrimSpace(output[start : end+1])
 }
 
-func (cfg settlementConfig) waitForTxConfirmation(parent context.Context, txHash string) (*settlementLookupResponse, error) {
+func (cfg settlementConfig) waitForTxConfirmation(parent context.Context, txHash string, expectations settlementLookupExpectations) (*settlementLookupResponse, error) {
+	if !expectations.RequirePayout {
+		return &settlementLookupResponse{Status: "unverifiable", FailureCode: "PAYOUT_CONTEXT_REQUIRED"}, nil
+	}
 	deadline := time.Now().Add(cfg.ConfirmTimeout)
 	for time.Now().Before(deadline) {
+		if err := parent.Err(); err != nil {
+			return nil, err
+		}
 		ctx, cancel := context.WithTimeout(parent, cfg.LookupTimeout)
-		result, err := cfg.lookupSettlementTx(ctx, txHash, settlementLookupExpectations{})
+		result, err := cfg.lookupSettlementTx(ctx, txHash, expectations)
 		cancel()
 		if err != nil {
 			return nil, err
@@ -2765,14 +2759,16 @@ func (cfg settlementConfig) lookupSettlementTx(ctx context.Context, txHash strin
 	normalizedHash := normalizeTxHash(txHash)
 	if normalizedHash == "" {
 		return settlementLookupResponse{
+			Status:      "unverifiable",
 			OK:          false,
 			FailureCode: "INVALID_TX_HASH",
 			Detail:      "tx hash is required",
 		}, nil
 	}
 
-	if !isHexHash(normalizedHash) {
+	if len(normalizedHash) != 64 || !isHexHash(normalizedHash) {
 		return settlementLookupResponse{
+			Status:      "unverifiable",
 			OK:          false,
 			FailureCode: "INVALID_TX_HASH",
 			Detail:      "tx hash must be uppercase/lowercase hex",
@@ -2782,9 +2778,10 @@ func (cfg settlementConfig) lookupSettlementTx(ctx context.Context, txHash strin
 	ctx, cancel := context.WithTimeout(ctx, cfg.LookupTimeout)
 	defer cancel()
 
-	runtimeChainID, err := cfg.fetchRuntimeChainID(ctx)
+	runtimeChainID, err := cfg.fetchSettlementConfirmationChainID(ctx)
 	if err != nil {
 		return settlementLookupResponse{
+			Status:      "unverifiable",
 			OK:          false,
 			FailureCode: "RPC_UNREACHABLE",
 			Detail:      err.Error(),
@@ -2793,35 +2790,21 @@ func (cfg settlementConfig) lookupSettlementTx(ctx context.Context, txHash strin
 
 	if runtimeChainID != cfg.ChainID {
 		return settlementLookupResponse{
+			Status:      "unverifiable",
 			OK:          false,
 			FailureCode: "CHAIN_ID_MISMATCH",
 			Detail:      fmt.Sprintf("rpc reported %s, expected %s", runtimeChainID, cfg.ChainID),
 		}, nil
 	}
 
-	payload := restTxLookupResponse{}
-	statusCode, err := getJSON(ctx, cfg.txLookupURL(normalizedHash), &payload)
-	if err != nil {
-		return settlementLookupResponse{
-			OK:                         false,
-			FailureCode:                "LOOKUP_FAILED",
-			Detail:                     err.Error(),
-			CanonicalTxLookup:          cfg.txLookupURL(normalizedHash),
-			CanonicalTxLookupPreferred: cfg.preferredTxLookupURL(normalizedHash),
-			CanonicalTxLookupInternal:  cfg.txLookupURL(normalizedHash),
-			CanonicalTxLookupPublic:    cfg.publicTxLookupURL(normalizedHash),
-		}, nil
+	payload, body, statusCode, failure := cfg.readSettlementTx(ctx, normalizedHash)
+	if failure != "" {
+		return cfg.unverifiableSettlementTx(normalizedHash, failure), nil
 	}
 	if statusCode == http.StatusNotFound {
-		return settlementLookupResponse{
-			OK:                         false,
-			FailureCode:                "TX_NOT_FOUND",
-			Detail:                     "tx hash not found on WoloChain REST",
-			CanonicalTxLookup:          cfg.txLookupURL(normalizedHash),
-			CanonicalTxLookupPreferred: cfg.preferredTxLookupURL(normalizedHash),
-			CanonicalTxLookupInternal:  cfg.txLookupURL(normalizedHash),
-			CanonicalTxLookupPublic:    cfg.publicTxLookupURL(normalizedHash),
-		}, nil
+		response := cfg.unverifiableSettlementTx(normalizedHash, "TX_NOT_FOUND")
+		response.Detail = "tx hash not found on WoloChain REST"
+		return response, nil
 	}
 
 	transfers := extractSettlementTransfers(payload)
@@ -2836,6 +2819,7 @@ func (cfg settlementConfig) lookupSettlementTx(ctx context.Context, txHash strin
 	}
 
 	response := settlementLookupResponse{
+		Status:                     "committed",
 		OK:                         true,
 		Found:                      true,
 		ChainID:                    cfg.ChainID,
@@ -2855,6 +2839,21 @@ func (cfg settlementConfig) lookupSettlementTx(ctx context.Context, txHash strin
 		Transfers:                  transfers,
 		MatchedExpected:            matchedExpected,
 		MatchedTransfer:            matchedTransfer,
+	}
+
+	if !response.TxSuccess {
+		response.Status = "failed"
+	}
+	if expectations.RequireMemo && body.Memo != expectations.Memo {
+		return cfg.unverifiableSettlementTx(normalizedHash, "TX_MEMO_MISMATCH"), nil
+	}
+	if expectations.RequirePayout {
+		if failure := cfg.verifySettlementPayout(ctx, normalizedHash, body, payload, expectations, &response); failure != "" {
+			return cfg.unverifiableSettlementTx(normalizedHash, failure), nil
+		}
+		if response.TxSuccess {
+			response.Status = "confirmed"
+		}
 	}
 
 	return response, nil
@@ -3861,6 +3860,7 @@ func normalizeStoredSettlementSignerRole(role string) string {
 
 func settlementRunPayoutResultFromExecuteResponse(payout normalizedSettlementPayout, response settlementExecuteResponse) settlementRunPayoutResult {
 	return settlementRunPayoutResult{
+		ConfirmationStatus:         response.ConfirmationStatus,
 		Index:                      payout.Index,
 		RequestID:                  response.RequestID,
 		Attempted:                  true,
@@ -4152,6 +4152,7 @@ func summarizeSettlementStoredResult(record settlementStoredResult) settlementRe
 	canonicalPreferred := firstNonEmpty(response.CanonicalTxLookupPreferred, response.CanonicalTxLookupPublic, canonicalInternal)
 
 	return settlementRecordSummary{
+		ConfirmationStatus:         response.ConfirmationStatus,
 		RequestID:                  firstNonEmpty(record.Request.RequestID, response.RequestID),
 		UpdatedAt:                  record.UpdatedAt,
 		Outcome:                    deriveSettlementOutcome(response),
@@ -4392,22 +4393,27 @@ func matchSettlementTransfer(transfers []settlementTransfer, expectations settle
 		return nil, false
 	}
 
+	var match *settlementTransfer
 	for _, transfer := range transfers {
-		if expectedSender != "" && !strings.EqualFold(transfer.Sender, expectedSender) {
+		if expectedSender != "" && transfer.Sender != expectedSender {
 			continue
 		}
-		if expectedRecipient != "" && !strings.EqualFold(transfer.Recipient, expectedRecipient) {
+		if expectedRecipient != "" && transfer.Recipient != expectedRecipient {
 			continue
 		}
 		if expectedAmount != "" && transfer.Amount != expectedAmount {
 			continue
 		}
-
-		match := transfer
-		return &match, true
+		if transfer.Denom != firstNonEmpty(expectations.Denom, settlementCanonicalBaseDenom) {
+			continue
+		}
+		if match != nil {
+			return nil, false
+		}
+		copy := transfer
+		match = &copy
 	}
-
-	return nil, false
+	return match, match != nil
 }
 
 func readSettlementStoredResult(path string) (settlementStoredResult, error) {

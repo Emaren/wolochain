@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/settlement-amount-normalization-bounds-20261016` at `025bc4be2fac94a027bf348804c348b1aa1aea74`
+Implementation baseline: `codex/exact-settlement-confirmation-c4` at `4b2f976166aeecb0dbc358b6114da8b8bbdc258c`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
@@ -27,21 +27,21 @@ This page is generated from the validated front matter in this repository. Cross
 
 ## Documentation health
 
-- Authoritative repository documents: **34**
+- Authoritative repository documents: **35**
 - Path moves in this migration: **0**
 - Every listed document has an explicit owner, lifecycle, authority, and review interval.
 
 ### Types
 
 - `historical`: 14
-- `reference`: 16
+- `reference`: 17
 - `runbook`: 2
 - `working`: 2
 
 ### Lifecycle
 
 - `active`: 16
-- `draft`: 4
+- `draft`: 5
 - `historical`: 14
 
 ## Documents
@@ -50,6 +50,7 @@ This page is generated from the validated front matter in this repository. Cross
 | --- | --- | --- | --- |
 | [WoloChain](../README.md) | `reference` | `active` | `chain-repository-entrypoint` |
 | [WoloChain Branch Authority](BRANCH_AUTHORITY.md) | `reference` | `active` | `git-branch-authority-contract` |
+| [Exact Settlement Confirmation C4](exact-settlement-confirmation-c4.md) | `reference` | `draft` | `source-only-exact-settlement-confirmation` |
 | [WoloChain Mainnet Cutover Checklist](mainnet-cutover-checklist.md) | `historical` | `historical` | `mainnet-launch-cutover-evidence` |
 | [WoloChain Mainnet Tony Decision Checklist](mainnet-decision-checklist.md) | `historical` | `historical` | `mainnet-launch-decision-evidence` |
 | [WoloChain Mainnet DNS, Nginx, And TLS](mainnet-dns-nginx-tls.md) | `reference` | `active` | `mainnet-public-endpoint-routing` |
