@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"net"
 	"net/http"
 	"net/url"
@@ -3612,11 +3613,12 @@ func normalizeAmountUWolo(amountUWolo string, amountWolo int64) (string, error) 
 	}
 
 	if trimmed != "" {
-		if _, err := strconv.ParseUint(trimmed, 10, 64); err != nil {
-			return "", errors.New("amount_uwolo must be a positive integer")
-		}
-		if trimmed == "0" {
-			return "", errors.New("amount_uwolo must be greater than zero")
+		// Enforce one canonical positive base-unit representation.
+		// Padded zero, leading plus, and uint64-only values otherwise enter
+		// distinct request identities or overflow downstream int64 readers.
+		units, err := strconv.ParseInt(trimmed, 10, 64)
+		if err != nil || units <= 0 || strconv.FormatInt(units, 10) != trimmed {
+			return "", errors.New("amount_uwolo must be a canonical positive int64")
 		}
 		return trimmed, nil
 	}
@@ -3624,7 +3626,11 @@ func normalizeAmountUWolo(amountUWolo string, amountWolo int64) (string, error) 
 	if amountWolo <= 0 {
 		return "", errors.New("amount_wolo must be greater than zero")
 	}
-
+	// Multiplication without this guard silently wraps a signed int64,
+	// potentially turning a requested payout into a smaller/negative value.
+	if amountWolo > math.MaxInt64/1_000_000 {
+		return "", errors.New("amount_wolo exceeds representable base units")
+	}
 	return strconv.FormatInt(amountWolo*1_000_000, 10), nil
 }
 
