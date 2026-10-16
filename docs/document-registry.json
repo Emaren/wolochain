@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "1541753507f77b3d68b260337f3ec748c756077821cdf4c29fedde8da17aab98",
+      "sha256": "cb4acadbf080ebd2d968afba3ffe11f32fb9da85bbde938b5648b3beb2c33a02",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -310,9 +310,9 @@
       "owner": "wolochain-ops",
       "path": "docs/mainnet-wallets.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-10-07",
+      "reviewed_at": "2026-10-15",
       "sensitivity": "restricted",
-      "sha256": "e4ff389923c666085f773f6fb28885e39efa4b94726b0a5d2cddcc95910bdee8",
+      "sha256": "e2d0cb5c0435840bf81a39c553ba7ae8e54b4cc30249c9c426c89dd837523cd3",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -374,6 +374,29 @@
         "operators",
         "ai-agents"
       ],
+      "authority": "source-only-war-satchel-custody-capability",
+      "id": "aoe2war.wolochain.war-satchel-custody-c2",
+      "owner": "wolochain-ops",
+      "path": "docs/war-satchel-custody-c2.md",
+      "review_interval_days": 14,
+      "reviewed_at": "2026-10-15",
+      "sensitivity": "restricted",
+      "sha256": "21afdc3a4f0eb7b180b16c85d51c33a6495e3671ac8efb7c4e7ffee7cc666c5a",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "War Satchel C2 Custody Capability",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
       "authority": "undeployed-warbound-module-design",
       "id": "aoe2war.wolochain.warbound-trophies",
       "owner": "wolochain-ops",
@@ -411,7 +434,7 @@
         "wolochain",
         "aoe2war"
       ],
-      "title": "Codex Mission: WoloChain Mainnet ↔ Osmosis IBC Prep",
+      "title": "Codex Mission: WoloChain Mainnet \u2194 Osmosis IBC Prep",
       "type": "historical"
     },
     {
@@ -572,7 +595,7 @@
         "wolochain",
         "aoe2war"
       ],
-      "title": "WoloChain Mainnet → Osmosis Liquidity Transfer",
+      "title": "WoloChain Mainnet \u2192 Osmosis Liquidity Transfer",
       "type": "historical"
     },
     {
@@ -641,7 +664,7 @@
         "wolochain",
         "aoe2war"
       ],
-      "title": "WoloChain Mainnet → Osmosis Test Transfer",
+      "title": "WoloChain Mainnet \u2192 Osmosis Test Transfer",
       "type": "historical"
     },
     {
@@ -739,8 +762,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "forensics/founder15-root-private-request-inspection-20261015",
-    "commit": "c4128ef77a634ae6315dbaf7f7557f619ce7d35c"
+    "branch": "codex/war-satchel-custody-c2",
+    "commit": "e64780aa30b5d397d3e33a9e1653e860ef976a13"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
