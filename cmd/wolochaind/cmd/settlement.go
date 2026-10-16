@@ -3605,7 +3605,7 @@ func normalizeSettlementRequest(request settlementExecuteRequest) (normalizedSet
 
 func normalizeAmountUWolo(amountUWolo string, amountWolo int64) (string, error) {
 	trimmed := strings.TrimSpace(amountUWolo)
-	if trimmed != "" && amountWolo > 0 {
+	if trimmed != "" && amountWolo != 0 {
 		return "", errors.New("provide either amount_uwolo or amount_wolo, not both")
 	}
 	if trimmed == "" && amountWolo <= 0 {
