@@ -1943,6 +1943,7 @@ func (cfg settlementConfig) executeSettlement(ctx context.Context, request settl
 			return settlementExecuteResponse{}, err
 		}
 		result := cfg.broadcastPayout(ctx, normalized, signerAddress)
+		result = preserveUnresolvedSettlementBroadcast(result)
 		if err := cfg.writeSettlementRecord(recordPath, normalized, signerAddress, result); err != nil {
 			return settlementExecuteResponse{}, err
 		}
