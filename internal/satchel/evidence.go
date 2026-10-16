@@ -119,11 +119,22 @@ func validHead(h Head, now time.Time) bool {
 // signature, finality, ownership or independent custody and grants no credit.
 // A trusted adapter and durable global receipt claim remain unimplemented.
 func InspectDeposit(i Intent, o Observation, now time.Time) (ReceiptCandidate, error) {
+	return inspectDeposit(i, o, now, true)
+}
+
+func validIntent(i Intent, now time.Time) bool {
+	return !now.IsZero() && strings.TrimSpace(i.OwnerID) != "" && len(i.OwnerID) <= 128 && utf8.ValidString(i.OwnerID) && utf8.ValidString(i.Memo) && address(i.Sender) && address(i.Vault) &&
+		i.Sender != i.Vault && !IsKnownRoleAddress(i.Vault) && amount(i.AmountUWolo) &&
+		len(i.Memo) > 0 && len(i.Memo) <= 256 && !i.CreatedAt.IsZero() && !i.CreatedAt.After(now) &&
+		i.ExpiresAt.After(i.CreatedAt) && i.ExpiresAt.Sub(i.CreatedAt) <= 30*time.Minute && now.Before(i.ExpiresAt)
+}
+
+// The network reader can inspect a primary-only NONCREDITING observation
+// without inventing an independent head. The public C2 contract still requires
+// both heads; neither path authenticates consensus or grants custody authority.
+func inspectDeposit(i Intent, o Observation, now time.Time, requireWitness bool) (ReceiptCandidate, error) {
 	refuse := func(reason string) (ReceiptCandidate, error) { return ReceiptCandidate{}, errors.New(reason) }
-	if now.IsZero() || strings.TrimSpace(i.OwnerID) == "" || len(i.OwnerID) > 128 || !utf8.ValidString(i.OwnerID) || !utf8.ValidString(i.Memo) || !address(i.Sender) || !address(i.Vault) ||
-		i.Sender == i.Vault || IsKnownRoleAddress(i.Vault) || !amount(i.AmountUWolo) ||
-		len(i.Memo) == 0 || len(i.Memo) > 256 || i.CreatedAt.IsZero() || i.CreatedAt.After(now) ||
-		!i.ExpiresAt.After(i.CreatedAt) || i.ExpiresAt.Sub(i.CreatedAt) > 30*time.Minute || !now.Before(i.ExpiresAt) {
+	if !validIntent(i, now) {
 		return refuse("invalid_or_expired_owner_intent")
 	}
 	if o.ChainID != ChainID || o.Code == nil || *o.Code != 0 || !digest(o.TxHash) ||
@@ -134,9 +145,9 @@ func InspectDeposit(i Intent, o Observation, now time.Time) (ReceiptCandidate, e
 	if !strings.EqualFold(hex.EncodeToString(hash[:]), o.TxHash) {
 		return refuse("transaction_hash_mismatch")
 	}
-	if !validHead(o.Head, now) || !validHead(o.IndependentHead, now) ||
+	if !validHead(o.Head, now) || (requireWitness && (!validHead(o.IndependentHead, now) ||
 		o.Head.Height != o.IndependentHead.Height || !strings.EqualFold(o.Head.BlockHash, o.IndependentHead.BlockHash) ||
-		!o.Head.BlockTime.Equal(o.IndependentHead.BlockTime) || o.Height <= 0 ||
+		!o.Head.BlockTime.Equal(o.IndependentHead.BlockTime))) || o.Height <= 0 ||
 		o.Height > o.Head.Height || o.Head.Height-o.Height+1 < minConfirmations || !digest(o.BlockHash) ||
 		o.BlockTime.Before(i.CreatedAt) || !o.BlockTime.Before(i.ExpiresAt) || o.BlockTime.After(o.Head.BlockTime) {
 		return refuse("unbound_or_unfinalized_chain_observation")
@@ -160,6 +171,13 @@ func exactSend(data []byte, sender, recipient, amountUWolo, memo string) bool {
 		len(raw.Signatures) != 1 || len(raw.Signatures[0]) == 0 || len(raw.AuthInfoBytes) == 0 ||
 		proto.Unmarshal(raw.BodyBytes, &body) != nil || len(body.ProtoReflect().GetUnknown()) != 0 ||
 		len(body.Messages) != 1 || len(body.ExtensionOptions) != 0 || len(body.NonCriticalExtensionOptions) != 0 || body.Memo != memo {
+		return false
+	}
+	return exactSendBody(&body, sender, recipient, amountUWolo, memo)
+}
+
+func exactSendBody(body *tx.TxBody, sender, recipient, amountUWolo, memo string) bool {
+	if body == nil || len(body.ProtoReflect().GetUnknown()) != 0 || len(body.Messages) != 1 || len(body.ExtensionOptions) != 0 || len(body.NonCriticalExtensionOptions) != 0 || body.Memo != memo {
 		return false
 	}
 	message := body.Messages[0]
