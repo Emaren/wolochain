@@ -21,6 +21,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/emaren/wolochain/internal/chainevents"
 	"github.com/spf13/cobra"
 )
 
@@ -327,8 +328,8 @@ type settlementLookupResponse struct {
 	MatchedTransfer            *settlementTransfer  `json:"matched_transfer,omitempty"`
 	// A unique ordinal in the canonical flattened transfer-event list. Nil for
 	// zero or multiple matching transfers; neither case is Satchel credit proof.
-	MatchedTransferIndex       *int                 `json:"matched_transfer_index,omitempty"`
-	MatchingTransferCount      int                  `json:"matching_transfer_count"`
+	MatchedTransferIndex  *int `json:"matched_transfer_index,omitempty"`
+	MatchingTransferCount int  `json:"matching_transfer_count"`
 }
 
 type settlementEscrowVerifyResponse struct {
@@ -370,12 +371,7 @@ type settlementEscrowDepositItem struct {
 	CanonicalTxLookupPublic    string `json:"canonical_tx_lookup_public,omitempty"`
 }
 
-type settlementTransfer struct {
-	Sender    string `json:"sender"`
-	Recipient string `json:"recipient"`
-	Amount    string `json:"amount"`
-	Denom     string `json:"denom"`
-}
+type settlementTransfer = chainevents.Transfer
 
 type settlementInspectResponse struct {
 	Found       bool                     `json:"found"`
@@ -593,19 +589,9 @@ type restTxSearchResponse struct {
 	Total string `json:"total"`
 }
 
-type restTxLogItem struct {
-	Events []restTxEvent `json:"events"`
-}
-
-type restTxEvent struct {
-	Type       string                 `json:"type"`
-	Attributes []restTxEventAttribute `json:"attributes"`
-}
-
-type restTxEventAttribute struct {
-	Key   string `json:"key"`
-	Value string `json:"value"`
-}
+type restTxLogItem = chainevents.LogItem
+type restTxEvent = chainevents.Event
+type restTxEventAttribute = chainevents.Attribute
 
 type bankSendBroadcastResponse struct {
 	Height    string `json:"height"`
@@ -4383,82 +4369,13 @@ func extractSettlementTransfers(payload restTxLookupResponse) []settlementTransf
 }
 
 func extractSettlementTransfersFromLogsAndEvents(logItems []restTxLogItem, fallbackEvents []restTxEvent) []settlementTransfer {
-	transfers := make([]settlementTransfer, 0)
-
-	appendFromEvents := func(events []restTxEvent) {
-		for _, event := range events {
-			if event.Type != "transfer" {
-				continue
-			}
-
-			sender := ""
-			recipient := ""
-			amount := ""
-			for _, attr := range event.Attributes {
-				switch attr.Key {
-				case "sender":
-					sender = strings.TrimSpace(attr.Value)
-				case "recipient":
-					recipient = strings.TrimSpace(attr.Value)
-				case "amount":
-					amount = strings.TrimSpace(attr.Value)
-				}
-			}
-
-			if sender == "" || recipient == "" || amount == "" {
-				continue
-			}
-
-			for _, coin := range splitCoinAmounts(amount) {
-				transfers = append(transfers, settlementTransfer{
-					Sender:    sender,
-					Recipient: recipient,
-					Amount:    coin.Amount,
-					Denom:     coin.Denom,
-				})
-			}
-		}
-	}
-
-	for _, logItem := range logItems {
-		appendFromEvents(logItem.Events)
-	}
-
-	if len(transfers) == 0 {
-		appendFromEvents(fallbackEvents)
-	}
-
-	return transfers
+	return chainevents.Extract(logItems, fallbackEvents)
 }
 
-type coinAmount struct {
-	Amount string
-	Denom  string
-}
+type coinAmount = chainevents.CoinAmount
 
 func splitCoinAmounts(raw string) []coinAmount {
-	parts := strings.Split(raw, ",")
-	out := make([]coinAmount, 0, len(parts))
-	for _, part := range parts {
-		part = strings.TrimSpace(part)
-		if part == "" {
-			continue
-		}
-
-		splitAt := 0
-		for splitAt < len(part) && part[splitAt] >= '0' && part[splitAt] <= '9' {
-			splitAt++
-		}
-		if splitAt == 0 || splitAt >= len(part) {
-			continue
-		}
-
-		out = append(out, coinAmount{
-			Amount: part[:splitAt],
-			Denom:  part[splitAt:],
-		})
-	}
-	return out
+	return chainevents.SplitCoins(raw)
 }
 
 func matchSettlementTransfer(transfers []settlementTransfer, expectations settlementLookupExpectations) (*settlementTransfer, bool) {

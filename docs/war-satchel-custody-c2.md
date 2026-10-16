@@ -160,9 +160,10 @@ Pure candidate checks define necessary requirements for a later trusted adapter:
   or replay an already confirmed result. Missing or ambiguous proof never
   authorizes another send.
 
-These are structural checks, not independent cryptographic, custody, finality,
-or solvency certification. The package implements no trusted chain adapter,
-network fetch, persistent receipt consumption, ledger credit, reservation,
+These are structural checks, not independent custody, finality or solvency
+certification. The [C3 reader](war-satchel-chain-evidence-c3.md) adds bounded
+network collection and proof consistency against unauthenticated headers. It
+does not implement a consensus trust root, persistent receipt consumption, ledger credit, reservation,
 signer/keyring access, signature production, transaction broadcast, or live API.
 Passing candidate tests leaves the current capability unavailable.
 

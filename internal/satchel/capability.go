@@ -1,5 +1,6 @@
-// Package satchel defines dormant War Satchel custody contracts. It has no
-// runtime adapter, credit writer, signer access, or transaction execution.
+// Package satchel defines dormant War Satchel custody contracts and bounded
+// read-only evidence collection. It has no authenticated consensus authority,
+// credit writer, signer access, or transaction execution.
 package satchel
 
 import (
