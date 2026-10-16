@@ -289,7 +289,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-16",
       "sensitivity": "restricted",
-      "sha256": "ccb50391550e35da1a019b58a26b72e440d39307f1dd5b1ed4c7c53e7c08e276",
+      "sha256": "5aede3f478266915cf8555d2567eac5db8d236a52ea79b716a28c5400de8c498",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
