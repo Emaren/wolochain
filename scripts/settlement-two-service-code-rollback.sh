@@ -116,51 +116,9 @@ fi
 check_old_config
 inspect_override "$PRIMARY"
 inspect_override "$FOUNDER"
-if [[ "$mode" == "--inspect" ]]; then
-  echo "PASS inspect only: no files modified, no services restarted"
-  exit 0
-fi
-
-# Historic auto-resumption of web/API/timers was removed. In particular, a
-# watchdog may never infer financial recovery from two restored code hashes.
-# Any future recovery must independently prove signer fences and liability state.
-
-# Explicitly never restore previous payout state or env files.
-# No shared binary or consensus executable is replaced.
-owned=0
-for unit in "$PRIMARY" "$FOUNDER"; do
-  [[ -f "$(dropin "$unit")" ]] && owned=$((owned + 1))
-done
-if (( owned == 0 )); then
-  echo "INFO: no owned new-executable overrides; avoiding unnecessary settlement bounce"
-  for name in "$PRIMARY" "$FOUNDER"; do
-    if ! systemctl is-active --quiet "$name"; then
-      timeout 40s systemctl start "$name" || fail "could not start original $name"
-    fi
-  done
-  check_legacy_pids
-else
-  echo "ROLLBACK: returning both settlement units to original shared executable"
-  for name in "$PRIMARY" "$FOUNDER"; do
-    timeout 40s systemctl stop "$name" || fail "could not stop $name; manual operator required"
-  done
-  for name in "$PRIMARY" "$FOUNDER"; do
-    file="$(dropin "$name")"
-    if [[ -f "$file" ]]; then
-      rm -- "$file"
-      echo "Removed only our exact reviewed override for $name"
-    fi
-  done
-  timeout 30s systemctl daemon-reload || fail "systemd reload failed"
-  for name in "$PRIMARY" "$FOUNDER"; do
-    timeout 40s systemctl start "$name" || fail "could not start $name; manual operator required"
-  done
-  check_legacy_pids
-fi
-health 8092 primary
-health 8093 founder
-check_consensus
-echo "ROLLBACK_PASS: both original settlement binaries active; live state preserved"
+echo "PASS inspect only: no files modified, no services restarted"
 echo "FINANCIAL_RESUME_AUTHORIZED=false"
-echo "QUIESCED_RECOVERY_ONLY: separate financial ingress/drain verification required"
-echo "NODE_UNTOUCHED: generic shared-binary restore script never called"
+echo "MUTATING_LEGACY_MODES_DISABLED=true"
+echo "Modern recovery must be QUIESCED_RECOVERY_ONLY; this helper cannot certify it"
+echo "NODE_UNTOUCHED: consensus was only inspected"
+exit 0
