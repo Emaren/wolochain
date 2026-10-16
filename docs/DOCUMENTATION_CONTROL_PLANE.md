@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `forensics/founder15-root-private-request-inspection-20261015` at `c4128ef77a634ae6315dbaf7f7557f619ce7d35c`
+Implementation baseline: `codex/war-satchel-custody-c2` at `e64780aa30b5d397d3e33a9e1653e860ef976a13`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
@@ -27,21 +27,21 @@ This page is generated from the validated front matter in this repository. Cross
 
 ## Documentation health
 
-- Authoritative repository documents: **32**
+- Authoritative repository documents: **33**
 - Path moves in this migration: **0**
 - Every listed document has an explicit owner, lifecycle, authority, and review interval.
 
 ### Types
 
 - `historical`: 14
-- `reference`: 14
+- `reference`: 15
 - `runbook`: 2
 - `working`: 2
 
 ### Lifecycle
 
 - `active`: 16
-- `draft`: 2
+- `draft`: 3
 - `historical`: 14
 
 ## Documents
@@ -63,6 +63,7 @@ This page is generated from the validated front matter in this repository. Cross
 | [WoloChain Mainnet Wallet And Key Plan](mainnet-wallets.md) | `reference` | `active` | `mainnet-wallet-role-and-custody-map` |
 | [Settlement Contracts](settlement-contracts/README.md) | `reference` | `active` | `machine-readable-settlement-contract-index` |
 | [WoloChain Testnet Ops](testnet-ops.md) | `runbook` | `active` | `legacy-testnet-operations` |
+| [War Satchel C2 Custody Capability](war-satchel-custody-c2.md) | `reference` | `draft` | `source-only-war-satchel-custody-capability` |
 | [AoE2WAR Warbound Trophies](warbound-trophies.md) | `working` | `draft` | `undeployed-warbound-module-design` |
 | [Codex Mission: WoloChain Mainnet ↔ Osmosis IBC Prep](../mainnet-prep/CODEX_OSMOSIS_IBC_MISSION.md) | `historical` | `historical` | `ibc-mission-prompt-evidence` |
 | [WoloChain Mainnet Osmosis Hermes Relayer Staging](../mainnet-prep/HERMES_OSMOSIS_RELAYER_STAGING.md) | `reference` | `active` | `ibc-relayer-operating-reference` |
