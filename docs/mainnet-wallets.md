@@ -8,12 +8,39 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "runtime-evidence"
 authority: "mainnet-wallet-role-and-custody-map"
-reviewed_at: "2026-10-07"
+reviewed_at: "2026-10-15"
 review_interval_days: 14
 sensitivity: "restricted"
 ---
 
 # WoloChain Mainnet Wallet And Key Plan
+
+## Satchel C2 read-only role verification — October 15, 2026
+
+At `2026-10-16T00:16:29Z` (October 15 in Edmonton), a bounded SSH read of
+`/settlement/v1/health` on both loopback listeners returned `ok=true`,
+`chain_id=wolo-1`, and `runtime_chain_id=wolo-1`. Only public role/address
+fields were retained. Port 8092 reports `mainnet-payout` and
+`mainnet-escrow` at their existing addresses below. Port 8093 reports
+`founder-rewards-mainnet` at
+`wolo1tg04m57e52evgzjkn9ruwwkz626pfv9qfv27wy` and the **same**
+`mainnet-escrow` address as 8092. Separate listeners and state roots do not
+establish independent escrow custody. No key material was read and no
+financial execution or service mutation occurred. This is role evidence,
+not a balance census, reserve certification or proof of independent key control.
+
+At `2026-10-16T00:18:39Z`, allowlisted address fields in both settlement
+environment files confirmed the same Community Treasury address below.
+At `2026-10-16T00:21:33Z`, allowlisted non-secret fields in the systemd-declared
+HD web environment confirmed `WOLO_STAKING_WALLET_ADDRESS` at the existing
+staking address and configured key selector `staking-mainnet`, plus the same
+Community Treasury. No mnemonic value was emitted or retained; keyring,
+passphrase and private-key files were not opened. This confirms configured addresses/selectors; key derivation,
+effective HD/DE fallback access and independent custody remain unverified.
+
+No dedicated Satchel vault or signer was established. The source-only
+[Satchel C2 contract](war-satchel-custody-c2.md) remains unavailable and
+excludes every registered role wallet, including the founder payout signer.
 
 
 ## Review Renewal — 2026-10-07 UTC
@@ -107,6 +134,7 @@ Use these labels when app or explorer surfaces render `wolo-1` holder and transf
 | Retired Bet Payout | `wolo1cy04t5af0mr9d8n6rrzgr8e9j4vuf42nfg02q5` | Historical configured payout signer; zero-balance and not used for the June 4 mainnet settlement service. |
 | Bet Payout Signer | `wolo1zfa9ssu2gpgqg7yzvhmjt4w66mza07qr2a4rwu` | Fresh mainnet payout signer in `/var/lib/wolochain-mainnet-settlement/keyring`; funded June 4, 2026. |
 | Bet Escrow Signer | `wolo1zygwt232ymc4h2g52yvkntffhmd5alx2kglw7p` | Fresh mainnet escrow signer in `/var/lib/wolochain-mainnet-settlement/keyring`; route new app escrow deposits here after cutover. |
+| Founder Rewards Payout Signer | `wolo1tg04m57e52evgzjkn9ruwwkz626pfv9qfv27wy` | Port 8093 `founder-rewards-mainnet`, read-only health observation October 15, 2026; shares the existing betting escrow role, not Satchel custody. |
 | Faucet/Test Wallet 10 | `wolo1jv65s3grqf6v6jl3dp4t6c9t9rk99cd80ypxqz` | Small legacy faucet/test balance. |
 | Legacy app `faucetgrowth` key | `wolo1jx4n3n2ey6uzfq28kplkmpd2am98xsmcn0nerx` | Present in `/var/lib/aoe2hdbets-wolo-mainnet` but not the funded mainnet Faucet Hot Wallet. |
 

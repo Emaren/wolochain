@@ -38,6 +38,9 @@ jobs:
       - name: Settlement tests
         run: go test ./cmd/wolochaind/cmd -count=1
 
+      - name: Dormant Satchel custody adversarial contracts
+        run: go test -race ./internal/satchel -count=1
+
       - name: Full repo tests
         run: go test ./...
 
