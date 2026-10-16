@@ -186,6 +186,7 @@ type normalizedSettlementChallengeRequest struct {
 }
 
 type settlementChallengeTransferResult struct {
+	ConfirmationStatus         string   `json:"confirmation_status,omitempty"`
 	Index                      int      `json:"index"`
 	RequestID                  string   `json:"request_id"`
 	ParticipantSide            string   `json:"participant_side,omitempty"`
@@ -2260,31 +2261,8 @@ func (cfg settlementConfig) broadcastEscrowTransfer(ctx context.Context, request
 			response.CanonicalTxLookupInternal = cfg.txLookupURL(broadcast.TxHash)
 			response.CanonicalTxLookupPublic = cfg.publicTxLookupURL(broadcast.TxHash)
 			if broadcast.Code == 0 {
-				confirmed, confirmErr := cfg.waitForTxConfirmation(ctx, broadcast.TxHash)
-				if confirmErr == nil && confirmed != nil {
-					response.Code = confirmed.Code
-					response.Codespace = confirmed.Codespace
-					response.RawLog = confirmed.RawLog
-					if confirmed.TxSuccess {
-						response.OK = true
-						response.Status = "confirmed"
-						response.Detail = "escrow transfer confirmed on WoloChain"
-						return response
-					}
-
-					response.FailureCode = classifyRejectedTx(confirmed.RawLog, confirmed.Code)
-					response.Detail = fmt.Sprintf("tx failed with code %d", confirmed.Code)
-					response.Retryable = false
-					return response
-				}
-
-				response.OK = true
-				response.Status = "accepted"
-				if confirmErr != nil {
-					response.Detail = "escrow transfer broadcast accepted; final confirmation check failed"
-				} else {
-					response.Detail = "escrow transfer broadcast accepted; final confirmation pending"
-				}
+				confirmed, confirmErr := cfg.waitForTxConfirmation(ctx, broadcast.TxHash, payoutConfirmationExpectations(request, signerAddress))
+				cfg.applySettlementConfirmation(ctx, &response, request, signerAddress, confirmed, confirmErr)
 				return response
 			}
 
@@ -2332,6 +2310,7 @@ func mergeChallengeRunResults(transfers []normalizedSettlementChallengeTransfer,
 		if payout, ok := resultsByRequestID[transfer.RequestID]; ok {
 			result.Attempted = payout.Attempted
 			result.OK = payout.OK
+			result.ConfirmationStatus = payout.ConfirmationStatus
 			result.Status = payout.Status
 			result.Outcome = payout.Outcome
 			result.FailureCode = payout.FailureCode

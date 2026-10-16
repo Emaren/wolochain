@@ -38,6 +38,15 @@ jobs:
       - name: Settlement tests
         run: go test ./cmd/wolochaind/cmd -count=1
 
+      - name: Exact settlement confirmation race contracts
+        run: go test -race ./cmd/wolochaind/cmd -count=1
+
+      - name: Vet source contracts
+        run: go vet ./...
+
+      - name: Source-bound documentation
+        run: python3 scripts/docs_v2_check.py
+
       - name: Read-only Satchel and shared event adversarial contracts
         run: go test -race ./internal/satchel ./internal/chainevents -count=1
 
@@ -45,7 +54,7 @@ jobs:
         run: go test ./...
 
       - name: Operator script syntax
-        run: bash -n scripts/*.sh
+        run: for script in scripts/*.sh; do bash -n "$script" || exit; done
 
       - name: Founder request-state forensics contracts (read only)
         run: python3 -m unittest discover -s tests -p 'test_settlement_founder15_state_readonly.py' -v

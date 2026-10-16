@@ -1,7 +1,18 @@
 package cmd
 
 import (
+	bank "cosmossdk.io/api/cosmos/bank/v1beta1"
+	base "cosmossdk.io/api/cosmos/base/v1beta1"
+	txapi "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"encoding/json"
+	"fmt"
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmtjson "github.com/cometbft/cometbft/libs/json"
+	core "github.com/cometbft/cometbft/rpc/core/types"
+	cmt "github.com/cometbft/cometbft/types"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -660,19 +671,23 @@ func TestVerifyEscrowDepositRequiresMatchedUwoloDenom(t *testing.T) {
 	badHash := strings.Repeat("1", 64)
 	goodHash := strings.Repeat("2", 64)
 	cfg := newTestSettlementConfigWithTxs(t, payout, map[string]string{payout: "5000"}, map[string]mockSettlementTx{
-		badHash: {Hash: badHash, Sender: sender, Recipient: escrow, AmountUWolo: "700", TransferCoins: "700ufake,1uwolo"},
+		badHash:  {Hash: badHash, Sender: sender, Recipient: escrow, AmountUWolo: "700", TransferCoins: "700ufake,1uwolo"},
 		goodHash: {Hash: goodHash, Sender: sender, Recipient: escrow, AmountUWolo: "700", TransferCoins: "700ufake,700uwolo"},
 	}, nil)
 	cfg.EscrowAddress = escrow
 
 	bad, err := cfg.verifyEscrowDeposit(t.Context(), badHash, sender, "700")
-	if err != nil { t.Fatal(err) }
+	if err != nil {
+		t.Fatal(err)
+	}
 	if bad.OK || !bad.DepositFound || bad.FailureCode != "ESCROW_DEPOSIT_MISMATCH" ||
 		bad.Lookup == nil || bad.Lookup.MatchedExpected || bad.Lookup.MatchedTransfer != nil {
 		t.Fatalf("foreign-denom 700 cannot be credited as uwolo when only 1uwolo was transferred: %+v", bad)
 	}
 	good, err := cfg.verifyEscrowDeposit(t.Context(), goodHash, sender, "700")
-	if err != nil { t.Fatal(err) }
+	if err != nil {
+		t.Fatal(err)
+	}
 	if !good.OK || !good.DepositFound || good.Lookup == nil || !good.Lookup.MatchedExpected ||
 		good.Lookup.MatchedTransfer == nil || good.Lookup.MatchedTransfer.Denom != "uwolo" ||
 		good.Lookup.MatchedTransfer.Amount != "700" {
@@ -694,13 +709,15 @@ func TestVerifyEscrowDepositUniqueTransferOrdinal(t *testing.T) {
 		},
 		ambiguousHash: {
 			Hash: ambiguousHash, Sender: sender, Recipient: escrow,
-			AmountUWolo: "700", TransferCoins: "700uwolo,700uwolo",
+			AmountUWolo: "700", RepeatTransfer: true,
 		},
 	}, nil)
 	cfg.EscrowAddress = escrow
 
 	unique, err := cfg.verifyEscrowDeposit(t.Context(), oneHash, sender, "700")
-	if err != nil { t.Fatal(err) }
+	if err != nil {
+		t.Fatal(err)
+	}
 	if !unique.OK || unique.Lookup == nil || unique.Lookup.MatchingTransferCount != 1 ||
 		unique.Lookup.MatchedTransferIndex == nil || *unique.Lookup.MatchedTransferIndex != 1 ||
 		unique.Lookup.MatchedTransfer == nil || unique.Lookup.MatchedTransfer.Denom != "uwolo" {
@@ -708,7 +725,9 @@ func TestVerifyEscrowDepositUniqueTransferOrdinal(t *testing.T) {
 	}
 
 	ambiguous, err := cfg.verifyEscrowDeposit(t.Context(), ambiguousHash, sender, "700")
-	if err != nil { t.Fatal(err) }
+	if err != nil {
+		t.Fatal(err)
+	}
 	if !ambiguous.OK || ambiguous.Lookup == nil || ambiguous.Lookup.MatchingTransferCount != 2 ||
 		ambiguous.Lookup.MatchedTransferIndex != nil {
 		t.Fatalf("two identical transfers must not expose a unique creditable index: %+v", ambiguous)
@@ -719,9 +738,13 @@ func TestVerifyEscrowDepositUniqueTransferOrdinal(t *testing.T) {
 		"?expected_sender="+sender+"&expected_amount_uwolo=700", nil)
 	recorder := httptest.NewRecorder()
 	handler.ServeHTTP(recorder, request)
-	if recorder.Code != http.StatusOK { t.Fatalf("verification route: %d %s", recorder.Code, recorder.Body.String()) }
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("verification route: %d %s", recorder.Code, recorder.Body.String())
+	}
 	var decoded settlementEscrowVerifyResponse
-	if err := json.Unmarshal(recorder.Body.Bytes(), &decoded); err != nil { t.Fatal(err) }
+	if err := json.Unmarshal(recorder.Body.Bytes(), &decoded); err != nil {
+		t.Fatal(err)
+	}
 	if decoded.Lookup == nil || decoded.Lookup.MatchedTransferIndex == nil ||
 		*decoded.Lookup.MatchedTransferIndex != 1 || decoded.Lookup.MatchingTransferCount != 1 {
 		t.Fatalf("HTTP response lost immutable transfer ordinal: %+v", decoded)
@@ -1157,7 +1180,7 @@ func TestExecuteEscrowSettlementRunUsesEscrowSigner(t *testing.T) {
 		recipientAddress = "wolo1recipienta000000000000000000000000000000"
 	)
 
-	txHash := strings.Repeat("E", 64)
+	txHash := mockSettlementHash(escrowAddress, recipientAddress, "300", "escrow memo")
 	cfg := newTestChallengeSettlementConfig(t, payoutAddress, escrowAddress, "", map[string]string{
 		payoutAddress: "10",
 		escrowAddress: "5000",
@@ -1278,8 +1301,8 @@ func TestExecuteSettlementRunStoresProofsAndReplays(t *testing.T) {
 	const payoutAddress = "wolo1payoutaddress000000000000000000000000000"
 	const recipientA = "wolo1recipienta000000000000000000000000000000"
 	const recipientB = "wolo1recipientb000000000000000000000000000000"
-	txHashA := strings.Repeat("A", 64)
-	txHashB := strings.Repeat("B", 64)
+	txHashA := mockSettlementHash(payoutAddress, recipientA, "100", "batch memo")
+	txHashB := mockSettlementHash(payoutAddress, recipientB, "200", "batch memo")
 
 	cfg := newTestSettlementConfigWithTxs(
 		t,
@@ -1379,7 +1402,7 @@ func TestExecuteSettlementRunPartialAndRecentHistory(t *testing.T) {
 	const payoutAddress = "wolo1payoutaddress000000000000000000000000000"
 	const recipientA = "wolo1recipienta000000000000000000000000000000"
 	const recipientB = "wolo1recipientb000000000000000000000000000000"
-	txHashA := strings.Repeat("A", 64)
+	txHashA := mockSettlementHash(payoutAddress, recipientA, "100", "partial memo")
 
 	cfg := newTestSettlementConfigWithTxs(
 		t,
@@ -1428,6 +1451,7 @@ func TestExecuteSettlementRunPartialAndRecentHistory(t *testing.T) {
 
 	request := settlementRunRequest{
 		SettlementRunID: "run-partial",
+		Memo:            "partial memo",
 		SourceApp:       "settler",
 		Payouts: []settlementRunPayoutInput{
 			{ToAddress: recipientA, AmountUWolo: "100"},
@@ -1470,8 +1494,8 @@ func TestExecuteSettlementRunPartialRetryDoesNotResendConfirmedPayout(t *testing
 	const payoutAddress = "wolo1payoutaddress000000000000000000000000000"
 	const recipientA = "wolo1recipienta000000000000000000000000000000"
 	const recipientB = "wolo1recipientb000000000000000000000000000000"
-	txHashA := strings.Repeat("A", 64)
-	txHashB := strings.Repeat("B", 64)
+	txHashA := mockSettlementHash(payoutAddress, recipientA, "100", "retry memo")
+	txHashB := mockSettlementHash(payoutAddress, recipientB, "200", "retry memo")
 
 	cfg := newTestSettlementConfigWithTxs(
 		t,
@@ -1683,16 +1707,17 @@ func newMockSettlementChainHandler(balances map[string]string) http.Handler {
 }
 
 type mockSettlementTx struct {
-	Hash        string
-	Sender      string
-	Recipient   string
-	AmountUWolo string
-	TransferCoins string
-	Memo        string
-	Code        uint32
-	Codespace   string
-	RawLog      string
-	Timestamp   string
+	Hash           string
+	Sender         string
+	Recipient      string
+	AmountUWolo    string
+	TransferCoins  string
+	RepeatTransfer bool
+	Memo           string
+	Code           uint32
+	Codespace      string
+	RawLog         string
+	Timestamp      string
 }
 
 func newTestSettlementConfigWithTxs(t *testing.T, payoutAddress string, balances map[string]string, txs map[string]mockSettlementTx, recipientTxHashes map[string]string) settlementConfig {
@@ -1744,6 +1769,21 @@ func newMockSettlementChainHandlerWithTxs(balances map[string]string, txs map[st
 			},
 		})
 	})
+	mux.HandleFunc("/tx", func(w http.ResponseWriter, r *http.Request) {
+		hash := strings.TrimPrefix(strings.ToUpper(r.URL.Query().Get("hash")), "0X")
+		tx, ok := txs[hash]
+		if !ok {
+			http.NotFound(w, r)
+			return
+		}
+		raw := mockSettlementRaw(tx)
+		result := core.ResultTx{Hash: raw.Hash(), Height: 123, Tx: raw, TxResult: abci.ExecTxResult{Code: tx.Code, Events: []abci.Event{{Type: "transfer", Attributes: []abci.EventAttribute{
+			{Key: "sender", Value: tx.Sender}, {Key: "recipient", Value: tx.Recipient}, {Key: "amount", Value: firstNonEmpty(tx.TransferCoins, tx.AmountUWolo+settlementCanonicalBaseDenom)},
+		}}}}}
+		encoded, _ := cmtjson.Marshal(result)
+		_, _ = w.Write(append(append([]byte(`{"jsonrpc":"2.0","id":-1,"result":`), encoded...), '}'))
+	})
+
 	mux.HandleFunc("/cosmos/base/tendermint/v1beta1/node_info", func(w http.ResponseWriter, _ *http.Request) {
 		_ = json.NewEncoder(w).Encode(map[string]any{
 			"default_node_info": map[string]any{
@@ -1842,7 +1882,7 @@ func newMockSettlementChainHandlerWithTxs(balances map[string]string, txs map[st
 						"attributes": []map[string]string{
 							{"key": "sender", "value": hit.tx.Sender},
 							{"key": "recipient", "value": hit.tx.Recipient},
-							{"key": "amount", "value": firstNonEmpty(hit.tx.TransferCoins, hit.tx.AmountUWolo + settlementCanonicalBaseDenom)},
+							{"key": "amount", "value": firstNonEmpty(hit.tx.TransferCoins, hit.tx.AmountUWolo+settlementCanonicalBaseDenom)},
 						},
 					},
 				},
@@ -1869,9 +1909,7 @@ func newMockSettlementChainHandlerWithTxs(balances map[string]string, txs map[st
 
 		_ = json.NewEncoder(w).Encode(map[string]any{
 			"tx": map[string]any{
-				"body": map[string]any{
-					"memo": tx.Memo,
-				},
+				"body": mockSettlementBody(tx),
 			},
 			"tx_response": map[string]any{
 				"height":    "123",
@@ -1880,16 +1918,7 @@ func newMockSettlementChainHandlerWithTxs(balances map[string]string, txs map[st
 				"codespace": tx.Codespace,
 				"raw_log":   tx.RawLog,
 				"timestamp": firstNonEmpty(tx.Timestamp, "2026-04-08T00:00:00Z"),
-				"events": []map[string]any{
-					{
-						"type": "transfer",
-						"attributes": []map[string]string{
-							{"key": "sender", "value": tx.Sender},
-							{"key": "recipient", "value": tx.Recipient},
-							{"key": "amount", "value": firstNonEmpty(tx.TransferCoins, tx.AmountUWolo + settlementCanonicalBaseDenom)},
-						},
-					},
-				},
+				"events":    mockSettlementEvents(tx),
 			},
 		})
 	})
@@ -2118,4 +2147,42 @@ func TestSettlementRunEscrowAutoTopUpDisabledByPolicy(t *testing.T) {
 			)
 		}
 	}
+}
+
+// Honest synthetic fixtures: signatures have no chain authority, but each hash
+// used for confirmation is derived from the protobuf bytes actually returned.
+func mockSettlementRaw(m mockSettlementTx) cmt.Tx {
+	coins := []*base.Coin{}
+	for _, coin := range splitCoinAmounts(firstNonEmpty(m.TransferCoins, m.AmountUWolo+settlementCanonicalBaseDenom)) {
+		coins = append(coins, &base.Coin{Denom: coin.Denom, Amount: coin.Amount})
+	}
+	send, _ := anypb.New(&bank.MsgSend{FromAddress: m.Sender, ToAddress: m.Recipient, Amount: coins})
+	send.TypeUrl = "/cosmos.bank.v1beta1.MsgSend"
+	messages := []*anypb.Any{send}
+	if m.RepeatTransfer {
+		messages = append(messages, send)
+	}
+	body, _ := proto.Marshal(&txapi.TxBody{Messages: messages, Memo: m.Memo})
+	raw, _ := proto.Marshal(&txapi.TxRaw{BodyBytes: body, AuthInfoBytes: []byte("synthetic-auth"), Signatures: [][]byte{[]byte("synthetic-signature")}})
+	return cmt.Tx(raw)
+}
+func mockSettlementBody(m mockSettlementTx) json.RawMessage {
+	var raw txapi.TxRaw
+	var body txapi.TxBody
+	_ = proto.Unmarshal(mockSettlementRaw(m), &raw)
+	_ = proto.Unmarshal(raw.BodyBytes, &body)
+	encoded, _ := protojson.Marshal(&body)
+	return encoded
+}
+func mockSettlementHash(sender, recipient, amount, memo string) string {
+	return fmt.Sprintf("%X", mockSettlementRaw(mockSettlementTx{Sender: sender, Recipient: recipient, AmountUWolo: amount, Memo: memo}).Hash())
+}
+
+func mockSettlementEvents(m mockSettlementTx) []map[string]any {
+	effect := map[string]any{"type": "transfer", "attributes": []map[string]string{{"key": "sender", "value": m.Sender}, {"key": "recipient", "value": m.Recipient}, {"key": "amount", "value": firstNonEmpty(m.TransferCoins, m.AmountUWolo+settlementCanonicalBaseDenom)}}}
+	events := []map[string]any{effect}
+	if m.RepeatTransfer {
+		events = append(events, effect)
+	}
+	return events
 }
