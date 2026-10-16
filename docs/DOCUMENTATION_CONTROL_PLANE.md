@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `codex/war-satchel-chain-evidence-c3` at `62864745b8776a442eb3809636f8d6f6204ddd8f`
+Implementation baseline: `fix/settlement-amount-normalization-bounds-20261016` at `025bc4be2fac94a027bf348804c348b1aa1aea74`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
