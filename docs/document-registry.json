@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "cb4acadbf080ebd2d968afba3ffe11f32fb9da85bbde938b5648b3beb2c33a02",
+      "sha256": "1b58a55f581fb44644230d1a20254f4f35445f9a48c5b0c79ea47bf5afd8e33b",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -374,6 +374,29 @@
         "operators",
         "ai-agents"
       ],
+      "authority": "source-only-war-satchel-chain-evidence",
+      "id": "aoe2war.wolochain.war-satchel-chain-evidence-c3",
+      "owner": "wolochain-ops",
+      "path": "docs/war-satchel-chain-evidence-c3.md",
+      "review_interval_days": 14,
+      "reviewed_at": "2026-10-15",
+      "sensitivity": "restricted",
+      "sha256": "19d4bc2e5e79de9929e6765ac2f3c6ffa1bad15125035ab0909d07168e5c57a9",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "War Satchel C3 Chain Evidence",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
       "authority": "source-only-war-satchel-custody-capability",
       "id": "aoe2war.wolochain.war-satchel-custody-c2",
       "owner": "wolochain-ops",
@@ -381,7 +404,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-15",
       "sensitivity": "restricted",
-      "sha256": "21afdc3a4f0eb7b180b16c85d51c33a6495e3671ac8efb7c4e7ffee7cc666c5a",
+      "sha256": "7979cefe9453d4c7528d1e7a8379c872d17c9f73a50ebb63923a342d6c88ea2c",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -762,8 +785,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "codex/war-satchel-custody-c2",
-    "commit": "e64780aa30b5d397d3e33a9e1653e860ef976a13"
+    "branch": "codex/war-satchel-chain-evidence-c3",
+    "commit": "62864745b8776a442eb3809636f8d6f6204ddd8f"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
