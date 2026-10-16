@@ -81,3 +81,19 @@ func writeSettlementDurablePrebroadcastRecord(path string, record settlementStor
 	defer parent.Close()
 	return parent.Sync()
 }
+
+// The CLI's historical retryability classifier cannot distinguish a command
+// which failed before signing from one which broadcast but lost its response.
+// Once the signer process has been invoked, a missing hash is ambiguous, not
+// permission to call the same payment again.
+func preserveUnresolvedSettlementBroadcast(result settlementExecuteResponse) settlementExecuteResponse {
+	result.Retryable = false
+	if result.TxHash == "" {
+		result.OK = false
+		result.Status = "unverifiable"
+		result.ConfirmationStatus = "unverifiable"
+		result.FailureCode = "BROADCAST_OUTCOME_UNRECORDED"
+		result.Detail = "Signer command was attempted without durable canonical tx outcome; independent operator reconciliation required before retry."
+	}
+	return result
+}
