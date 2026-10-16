@@ -15,6 +15,45 @@ sensitivity: "restricted"
 
 # WoloChain Mainnet Settlement Runbook
 
+## October 16, 2026 — current exact candidate build, NOT a cutover
+
+The current governed financial Go implementation is
+`bdbce253c524d6faac14f61cd129ac5072287c3f`.
+The earlier non-deploying settlement-candidate workflow still pins
+`3ea79363695dd93be5f0a5e8a5121cf6e31d27b8`, which cannot represent
+the present source: Go settlement confirmation, durable payment markers,
+replay ownership, and request-state behavior have substantively changed.
+The old controller and its binary digests are historical and **must not
+be used for promotion**.
+
+The new `.github/workflows/settlement-current-implementation-candidate.yml`
+is a separate **source-pinned, no-deploy** verification lane. It checks
+out exactly `bdbce253`, runs financial/race tests, builds a versioned
+Linux amd64 binary outside the source tree, verifies embedded Go VCS
+revision and unmodified flag, and records SHA-256 and an explicit
+`production_authorized=false` statement. This artifact cannot certify
+current on-chain payer liability, signer ingress/drain, founder claim
+#889, a two-settlement rollback rehearsal, or the consensus node's
+unchanged identity. It performs no live SSH, key access, financial send,
+deployment, or node restart.
+
+Source-bound Documentation OS may advance its **repository-wide
+implementation baseline** to the commit adding the workflow, because
+the workflow itself is executable source. That Git ancestry seal is
+not a claim that the Go binary is built from the documentation commit:
+the candidate binary must still attest `bdbce253` exactly. Runtime
+settlement VCS, live VPS checkout, source baseline, and CI artifact are
+**four separately reported authorities**. Do not greenwash their drift
+or use the new artifact in the old `3ea79363` controller.
+
+Release remains held on independent complete proof of founder #889;
+signed HD+DE payment-ingress isolation, zero inflight/authorized drain,
+governed snapshots and a rehearsed settlement-only rescue watchdog;
+then named authorization, protected two-lane activation, unchanged
+consensus PID/binary SHA and observed exact runtime receipt. Until
+then, no `finish` workaround, manual Git checkout fast-forward,
+payout retry or generic shared-node binary replacement is allowed.
+
 ## October 16, 2026 — crash-durable prebroadcast request holds (C4b)
 
 **Observed defect:** the payout and escrow sender paths historically executed
