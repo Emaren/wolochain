@@ -19,9 +19,9 @@ sensitivity: "restricted"
 
 The current governed financial Go implementation is
 `bdbce253c524d6faac14f61cd129ac5072287c3f`.
-The earlier non-deploying settlement-candidate workflow still pins
-`3ea79363695dd93be5f0a5e8a5121cf6e31d27b8`, which cannot represent
-the present source: Go settlement confirmation, durable payment markers,
+The earlier non-deploying `3ea79363` candidate workflow has now been
+retired from the current release line; its old binary source could not represent
+the present implementation because Go settlement confirmation, durable payment markers,
 replay ownership, and request-state behavior have substantively changed.
 The old controller and its binary digests are historical and **must not
 be used for promotion**.
@@ -263,7 +263,25 @@ touching DE services without explicit approval. The existing historical
 founder claim #889 also independently blocks financial drain clearance.
 
 
-## Emergency code-only two-service rollback (October 14, 2026)
+## Emergency code-only two-service rollback (October 14, 2026 — HISTORICAL, RETIRED)
+
+**October 16 supersession (PR #24, SOURCE ONLY):** The original
+`scripts/settlement-two-service-code-rollback.sh` now has a read-only
+`--inspect` mode only. Its `--rollback` and `--rescue` modes exit **2**
+with `OBSOLETE_LEGACY_RECOVERY` before any root/process or service operation.
+The formerly documented automatic restart of web/API and timer producers
+was deleted. The former `3ea79363` candidate-build CI job was also retired.
+The historical procedure below is **not currently executable** and must
+not be used as a cutover, watchdog, rollback, or approval playbook.
+
+For the modern `bdbce253` implementation, build a separately reviewed
+two-settlement-only rollback/watchdog with **QUIESCED_RECOVERY_ONLY**
+semantics: keep all financial signers, requests and producers fenced until
+independent canonical chain/request-state reconciliation and named approval.
+Never infer payout safety merely from restoring an executable hash.
+This retirement changes GitHub source only; it does not change production.
+
+
 
 `scripts/settlement-two-service-code-rollback.sh` is a separately audited
 **rollback-only** implementation. It does NOT activate the candidate and cannot

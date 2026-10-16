@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "ddc1eccc3e46e62679b1f7c65ae13ac0d7eec7097cf75cd2393998dfdfe9cf3a",
+      "sha256": "56b3b909cdeba16192930f86faba37fd6fa567019cc03879d00a768c6ecb3b56",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -289,7 +289,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-16",
       "sensitivity": "restricted",
-      "sha256": "ccb50391550e35da1a019b58a26b72e440d39307f1dd5b1ed4c7c53e7c08e276",
+      "sha256": "5aede3f478266915cf8555d2567eac5db8d236a52ea79b716a28c5400de8c498",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -808,8 +808,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "ops/current-settlement-candidate-bdbce253-20261016",
-    "commit": "e15237c2dc1a1176ff7883a209cd169a77d2cf05"
+    "branch": "fix/retire-obsolete-settlement-rollback-unfence-20261016",
+    "commit": "330cfe9394ec1cb8ad0b45829ee873b70d5de9d8"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

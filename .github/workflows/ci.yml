@@ -62,6 +62,9 @@ jobs:
       - name: Founder request-state forensics contracts (read only)
         run: python3 -m unittest discover -s tests -p 'test_settlement_founder15_state_readonly.py' -v
 
+      - name: Legacy settlement rollback retirement (offline)
+        run: python3 -m unittest discover -s tests -p 'test_settlement_legacy_rollback_quiescence.py' -v
+
       - name: Chain invariant guard
         run: WOLO_SKIP_RUNTIME_CHECKS=1 ./scripts/check-chain-invariants.sh
 

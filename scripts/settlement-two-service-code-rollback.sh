@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-# Explicit TWO-settlement code rollback. Never rewinds settlement state.
+# HISTORICAL 3ea79363 two-settlement helper: read-only inspection only.
+# Its old artifact, recovery, and automatic producer-resume contracts are obsolete.
+# Modern bdbce253 recovery requires a separately reviewed protected controller.
 # NEVER restarts/stops the consensus node; never replaces the shared binary.
 set -euo pipefail
 umask 077
@@ -96,6 +98,13 @@ case "$mode" in
   --inspect|--rollback|--rescue) ;;
   *) printf 'usage: sudo bash %s [--inspect|--rollback|--rescue]\n' "$0" >&2; exit 2 ;;
 esac
+# The old rescue path could restart financial producers without proof that legacy
+# grouped request state and newer confirmation receipts were safe to interpret.
+# Refuse BEFORE any process or filesystem mutation, including under watchdog mode.
+# Do not resurrect this 3ea79363 helper by modifying its artifact pins.
+if [[ "$mode" != "--inspect" ]]; then
+  fail "OBSOLETE_LEGACY_RECOVERY: financial resume not certified; current bdbce253 settlement cutover requires an independently reviewed recovery controller"
+fi
 (( EUID == 0 )) || fail "root required for process inspection and optional rollback"
 echo "=== TWO-SETTLEMENT CODE-ONLY ROLLBACK ($mode) ==="
 assert_hash "$OLD" "$OLD_SHA"
@@ -107,83 +116,9 @@ fi
 check_old_config
 inspect_override "$PRIMARY"
 inspect_override "$FOUNDER"
-if [[ "$mode" == "--inspect" ]]; then
-  echo "PASS inspect only: no files modified, no services restarted"
-  exit 0
-fi
-
-# Recovery supervisor may be called by an independent monotonic systemd timer
-# after SSH disconnect or a partial code promotion.
-resume_producers() {
-  local manifest=/run/aoe2war-wolo-two-service-cutover/restore-units unit
-  if [[ ! -e "$manifest" ]]; then
-    echo "INFO: no operator service-resume manifest exists"
-    return 0
-  fi
-  [[ -f "$manifest" && ! -L "$manifest" ]] || fail "restore manifest invalid"
-  [[ "$(stat -c '%u:%g:%a' "$manifest")" == "0:0:600" ]] ||
-    fail "service-resume manifest is not root:root 0600"
-  while IFS= read -r unit; do
-    case "$unit" in
-      aoe2hdbets-web.service|aoe2hdbets-api.service|aoe2hdbets-challenge-reconcile.timer|aoe2hdbets-bet-stake-reconcile.timer|aoe2hdbets-replay-auto-recovery.timer|aoe2hdbets-trophy-tributes.timer|aoe2hdbets-staking-rewards.timer|aoe2-wolo-transfer-heartbeat.timer) ;;
-      *) fail "unsafe resume unit: $unit" ;;
-    esac
-  done < "$manifest"
-  # Web and API must return before callers and automated timers.
-  for unit in aoe2hdbets-api.service aoe2hdbets-web.service; do
-    grep -Fxq "$unit" "$manifest" || continue
-    timeout 60s systemctl start "$unit" || fail "could not resume $unit"
-    systemctl is-active --quiet "$unit" || fail "$unit did not become active"
-    echo "PASS resumed $unit"
-  done
-  while IFS= read -r unit; do
-    case "$unit" in
-      *.timer)
-        timeout 30s systemctl start "$unit" || fail "could not resume $unit"
-        systemctl is-active --quiet "$unit" || fail "$unit not active"
-        echo "PASS resumed $unit" ;;
-    esac
-  done < "$manifest"
-  echo "PRODUCERS_RESTORED: initial active web/API/timer inventory restored"
-}
-
-# Explicitly never restore previous payout state or env files.
-# No shared binary or consensus executable is replaced.
-owned=0
-for unit in "$PRIMARY" "$FOUNDER"; do
-  [[ -f "$(dropin "$unit")" ]] && owned=$((owned + 1))
-done
-if (( owned == 0 )); then
-  echo "INFO: no owned new-executable overrides; avoiding unnecessary settlement bounce"
-  for name in "$PRIMARY" "$FOUNDER"; do
-    if ! systemctl is-active --quiet "$name"; then
-      timeout 40s systemctl start "$name" || fail "could not start original $name"
-    fi
-  done
-  check_legacy_pids
-else
-  echo "ROLLBACK: returning both settlement units to original shared executable"
-  for name in "$PRIMARY" "$FOUNDER"; do
-    timeout 40s systemctl stop "$name" || fail "could not stop $name; manual operator required"
-  done
-  for name in "$PRIMARY" "$FOUNDER"; do
-    file="$(dropin "$name")"
-    if [[ -f "$file" ]]; then
-      rm -- "$file"
-      echo "Removed only our exact reviewed override for $name"
-    fi
-  done
-  timeout 30s systemctl daemon-reload || fail "systemd reload failed"
-  for name in "$PRIMARY" "$FOUNDER"; do
-    timeout 40s systemctl start "$name" || fail "could not start $name; manual operator required"
-  done
-  check_legacy_pids
-fi
-health 8092 primary
-health 8093 founder
-check_consensus
-echo "ROLLBACK_PASS: both original settlement binaries active; live state preserved"
-if [[ "$mode" == "--rescue" ]]; then
-  resume_producers
-fi
-echo "NODE_UNTOUCHED: generic shared-binary restore script never called"
+echo "PASS inspect only: no files modified, no services restarted"
+echo "FINANCIAL_RESUME_AUTHORIZED=false"
+echo "MUTATING_LEGACY_MODES_DISABLED=true"
+echo "Modern recovery must be QUIESCED_RECOVERY_ONLY; this helper cannot certify it"
+echo "NODE_UNTOUCHED: consensus was only inspected"
+exit 0

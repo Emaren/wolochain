@@ -1,4 +1,4 @@
-name: Settlement-only candidate (NO DEPLOY)
+name: Legacy settlement helper retirement (NO DEPLOY)
 on:
   pull_request:
     branches: [wolo-1-mainnet-prep]
@@ -25,7 +25,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: Verify read-only script syntax and help contract
+      - name: Verify read-only legacy helper and refusal of obsolete recovery
         run: |
           set -euo pipefail
           bash -n scripts/settlement-only-provenance.sh
@@ -39,11 +39,12 @@ jobs:
           # Code-only rescuer must NEVER operate the consensus unit, restore
           # historic state, or replace the shared settlement executable.
           grep -q -- '--rescue' scripts/settlement-two-service-code-rollback.sh
-          grep -q -- 'ROLLBACK_PASS' scripts/settlement-two-service-code-rollback.sh
-          grep -q 'wolochain-founder-rewards-settlement.service' scripts/settlement-two-service-code-rollback.sh
-          ! grep -Eq 'systemctl[[:space:]]+(stop|start|restart)[[:space:]]+\$NODE' scripts/settlement-two-service-code-rollback.sh
+          grep -q 'OBSOLETE_LEGACY_RECOVERY' scripts/settlement-two-service-code-rollback.sh
+          grep -q 'MUTATING_LEGACY_MODES_DISABLED=true' scripts/settlement-two-service-code-rollback.sh
+          grep -q 'FINANCIAL_RESUME_AUTHORIZED=false' scripts/settlement-two-service-code-rollback.sh
+          ! grep -Eq 'systemctl[[:space:]]+(stop|start|restart|daemon-reload)[[:space:]]' scripts/settlement-two-service-code-rollback.sh
           ! grep -Eq '([[:space:]]cp[[:space:]]|[[:space:]]rsync[[:space:]]|[[:space:]]restore-live-settlement.sh)' scripts/settlement-two-service-code-rollback.sh
-          test "$(grep -c 'timeout 40s systemctl' scripts/settlement-two-service-code-rollback.sh)" -ge 2
+          python3 -m unittest discover -s tests -p 'test_settlement_legacy_rollback_quiescence.py' -v
           ! grep -Eiq 'systemctl[[:space:]]+(restart|stop|start|reload|daemon-reload)' scripts/settlement-dual-service-release-preflight.sh
           ! grep -Eq '[[:space:]]+(cp|mv|rm|install|tee|touch)[[:space:]]' scripts/settlement-dual-service-release-preflight.sh
           grep -q 'wolochain-founder-rewards-settlement.service' scripts/settlement-dual-service-release-preflight.sh
@@ -56,59 +57,3 @@ jobs:
           ! grep -Eiq 'systemctl[[:space:]]+(restart|stop|start|reload)' scripts/settlement-only-provenance.sh
           ! grep -Eq '[[:space:]]+(cp|mv|rm|install)[[:space:]]' scripts/settlement-only-provenance.sh
 
-  settlement-candidate:
-    runs-on: ubuntu-latest
-    timeout-minutes: 50
-    env:
-      CANDIDATE_DIR: /tmp/wolo-settlement-3ea79363
-    steps:
-      # Do not compile PR-head code. The audited 3ea79363 source is the candidate.
-      - name: Checkout exact reviewed implementation
-        uses: actions/checkout@v4
-        with:
-          ref: 3ea79363695dd93be5f0a5e8a5121cf6e31d27b8
-          persist-credentials: false
-          fetch-depth: 1
-
-      - name: Prove exact source and clean worktree
-        shell: bash
-        run: |
-          set -euo pipefail
-          test "$(git rev-parse HEAD)" = "3ea79363695dd93be5f0a5e8a5121cf6e31d27b8"
-          test -z "$(git status --porcelain)"
-
-      - name: Install pinned Go toolchain
-        uses: actions/setup-go@v5
-        with:
-          go-version-file: go.mod
-          cache: true
-
-      - name: Test settlement verification
-        shell: bash
-        run: |
-          set -euo pipefail
-          go test -tags go1.27 ./cmd/wolochaind/cmd -count=1
-
-      - name: Build audited linux/amd64 candidate
-        shell: bash
-        run: |
-          set -euo pipefail
-          # Build outside the Git checkout: untracked output must not mark VCS dirty.
-          mkdir -p "$CANDIDATE_DIR"
-          GOOS=linux GOARCH=amd64 go build -tags go1.27 -o "$CANDIDATE_DIR/wolochaind-settlement-only-linux-amd64" ./cmd/wolochaind
-          go version -m "$CANDIDATE_DIR/wolochaind-settlement-only-linux-amd64" | tee "$CANDIDATE_DIR/go-build-metadata.txt"
-          grep -Eq 'vcs.revision=3ea79363695dd93be5f0a5e8a5121cf6e31d27b8$' "$CANDIDATE_DIR/go-build-metadata.txt"
-          grep -Eq 'vcs.modified=false$' "$CANDIDATE_DIR/go-build-metadata.txt"
-          ( cd "$CANDIDATE_DIR" && sha256sum wolochaind-settlement-only-linux-amd64 > SHA256SUMS )
-          printf 'reviewed_source_commit=3ea79363695dd93be5f0a5e8a5121cf6e31d27b8\n' > "$CANDIDATE_DIR/SOURCE.txt"
-          printf 'production_authorized=false\nconsensus_upgrade_authorized=false\n' >> "$CANDIDATE_DIR/SOURCE.txt"
-
-      # Artifacts are transient, non-executable release candidates, not a
-      # production deployment or a certification of live custody.
-      - name: Retain candidate and provenance for operator review
-        uses: actions/upload-artifact@v4
-        with:
-          name: wolo-settlement-3ea79363-linux-amd64-UNDEPLOYED
-          path: /tmp/wolo-settlement-3ea79363/
-          if-no-files-found: error
-          retention-days: 14
