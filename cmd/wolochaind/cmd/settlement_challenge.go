@@ -2074,6 +2074,7 @@ func (cfg settlementConfig) executeEscrowTransfer(ctx context.Context, request s
 			return settlementExecuteResponse{}, err
 		}
 		result := cfg.broadcastEscrowTransfer(ctx, normalized, signerAddress)
+		result = preserveUnresolvedSettlementBroadcast(result)
 		if err := cfg.writeSettlementRecord(recordPath, normalized, signerAddress, result); err != nil {
 			return settlementExecuteResponse{}, err
 		}
