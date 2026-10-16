@@ -194,7 +194,10 @@ and each operator script's syntax passed. Production runtime invariant checks
 were intentionally excluded with `WOLO_SKIP_RUNTIME_CHECKS=1`.
 
 CI now includes command-package race tests, vet and source-bound documentation
-validation, and checks each shell script individually. A single `bash -n
+validation, and checks each shell script individually. Documentation validation
+runs immediately after a full-history checkout: the first hosted attempt proved
+that a shallow checkout cannot resolve the recorded implementation ancestor.
+The checkout now fetches that history; the authority guard remains unchanged. A single `bash -n
 scripts/*.sh` treats later script paths as arguments to the first script and is
 not an all-script syntax check. The final-head hosted CI receipt and final source
 SHA belong in the draft PR; these local validation results do not imply hosted

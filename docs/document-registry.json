@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "fd3685dc0dd11e8362e85b4b2d8cecd39fd1d8cea83bd0447d254621cc3b135f",
+      "sha256": "cd2f91186e85f4305e623dc08a32dfef96aee0aaaf5f736a55df3af474d75180",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -82,7 +82,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-16",
       "sensitivity": "restricted",
-      "sha256": "e2ed08eccb7011a3f463012b21899e6943b7bfcadbbe5b0f9d47f8efa5411798",
+      "sha256": "a60d1138aaedcd03461a7332972f02f41aea5ee25efaf5e94a7d7c6424295ccd",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -809,7 +809,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "codex/exact-settlement-confirmation-c4",
-    "commit": "d32ee6c6a61024f0610922b1e1b67318eb51fbc2"
+    "commit": "4b2f976166aeecb0dbc358b6114da8b8bbdc258c"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
