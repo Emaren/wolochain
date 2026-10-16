@@ -150,13 +150,17 @@ withdrawal broadcast, token transfer, or app/API repository edit is part of C3.
 
 ## Engineering memory: reproduced protocol failures
 
-- A bounded public read-only smoke initially refused a latest-height commit.
+- A bounded public read-only smoke initially returned
+  `invalid_response:primary:commit`. Its failing raw response was not retained,
+  so the exact first payload/height cannot be independently reverified.
   CometBFT `rpc/core/blocks.go` returns a **seen** commit (`canonical=false`) at
   its latest height, and the next-block-backed canonical form for historical
   heights. The reader now accepts that representation only at the observed
   latest height, still requiring header/commit hash binding and all inclusion and
   result-root checks. Missing/null metadata and historical noncanonical commits
-  remain failures. Permanent offline fixtures reproduce this distinction.
+  remain failures. Permanent offline fixtures reproduce the source's former
+  rejection of that legitimate representation; this is a verified compatibility
+  defect, not proof of the original response's contents or a network defect.
 - The same existing staking transaction passed inclusion/result consistency on
   a subsequent read, then was correctly refused for extra fee/transfer effects.
   It was never a Satchel deposit. No network defect or payment authority follows
