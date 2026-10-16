@@ -38,7 +38,13 @@ its legacy error classifier calls the outcome retryable, that result becomes
 storage. Otherwise a transient RPC error after broadcasting could overwrite
 the durable hold with a retryable result, defeating the fix. A known hash
 retains the distinct pending/confirmed/failed evidence classification but
-cannot be rebroadcast under the same request ID. If the process dies or the final write fails,
+cannot be rebroadcast under the same request ID. Grouped settlement runs containing a no-hash
+unverifiable payout now explicitly return `status=unverifiable`,
+`retryable=false` and replay the same held result. Previously their
+aggregate status could be empty because only refused/rejected counts
+were classified; that is a control-plane correctness defect. Historical
+test expectations allowing a second CLI attempt are superseded by this
+stricter financial safety contract. If the process dies or the final write fails,
 the preceding durable marker remains or may reappear after a filesystem
 crash, so an idempotent replay refuses re-broadcasting. Prebroadcast
 marker existence **never proves a payment was sent**; it can also
