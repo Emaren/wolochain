@@ -15,6 +15,40 @@ sensitivity: "restricted"
 
 # WoloChain Mainnet Settlement Runbook
 
+## October 16, 2026 — crash-durable prebroadcast request holds (C4b)
+
+**Observed defect:** the payout and escrow sender paths historically executed
+`broadcastPayout` / `broadcastEscrowTransfer` **before** saving the individual
+request record. A process crash, out-of-memory kill or filesystem fault after
+broadcast but before the write could erase the accepted transfer's request
+identity. Replaying the same request ID could then attempt a second transfer.
+
+**Source-only mitigation:** after successful independent signer/reserve
+preflight, both paths now fsync a minimal owner-bound, non-retryable
+`BROADCAST_OUTCOME_UNRECORDED` request marker **before calling the signer**.
+The marker records the exact normalized request, intended role, signer,
+recipient and amount, but **no invented transaction hash or payment status**.
+Its status is `unverifiable` and `retryable=false`. The file and parent
+directory must both sync successfully; otherwise no broadcast begins.
+
+Once the signer/broadcast step returns, the existing writer replaces the
+marker with actual evidence. If the process dies or the final write fails,
+the preceding durable marker remains or may reappear after a filesystem
+crash, so an idempotent replay refuses re-broadcasting. Prebroadcast
+marker existence **never proves a payment was sent**; it can also
+represent a crash occurring before the signer was invoked.
+
+**Remaining limits:** a marker with no final hash requires independent
+operator reconciliation from actual chain history, signer sequence and
+request memo. There is no automatic resolution, no clearing legacy
+ambiguous attempts (including founder #889), and no independent node
+consensus authentication or global cross-service request store. Do not
+delete the marker or stale lock to retry. This is NOT a Satchel vault,
+ledger credit, staking payout authorization or production deployment.
+The live 8092/8093 services are unchanged until a separately approved
+protected release.
+
+
 ## October 16, 2026 — exact settlement confirmation source contract (C4)
 
 [C4's source contract](exact-settlement-confirmation-c4.md) hardens transaction
