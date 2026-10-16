@@ -32,7 +32,13 @@ Its status is `unverifiable` and `retryable=false`. The file and parent
 directory must both sync successfully; otherwise no broadcast begins.
 
 Once the signer/broadcast step returns, the existing writer replaces the
-marker with actual evidence. If the process dies or the final write fails,
+marker with actual evidence. If the CLI returns **without a hash**, even when
+its legacy error classifier calls the outcome retryable, that result becomes
+`unverifiable` / `BROADCAST_OUTCOME_UNRECORDED` / `retryable=false` before
+storage. Otherwise a transient RPC error after broadcasting could overwrite
+the durable hold with a retryable result, defeating the fix. A known hash
+retains the distinct pending/confirmed/failed evidence classification but
+cannot be rebroadcast under the same request ID. If the process dies or the final write fails,
 the preceding durable marker remains or may reappear after a filesystem
 crash, so an idempotent replay refuses re-broadcasting. Prebroadcast
 marker existence **never proves a payment was sent**; it can also
