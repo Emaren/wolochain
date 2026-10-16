@@ -25,7 +25,7 @@ class LegacySettlementRecoveryQuiescence(unittest.TestCase):
         self.assertNotIn("resume_producers()", text)
         self.assertNotIn("resume_producers\n", text)
         self.assertNotIn("restore-units", text)
-        self.assertNotRegex(text, r"systemctl\\s+(?:start|restart)\\s+(?:aoe2hdbets|aoe2dewarwagers|aoe2-wolo)")
+        self.assertNotRegex(text, r"systemctl\s+(?:start|restart)\s+(?:aoe2hdbets|aoe2dewarwagers|aoe2-wolo)")
         self.assertNotIn("PRODUCERS_RESTORED", text)
 
     def test_quiescence_is_not_financial_approval(self):
