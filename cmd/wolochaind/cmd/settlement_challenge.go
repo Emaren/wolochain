@@ -2068,7 +2068,13 @@ func (cfg settlementConfig) executeEscrowTransfer(ctx context.Context, request s
 			return *failure, nil
 		}
 
+		// Persist an explicitly ambiguous, non-retryable request before calling
+		// the signing/broadcast command. A crash cannot erase the request ID.
+		if err := cfg.writeSettlementPrebroadcastHold(recordPath, normalized, signerAddress); err != nil {
+			return settlementExecuteResponse{}, err
+		}
 		result := cfg.broadcastEscrowTransfer(ctx, normalized, signerAddress)
+		result = preserveUnresolvedSettlementBroadcast(result)
 		if err := cfg.writeSettlementRecord(recordPath, normalized, signerAddress, result); err != nil {
 			return settlementExecuteResponse{}, err
 		}

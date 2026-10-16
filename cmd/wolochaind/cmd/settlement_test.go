@@ -1537,8 +1537,10 @@ func TestExecuteSettlementRunPartialRetryDoesNotResendConfirmedPayout(t *testing
 	if err != nil {
 		t.Fatalf("execute first partial run: %v", err)
 	}
-	if first.OK || first.Status != "partial" || !first.Retryable || first.Payouts[1].FailureCode != "RPC_UNREACHABLE" {
-		t.Fatalf("expected retryable partial run, got %+v", first)
+	if first.OK || first.Status != "unverifiable" || first.Retryable ||
+		first.Payouts[1].FailureCode != "BROADCAST_OUTCOME_UNRECORDED" ||
+		first.Payouts[1].Retryable || first.Payouts[1].TxHash != "" {
+		t.Fatalf("unknown signer result must hold the entire partial run: %+v", first)
 	}
 	if got := readRetryFakeSendCount(t, countsDir, recipientA); got != 1 {
 		t.Fatalf("expected recipient A to be sent once after first run, got %d", got)
@@ -1551,20 +1553,22 @@ func TestExecuteSettlementRunPartialRetryDoesNotResendConfirmedPayout(t *testing
 	if err != nil {
 		t.Fatalf("execute retry run: %v", err)
 	}
-	if !second.OK || second.Status != "confirmed" || second.ConfirmedPayoutCount != 2 {
-		t.Fatalf("expected retry to finish run, got %+v", second)
+	if second.OK || second.Status != "unverifiable" || second.Retryable || !second.IdempotentReplay ||
+		second.ConfirmedPayoutCount != 1 {
+		t.Fatalf("same grouped request must replay unresolved payment without rebroadcast: %+v", second)
 	}
-	if !second.Payouts[0].IdempotentReplay || second.Payouts[0].TxHash != txHashA {
-		t.Fatalf("expected first payout to replay stored tx, got %+v", second.Payouts[0])
+	if second.Payouts[0].TxHash != txHashA || second.Payouts[0].Status != "confirmed" {
+		t.Fatalf("first payout must remain confirmed by the original transfer: %+v", second.Payouts[0])
 	}
-	if second.Payouts[1].IdempotentReplay || second.Payouts[1].TxHash != txHashB {
-		t.Fatalf("expected second payout to execute on retry, got %+v", second.Payouts[1])
+	if second.Payouts[1].TxHash != "" || second.Payouts[1].Retryable ||
+		second.Payouts[1].Status != "unverifiable" {
+		t.Fatalf("ambiguous second payout must remain held for human review: %+v", second.Payouts[1])
 	}
 	if got := readRetryFakeSendCount(t, countsDir, recipientA); got != 1 {
 		t.Fatalf("confirmed payout was resent on retry; count=%d", got)
 	}
-	if got := readRetryFakeSendCount(t, countsDir, recipientB); got != 2 {
-		t.Fatalf("expected failed payout to be retried once; count=%d", got)
+	if got := readRetryFakeSendCount(t, countsDir, recipientB); got != 1 {
+		t.Fatalf("ambiguous payout cannot be sent a second time; count=%d", got)
 	}
 }
 

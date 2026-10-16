@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `codex/exact-settlement-confirmation-c4` at `4b2f976166aeecb0dbc358b6114da8b8bbdc258c`
+Implementation baseline: `fix/settlement-prebroadcast-durable-hold-c5-20261016` at `bdbce253c524d6faac14f61cd129ac5072287c3f`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 

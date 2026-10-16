@@ -1937,7 +1937,13 @@ func (cfg settlementConfig) executeSettlement(ctx context.Context, request settl
 			return *failure, nil
 		}
 
+		// Persist an explicitly ambiguous, non-retryable request before calling
+		// the signing/broadcast command. A crash cannot erase the request ID.
+		if err := cfg.writeSettlementPrebroadcastHold(recordPath, normalized, signerAddress); err != nil {
+			return settlementExecuteResponse{}, err
+		}
 		result := cfg.broadcastPayout(ctx, normalized, signerAddress)
+		result = preserveUnresolvedSettlementBroadcast(result)
 		if err := cfg.writeSettlementRecord(recordPath, normalized, signerAddress, result); err != nil {
 			return settlementExecuteResponse{}, err
 		}
@@ -3963,6 +3969,14 @@ func deriveSettlementRunStatus(response settlementRunResponse) (string, bool, st
 	if response.FailureCode == "INVALID_RUN" {
 		return "failed", false, response.FailureCode
 	}
+	// Uncertain signer outcomes override aggregate success. Never turn an
+	// unknown-hash transfer into a retryable partial run with no status.
+	for _, payout := range response.Payouts {
+		if payout.Status == "unverifiable" || payout.ConfirmationStatus == "unverifiable" || payout.Outcome == "unverifiable" {
+			return "unverifiable", false, firstNonEmpty(response.FailureCode,
+				firstSettlementRunFailureCode(response.Payouts), "RUN_PAYOUT_UNVERIFIABLE")
+		}
+	}
 	if response.ConfirmedPayoutCount == response.RequestedPayoutCount && response.RequestedPayoutCount > 0 {
 		return "confirmed", true, ""
 	}
@@ -3997,6 +4011,8 @@ func settlementRunExecutionDetail(response settlementRunResponse) string {
 		return fmt.Sprintf("all %d payouts broadcast accepted; final confirmation is still pending for at least one payout", response.ExecutedPayoutCount)
 	case "partial":
 		return fmt.Sprintf("%d of %d payouts executed; inspect per-recipient results for the remaining failures", response.ExecutedPayoutCount, response.RequestedPayoutCount)
+	case "unverifiable":
+		return fmt.Sprintf("%d of %d payouts have confirmed or accepted evidence; one or more remaining signer outcomes require operator reconciliation, never automatic retry", response.ExecutedPayoutCount, response.RequestedPayoutCount)
 	case "failed":
 		if detail := firstSettlementRunFailureDetail(response.Payouts); detail != "" {
 			return detail
@@ -4042,7 +4058,7 @@ func settlementRunResponseIsFinal(response settlementRunResponse) bool {
 		return false
 	}
 
-	return response.OK || strings.EqualFold(strings.TrimSpace(response.Status), "failed") || strings.EqualFold(strings.TrimSpace(response.Status), "partial")
+	return response.OK || strings.EqualFold(strings.TrimSpace(response.Status), "failed") || strings.EqualFold(strings.TrimSpace(response.Status), "partial") || strings.EqualFold(strings.TrimSpace(response.Status), "unverifiable")
 }
 
 func markRunReadyPayoutsRefused(payouts []settlementRunPayoutResult, failureCode, detail string, retryable bool) []settlementRunPayoutResult {
