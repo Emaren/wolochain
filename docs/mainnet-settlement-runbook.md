@@ -8,12 +8,55 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "runtime-evidence"
 authority: "mainnet-settlement-operations"
-reviewed_at: "2026-10-14"
+reviewed_at: "2026-10-16"
 review_interval_days: 14
 sensitivity: "restricted"
 ---
 
 # WoloChain Mainnet Settlement Runbook
+
+## October 16, 2026 — exact settlement confirmation source contract (C4)
+
+[C4's source contract](exact-settlement-confirmation-c4.md) hardens transaction
+lookup and payout confirmation from merged PR #20 at
+`87f9c0f9e4c9ad92520d72ac0df5fae9718c923a`. An HTTP-success response, missing
+transaction fields, or broadcast acceptance cannot establish payment. A payout
+can become `confirmed` only after the configured sources report the requested
+hash at a positive committed height with valid successful execution; actual
+hash-bound transaction bytes decode to the exact authorized signer, recipient,
+one `uwolo` amount and normalized memo; and a unique bank effect is reserved for
+the durable request in this service's state directory. Legitimate omitted
+Cosmos proto3 zero execution codes remain valid inside a complete response.
+
+`status=accepted` records broadcast acceptance, including when
+`confirmation_status=pending` or `unverifiable`; it does **not** mean paid.
+`OK=true` on that response retains its historical acceptance meaning. Confirmed
+payment requires `status=confirmed` and `confirmation_status=confirmed` under
+the exact proof contract. A committed failed execution is `failed`. Unavailable,
+malformed, conflicting or incomplete evidence stays unverifiable, without
+automatically retrying or rebroadcasting the payment. Do not delete request
+records, incomplete `*.json.tmp` records, confirmation receipts or stale receipt
+locks to make a retry possible; uncertain local ownership refuses confirmation.
+
+Versioned confirmation receipts own `wolo-1` + transaction hash + strict body
+effect `0` (the sole `MsgSend` and sole coin) for one request fingerprint and
+signer within the configured `StateDir`. The displayed log-first event index
+can vary when logs omit fees; it is not the receipt ownership index.
+Pre-existing same-hash records owned by a different request conservatively block
+confirmation. This is a local reuse guard; it establishes no cross-service
+ledger uniqueness, independent consensus authentication or Satchel credit.
+8092/8093 retain their distinct payout signer and state authorities. The shared
+betting escrow is not Satchel collateral.
+
+This is a **source-only** correction. No production service was deployed,
+restarted, reconfigured or freshly certified, and no key, transfer, database or
+claim retry was performed. Existing financial drain/release gates, the separate
+consensus executable, all liabilities, and founder claim #889 remain unchanged.
+Previously persisted outcomes are not rewritten or independently re-proved;
+the historical broadcast-before-request-write crash gap and recovery work remain
+separate prerequisites. Satchel custody remains `UNAVAILABLE` and C3 evidence
+remains `NONCREDITING`. The dated runtime observations below retain their
+original scope and dates.
 
 ## October 16, 2026 — canonical payout amount and int64 conversion boundary
 
