@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/retire-obsolete-settlement-rollback-unfence-20261016` at `330cfe9394ec1cb8ad0b45829ee873b70d5de9d8`
+Implementation baseline: `codex/legacy-settlement-hardening` at `7a830e8d2362d4ff16fbf852e20d825865075f34`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
@@ -27,21 +27,21 @@ This page is generated from the validated front matter in this repository. Cross
 
 ## Documentation health
 
-- Authoritative repository documents: **35**
+- Authoritative repository documents: **36**
 - Path moves in this migration: **0**
 - Every listed document has an explicit owner, lifecycle, authority, and review interval.
 
 ### Types
 
 - `historical`: 14
-- `reference`: 17
+- `reference`: 18
 - `runbook`: 2
 - `working`: 2
 
 ### Lifecycle
 
 - `active`: 16
-- `draft`: 5
+- `draft`: 6
 - `historical`: 14
 
 ## Documents
@@ -51,6 +51,7 @@ This page is generated from the validated front matter in this repository. Cross
 | [WoloChain](../README.md) | `reference` | `active` | `chain-repository-entrypoint` |
 | [WoloChain Branch Authority](BRANCH_AUTHORITY.md) | `reference` | `active` | `git-branch-authority-contract` |
 | [Exact Settlement Confirmation C4](exact-settlement-confirmation-c4.md) | `reference` | `draft` | `source-only-exact-settlement-confirmation` |
+| [Legacy Settlement Hardening and Protected Release Handoff](legacy-settlement-hardening.md) | `reference` | `draft` | `source-only-legacy-settlement-hardening` |
 | [WoloChain Mainnet Cutover Checklist](mainnet-cutover-checklist.md) | `historical` | `historical` | `mainnet-launch-cutover-evidence` |
 | [WoloChain Mainnet Tony Decision Checklist](mainnet-decision-checklist.md) | `historical` | `historical` | `mainnet-launch-decision-evidence` |
 | [WoloChain Mainnet DNS, Nginx, And TLS](mainnet-dns-nginx-tls.md) | `reference` | `active` | `mainnet-public-endpoint-routing` |
