@@ -19,6 +19,17 @@ Reviewed: 2026-10-14
 
 ## Current federation source
 
+### October 17, 2026 — authenticated financial bridge integration
+
+Branch `codex/satchel-authenticated-financial-bridge` extends composed PR #28
+`9f59b6472163e226e98a0a94d6a0136b0dc02d96` without rewriting PR #25, #26,
+#27 or #28. Portable Comet proofs and mandatory owner withdrawal mandates are
+source contracts; the exact composed signer artifact uses the shared pinned
+profile framework. See [release gates](war-satchel-controlled-release.md) for
+fresh runtime identities and accepted-state observations. None of these source
+commits is deployed. All historical authority and founder #889 holds remain.
+
+
 ### October 17, 2026 — source-only settlement candidate
 
 This work starts from remote-exact `wolo-1-mainnet-prep` at

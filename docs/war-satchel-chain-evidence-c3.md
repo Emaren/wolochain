@@ -15,6 +15,17 @@ sensitivity: "restricted"
 
 # War Satchel C3 Chain Evidence
 
+The later [authenticated financial bridge](war-satchel-financial-bridge.md)
+exports bounded portable transcripts and reuses this reader plus CometBFT
+verification offline. Its external checkpoint remains operator-provisioned.
+The network deposit path now accepts only the exact signed ante fee alongside
+the single MsgSend, as exercised by real isolated SDK execution. Public C2
+shape inspection keeps its historical one-effect guard. Transaction identity
+for global consumption is `(wolo-1, uppercase tx hash)`; Comet result roots
+exclude events, so a bank-event ordinal alone cannot establish unique credit.
+C2 remains UNAVAILABLE and every exported proof remains NONCREDITING.
+
+
 **Every adapter result is NONCREDITING. C2 custody remains UNAVAILABLE.**
 This source milestone starts from merged [C2 PR #17](https://github.com/Emaren/wolochain/pull/17),
 `7e68f43ac6eba7fdb8036edf1f68ead3838d124f`. It adds bounded network evidence
