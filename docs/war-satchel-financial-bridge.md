@@ -1,0 +1,254 @@
+---
+id: "aoe2war.wolochain.satchel-financial-bridge"
+title: "Authenticated War Satchel Financial Bridge"
+type: "reference"
+status: "draft"
+owner: "wolochain-ops"
+systems: ["wolochain","aoe2war"]
+audience: ["developers","operators","ai-agents"]
+source_of_truth: "git"
+authority: "source-integration-proof-not-production-approval"
+reviewed_at: "2026-10-17"
+review_interval_days: 14
+sensitivity: "restricted"
+---
+
+# Authenticated War Satchel financial bridge
+
+This source contract composes PR #28's durable dedicated signer with the C3
+CometBFT reader. It introduces portable evidence and an independent offline
+verification command. Every exported and verified receipt remains
+`credit_authorized: false`. The HD financial activation hold remains required;
+C2 custody remains **UNAVAILABLE**. Source CI does not certify a vault, key,
+balance, liability reconciliation, endpoint operator or protected release.
+
+## Authority and transport
+
+The sole listener is literal loopback `127.0.0.1:8094`, with
+`Authorization: Bearer <operator-provisioned private token>`. Only HD's server
+may know this credential. Browser evidence, proxy headers and CORS do not grant
+authority. The existing `/satchel/v1/health` and `/satchel/v1/one-shot` contracts
+remain; no 8194/HMAC listener exists here. Health flags do not authenticate a
+transaction or authorize a ledger credit.
+
+The normal service still requires an independent activation permit, isolated
+vault/keyring, exclusive durable state and an operator-provisioned Comet trust
+anchor before opening the listener. The proof routes themselves remain readable
+when that permit subsequently expires. They invoke no signing, broadcast,
+reservation, credit or journal update. Existing reconciliation routes can record
+authenticated journal outcomes and cannot initiate another transfer.
+
+All POST routes require `application/json`, exact case-sensitive fields, no
+unknown/duplicate/aliased fields, no URL query or compressed body, and the
+existing 16 KiB request cap. Existing transport timeouts, cancellation and
+concurrency limits apply. Proof collection additionally retains C3's bounded
+responses and Comet provider budgets. The response cap is
+`MaxFinancialProofBytes = MaxPortableProofBytes + 64 KiB`; the portable proof
+limit is 14 MiB plus 128 KiB framing, at most 80 bounded transcript responses.
+
+## Read-only proof requests
+
+`POST /satchel/v1/proofs/deposit` accepts exactly:
+
+```json
+{"protocol":1,"owner_id":"HD-durable-owner","sender":"<owner wolo address>","amount_uwolo":"1000000","memo":"<immutable HD deposit memo>","created_at":"<RFC3339 timestamp>","expires_at":"<RFC3339 timestamp>","tx_hash":"<64 uppercase hex>"}
+```
+
+HD must obtain these fields from its persisted immutable intent and persisted
+candidate transaction hash. The vault, chain (`wolo-1`), denomination (`uwolo`),
+RPC/REST sources and trust anchor derive from operator/server configuration.
+The intent has the existing maximum 30-minute admission window. Fractional
+timestamps are preserved. A proof lookup never creates or consumes an intent.
+Late/expired, wrong-owner/sender/recipient/memo/amount/chain/denom, failed, pending,
+ambiguous or untrusted observations cannot become a credit.
+
+`POST /satchel/v1/proofs/operation` accepts only
+`{"operation_id":"satchel:withdrawal:<UUID>"}` (or a funded ticket operation).
+The exact owner, transfer, accepted signature, memo and transaction hash come
+from the existing journal. Caller-selected hashes/destinations are forbidden.
+The actual authenticated bytes must equal the exact persisted signed bytes.
+Ownerless historical wager records return `operation_owner_binding_unavailable`;
+new HD wager requests must supply `owner_id` in the existing snake-case one-shot
+request (`ownerId` in its camel-case form). This optional owner field does not
+change the existing product caps or authorize another owner to spend funds.
+
+`POST /satchel/v1/proofs/return` accepts only `{"claim_id":"101"}`.
+It requires an already prepared, v2-authorized and durably reconciled return.
+The owner, claim, allocation, ticket/market/leg/entitlement and physical hash
+derive from that journal record. It cannot substitute an allocation revision,
+funding transaction or new return hash. Founder claim **#889** is forbidden.
+
+The envelope contains `protocol:1`, `chain_id`, `denom`, `context`,
+`context_digest`, `tx_hash`, `receipt_id`, `transfer_index`, `message_index:0`,
+`height`, `block_hash`, `consensus_authenticated:true`,
+`credit_authorized:false`, and `proof`. These flags are transport statements,
+not independent authentication. A fabricated envelope with matching hashes is
+rejected by independent verification.
+
+The context contains `protocol`, `kind` (`deposit`, `wager`, `withdrawal`, or
+`claim_return`), `owner_id`, `sender`, `recipient`, `amount_uwolo`, `memo`, and
+the **independently expected** `tx_hash`. Operations also include `operation_id`.
+Deposits include original `created_at`/`expires_at` text. Withdrawals include
+`withdrawal_approval` and `owner_mandate`. Returns include the original signed
+`return_approval` and `funded_amount_uwolo` from the authenticated funded ticket.
+HD must reconstruct the full expected context from its own durable records,
+including original signed approvals, rather than adopting `response.context`.
+`context_digest` is SHA-256 of Go's fixed-field-order context JSON; the pinned
+verifier computes it, so clients need not implement another canonicalizer.
+
+## Independent verification
+
+The portable proof is v1 JSON containing only `version`, `chain_id`, `kind`
+(`deposit` or `transfer`), `tx_hash`, and `responses`. Each response contains
+`source` (`primary`, `rest`, `witness`), `path`, canonical `query`, and raw JSON
+`body`. It contains **no trust anchor or source URL**. Its transcript is
+untrusted input. `satchel.NewProofVerifier(operatorAnchor)` replays the existing
+bounded parsers and actual CometBFT light client against operator-pinned trust,
+with no network access or fallback. It verifies transaction inclusion, exact
+bytes/hash, committed success/result commitment, signed blocks, chain identity,
+fresh heads and corroboration. Cosmos' legitimate omitted zero code is accepted
+only with the rest of that committed proof intact. Event attributes are not
+Comet's deterministic execution-result commitment: the economic proof is the
+exact single decoded bank MsgSend and committed successful SDK execution.
+
+HD can use the composed, exact-source-verified binary as a separate offline
+verification process, with fixed argv and no shell:
+
+```text
+wolosatcheld verify-financial-proof --authority /operator/public-authority.json --expected /hd/private/durable-expected-context.json --proof /hd/private/untrusted-export.json
+```
+
+All paths must be absolute, regular files, non-symlinks and not group/world
+writable. Authority/context are capped at 64 KiB, proof at the envelope limit;
+all reads are bounded and stable-file checked. The command returns before
+normal service startup. It opens no listener, journal, keyring, activation
+config or network connection. Authority JSON has exactly `trust_anchor`
+(`height`, `hash`, `period_seconds`, `evidence_reference`), `vault`,
+`betting_escrow`, and `approval_public_key_hex` (independent Ed25519 reviewer).
+These public values must be provisioned independently of the proof/exporter.
+Freshness uses the verifier's actual clock; no caller `--now` escape exists.
+
+Success is exit 0 and one `VerifiedFinancialReceipt` JSON object bound to the
+expected owner, kind, operation, context digest, exact hash and committed block.
+It remains NONCREDITING. Failure is exit 2, no receipt on stdout, and a bounded
+UNVERIFIABLE diagnostic. HTTP chain failures retain typed reasons such as
+`stale_head`, `untrusted_consensus_anchor`, `transaction_mismatch`,
+`execution_failed`, `ambiguous_transfers`, `source_unavailable`,
+`inconsistent_observations`, `timed_out`, and `canceled`. They never imply a
+retry, principal release or proven failure of an uncertain broadcast.
+
+RPC/REST agreement and two transcript source labels do not establish independent
+operator control. Comet authentication rests on the independently reviewed
+initial checkpoint/validator trust, bounded trusting period, actual signatures
+and provisioned witness. Missing/stale trust cannot be replaced by a flag or
+an anchor supplied in the response.
+
+## Withdrawal authorization, execution and recovery
+
+Retain `POST /v1/satchel/withdrawals` on the same 8094 listener. Its protocol-1
+request is the published `withdrawal_request` fixture, including `operation_id`,
+`chain_id`, `from_address`, `to_address`, `amount:{denom,amount}`, `memo`,
+`owner_id`, `approval`, and now mandatory `owner_mandate`.
+
+`owner_mandate` contains `challenge:{id,owner_uid,wallet_address,amount_uwolo,
+issued_at_utc,expires_at_utc}`, `pub_key:{type,value}`, and `signature`. The
+exact HD withdrawal challenge text is reproduced by `WithdrawalChallengeText`;
+original ISO timestamps are signed without truncating fractional seconds.
+ADR-36 uses canonical sorted Amino JSON, empty chain/account/sequence/memo,
+fee `{amount:[],gas:"0"}`, and one `sign/MsgSignData` with owner wallet and
+base64 UTF-8 text. The Go backend checks canonical base64, a compressed
+secp256k1 key, derived canonical `wolo` wallet and the 64-byte signature. Login
+and auto-bet signatures do not authorize withdrawal. Challenge owner, receiving
+wallet, amount and ID must agree with the independently reviewed approval and
+durable operation. The maximum challenge lifetime remains five minutes.
+
+The independent approval retains the existing `ApprovalMessage` ordered JSON
+array and Ed25519 key, domain `aoe2war/satchel/withdraw-approval/v1`. Its new
+`reservation_digest` identifies HD's independently reviewed durable unreserved
+balance hold. `OwnerMandateDigest` is SHA-256 of the ordered array shown in the
+fixture; `hold_digest` must equal SHA-256 of
+`["aoe2war/satchel/withdraw-hold/v1",reservation_digest,owner_mandate_digest]`.
+Thus the existing independent signature binds the actual owner mandate and
+reviewed hold. A digest still does not prove the ledger reservation exists: HD
+and the independent reviewer must establish that fact before signing.
+
+Owner consent and independent approval are checked before durable admission,
+again after account/head I/O immediately before native signing, and immediately
+before first broadcast after signed-byte persistence. Expiry after signing
+retains an UNKNOWN fenced operation and cannot authorize re-signing, automatic
+rebroadcast, a new sequence, cancellation or hold release. The activation permit
+is also rechecked after trust I/O and before signing/broadcast. Safe retries of
+the same durable request return its existing state after expiry; read-only
+reconciliation validates its original signed bytes. Old journal records remain
+recoverable without being silently granted new owner authority.
+
+## Signed v2 settlement and refunds
+
+The existing `/satchel/v1/returns/prepare` accepts the complete signed v2
+`ReturnApproval`; it atomically reserves its entitlement and shared reviewed
+funds budget before returning the existing escrow `/settlement/v1/runs` request.
+Only separately protected 8092 escrow authority may execute that run. 8094 has
+no escrow key or execution credential. `/satchel/v1/returns/reconcile` accepts
+`{approval,tx_hash}` and durably consumes its authenticated physical transaction.
+Its scalar receipt alone is insufficient for HD credit; obtain and independently
+verify `/proofs/return` against HD's original expected allocation/context.
+
+`AllocationMessage` is the existing ordered-array domain
+`aoe2war/satchel/return-allocation/v2`; its digest excludes review times and
+signature. The signed plan binds chain/denom, escrow/vault, allocation ID and
+revision, original operation/owner/ticket/funding hash, total return cap,
+shared funds-budget identity/availability, bank-review digest/height/block and
+sorted legs/entitlements. `ReturnApprovalMessage` binds the exact claim,
+owner/ticket/market/leg/entitlement, kind, amount and allocation digest under
+`aoe2war/satchel/claim-return-approval/v2`. Both use the already configured
+independent Ed25519 review authority. Allocation renewal/revision cannot
+rewrite existing economics or consume another owner's reserve.
+
+The journal and offline verifier reuse the same allocation arithmetic: exact
+ticket stake partition; unique sorted legs/markets/entitlements/claims; bounded
+principal; aggregate returns within reviewed cap and shared available budget;
+each `bet_refund` equals its full unmatched principal. Partial unmatched
+principal returns in full and incurs no 2% deduction. A signed plan does not
+create solvency or prove the bank/liability review's completeness. HD must use
+the already verified funded ticket amount and original reviewed plan.
+
+## Durable HD admission and remaining gates
+
+Before any ledger credit/debit, HD must atomically consume **physical
+`(wolo-1, uppercase tx_hash)` globally across every financial lane**, plus its
+own immutable intent/claim/withdrawal idempotency key. `message_index:0` denotes
+the single decoded bank message. `transfer_index`/old `receipt_id` preserve
+journal compatibility; fee/event ordinals are auxiliary and must never create
+another credit namespace. A deposit, return, withdrawal and manual betting
+consumer cannot each claim the same transaction. Verification stores no global
+receipt and cannot replace that ledger transaction.
+
+HD retains ownership of player linkage, ADR-36 auto-bet scope/expiry/revocation,
+game participation, available/reserved balances, concurrency, product caps,
+seven-migration admission and the permanent financial hold. The Wolo service
+does not increase spending caps. Independently provisioned vault/signer role,
+unencumbered reserves, complete legacy/Satchel liabilities, current trust anchor
+and witness control, exclusive journal ownership, protected release and recovery
+authority remain operator gates. Preserve 8092/8093 separation and founder #889.
+No deposit, withdrawal, credit, broadcast or production activation is authorized
+by this source contract or its fixtures.
+
+## Reviewable fixtures and tests
+
+`internal/satchelservice/testdata/financial-bridge-v1.json` publishes test-only
+public keys, canonical challenge/signing bytes, owner consent, existing
+withdrawal approval/hold, v2 allocation and return signatures, and exact request
+schemas. It has no mainnet authority. Go pins source-to-fixture equality;
+`node scripts/check-satchel-financial-bridge-fixture.mjs` independently verifies
+the HD text, secp256k1/Ed25519 signatures, ordered arrays and tamper rejection.
+Core isolated SDK execution tests execute a real signed bank transfer with ante
+fee, then authenticate its bytes/results with validator-signed Comet headers
+and verify the portable transcript. These isolated fixture validators are
+explicit test trust, not evidence of mainnet validator or custody readiness.
+
+`PYTHONDONTWRITEBYTECODE=1 python3 scripts/check-satchel-financial-proof-roundtrip.py`
+builds the verifier before exporting a fresh real SDK execution fixture, verifies
+its financial proof through the actual offline CLI with actual-clock freshness,
+checks identical read-only receipt identity on repeat verification, and rejects
+wrong expected hash/owner, wrong checkpoint and fabricated REST-only evidence.
+It creates only temporary isolated test files and never contacts production.

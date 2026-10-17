@@ -51,6 +51,14 @@ type HTTPReturnBackend interface {
 	ReconcileClaimReturn(context.Context, ReturnApproval, string) (ReturnReceipt, error)
 }
 
+// HTTPFinancialProofBackend exports evidence only. It cannot credit, sign,
+// broadcast or reserve an operation, including when the permit has expired.
+type HTTPFinancialProofBackend interface {
+	DepositProof(context.Context, DepositProofRequest) (FinancialProof, error)
+	OperationProof(context.Context, string) (FinancialProof, error)
+	ReturnProof(context.Context, string) (FinancialProof, error)
+}
+
 // HTTPHealth describes the already-verified service identity. This self-report
 // does not certify vault ownership, bank reserves, recovery or chain consensus.
 // Construct it only after the engine verifies its operator-owned authority.
@@ -181,7 +189,8 @@ func (h *privateHTTPHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if r.URL.Path != "/satchel/v1/one-shot" && r.URL.Path != "/v1/satchel/withdrawals" && r.URL.Path != "/satchel/v1/reconcile" &&
-		r.URL.Path != "/satchel/v1/returns/prepare" && r.URL.Path != "/satchel/v1/returns/reconcile" {
+		r.URL.Path != "/satchel/v1/returns/prepare" && r.URL.Path != "/satchel/v1/returns/reconcile" &&
+		r.URL.Path != "/satchel/v1/proofs/deposit" && r.URL.Path != "/satchel/v1/proofs/operation" && r.URL.Path != "/satchel/v1/proofs/return" {
 		httpFailure(w, http.StatusNotFound, "private_route_not_found")
 		return
 	}
@@ -193,7 +202,7 @@ func (h *privateHTTPHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		httpFailure(w, http.StatusRequestTimeout, "request_canceled")
 		return
 	}
-	readOnly := r.URL.Path == "/satchel/v1/reconcile" || r.URL.Path == "/satchel/v1/returns/reconcile"
+	readOnly := r.URL.Path == "/satchel/v1/reconcile" || r.URL.Path == "/satchel/v1/returns/reconcile" || strings.HasPrefix(r.URL.Path, "/satchel/v1/proofs/")
 	if !readOnly && !h.accepting(ctx) {
 		httpFailure(w, http.StatusServiceUnavailable, "custody_service_unavailable")
 		return
@@ -205,6 +214,10 @@ func (h *privateHTTPHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	if ctx.Err() != nil {
 		httpFailure(w, http.StatusRequestTimeout, "request_canceled")
+		return
+	}
+	if strings.HasPrefix(r.URL.Path, "/satchel/v1/proofs/") {
+		h.financialProof(ctx, w, r.URL.Path, data)
 		return
 	}
 	if strings.HasPrefix(r.URL.Path, "/satchel/v1/returns/") {
@@ -432,6 +445,9 @@ func strictHTTPJSON(data []byte, out any) error {
 // encoding/json otherwise accepts case-insensitive aliases such as RequestId
 // alongside requestId. Require the exact published spelling at every struct.
 func exactHTTPFields(data []byte, shape reflect.Type) bool {
+	if shape == reflect.TypeOf(json.RawMessage{}) {
+		return chainjson.Valid(data)
+	}
 	if shape.Kind() == reflect.Pointer {
 		if bytes.Equal(bytes.TrimSpace(data), []byte("null")) {
 			return true
@@ -494,6 +510,7 @@ type httpCamelWager struct {
 	Denom       string `json:"denom"`
 	AmountUWolo string `json:"amountUwolo"`
 	Memo        string `json:"memo"`
+	OwnerID     string `json:"ownerId,omitempty"`
 }
 type httpSnakeWager struct {
 	RequestID string   `json:"request_id"`
@@ -503,6 +520,7 @@ type httpSnakeWager struct {
 	Recipient string   `json:"to_address"`
 	Amount    httpCoin `json:"amount"`
 	Memo      string   `json:"memo"`
+	OwnerID   string   `json:"owner_id,omitempty"`
 }
 
 func decodeWagerHTTP(data []byte) (TransferRequest, error) {
@@ -513,13 +531,13 @@ func decodeWagerHTTP(data []byte) (TransferRequest, error) {
 		if err := strictHTTPJSON(data, &input); err != nil || input.Protocol != 1 {
 			return request, errors.New("invalid_wager_protocol")
 		}
-		request = TransferRequest{OperationID: input.RequestID, ChainID: input.ChainID, Sender: input.Sender, Recipient: input.Recipient, Denom: input.Denom, AmountUWolo: input.AmountUWolo, Memo: input.Memo, Kind: "wager"}
+		request = TransferRequest{OperationID: input.RequestID, ChainID: input.ChainID, Sender: input.Sender, Recipient: input.Recipient, Denom: input.Denom, AmountUWolo: input.AmountUWolo, Memo: input.Memo, Kind: "wager", OwnerID: input.OwnerID}
 	} else {
 		var input httpSnakeWager
 		if err := strictHTTPJSON(data, &input); err != nil || input.Role != httpCustodyRole {
 			return request, errors.New("invalid_wager_role")
 		}
-		request = TransferRequest{OperationID: input.RequestID, ChainID: input.ChainID, Sender: input.Sender, Recipient: input.Recipient, Denom: input.Amount.Denom, AmountUWolo: input.Amount.Amount, Memo: input.Memo, Kind: "wager"}
+		request = TransferRequest{OperationID: input.RequestID, ChainID: input.ChainID, Sender: input.Sender, Recipient: input.Recipient, Denom: input.Amount.Denom, AmountUWolo: input.Amount.Amount, Memo: input.Memo, Kind: "wager", OwnerID: input.OwnerID}
 	}
 	if !httpOperationPattern.MatchString(request.OperationID) || request.ChainID != "wolo-1" || request.Denom != "uwolo" || request.Sender == "" || request.Recipient == "" || request.AmountUWolo == "" || request.Memo == "" {
 		return TransferRequest{}, errors.New("invalid_wager_identity")
@@ -528,23 +546,24 @@ func decodeWagerHTTP(data []byte) (TransferRequest, error) {
 }
 
 type httpWithdrawal struct {
-	Protocol    int                 `json:"protocol"`
-	OperationID string              `json:"operation_id"`
-	ChainID     string              `json:"chain_id"`
-	Sender      string              `json:"from_address"`
-	Recipient   string              `json:"to_address"`
-	Amount      httpCoin            `json:"amount"`
-	Memo        string              `json:"memo"`
-	OwnerID     string              `json:"owner_id"`
-	Approval    *WithdrawalApproval `json:"approval"`
+	Protocol     int                     `json:"protocol"`
+	OperationID  string                  `json:"operation_id"`
+	ChainID      string                  `json:"chain_id"`
+	Sender       string                  `json:"from_address"`
+	Recipient    string                  `json:"to_address"`
+	Amount       httpCoin                `json:"amount"`
+	Memo         string                  `json:"memo"`
+	OwnerID      string                  `json:"owner_id"`
+	Approval     *WithdrawalApproval     `json:"approval"`
+	OwnerMandate *OwnerWithdrawalMandate `json:"owner_mandate"`
 }
 
 func decodeWithdrawalHTTP(data []byte) (TransferRequest, error) {
 	var input httpWithdrawal
-	if strictHTTPJSON(data, &input) != nil || input.Protocol != 1 || !httpOperationPattern.MatchString(input.OperationID) || input.ChainID != "wolo-1" || input.Amount.Denom != "uwolo" || input.OwnerID == "" || input.Approval == nil {
+	if strictHTTPJSON(data, &input) != nil || input.Protocol != 1 || !httpOperationPattern.MatchString(input.OperationID) || input.ChainID != "wolo-1" || input.Amount.Denom != "uwolo" || input.OwnerID == "" || input.Approval == nil || input.OwnerMandate == nil {
 		return TransferRequest{}, errors.New("invalid_withdrawal_contract")
 	}
 	return TransferRequest{OperationID: input.OperationID, ChainID: input.ChainID, Sender: input.Sender, Recipient: input.Recipient,
 		Denom: input.Amount.Denom, AmountUWolo: input.Amount.Amount, Memo: input.Memo, OwnerID: input.OwnerID,
-		Approval: input.Approval, Kind: "withdrawal"}, nil
+		Approval: input.Approval, OwnerMandate: input.OwnerMandate, Kind: "withdrawal"}, nil
 }

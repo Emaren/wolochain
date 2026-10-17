@@ -18,6 +18,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/btcutil/bech32"
+	sdksecp "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	bolt "go.etcd.io/bbolt"
 )
 
@@ -125,9 +127,22 @@ func engineTestWager(t *testing.T, n string) TransferRequest {
 func engineTestWithdrawal(t *testing.T) TransferRequest {
 	p := engineTestPolicy(t)
 	id := "12345678-1234-4123-8123-123456789abc"
-	a := WithdrawalApproval{WithdrawalID: id, ChallengeID: "12345678-1234-4123-8123-123456789abd", OwnerID: "owner-1", Recipient: testHTTPAddress(t, 113), AmountUWolo: "1000000", Memo: "aoe2war/satchel/withdraw/v1/" + id, HoldDigest: strings.Repeat("C", 64), IssuedAt: 1799999990, ExpiresAt: 1800000100}
+	a := WithdrawalApproval{WithdrawalID: id, ChallengeID: "12345678-1234-4123-8123-123456789abd", OwnerID: "owner-1", AmountUWolo: "1000000", Memo: "aoe2war/satchel/withdraw/v1/" + id, ReservationDigest: strings.Repeat("C", 64), IssuedAt: 1799999990, ExpiresAt: 1800000100}
+	owner := sdksecp.GenPrivKeyFromSecret([]byte("isolated-test-owner-consent-not-a-production-key"))
+	a.Recipient, _ = bech32.EncodeFromBase256("wolo", owner.PubKey().Address())
+	m := &OwnerWithdrawalMandate{Challenge: OwnerWithdrawalChallenge{ID: a.ChallengeID, OwnerUID: a.OwnerID, WalletAddress: a.Recipient, AmountUWolo: a.AmountUWolo, IssuedAtUTC: time.Unix(a.IssuedAt, 0).UTC().Format("2006-01-02T15:04:05.000Z"), ExpiresAtUTC: time.Unix(a.ExpiresAt, 0).UTC().Format("2006-01-02T15:04:05.000Z")}, PubKey: OwnerWithdrawalPublicKey{Type: "tendermint/PubKeySecp256k1", Value: base64.StdEncoding.EncodeToString(owner.PubKey().Bytes())}}
+	message, err := WithdrawalOwnerSignBytes(m.Challenge)
+	if err != nil {
+		t.Fatal(err)
+	}
+	sig, err := owner.Sign(message)
+	if err != nil {
+		t.Fatal(err)
+	}
+	m.Signature = base64.StdEncoding.EncodeToString(sig)
+	a.HoldDigest = WithdrawalHoldDigest(a.ReservationDigest, *m)
 	engineTestSignApproval(&a, p.Vault)
-	return TransferRequest{OperationID: "satchel:withdrawal:" + id, ChainID: "wolo-1", Denom: "uwolo", Sender: p.Vault, Recipient: a.Recipient, AmountUWolo: a.AmountUWolo, Memo: a.Memo, Kind: "withdrawal", OwnerID: a.OwnerID, Approval: &a}
+	return TransferRequest{OperationID: "satchel:withdrawal:" + id, ChainID: "wolo-1", Denom: "uwolo", Sender: p.Vault, Recipient: a.Recipient, AmountUWolo: a.AmountUWolo, Memo: a.Memo, Kind: "withdrawal", OwnerID: a.OwnerID, Approval: &a, OwnerMandate: m}
 }
 func engineTestSignApproval(a *WithdrawalApproval, vault string) {
 	a.Signature = base64.StdEncoding.EncodeToString(ed25519.Sign(engineTestApprovalKey(), ApprovalMessage(*a, vault)))
@@ -553,6 +568,17 @@ func TestEngineWithdrawalSupportsAppMaximumWithoutRaisingWagerCap(t *testing.T) 
 	withdrawal := engineTestWithdrawal(t)
 	withdrawal.AmountUWolo = "50000000000"
 	withdrawal.Approval.AmountUWolo = withdrawal.AmountUWolo
+	withdrawal.OwnerMandate.Challenge.AmountUWolo = withdrawal.AmountUWolo
+	ownerMessage, err := WithdrawalOwnerSignBytes(withdrawal.OwnerMandate.Challenge)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ownerSignature, err := sdksecp.GenPrivKeyFromSecret([]byte("isolated-test-owner-consent-not-a-production-key")).Sign(ownerMessage)
+	if err != nil {
+		t.Fatal(err)
+	}
+	withdrawal.OwnerMandate.Signature = base64.StdEncoding.EncodeToString(ownerSignature)
+	withdrawal.Approval.HoldDigest = WithdrawalHoldDigest(withdrawal.Approval.ReservationDigest, *withdrawal.OwnerMandate)
 	engineTestSignApproval(withdrawal.Approval, policy.Vault)
 	result, err := engine.Submit(t.Context(), withdrawal)
 	if err != nil || result.Status != "ACCEPTED" || backend.signs.Load() != 1 || backend.broadcasts.Load() != 1 {

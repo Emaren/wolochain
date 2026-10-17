@@ -474,7 +474,7 @@ func TestPrivateHTTPWithdrawalRequiresExplicitIndependentApprovalContract(t *tes
 	approval := WithdrawalApproval{WithdrawalID: "12345678-1234-4123-8123-123456789abc", ChallengeID: "12345678-1234-4123-8123-123456789abd", OwnerID: "owner-1",
 		Recipient: testHTTPAddress(t, 102), AmountUWolo: "1000000", Memo: "aoe2war/satchel/withdraw/v1/12345678-1234-4123-8123-123456789abc", HoldDigest: strings.Repeat("3", 64), IssuedAt: 100, ExpiresAt: 200, Signature: "synthetic"}
 	payload := httpWithdrawal{Protocol: 1, OperationID: "satchel:withdrawal:" + approval.WithdrawalID, ChainID: "wolo-1", Sender: testHTTPAddress(t, 100), Recipient: approval.Recipient,
-		Amount: httpCoin{Denom: "uwolo", Amount: approval.AmountUWolo}, Memo: approval.Memo, OwnerID: approval.OwnerID, Approval: &approval}
+		Amount: httpCoin{Denom: "uwolo", Amount: approval.AmountUWolo}, Memo: approval.Memo, OwnerID: approval.OwnerID, Approval: &approval, OwnerMandate: engineTestWithdrawal(t).OwnerMandate}
 	for _, test := range []struct {
 		name   string
 		mutate func(*httpWithdrawal)
@@ -482,6 +482,7 @@ func TestPrivateHTTPWithdrawalRequiresExplicitIndependentApprovalContract(t *tes
 	}{
 		{"full approval forwarded to verifier", func(*httpWithdrawal) {}, true},
 		{"missing independently signed approval", func(v *httpWithdrawal) { v.Approval = nil }, false},
+		{"missing independent owner mandate", func(v *httpWithdrawal) { v.OwnerMandate = nil }, false},
 		{"missing owner", func(v *httpWithdrawal) { v.OwnerID = "" }, false},
 		{"wrong protocol", func(v *httpWithdrawal) { v.Protocol = 2 }, false},
 	} {

@@ -33,6 +33,9 @@ func main() {
 // run returns only fixed public diagnostic labels. Sensitive configuration,
 // source responses, filesystem paths and keyring errors are never printed.
 func run(ctx context.Context, args []string, out, errout io.Writer) int {
+	if len(args) > 0 && args[0] == "verify-financial-proof" {
+		return verifyFinancialProofCommand(ctx, args[1:], out, errout)
+	}
 	flags := flag.NewFlagSet("wolosatcheld", flag.ContinueOnError)
 	flags.SetOutput(io.Discard)
 	path := flags.String("config", "", "absolute operator-managed config path")
@@ -156,11 +159,24 @@ func (e *serviceEngine) ReconcileClaimReturn(ctx context.Context, a satchelservi
 	return e.Engine.ReconcileReturn(ctx, a, hash, e.trusted)
 }
 
+func (e *serviceEngine) DepositProof(ctx context.Context, r satchelservice.DepositProofRequest) (satchelservice.FinancialProof, error) {
+	return e.Engine.DepositProof(ctx, r, e.trusted)
+}
+func (e *serviceEngine) OperationProof(ctx context.Context, id string) (satchelservice.FinancialProof, error) {
+	return e.Engine.OperationProof(ctx, id, e.trusted)
+}
+func (e *serviceEngine) ReturnProof(ctx context.Context, id string) (satchelservice.FinancialProof, error) {
+	return e.Engine.ReturnProof(ctx, id, e.trusted)
+}
+
 func (b *permittedBackend) Sign(ctx context.Context, r satchelservice.TransferRequest) (satchelservice.SignedTransaction, error) {
 	if b.authorize == nil || !b.authorize(ctx) {
 		return satchelservice.SignedTransaction{}, satchelservice.ErrPreSignRefused
 	}
 	if b.trust == nil || b.trust(ctx) != nil {
+		return satchelservice.SignedTransaction{}, satchelservice.ErrPreSignRefused
+	}
+	if ctx.Err() != nil || !b.authorize(ctx) {
 		return satchelservice.SignedTransaction{}, satchelservice.ErrPreSignRefused
 	}
 	return b.inner.Sign(ctx, r)

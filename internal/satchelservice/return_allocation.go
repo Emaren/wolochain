@@ -136,6 +136,26 @@ func (e *Engine) validateAllocation(tx *bolt.Tx, a ReturnApproval, fresh bool) (
 	if !ok {
 		return refuse()
 	}
+	return validateAllocationEconomics(a, funded)
+}
+
+// The offline financial bridge reuses this exact accounting contract. Its
+// funded amount must come from HD's already authenticated durable ticket;
+// neither the exported proof nor a signed reviewer claim supplies new capital.
+func validateAllocationEconomics(a ReturnApproval, funded uint64) (ReturnEntitlement, error) {
+	refuse := func() (ReturnEntitlement, error) { return ReturnEntitlement{}, errors.New("return_allocation_invalid") }
+	p := a.Allocation
+	if !boundedAllocation(p) || funded == 0 || funded > 1000000000 || p == nil || len(p.Legs) == 0 || len(p.Legs) > 16 {
+		return refuse()
+	}
+	cap, ok := positive(p.ReturnCapUWolo, 100000000000000)
+	if !ok {
+		return refuse()
+	}
+	funds, ok := positive(p.FundsAvailableUWolo, 100000000000000)
+	if !ok || cap > funds {
+		return refuse()
+	}
 	seenClaims := map[string]bool{}
 	seenEntitlements := map[string]bool{}
 	seenMarkets := map[string]bool{}
