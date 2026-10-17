@@ -15,6 +15,23 @@ sensitivity: "restricted"
 
 # WoloChain Mainnet Settlement Runbook
 
+## October 17, 2026 — exact-source artifact lane, no release authority
+
+The [exact-source artifact contract](settlement-exact-source-artifact.md)
+adds a separate non-deploying build lane for the hardened PR #26 head
+`526d5eb6123f6cc0394b5e78489c668e77e46106`. Its stacked builder branch,
+workflow run and upload receipt are separate identities from the binary's
+fixed source revision. The historical `bdbce253` workflow/artifact and all
+old provenance/recovery pins remain unchanged. Neither the new candidate nor
+green source CI attests current services or authorizes a cutover.
+
+Both live 8092/8093 identities, HD+DE ingress and active-job drain, liability
+reconciliation including #889, exclusive state ownership, current private
+snapshots and separately reviewed quiesced two-service recovery authority
+remain protected operator prerequisites. No runtime observations or production
+operations were performed for this artifact milestone; consensus and Satchel
+authorities are unchanged.
+
 ## October 17, 2026 — source hardening and protected release remain separate
 
 The [legacy settlement hardening handoff](legacy-settlement-hardening.md)
