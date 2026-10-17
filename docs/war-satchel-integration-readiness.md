@@ -76,6 +76,11 @@ owned by its coordinator; this work makes no HD code or migration changes.
    reported `118/112/6/2` frontier is read-only evidence: six migrations remain
    pending. It is not a schema-rehearsal or installation receipt. Use the
    existing governed HD rehearsal and separately approved migration procedures.
+   That six-file main-branch frontier does not cover PR #638's additional
+   `20261017_012000_war_satchel_funded_ledger_foundation` migration. Obtain a
+   fresh exact-candidate frontier/schema review and the appropriate protected
+   receipt for that ledger too; installing six simulation foundations alone
+   cannot establish the funded product.
 2. Verify PR #27's final exact-head successful CI, archive digest, external
    receipt manifest digest, actual executable digest/ELF/Go metadata and source
    pin before considering that legacy candidate. Its binary is never the
