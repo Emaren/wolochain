@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "56b3b909cdeba16192930f86faba37fd6fa567019cc03879d00a768c6ecb3b56",
+      "sha256": "78886e7d033f1c8a1d23646cdec0979d326aca086d2ab87d8fa717da606dc4b1",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -289,7 +289,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-16",
       "sensitivity": "restricted",
-      "sha256": "5aede3f478266915cf8555d2567eac5db8d236a52ea79b716a28c5400de8c498",
+      "sha256": "8a6d5ca9351606a02e74c72600443b5d714c84c0a54501ac96adf98264d68390",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -443,6 +443,29 @@
         "operators",
         "ai-agents"
       ],
+      "authority": "restricted-satchel-execution-and-provisioning-contract",
+      "id": "aoe2war.wolochain.war-satchel-mainnet-execution",
+      "owner": "wolochain-ops",
+      "path": "docs/war-satchel-mainnet-execution.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-10-17",
+      "sensitivity": "restricted",
+      "sha256": "5c00366f2774dd7284c313affdc0a734084765cf53bc94d7217ddf1cbd2bc928",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "War Satchel Mainnet Execution and Operator Gates",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
       "authority": "undeployed-warbound-module-design",
       "id": "aoe2war.wolochain.warbound-trophies",
       "owner": "wolochain-ops",
@@ -480,7 +503,7 @@
         "wolochain",
         "aoe2war"
       ],
-      "title": "Codex Mission: WoloChain Mainnet ↔ Osmosis IBC Prep",
+      "title": "Codex Mission: WoloChain Mainnet \u2194 Osmosis IBC Prep",
       "type": "historical"
     },
     {
@@ -641,7 +664,7 @@
         "wolochain",
         "aoe2war"
       ],
-      "title": "WoloChain Mainnet → Osmosis Liquidity Transfer",
+      "title": "WoloChain Mainnet \u2192 Osmosis Liquidity Transfer",
       "type": "historical"
     },
     {
@@ -710,7 +733,7 @@
         "wolochain",
         "aoe2war"
       ],
-      "title": "WoloChain Mainnet → Osmosis Test Transfer",
+      "title": "WoloChain Mainnet \u2192 Osmosis Test Transfer",
       "type": "historical"
     },
     {
@@ -808,8 +831,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/retire-obsolete-settlement-rollback-unfence-20261016",
-    "commit": "330cfe9394ec1cb8ad0b45829ee873b70d5de9d8"
+    "branch": "codex/satchel-mainnet-execution",
+    "commit": "62728c848dcab7e4674965cafe103975ffb36497"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
