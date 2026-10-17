@@ -36,7 +36,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-17",
       "sensitivity": "internal",
-      "sha256": "7169484e85fa1d0a26d67c8ba2a61bf78153633a82e56be889bb8fda1302757d",
+      "sha256": "435f1b3f545dc1482fddad6c3f98412a72918aab358056b79e47d909a0c786e2",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "d28d65d2230e36c0a2666426b54fe0e523c9aff41030de9f3168cf6ce85c69a8",
+      "sha256": "b6c21b6cf2a15c41a73940bbc51d008103057dd3c0ce8a0f05ddc9797ee7009f",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -312,7 +312,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-17",
       "sensitivity": "restricted",
-      "sha256": "b4f4f6320c32fc19633cb791d9321227d77a383b9030fdfbaddc1e4ec12a5b2c",
+      "sha256": "5b7ca882bc965785747d6d34dbc18d59b25a197a25e26b917494fc18df7e1d7b",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -389,6 +389,29 @@
         "aoe2war"
       ],
       "title": "Settlement Contracts",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "non-deploying-settlement-artifact-contract",
+      "id": "aoe2war.wolochain.settlement-exact-source-artifact",
+      "owner": "wolochain-ops",
+      "path": "docs/settlement-exact-source-artifact.md",
+      "review_interval_days": 14,
+      "reviewed_at": "2026-10-17",
+      "sensitivity": "restricted",
+      "sha256": "3910b56a6b4a4ab5ceff6226649cf7f59a263905014ab62565dcb28122f6be3b",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "Exact-source Settlement Artifact",
       "type": "reference"
     },
     {
@@ -831,8 +854,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "ops/legacy-settlement-526d5-exact-ci-artifact-20261017",
-    "commit": "b974602be6b5508c917cf8c7981c7d4986cc8819"
+    "branch": "codex/exact-settlement-artifact",
+    "commit": "b52b6a49afe51de77f9859c5cae4fa448b904c78"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
