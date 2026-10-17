@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "b2f2cd6917f1275c276e8caca244fe7e1b29c5ea05184e1df26753a57d954b1a",
+      "sha256": "f0b53107e1da183a0e98533625852503acb6112094805d1b90f09a3d677a7030",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -878,7 +878,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "codex/satchel-source-integration-proof",
-    "commit": "38217d3c75042ff5b8b56f05ed628fcbb7743ad9"
+    "commit": "28b91f141ef3fc66554f17e5e6d31532c5780a67"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

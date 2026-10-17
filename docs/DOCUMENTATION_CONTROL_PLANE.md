@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `codex/satchel-source-integration-proof` at `38217d3c75042ff5b8b56f05ed628fcbb7743ad9`
+Implementation baseline: `codex/satchel-source-integration-proof` at `28b91f141ef3fc66554f17e5e6d31532c5780a67`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
