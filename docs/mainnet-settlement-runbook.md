@@ -8,12 +8,41 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "runtime-evidence"
 authority: "mainnet-settlement-operations"
-reviewed_at: "2026-10-16"
+reviewed_at: "2026-10-17"
 review_interval_days: 14
 sensitivity: "restricted"
 ---
 
 # WoloChain Mainnet Settlement Runbook
+
+## October 17, 2026 — source hardening and protected release remain separate
+
+The [legacy settlement hardening handoff](legacy-settlement-hardening.md)
+records the source-only candidate and precise remaining operator evidence.
+No new VPS observation was made. The `78c25985` live-source observations and
+`bdbce253` reviewed candidate below are dated history; neither is asserted as
+current production truth or the binary containing this new source work.
+The existing no-deploy candidate workflow still builds exactly `bdbce253`.
+A new reviewed immutable artifact must identify the final approved source SHA.
+
+The old provenance, preflight and snapshot helpers remain pinned to historical
+runtime/artifact identities. Their source checks cannot certify a modern
+cutover, and changing their pins alone cannot establish financial drain or
+recovery safety. The preflight now requires the founder bind to be exactly `127.0.0.1:8093`;
+previously it accepted other distinct loopback ports. Six offline release-policy
+tests pass, including the unchanged refusal of `--rollback` and `--rescue`
+before live checks. The retired procedures below
+are retained only as engineering history; their imperative wording is not an
+instruction to execute them.
+
+A future release needs independent HD+DE financial-ingress isolation and active
+job drain, current chain/request-state reconciliation including the unresolved
+founder #889 hold, both private state trees preserved, and a separately reviewed
+`QUIESCED_RECOVERY_ONLY` controller/watchdog. Financial producers remain fenced
+through recovery until named approval. No source test or artifact authorizes
+resuming them. Preserve 8092/8093 signer/state separation, the dedicated consensus
+executable and all current liabilities. Satchel PR #25 remains separate and
+unmerged; C2 custody remains `UNAVAILABLE`.
 
 ## October 16, 2026 — current exact candidate build, NOT a cutover
 

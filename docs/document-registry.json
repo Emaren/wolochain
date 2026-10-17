@@ -34,9 +34,9 @@
       "owner": "wolochain-ops",
       "path": "docs/BRANCH_AUTHORITY.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-10-14",
+      "reviewed_at": "2026-10-17",
       "sensitivity": "internal",
-      "sha256": "6daf07f8d2ac62b8461bb4d6c93e50b02014194b0c3a86dddb8e146a9cde890c",
+      "sha256": "7169484e85fa1d0a26d67c8ba2a61bf78153633a82e56be889bb8fda1302757d",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "56b3b909cdeba16192930f86faba37fd6fa567019cc03879d00a768c6ecb3b56",
+      "sha256": "da6f3951694159f2b935aa5f830f25ffacf3820da72af935d67f2947993bab6e",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -90,6 +90,29 @@
         "aoe2war"
       ],
       "title": "Exact Settlement Confirmation C4",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "source-only-legacy-settlement-hardening",
+      "id": "aoe2war.wolochain.legacy-settlement-hardening",
+      "owner": "wolochain-ops",
+      "path": "docs/legacy-settlement-hardening.md",
+      "review_interval_days": 14,
+      "reviewed_at": "2026-10-17",
+      "sensitivity": "restricted",
+      "sha256": "302fb9f6b0b9729c3b65b072d64d33c7503d1d48b86d85d78572eb6e94d3657c",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "Legacy Settlement Hardening and Protected Release Handoff",
       "type": "reference"
     },
     {
@@ -287,9 +310,9 @@
       "owner": "wolochain-ops",
       "path": "docs/mainnet-settlement-runbook.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-10-16",
+      "reviewed_at": "2026-10-17",
       "sensitivity": "restricted",
-      "sha256": "5aede3f478266915cf8555d2567eac5db8d236a52ea79b716a28c5400de8c498",
+      "sha256": "b4f4f6320c32fc19633cb791d9321227d77a383b9030fdfbaddc1e4ec12a5b2c",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -480,7 +503,7 @@
         "wolochain",
         "aoe2war"
       ],
-      "title": "Codex Mission: WoloChain Mainnet ↔ Osmosis IBC Prep",
+      "title": "Codex Mission: WoloChain Mainnet \u2194 Osmosis IBC Prep",
       "type": "historical"
     },
     {
@@ -609,9 +632,9 @@
       "owner": "wolochain-ops",
       "path": "mainnet-prep/STATUS.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-10-07",
+      "reviewed_at": "2026-10-17",
       "sensitivity": "restricted",
-      "sha256": "49e98f782dfb00b5010ff242c0882b60742d738cd9799b24ab693480bbbef1a7",
+      "sha256": "00cd2930b67f389df939d525dd2484ab277a14664570773721c7082aae23f9e5",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -641,7 +664,7 @@
         "wolochain",
         "aoe2war"
       ],
-      "title": "WoloChain Mainnet → Osmosis Liquidity Transfer",
+      "title": "WoloChain Mainnet \u2192 Osmosis Liquidity Transfer",
       "type": "historical"
     },
     {
@@ -710,7 +733,7 @@
         "wolochain",
         "aoe2war"
       ],
-      "title": "WoloChain Mainnet → Osmosis Test Transfer",
+      "title": "WoloChain Mainnet \u2192 Osmosis Test Transfer",
       "type": "historical"
     },
     {
@@ -808,8 +831,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/retire-obsolete-settlement-rollback-unfence-20261016",
-    "commit": "330cfe9394ec1cb8ad0b45829ee873b70d5de9d8"
+    "branch": "codex/legacy-settlement-hardening",
+    "commit": "7a830e8d2362d4ff16fbf852e20d825865075f34"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
