@@ -17,7 +17,7 @@ jobs:
     timeout-minutes: 55
     env:
       REVIEWED_SOURCE: 526d5eb6123f6cc0394b5e78489c668e77e46106
-      ARTIFACT_DIR: ${{ runner.temp }}/legacy-settlement-526d5-artifact
+      ARTIFACT_DIR: /tmp/legacy-settlement-526d5-artifact
       CGO_ENABLED: "0"
       GOOS: linux
       GOARCH: amd64
@@ -92,6 +92,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: settlement-526d5-legacy-hardening-linux-amd64-UNDEPLOYED
-          path: ${{ runner.temp }}/legacy-settlement-526d5-artifact/
+          path: /tmp/legacy-settlement-526d5-artifact/
           if-no-files-found: error
           retention-days: 14
