@@ -2,7 +2,7 @@ name: Satchel execution source proof
 
 on:
   pull_request:
-    branches: [wolo-1-mainnet-prep]
+    branches: [wolo-1-mainnet-prep, codex/satchel-mainnet-execution]
   workflow_dispatch:
 
 permissions:
@@ -29,6 +29,8 @@ jobs:
           CGO_ENABLED: 1
         run: go test -race ./internal/satchelservice ./internal/satchel ./cmd/wolosatcheld -count=1
       - name: Reproduce the two immutable baseline defects offline
+        env:
+          CGO_ENABLED: 1
         run: python3 scripts/check-satchel-multileg-regression.py
       - name: Build isolated signer and paired settlement candidate
         env:

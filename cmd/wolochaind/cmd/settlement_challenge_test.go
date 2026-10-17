@@ -14,15 +14,15 @@ func TestVerifyChallengeFundingDepositAndRecentRoutes(t *testing.T) {
 	t.Parallel()
 
 	const (
-		payoutAddress = "wolo1payoutaddress000000000000000000000000000"
-		escrowAddress = "wolo1escrow000000000000000000000000000000000"
-		leftAddress   = "wolo1leftplayer000000000000000000000000000000"
-		rightAddress  = "wolo1rightplayer00000000000000000000000000000"
+		payoutAddress = "wolo14hteq5qgk8gzme3z2d20enyyannru3hgpue70n"
+		escrowAddress = "wolo1tc6mt544hmyzj2plzmnws5d28ag9rru26aeuec"
+		leftAddress   = "wolo1rm4vt3cualmvrsd2e5twsazddqzmttznp09943"
+		rightAddress  = "wolo10h350dfsgmhp2q40j6etnp6xpvnlxurzlz9ctc"
 		runID         = "challenge-123-run"
 	)
 
-	leftFundingTx := strings.Repeat("A", 64)
-	rightFundingTx := strings.Repeat("B", 64)
+	leftFundingTx := mockSettlementHash(leftAddress, escrowAddress, "150", challengeFundingMemoWithSettlementRunID(runID, "aoe2hdbets", "challenge-123", "", "left", "left-user", "100", "50"))
+	rightFundingTx := mockSettlementHash(rightAddress, escrowAddress, "150", challengeFundingMemoWithSettlementRunID(runID, "aoe2hdbets", "challenge-123", "", "right", "right-user", "100", "50"))
 	cfg := newTestChallengeSettlementConfig(t, payoutAddress, escrowAddress, "", map[string]string{
 		payoutAddress: "5000",
 		escrowAddress: "5000",
@@ -126,21 +126,21 @@ func TestCanonicalAoE2HDBetsFundingMemoProofAndRejections(t *testing.T) {
 	t.Parallel()
 
 	const (
-		payoutAddress = "wolo1payoutaddress000000000000000000000000000"
-		escrowAddress = "wolo1escrow000000000000000000000000000000000"
-		senderAddress = "wolo1leftplayer000000000000000000000000000000"
-		otherAddress  = "wolo1rightplayer00000000000000000000000000000"
+		payoutAddress = "wolo14hteq5qgk8gzme3z2d20enyyannru3hgpue70n"
+		escrowAddress = "wolo1tc6mt544hmyzj2plzmnws5d28ag9rru26aeuec"
+		senderAddress = "wolo1rm4vt3cualmvrsd2e5twsazddqzmttznp09943"
+		otherAddress  = "wolo10h350dfsgmhp2q40j6etnp6xpvnlxurzlz9ctc"
 		runID         = "aoe2hdbets:challenge-42:v1"
 	)
 
-	validTx := strings.Repeat("1", 64)
-	wrongSIDTx := strings.Repeat("2", 64)
-	wrongSideTx := strings.Repeat("3", 64)
-	wrongBucketTx := strings.Repeat("4", 64)
-	extraFieldTx := strings.Repeat("5", 64)
-	failedTx := strings.Repeat("6", 64)
-	wrongEscrowTx := strings.Repeat("7", 64)
-	zeroGuaranteeTx := strings.Repeat("8", 64)
+	validTx := mockSettlementHash(senderAddress, escrowAddress, "35000000", canonicalAoE2HDBetsChallengeFundingMemo("42", "left", "25000000", "10000000"))
+	wrongSIDTx := mockSettlementHash(senderAddress, escrowAddress, "35000000", "wolo.challenge.funding.v1:app=aoe2hdbets&sid=aoe2hdbets:challenge-41:v1&cid=42&side=left&w=25000000&g=10000000&t=35000000")
+	wrongSideTx := mockSettlementHash(senderAddress, escrowAddress, "35000000", "wolo.challenge.funding.v1:app=aoe2hdbets&sid=aoe2hdbets:challenge-42:v1&cid=42&side=creator&w=25000000&g=10000000&t=35000000")
+	wrongBucketTx := mockSettlementHash(senderAddress, escrowAddress, "35000000", "wolo.challenge.funding.v1:app=aoe2hdbets&sid=aoe2hdbets:challenge-42:v1&cid=42&side=left&w=25000000&g=9999999&t=35000000")
+	extraFieldTx := mockSettlementHash(senderAddress, escrowAddress, "35000000", canonicalAoE2HDBetsChallengeFundingMemo("42", "left", "25000000", "10000000")+"&pid=not-in-v1-contract")
+	failedTx := mockSettlementHash(senderAddress, escrowAddress, "35000000", canonicalAoE2HDBetsChallengeFundingMemo("42", "right", "25000000", "10000000"))
+	wrongEscrowTx := mockSettlementHash(senderAddress, otherAddress, "35000000", canonicalAoE2HDBetsChallengeFundingMemo("42", "left", "25000000", "10000000"))
+	zeroGuaranteeTx := mockSettlementHash(otherAddress, escrowAddress, "25000000", canonicalAoE2HDBetsChallengeFundingMemo("42", "right", "25000000", "0"))
 	cfg := newTestChallengeSettlementConfig(t, payoutAddress, escrowAddress, "", map[string]string{
 		payoutAddress: "5000",
 		escrowAddress: "5000",
@@ -190,7 +190,7 @@ func TestCanonicalAoE2HDBetsFundingMemoProofAndRejections(t *testing.T) {
 			Sender:      senderAddress,
 			Recipient:   escrowAddress,
 			AmountUWolo: "35000000",
-			Memo:        canonicalAoE2HDBetsChallengeFundingMemo("42", "left", "25000000", "10000000"),
+			Memo:        canonicalAoE2HDBetsChallengeFundingMemo("42", "right", "25000000", "10000000"),
 			Code:        7,
 			RawLog:      "mock failed tx",
 			Timestamp:   "2026-06-27T19:55:00Z",
@@ -332,8 +332,8 @@ func TestCanonicalAoE2HDBetsFundingMemoProofAndRejections(t *testing.T) {
 func TestAoE2HDBetsCanonicalRunIDAndDuplicateFundingAreReplaySafe(t *testing.T) {
 	t.Parallel()
 
-	const payoutAddress = "wolo1payoutaddress000000000000000000000000000"
-	const escrowAddress = "wolo1escrow000000000000000000000000000000000"
+	const payoutAddress = "wolo14hteq5qgk8gzme3z2d20enyyannru3hgpue70n"
+	const escrowAddress = "wolo1tc6mt544hmyzj2plzmnws5d28ag9rru26aeuec"
 	cfg := newTestChallengeSettlementConfig(t, payoutAddress, escrowAddress, "", map[string]string{
 		payoutAddress: "5000",
 		escrowAddress: "5000",
@@ -368,11 +368,11 @@ func TestSettlementChallengeHTTPAuthAndReadOnlyRoutes(t *testing.T) {
 	t.Parallel()
 
 	const (
-		payoutAddress = "wolo1payoutaddress000000000000000000000000000"
-		escrowAddress = "wolo1escrow000000000000000000000000000000000"
+		payoutAddress = "wolo14hteq5qgk8gzme3z2d20enyyannru3hgpue70n"
+		escrowAddress = "wolo1tc6mt544hmyzj2plzmnws5d28ag9rru26aeuec"
 	)
 
-	cfg := newTestChallengeSettlementConfig(t, payoutAddress, escrowAddress, "wolo1treasury000000000000000000000000000000", map[string]string{
+	cfg := newTestChallengeSettlementConfig(t, payoutAddress, escrowAddress, "wolo1a058g65aal22marglazwh5w5hs092chsx5vj8z", map[string]string{
 		payoutAddress: "5000",
 		escrowAddress: "5000",
 	}, nil, nil)
@@ -414,14 +414,14 @@ func TestValidateSettlementChallengeRequiresExactBucketAllocation(t *testing.T) 
 	t.Parallel()
 
 	const (
-		payoutAddress = "wolo1payoutaddress000000000000000000000000000"
-		escrowAddress = "wolo1escrow000000000000000000000000000000000"
-		leftAddress   = "wolo1leftplayer000000000000000000000000000000"
-		rightAddress  = "wolo1rightplayer00000000000000000000000000000"
+		payoutAddress = "wolo14hteq5qgk8gzme3z2d20enyyannru3hgpue70n"
+		escrowAddress = "wolo1tc6mt544hmyzj2plzmnws5d28ag9rru26aeuec"
+		leftAddress   = "wolo1rm4vt3cualmvrsd2e5twsazddqzmttznp09943"
+		rightAddress  = "wolo10h350dfsgmhp2q40j6etnp6xpvnlxurzlz9ctc"
 	)
 
-	leftFundingTx := strings.Repeat("C", 64)
-	rightFundingTx := strings.Repeat("D", 64)
+	leftFundingTx := mockSettlementHash(leftAddress, escrowAddress, "150", challengeFundingMemo("aoe2hdbets", "challenge-tight", "", "left", "left-user", "100", "50"))
+	rightFundingTx := mockSettlementHash(rightAddress, escrowAddress, "150", challengeFundingMemo("aoe2hdbets", "challenge-tight", "", "right", "right-user", "100", "50"))
 	cfg := newTestChallengeSettlementConfig(t, payoutAddress, escrowAddress, "", map[string]string{
 		payoutAddress: "1000",
 		escrowAddress: "1000",
@@ -474,16 +474,16 @@ func TestValidateSettlementChallengeFundingExpectationsAndTreasuryForfeit(t *tes
 	t.Parallel()
 
 	const (
-		payoutAddress   = "wolo1payoutaddress000000000000000000000000000"
-		escrowAddress   = "wolo1escrow000000000000000000000000000000000"
-		leftAddress     = "wolo1leftplayer000000000000000000000000000000"
-		rightAddress    = "wolo1rightplayer00000000000000000000000000000"
-		treasuryAddress = "wolo1treasury000000000000000000000000000000"
+		payoutAddress   = "wolo14hteq5qgk8gzme3z2d20enyyannru3hgpue70n"
+		escrowAddress   = "wolo1tc6mt544hmyzj2plzmnws5d28ag9rru26aeuec"
+		leftAddress     = "wolo1rm4vt3cualmvrsd2e5twsazddqzmttznp09943"
+		rightAddress    = "wolo10h350dfsgmhp2q40j6etnp6xpvnlxurzlz9ctc"
+		treasuryAddress = "wolo1a058g65aal22marglazwh5w5hs092chsx5vj8z"
 		runID           = "challenge-double-noshow-run"
 	)
 
-	leftFundingTx := strings.Repeat("7", 64)
-	rightFundingTx := strings.Repeat("8", 64)
+	leftFundingTx := mockSettlementHash(leftAddress, escrowAddress, "150", challengeFundingMemoWithSettlementRunID(runID, "aoe2hdbets", "challenge-double-noshow", "", "left", "left-user", "100", "50"))
+	rightFundingTx := mockSettlementHash(rightAddress, escrowAddress, "150", challengeFundingMemoWithSettlementRunID(runID, "aoe2hdbets", "challenge-double-noshow", "", "right", "right-user", "100", "50"))
 	cfg := newTestChallengeSettlementConfig(t, payoutAddress, escrowAddress, treasuryAddress, map[string]string{
 		payoutAddress: "1000",
 		escrowAddress: "1000",
@@ -582,14 +582,14 @@ func TestValidateSettlementChallengePlayedMatchPlan(t *testing.T) {
 	t.Parallel()
 
 	const (
-		payoutAddress = "wolo1payoutaddress000000000000000000000000000"
-		escrowAddress = "wolo1escrow000000000000000000000000000000000"
-		leftAddress   = "wolo1leftplayer000000000000000000000000000000"
-		rightAddress  = "wolo1rightplayer00000000000000000000000000000"
+		payoutAddress = "wolo14hteq5qgk8gzme3z2d20enyyannru3hgpue70n"
+		escrowAddress = "wolo1tc6mt544hmyzj2plzmnws5d28ag9rru26aeuec"
+		leftAddress   = "wolo1rm4vt3cualmvrsd2e5twsazddqzmttznp09943"
+		rightAddress  = "wolo10h350dfsgmhp2q40j6etnp6xpvnlxurzlz9ctc"
 	)
 
-	leftFundingTx := strings.Repeat("E", 64)
-	rightFundingTx := strings.Repeat("F", 64)
+	leftFundingTx := mockSettlementHash(leftAddress, escrowAddress, "150", challengeFundingMemo("aoe2hdbets", "challenge-played", "", "left", "left-user", "100", "50"))
+	rightFundingTx := mockSettlementHash(rightAddress, escrowAddress, "150", challengeFundingMemo("aoe2hdbets", "challenge-played", "", "right", "right-user", "100", "50"))
 	cfg := newTestChallengeSettlementConfig(t, payoutAddress, escrowAddress, "", map[string]string{
 		payoutAddress: "1000",
 		escrowAddress: "1000",
@@ -656,8 +656,8 @@ func TestBuildAndExecuteChallengeTopUp(t *testing.T) {
 	t.Parallel()
 
 	const (
-		payoutAddress = "wolo1payoutaddress000000000000000000000000000"
-		escrowAddress = "wolo1escrow000000000000000000000000000000000"
+		payoutAddress = "wolo14hteq5qgk8gzme3z2d20enyyannru3hgpue70n"
+		escrowAddress = "wolo1tc6mt544hmyzj2plzmnws5d28ag9rru26aeuec"
 	)
 
 	topUpTxHash := mockSettlementHash(escrowAddress, payoutAddress, "290", "challenge top-up challenge-topup-run")
@@ -706,15 +706,15 @@ func TestExecuteSettlementChallengeOneNoShowIdempotent(t *testing.T) {
 	t.Parallel()
 
 	const (
-		payoutAddress   = "wolo1payoutaddress000000000000000000000000000"
-		escrowAddress   = "wolo1escrow000000000000000000000000000000000"
-		leftAddress     = "wolo1leftplayer000000000000000000000000000000"
-		rightAddress    = "wolo1rightplayer00000000000000000000000000000"
-		treasuryAddress = "wolo1treasury000000000000000000000000000000"
+		payoutAddress   = "wolo14hteq5qgk8gzme3z2d20enyyannru3hgpue70n"
+		escrowAddress   = "wolo1tc6mt544hmyzj2plzmnws5d28ag9rru26aeuec"
+		leftAddress     = "wolo1rm4vt3cualmvrsd2e5twsazddqzmttznp09943"
+		rightAddress    = "wolo10h350dfsgmhp2q40j6etnp6xpvnlxurzlz9ctc"
+		treasuryAddress = "wolo1a058g65aal22marglazwh5w5hs092chsx5vj8z"
 	)
 
-	leftFundingTx := strings.Repeat("1", 64)
-	rightFundingTx := strings.Repeat("2", 64)
+	leftFundingTx := mockSettlementHash(leftAddress, escrowAddress, "160", challengeFundingMemo("aoe2hdbets", "challenge-noshow", "", "left", "left-user", "100", "60"))
+	rightFundingTx := mockSettlementHash(rightAddress, escrowAddress, "170", challengeFundingMemo("aoe2hdbets", "challenge-noshow", "", "right", "right-user", "100", "70"))
 	leftGuaranteeTx := mockSettlementHash(payoutAddress, leftAddress, "60", "left-guarantee-return")
 	rightGuaranteeTx := mockSettlementHash(payoutAddress, leftAddress, "70", "right-guarantee-forfeit")
 	leftRefundTx := mockSettlementHash(payoutAddress, leftAddress, "100", "left-wager-refund")

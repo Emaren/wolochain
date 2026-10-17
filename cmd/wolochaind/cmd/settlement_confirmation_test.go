@@ -25,9 +25,9 @@ import (
 const (
 	c4TxHash       = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
 	c4OtherHash    = "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
-	c4Signer       = "wolo1payout00000000000000000000000000000000"
-	c4EscrowSigner = "wolo1escrow00000000000000000000000000000000"
-	c4Recipient    = "wolo1recipient0000000000000000000000000000"
+	c4Signer       = "wolo1wlwyw4z7tn5y8e6d5gzng7w5k6h25tukwmwmx4"
+	c4EscrowSigner = "wolo1v3s6l2fqunaxvj9qpy6xmh3mnyqeu04n3e6xnf"
+	c4Recipient    = "wolo1gtdcyjgqmlxqt0l9vxxhsc8876nafxuc5ufzcy"
 	c4Memo         = "payout:match-c4:user-1"
 )
 

@@ -6,6 +6,7 @@ import os
 import pathlib
 import shutil
 import subprocess
+import sys
 import tarfile
 import tempfile
 
@@ -40,6 +41,11 @@ def main():
         failures = {e["Test"] for e in events if e.get("Action") == "fail" and "Test" in e}
         output = "".join(e.get("Output", "") for e in events)
         if result.returncode == 0 or failures != TESTS or "operation_return_already_allocated" not in output or "owner_return_policy_refused" not in output:
+            # A compiler/cache/setup failure is not evidence that a historical
+            # financial defect was reproduced. Preserve bounded diagnostics so
+            # CI can distinguish it without relaxing either expected failure.
+            print(json.dumps({"returncode": result.returncode, "observed_failures": sorted(failures)}), file=sys.stderr)
+            print((result.stderr + result.stdout)[-12000:], file=sys.stderr)
             raise RuntimeError("historical_defect_not_reproduced")
         print(json.dumps({"baseline": BASE, "expected_failures": sorted(failures),
                           "reproduced": True, "network": False, "production_actions": False}))

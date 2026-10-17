@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `codex/satchel-mainnet-execution` at `6c597b2965a83aa74b1903f83b5640926b562adb`
+Implementation baseline: `codex/satchel-source-integration-proof` at `28b91f141ef3fc66554f17e5e6d31532c5780a67`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
@@ -27,21 +27,21 @@ This page is generated from the validated front matter in this repository. Cross
 
 ## Documentation health
 
-- Authoritative repository documents: **36**
+- Authoritative repository documents: **38**
 - Path moves in this migration: **0**
 - Every listed document has an explicit owner, lifecycle, authority, and review interval.
 
 ### Types
 
 - `historical`: 14
-- `reference`: 18
+- `reference`: 20
 - `runbook`: 2
 - `working`: 2
 
 ### Lifecycle
 
 - `active`: 16
-- `draft`: 6
+- `draft`: 8
 - `historical`: 14
 
 ## Documents
@@ -51,6 +51,7 @@ This page is generated from the validated front matter in this repository. Cross
 | [WoloChain](../README.md) | `reference` | `active` | `chain-repository-entrypoint` |
 | [WoloChain Branch Authority](BRANCH_AUTHORITY.md) | `reference` | `active` | `git-branch-authority-contract` |
 | [Exact Settlement Confirmation C4](exact-settlement-confirmation-c4.md) | `reference` | `draft` | `source-only-exact-settlement-confirmation` |
+| [Legacy Settlement Hardening and Protected Release Handoff](legacy-settlement-hardening.md) | `reference` | `draft` | `source-only-legacy-settlement-hardening` |
 | [WoloChain Mainnet Cutover Checklist](mainnet-cutover-checklist.md) | `historical` | `historical` | `mainnet-launch-cutover-evidence` |
 | [WoloChain Mainnet Tony Decision Checklist](mainnet-decision-checklist.md) | `historical` | `historical` | `mainnet-launch-decision-evidence` |
 | [WoloChain Mainnet DNS, Nginx, And TLS](mainnet-dns-nginx-tls.md) | `reference` | `active` | `mainnet-public-endpoint-routing` |
@@ -66,6 +67,7 @@ This page is generated from the validated front matter in this repository. Cross
 | [WoloChain Testnet Ops](testnet-ops.md) | `runbook` | `active` | `legacy-testnet-operations` |
 | [War Satchel C3 Chain Evidence](war-satchel-chain-evidence-c3.md) | `reference` | `draft` | `source-only-war-satchel-chain-evidence` |
 | [War Satchel C2 Custody Capability](war-satchel-custody-c2.md) | `reference` | `draft` | `source-only-war-satchel-custody-capability` |
+| [War Satchel Integration Evidence and Operator Handoff](war-satchel-integration-readiness.md) | `reference` | `draft` | `source-integration-proof-not-production-approval` |
 | [War Satchel Mainnet Execution and Operator Gates](war-satchel-mainnet-execution.md) | `reference` | `draft` | `restricted-satchel-execution-and-provisioning-contract` |
 | [AoE2WAR Warbound Trophies](warbound-trophies.md) | `working` | `draft` | `undeployed-warbound-module-design` |
 | [Codex Mission: WoloChain Mainnet ↔ Osmosis IBC Prep](../mainnet-prep/CODEX_OSMOSIS_IBC_MISSION.md) | `historical` | `historical` | `ibc-mission-prompt-evidence` |
