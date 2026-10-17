@@ -1,4 +1,4 @@
-// Package chainjson contains bounded JSON guards shared by read-only chain consumers.
+// Package chainjson contains bounded JSON guards shared by chain consumers and financial requests.
 package chainjson
 
 import (
@@ -6,11 +6,24 @@ import (
 	"encoding/json"
 	"io"
 	"strconv"
+	"strings"
+	"unicode"
 )
 
 // Bound JSON structure and reject duplicate members before either JSON decoder
 // sees it. This prevents last-member-wins execution code/envelope substitution.
 func Valid(data []byte) bool {
+	return valid(data, false)
+}
+
+// ValidFolded also rejects members whose names encoding/json treats as aliases
+// for the same struct field. A single alternate spelling remains compatible;
+// two colliding spellings may not silently substitute a financial request field.
+func ValidFolded(data []byte) bool {
+	return valid(data, true)
+}
+
+func valid(data []byte, folded bool) bool {
 	d := json.NewDecoder(bytes.NewReader(data))
 	d.UseNumber()
 	nodes := 0
@@ -33,6 +46,9 @@ func Valid(data []byte) bool {
 					return false
 				}
 				k, ok := key.(string)
+				if folded {
+					k = foldKey(k)
+				}
 				if !ok || seen[k] {
 					return false
 				}
@@ -62,6 +78,20 @@ func Valid(data []byte) bool {
 	}
 	_, err := d.Token()
 	return err == io.EOF
+}
+
+// Match encoding/json's Unicode simple-fold equivalence, including the long s
+// and Kelvin sign. Lowercasing alone does not cover every decoder alias.
+func foldKey(key string) string {
+	return strings.Map(func(r rune) rune {
+		for {
+			next := unicode.SimpleFold(r)
+			if next <= r {
+				return next
+			}
+			r = next
+		}
+	}, key)
 }
 
 func Object(data []byte) (map[string]json.RawMessage, bool) {

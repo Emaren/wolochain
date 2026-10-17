@@ -8,13 +8,28 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "runtime-evidence"
 authority: "mainnet-prep-chronological-handoff"
-reviewed_at: "2026-10-07"
+reviewed_at: "2026-10-17"
 review_interval_days: 14
 sensitivity: "restricted"
 ---
 
 # WoloChain wolo-1 Mainnet Prep Status
 
+## Source-only settlement review — 2026-10-17
+
+The [legacy settlement hardening handoff](../docs/legacy-settlement-hardening.md)
+records a new isolated source candidate from
+`wolo-1-mainnet-prep@c1210dda37b725a5b141ad63361048d4b37731c2`.
+This date renews engineering memory only; no SSH, runtime inspection or financial
+operation was performed. Earlier runtime identities and readiness observations
+below retain their original dates and scope. The pinned `bdbce253` candidate
+workflow does not build this new source, and obsolete rollback/rescue modes
+remain disabled. A separately reviewed exact-source artifact and protected
+quiesced two-service release/recovery policy remain required, together with
+current financial reconciliation and the unresolved founder claim #889 hold.
+Existing 8092/8093 signer/state separation, consensus executable isolation and
+all liabilities remain preserved. Satchel PR #25 stays separate and unmerged;
+this work does not activate Satchel custody or certify live funds.
 
 ## Review Renewal — 2026-10-07 UTC
 
