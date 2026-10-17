@@ -2,7 +2,7 @@ name: Satchel execution source proof
 
 on:
   pull_request:
-    branches: [wolo-1-mainnet-prep]
+    branches: [wolo-1-mainnet-prep, codex/satchel-mainnet-execution]
   workflow_dispatch:
 
 permissions:
