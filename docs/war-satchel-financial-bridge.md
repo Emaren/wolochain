@@ -13,7 +13,7 @@ review_interval_days: 14
 sensitivity: "restricted"
 ---
 
-# Authenticated War Satchel financial bridge
+# Authenticated War Satchel Financial Bridge
 
 This source contract composes PR #28's durable dedicated signer with the C3
 CometBFT reader. It introduces portable evidence and an independent offline
