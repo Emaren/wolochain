@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `codex/legacy-settlement-hardening` at `7a830e8d2362d4ff16fbf852e20d825865075f34`
+Implementation baseline: `ops/legacy-settlement-526d5-exact-ci-artifact-20261017` at `b974602be6b5508c917cf8c7981c7d4986cc8819`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
