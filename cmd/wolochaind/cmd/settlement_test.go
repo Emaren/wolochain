@@ -29,7 +29,7 @@ func TestNormalizeSettlementRequest(t *testing.T) {
 
 	request, err := normalizeSettlementRequest(settlementExecuteRequest{
 		RequestID:  "payout:match-42:user-8",
-		ToAddress:  "wolo1abcdefghijklmnopqrstuvwxyz0123456789abcd",
+		ToAddress:  "wolo1jssp9fggqduu06wj5klxu3pru0upx23f9slc5m",
 		AmountWolo: 7,
 		Memo:       "  settled  ",
 	})
@@ -50,7 +50,7 @@ func TestNormalizeSettlementRequestRejectsConflictingAmounts(t *testing.T) {
 
 	_, err := normalizeSettlementRequest(settlementExecuteRequest{
 		RequestID:   "payout:match-42:user-8",
-		ToAddress:   "wolo1abcdefghijklmnopqrstuvwxyz0123456789abcd",
+		ToAddress:   "wolo1jssp9fggqduu06wj5klxu3pru0upx23f9slc5m",
 		AmountUWolo: "1000000",
 		AmountWolo:  1,
 	})
@@ -410,8 +410,8 @@ func TestSummarizeSettlementRecentItems(t *testing.T) {
 func TestSettlementHTTPAuthBehavior(t *testing.T) {
 	t.Parallel()
 
-	cfg := newTestSettlementConfig(t, "wolo1payoutaddress000000000000000000000000000", map[string]string{
-		"wolo1payoutaddress000000000000000000000000000": "5000000",
+	cfg := newTestSettlementConfig(t, "wolo14hteq5qgk8gzme3z2d20enyyannru3hgpue70n", map[string]string{
+		"wolo14hteq5qgk8gzme3z2d20enyyannru3hgpue70n": "5000000",
 	})
 	cfg.AuthToken = "secret-token"
 
@@ -453,8 +453,8 @@ func TestSettlementHTTPAuthBehavior(t *testing.T) {
 func TestSettlementHTTPReadOnlyRoutesStayOpen(t *testing.T) {
 	t.Parallel()
 
-	cfg := newTestSettlementConfig(t, "wolo1payoutaddress000000000000000000000000000", map[string]string{
-		"wolo1payoutaddress000000000000000000000000000": "5000000",
+	cfg := newTestSettlementConfig(t, "wolo14hteq5qgk8gzme3z2d20enyyannru3hgpue70n", map[string]string{
+		"wolo14hteq5qgk8gzme3z2d20enyyannru3hgpue70n": "5000000",
 	})
 	cfg.AuthToken = "secret-token"
 
@@ -492,7 +492,7 @@ func TestSettlementHTTPReadOnlyRoutesStayOpen(t *testing.T) {
 func TestSettlementDoctorWarningsAndPayoutAddressMismatch(t *testing.T) {
 	t.Parallel()
 
-	const payoutAddress = "wolo1payoutaddress000000000000000000000000000"
+	const payoutAddress = "wolo14hteq5qgk8gzme3z2d20enyyannru3hgpue70n"
 
 	t.Run("warnings", func(t *testing.T) {
 		t.Parallel()
@@ -531,8 +531,8 @@ func TestSettlementDoctorWarningsAndPayoutAddressMismatch(t *testing.T) {
 		cfg := newTestSettlementConfig(t, payoutAddress, map[string]string{
 			payoutAddress: "5000000",
 		})
-		cfg.PayoutAddress = "wolo1differentpayout0000000000000000000000000"
-		cfg.EscrowAddress = "wolo1escrow000000000000000000000000000000000"
+		cfg.PayoutAddress = "wolo1mnheaf7vlczjw8a54kn4euk8x9vkxrcpdxdplk"
+		cfg.EscrowAddress = "wolo1tc6mt544hmyzj2plzmnws5d28ag9rru26aeuec"
 		cfg.PublicRESTURL = "https://rest-mainnet.aoe2war.com"
 		cfg.AuthToken = "secret-token"
 		cfg.MinPayoutBalanceUWolo = 1000000000
@@ -548,10 +548,10 @@ func TestSettlementDoctorWarningsAndPayoutAddressMismatch(t *testing.T) {
 func TestVerifyEscrowDepositAndHTTPRoute(t *testing.T) {
 	t.Parallel()
 
-	const payoutAddress = "wolo1payoutaddress000000000000000000000000000"
-	const escrowAddress = "wolo1escrow000000000000000000000000000000000"
-	const depositorAddress = "wolo1sender000000000000000000000000000000000"
-	txHash := strings.Repeat("D", 64)
+	const payoutAddress = "wolo14hteq5qgk8gzme3z2d20enyyannru3hgpue70n"
+	const escrowAddress = "wolo1tc6mt544hmyzj2plzmnws5d28ag9rru26aeuec"
+	const depositorAddress = "wolo16lh78t7mksfgu46l8kscqm6yjlw5hhrllmdfr4"
+	txHash := mockSettlementHash(depositorAddress, escrowAddress, "700", "escrow deposit")
 
 	cfg := newTestSettlementConfigWithTxs(
 		t,
@@ -610,9 +610,9 @@ func TestVerifyEscrowDepositAndHTTPRoute(t *testing.T) {
 func TestVerifyEscrowDepositRejectsFailedTransaction(t *testing.T) {
 	t.Parallel()
 
-	const payoutAddress = "wolo1payoutaddress000000000000000000000000000"
-	const escrowAddress = "wolo1escrow000000000000000000000000000000000"
-	const depositorAddress = "wolo1sender000000000000000000000000000000000"
+	const payoutAddress = "wolo14hteq5qgk8gzme3z2d20enyyannru3hgpue70n"
+	const escrowAddress = "wolo1tc6mt544hmyzj2plzmnws5d28ag9rru26aeuec"
+	const depositorAddress = "wolo16lh78t7mksfgu46l8kscqm6yjlw5hhrllmdfr4"
 	txHash := strings.Repeat("F", 64)
 
 	// Even a matching transfer event from a failed tx is never spendable funds.
@@ -665,11 +665,11 @@ func TestVerifyEscrowDepositRejectsFailedTransaction(t *testing.T) {
 
 func TestVerifyEscrowDepositRequiresMatchedUwoloDenom(t *testing.T) {
 	t.Parallel()
-	const payout = "wolo1payoutaddress000000000000000000000000000"
-	const escrow = "wolo1escrow000000000000000000000000000000000"
-	const sender = "wolo1sender000000000000000000000000000000000"
-	badHash := strings.Repeat("1", 64)
-	goodHash := strings.Repeat("2", 64)
+	const payout = "wolo14hteq5qgk8gzme3z2d20enyyannru3hgpue70n"
+	const escrow = "wolo1tc6mt544hmyzj2plzmnws5d28ag9rru26aeuec"
+	const sender = "wolo16lh78t7mksfgu46l8kscqm6yjlw5hhrllmdfr4"
+	badHash := fmt.Sprintf("%X", mockSettlementRaw(mockSettlementTx{Sender: sender, Recipient: escrow, AmountUWolo: "700", TransferCoins: "700ufake,1uwolo"}).Hash())
+	goodHash := fmt.Sprintf("%X", mockSettlementRaw(mockSettlementTx{Sender: sender, Recipient: escrow, AmountUWolo: "700", TransferCoins: "700ufake,700uwolo"}).Hash())
 	cfg := newTestSettlementConfigWithTxs(t, payout, map[string]string{payout: "5000"}, map[string]mockSettlementTx{
 		badHash:  {Hash: badHash, Sender: sender, Recipient: escrow, AmountUWolo: "700", TransferCoins: "700ufake,1uwolo"},
 		goodHash: {Hash: goodHash, Sender: sender, Recipient: escrow, AmountUWolo: "700", TransferCoins: "700ufake,700uwolo"},
@@ -697,11 +697,11 @@ func TestVerifyEscrowDepositRequiresMatchedUwoloDenom(t *testing.T) {
 
 func TestVerifyEscrowDepositUniqueTransferOrdinal(t *testing.T) {
 	t.Parallel()
-	const payout = "wolo1payoutaddress000000000000000000000000000"
-	const escrow = "wolo1escrow000000000000000000000000000000000"
-	const sender = "wolo1sender000000000000000000000000000000000"
-	oneHash := strings.Repeat("3", 64)
-	ambiguousHash := strings.Repeat("4", 64)
+	const payout = "wolo14hteq5qgk8gzme3z2d20enyyannru3hgpue70n"
+	const escrow = "wolo1tc6mt544hmyzj2plzmnws5d28ag9rru26aeuec"
+	const sender = "wolo16lh78t7mksfgu46l8kscqm6yjlw5hhrllmdfr4"
+	oneHash := fmt.Sprintf("%X", mockSettlementRaw(mockSettlementTx{Sender: sender, Recipient: escrow, AmountUWolo: "700", TransferCoins: "700ufake,700uwolo"}).Hash())
+	ambiguousHash := fmt.Sprintf("%X", mockSettlementRaw(mockSettlementTx{Sender: sender, Recipient: escrow, AmountUWolo: "700", RepeatTransfer: true}).Hash())
 	cfg := newTestSettlementConfigWithTxs(t, payout, map[string]string{payout: "5000"}, map[string]mockSettlementTx{
 		oneHash: {
 			Hash: oneHash, Sender: sender, Recipient: escrow,
@@ -728,9 +728,9 @@ func TestVerifyEscrowDepositUniqueTransferOrdinal(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !ambiguous.OK || ambiguous.Lookup == nil || ambiguous.Lookup.MatchingTransferCount != 2 ||
+	if ambiguous.OK || ambiguous.FailureCode != "TX_TRANSFER_AMBIGUOUS" || ambiguous.Lookup == nil ||
 		ambiguous.Lookup.MatchedTransferIndex != nil {
-		t.Fatalf("two identical transfers must not expose a unique creditable index: %+v", ambiguous)
+		t.Fatalf("two identical transfers cannot verify one escrow obligation: %+v", ambiguous)
 	}
 
 	handler := cfg.newSettlementHTTPHandler()
@@ -754,10 +754,10 @@ func TestVerifyEscrowDepositUniqueTransferOrdinal(t *testing.T) {
 func TestListRecentEscrowDepositsAndHTTPRoute(t *testing.T) {
 	t.Parallel()
 
-	const payoutAddress = "wolo1payoutaddress000000000000000000000000000"
-	const escrowAddress = "wolo1escrow000000000000000000000000000000000"
-	const senderA = "wolo1sendera00000000000000000000000000000000"
-	const senderB = "wolo1senderb00000000000000000000000000000000"
+	const payoutAddress = "wolo14hteq5qgk8gzme3z2d20enyyannru3hgpue70n"
+	const escrowAddress = "wolo1tc6mt544hmyzj2plzmnws5d28ag9rru26aeuec"
+	const senderA = "wolo1d0w4j4k9wn9dnk9thjt2hazt9dsr2mzpwf8f6e"
+	const senderB = "wolo13c4m4mecw6ewzcwhz5a7sar5avp3rwkmqd692j"
 	txHashA := strings.Repeat("A", 64)
 	txHashB := strings.Repeat("B", 64)
 
@@ -835,11 +835,11 @@ func TestPrepareSettlementRunRequestDerivesIDsAndWarnings(t *testing.T) {
 		Memo:            " batch memo ",
 		Payouts: []settlementRunPayoutInput{
 			{
-				ToAddress:   "wolo1recipienta000000000000000000000000000000",
+				ToAddress:   "wolo1uyge4kml7ecajn8gjrvgeuw0h2fq4alywnf7ux",
 				AmountUWolo: "100",
 			},
 			{
-				ToAddress:   "wolo1recipienta000000000000000000000000000000",
+				ToAddress:   "wolo1uyge4kml7ecajn8gjrvgeuw0h2fq4alywnf7ux",
 				AmountUWolo: "100",
 			},
 		},
@@ -874,7 +874,7 @@ func TestPrepareSettlementRunSignerRoleDefaultsAndRejectsUnknown(t *testing.T) {
 		SettlementRunID: "run-default-role",
 		Payouts: []settlementRunPayoutInput{
 			{
-				ToAddress:   "wolo1recipienta000000000000000000000000000000",
+				ToAddress:   "wolo1uyge4kml7ecajn8gjrvgeuw0h2fq4alywnf7ux",
 				AmountUWolo: "100",
 			},
 		},
@@ -891,7 +891,7 @@ func TestPrepareSettlementRunSignerRoleDefaultsAndRejectsUnknown(t *testing.T) {
 		SignerRole:      "treasury",
 		Payouts: []settlementRunPayoutInput{
 			{
-				ToAddress:   "wolo1recipienta000000000000000000000000000000",
+				ToAddress:   "wolo1uyge4kml7ecajn8gjrvgeuw0h2fq4alywnf7ux",
 				AmountUWolo: "100",
 			},
 		},
@@ -907,8 +907,8 @@ func TestPrepareSettlementRunSignerRoleDefaultsAndRejectsUnknown(t *testing.T) {
 func TestValidateSettlementRunCapacityBoundariesAndPrecedence(t *testing.T) {
 	t.Parallel()
 
-	const payoutAddress = "wolo1payoutaddress000000000000000000000000000"
-	const recipientAddress = "wolo1recipienta000000000000000000000000000000"
+	const payoutAddress = "wolo14hteq5qgk8gzme3z2d20enyyannru3hgpue70n"
+	const recipientAddress = "wolo1uyge4kml7ecajn8gjrvgeuw0h2fq4alywnf7ux"
 
 	testCases := []struct {
 		name           string
@@ -1023,9 +1023,9 @@ func TestValidatePayoutSettlementRunIgnoresEscrowBalance(t *testing.T) {
 	t.Parallel()
 
 	const (
-		payoutAddress    = "wolo1payoutaddress000000000000000000000000000"
-		escrowAddress    = "wolo1escrow000000000000000000000000000000000"
-		recipientAddress = "wolo1recipienta000000000000000000000000000000"
+		payoutAddress    = "wolo14hteq5qgk8gzme3z2d20enyyannru3hgpue70n"
+		escrowAddress    = "wolo1tc6mt544hmyzj2plzmnws5d28ag9rru26aeuec"
+		recipientAddress = "wolo1uyge4kml7ecajn8gjrvgeuw0h2fq4alywnf7ux"
 	)
 
 	cfg := newTestChallengeSettlementConfig(t, payoutAddress, escrowAddress, "", map[string]string{
@@ -1054,9 +1054,9 @@ func TestValidateEscrowSettlementRunUsesEscrowBalance(t *testing.T) {
 	t.Parallel()
 
 	const (
-		payoutAddress    = "wolo1payoutaddress000000000000000000000000000"
-		escrowAddress    = "wolo1escrow000000000000000000000000000000000"
-		recipientAddress = "wolo1recipienta000000000000000000000000000000"
+		payoutAddress    = "wolo14hteq5qgk8gzme3z2d20enyyannru3hgpue70n"
+		escrowAddress    = "wolo1tc6mt544hmyzj2plzmnws5d28ag9rru26aeuec"
+		recipientAddress = "wolo1uyge4kml7ecajn8gjrvgeuw0h2fq4alywnf7ux"
 	)
 
 	cfg := newTestChallengeSettlementConfig(t, payoutAddress, escrowAddress, "", map[string]string{
@@ -1098,9 +1098,9 @@ func TestValidateEscrowSettlementRunBalanceAndHeadroom(t *testing.T) {
 	t.Parallel()
 
 	const (
-		payoutAddress    = "wolo1payoutaddress000000000000000000000000000"
-		escrowAddress    = "wolo1escrow000000000000000000000000000000000"
-		recipientAddress = "wolo1recipienta000000000000000000000000000000"
+		payoutAddress    = "wolo14hteq5qgk8gzme3z2d20enyyannru3hgpue70n"
+		escrowAddress    = "wolo1tc6mt544hmyzj2plzmnws5d28ag9rru26aeuec"
+		recipientAddress = "wolo1uyge4kml7ecajn8gjrvgeuw0h2fq4alywnf7ux"
 	)
 
 	testCases := []struct {
@@ -1175,9 +1175,9 @@ func TestExecuteEscrowSettlementRunUsesEscrowSigner(t *testing.T) {
 	t.Parallel()
 
 	const (
-		payoutAddress    = "wolo1payoutaddress000000000000000000000000000"
-		escrowAddress    = "wolo1escrow000000000000000000000000000000000"
-		recipientAddress = "wolo1recipienta000000000000000000000000000000"
+		payoutAddress    = "wolo14hteq5qgk8gzme3z2d20enyyannru3hgpue70n"
+		escrowAddress    = "wolo1tc6mt544hmyzj2plzmnws5d28ag9rru26aeuec"
+		recipientAddress = "wolo1uyge4kml7ecajn8gjrvgeuw0h2fq4alywnf7ux"
 	)
 
 	txHash := mockSettlementHash(escrowAddress, recipientAddress, "300", "escrow memo")
@@ -1232,13 +1232,13 @@ func TestExecuteEscrowSettlementRunUsesEscrowSigner(t *testing.T) {
 func TestSettlementHTTPRunAuthBehavior(t *testing.T) {
 	t.Parallel()
 
-	cfg := newTestSettlementConfig(t, "wolo1payoutaddress000000000000000000000000000", map[string]string{
-		"wolo1payoutaddress000000000000000000000000000": "5000000",
+	cfg := newTestSettlementConfig(t, "wolo14hteq5qgk8gzme3z2d20enyyannru3hgpue70n", map[string]string{
+		"wolo14hteq5qgk8gzme3z2d20enyyannru3hgpue70n": "5000000",
 	})
 	cfg.AuthToken = "secret-token"
 
 	handler := cfg.newSettlementHTTPHandler()
-	validPayload := `{"settlement_run_id":"run-1","payouts":[{"to_address":"wolo1recipienta000000000000000000000000000000","amount_uwolo":"1"}]}`
+	validPayload := `{"settlement_run_id":"run-1","payouts":[{"to_address":"wolo1uyge4kml7ecajn8gjrvgeuw0h2fq4alywnf7ux","amount_uwolo":"1"}]}`
 
 	request := httptest.NewRequest(http.MethodPost, "/settlement/v1/runs/validate", strings.NewReader(validPayload))
 	recorder := httptest.NewRecorder()
@@ -1298,9 +1298,9 @@ func TestSettlementHTTPRunAuthBehavior(t *testing.T) {
 func TestExecuteSettlementRunStoresProofsAndReplays(t *testing.T) {
 	t.Parallel()
 
-	const payoutAddress = "wolo1payoutaddress000000000000000000000000000"
-	const recipientA = "wolo1recipienta000000000000000000000000000000"
-	const recipientB = "wolo1recipientb000000000000000000000000000000"
+	const payoutAddress = "wolo14hteq5qgk8gzme3z2d20enyyannru3hgpue70n"
+	const recipientA = "wolo1uyge4kml7ecajn8gjrvgeuw0h2fq4alywnf7ux"
+	const recipientB = "wolo19nmlmyfhzkze7rcm3jj2yd65utujp8p8cnxa22"
 	txHashA := mockSettlementHash(payoutAddress, recipientA, "100", "batch memo")
 	txHashB := mockSettlementHash(payoutAddress, recipientB, "200", "batch memo")
 
@@ -1399,9 +1399,9 @@ func TestExecuteSettlementRunStoresProofsAndReplays(t *testing.T) {
 func TestExecuteSettlementRunPartialAndRecentHistory(t *testing.T) {
 	t.Parallel()
 
-	const payoutAddress = "wolo1payoutaddress000000000000000000000000000"
-	const recipientA = "wolo1recipienta000000000000000000000000000000"
-	const recipientB = "wolo1recipientb000000000000000000000000000000"
+	const payoutAddress = "wolo14hteq5qgk8gzme3z2d20enyyannru3hgpue70n"
+	const recipientA = "wolo1uyge4kml7ecajn8gjrvgeuw0h2fq4alywnf7ux"
+	const recipientB = "wolo19nmlmyfhzkze7rcm3jj2yd65utujp8p8cnxa22"
 	txHashA := mockSettlementHash(payoutAddress, recipientA, "100", "partial memo")
 
 	cfg := newTestSettlementConfigWithTxs(
@@ -1425,7 +1425,7 @@ func TestExecuteSettlementRunPartialAndRecentHistory(t *testing.T) {
 
 	conflicting := normalizedSettlementRequest{
 		RequestID:   "run-partial:item-002",
-		ToAddress:   "wolo1otherrecipient000000000000000000000000000",
+		ToAddress:   "wolo1gryx57qs6drna29lmsz5nx2znzs2c3m6jnvfew",
 		AmountUWolo: "999",
 		Memo:        "previous payout",
 	}
@@ -1491,9 +1491,9 @@ func TestExecuteSettlementRunPartialAndRecentHistory(t *testing.T) {
 func TestExecuteSettlementRunPartialRetryDoesNotResendConfirmedPayout(t *testing.T) {
 	t.Parallel()
 
-	const payoutAddress = "wolo1payoutaddress000000000000000000000000000"
-	const recipientA = "wolo1recipienta000000000000000000000000000000"
-	const recipientB = "wolo1recipientb000000000000000000000000000000"
+	const payoutAddress = "wolo14hteq5qgk8gzme3z2d20enyyannru3hgpue70n"
+	const recipientA = "wolo1uyge4kml7ecajn8gjrvgeuw0h2fq4alywnf7ux"
+	const recipientB = "wolo19nmlmyfhzkze7rcm3jj2yd65utujp8p8cnxa22"
 	txHashA := mockSettlementHash(payoutAddress, recipientA, "100", "retry memo")
 	txHashB := mockSettlementHash(payoutAddress, recipientB, "200", "retry memo")
 
@@ -1663,7 +1663,7 @@ func TestSettlementRunLogEventClassification(t *testing.T) {
 func TestExecuteSettlementStoresRetryableRefusal(t *testing.T) {
 	t.Parallel()
 
-	payoutAddress := "wolo1payoutaddress000000000000000000000000000"
+	payoutAddress := "wolo14hteq5qgk8gzme3z2d20enyyannru3hgpue70n"
 	cfg := newTestSettlementConfig(t, payoutAddress, map[string]string{
 		payoutAddress: "250",
 	})
@@ -1672,7 +1672,7 @@ func TestExecuteSettlementStoresRetryableRefusal(t *testing.T) {
 
 	response, err := cfg.executeSettlement(t.Context(), settlementExecuteRequest{
 		RequestID:   "reserve-floor-refusal",
-		ToAddress:   "wolo1recipient000000000000000000000000000000",
+		ToAddress:   "wolo16082h2x52u87uj4pjj5049mvh9fxu0gjal08j5",
 		AmountUWolo: "101",
 		Memo:        "reserve check",
 	})

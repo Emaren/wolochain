@@ -8,7 +8,7 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "git-branch-authority-contract"
-reviewed_at: "2026-10-14"
+reviewed_at: "2026-10-17"
 review_interval_days: 14
 sensitivity: "internal"
 ---
@@ -18,6 +18,21 @@ sensitivity: "internal"
 Reviewed: 2026-10-14
 
 ## Current federation source
+
+### October 17, 2026 — source-only settlement candidate
+
+This work starts from remote-exact `wolo-1-mainnet-prep` at
+`c1210dda37b725a5b141ad63361048d4b37731c2` on the isolated
+`codex/legacy-settlement-hardening` branch. Its source baseline is recorded in
+the [documentation index](DOCUMENTATION_CONTROL_PLANE.md); that baseline is
+not deployed settlement or consensus authority. The older source/build and
+October 14 runtime identities below remain dated historical observations.
+The [release handoff](legacy-settlement-hardening.md) records why neither the
+retired `3ea79363` policy nor the pinned `bdbce253` artifact can certify this
+candidate. No new production observation or branch reconciliation occurred.
+Satchel PR #25 remains intact and unmerged on its separate branch.
+
+### Historical October 14 federation observation
 
 The documentation federation for `wolo-1` mainnet work is sourced from
 the clean remote-exact `wolo-1-mainnet-prep` branch. The

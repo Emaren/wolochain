@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -28,7 +29,10 @@ import (
 // This client only reads server-configured chain sources. Its observations are
 // trusted-node evidence, not independent consensus authentication or Satchel credit.
 var settlementConfirmationClient = &http.Client{
+	Timeout: 5 * time.Second,
 	Transport: &http.Transport{DisableCompression: true, ResponseHeaderTimeout: 2 * time.Second,
+		DialContext:            (&net.Dialer{Timeout: 2 * time.Second, KeepAlive: 30 * time.Second}).DialContext,
+		TLSHandshakeTimeout:    2 * time.Second,
 		MaxResponseHeaderBytes: 16384, MaxConnsPerHost: 4, MaxIdleConns: 8,
 		MaxIdleConnsPerHost: 4, IdleConnTimeout: 30 * time.Second},
 	CheckRedirect: func(*http.Request, []*http.Request) error { return errors.New("redirect refused") },
@@ -52,9 +56,8 @@ func readSettlementEvidenceJSON(ctx context.Context, target string) ([]byte, int
 	if resp.StatusCode != http.StatusOK || (resp.Header.Get("Content-Encoding") != "" && resp.Header.Get("Content-Encoding") != "identity") {
 		return nil, resp.StatusCode, errors.New("source unavailable")
 	}
-	const limit = 1 << 20
-	data, err := io.ReadAll(io.LimitReader(resp.Body, limit+1))
-	if err != nil || len(data) > limit || !chainjson.Valid(data) {
+	data, err := io.ReadAll(io.LimitReader(resp.Body, settlementJSONLimit+1))
+	if err != nil || len(data) > settlementJSONLimit || !chainjson.ValidFolded(data) {
 		return nil, resp.StatusCode, errors.New("invalid bounded JSON")
 	}
 	return data, resp.StatusCode, nil
@@ -173,53 +176,72 @@ func (cfg settlementConfig) verifySettlementPayout(ctx context.Context, hash str
 		send.Amount[0].Denom != settlementCanonicalBaseDenom || send.Amount[0].Amount != expected.AmountUWolo {
 		return "TX_PAYOUT_MISMATCH"
 	}
+	observed, failure := cfg.verifySettlementBytes(ctx, hash, body, payload)
+	if failure != "" {
+		return failure
+	}
+	if payload.TxResponse.Code != 0 {
+		return ""
+	} // Failed execution is never evidence of payment.
+	wanted := settlementTransfer{Sender: expected.Sender, Recipient: expected.Recipient, Amount: expected.AmountUWolo, Denom: settlementCanonicalBaseDenom}
+	if failure := verifySettlementEffect(payload, observed, wanted, response); failure != "" {
+		return failure
+	}
+	receiptIndex := 0
+	response.ReceiptTransferIndex = &receiptIndex
+	return ""
+}
+
+// verifySettlementBytes shares the exact configured-node proof contract between
+// payout and escrow. Agreement does not authenticate consensus independently.
+func (cfg settlementConfig) verifySettlementBytes(ctx context.Context, hash string, body *tx.TxBody, payload restTxLookupResponse) (*core.ResultTx, string) {
 	query := url.Values{"hash": {"0x" + hash}, "prove": {"false"}}
 	data, status, err := readSettlementEvidenceJSON(ctx, strings.TrimRight(cfg.RPCHTTP, "/")+"/tx?"+query.Encode())
 	if err != nil || status != http.StatusOK {
-		return "TX_BYTES_UNAVAILABLE"
+		return nil, "TX_BYTES_UNAVAILABLE"
 	}
 	envelope, ok := chainjson.Object(data)
 	if !ok || string(envelope["jsonrpc"]) != `"2.0"` {
-		return "TX_RPC_INVALID"
+		return nil, "TX_RPC_INVALID"
 	}
 	if raw := envelope["error"]; len(raw) > 0 && !bytes.Equal(bytes.TrimSpace(raw), []byte("null")) {
-		return "TX_BYTES_UNAVAILABLE"
+		return nil, "TX_BYTES_UNAVAILABLE"
 	}
 	result, ok := chainjson.Object(envelope["result"])
 	if !ok {
-		return "TX_RPC_INVALID"
+		return nil, "TX_RPC_INVALID"
 	}
 	execution, ok := chainjson.Object(result["tx_result"])
 	if !ok {
-		return "TX_RPC_INVALID"
+		return nil, "TX_RPC_INVALID"
 	}
 	code, ok := chainjson.ExecutionCode(execution)
 	if !ok {
-		return "TX_CODE_INVALID"
+		return nil, "TX_CODE_INVALID"
 	}
 	execution["code"] = json.RawMessage(strconv.FormatUint(uint64(code), 10))
 	result["tx_result"], _ = json.Marshal(execution)
 	normalized, _ := json.Marshal(result)
 	var observed core.ResultTx
 	if cmtjson.Unmarshal(normalized, &observed) != nil {
-		return "TX_RPC_INVALID"
+		return nil, "TX_RPC_INVALID"
 	}
 	if len(observed.Tx) == 0 || len(observed.Tx) > 65536 || !strings.EqualFold(hex.EncodeToString(observed.Hash), hash) || !bytes.Equal(observed.Tx.Hash(), observed.Hash) {
-		return "TX_BYTES_MISMATCH"
+		return nil, "TX_BYTES_MISMATCH"
 	}
 	if strconv.FormatInt(observed.Height, 10) != payload.TxResponse.Height || observed.Height <= 0 || code != payload.TxResponse.Code {
-		return "TX_RESULT_MISMATCH"
+		return nil, "TX_RESULT_MISMATCH"
 	}
 	var raw tx.TxRaw
 	var actual tx.TxBody
 	if proto.Unmarshal(observed.Tx, &raw) != nil || len(raw.ProtoReflect().GetUnknown()) != 0 || len(raw.AuthInfoBytes) == 0 || len(raw.Signatures) != 1 || len(raw.Signatures[0]) == 0 ||
 		proto.Unmarshal(raw.BodyBytes, &actual) != nil || !proto.Equal(&actual, body) {
-		return "TX_BYTES_MISMATCH"
+		return nil, "TX_BYTES_MISMATCH"
 	}
-	if code != 0 {
-		return ""
-	} // Failed execution is never evidence of payment.
-	wanted := settlementTransfer{Sender: expected.Sender, Recipient: expected.Recipient, Amount: expected.AmountUWolo, Denom: settlementCanonicalBaseDenom}
+	return &observed, ""
+}
+
+func verifySettlementEffect(payload restTxLookupResponse, observed *core.ResultTx, wanted settlementTransfer, response *settlementLookupResponse) string {
 	index, count := -1, 0
 	for i, effect := range response.Transfers {
 		if effect == wanted {
@@ -276,9 +298,67 @@ func (cfg settlementConfig) verifySettlementPayout(ctx context.Context, hash str
 	response.MatchedExpected = true
 	response.MatchedTransfer = &wanted
 	response.MatchedTransferIndex = &index
-	receiptIndex := 0
-	response.ReceiptTransferIndex = &receiptIndex
 	return ""
+}
+
+// Escrow confirmation supports distinct MsgSend messages/coins, but exactly one
+// decoded bank send and one committed effect must satisfy the supplied filters.
+// A generic lookup or search result alone remains discovery, never funding proof.
+func (cfg settlementConfig) verifySettlementEscrow(ctx context.Context, hash string, body *tx.TxBody, payload restTxLookupResponse, expected settlementLookupExpectations, response *settlementLookupResponse) string {
+	if cfg.ChainID != settlementCanonicalChainID || cfg.BaseDenom != settlementCanonicalBaseDenom ||
+		expected.Recipient != cfg.EscrowAddress || !isWoloAddress(expected.Recipient, cfg.AddressPrefix) {
+		return "ESCROW_CONTEXT_REQUIRED"
+	}
+	if payload.TxResponse.Code != 0 {
+		return ""
+	} // Preserve the distinct committed failure; it can never prove funding.
+	observed, failure := cfg.verifySettlementBytes(ctx, hash, body, payload)
+	if failure != "" {
+		return failure
+	}
+	if len(body.ExtensionOptions) != 0 || len(body.NonCriticalExtensionOptions) != 0 {
+		return "TX_ESCROW_MISMATCH"
+	}
+	var wanted settlementTransfer
+	response.MatchingTransferCount = 0
+	response.MatchedExpected = false
+	response.MatchedTransfer = nil
+	for _, effect := range response.Transfers {
+		if effect.Recipient == expected.Recipient && effect.Denom == cfg.BaseDenom &&
+			(expected.Sender == "" || effect.Sender == expected.Sender) &&
+			(expected.AmountUWolo == "" || effect.Amount == expected.AmountUWolo) {
+			wanted = effect
+			response.MatchingTransferCount++
+		}
+	}
+	if response.MatchingTransferCount == 0 {
+		return "" // Caller reports the distinct requested-amount/sender mismatch.
+	}
+	if response.MatchingTransferCount != 1 {
+		return "TX_TRANSFER_AMBIGUOUS"
+	}
+	if !isWoloAddress(wanted.Sender, cfg.AddressPrefix) {
+		return "TX_ESCROW_MISMATCH"
+	}
+	sends := 0
+	for _, message := range body.Messages {
+		if message.TypeUrl != "/cosmos.bank.v1beta1.MsgSend" {
+			continue
+		}
+		var send bank.MsgSend
+		if proto.Unmarshal(message.Value, &send) != nil || len(send.ProtoReflect().GetUnknown()) != 0 {
+			return "TX_BODY_INVALID"
+		}
+		for _, coin := range send.Amount {
+			if send.FromAddress == wanted.Sender && send.ToAddress == wanted.Recipient && coin.Denom == wanted.Denom && coin.Amount == wanted.Amount {
+				sends++
+			}
+		}
+	}
+	if sends != 1 {
+		return "TX_ESCROW_MISMATCH"
+	}
+	return verifySettlementEffect(payload, observed, wanted, response)
 }
 
 func payoutConfirmationExpectations(request normalizedSettlementRequest, signer string) settlementLookupExpectations {

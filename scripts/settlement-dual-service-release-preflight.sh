@@ -100,7 +100,7 @@ done
 primary_addr="$(listen_addr "$primary_env")" || fail "primary bind config unknown"
 founder_addr="$(listen_addr "$founder_env")" || fail "founder bind config unknown"
 [[ "$primary_addr" == "127.0.0.1:8092" ]] || fail "primary bind changed"
-[[ "$founder_addr" != "$primary_addr" ]] || fail "primary and founder bind collided"
+[[ "$founder_addr" == "127.0.0.1:8093" ]] || fail "founder bind changed"
 
 echo "PASS primary listen $primary_addr and founder listen $founder_addr"
 curl --fail --silent --show-error --max-time 8 "http://$primary_addr/settlement/v1/health" >/dev/null ||
