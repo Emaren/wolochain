@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "da6f3951694159f2b935aa5f830f25ffacf3820da72af935d67f2947993bab6e",
+      "sha256": "d28d65d2230e36c0a2666426b54fe0e523c9aff41030de9f3168cf6ce85c69a8",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -831,8 +831,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "codex/legacy-settlement-hardening",
-    "commit": "7a830e8d2362d4ff16fbf852e20d825865075f34"
+    "branch": "ops/legacy-settlement-526d5-exact-ci-artifact-20261017",
+    "commit": "b974602be6b5508c917cf8c7981c7d4986cc8819"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
