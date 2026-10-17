@@ -15,6 +15,19 @@ sensitivity: "restricted"
 
 # WoloChain Mainnet Settlement Runbook
 
+## October 17, 2026 — authenticated bridge and fresh release HOLD
+
+The [financial bridge](war-satchel-financial-bridge.md),
+[composed artifact](war-satchel-exact-source-artifact.md) and
+[controlled release gates](war-satchel-controlled-release.md) supersede older
+source-readiness observations for this candidate. Fresh read-only runtime
+inspection still finds settlement source `78c25985`, separate consensus
+identity, no 8094 listener and accepted legacy records. No drain, complete
+liability reconciliation, independent vault control or live canary is proved.
+Keep HD financial hold and C2 UNAVAILABLE. Never rebroadcast an uncertain
+request or treat a checkout/artifact change as a changed running process.
+
+
 ## October 17, 2026 — dedicated Satchel execution source, no activation
 
 The [Satchel execution/operator contract](war-satchel-mainnet-execution.md)

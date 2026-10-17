@@ -34,8 +34,9 @@ type TrustedReader struct {
 	gate   chan struct{}
 }
 type AuthenticatedEvidence struct {
-	evidence ChainEvidence
-	anchor   TrustAnchor
+	evidence   ChainEvidence
+	anchor     TrustAnchor
+	anchorTime time.Time
 }
 
 func (e AuthenticatedEvidence) Observation() Observation {
@@ -60,15 +61,21 @@ func (e AuthenticatedEvidence) Observation() Observation {
 	}
 	return o
 }
-func (e AuthenticatedEvidence) Receipt() ReceiptCandidate    { return e.evidence.Receipt }
-func (e AuthenticatedEvidence) ConsensusAuthenticated() bool { return e.anchor.Height > 0 }
+func (e AuthenticatedEvidence) Receipt() ReceiptCandidate { return e.evidence.Receipt }
+func (e AuthenticatedEvidence) ConsensusAuthenticated() bool {
+	return e.anchor.Height > 0 && !e.anchorTime.IsZero()
+}
 
 // Authentication of a chain result is not custody, owner authorization, global
 // receipt consumption, reserve coverage, or permission to post a ledger credit.
 func (AuthenticatedEvidence) CreditAuthorized() bool { return false }
 
+func validTrustAnchor(a TrustAnchor) bool {
+	return a.Height > 0 && digest(a.Hash) && a.PeriodSeconds >= 60 && a.PeriodSeconds <= 86400 && strings.TrimSpace(a.EvidenceReference) != "" && len(a.EvidenceReference) <= 512
+}
+
 func NewTrustedReader(cfg SourceConfig, a TrustAnchor) (*TrustedReader, error) {
-	if a.Height <= 0 || !digest(a.Hash) || a.PeriodSeconds < 60 || a.PeriodSeconds > 86400 || strings.TrimSpace(a.EvidenceReference) == "" || len(a.EvidenceReference) > 512 || cfg.WitnessRPC == "" || cfg.WitnessRPC == cfg.RPC {
+	if !validTrustAnchor(a) || cfg.WitnessRPC == "" || cfg.WitnessRPC == cfg.RPC {
 		return nil, fail(InvalidConfiguration, "trust", "anchor")
 	}
 	r, e := NewChainReader(cfg)
@@ -139,7 +146,14 @@ func (r *TrustedReader) ReadTransfer(ctx context.Context, i TransferIntent, hash
 	return r.read(ctx, func(ctx context.Context) (ChainEvidence, error) { return r.reader.ReadTransfer(ctx, i, hash) })
 }
 func (r *TrustedReader) ReadDeposit(ctx context.Context, i Intent, hash string) (AuthenticatedEvidence, error) {
-	return r.read(ctx, func(ctx context.Context) (ChainEvidence, error) { return r.reader.ReadDeposit(ctx, i, hash) })
+	evidence, err := r.read(ctx, func(ctx context.Context) (ChainEvidence, error) { return r.reader.ReadDeposit(ctx, i, hash) })
+	if err != nil {
+		return AuthenticatedEvidence{}, err
+	}
+	if !validIntent(i, r.reader.now()) {
+		return AuthenticatedEvidence{}, fail(InvalidIntent, "intent", "trusted_complete")
+	}
+	return evidence, nil
 }
 func (r *TrustedReader) read(ctx context.Context, collect func(context.Context) (ChainEvidence, error)) (AuthenticatedEvidence, error) {
 	if r == nil || r.reader == nil {
@@ -208,7 +222,7 @@ func (r *TrustedReader) read(ctx context.Context, collect func(context.Context) 
 	if !validHead(e.WitnessHead, finished) || !validHead(e.Observation.IndependentHead, finished) {
 		return AuthenticatedEvidence{}, fail(StaleHead, "witness", "complete")
 	}
-	return AuthenticatedEvidence{e, r.anchor}, nil
+	return AuthenticatedEvidence{evidence: e, anchor: r.anchor, anchorTime: anchor.Time}, nil
 }
 
 type lightBudget struct {

@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `codex/satchel-source-integration-proof` at `28b91f141ef3fc66554f17e5e6d31532c5780a67`
+Implementation baseline: `codex/satchel-authenticated-financial-bridge` at `fa5af7a55ba89dcdda6d48794922b3a0c1327fdb`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
@@ -27,21 +27,21 @@ This page is generated from the validated front matter in this repository. Cross
 
 ## Documentation health
 
-- Authoritative repository documents: **38**
+- Authoritative repository documents: **41**
 - Path moves in this migration: **0**
 - Every listed document has an explicit owner, lifecycle, authority, and review interval.
 
 ### Types
 
 - `historical`: 14
-- `reference`: 20
+- `reference`: 23
 - `runbook`: 2
 - `working`: 2
 
 ### Lifecycle
 
 - `active`: 16
-- `draft`: 8
+- `draft`: 11
 - `historical`: 14
 
 ## Documents
@@ -66,7 +66,10 @@ This page is generated from the validated front matter in this repository. Cross
 | [Settlement Contracts](settlement-contracts/README.md) | `reference` | `active` | `machine-readable-settlement-contract-index` |
 | [WoloChain Testnet Ops](testnet-ops.md) | `runbook` | `active` | `legacy-testnet-operations` |
 | [War Satchel C3 Chain Evidence](war-satchel-chain-evidence-c3.md) | `reference` | `draft` | `source-only-war-satchel-chain-evidence` |
+| [War Satchel Controlled Release Gates](war-satchel-controlled-release.md) | `reference` | `draft` | `source-integration-proof-not-production-approval` |
 | [War Satchel C2 Custody Capability](war-satchel-custody-c2.md) | `reference` | `draft` | `source-only-war-satchel-custody-capability` |
+| [War Satchel Exact Source Artifact Contract](war-satchel-exact-source-artifact.md) | `reference` | `draft` | `source-artifact-proof-not-runtime-or-financial-approval` |
+| [Authenticated War Satchel Financial Bridge](war-satchel-financial-bridge.md) | `reference` | `draft` | `source-integration-proof-not-production-approval` |
 | [War Satchel Integration Evidence and Operator Handoff](war-satchel-integration-readiness.md) | `reference` | `draft` | `source-integration-proof-not-production-approval` |
 | [War Satchel Mainnet Execution and Operator Gates](war-satchel-mainnet-execution.md) | `reference` | `draft` | `restricted-satchel-execution-and-provisioning-contract` |
 | [AoE2WAR Warbound Trophies](warbound-trophies.md) | `working` | `draft` | `undeployed-warbound-module-design` |

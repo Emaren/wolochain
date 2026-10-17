@@ -2,7 +2,7 @@ name: Satchel execution source proof
 
 on:
   pull_request:
-    branches: [wolo-1-mainnet-prep, codex/satchel-mainnet-execution]
+    branches: [wolo-1-mainnet-prep, codex/satchel-mainnet-execution, codex/satchel-source-integration-proof]
   workflow_dispatch:
 
 permissions:
@@ -28,21 +28,13 @@ jobs:
         env:
           CGO_ENABLED: 1
         run: go test -race ./internal/satchelservice ./internal/satchel ./cmd/wolosatcheld -count=1
+      - name: Independently verify HD signed financial wire fixtures
+        run: node scripts/check-satchel-financial-bridge-fixture.mjs
+      - name: Real isolated SDK to offline financial verifier roundtrip
+        run: python3 scripts/check-satchel-financial-proof-roundtrip.py
       - name: Reproduce the two immutable baseline defects offline
         env:
           CGO_ENABLED: 1
         run: python3 scripts/check-satchel-multileg-regression.py
-      - name: Build isolated signer and paired settlement candidate
-        env:
-          OUTPUT: ${{ runner.temp }}/satchel-source-candidate
-        run: |
-          mkdir -p "$OUTPUT"
-          go build -trimpath -o "$OUTPUT/wolosatcheld" ./cmd/wolosatcheld
-          go build -trimpath -o "$OUTPUT/wolochaind-settlement-UNDEPLOYED" ./cmd/wolochaind
-          git diff --exit-code
-          python3 scripts/satchel-source-artifact.py "$OUTPUT"
-      - uses: actions/upload-artifact@v4
-        with:
-          name: satchel-and-settlement-source-UNDEPLOYED
-          path: ${{ runner.temp }}/satchel-source-candidate/
-          retention-days: 14
+      # Exact artifacts use the shared pinned-profile builder in
+      # composed-satcheld-exact-artifact.yml. This lane remains source testing.

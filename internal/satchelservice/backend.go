@@ -247,6 +247,11 @@ func (b *KeyringBackend) Sign(ctx context.Context, r TransferRequest) (SignedTra
 	publicBytes, _ := proto.Marshal(&secp.PubKey{Key: b.publicKey.Key})
 	authBytes, _ := proto.Marshal(&txapi.AuthInfo{SignerInfos: []*txapi.SignerInfo{{PublicKey: &anypb.Any{TypeUrl: "/cosmos.crypto.secp256k1.PubKey", Value: publicBytes}, ModeInfo: &txapi.ModeInfo{Sum: &txapi.ModeInfo_Single_{Single: &txapi.ModeInfo_Single{Mode: signapi.SignMode_SIGN_MODE_DIRECT}}}, Sequence: sequence}}, Fee: &txapi.Fee{Amount: []*base.Coin{{Denom: "uwolo", Amount: b.cfg.FeesUWolo}}, GasLimit: b.cfg.GasLimit}})
 	signBytes, _ := proto.Marshal(&txapi.SignDoc{BodyBytes: bodyBytes, AuthInfoBytes: authBytes, ChainId: "wolo-1", AccountNumber: number})
+	// Account/head I/O must not allow owner consent or the independent approval
+	// to expire between validation and entering the irreversible signing call.
+	if ctx.Err() != nil || b.validateRequest(r, true) != nil {
+		return SignedTransaction{}, ErrPreSignRefused
+	}
 	signature, public, err := b.signer.Sign(b.cfg.KeyName, signBytes, signing.SignMode_SIGN_MODE_DIRECT)
 	if err != nil || ctx.Err() != nil || public == nil || !bytes.Equal(public.Bytes(), b.publicKey.Key) || !b.publicKey.VerifySignature(signBytes, signature) {
 		return SignedTransaction{}, ErrBackend

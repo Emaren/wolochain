@@ -25,28 +25,30 @@ import (
 )
 
 type TransferRequest struct {
-	OperationID string              `json:"operation_id"`
-	ChainID     string              `json:"chain_id"`
-	Denom       string              `json:"denom"`
-	Sender      string              `json:"sender"`
-	Recipient   string              `json:"recipient"`
-	AmountUWolo string              `json:"amount_uwolo"`
-	Memo        string              `json:"memo"`
-	Kind        string              `json:"kind"`
-	OwnerID     string              `json:"owner_id,omitempty"`
-	Approval    *WithdrawalApproval `json:"approval,omitempty"`
+	OperationID  string                  `json:"operation_id"`
+	ChainID      string                  `json:"chain_id"`
+	Denom        string                  `json:"denom"`
+	Sender       string                  `json:"sender"`
+	Recipient    string                  `json:"recipient"`
+	AmountUWolo  string                  `json:"amount_uwolo"`
+	Memo         string                  `json:"memo"`
+	Kind         string                  `json:"kind"`
+	OwnerID      string                  `json:"owner_id,omitempty"`
+	Approval     *WithdrawalApproval     `json:"approval,omitempty"`
+	OwnerMandate *OwnerWithdrawalMandate `json:"owner_mandate,omitempty"`
 }
 type WithdrawalApproval struct {
-	WithdrawalID string `json:"withdrawal_id"`
-	ChallengeID  string `json:"challenge_id"`
-	OwnerID      string `json:"owner_id"`
-	Recipient    string `json:"recipient"`
-	AmountUWolo  string `json:"amount_uwolo"`
-	Memo         string `json:"memo"`
-	HoldDigest   string `json:"hold_digest"`
-	IssuedAt     int64  `json:"issued_at"`
-	ExpiresAt    int64  `json:"expires_at"`
-	Signature    string `json:"signature"`
+	WithdrawalID      string `json:"withdrawal_id"`
+	ChallengeID       string `json:"challenge_id"`
+	OwnerID           string `json:"owner_id"`
+	Recipient         string `json:"recipient"`
+	AmountUWolo       string `json:"amount_uwolo"`
+	Memo              string `json:"memo"`
+	HoldDigest        string `json:"hold_digest"`
+	ReservationDigest string `json:"reservation_digest"`
+	IssuedAt          int64  `json:"issued_at"`
+	ExpiresAt         int64  `json:"expires_at"`
+	Signature         string `json:"signature"`
 }
 type SignedTransaction struct {
 	Bytes                   []byte
@@ -137,7 +139,11 @@ func hashJSON(v any) string {
 func fingerprint(r TransferRequest) string {
 	// Approval renewal cannot change an economic operation's identity. The
 	// original accepted approval is retained durably, never replaced by a retry.
-	return hashJSON([]string{"satchel-operation-v1", r.OperationID, r.Kind, r.ChainID, r.Denom, r.Sender, r.Recipient, r.AmountUWolo, r.Memo, r.OwnerID})
+	fields := []string{"satchel-operation-v1", r.OperationID, r.Kind, r.ChainID, r.Denom, r.Sender, r.Recipient, r.AmountUWolo, r.Memo, r.OwnerID}
+	if r.OwnerMandate != nil {
+		fields = append(fields, OwnerMandateDigest(*r.OwnerMandate))
+	}
+	return hashJSON(fields)
 }
 
 // ApprovalMessage is a domain-separated, ordered JSON array, not a client
@@ -158,7 +164,7 @@ func (p Policy) verifyWithdrawal(r TransferRequest, now time.Time) error {
 	if e != nil || len(sig) != ed25519.SignatureSize || base64.StdEncoding.EncodeToString(sig) != a.Signature || !ed25519.Verify(p.WithdrawalApprovalKey, ApprovalMessage(*a, p.Vault), sig) {
 		return errors.New("withdrawal_approval_invalid")
 	}
-	return nil
+	return verifyOwnerWithdrawal(r, now)
 }
 func (p Policy) validate(r TransferRequest, now time.Time) error {
 	if !ids.MatchString(r.OperationID) || r.ChainID != "wolo-1" || r.Denom != "uwolo" || r.Sender != p.Vault || !validAddress(r.Recipient) || r.Recipient == p.Vault || !amount(r.AmountUWolo, p.MaxAmountUWolo) {
@@ -169,7 +175,7 @@ func (p Policy) validate(r TransferRequest, now time.Time) error {
 		// Ticket memo is server issued; bind its whole exact bytes to this durable
 		// request. App admission/owner/game caps remain the HD ledger's authority.
 		n, _ := strconv.ParseUint(r.AmountUWolo, 10, 64)
-		if n > 1000000000 || n%1000000 != 0 || !wagerIDs.MatchString(r.OperationID) || r.Recipient != p.BettingEscrow || r.Approval != nil || !ticketMemo.MatchString(r.Memo) {
+		if n > 1000000000 || n%1000000 != 0 || !wagerIDs.MatchString(r.OperationID) || r.Recipient != p.BettingEscrow || r.Approval != nil || r.OwnerMandate != nil || (r.OwnerID != "" && !ownerUIDPattern.MatchString(r.OwnerID)) || !ticketMemo.MatchString(r.Memo) {
 			return errors.New("wager_policy_refused")
 		}
 	case "withdrawal":
@@ -439,6 +445,15 @@ func (e *Engine) Submit(ctx context.Context, req TransferRequest) (Result, error
 	r = held(r, "broadcast_started")
 	if err = e.write(r); err != nil {
 		return Result{}, errors.New("durability_failed")
+	}
+	if req.Kind == "withdrawal" && e.policy.validate(req, e.now()) != nil {
+		// A signature already exists: expiry cannot release its sequence/hold,
+		// authorize a replacement or turn this into a retryable refusal.
+		r = held(r, "withdrawal_authority_expired_before_broadcast")
+		if err = e.write(r); err != nil {
+			return Result{}, errors.New("durability_failed")
+		}
+		return r.Result, nil
 	}
 	out, err := e.backend.Broadcast(ctx, signed)
 	if err == nil && out.Status == "ACCEPTED" && out.Code == 0 {

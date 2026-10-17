@@ -15,6 +15,27 @@ sensitivity: "restricted"
 
 # War Satchel Integration Evidence and Operator Handoff
 
+## Authenticated bridge continuation, October 17
+
+The [financial bridge](war-satchel-financial-bridge.md) at implementation
+`155fcf67fb2127a2227de5ea785e51bdbb0155c0` now exports real portable Comet
+evidence and verifies it offline against operator-owned trust and separately
+stored expected owner/economic/hash context. New withdrawals require exact HD
+Keplr consent plus the independent reservation approval. Signed v2 per-leg
+conservation checks are reused. The [shared artifact profile](war-satchel-exact-source-artifact.md)
+builds that exact composed `wolosatcheld`; it cannot be confused with the legacy
+`526d5eb6` binary.
+
+The frozen source passes 1,320 Go tests including 271 top-level tests, with five
+existing skips. Node crypto independently verifies the signed wire fixtures;
+real isolated SDK execution feeds the actual offline verifier and rejects forged
+owner/hash/root/REST evidence. Production is still BLOCKED for every financial
+flow. HD #638 at `c4fd91e548042807fb02c000f7360e87efa4801d` retains its hold and
+has not consumed this new bridge. See [fresh live identities and controlled
+release gates](war-satchel-controlled-release.md) for the finite remaining
+operator prerequisites. The composition-baseline observations below remain
+history; no earlier source-green report is a live activation receipt.
+
 This source combines unchanged PR #25 at `42ecb12c130b383677f913112baa07debd52a5ab`
 with PR #26 at `526d5eb6123f6cc0394b5e78489c668e77e46106` in an isolated branch.
 Neither original branch is modified or merged by this proof. There were no Go
