@@ -2,8 +2,6 @@ package satchelservice
 
 import (
 	"context"
-	"crypto/ed25519"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"regexp"
@@ -17,17 +15,29 @@ import (
 // money has moved. The signature binds the original funded operation to exactly
 // one owner's claim/ledger allocation. No escrow key enters this service.
 type ReturnApproval struct {
-	OperationID      string `json:"operation_id"`
-	ClaimID          string `json:"claim_id"`
-	OwnerID          string `json:"owner_id"`
-	ClaimKind        string `json:"claim_kind"`
-	AmountUWolo      string `json:"amount_uwolo"`
-	AllocationDigest string `json:"allocation_digest"`
-	IssuedAt         int64  `json:"issued_at"`
-	ExpiresAt        int64  `json:"expires_at"`
-	Signature        string `json:"signature"`
+	Version          int               `json:"version"`
+	TicketID         string            `json:"ticket_id"`
+	MarketID         string            `json:"market_id"`
+	LegID            string            `json:"leg_id"`
+	EntitlementID    string            `json:"entitlement_id"`
+	Allocation       *ReturnAllocation `json:"allocation"`
+	OperationID      string            `json:"operation_id"`
+	ClaimID          string            `json:"claim_id"`
+	OwnerID          string            `json:"owner_id"`
+	ClaimKind        string            `json:"claim_kind"`
+	AmountUWolo      string            `json:"amount_uwolo"`
+	AllocationDigest string            `json:"allocation_digest"`
+	IssuedAt         int64             `json:"issued_at"`
+	ExpiresAt        int64             `json:"expires_at"`
+	Signature        string            `json:"signature"`
 }
 type ReturnReceipt struct {
+	Version          int    `json:"version"`
+	TicketID         string `json:"ticket_id"`
+	MarketID         string `json:"market_id"`
+	LegID            string `json:"leg_id"`
+	EntitlementID    string `json:"entitlement_id"`
+	AllocationID     string `json:"allocation_id"`
 	OperationID      string `json:"operation_id"`
 	ClaimID          string `json:"claim_id"`
 	OwnerID          string `json:"owner_id"`
@@ -66,62 +76,66 @@ var returns = []byte("owner-returns-v1")
 var claimIDs = regexp.MustCompile(`^[1-9][0-9]{0,11}$`)
 
 func ReturnApprovalMessage(a ReturnApproval, p Policy) []byte {
-	b, _ := json.Marshal([]any{"aoe2war/satchel/claim-return-approval/v1", "wolo-1", "uwolo", p.BettingEscrow, p.Vault, a.OperationID, a.ClaimID, a.OwnerID, a.ClaimKind, a.AmountUWolo, a.AllocationDigest, a.IssuedAt, a.ExpiresAt})
+	if a.Version != 2 {
+		b, _ := json.Marshal([]any{"aoe2war/satchel/claim-return-approval/v1", "wolo-1", "uwolo", p.BettingEscrow, p.Vault, a.OperationID, a.ClaimID, a.OwnerID, a.ClaimKind, a.AmountUWolo, a.AllocationDigest, a.IssuedAt, a.ExpiresAt})
+		return b
+	}
+	b, _ := json.Marshal([]any{"aoe2war/satchel/claim-return-approval/v2", "wolo-1", "uwolo", p.BettingEscrow, p.Vault, a.Version, a.OperationID, a.ClaimID, a.OwnerID, a.TicketID, a.MarketID, a.LegID, a.EntitlementID, a.ClaimKind, a.AmountUWolo, a.AllocationDigest, a.IssuedAt, a.ExpiresAt})
 	return b
 }
 func returnFingerprint(a ReturnApproval) string {
-	return hashJSON([]string{a.OperationID, a.ClaimID, a.OwnerID, a.ClaimKind, a.AmountUWolo, a.AllocationDigest})
+	if a.Version != 2 || a.Allocation == nil {
+		return hashJSON([]string{a.OperationID, a.ClaimID, a.OwnerID, a.ClaimKind, a.AmountUWolo, a.AllocationDigest})
+	}
+	p := a.Allocation
+	principal := ""
+	for _, leg := range p.Legs {
+		for _, entry := range leg.Entitlements {
+			if entry.ClaimID == a.ClaimID {
+				principal = entry.PrincipalUWolo
+			}
+		}
+	}
+	return hashJSON([]any{"return-claim-v2", a.Version, a.OperationID, a.ClaimID, a.OwnerID, a.TicketID, a.MarketID, a.LegID, a.EntitlementID, a.ClaimKind, a.AmountUWolo, p.AllocationID, p.FundingTxHash, p.ReturnCapUWolo, p.FundsBudgetID, p.FundsAvailableUWolo, p.BankEvidenceDigest, p.BankHeight, p.BankBlockHash, principal})
 }
 func (e *Engine) validateReturn(tx *bolt.Tx, a ReturnApproval) error {
-	r, err := load(tx, a.OperationID)
-	if err != nil {
-		return err
-	}
-	if e.backend.ValidateSigned(r.Request, r.Signed) != nil || r.Request.Kind != "wager" || r.Result.Status != "CONFIRMED" || r.Request.Recipient != e.policy.BettingEscrow || !claimIDs.MatchString(a.ClaimID) || a.ClaimID == "889" || a.OwnerID == "" || len(a.OwnerID) > 128 || !nonzeroDigest(a.AllocationDigest) || !amount(a.AmountUWolo, 50000000000) ||
-		(r.Request.OwnerID != "" && r.Request.OwnerID != a.OwnerID) || (a.ClaimKind != "bet_payout" && a.ClaimKind != "bet_refund") || (a.ClaimKind == "bet_refund" && a.AmountUWolo != r.Request.AmountUWolo) {
-		return errors.New("owner_return_policy_refused")
-	}
-	now := e.now().Unix()
-	if a.IssuedAt > now || a.ExpiresAt <= now || a.ExpiresAt <= a.IssuedAt || uint64(a.ExpiresAt)-uint64(a.IssuedAt) > 300 || len(e.policy.WithdrawalApprovalKey) != ed25519.PublicKeySize {
+	return e.validateReturnAt(tx, a, true)
+}
+func (e *Engine) validateReturnAt(tx *bolt.Tx, a ReturnApproval, fresh bool) error {
+	if a.Version != 2 || !ids.MatchString(a.OwnerID) || !claimIDs.MatchString(a.ClaimID) || a.ClaimID == "889" || !validReviewTime(a.IssuedAt, a.ExpiresAt, e.now().Unix(), fresh) || !verifyReview(e.policy.WithdrawalApprovalKey, ReturnApprovalMessage(a, e.policy), a.Signature) {
 		return errors.New("owner_return_approval_refused")
 	}
-	sig, err := base64.StdEncoding.Strict().DecodeString(a.Signature)
-	if err != nil || len(sig) != ed25519.SignatureSize || base64.StdEncoding.EncodeToString(sig) != a.Signature || !ed25519.Verify(e.policy.WithdrawalApprovalKey, ReturnApprovalMessage(a, e.policy), sig) {
-		return errors.New("owner_return_approval_refused")
-	}
-	return nil
+	_, err := e.validateAllocation(tx, a, fresh)
+	return err
 }
 func (e *Engine) prepareReturn(a ReturnApproval) (returnRecord, error) {
 	var out returnRecord
 	err := e.db.Update(func(tx *bolt.Tx) error {
+		if err := e.validateReturn(tx, a); err != nil {
+			return err
+		}
 		b, err := tx.CreateBucketIfNotExists(returns)
 		if err != nil {
 			return err
 		}
 		old := b.Get([]byte(a.ClaimID))
-		if old != nil {
-			if json.Unmarshal(old, &out) != nil || out.Fingerprint != returnFingerprint(out.Approval) {
-				return errors.New("return_state_corrupt")
+		exists := old != nil
+		if exists {
+			if json.Unmarshal(old, &out) != nil || out.Approval.Version != 2 || out.Fingerprint != returnFingerprint(out.Approval) {
+				return errors.New("legacy_or_corrupt_return_requires_review")
 			}
 			if out.Fingerprint != returnFingerprint(a) {
 				return errors.New("return_allocation_conflict")
 			}
-			if out.Receipt != nil {
-				if !validReturnReceipt(out, *out.Receipt) {
-					return errors.New("return_state_corrupt")
-				}
-				return nil
+			if out.Receipt != nil && !validReturnReceipt(out, *out.Receipt) {
+				return errors.New("return_state_corrupt")
 			}
 		}
-		key := []byte("return-operation:" + a.OperationID)
-		if previous := tx.Bucket(meta).Get(key); previous != nil && string(previous) != a.ClaimID {
-			return errors.New("operation_return_already_allocated")
-		}
-		if err := e.validateReturn(tx, a); err != nil {
+		if err := e.reserveAllocation(tx, a, !exists); err != nil {
 			return err
 		}
-		if err := tx.Bucket(meta).Put(key, []byte(a.ClaimID)); err != nil {
-			return err
+		if exists {
+			return nil
 		}
 		out = returnRecord{Approval: a, Fingerprint: returnFingerprint(a)}
 		data, _ := json.Marshal(out)
@@ -131,7 +145,7 @@ func (e *Engine) prepareReturn(a ReturnApproval) (returnRecord, error) {
 }
 
 // PrepareReturnRun durably binds owner/claim before returning an exact escrow
-// execution request. A full unmatched refund is the original entire stake;
+// execution request. An unmatched refund is its exact allocated stake portion;
 // there is no 2% deduction or fee transfer in this run. Chain gas is separate.
 func (e *Engine) PrepareReturnRun(ctx context.Context, a ReturnApproval) (ReturnRun, error) {
 	e.mu.Lock()
@@ -155,12 +169,40 @@ func (e *Engine) ReconcileReturn(ctx context.Context, a ReturnApproval, hash str
 		return ReturnReceipt{}, errors.New("return_proof_unavailable")
 	}
 	hash = strings.ToUpper(hash)
-	r, err := e.prepareReturn(a)
+	if ctx.Err() != nil {
+		return ReturnReceipt{}, ctx.Err()
+	}
+	var r returnRecord
+	err := e.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket(returns)
+		if b == nil {
+			return errors.New("return_not_prepared")
+		}
+		data := b.Get([]byte(a.ClaimID))
+		if data == nil {
+			return errors.New("return_not_prepared")
+		}
+		if json.Unmarshal(data, &r) != nil || r.Approval.Version != 2 || r.Fingerprint != returnFingerprint(r.Approval) {
+			return errors.New("legacy_or_corrupt_return_requires_review")
+		}
+		if r.Fingerprint != returnFingerprint(a) {
+			return errors.New("return_allocation_conflict")
+		}
+		if err := e.validateReturnAt(tx, a, false); err != nil {
+			return err
+		}
+		// Reconciliation uses the already durable authority; it cannot adopt a new
+		// allocation revision, reserve another entitlement or transmit a payment.
+		if a.AllocationDigest != r.Approval.AllocationDigest {
+			return errors.New("reconciliation_allocation_conflict")
+		}
+		return nil
+	})
 	if err != nil {
 		return ReturnReceipt{}, err
 	}
 	if r.Receipt != nil {
-		if r.Receipt.TxHash != hash {
+		if !validReturnReceipt(r, *r.Receipt) || r.Receipt.TxHash != hash {
 			return ReturnReceipt{}, errors.New("return_transaction_conflict")
 		}
 		return *r.Receipt, nil
@@ -170,7 +212,7 @@ func (e *Engine) ReconcileReturn(ctx context.Context, a ReturnApproval, hash str
 		return ReturnReceipt{}, errors.New("return_proof_unavailable")
 	}
 	o := proof.Observation()
-	receipt := ReturnReceipt{OperationID: a.OperationID, ClaimID: a.ClaimID, OwnerID: a.OwnerID, ClaimKind: a.ClaimKind, AmountUWolo: a.AmountUWolo, TxHash: hash, ReceiptID: proof.Receipt().ID(), Height: o.Height, BlockHash: o.BlockHash}
+	receipt := ReturnReceipt{Version: 2, TicketID: a.TicketID, MarketID: a.MarketID, LegID: a.LegID, EntitlementID: a.EntitlementID, AllocationID: a.Allocation.AllocationID, OperationID: a.OperationID, ClaimID: a.ClaimID, OwnerID: a.OwnerID, ClaimKind: a.ClaimKind, AmountUWolo: a.AmountUWolo, TxHash: hash, ReceiptID: proof.Receipt().ID(), Height: o.Height, BlockHash: o.BlockHash}
 	if err = e.recordReturn(r, receipt); err != nil {
 		return ReturnReceipt{}, err
 	}
@@ -181,6 +223,22 @@ func (e *Engine) recordReturn(r returnRecord, receipt ReturnReceipt) error {
 		return errors.New("return_receipt_invalid")
 	}
 	return e.db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket(returns)
+		if b == nil {
+			return errors.New("return_not_prepared")
+		}
+		var stored returnRecord
+		data := b.Get([]byte(r.Approval.ClaimID))
+		if data == nil || json.Unmarshal(data, &stored) != nil || stored.Fingerprint != returnFingerprint(stored.Approval) || stored.Fingerprint != r.Fingerprint {
+			return errors.New("return_state_corrupt")
+		}
+		if stored.Receipt != nil {
+			if *stored.Receipt != receipt {
+				return errors.New("return_transaction_conflict")
+			}
+			return nil
+		}
+		r = stored
 		// Consume the physical single-MsgSend transaction, not a caller-selected
 		// bank event representation. Never mint a second receipt namespace.
 		key := []byte("wolo-1:" + receipt.TxHash)
@@ -192,11 +250,11 @@ func (e *Engine) recordReturn(r returnRecord, receipt ReturnReceipt) error {
 			return err
 		}
 		r.Receipt = &receipt
-		data, _ := json.Marshal(r)
+		data, _ = json.Marshal(r)
 		return tx.Bucket(returns).Put([]byte(r.Approval.ClaimID), data)
 	})
 }
 
 func validReturnReceipt(r returnRecord, p ReturnReceipt) bool {
-	return p.OperationID == r.Approval.OperationID && p.ClaimID == r.Approval.ClaimID && p.OwnerID == r.Approval.OwnerID && p.ClaimKind == r.Approval.ClaimKind && p.AmountUWolo == r.Approval.AmountUWolo && !p.CreditAuthorized && p.Height > 0 && nonzeroDigest(p.BlockHash) && digestRE.MatchString(p.TxHash) && p.TxHash == strings.ToUpper(p.TxHash) && (p.ReceiptID == "wolo-1:"+p.TxHash+":0" || p.ReceiptID == "wolo-1:"+p.TxHash+":1")
+	return p.Version == 2 && r.Approval.Version == 2 && r.Approval.Allocation != nil && p.TicketID == r.Approval.TicketID && p.MarketID == r.Approval.MarketID && p.LegID == r.Approval.LegID && p.EntitlementID == r.Approval.EntitlementID && p.AllocationID == r.Approval.Allocation.AllocationID && p.OperationID == r.Approval.OperationID && p.ClaimID == r.Approval.ClaimID && p.OwnerID == r.Approval.OwnerID && p.ClaimKind == r.Approval.ClaimKind && p.AmountUWolo == r.Approval.AmountUWolo && !p.CreditAuthorized && p.Height > 0 && nonzeroDigest(p.BlockHash) && digestRE.MatchString(p.TxHash) && p.TxHash == strings.ToUpper(p.TxHash) && (p.ReceiptID == "wolo-1:"+p.TxHash+":0" || p.ReceiptID == "wolo-1:"+p.TxHash+":1")
 }

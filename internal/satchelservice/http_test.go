@@ -529,11 +529,11 @@ func (b *httpTestReturnBackend) ReconcileClaimReturn(_ context.Context, a Return
 	if b.receipt != nil {
 		return *b.receipt, b.err
 	}
-	return ReturnReceipt{OperationID: a.OperationID, ClaimID: a.ClaimID, OwnerID: a.OwnerID, ClaimKind: a.ClaimKind, AmountUWolo: a.AmountUWolo, TxHash: hash, ReceiptID: "wolo-1:" + hash + ":0", Height: 123, BlockHash: strings.Repeat("B", 64)}, b.err
+	return ReturnReceipt{Version: 2, TicketID: a.TicketID, MarketID: a.MarketID, LegID: a.LegID, EntitlementID: a.EntitlementID, AllocationID: a.Allocation.AllocationID, OperationID: a.OperationID, ClaimID: a.ClaimID, OwnerID: a.OwnerID, ClaimKind: a.ClaimKind, AmountUWolo: a.AmountUWolo, TxHash: hash, ReceiptID: "wolo-1:" + hash + ":0", Height: 123, BlockHash: strings.Repeat("B", 64)}, b.err
 }
 
 func TestPrivateHTTPReturnPreparationIsNotExecutionOrCredit(t *testing.T) {
-	a := ReturnApproval{OperationID: "satchel:ticket:1", ClaimID: "1", OwnerID: "owner-1", ClaimKind: "bet_refund", AmountUWolo: "1000000", AllocationDigest: strings.Repeat("C", 64), Signature: "synthetic"}
+	a := testReturnApproval(t, "satchel:ticket:1", "1")
 	data, _ := json.Marshal(a)
 	backend := &httpTestReturnBackend{httpTestBackend: &httpTestBackend{}, vault: testHTTPAddress(t, 100)}
 	handler := testHTTPHandler(t, backend, testHTTPConfig(t))
@@ -551,7 +551,7 @@ func TestPrivateHTTPReturnPreparationIsNotExecutionOrCredit(t *testing.T) {
 }
 
 func TestPrivateHTTPExpiredPermitAllowsOnlyReturnReconciliation(t *testing.T) {
-	a := ReturnApproval{OperationID: "satchel:ticket:1", ClaimID: "1", OwnerID: "owner-1", ClaimKind: "bet_refund", AmountUWolo: "1000000"}
+	a := testReturnApproval(t, "satchel:ticket:1", "1")
 	backend := &httpTestReturnBackend{httpTestBackend: &httpTestBackend{}, vault: testHTTPAddress(t, 100)}
 	cfg := testHTTPConfig(t)
 	cfg.Authorize = func(context.Context) bool { return false }
@@ -572,7 +572,7 @@ func TestPrivateHTTPExpiredPermitAllowsOnlyReturnReconciliation(t *testing.T) {
 }
 
 func TestPrivateHTTPMalformedOrForgedReturnEvidenceIsUnavailable(t *testing.T) {
-	a := ReturnApproval{OperationID: "satchel:ticket:1", ClaimID: "1", OwnerID: "owner-1", ClaimKind: "bet_refund", AmountUWolo: "1000000"}
+	a := testReturnApproval(t, "satchel:ticket:1", "1")
 	for _, test := range []struct {
 		name, path, body string
 		backend          *httpTestReturnBackend

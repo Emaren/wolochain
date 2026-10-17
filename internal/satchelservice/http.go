@@ -253,7 +253,7 @@ func (h *privateHTTPHandler) claimReturn(ctx context.Context, w http.ResponseWri
 	}
 	if path == "/satchel/v1/returns/prepare" {
 		var approval ReturnApproval
-		if strictHTTPJSON(data, &approval) != nil || !httpOperationPattern.MatchString(approval.OperationID) || approval.ClaimID == "" || approval.OwnerID == "" {
+		if strictHTTPJSON(data, &approval) != nil || !httpReturnV2(approval) {
 			httpFailure(w, http.StatusBadRequest, "invalid_return_approval")
 			return
 		}
@@ -280,7 +280,7 @@ func (h *privateHTTPHandler) claimReturn(ctx context.Context, w http.ResponseWri
 		Approval *ReturnApproval `json:"approval"`
 		TxHash   string          `json:"tx_hash"`
 	}
-	if strictHTTPJSON(data, &input) != nil || input.Approval == nil || !httpHashPattern.MatchString(input.TxHash) {
+	if strictHTTPJSON(data, &input) != nil || input.Approval == nil || !httpReturnV2(*input.Approval) || !httpHashPattern.MatchString(input.TxHash) {
 		httpFailure(w, http.StatusBadRequest, "invalid_return_reconciliation")
 		return
 	}
@@ -290,13 +290,17 @@ func (h *privateHTTPHandler) claimReturn(ctx context.Context, w http.ResponseWri
 		return
 	}
 	a := input.Approval
-	if receipt.OperationID != a.OperationID || receipt.ClaimID != a.ClaimID || receipt.OwnerID != a.OwnerID || receipt.ClaimKind != a.ClaimKind || receipt.AmountUWolo != a.AmountUWolo ||
+	if receipt.Version != 2 || receipt.TicketID != a.TicketID || receipt.MarketID != a.MarketID || receipt.LegID != a.LegID || receipt.EntitlementID != a.EntitlementID || receipt.AllocationID != a.Allocation.AllocationID || receipt.OperationID != a.OperationID || receipt.ClaimID != a.ClaimID || receipt.OwnerID != a.OwnerID || receipt.ClaimKind != a.ClaimKind || receipt.AmountUWolo != a.AmountUWolo ||
 		receipt.TxHash != strings.ToUpper(input.TxHash) || receipt.Height <= 0 || !httpHashPattern.MatchString(receipt.BlockHash) || receipt.CreditAuthorized ||
 		(receipt.ReceiptID != "wolo-1:"+receipt.TxHash+":0" && receipt.ReceiptID != "wolo-1:"+receipt.TxHash+":1") {
 		httpFailure(w, http.StatusServiceUnavailable, "return_receipt_identity_unverifiable")
 		return
 	}
 	httpWrite(w, http.StatusOK, receipt)
+}
+
+func httpReturnV2(a ReturnApproval) bool {
+	return a.Version == 2 && httpOperationPattern.MatchString(a.OperationID) && a.ClaimID != "" && a.OwnerID != "" && a.TicketID != "" && a.MarketID != "" && a.LegID != "" && a.EntitlementID != "" && a.Allocation != nil && a.Allocation.Version == 2 && a.Allocation.AllocationID != ""
 }
 
 func (h *privateHTTPHandler) authorized(r *http.Request) bool {
@@ -433,6 +437,21 @@ func exactHTTPFields(data []byte, shape reflect.Type) bool {
 			return true
 		}
 		return exactHTTPFields(data, shape.Elem())
+	}
+	if shape.Kind() == reflect.Slice || shape.Kind() == reflect.Array {
+		if bytes.Equal(bytes.TrimSpace(data), []byte("null")) {
+			return true
+		}
+		var entries []json.RawMessage
+		if json.Unmarshal(data, &entries) != nil {
+			return false
+		}
+		for _, entry := range entries {
+			if !exactHTTPFields(entry, shape.Elem()) {
+				return false
+			}
+		}
+		return true
 	}
 	if shape.Kind() != reflect.Struct {
 		return true

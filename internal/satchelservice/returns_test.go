@@ -14,9 +14,18 @@ import (
 )
 
 func testReturnApproval(t *testing.T, operationID, claimID string) ReturnApproval {
-	a := ReturnApproval{OperationID: operationID, ClaimID: claimID, OwnerID: "owner-1", ClaimKind: "bet_refund", AmountUWolo: "1000000", AllocationDigest: strings.Repeat("D", 64), IssuedAt: 1799999990, ExpiresAt: 1800000100}
+	ticket := strings.TrimPrefix(operationID, "satchel:ticket:")
+	request := engineTestWager(t, ticket)
+	plan := ReturnAllocation{Version: 2, AllocationID: "allocation:" + ticket, Revision: 1, OperationID: operationID, OwnerID: "owner-1", TicketID: ticket,
+		FundingTxHash: engineTestSigned(request).Hash, ReturnCapUWolo: "50000000000", FundsBudgetID: "bank-review-1", FundsAvailableUWolo: "50000000000", BankEvidenceDigest: strings.Repeat("E", 64), BankHeight: 200, BankBlockHash: strings.Repeat("B", 64),
+		Legs: []ReturnLeg{{LegID: "winner", MarketID: "501", StakeUWolo: "1000000", Entitlements: []ReturnEntitlement{{EntitlementID: "entitlement:" + claimID, ClaimID: claimID, ClaimKind: "bet_refund", PrincipalUWolo: "1000000", AmountUWolo: "1000000"}}}}, IssuedAt: 1799999990, ExpiresAt: 1800000100}
+	testSignAllocation(&plan, engineTestPolicy(t))
+	a := ReturnApproval{Version: 2, TicketID: ticket, MarketID: "501", LegID: "winner", EntitlementID: "entitlement:" + claimID, Allocation: &plan, OperationID: operationID, ClaimID: claimID, OwnerID: "owner-1", ClaimKind: "bet_refund", AmountUWolo: "1000000", AllocationDigest: AllocationDigest(plan, engineTestPolicy(t)), IssuedAt: 1799999990, ExpiresAt: 1800000100}
 	testSignReturnApproval(&a, engineTestPolicy(t))
 	return a
+}
+func testSignAllocation(a *ReturnAllocation, p Policy) {
+	a.Signature = base64.StdEncoding.EncodeToString(ed25519.Sign(engineTestApprovalKey(), AllocationMessage(*a, p)))
 }
 func testSignReturnApproval(a *ReturnApproval, p Policy) {
 	a.Signature = base64.StdEncoding.EncodeToString(ed25519.Sign(engineTestApprovalKey(), ReturnApprovalMessage(*a, p)))
@@ -159,7 +168,7 @@ func TestReturnClaimAndOperationAllocationCannotBeReassigned(t *testing.T) {
 		mutate func(*ReturnApproval)
 	}{
 		{"different owner same claim", func(a *ReturnApproval) { a.OwnerID = "owner-2" }},
-		{"different claim same operation", func(a *ReturnApproval) { a.ClaimID = "102" }},
+		{"undeclared claim same operation", func(a *ReturnApproval) { a.ClaimID = "102" }},
 		{"different amount same claim", func(a *ReturnApproval) { a.ClaimKind = "bet_payout"; a.AmountUWolo = "2000000" }},
 		{"different kind same claim", func(a *ReturnApproval) { a.ClaimKind = "bet_payout" }},
 		{"different allocation same claim", func(a *ReturnApproval) { a.AllocationDigest = strings.Repeat("E", 64) }},
@@ -213,7 +222,7 @@ func TestReturnMissingTrustedProofNeverInfersPayment(t *testing.T) {
 }
 
 func testFaultInjectedReturnReceipt(a ReturnApproval, hash string, index int) ReturnReceipt {
-	return ReturnReceipt{OperationID: a.OperationID, ClaimID: a.ClaimID, OwnerID: a.OwnerID, ClaimKind: a.ClaimKind, AmountUWolo: a.AmountUWolo, TxHash: hash, ReceiptID: "wolo-1:" + hash + ":" + string(rune('0'+index)), Height: 123, BlockHash: strings.Repeat("B", 64)}
+	return ReturnReceipt{Version: 2, TicketID: a.TicketID, MarketID: a.MarketID, LegID: a.LegID, EntitlementID: a.EntitlementID, AllocationID: a.Allocation.AllocationID, OperationID: a.OperationID, ClaimID: a.ClaimID, OwnerID: a.OwnerID, ClaimKind: a.ClaimKind, AmountUWolo: a.AmountUWolo, TxHash: hash, ReceiptID: "wolo-1:" + hash + ":" + string(rune('0'+index)), Height: 123, BlockHash: strings.Repeat("B", 64)}
 }
 
 func TestReturnDuplicatePhysicalEffectsCannotBecomeOwnerCredits(t *testing.T) {
@@ -239,6 +248,9 @@ func TestReturnDuplicatePhysicalEffectsCannotBecomeOwnerCredits(t *testing.T) {
 			}
 			second := testReturnApproval(t, secondRequest.OperationID, "102")
 			second.OwnerID = "owner-2"
+			second.Allocation.OwnerID = second.OwnerID
+			testSignAllocation(second.Allocation, policy)
+			second.AllocationDigest = AllocationDigest(*second.Allocation, policy)
 			testSignReturnApproval(&second, policy)
 			if _, err := engine.PrepareReturnRun(t.Context(), second); err != nil {
 				t.Fatal(err)
@@ -270,9 +282,9 @@ func TestReturnReceiptReplayRemainsOwnerBoundAcrossRestart(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer reopened.Close()
-	reopened.now = func() time.Time { return time.Unix(1800000200, 0) }
+	reopened.now = func() time.Time { return time.Unix(1800000000, 0) }
 	if _, err := reopened.PrepareReturnRun(t.Context(), a); err != nil {
-		t.Fatalf("same already-proven receipt could not replay after expiry: %v", err)
+		t.Fatalf("same already-proven receipt could not replay after restart: %v", err)
 	}
 	a.OwnerID = "another-owner"
 	testSignReturnApproval(&a, policy)

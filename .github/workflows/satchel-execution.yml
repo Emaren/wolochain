@@ -28,6 +28,8 @@ jobs:
         env:
           CGO_ENABLED: 1
         run: go test -race ./internal/satchelservice ./internal/satchel ./cmd/wolosatcheld -count=1
+      - name: Reproduce the two immutable baseline defects offline
+        run: python3 scripts/check-satchel-multileg-regression.py
       - name: Build isolated signer and paired settlement candidate
         env:
           OUTPUT: ${{ runner.temp }}/satchel-source-candidate
