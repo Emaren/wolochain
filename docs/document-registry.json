@@ -287,7 +287,7 @@
       "owner": "wolochain-ops",
       "path": "docs/mainnet-settlement-runbook.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-10-16",
+      "reviewed_at": "2026-10-17",
       "sensitivity": "restricted",
       "sha256": "8a6d5ca9351606a02e74c72600443b5d714c84c0a54501ac96adf98264d68390",
       "source_of_truth": "runtime-evidence",
