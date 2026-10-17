@@ -1,0 +1,97 @@
+name: Legacy settlement hardening exact-source artifact (NO DEPLOY)
+
+on:
+  pull_request:
+    branches:
+      - codex/legacy-settlement-hardening
+    paths:
+      - ".github/workflows/legacy-settlement-exact-526d5-artifact.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  exact-linux-amd64-artifact:
+    name: Exact 526d5 settlement source / Linux amd64 / NON-PROMOTING
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    env:
+      REVIEWED_SOURCE: 526d5eb6123f6cc0394b5e78489c668e77e46106
+      ARTIFACT_DIR: ${{ runner.temp }}/legacy-settlement-526d5-artifact
+      CGO_ENABLED: "0"
+      GOOS: linux
+      GOARCH: amd64
+    steps:
+      - name: Checkout immutable hardened source, not PR merge HEAD
+        uses: actions/checkout@v4
+        with:
+          ref: 526d5eb6123f6cc0394b5e78489c668e77e46106
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Prove clean exact source and non-deploying CI context
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_EVENT_NAME" = "pull_request"
+          test "$(git rev-parse HEAD)" = "$REVIEWED_SOURCE"
+          test -z "$(git status --porcelain --untracked-files=all)"
+          test "$(git rev-parse --is-shallow-repository)" = true
+          test "$GOOS" = linux && test "$GOARCH" = amd64
+          echo "PASS immutable hardened source $REVIEWED_SOURCE"
+          echo "NO DEPLOY / NO SERVICE RESTART / NO MAINNET TRANSACTION"
+
+      - name: Install Go from reviewed source module
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Exact source financial/settlement regression contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          go test -tags go1.27 ./cmd/wolochaind/cmd -count=1
+          go vet -tags go1.27 ./cmd/wolochaind/cmd
+          test "$(git rev-parse HEAD)" = "$REVIEWED_SOURCE"
+          test -z "$(git status --porcelain --untracked-files=all)"
+
+      - name: Build clean-source candidate and bind VCS / SHA-256 proof
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$ARTIFACT_DIR"
+          GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -tags go1.27 -o "$ARTIFACT_DIR/wolochaind-settlement-only-linux-amd64" ./cmd/wolochaind
+          go version -m "$ARTIFACT_DIR/wolochaind-settlement-only-linux-amd64" > "$ARTIFACT_DIR/go-build-metadata.txt"
+          grep -F "vcs.revision=$REVIEWED_SOURCE" "$ARTIFACT_DIR/go-build-metadata.txt"
+          grep -F 'vcs.modified=false' "$ARTIFACT_DIR/go-build-metadata.txt"
+          file "$ARTIFACT_DIR/wolochaind-settlement-only-linux-amd64" | grep -F 'ELF 64-bit' | grep -F 'x86-64'
+          (
+            cd "$ARTIFACT_DIR"
+            sha256sum wolochaind-settlement-only-linux-amd64 go-build-metadata.txt > SHA256SUMS
+            sha256sum -c SHA256SUMS
+          )
+          {
+            printf 'reviewed_source=%s\n' "$REVIEWED_SOURCE"
+            printf 'build_tags=go1.27\n'
+            printf 'goos=linux\ngoarch=amd64\ncgo_enabled=0\n'
+            printf 'binary_sha256=%s\n' "$(sha256sum "$ARTIFACT_DIR/wolochaind-settlement-only-linux-amd64" | awk '{print $1}')"
+            printf 'github_pr_head=%s\n' "$GITHUB_SHA"
+            printf 'production_authorized=false\n'
+            printf 'consensus_upgrade_authorized=false\n'
+            printf 'legacy_8092_8093_cutover_authorized=false\n'
+            printf 'founder_889_resolved=false\n'
+            printf 'bank_solvency_certified=false\n'
+            printf 'rollback_certified=false\n'
+          } > "$ARTIFACT_DIR/AUTHORITY.txt"
+          test "$(git rev-parse HEAD)" = "$REVIEWED_SOURCE"
+          test -z "$(git status --porcelain --untracked-files=all)"
+          echo "PASS source-pinned financial candidate artifact: NO DEPLOY"
+
+      - name: Preserve unpromoted provenance and binary for independent review
+        uses: actions/upload-artifact@v4
+        with:
+          name: settlement-526d5-legacy-hardening-linux-amd64-UNDEPLOYED
+          path: ${{ runner.temp }}/legacy-settlement-526d5-artifact/
+          if-no-files-found: error
+          retention-days: 14
