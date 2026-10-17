@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "78886e7d033f1c8a1d23646cdec0979d326aca086d2ab87d8fa717da606dc4b1",
+      "sha256": "f4e552a4c4657a2edc41a7e3aaaf58326d525eda5555ae0704f3d929c9cbb3df",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -404,7 +404,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-15",
       "sensitivity": "restricted",
-      "sha256": "b24c8e50e6c3692e5a04812def1176747cf24367cc1d3fa5a7d0574a9a80ba2e",
+      "sha256": "77c7da5b21808a0a85cf3804c323e556e7f49dd9a3ed76d56e9a671439d08238",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -450,7 +450,7 @@
       "review_interval_days": 7,
       "reviewed_at": "2026-10-17",
       "sensitivity": "restricted",
-      "sha256": "5c00366f2774dd7284c313affdc0a734084765cf53bc94d7217ddf1cbd2bc928",
+      "sha256": "4b68ce72bb92c16eba6703c7b6deb383f4295dbbe87bb08a738fc43d4f66c0fd",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -832,7 +832,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "codex/satchel-mainnet-execution",
-    "commit": "62728c848dcab7e4674965cafe103975ffb36497"
+    "commit": "6c597b2965a83aa74b1903f83b5640926b562adb"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

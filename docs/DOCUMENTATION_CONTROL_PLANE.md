@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `codex/satchel-mainnet-execution` at `62728c848dcab7e4674965cafe103975ffb36497`
+Implementation baseline: `codex/satchel-mainnet-execution` at `6c597b2965a83aa74b1903f83b5640926b562adb`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 

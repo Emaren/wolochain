@@ -30,7 +30,7 @@ process. App/API source is owned by its separate release; this PR changes neithe
 ## HD interface and custody boundary
 
 [HD PR #638](https://github.com/Emaren/app-prodn/pull/638), inspected at
-`30d4b23152ef20f293f1cb6459ac674cb89d1036`, defines
+`6afc11399c6e84c7cfcb308f4d4523ce1b8c3866`, defines
 `IsolatedSatchelSigner.submitOneShot({requestId, chainId, senderAddress,
 recipientAddress, denom, amountUwolo, memo})`. It never automatically retries.
 The dedicated service binds `wolo-1`, `uwolo`, the independently provisioned
@@ -38,8 +38,13 @@ vault and approved escrow destination before any signing. A service bearer token
 is not player spending consent, withdrawal approval, custody certification or
 permission to change the destination.
 
-The app contains two compatible client ports with distinct encodings. The
-service must validate either complete format and refuse mixed/unknown fields:
+The authoritative Go transport is **`127.0.0.1:8094` with Bearer
+authentication**. `warSatchelDedicatedSignerClient.ts` targets this protocol.
+The Go service accepts the complete snake-case wager object or its existing
+protocol-1 camel-case compatibility form and refuses mixed/unknown fields.
+HD's competing `warSatchelIsolatedSignerClient.ts` targets `127.0.0.1:8194`,
+`/v1/*` and HMAC envelopes; that client is not this Go protocol and cannot be
+enabled against it. HD must select the 8094 adapter in its separate release.
 
 | Private endpoint | Contract |
 | --- | --- |
@@ -48,6 +53,8 @@ service must validate either complete format and refuse mixed/unknown fields:
 | `GET /satchel/v1/operations/<operation-id>` | Read an existing durable operation; never signs or resubmits. |
 | `POST /satchel/v1/reconcile` | Strict `operation_id`; observes the original signed transaction without transmitting it. |
 | `POST /v1/satchel/withdrawals` | Owner-bound withdrawal plus independent approval; a service token alone is insufficient. |
+| `POST /satchel/v1/returns/prepare` | Strict version-2 signed claim/allocation below; durably reserves the entitlement and returns a prepared 8092 run with `execution_authorized:false`, `credit_authorized:false`. It never calls 8092. |
+| `POST /satchel/v1/returns/reconcile` | Strict `{approval:<original-version-2-approval>,tx_hash:<hash>}`; authenticates the original escrow return and persists its unique receipt without signing, transmitting or crediting. |
 
 The endpoint is private `127.0.0.1:8094` with service-to-service Bearer
 authentication; it must never be exposed by public nginx or an unauthenticated
@@ -160,6 +167,142 @@ they must not silently reduce the refund or spend another owner's reserve.
 This signing service does not mutate the app ledger or manufacture a return
 from the existing betting escrow.
 
+## Version-2 multi-leg return contract
+
+One funding operation may pay a winner leg and refund a desync leg independently,
+in either order. The durable deduplication key is the globally unique `claim_id`,
+with an immutable fingerprint binding owner, funding operation/hash, ticket,
+market, leg, entitlement, claim kind, exact amount, allocated principal and
+allocation/funds roots. It is no longer a single return per funding operation.
+Each entitlement names exactly one claim; changing a claim's economics or owner
+under the same ID is a conflict. Transaction-hash consumption spans all return
+and signing receipts in this journal, regardless of an observed fee-event index.
+
+`internal/satchelservice/returns.go` and `return_allocation.go` define the exact
+snake-case JSON objects. `POST /satchel/v1/returns/prepare` takes this outer
+`ReturnApproval` object directly, without a wrapper:
+
+| Object | Required fields |
+| --- | --- |
+| `ReturnApproval` | `version:2`, `operation_id`, `claim_id`, `owner_id`, `ticket_id`, `market_id`, `leg_id`, `entitlement_id`, `claim_kind`, `amount_uwolo`, `allocation_digest`, `issued_at`, `expires_at`, `signature`, `allocation`. |
+| `allocation` (`ReturnAllocation`) | `version:2`, `allocation_id`, `revision`, `operation_id`, `owner_id`, `ticket_id`, `funding_tx_hash`, `return_cap_uwolo`, `funds_budget_id`, `funds_available_uwolo`, `bank_evidence_digest`, `bank_height`, `bank_block_hash`, `legs`, `issued_at`, `expires_at`, `signature`. |
+| Each `legs[]` element | `leg_id`, `market_id`, `stake_uwolo`, `entitlements`. |
+| Each `entitlements[]` element | `entitlement_id`, `claim_id`, `claim_kind`, `principal_uwolo`, `amount_uwolo`. |
+
+Amounts are canonical positive decimal `uwolo` strings. `ticket_id`, `market_id`
+and `claim_id` are positive decimal strings of at most 12 digits. Claim `889`
+remains excluded. Other identities use the existing bounded identifier contract.
+`claim_kind` is `bet_payout` or `bet_refund`. Funding hashes are uppercase hex;
+bank evidence and block hashes are nonzero 64-digit hex. Times are Unix seconds;
+both reviews must be current for preparation, issued no later than server time
+and valid for at most 300 seconds. JSON bodies remain bounded to 16 KiB, with
+duplicate, aliased, unknown and trailing fields rejected.
+
+The original wager must already be `CONFIRMED`, have the exact funding hash,
+escrow destination and `AoE2HDBets bet ticket v1 · ticket <ticket_id>` memo.
+The full immutable leg partition sums exactly to that funding principal. There
+are at most 16 legs, 64 entitlements per leg and 128 total entitlements. Legs are
+strictly lexicographically sorted by `leg_id`; each entitlement list is sorted
+by `entitlement_id`. Market, claim and entitlement identities are unique within
+the allocation. A leg's entitled principal portions cannot exceed its stake.
+Every refund's amount equals its exact allocated principal: a partial unmatched
+leg returns 100% of that portion, with no 2% betting fee. Payouts may include
+reviewed winnings, within the immutable return cap.
+
+Use the exported Go helpers for the actual canonical JSON bytes. The two
+Ed25519 signatures use the configured independent approval public key and
+strict padded standard base64. Their distinct domains cannot authorize a
+withdrawal or substitute for the player's betting consent. The array contracts
+are:
+
+```text
+legs := [[leg_id, market_id, stake_uwolo,
+          [[entitlement_id, claim_id, claim_kind, principal_uwolo, amount_uwolo], ...]], ...]
+
+allocation_fields := ["aoe2war/satchel/return-allocation/v2", "wolo-1", "uwolo",
+ escrow, vault, version, allocation_id, revision, operation_id, owner_id,
+ ticket_id, funding_tx_hash, return_cap_uwolo, funds_budget_id,
+ funds_available_uwolo, bank_evidence_digest, bank_height, bank_block_hash, legs]
+
+AllocationMessage := allocation_fields followed by issued_at, expires_at
+AllocationDigest := SHA-256 of canonical JSON(allocation_fields)
+
+ReturnApprovalMessage := ["aoe2war/satchel/claim-return-approval/v2", "wolo-1",
+ "uwolo", escrow, vault, version, operation_id, claim_id, owner_id, ticket_id,
+ market_id, leg_id, entitlement_id, claim_kind, amount_uwolo,
+ allocation_digest, issued_at, expires_at]
+```
+
+`AllocationMessage`, `AllocationDigest` and `ReturnApprovalMessage` are the
+authoritative encoders; the display whitespace above is not signed. Digesting
+excludes review times/signature so the same plan can be freshly approved. The
+outer approval's `allocation_digest` must exactly identify the nested plan.
+
+The first independently signed revision may arrive out of order. A newer
+revision must preserve the full leg partition, root, cap and funds evidence,
+and be an append-only superset of all previous entitlements. Older signed
+revisions may prepare an earlier unprepared claim only when their entire plan
+is an unchanged subset of the stored latest revision. Stored revisions and
+reservations never regress. Existing claims retain their original durable
+approval for reconciliation; a fresh signature cannot retarget an old claim.
+
+In the same bbolt transaction as the new claim record, the engine reserves its
+full amount against both the funding allocation's cap and **one shared funds
+budget for this journal**. Pending, unknown and paid claims all retain their
+reservations. Every funding allocation must use the same pinned budget ID,
+ceiling and bank-review identity; changing the budget cannot mint fresh capacity.
+No timeout, missing proof or cancellation frees a reservation. Reservations are
+durable before any prepared run is returned.
+
+The bank/liability review is authenticated by the independent reviewer's
+signature and referenced digest, height and block identity. **It is not a native
+bank-state Merkle proof, current solvency certification or a lock on competing
+escrow writers.** Real activation still requires complete fresh physical-bank,
+liability and fee-headroom evidence, exclusive allocation coordination, and the
+existing 8092 signer's funds/sequence preflight. This bounded service prepares
+and reconciles returns; it holds no betting escrow key or execution credential.
+
+Preparation returns HTTP 200 with `kind:"escrow_run_prepared"`,
+`execution_authorized:false`, `credit_authorized:false` and `run`. The run uses
+the existing `/settlement/v1/runs` schema: `settlement_run_id` and the sole
+payout's `request_id` are `satchel:claim-return:<claim_id>`, `source_app` is
+`aoe2hdbets`, `source_event_id` is the original `operation_id`, `signer_role` is
+`escrow`, destination is the configured Satchel vault, amount is the exact
+approved amount, and memo remains
+`aoe2war/satchel/claim-return/v1/<claim_id>`. No new return execution route is
+introduced. Only a separately authorized operator may submit this exact run to
+the protected existing 8092 lane after its release gates close. Replaying the
+prepared run must use its original durable IDs, never a new claim or retry ID.
+
+Reconciliation requires the original durable approval and authenticated exact
+escrow-to-vault chain evidence. Its version-2 receipt includes the complete
+owner/ticket/market/leg/entitlement/allocation identity, original operation and
+claim, exact amount, transaction hash, receipt ID, committed height/block hash,
+and `credit_authorized:false`. Expired reviews may reconcile an already prepared
+claim; they cannot prepare a new liability. Missing/forged/ambiguous evidence
+leaves the claim reserved and triggers no transmission.
+
+**Migration and HD credit remain HELD.** Existing version-1 claim records,
+receipts and one-return markers are preserved byte-for-byte; their presence
+blocks new version-2 allocation until a separately reviewed migration/liability
+decision. There is no automatic replay, reinterpretation or migration command.
+The retained bucket name `owner-returns-v1` is storage compatibility, not v1
+approval acceptance.
+
+HD must independently map `owner_id` to the actual Steam user's immutable
+`users.id`/`uid`, `ticket_id` to `BetStakeTicket.id`, `leg_id` to `BetStakeLeg.id`,
+and `market_id` to that leg's market; `entitlement_id` must identify the reviewed
+settled `BetWager` entitlement. `claim_id` is `PendingWoloClaim.id`, whose
+`claimedByUserId`, source market, kind and amount must agree. The Go signer does
+not read these application tables. HD's current return-credit function can
+aggregate one owner's wagers across multiple tickets in a market; such a mixed
+claim cannot be silently recast as this contract's single funding operation.
+That explicit bridge remains required in the separately owned HD integration.
+Only its atomically locked funded-ledger path may consume the globally unique
+chain receipt, recheck owner/entitlement and all vault liabilities against fresh
+bank evidence, and post the rightful owner's credit. A Go receipt grants no
+ledger posting authority.
+
 ## Secure operator provisioning — separate approval required
 
 No step below was performed by this PR. Wallet/key creation, funding,
@@ -268,7 +411,7 @@ operation ID is refused.
 
 An UNKNOWN response freezes the operation and corresponding app reserve; stop
 the canary without another send. Preserve original bytes/hash and reconcile
-independently. A full unmatched refund must equal the original stake; fee
+independently. A full unmatched refund must equal its entire unmatched stake portion; fee
 headroom is accounted separately. Finish only with exact owner balances,
 liabilities, fee debits and immutable receipts reconciled. A canary failure grants
 no claim #889 retry, state rewind or consensus restart.
@@ -276,3 +419,29 @@ no claim #889 retry, state rewind or consensus restart.
 No canary, wallet creation, funding, installation, key operation or real transfer
 was performed in this source work. CI and negative tests are reported against
 the exact PR head; they do not certify any unperformed operator step above.
+
+## Recovery validation — October 17, 2026
+
+The recovered starting PR head was
+`d3b7586dc13c9ab38d634acbc0572e350463a325`. The immutable-baseline fixture in
+`tests/fixtures/satchel-multileg-before_test.go.txt`, replayed offline by
+`scripts/check-satchel-multileg-regression.py`, reproduces both original defects:
+a second independently approved leg is refused by the one-operation marker,
+and a full refund of one leg is refused because it is smaller than total ticket
+funding. Ordinary source CI now reproduces those historical failures as well as
+running the corrected contracts.
+
+The recovered full Go suite and full repository race run each pass **1,043 tests
+and subtests (225 top-level), zero failures**. Four opt-in application simulations
+and the foreign-owner filesystem check requiring elevated test privileges are
+skipped locally. Native signer/keyring tests use synthetic temporary fixtures.
+Vet, both executable builds, protobuf drift checks, source invariants and the
+nine Python settlement safety tests pass. These results do not establish live
+key control, balances, reserves, a production checkpoint or a successful canary.
+
+Coverage includes winner/desync claims in either order, partial/full unmatched
+principal, immutable claims, concurrent delivery/shared-budget races, append-only
+revisions arriving out of order, restart/uncertain reservations, physical receipt
+reuse, independent withdrawal authority and nested HTTP schema/receipt binding.
+The C3 SDK timestamp/status-commit checks were already present; the recovered
+patch adds the missing witness freshness check after light-client I/O.
