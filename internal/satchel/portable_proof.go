@@ -80,6 +80,12 @@ func (p *proofRecorder) add(source, path, query string, body []byte) error {
 	return nil
 }
 
+func (p *proofRecorder) snapshot() []ProofResponse {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	return append([]ProofResponse(nil), p.responses...)
+}
+
 func (r *TrustedReader) ReadDepositProof(ctx context.Context, intent Intent, hash string) (AuthenticatedEvidence, PortableProof, error) {
 	evidence, proof, err := r.readProof(ctx, "deposit", hash, func(ctx context.Context, reader *TrustedReader) (AuthenticatedEvidence, error) {
 		return reader.ReadDeposit(ctx, intent, hash)
@@ -112,7 +118,7 @@ func (r *TrustedReader) readProof(ctx context.Context, kind, hash string, collec
 	if err != nil {
 		return AuthenticatedEvidence{}, PortableProof{}, err
 	}
-	proof, err := copyProof(PortableProof{PortableProofVersion, ChainID, kind, strings.ToUpper(hash), recorder.responses}, kind, hash)
+	proof, err := copyProof(PortableProof{PortableProofVersion, ChainID, kind, strings.ToUpper(hash), recorder.snapshot()}, kind, hash)
 	if err != nil {
 		return AuthenticatedEvidence{}, PortableProof{}, err
 	}
