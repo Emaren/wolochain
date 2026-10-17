@@ -74,12 +74,32 @@ func TestOutgoingProofPermitsOnlyExactEncodedFeeAndPreservesOrdinal(t *testing.T
 			if !strings.EqualFold(proof.Receipt().TxHash, hex.EncodeToString(f.tx.Hash)) {
 				t.Fatal("tx identity lost")
 			}
-			_, err = r.reader.ReadDeposit(context.Background(), f.intent, f.observation.TxHash)
-			if err == nil {
-				t.Fatal("outgoing fee exception weakened C2 deposits")
+			deposit, err := r.ReadDeposit(context.Background(), f.intent, f.observation.TxHash)
+			if err != nil || deposit.Receipt().TransferIndex != 0 {
+				t.Fatalf("real fee-paying deposit did not use canonical message-zero identity: %v", err)
+			}
+			observation := proof.Observation()
+			observation.Transfers = []Transfer{{f.intent.Sender, collectorAddress(t), Denom, "1"}, {f.intent.Sender, f.intent.Vault, Denom, f.intent.AmountUWolo}}
+			index := uint32(1)
+			observation.TransferIndex = &index
+			if _, err = InspectDeposit(f.intent, observation, f.now); err == nil {
+				t.Fatal("network fee support weakened public C2 pure one-effect contract")
 			}
 		})
 	}
+}
+
+func collectorAddress(t *testing.T) string {
+	t.Helper()
+	words, err := bech32.ConvertBits(sdkaddress.Module("fee_collector"), 8, 5, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	address, err := bech32.Encode("wolo", words)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return address
 }
 func TestTrustedReaderChecksRealTrustBeforeOpeningSigner(t *testing.T) {
 	f, v := signedReaderFixture(t)

@@ -41,10 +41,10 @@ type Intent struct {
 
 type Transfer struct{ Sender, Recipient, Denom, Amount string }
 
-// Observation must eventually be produced by a server-owned authenticated
-// adapter verifying inclusion and the signed commit against pinned chain trust.
-// IndependentHead must come from a separately operated trust path. Matching
-// fields alone do not establish either fact; that adapter is NOT implemented.
+// Observation is a data shape, not authentication. TrustedReader verifies the
+// transaction/result commitments and Comet signed headers against its provisioned
+// root. Portable proofs replay that verification without trusting these fields.
+// Matching primary/witness fields alone do not establish independent operators.
 type Observation struct {
 	ChainID, TxHash, BlockHash string
 	TxBytes                    []byte
@@ -117,7 +117,8 @@ func validHead(h Head, now time.Time) bool {
 
 // InspectDeposit checks caller-supplied candidate shape. It proves no inclusion,
 // signature, finality, ownership or independent custody and grants no credit.
-// A trusted adapter and durable global receipt claim remain unimplemented.
+// TrustedReader and the portable verifier supply chain authentication separately;
+// a durable global receipt claim remains the consuming ledger's responsibility.
 func InspectDeposit(i Intent, o Observation, now time.Time) (ReceiptCandidate, error) {
 	return inspectDeposit(i, o, now, true)
 }
@@ -162,8 +163,8 @@ func inspectDeposit(i Intent, o Observation, now time.Time, requireWitness bool)
 	return ReceiptCandidate{ChainID, strings.ToUpper(o.TxHash), 0}, nil
 }
 
-// Structural message parity only; signature validity, account sequence, chain
-// sign-doc binding and authenticated execution still require the future adapter.
+// Structural message parity only. TrustedReader separately authenticates committed
+// execution, relying on the pinned chain's SDK signature/account-sequence rules.
 func exactSend(data []byte, sender, recipient, amountUWolo, memo string) bool {
 	var raw tx.TxRaw
 	var body tx.TxBody

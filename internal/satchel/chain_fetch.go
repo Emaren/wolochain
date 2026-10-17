@@ -203,10 +203,7 @@ func (s *readSession) restTx(ctx context.Context, hash string, i Intent, rpcTx *
 	if !reflect.DeepEqual(chainevents.Extract(nil, payload.Response.Events), effects) {
 		return fail(InconsistentObservations, "rest", "events")
 	}
-	if deposit && !reflect.DeepEqual(chosen, effects) {
-		return fail(InconsistentObservations, "rest", "events")
-	}
-	if !deposit {
+	if !reflect.DeepEqual(chosen, effects) {
 		pos := 0
 		for _, effect := range chosen {
 			for pos < len(effects) && effects[pos] != effect {
@@ -217,7 +214,11 @@ func (s *readSession) restTx(ctx context.Context, hash string, i Intent, rpcTx *
 			}
 			pos++
 		}
-		if _, err := outgoingEffectIndex(rpcTx.Tx, i, chosen); err != nil {
+		effectIndex := outgoingEffectIndex
+		if deposit {
+			effectIndex = networkEffectIndex
+		}
+		if _, err := effectIndex(rpcTx.Tx, i, chosen); err != nil {
 			return err
 		}
 	}
@@ -336,24 +337,21 @@ func (r *ChainReader) readTransfer(ctx context.Context, i Intent, txHash string,
 	if !reflect.DeepEqual(effects, boundEffects) {
 		return ChainEvidence{}, fail(InconsistentObservations, "primary", "result_events")
 	}
-	if deposit && len(effects) != 1 {
-		return ChainEvidence{}, fail(AmbiguousTransfers, "primary", "events")
-	}
 	var canonical []chainevents.Transfer
-	if !deposit {
-		if _, err = outgoingEffectIndex(transaction.Tx, i, effects); err != nil {
-			return ChainEvidence{}, err
-		}
+	effectIndex := outgoingEffectIndex
+	if deposit {
+		effectIndex = networkEffectIndex
+	}
+	if _, err = effectIndex(transaction.Tx, i, effects); err != nil {
+		return ChainEvidence{}, err
 	}
 	if err = s.restTx(ctx, hash, i, &transaction, included.Header, effects, deposit, &canonical); err != nil {
 		return ChainEvidence{}, err
 	}
 	zero, ordinal := uint32(0), uint32(0)
-	if !deposit {
-		ordinal, err = outgoingEffectIndex(transaction.Tx, i, canonical)
-		if err != nil {
-			return ChainEvidence{}, err
-		}
+	ordinal, err = effectIndex(transaction.Tx, i, canonical)
+	if err != nil {
+		return ChainEvidence{}, err
 	}
 	transfers := make([]Transfer, len(canonical))
 	for idx, v := range canonical {
@@ -410,7 +408,7 @@ func (r *ChainReader) readTransfer(ctx context.Context, i Intent, txHash string,
 	}
 	var receipt ReceiptCandidate
 	if deposit {
-		receipt, err = inspectDeposit(i, observation, r.now(), r.witness != nil)
+		receipt, err = inspectNetworkDeposit(i, observation, r.now(), r.witness != nil)
 	} else if !exactSend(observation.TxBytes, i.Sender, i.Vault, i.AmountUWolo, i.Memo) ||
 		observation.Transfers[ordinal] != (Transfer{i.Sender, i.Vault, Denom, i.AmountUWolo}) {
 		err = fail(TransactionMismatch, "intent", "candidate")
@@ -421,6 +419,35 @@ func (r *ChainReader) readTransfer(ctx context.Context, i Intent, txHash string,
 		return ChainEvidence{}, fail(TransactionMismatch, "intent", "candidate")
 	}
 	return ChainEvidence{Observation: observation, Receipt: receipt, WitnessCompared: r.witness != nil, WitnessHead: actualWitness, resultCommitHash: hex.EncodeToString(next.Header.Hash())}, nil
+}
+
+// A successful one-MsgSend transaction may also contain its exact signed ante
+// fee effect. Preserve the public C2 pure one-effect contract, but let the
+// network reader handle real SDK fee-paying transactions. No arbitrary extra
+// transfer, split coin, fee payer/granter or duplicate effect is accepted.
+func networkEffectIndex(rawBytes []byte, i Intent, effects []chainevents.Transfer) (uint32, error) {
+	if len(effects) == 1 && effects[0] == (chainevents.Transfer{Sender: i.Sender, Recipient: i.Vault, Amount: i.AmountUWolo, Denom: Denom}) {
+		return 0, nil
+	}
+	return outgoingEffectIndex(rawBytes, i, effects)
+}
+
+func inspectNetworkDeposit(i Intent, observation Observation, now time.Time, requireWitness bool) (ReceiptCandidate, error) {
+	effects := make([]chainevents.Transfer, len(observation.Transfers))
+	for n, effect := range observation.Transfers {
+		effects[n] = chainevents.Transfer{Sender: effect.Sender, Recipient: effect.Recipient, Denom: effect.Denom, Amount: effect.Amount}
+	}
+	index, err := networkEffectIndex(observation.TxBytes, i, effects)
+	if err != nil || observation.TransferIndex == nil || *observation.TransferIndex != index {
+		return ReceiptCandidate{}, fail(AmbiguousTransfers, "deposit", "effects")
+	}
+	// The canonical authenticated identity is the one decoded MsgSend (message
+	// index zero). Events are excluded from Comet's deterministic result root,
+	// and therefore event position must not mint another consumable receipt.
+	zero := uint32(0)
+	observation.Transfers = []Transfer{{i.Sender, i.Vault, Denom, i.AmountUWolo}}
+	observation.TransferIndex = &zero
+	return inspectDeposit(i, observation, now, requireWitness)
 }
 
 // Outgoing transfers retain the shared parser's ordinal. The only permitted
