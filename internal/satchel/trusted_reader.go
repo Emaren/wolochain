@@ -202,6 +202,12 @@ func (r *TrustedReader) read(ctx context.Context, collect func(context.Context) 
 	if !validHead(e.Observation.Head, finished) || ctx.Err() != nil {
 		return AuthenticatedEvidence{}, fail(StaleHead, "trust", "complete")
 	}
+	// C3 checked both witness identities before light-client I/O. Authentication
+	// must preserve that freshness contract through completion, including the
+	// actual witness status when it is ahead of the compared primary height.
+	if !validHead(e.WitnessHead, finished) || !validHead(e.Observation.IndependentHead, finished) {
+		return AuthenticatedEvidence{}, fail(StaleHead, "witness", "complete")
+	}
 	return AuthenticatedEvidence{e, r.anchor}, nil
 }
 
