@@ -8,12 +8,43 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "runtime-evidence"
 authority: "mainnet-settlement-operations"
-reviewed_at: "2026-10-16"
+reviewed_at: "2026-10-17"
 review_interval_days: 14
 sensitivity: "restricted"
 ---
 
 # WoloChain Mainnet Settlement Runbook
+
+## October 17, 2026 — dedicated Satchel execution source, no activation
+
+The [Satchel execution/operator contract](war-satchel-mainnet-execution.md)
+describes the new restricted 8094 service, immutable one-shot operation journal,
+independent withdrawal approval, exact HD wire adapters, owner-attributed return
+requirements and staged provisioning/canary procedure. It creates no wallet,
+key, funded deposit, app ledger credit or real transfer. C2 remains
+`UNAVAILABLE` and C3 remains `NONCREDITING` until independently verified custody,
+complete accounting and authenticated chain trust are genuinely established.
+
+8094 must use a dedicated keyring, OS authority, private credential and current
+journal; existing payout, betting escrow, founder, treasury, staking and validator
+keys are excluded. UNKNOWN attempts remain fenced across restart and block new
+operations; neither HTTP success nor a bearer token proves payment or approval.
+No producer may blindly retry, delete holds or restore an older journal.
+
+The current base is PR #24 merge
+`c1210dda37b725a5b141ad63361048d4b37731c2`. It retired the obsolete
+`3ea79363` mutating rollback/rescue paths; do not resurrect them or reuse unrelated
+draft release branches. Existing 8092/8093 source/runtime mismatch, founder #889
+UNKNOWN, fresh ingress/drain and protected recovery holds remain unchanged.
+The dedicated consensus executable must remain untouched and running.
+
+Installation, new custody provisioning, paired settlement maintenance and one
+small real-chain canary each require their separately reviewed operator
+authorization. Current source-readiness evidence is not a deployment controller
+or authorization. Preserve the latest request/run/receipt/prebroadcast state
+through code-only recovery; keep financial producers quiesced if reverting to
+legacy grouped/receipt semantics. No live operation or repeated founder
+investigation was performed by this source work.
 
 ## October 16, 2026 — current exact candidate build, NOT a cutover
 

@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/retire-obsolete-settlement-rollback-unfence-20261016` at `330cfe9394ec1cb8ad0b45829ee873b70d5de9d8`
+Implementation baseline: `codex/satchel-mainnet-execution` at `6c597b2965a83aa74b1903f83b5640926b562adb`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
@@ -27,21 +27,21 @@ This page is generated from the validated front matter in this repository. Cross
 
 ## Documentation health
 
-- Authoritative repository documents: **35**
+- Authoritative repository documents: **36**
 - Path moves in this migration: **0**
 - Every listed document has an explicit owner, lifecycle, authority, and review interval.
 
 ### Types
 
 - `historical`: 14
-- `reference`: 17
+- `reference`: 18
 - `runbook`: 2
 - `working`: 2
 
 ### Lifecycle
 
 - `active`: 16
-- `draft`: 5
+- `draft`: 6
 - `historical`: 14
 
 ## Documents
@@ -66,6 +66,7 @@ This page is generated from the validated front matter in this repository. Cross
 | [WoloChain Testnet Ops](testnet-ops.md) | `runbook` | `active` | `legacy-testnet-operations` |
 | [War Satchel C3 Chain Evidence](war-satchel-chain-evidence-c3.md) | `reference` | `draft` | `source-only-war-satchel-chain-evidence` |
 | [War Satchel C2 Custody Capability](war-satchel-custody-c2.md) | `reference` | `draft` | `source-only-war-satchel-custody-capability` |
+| [War Satchel Mainnet Execution and Operator Gates](war-satchel-mainnet-execution.md) | `reference` | `draft` | `restricted-satchel-execution-and-provisioning-contract` |
 | [AoE2WAR Warbound Trophies](warbound-trophies.md) | `working` | `draft` | `undeployed-warbound-module-design` |
 | [Codex Mission: WoloChain Mainnet ↔ Osmosis IBC Prep](../mainnet-prep/CODEX_OSMOSIS_IBC_MISSION.md) | `historical` | `historical` | `ibc-mission-prompt-evidence` |
 | [WoloChain Mainnet Osmosis Hermes Relayer Staging](../mainnet-prep/HERMES_OSMOSIS_RELAYER_STAGING.md) | `reference` | `active` | `ibc-relayer-operating-reference` |

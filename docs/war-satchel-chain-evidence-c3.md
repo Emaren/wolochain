@@ -173,3 +173,14 @@ withdrawal broadcast, token transfer, or app/API repository edit is part of C3.
   Copying the primary head would hide conflicting or stale witness observations.
 - These fixes do not authenticate validator signatures, establish a trust root,
   authenticate bank events, or relax any custody/credit gate.
+
+### October 17 recovery regression
+
+The SDK's legitimate RFC3339 whole-second REST timestamp and the actual witness
+status/commit binding already had adversarial coverage in the recovered source;
+these checks remain in place. The optional `TrustedReader` now rechecks both the
+retained actual witness head and its compared head after validator/light-client
+I/O. A signed synthetic regression reproduces witness observation expiry while
+the primary remains fresh under a bounded clock correction; it fails before the
+completion guard and returns `stale_head:witness:complete` afterward. No
+CometBFT authentication or default NONCREDITING/C2 gate is relaxed.

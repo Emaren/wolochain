@@ -41,6 +41,12 @@ jobs:
       - name: Build wolochaind
         run: go build ./cmd/wolochaind
 
+      - name: Build isolated Satchel service
+        run: go build ./cmd/wolosatcheld
+
+      - name: Satchel custody execution race contracts
+        run: go test -race ./internal/satchelservice ./cmd/wolosatcheld -count=1
+
       - name: Settlement tests
         run: go test ./cmd/wolochaind/cmd -count=1
 
