@@ -21,7 +21,9 @@ This lane builds the hardened legacy settlement implementation at exactly
 `codex/exact-settlement-artifact` branch contains the builder, verifier and
 tests. Its commit and GitHub workflow identity describe the build machinery;
 they must not replace the binary's source revision in a receipt. The target
-base remains `codex/legacy-settlement-hardening`. Neither branch is deployed.
+base remains `codex/legacy-settlement-hardening`. Neither branch is deployed. The stronger recovered builder is consolidated into
+[PR #27](https://github.com/Emaren/wolochain/pull/27), replacing its earlier
+single-build workflow rather than creating another artifact standard.
 
 The existing `settlement-current-implementation-candidate.yml` continues to
 refer to historical source `bdbce253c524d6faac14f61cd129ac5072287c3f`.
