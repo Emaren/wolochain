@@ -19,6 +19,16 @@ Reviewed: 2026-10-14
 
 ## Current federation source
 
+### October 17, 2026 — stacked exact-source artifact machinery
+
+`codex/exact-settlement-artifact` starts at exact PR #26 head
+`526d5eb6123f6cc0394b5e78489c668e77e46106` and targets
+`codex/legacy-settlement-hardening`. Its [artifact contract](settlement-exact-source-artifact.md)
+keeps the binary's pinned implementation revision separate from the builder
+commit, documentation baseline and GitHub run/upload identity. It does not
+advance federation, attest production, repin the historical `bdbce253` lane,
+or change Satchel PR #25. Release and recovery authority remain held.
+
 ### October 17, 2026 — source-only settlement candidate
 
 This work starts from remote-exact `wolo-1-mainnet-prep` at
