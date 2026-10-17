@@ -64,8 +64,8 @@ receipt. Retain the immutable upload receipt, including artifact ID/digest,
 alongside it. The upload receipt is external because its archive digest does
 not exist until after upload; embedding it would create a circular claim.
 
-For independent offline inspection, obtain the expected builder SHA, run ID,
-attempt, workflow reference and workflow SHA from the reviewed PR and
+For independent offline inspection, obtain the expected manifest SHA-256, builder
+SHA, run ID, attempt, workflow reference and workflow SHA from the reviewed PR and
 authenticated GitHub run context. Verify the downloaded archive against the
 GitHub artifact API/upload digest before extraction. Supply those externally
 obtained values, never values copied from the candidate manifest:
@@ -75,6 +75,7 @@ python3 /path/to/reviewed-artifact-tools/scripts/settlement-artifact.py verify \
   --source-dir /path/to/clean-526d5eb6-checkout \
   --binary /path/to/extracted-candidate/wolochaind \
   --manifest /path/to/extracted-candidate/manifest.json \
+  --expected-manifest-sha256 "$TRUSTED_MANIFEST_SHA256" \
   --builder-commit "$REVIEWED_BUILDER_SHA" \
   --repository Emaren/wolochain \
   --run-id "$TRUSTED_RUN_ID" --run-attempt "$TRUSTED_RUN_ATTEMPT" \
@@ -94,7 +95,10 @@ replace that external receipt or the verifier's binary inspection.
 
 Offline adversarial tests exercise malformed, inconsistent and forged
 provenance without running a candidate or accessing a service. The workflow
-also runs source tests at the pinned implementation. The final PR receipt
+also runs source tests at the pinned implementation. The original 26 offline adversarial cases remain intact; seven additional
+receipt cases reject retargeting a binary and manifest while retaining valid Go
+metadata. All 33 pass. Full Go and race runs each passed 797 tests including
+subtests, with four existing simulation skips. The final PR receipt
 records the exact builder commit, run URL, artifact identity and verification
 results; those are distinct from the fixed implementation commit above.
 
