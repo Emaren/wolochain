@@ -1,0 +1,44 @@
+name: Satchel execution source proof
+
+on:
+  pull_request:
+    branches: [wolo-1-mainnet-prep]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  private-custody:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      GOFLAGS: -tags=go1.27
+      CGO_ENABLED: 0
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Native signing, fencing, owner-return and trust adversarial tests
+        env:
+          CGO_ENABLED: 1
+        run: go test -race ./internal/satchelservice ./internal/satchel ./cmd/wolosatcheld -count=1
+      - name: Build isolated signer and paired settlement candidate
+        env:
+          OUTPUT: ${{ runner.temp }}/satchel-source-candidate
+        run: |
+          mkdir -p "$OUTPUT"
+          go build -trimpath -o "$OUTPUT/wolosatcheld" ./cmd/wolosatcheld
+          go build -trimpath -o "$OUTPUT/wolochaind-settlement-UNDEPLOYED" ./cmd/wolochaind
+          git diff --exit-code
+          python3 scripts/satchel-source-artifact.py "$OUTPUT"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: satchel-and-settlement-source-UNDEPLOYED
+          path: ${{ runner.temp }}/satchel-source-candidate/
+          retention-days: 14

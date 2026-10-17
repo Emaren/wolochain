@@ -118,10 +118,11 @@ func (r *ChainReader) Close() {
 // hash/inclusion/result consistency checks relative to unauthenticated headers.
 // It cannot establish finality, independently operated sources or vault control.
 type ChainEvidence struct {
-	Observation     Observation
-	Receipt         ReceiptCandidate
-	WitnessCompared bool
-	WitnessHead     Head // actual witness status, which may be ahead of the compared head
+	Observation      Observation
+	Receipt          ReceiptCandidate
+	WitnessCompared  bool
+	WitnessHead      Head   // actual witness status, which may be ahead of the compared head
+	resultCommitHash string // H+1 identity used for the execution-root check
 }
 
 func (ChainEvidence) Status() string               { return "NONCREDITING" }
