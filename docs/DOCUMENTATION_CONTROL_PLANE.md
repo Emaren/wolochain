@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/exact-bdbce-settlement-artifact-receipt-20261017` at `34f8a76d96858aeffc1fbd24b16d322e8678889d`
+Implementation baseline: `feat/bdbce253-two-lane-nonmutating-cutover-preflight-20261017` at `72f605e327e0e0de23be8f70194828819cfa564b`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
