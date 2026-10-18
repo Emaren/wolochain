@@ -882,6 +882,27 @@ cannot be inspected. The unresolved unit names are retained in
 as safe. An entirely inspected inventory still deliberately exits 3,
 not a financial fence certificate.
 
+**2026-10-18T03:37:46Z VPS receipt:** The corrected real-unit inventory
+identified active HD and DE web/API processes with database keys, HD web
+with both settlement endpoint/token key names and staking/faucet CLI key
+names, and active WOLO transfer heartbeat, stake reconcile, challenge
+reconcile, replay recovery, staking rewards, trophy tributes and
+prewarm timers. It printed **no secret values** and changed no services.
+Three unresolved inspection errors were `aoe2war-build@.service`,
+`aoe2war-deps@.service`, and
+`aoe2war-speedos-cloudflare@.service`. They are uninstantiated systemd
+`@.` **template definitions** rather than runnable unit instances.
+The repaired discovery explicitly records these names in
+`templateDefinitionsNotServiceInstances` without asking
+`systemctl show` to inspect them. Instantiated template units such as
+`aoe2war-build@job42.service` remain included and a failed inspection
+of one still produces exit 2. With only template definitions skipped,
+a complete report returns noncertifying exit 3 as designed. The HD
+and DE active web/API and timer list is for **human classification**,
+not a blanket stop list; an active timer can trigger an inactive
+financial service while maintenance is underway, and unit environment
+key presence alone is not evidence of an active wallet key.
+
 Absent process environment keys do not prove disabled signers, and
 installed unit enumeration cannot find every cron, container,
 external signer, database job or HTTP caller. Its exit code is 3
