@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "d8f127c0cf056fb59d0d39fdc1de481cf97b4ed9ef19d6897cc84e40982ea129",
+      "sha256": "e718f2b2c2d7522e0129d60e4dca00011aa0aabf8bb65a8a955ae8e9159d517e",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -809,7 +809,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "feat/bdbce253-two-lane-nonmutating-cutover-preflight-20261017",
-    "commit": "72f605e327e0e0de23be8f70194828819cfa564b"
+    "commit": "f5ee1886a5b7ba8a86d0d45e6a0522e1af7635a3"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
