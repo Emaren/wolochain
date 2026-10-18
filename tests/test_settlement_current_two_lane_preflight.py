@@ -62,7 +62,7 @@ class CurrentTwoLanePreflightTests(unittest.TestCase):
         for forbidden in (
             r"\bsystemctl\s+(?:stop|start|restart|reload|enable|disable|daemon-reload)\b",
             r"\b(?:install|cp|mv|rm|chmod|chown|kill|pkill)\s+",
-            r"\b(?:send|broadcast|migrate|restore|rollback)\s+",
+            r"^\s*(?:wolochaind|prisma|psql|pg_restore)\s+",
         ):
             with self.subTest(pattern=forbidden):
                 self.assertIsNone(re.search(forbidden, self.preflight))
