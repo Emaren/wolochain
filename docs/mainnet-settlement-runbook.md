@@ -853,8 +853,8 @@ production.
 `scripts/settlement-shared-producer-inventory-readonly.py --inspect`
 is a root-only, bounded, **noncertifying** inventory of active and
 installed systemd services/timers with the known HD/DE prefixes
-`aoe2hdbets-`, `aoe2war-`, and `aoe2dewarwagers-`, plus
-the four explicit web/API service names. It reports unit names,
+`aoe2hdbets-`, `aoe2war-`, `aoe2dewarwagers-`, and `aoe2-wolo-`, plus
+the four explicit web/API service names and bare application service/timer unit names. The `aoe2-wolo-transfer-heartbeat.timer` family is explicitly covered because prior settlement maintenance listed it as a payout-ingress producer despite its different prefix. It reports unit names,
 active/loading status, the existence (not values) of PIDs,
 and the presence of allowlisted payout/settlement/database **key
 names** in bounded process environments. It never reports passwords,
