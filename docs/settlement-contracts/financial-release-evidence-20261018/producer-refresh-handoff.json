@@ -1,0 +1,79 @@
+{
+  "schema": "wolo.financial.producer-refresh.handoff.v1",
+  "preparedAtUtc": "2026-10-18T18:12:18.028368+00:00",
+  "control": "hd_de_producers_isolated",
+  "status": "BLOCKED",
+  "observedFacts": {
+    "discoveredAppUnits": 19,
+    "activeCandidateUnits": [
+      "aoe2-wolo-transfer-heartbeat.timer",
+      "aoe2dewarwagers-api.service",
+      "aoe2dewarwagers-web.service",
+      "aoe2hdbets-api.service",
+      "aoe2hdbets-bet-stake-reconcile.timer",
+      "aoe2hdbets-challenge-reconcile.timer",
+      "aoe2hdbets-replay-auto-recovery.timer",
+      "aoe2hdbets-staking-rewards.timer",
+      "aoe2hdbets-trophy-tributes.timer",
+      "aoe2hdbets-web.service",
+      "aoe2war-prewarm.timer"
+    ],
+    "completeForDiscoveredSystemdUnits": true,
+    "independentlySignedOriginExclusion": "UNKNOWN",
+    "externalProducerExclusion": "UNKNOWN",
+    "financialProducersFenced": false,
+    "hdIndependentSignerConfigurationNamesPresent": true,
+    "deAuthorityExclusionCertified": false,
+    "dockerContainers": [
+      {
+        "name": "tokenchain-hasura",
+        "state": "running"
+      }
+    ],
+    "userServiceManagersObserved": [
+      "user@0.service",
+      "user@1000.service"
+    ],
+    "settlementSatchelListenerBindings": [
+      {
+        "port": 8093,
+        "loopbackOnlyBinding": true
+      },
+      {
+        "port": 8092,
+        "loopbackOnlyBinding": true
+      }
+    ]
+  },
+  "nextRequiredAction": "Named HD, DE and external financial owners must classify the discovered services/timers, cron/user jobs and container, identify every settlement API and independent staking/faucet/keyring producer, attest queue/in-flight coverage and approve a coordinated financial-ingress fence. Do not blanket-stop unrelated app/timer services. Only then perform the separately authorized fence/drain and capture quiesced evidence.",
+  "evidence": [
+    {
+      "path": "settlement-shared-producer-inventory-readonly.json",
+      "sha256": "2b96836fa5c1155d4c2d80a490c845c60448f063a9fcc43ef2b2de99f961db2e",
+      "observedAtUtc": "2026-10-18T18:11:04.368831+00:00"
+    },
+    {
+      "path": "settlement-parallel-de-authority-inventory.json",
+      "sha256": "19cf7a9a6b65e1780798dd3683f5e38d204a6b8280f4f6a2eaaa7d51341f5171",
+      "observedAtUtc": "2026-10-18T18:11:04.206345+00:00"
+    },
+    {
+      "path": "producer-surface-metadata.json",
+      "sha256": "679c15fc806479e998a5d10a320d81969b55f973cadeebc5d2d3055c6df64dbd",
+      "observedAtUtc": "2026-10-18T18:11:23.242384+00:00"
+    },
+    {
+      "path": "producer-containers-identities.json",
+      "sha256": "cebc2d48730c6d6b0485f3c343e49e80892f1049d5de53416118571aac08a428",
+      "observedAtUtc": "2026-10-18T18:12:00.829108+00:00"
+    }
+  ],
+  "limits": [
+    "Allowlisted nonempty environment key names show configuration presence, not actual execution or signing authority. Absence does not exclude lazy secret loading or external wallets.",
+    "Installed/active prefix-based systemd inventory is complete only for discovered units; queued work and external or nonprefix producers remain unknown.",
+    "Cron and user-unit counts are metadata only. Container names and state were read without command lines, environment, mounts or logs.",
+    "8092/8093 loopback binding does not prove authenticated-proxy exclusion or isolation. No 8094 listener was observed.",
+    "No financial producer was fenced; no service, process, configuration, key, balance or token was changed."
+  ],
+  "productionCutoverAuthorized": false
+}

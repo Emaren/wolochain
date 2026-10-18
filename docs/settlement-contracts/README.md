@@ -29,6 +29,16 @@ consensus and legacy 8092/8093 authorities.
 
 ## October 18 dated release evidence
 
+The **[financial release checklist](financial-release-checklist.json)** is the
+single current six-control index, using the existing controller's exact control
+names. Its linked dated observations are nonauthorizing evidence, not independent
+consensus or financial certification. The current website release is independent
+and CERTIFIED at `78d2a332`; the Wolo financial HOLD is unchanged. See the
+[finite maintenance/cutover sequence](../mainnet-settlement-runbook.md#shortest-protected-operator-sequence).
+
+The earlier receipts below remain immutable historical records, including their
+then-current website assumptions; they do not supersede the current checklist.
+
 The [protected release-frontier receipt](protected-release-frontier-20261018.json)
 records subsequent unchanged runtime identities, local chain progress and
 noncertifying producer/request-store observations. The

@@ -1,0 +1,107 @@
+{
+  "mode": "READ_ONLY_UNENUMERATED_PRODUCER_SURFACE_METADATA",
+  "observedAtUtc": "2026-10-18T18:11:23.242384+00:00",
+  "cronContentsRead": false,
+  "processCommandLinesRead": false,
+  "environmentValuesPrinted": false,
+  "servicesChanged": false,
+  "financialProducersFenced": false,
+  "surfaces": [
+    {
+      "surface": "/etc/crontab",
+      "exists": true,
+      "isSymlink": false,
+      "kind": "file"
+    },
+    {
+      "surface": "/etc/anacrontab",
+      "exists": false
+    },
+    {
+      "surface": "/etc/cron.d",
+      "exists": true,
+      "isSymlink": false,
+      "kind": "directory",
+      "immediateEntryCount": 4
+    },
+    {
+      "surface": "/etc/cron.hourly",
+      "exists": true,
+      "isSymlink": false,
+      "kind": "directory",
+      "immediateEntryCount": 1
+    },
+    {
+      "surface": "/etc/cron.daily",
+      "exists": true,
+      "isSymlink": false,
+      "kind": "directory",
+      "immediateEntryCount": 10
+    },
+    {
+      "surface": "/etc/cron.weekly",
+      "exists": true,
+      "isSymlink": false,
+      "kind": "directory",
+      "immediateEntryCount": 4
+    },
+    {
+      "surface": "/etc/cron.monthly",
+      "exists": true,
+      "isSymlink": false,
+      "kind": "directory",
+      "immediateEntryCount": 2
+    },
+    {
+      "surface": "/var/spool/cron",
+      "exists": true,
+      "isSymlink": false,
+      "kind": "directory",
+      "immediateEntryCount": 3
+    },
+    {
+      "surface": "/var/spool/cron/crontabs",
+      "exists": true,
+      "isSymlink": false,
+      "kind": "directory",
+      "immediateEntryCount": 1
+    },
+    {
+      "surface": "/etc/systemd/user",
+      "exists": true,
+      "isSymlink": false,
+      "kind": "directory",
+      "immediateEntryCount": 3
+    },
+    {
+      "surface": "/root/.config/systemd/user",
+      "exists": false
+    }
+  ],
+  "dockerSocketPresent": true,
+  "podmanSocketPresent": false,
+  "containerRuntimeAndUserManagerUnits": [
+    "containerd.service",
+    "cron.service",
+    "docker.service",
+    "user@0.service",
+    "user@1000.service"
+  ],
+  "settlementSatchelListenerBindings": [
+    {
+      "port": 8093,
+      "loopbackOnlyBinding": true
+    },
+    {
+      "port": 8092,
+      "loopbackOnlyBinding": true
+    }
+  ],
+  "cannotProve": [
+    "Cron contents and user jobs were not inspected; counts do not identify financial execution.",
+    "No container daemon API was queried. Socket absence is not proof of no containers.",
+    "User service and root-only metadata does not cover every account or external origin.",
+    "Loopback settlement listeners do not prove app authorization, authenticated proxy exclusion, or signer isolation.",
+    "Queued work, independent keyring or direct RPC signing and external financial producers require named owner evidence."
+  ]
+}

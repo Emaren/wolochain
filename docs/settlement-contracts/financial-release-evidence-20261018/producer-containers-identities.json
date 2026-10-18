@@ -1,0 +1,40 @@
+{
+  "mode": "READ_ONLY_CONTAINER_NAMES_AND_UNIT_SERVICE_IDENTITIES",
+  "observedAtUtc": "2026-10-18T18:12:00.829108+00:00",
+  "noEnvironmentValuesOrCommandLines": true,
+  "servicesChanged": false,
+  "financialProducersFenced": false,
+  "containerInventoryAvailable": true,
+  "containers": [
+    {
+      "name": "tokenchain-hasura",
+      "state": "running"
+    }
+  ],
+  "appServiceIdentityMetadata": [
+    {
+      "unit": "aoe2hdbets-web.service",
+      "runsAsRoot": false,
+      "dynamicUser": false
+    },
+    {
+      "unit": "aoe2hdbets-api.service",
+      "runsAsRoot": false,
+      "dynamicUser": false
+    },
+    {
+      "unit": "aoe2dewarwagers-web.service",
+      "runsAsRoot": false,
+      "dynamicUser": false
+    },
+    {
+      "unit": "aoe2dewarwagers-api.service",
+      "runsAsRoot": false,
+      "dynamicUser": false
+    }
+  ],
+  "limits": [
+    "Container names/states do not reveal code, mounts, credentials, queues, network ingress or signer capability.",
+    "Non-root service identity is not proof of keyring isolation; ACLs, supplemental groups, delegated services and secret loading remain unreviewed."
+  ]
+}

@@ -15,7 +15,131 @@ sensitivity: "restricted"
 
 # WoloChain Mainnet Settlement Runbook
 
-## October 18 — exact remaining release frontier
+## October 18, 18:12 UTC — financial release HOLD and six-control handoff
+
+The **[financial release checklist](settlement-contracts/financial-release-checklist.json)**
+is the single current machine-readable six-control index. Its keys are the exact
+`ATTESTED` controls consumed by the existing cutover controller. Dated receipts
+remain immutable history; they are not competing readiness checklists. The index
+is observational and never a permit, continuous monitor, chain trust root or
+financial certification. Refresh it after every maintenance or financial change.
+
+The app owner independently deployed website `78d2a3329096c25b9429a3536f08c33d1d9dc96f`;
+its read-only status is CERTIFIED. Website delivery no longer depends on rushing
+this Wolo release. No app source was edited. The historical `bdbce253` settlement
+artifact remains distinct from the unactivated newer custody/escrow source.
+
+| Existing control | Status | Evidence and exact missing action |
+| --- | --- | --- |
+| HD/DE/external producers isolated | **BLOCKED** | 19 discovered app units, 11 active candidates; HD has independent staking/faucet configuration. Cron, two user managers and one container also exist. Named owners must classify every HTTP, queued, timer, cron, user and external signer path, then explicitly approve coordinated fencing. Do not blanket-stop all candidates. |
+| In-flight/accepted outcomes reconciled | **BLOCKED** | Primary still has one recorded accepted 100 WOLO request. Configured-node bytes/hash agree and report code 0 at height 1078913; this is not independently authenticated finality or authorized reconciliation. Independently bind bank effects to every obligation; never retry an unknown. |
+| Claim #889 preserved/reviewed | **BLOCKED** | A fresh READ ONLY / REPEATABLE READ query confirms the same 300 WOLO pending claim, attempted 2026-07-04T22:23:41.342Z, no stored hash. Preserve its liability and history. No exhausted historical cache search was repeated. Finance must supply independently reviewed paid/unpaid or continuing-hold disposition. |
+| Fresh quiesced verified backup | **BLOCKED** | Existing `--inspect` checks passed at 18:12:48 UTC, but created no backup and proved no quiescence. Approve the coordinated fence/drain first; then capture fresh restricted state/config/unit backups, verify checksums and exclusive state ownership. Never restore old payout histories as binary rollback. |
+| Reviewed code-only rollback rehearsed | **BLOCKED** | Existing offline controller tests cover uncertainty, permit expiry/revocation, partial rollout and bounded recovery; they are not a live rehearsal. Named operator must approve and witness the exact two-service rehearsal/recovery with producers fenced and consensus untouched. |
+| Bank solvency independently checked | **UNKNOWN** | Three distinct configured-node accounts observed; common escrow counted once. HD records 947 pending claims totaling 993,189 WOLO. Complete DE/external, escrow, unmaterialized obligations and fee liabilities remain unknown. Independently reconcile their overlap, ownership and fees before asserting solvency. |
+
+At 18:16:25 UTC, the sensor read 1,566 leaf requests and 793 runs: primary
+920 (914 recorded confirmed, 5 failed, 1 accepted) and founder 646 (609 recorded
+confirmed, 37 failed). It deduplicated 886 run references. The single run-only
+1,323,000 WOLO requested child has a recorded prebroadcast funds/reserve refusal
+(`attempted=false`, no hash), confirmed by the bounded 18:18:02 UTC follow-up.
+This is not independently proved payment absence or a certified debt. No finite
+execution-principal bound was emitted because evidence gaps remain. The primary
+count increased from the earlier 919; production was not quiesced.
+
+At 18:12 UTC, health and bank REST observations within the **same node trust
+domain** agreed on primary payout **396,507 WOLO**, founder payout
+**356,787.241424 WOLO**, and shared escrow **825,469.5 WOLO**. Configured payout
+floors are 250,000 and 1,000 WOLO respectively; escrow floor is 100 WOLO; each
+reported fee headroom is 10 WOLO. These values are configuration/local-node
+observations, not authenticated balances, fee estimates, available collateral
+or proof that any obligation is funded. The three HD pending claim groups are
+207,979 WOLO founder bonuses, 110,524 WOLO founder wins, and 674,686 WOLO winner
+bounties. Claim #889 is included in founder wins. **Do not add these claims to
+journal amounts**: their obligations may overlap. No finite global liability
+upper bound is established; missing records never mean zero.
+
+### Bounded journal accounting sensor
+
+`scripts/settlement-state-evidence.py` recovers preserved unfinished work and
+adds exact decimal integer accounting by input lane, signer role and recorded
+status. Run the reviewed source against only the two governed roots:
+
+```sh
+sudo python3 scripts/settlement-state-evidence.py \
+  --state-root /mnt/HC_Volume_105319120/wolochain-mainnet/settlement-state \
+  --state-root /mnt/HC_Volume_105319120/wolochain-mainnet/founder-rewards-settlement-state
+```
+
+Exit **3** means bounded evidence collected with the HOLD retained; **2** means
+unavailable/unsafe/inconsistent evidence. Neither exit allows release or retry.
+The sensor never accesses the network, changes financial state, deletes locks,
+prints wallet addresses, memos, request IDs or raw errors. It verifies stored
+normalized request fingerprints, bounds bytes/entries/depth, rejects symlinks
+and ambiguous records, checks receipt reuse, and separates aggregate runs from
+leaf obligations. Run children do not become extra liabilities when identical
+leaf records already account for them; missing/conflicting child evidence
+remains explicit. Every recorded payment status is an assertion requiring chain
+reconciliation. Observed principal uncertainty is bounded only for the records
+actually read; fees and global liabilities remain unknown. A stable read is
+**not an atomic or exclusive snapshot**, producer drain or proof of absence.
+When invoked through stdin without remote files, the reader's own source hash
+is unavailable; the collecting operator must retain the exact input-byte hash
+separately. Never infer provenance from a self-declared field.
+
+### Shortest protected operator sequence
+
+1. Independently classify the remaining producer/signing paths and designate HD,
+   DE, finance and recovery owners. Obtain **explicit owner approval for a
+   bounded financial maintenance window**, including the specific fences,
+   quiesced snapshots and two-service recovery rehearsal. That approval has not
+   been granted by this engineering work. The website stays independent.
+2. Under that approval, fence every classified financial producer and direct
+   signer; verify queues, accepted/uncertain requests and exclusive state
+   ownership. Preserve #889. Collect independently authenticated exact bank
+   effects and complete liabilities/fees. An unresolved payout is held, not
+   retried. If any control remains UNKNOWN/BLOCKED, do not promote.
+3. Capture fresh private checksummed snapshots with the existing snapshot tool
+   after quiescence, witness the reviewed binary-only rollback/recovery scope,
+   and update the same checklist with independently reviewed receipts. No
+   consensus restart, database rewind or restoration of financial state.
+4. Only after all six controls have real independent evidence, obtain the
+   owner's separate **paired code-only cutover approval**. Issue the existing
+   short-lived root:root 0600 permit bound to exact `bdbce253` and binary
+   `44d8aed5550d1b33635c734c1a359d0cb69e854093ef8c9a8a3da4f99d416ede`.
+   Use the existing commands below; never derive its witnessed controls from
+   CI or this checklist alone:
+
+   ```sh
+   sudo python3 scripts/settlement-bdbce253-code-cutover.py --mode inspect
+   sudo python3 scripts/settlement-bdbce253-code-cutover.py --mode promote \
+     --permit /root/aoe2war-release/approved-two-service-permit.json
+   ```
+
+5. Keep producers fenced. Verify both actual runtime PIDs/executable/VCS/health,
+   unchanged node PID/hash and chain progress. Failure permits only bounded
+   old-binary recovery for both settlement lanes; preserve all request, run,
+   receipt and financial state. A separately requested rollback or interrupted
+   recovery needs fresh authority. Keep CRITICAL recovery failures fenced.
+6. After actual paired runtime verification, separately approve source
+   alignment using the fail-fast exact-object/ancestry procedure below. Privately
+   preserve/review the ignored build-output directory; do not erase it to pass
+   a cleanliness check. Producer resumption and Satchel custody activation are
+   separate decisions. Satchel remains **UNAVAILABLE / NONCREDITING**.
+
+### Source ancestry and release independence
+
+PR #38 (`68cdc1ae`) integrates the existing ops and Satchel ancestry; #39
+(`7611946c`) builds on #38, #40 (`6ea89143`) on #39, and #41 (`9fb53d95`)
+on #40. Each remains an unchanged CI-green draft. This evidence/accounting leaf
+stacks on #41; no existing branch or valuable dirty worktree was discarded.
+Review/merge these source dependencies in order, or review an explicitly scoped
+backport separately. Neither merging them nor installing their operator scripts
+changes the pinned historical settlement binary target. Do not substitute the
+newer Satchel backend artifact for `bdbce253`, and do not deploy the full branch
+as a shortcut. Source tests and artifact receipts do not certify live custody.
+
+## October 18, 14:24 UTC — earlier release frontier (superseded)
 
 PRs #38–40 are unchanged CI-green draft source; none is a production release.
 The new controller correction binds the original operator permit and reloads it
@@ -57,10 +181,10 @@ scope; only then may the reviewed `promote --permit` procedure below execute.
 Financial producers remain fenced through runtime verification and the separate
 source transition. No automatic caller or retry may resolve an unknown payment.
 
-For the separate website-only route, the [observational contract](war-satchel-controlled-release.md#future-website-only-lane-observational-evidence-separate-authority)
-preserves this HOLD. The app owner must implement and independently test scope
-admission and authenticated evidence consumption. This repository does not
-authorize deployment of app candidate `7ee1606a0172b9248f3b9c52c92670a5b4e3645a`.
+The earlier website-only route was implemented and independently released by
+the app owner. Current website delivery is separate from this financial HOLD;
+see the current six-control packet above. Preserve these earlier observations
+as historical evidence rather than interpreting them as current release status.
 
 ## October 18 — machine-readable source/runtime authority gate
 
