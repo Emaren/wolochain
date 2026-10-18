@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `ops/20261018-predeploy-capacity-guard` at `9fb8508173e10d13f62798831ac778df7d277e1b`
+Implementation baseline: `ops/20261018-predeploy-capacity-guard` at `5b4088fc3d23ea22cccbc5eabe6fb3e781fbcb72`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
