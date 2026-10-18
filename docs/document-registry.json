@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "80452afa42f1968f1a115e2d3761741c839a4c84fb1f88e3a4530dc2615946ab",
+      "sha256": "bc4b438bea85dae74e53190c1ed42015d015b25040d16ef2b8f1d84def3260bf",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -289,7 +289,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-16",
       "sensitivity": "restricted",
-      "sha256": "fc5163f6da9e0aaf3db90f58bc08e7d3673ce58fa44214b094961d1177f07766",
+      "sha256": "be4f89894e0ea6ad0defa7f9a4ca128634a526420b7204db807c87c27412b433",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -809,7 +809,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "feat/20261018-guarded-two-service-code-cutover",
-    "commit": "f530088dd6f4faf8e0b70f2f09a96aa08cefa518"
+    "commit": "5933a1fb25bd05580cd9ce89b23f3a113aa38e72"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
