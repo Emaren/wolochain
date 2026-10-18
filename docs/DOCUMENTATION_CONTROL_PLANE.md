@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `test/bdbce253-two-lane-fault-rehearsal-20261017` at `1bf1c5a23baa8d7e56aad7d66ba99d60a2c4014a`
+Implementation baseline: `test/bdbce253-two-lane-fault-rehearsal-20261017` at `782691e15889fe15f3f2d7ed6f9c7759544c4c13`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
