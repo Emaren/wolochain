@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `feat/shared-hd-de-financial-ingress-inventory-20261017` at `59b0b2039c15d91240656ad92f97375327bae976`
+Implementation baseline: `ops/20261018-predeploy-capacity-guard` at `31904ff0d6c3c862f68dc5a24061713ec2318743`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
