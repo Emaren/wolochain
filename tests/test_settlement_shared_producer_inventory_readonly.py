@@ -69,6 +69,57 @@ class SharedHdDeProducerInventoryTests(unittest.TestCase):
         self.assertFalse(self.inv.relevant("wolochaind-mainnet.service"))
         self.assertFalse(self.inv.relevant("wolochain-mainnet-settlement.service"))
 
+    def test_uninstalled_expected_units_not_invented_or_show_queried(self):
+        def fake(args):
+            if args[0] == "list-units":
+                return "aoe2hdbets-web.service loaded active running -\\n"
+            if args[0] == "list-unit-files":
+                return "aoe2-wolo-transfer-heartbeat.timer enabled -\\n"
+            raise AssertionError("no absent exact-unit query expected")
+        with patch.object(self.inv, "run_systemctl", side_effect=fake):
+            names = self.inv.discover_units()
+        self.assertEqual(names, [
+            "aoe2-wolo-transfer-heartbeat.timer",
+            "aoe2hdbets-web.service",
+        ])
+        self.assertNotIn("aoe2hdbets-api.service", names)
+
+    def test_uninspectable_installed_unit_is_visible_and_fail_closed(self):
+        actual = {
+            "unit": "aoe2hdbets-web.service",
+            "active": True,
+            "isCandidateForExplicitMaintenanceReview": True,
+        }
+        with patch.object(self.inv, "discover_units", return_value=[
+            "aoe2-wolo-transfer-heartbeat.timer", "aoe2hdbets-web.service",
+        ]):
+            def fake_info(name):
+                if name.endswith(".timer"):
+                    raise subprocess.CalledProcessError(1, ["systemctl", "show"])
+                return actual
+            with patch.object(self.inv, "info", side_effect=fake_info):
+                report = self.inv.inspect()
+        self.assertEqual(report["unitsWithIncompleteInspection"], [
+            "aoe2-wolo-transfer-heartbeat.timer"
+        ])
+        self.assertFalse(report["inventoryCompleteForDiscoveredUnits"])
+        self.assertIn("aoe2hdbets-web.service", report["activeCandidateUnitsToReview"])
+        self.assertFalse(report["financialProducersFenced"])
+        self.assertIn("aoe2hdbets-api.service", report["expectedNamedUnitsNotFound"])
+
+    def test_fully_inspected_inventory_still_does_not_certify_freeze(self):
+        with patch.object(self.inv, "discover_units", return_value=["aoe2hdbets-web.service"]):
+            with patch.object(self.inv, "info", return_value={
+                "unit": "aoe2hdbets-web.service",
+                "active": True,
+                "isCandidateForExplicitMaintenanceReview": True,
+            }):
+                report = self.inv.inspect()
+        self.assertTrue(report["inventoryCompleteForDiscoveredUnits"])
+        self.assertEqual(report["unitsWithIncompleteInspection"], [])
+        self.assertFalse(report["financialProducersFenced"])
+        self.assertFalse(report["productionCutoverAuthorized"])
+
     def test_only_allowlisted_key_names_pass_through(self):
         fields = b"DATABASE_URL=postgres://a:SECRET@db/s\0" + (
             b"WOLO_SETTLEMENT_AUTH_TOKEN=VERY_SECRET\0"
