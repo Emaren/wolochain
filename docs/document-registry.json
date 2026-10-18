@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "2aa38abc13778b58dcd1177d7eddf496109088acbdd42fe3f2d04599593304ca",
+      "sha256": "80452afa42f1968f1a115e2d3761741c839a4c84fb1f88e3a4530dc2615946ab",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -289,7 +289,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-16",
       "sensitivity": "restricted",
-      "sha256": "4382d217c90ada8f1ca70369b43291ca72d5ca7bc5cbbd1de4aa109139d60bd6",
+      "sha256": "fc5163f6da9e0aaf3db90f58bc08e7d3673ce58fa44214b094961d1177f07766",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -808,8 +808,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "ops/20261018-predeploy-capacity-guard",
-    "commit": "5b4088fc3d23ea22cccbc5eabe6fb3e781fbcb72"
+    "branch": "feat/20261018-guarded-two-service-code-cutover",
+    "commit": "f530088dd6f4faf8e0b70f2f09a96aa08cefa518"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
