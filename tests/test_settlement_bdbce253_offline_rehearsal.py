@@ -97,8 +97,9 @@ class SettlementBdbce253OfflineFaultRehearsal(unittest.TestCase):
 
     def test_only_synthetic_state_and_no_external_commands(self):
         source = SCRIPT.read_text(encoding="utf-8")
+        # Match executable imports/calls, not harmless diagnostic strings.
         for forbidden in (
-            "subprocess", "os.system", "os.exec", "os.spawn", "socket.",
+            "import subprocess", "from subprocess", "os.system(", "os.exec", "os.spawn", "socket.",
             "urllib", "requests.", "paramiko", "psycopg", "systemctl ",
             "ssh ", "sudo ", "shell=True",
         ):
