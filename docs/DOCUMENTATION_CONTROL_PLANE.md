@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/retire-obsolete-settlement-rollback-unfence-20261016` at `330cfe9394ec1cb8ad0b45829ee873b70d5de9d8`
+Implementation baseline: `fix/exact-bdbce-settlement-artifact-receipt-20261017` at `46a0e88391bdd86cf8e34372c90a09dfaaf00ce3`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
