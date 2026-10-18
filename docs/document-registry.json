@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "cca5b0324536b3f818270d8269a498746dbf5209516ccfb8761c7724ba6b3c02",
+      "sha256": "7457fc661f31515dc682281e520e06c41dd32112b4b98fddde110cf9d94511d2",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -289,7 +289,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-16",
       "sensitivity": "restricted",
-      "sha256": "769ceee0c71041a098e0b3bbd568ffd259326e7e45ee2ee3362e5fc6564abd32",
+      "sha256": "bcf5dcd7c3aa264fa143f7897631c6b92934305cc8aa08f49bb7accfdfb77498",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -809,7 +809,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "feat/shared-hd-de-financial-ingress-inventory-20261017",
-    "commit": "9b421ece575c77e81fbd83b1ba3fd4d33d6b6574"
+    "commit": "59b0b2039c15d91240656ad92f97375327bae976"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
