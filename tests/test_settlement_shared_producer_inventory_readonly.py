@@ -71,15 +71,15 @@ class SharedHdDeProducerInventoryTests(unittest.TestCase):
 
     def test_template_definitions_do_not_block_but_real_instances_do(self):
         fake_files = (
-            "aoe2war-build@.service disabled -\\n"
-            "aoe2war-deps@.service disabled -\\n"
-            "aoe2war-speedos-cloudflare@.service disabled -\\n"
-            "aoe2war-build@job42.service enabled -\\n"
-            "aoe2hdbets-web.service enabled -\\n"
+            "aoe2war-build@.service disabled -\n"
+            "aoe2war-deps@.service disabled -\n"
+            "aoe2war-speedos-cloudflare@.service disabled -\n"
+            "aoe2war-build@job42.service enabled -\n"
+            "aoe2hdbets-web.service enabled -\n"
         )
         def fake(args):
             if args[0] == "list-units":
-                return "aoe2hdbets-web.service loaded active running -\\n"
+                return "aoe2hdbets-web.service loaded active running -\n"
             if args[0] == "list-unit-files":
                 return fake_files
             raise AssertionError(args)
