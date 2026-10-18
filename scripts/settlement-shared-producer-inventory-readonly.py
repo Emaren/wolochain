@@ -19,12 +19,16 @@ import subprocess
 import sys
 
 NAME = re.compile(r"^[A-Za-z0-9_.@:-]+\.(?:service|timer)$")
-APP_PREFIXES = ("aoe2hdbets-", "aoe2war-", "aoe2dewarwagers-")
+APP_PREFIXES = ("aoe2hdbets-", "aoe2war-", "aoe2dewarwagers-", "aoe2-wolo-")
 EXACT_APP = {
     "aoe2hdbets-web.service",
     "aoe2hdbets-api.service",
     "aoe2dewarwagers-web.service",
     "aoe2dewarwagers-api.service",
+    "aoe2hdbets.timer",
+    "aoe2hdbets.service",
+    "aoe2war.timer",
+    "aoe2war.service",
 }
 PROTECTED_WOLO = {
     "wolochain-mainnet-settlement.service",
