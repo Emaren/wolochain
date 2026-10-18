@@ -99,7 +99,7 @@ def discover_inventory() -> tuple[list[str], list[str]]:
             name = fields[0]
             if not relevant(name):
                 continue
-            if "@." in name:
+            if re.fullmatch(r"[^@]+@\.(?:service|timer)", name):
                 # Template definition, not a runnable unit instance.
                 templates.add(name)
                 continue
