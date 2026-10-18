@@ -15,6 +15,53 @@ sensitivity: "restricted"
 
 # WoloChain Mainnet Settlement Runbook
 
+## October 18 — exact remaining release frontier
+
+PRs #38–40 are unchanged CI-green draft source; none is a production release.
+The new controller correction binds the original operator permit and reloads it
+immediately before each forward side effect and after final verification.
+It opens the permit without following symlinks, checks the opened root-private
+descriptor and stable path, bounds the read below 8KiB, rejects duplicate fields
+and evaluates expiry after acquisition and parsing finish.
+Expiry, revocation or changed approval before the first mutation causes zero
+changes. After an approved mutation starts, failure allows only the fixed
+old-code cleanup: two settlement stops, at most two owned override removals,
+one reload and two settlement starts. This cleanup may finish after permit
+expiry so a half-switched pair is not abandoned. It never resumes financial
+producers, restores request/run history, renews rollout authority or changes
+consensus. A separately requested rollback/recovery requires fresh authority.
+The original five-minute issuance and ten-minute maximum permit bounds remain;
+every revalidation must satisfy both. Cleanup failure is CRITICAL and requires
+human inspection under the continuing financial fence.
+
+The dated [release-frontier receipt](settlement-contracts/protected-release-frontier-20261018.json)
+separates source proof, actual observations and missing independent controls:
+
+| Requirement | Established evidence | Remaining authority/evidence |
+| --- | --- | --- |
+| Exact legacy candidate | Staged `bdbce253` binary hash `44d8aed5…`; unchanged old lanes use `040126a2…` | Fresh protected preflight and independently approved paired installation. |
+| Consensus separation/progress | PID 1009 and hash `4b77f622…` unchanged; local `wolo-1` RPC advanced 2515247 → 2515266 | This is local operational progress, not independently authenticated financial finality. Never restart the node. |
+| Accepted/uncertain obligations | Primary: 913 recorded confirmed, 5 failed, 1 accepted; founder: 609 confirmed, 37 failed | Exclusive current reconciliation against independent chain evidence and app liabilities; recorded statuses never prove payment or zero liability. No retry. |
+| Founder #889 | Existing unresolved hold retained; exhausted historical investigation not repeated | App/finance owner must provide independently reviewed claim-to-payment evidence and preserved liability disposition. No inferred paid/unpaid result. |
+| HD/DE signer/producer isolation | Eleven discovered app unit candidates in a noncertifying inventory | Independent owners must fence all HTTP, workers, cron, external signers and queued/in-flight work. A list of processes is not a fence. |
+| Backups and recovery | Existing root-private snapshot/paired code-only controls and offline fault tests | Fresh quiesced checksummed snapshots, exclusive state ownership, actual operator recovery/watchdog authority and bounded window. An October 14 snapshot is not current certification. |
+| Reserves/financial authority | No new balance, solvency or custody certification issued | Independently reconcile bank reserves, all liabilities and fee headroom; issue the existing exact root-private permit only after all six witnessed controls. |
+| Source transition | Checkout still `78c25985`, with one preserved ignored build-output directory | Privately review/preserve ignored content; real two-lane runtime cutover must precede separately approved exact source fast-forward. |
+
+The next operator action is to assemble one dated, independently witnessed
+packet for the six existing `witnessedControls`, bound to the exact candidate,
+both services, current state/snapshot identities and maintenance window. Do not
+issue a permit from these observations or CI results. Once that packet passes,
+the owner can approve the existing paired code-only cutover and its recovery
+scope; only then may the reviewed `promote --permit` procedure below execute.
+Financial producers remain fenced through runtime verification and the separate
+source transition. No automatic caller or retry may resolve an unknown payment.
+
+For the separate website-only route, the [observational contract](war-satchel-controlled-release.md#future-website-only-lane-observational-evidence-separate-authority)
+preserves this HOLD. The app owner must implement and independently test scope
+admission and authenticated evidence consumption. This repository does not
+authorize deployment of app candidate `7ee1606a0172b9248f3b9c52c92670a5b4e3645a`.
+
 ## October 18 — machine-readable source/runtime authority gate
 
 The website's `vps-source-drift` hold must not be cleared by changing a Git SHA
