@@ -24,6 +24,8 @@ import re
 import stat
 import subprocess
 import sys
+import time
+from urllib.error import HTTPError, URLError
 from urllib.request import urlopen
 
 OLD = "/usr/local/bin/wolochaind-mainnet"
@@ -41,6 +43,10 @@ CONSENSUS = "wolochaind-mainnet.service"
 SERVICES = (PRIMARY, FOUNDER)
 OVERRIDE = "50-aoe2war-bdbce253-settlement-only.conf"
 EXACT_APPROVAL = "I approve an isolated two-settlement code-only cutover; payouts remain fenced"
+# systemd Type=simple may report active before the HTTP listener binds.
+# Transient transport failures alone may be retried for this bounded interval.
+STARTUP_HEALTH_GRACE_SECONDS = 15.0
+STARTUP_HEALTH_POLL_SECONDS = 0.25
 ATTESTED = {
     "hd_de_producers_isolated",
     "inflight_requests_and_accepted_tx_reconciled",
@@ -278,12 +284,52 @@ class Cutover:
             return "partial"
         return modes[0]
 
+    def wait_settlement_health(self, port: int, pinned_pid: int) -> None:
+        """Wait for a starting HTTP listener, never for wrong-chain or malformed health.
+
+        A process may be systemd-active before it has bound its localhost port.
+        Only temporary network transport faults receive a short retry window.
+        Semantic health mismatches, HTTP responses indicating failure, and
+        any change to the dedicated consensus process fail immediately.
+        """
+        deadline = time.monotonic() + STARTUP_HEALTH_GRACE_SECONDS
+        while True:
+            require(self.pin_node() == pinned_pid,
+                    "consensus changed during settlement startup wait")
+            try:
+                self.live.health(port)
+                return
+            except HTTPError:
+                raise
+            except (URLError, ConnectionRefusedError, ConnectionResetError,
+                    TimeoutError) as exc:
+                if isinstance(exc, URLError) and not isinstance(
+                    exc.reason, (ConnectionRefusedError, ConnectionResetError,
+                                 TimeoutError)
+                ):
+                    raise
+                if time.monotonic() >= deadline:
+                    raise Blocked(
+                        f"settlement localhost port {port} did not become "
+                        "ready before the bounded health deadline"
+                    ) from exc
+                time.sleep(min(STARTUP_HEALTH_POLL_SECONDS,
+                               max(0.0, deadline - time.monotonic())))
+
     def assert_services(self, generation: str, pinned_pid: int) -> None:
         program, sha = (OLD, OLD_SHA) if generation == "old" else (NEW, NEW_SHA)
         for unit in SERVICES:
             self.running(unit, program, sha)
         require(self.pin_node() == pinned_pid,
                 "consensus PID changed during settlement operation")
+        for port in (8092, 8093):
+            self.wait_settlement_health(port, pinned_pid)
+        # A lane might exit while the other is becoming ready: recheck both
+        # executable identities and health at the end of the bounded wait.
+        for unit in SERVICES:
+            self.running(unit, program, sha)
+        require(self.pin_node() == pinned_pid,
+                "consensus changed after settlement startup")
         self.live.health(8092)
         self.live.health(8093)
 
