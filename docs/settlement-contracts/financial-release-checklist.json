@@ -1,6 +1,6 @@
 {
   "schema": "aoe2war.wolo.financial-release-checklist.v1",
-  "updated_at_utc": "2026-10-18T18:18:43.997778+00:00",
+  "updated_at_utc": "2026-10-18T23:21:39.340946+00:00",
   "canonical_issue": "https://github.com/Emaren/wolochain/issues/5",
   "role": "Single current observational six-control index; never a release permit or autonomous controller",
   "overall_status": "HOLD",
@@ -20,13 +20,21 @@
         "producer-surface-metadata.json",
         "producer-containers-identities.json"
       ],
-      "established": "19 named systemd candidates inspected;11 active. Cron, user managers, container and independent HD staking/faucet configuration observed. No fence performed.",
+      "established": "All19originalunitobjects source-classified, cron/user/container/nonprefix paths traced. OrdinaryHD/DEGET can initiate financial reconciliation. HD holds both settlementbearers and independentkeyring routes; no activefence. See source-bound capability analysis.",
       "unknowns": [
-        "nonprefix/user/cron/container/external financial authority",
-        "all signers, queues, HTTP and independently signed paths"
+        "Name and suspend all off-host/manual/CI/Operator Bridge signing and restore authority for approved window. Host metadata cannot prove absence.",
+        "Keep configured dormant mainnet Hermes relay inactive; attest no manual start/signing and prove any activation fence under actual systemd unit precedence. No keys inspected.",
+        "Prove any availability-preserving global financial/identity gate covers GET side effects, workers, direct API aliases and independent CLI signers; current source does not.",
+        "Validate actual activation-fence mechanism on custom /etc unit files; runtime mask semantics are not assumed. Review proposed sequence and partial failure behavior before approval.",
+        "Bind per-PID kernel cohort classification to a fresh exact-bearer observation before window; existing126 ESRCH gaps have separate same-series PF_KTHREAD evidence, not retroactive perPID proof."
       ],
-      "next_action": "Named HD/DE/external owners classify exact producer and signer paths; obtain explicit approval for coordinated financial fence. Do not blanket-stop candidates.",
-      "requires_production_approval": true
+      "next_action": "Complete named external-owner freeze and independently validate exact per-unit activation fence/partial-failure plan; obtain explicit maintenanceapproval before any producer/service operation. Featuredevelopment now proceeds separately.",
+      "requires_production_approval": true,
+      "capability_analysis": {
+        "path": "docs/settlement-contracts/producer-capabilities-20261018.json",
+        "sha256": "69f052d92962991e28d1558538fc661a871479854205786a55b89d9116fcfbda",
+        "observed_window_utc": "2026-10-18T19:07:59Z/2026-10-18T19:15:53Z"
+      }
     },
     "inflight_requests_and_accepted_tx_reconciled": {
       "status": "BLOCKED",
