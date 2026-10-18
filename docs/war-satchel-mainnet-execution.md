@@ -506,3 +506,43 @@ revisions arriving out of order, restart/uncertain reservations, physical receip
 reuse, independent withdrawal authority and nested HTTP schema/receipt binding.
 The C3 SDK timestamp/status-commit checks were already present; the recovered
 patch adds the missing witness freshness check after light-client I/O.
+
+## Exact HD #656 compatibility handoff (source inspected through GitHub)
+
+At HD #656 head `1a79e5f615bff0ebf2f5c6903042ac26f42c5424`,
+`warSatchelDedicatedSignerClient.ts` still sends an unsigned
+`POST /satchel/v1/one-shot` and expects the historical
+`broadcast_status:"accepted_once"` field. Its
+`warSatchelAutoBetExecutor.ts` signer input has no reservation approval.
+That contract intentionally cannot initiate a new wager against this backend;
+new source requires `/satchel/v2/one-shot` and independent owner-ledger review.
+The concurrent app engineer owns the following minimal compatible patch:
+
+1. Add the exact `WagerReservation` object from the OpenAPI contract to the
+   existing signer input. After canonical ticket preparation, independently
+   review the durable owner reservation, current consent/market/caps/revocation
+   and separately reconciled fee headroom. Bind operation, owner, vault, escrow,
+   amount, exact prepared ticket memo, hold/ledger/consent digests and short
+   expiry. Persist the original approval and exact request before its one-shot
+   attempt; never manufacture a signature from a service credential.
+2. Preserve the existing serializable reservation and
+   `markSatchelSubmissionAttempt` no-retry fence. Extend the client to send
+   `protocol:2`, exact snake-case fields and the stored signed reservation to
+   `/satchel/v2/one-shot`. Retain the private 8094 bearer protocol; no 8194/HMAC
+   client or new parallel ledger is needed.
+3. Consume actual `status:ACCEPTED` (or authenticated `CONFIRMED`), exact
+   request/operation identity, valid hash and `durable_request_fenced:true`.
+   Protocol 2 does not emit the misleading historical `broadcast_confirmed`
+   alias. An accepted broadcast still requires authenticated exact funding proof
+   before committing a ticket, consuming a game slot or posting ledger effects.
+4. On timeout, malformed response, UNKNOWN or uncertain attempt acknowledgment,
+   keep the original app hold and recover via original operation lookup and
+   reconcile/proof routes. Never resubmit, change IDs or auto-refund uncertainty.
+   Add real cross-contract tests for signed v2 acceptance, invalid/expired or
+   reused approval, changed memo/owner/fee and restart recovery, preserving the
+   false financial activation gate.
+
+The exact Go approval bytes are supplied by exported
+`WagerReservationMessage`, not an app-invented canonicalizer. HD's existing
+1,000 WOLO combined game and 10,000 daily policy remain app authority; this
+handoff changes neither cap. No app files were read locally or modified.

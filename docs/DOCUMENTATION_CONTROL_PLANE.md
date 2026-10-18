@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `codex/satchel-production-backend` at `ab293c896d9f58f7e37aca0090c533a94c0488e4`
+Implementation baseline: `codex/settlement-source-runtime-authority` at `ce00b56c377b18ec70935f6bad629d78b2586681`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 

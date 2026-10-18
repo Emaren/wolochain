@@ -1,0 +1,51 @@
+{
+  "receipt_scope": "dated read-only observation; never financial or deployment authorization",
+  "controller_path": "scripts/settlement-bdbce253-code-cutover.py",
+  "controller_sha256": "c1beb87fd07531c21f9979eada69f06c79af8a3a95be9edc46efd53c785c1901",
+  "exit_code": 2,
+  "observation": {
+    "blockers": [
+      "SOURCE_TREE_OR_INDEX_NOT_CLEAN",
+      "PROTECTED_TWO_SERVICE_CODE_CUTOVER_REQUIRED",
+      "SOURCE_TRANSITION_REQUIRED_AFTER_VERIFIED_CODE_CUTOVER"
+    ],
+    "checkout_clean": false,
+    "checkout_revision": "78c25985420ee41a6678c42fab8ea8d6c3b1b519",
+    "claim_889_resolved": false,
+    "code_cutover_required": true,
+    "consensus_pid": 1009,
+    "consensus_unchanged": true,
+    "custody_authorized": false,
+    "expected_revision": "bdbce253c524d6faac14f61cd129ac5072287c3f",
+    "financial_drain_certified": false,
+    "ignored_entries": 1,
+    "live_code_state": "old",
+    "live_settlement_revision": "78c25985420ee41a6678c42fab8ea8d6c3b1b519",
+    "live_settlement_sha256": "040126a2884946caf1651a50b7d8115c5a6fb2d5aa94fcbbe150694602d451a5",
+    "mode": "READ_ONLY",
+    "observed_at_utc": "2026-10-18T13:16:47.069891Z",
+    "production_mutated": false,
+    "release_authorized": false,
+    "schema": "aoe2war.wolo.settlement-source-authority.v1",
+    "settlement_pids": {
+      "wolochain-founder-rewards-settlement.service": 1010,
+      "wolochain-mainnet-settlement.service": 1012
+    },
+    "source_runtime_aligned": false,
+    "source_transition_required": true,
+    "source_transition_runtime_prerequisite_met": false,
+    "status": "BLOCKED",
+    "tracked_change_entries": 0,
+    "tracked_index_visible": true,
+    "untracked_entries": 0
+  },
+  "ignored_metadata": {
+    "entries": 1,
+    "category": "build_output_directory",
+    "paths_redacted": true,
+    "content_disposition_reviewed": false
+  },
+  "target_git_object_observed_present_at_20261018T1301Z": false,
+  "production_mutated": false,
+  "financial_activation_authorized": false
+}
