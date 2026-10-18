@@ -123,7 +123,7 @@
     },
     "collection-provenance.json": {
       "path": "docs/settlement-contracts/financial-release-evidence-20261018/collection-provenance.json",
-      "sha256": "11870a343dbcc8780de3ab82a60b42e6daf2dc8253f8f727e18a676519fc84b8"
+      "sha256": "34410fe3e2a22cf127cedadda508370f3fe749df4d14dfa5260f6901ca0a148c"
     },
     "hd-liability-observations.json": {
       "path": "docs/settlement-contracts/financial-release-evidence-20261018/hd-liability-observations.json",
@@ -131,11 +131,11 @@
     },
     "producer-containers-identities.json": {
       "path": "docs/settlement-contracts/financial-release-evidence-20261018/producer-containers-identities.json",
-      "sha256": "cebc2d48730c6d6b0485f3c343e49e80892f1049d5de53416118571aac08a428"
+      "sha256": "f4ee1d8c08c85adae2bbcd03a566a15652443b1f49acf09153d5eb82acfd57dd"
     },
     "producer-refresh-handoff.json": {
       "path": "docs/settlement-contracts/financial-release-evidence-20261018/producer-refresh-handoff.json",
-      "sha256": "ac79b0c99925f7f2a9b35fa5cbf04f2f77f31affe48dc148766e5c41ef249a36"
+      "sha256": "542a6efa627e15aa4c70bf75853bf26362c946e9263acf64ccb01ca47303978f"
     },
     "producer-surface-metadata.json": {
       "path": "docs/settlement-contracts/financial-release-evidence-20261018/producer-surface-metadata.json",

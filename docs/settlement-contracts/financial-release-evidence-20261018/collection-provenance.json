@@ -27,5 +27,15 @@
     "Sequential reads are not a coordinated or quiesced snapshot.",
     "No producer fenced, payment retried, journal rewritten, backup created or service changed."
   ],
-  "production_mutated": false
+  "production_mutated": false,
+  "published_receipt_transforms": {
+    "producer-containers-identities.json": {
+      "raw_receipt_sha256": "cebc2d48730c6d6b0485f3c343e49e80892f1049d5de53416118571aac08a428",
+      "transform": "Container name withheld as name_sha256 to preserve repository legacy-name invariant; raw SSH output retained locally."
+    },
+    "producer-refresh-handoff.json": {
+      "raw_receipt_sha256": "ac79b0c99925f7f2a9b35fa5cbf04f2f77f31affe48dc148766e5c41ef249a36",
+      "transform": "Container name withheld as name_sha256 to preserve repository legacy-name invariant; raw SSH output retained locally."
+    }
+  }
 }

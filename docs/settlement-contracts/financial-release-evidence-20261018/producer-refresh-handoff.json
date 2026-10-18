@@ -26,8 +26,9 @@
     "deAuthorityExclusionCertified": false,
     "dockerContainers": [
       {
-        "name": "tokenchain-hasura",
-        "state": "running"
+        "state": "running",
+        "name_sha256": "8a23a14f0218c88678ffa0624350b4630c107104aaa7f981e2290427eb376c32",
+        "name_disclosure": "WITHHELD_RAW_RECEIPT_RETAINED"
       }
     ],
     "userServiceManagersObserved": [
@@ -64,8 +65,9 @@
     },
     {
       "path": "producer-containers-identities.json",
-      "sha256": "cebc2d48730c6d6b0485f3c343e49e80892f1049d5de53416118571aac08a428",
-      "observedAtUtc": "2026-10-18T18:12:00.829108+00:00"
+      "sha256": "f4ee1d8c08c85adae2bbcd03a566a15652443b1f49acf09153d5eb82acfd57dd",
+      "observedAtUtc": "2026-10-18T18:12:00.829108+00:00",
+      "raw_receipt_sha256": "cebc2d48730c6d6b0485f3c343e49e80892f1049d5de53416118571aac08a428"
     }
   ],
   "limits": [
@@ -75,5 +77,7 @@
     "8092/8093 loopback binding does not prove authenticated-proxy exclusion or isolation. No 8094 listener was observed.",
     "No financial producer was fenced; no service, process, configuration, key, balance or token was changed."
   ],
-  "productionCutoverAuthorized": false
+  "productionCutoverAuthorized": false,
+  "raw_receipt_sha256": "ac79b0c99925f7f2a9b35fa5cbf04f2f77f31affe48dc148766e5c41ef249a36",
+  "published_receipt_transform": "Container names replaced with SHA256; raw original retained in restricted local evidence packet. State and all authority limits unchanged."
 }
