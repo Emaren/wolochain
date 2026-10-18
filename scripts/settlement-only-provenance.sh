@@ -3,7 +3,7 @@
 set -euo pipefail
 
 EXPECTED_OLD_SOURCE="78c25985420ee41a6678c42fab8ea8d6c3b1b519"
-EXPECTED_NEW_SOURCE="3ea79363695dd93be5f0a5e8a5121cf6e31d27b8"
+EXPECTED_NEW_SOURCE="bdbce253c524d6faac14f61cd129ac5072287c3f"
 EXPECTED_OLD_SETTLEMENT_SHA="040126a2884946caf1651a50b7d8115c5a6fb2d5aa94fcbbe150694602d451a5"
 EXPECTED_NODE_SHA="4b77f622191db7550cb87cafb8f1886a0aadebee3eb6565f9f90036f809e61d3"
 EXPECTED_NODE_SOURCE="d3bd62414a047a492a3814b7d3baa2717d64db2e"
@@ -93,13 +93,19 @@ curl -fsS --max-time 8 'http://127.0.0.1:8092/settlement/v1/health' >/dev/null |
 echo "PASS settlement 8092 health endpoint"
 
 if [[ -n "$candidate" ]]; then
-  [[ -f "$candidate" && -r "$candidate" ]] || fail "candidate missing/unreadable"
+  [[ -f "$candidate" && -r "$candidate" && ! -L "$candidate" ]] || fail "candidate missing/unreadable or symlink"
   [[ "$(sha_file "$candidate")" == "${expected_candidate_sha,,}" ]] ||
     fail "candidate SHA256 mismatch with independent CI receipt"
   [[ "$(vcs_value "$candidate" vcs.revision)" == "$EXPECTED_NEW_SOURCE" ]] ||
     fail "candidate is not compiled from reviewed source $EXPECTED_NEW_SOURCE"
   [[ "$(vcs_value "$candidate" vcs.modified)" == false ]] ||
     fail "candidate is not a clean-source build"
+  [[ "$(vcs_value "$candidate" GOOS)" == linux ]] ||
+    fail "candidate is not a Linux executable"
+  [[ "$(vcs_value "$candidate" GOARCH)" == amd64 ]] ||
+    fail "candidate is not an amd64 executable"
+  [[ "$(sha_file "$candidate")" == "${expected_candidate_sha,,}" ]] ||
+    fail "candidate content changed during inspection"
   printf 'PASS candidate exact revision=%s sha256=%s\n' "$EXPECTED_NEW_SOURCE" "$expected_candidate_sha"
 else
   echo "NO CANDIDATE GIVEN: existing runtime verified; deployment NOT authorized"

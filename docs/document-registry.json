@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "56b3b909cdeba16192930f86faba37fd6fa567019cc03879d00a768c6ecb3b56",
+      "sha256": "1716295e37d4f18e510f2bf064512aac4e4a9cb1641570c80ee50a795ef59279",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -808,8 +808,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/retire-obsolete-settlement-rollback-unfence-20261016",
-    "commit": "330cfe9394ec1cb8ad0b45829ee873b70d5de9d8"
+    "branch": "fix/exact-bdbce-settlement-artifact-receipt-20261017",
+    "commit": "34f8a76d96858aeffc1fbd24b16d322e8678889d"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
