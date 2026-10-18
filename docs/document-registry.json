@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "fafc339ed68fcb2c46f84feda2008ac341ab44f943f34acbfc66144e56b65c46",
+      "sha256": "97a5c19b3449860bea2ff0996a7e851447d73f86a162e7acd2c8966c837bf788",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -947,7 +947,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "integration/20261018-satchel-ops-finance-held",
-    "commit": "952bacef86febf24d3d799aca64b097b9e4502e6"
+    "commit": "25df6e4a3b79fcd2df7ead45b8af5e877905986a"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
