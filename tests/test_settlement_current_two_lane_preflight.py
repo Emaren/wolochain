@@ -60,9 +60,9 @@ class CurrentTwoLanePreflightTests(unittest.TestCase):
 
     def test_preflight_never_mutates_services_or_banks(self):
         for forbidden in (
-            r"\\bsystemctl\\s+(?:stop|start|restart|reload|enable|disable|daemon-reload)\\b",
-            r"\\b(?:install|cp|mv|rm|chmod|chown|kill|pkill)\\s+",
-            r"\\b(?:send|broadcast|migrate|restore|rollback)\\s+",
+            r"\bsystemctl\s+(?:stop|start|restart|reload|enable|disable|daemon-reload)\b",
+            r"\b(?:install|cp|mv|rm|chmod|chown|kill|pkill)\s+",
+            r"\b(?:send|broadcast|migrate|restore|rollback)\s+",
         ):
             with self.subTest(pattern=forbidden):
                 self.assertIsNone(re.search(forbidden, self.preflight))
