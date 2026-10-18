@@ -868,6 +868,20 @@ not units to automatically stop**. In particular the list
 excluded from app-producer stop candidates. No automation in this
 source stops or restarts any unit.
 
+The 2026-10-18 VPS read-only inventory returned
+`BLOCKED: incomplete systemd unit inventory` with exit code 2 because
+the original discovery path **synthesized** extra expected unit names
+and attempted `systemctl show` against units that may not be installed.
+That generic error did **not** establish that a real signer was active,
+missing, or misconfigured. The corrected inventory enumerates only
+actual loaded/installed units, lists known exact-name units absent from
+the discovery separately as `expectedNamedUnitsNotFound`, and prints
+successful per-unit observations even when a particular installed unit
+cannot be inspected. The unresolved unit names are retained in
+`unitsWithIncompleteInspection`, with exit code 2, never reported
+as safe. An entirely inspected inventory still deliberately exits 3,
+not a financial fence certificate.
+
 Absent process environment keys do not prove disabled signers, and
 installed unit enumeration cannot find every cron, container,
 external signer, database job or HTTP caller. Its exit code is 3
