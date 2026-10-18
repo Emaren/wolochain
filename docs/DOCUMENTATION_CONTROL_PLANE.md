@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `feat/20261018-guarded-two-service-code-cutover` at `86f14703f9f1e3e679dcd7da6ba849d727357955`
+Implementation baseline: `integration/20261018-satchel-ops-finance-held` at `952bacef86febf24d3d799aca64b097b9e4502e6`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 

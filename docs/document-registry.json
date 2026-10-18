@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "6551dac61d936ba82aca591cb915ec326d5e6df3eab229b3690f1a0a5b584359",
+      "sha256": "fafc339ed68fcb2c46f84feda2008ac341ab44f943f34acbfc66144e56b65c46",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -312,7 +312,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-17",
       "sensitivity": "restricted",
-      "sha256": "2c8af780cdb706cb823622bbe0a0e73ced33b8af78d4b5e70228a96fc4ec7c2b",
+      "sha256": "519053f275e0bf41cc3f2e914312d47fee8696552ee9f3b7151b0cb0da69eb35",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -946,8 +946,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "feat/20261018-guarded-two-service-code-cutover",
-    "commit": "86f14703f9f1e3e679dcd7da6ba849d727357955"
+    "branch": "integration/20261018-satchel-ops-finance-held",
+    "commit": "952bacef86febf24d3d799aca64b097b9e4502e6"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
