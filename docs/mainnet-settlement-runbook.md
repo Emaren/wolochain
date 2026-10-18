@@ -777,3 +777,43 @@ and obtain explicit named operator approval. App protected Finish and
 War Satchel live custody require their own separate migration and
 financial-bridge release gates.
 
+## October 18 current-version rollback-state plan — no mutating recovery yet
+
+The production operator's exact reviewed preflight from WoloChain PR #31
+returned `PREFLIGHT_PASS` on 2026-10-18 at 01:21:40 UTC. Both existing
+settlement units (PIDs 1012 and 1010), dedicated consensus PID 1009,
+root-owned non-live `bdbce253` candidate, original systemd units,
+restricted historical snapshot integrity, and health ports 8092/8093
+matched their exact pins. No lock files were observed, and about 50 GB
+remained on the dedicated volume. The receipt explicitly retained
+`FINANCIAL_DRAIN_CERTIFIED=false`,
+`PARALLEL_HD_DE_SIGNER_FREEZE_CERTIFIED=false`, and
+`CURRENT_VERSION_ROLLBACK_CERTIFIED=false`. No promotion occurred.
+
+The source-only `scripts/settlement-bdbce253-recovery-plan.sh --inspect`
+now validates the exact rollback *shape* without permitting any systemd
+or filesystem mutation. It recognizes both an original two-service
+state and an exact two-service candidate state; mismatched, partial,
+foreign or modified drop-in configurations block. It pins the preserved
+consensus executable and checks that its PID has not changed during
+inspection. `--rollback`, `--apply` and `--rescue` remain unsupported.
+This is **not** a live rollback tool and is **not** a rehearsed
+rollback. It cannot be substituted for an approved current-version
+two-service recovery controller and watchdog.
+
+Independent live `findmnt` returned
+`/mnt/HC_Volume_105319120 ext4 rw,relatime,discard` with no `noexec`
+option. Both systemd units have empty User/Group/RootDirectory/
+NoExecPaths and DynamicUser=no, consistent with root execution of the
+root-only candidate; no service identity or mode changes were made.
+
+Before any mutating controller is introduced or invoked, provide proof
+of HD and DE payment-producer fencing, in-flight drain, exact accepted
+bank receipt ownership and outstanding liability reconciliation,
+post-quiescence restricted backup, offline rollback rehearsals with
+negative tests, an independently reviewed watchdog that never touches
+the sole consensus node, and named operator approval. Rollback must
+switch **code only** for the two settlement services: never restore
+old request/run-state trees into live directories and never
+automatically reopen payout ingress. Production website Finish,
+database migration and Satchel enablement are separate approval rails.
