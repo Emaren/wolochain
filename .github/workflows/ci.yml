@@ -37,6 +37,7 @@ jobs:
         uses: bufbuild/buf-setup-action@v1
         with:
           version: 1.54.0
+          github_token: ${{ github.token }}
 
       - name: Build wolochaind
         run: go build ./cmd/wolochaind
@@ -84,6 +85,9 @@ jobs:
 
       - name: Two-filesystem predeploy capacity gate (nonmutating)
         run: python3 -m unittest discover -s tests -p 'test_settlement_predeploy_capacity_readonly.py' -v
+
+      - name: Guarded current settlement code-only cutover and fault rollback (offline)
+        run: python3 -m unittest discover -s tests -p 'test_settlement_bdbce253_code_cutover.py' -v
 
       - name: Chain invariant guard
         run: WOLO_SKIP_RUNTIME_CHECKS=1 ./scripts/check-chain-invariants.sh

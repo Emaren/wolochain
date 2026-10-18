@@ -941,3 +941,63 @@ to make this check pass. If root is low, add verified storage or otherwise
 recover unrelated expendable capacity under a separately reviewed procedure.
 Do not attempt protected Finish or wallet maintenance based solely on this
 capacity report.
+
+## October 18: source-controlled two-service CODE-only controller (NO LIVE CUTOVER)
+
+The new `scripts/settlement-bdbce253-code-cutover.py` narrows all
+service mutations to the two exact systemd services
+`wolochain-mainnet-settlement.service` and
+`wolochain-founder-rewards-settlement.service`. The dedicated
+`wolochaind-mainnet.service` is inspected and pinned by executable and
+unchanged PID, **NEVER stopped/restarted/overridden**. Both old and new
+settlement executables remain immutable and must match previously reviewed
+SHA-256 values. This script never copies, deletes, restores or rewinds
+settlement request/run state. App payment producers remain fenced after
+either cutover or rollback; code-only recovery is **NOT** permission to
+restart financial ingress.
+
+CLI defaults to root-only `--mode inspect`, with no service mutations.
+Exact `--mode promote`, `--mode rollback` and `--mode
+recover-interrupted` are guarded by an **explicit fresh operator finance
+permit** (`--permit`, absolute root-owned and root-group 0600 JSON with
+exact implementation revision, candidate SHA, operator acknowledgement,
+current 10-minute-or-less validity and named independently reviewed
+conditions). The external permit is a *human attestation*, **not**
+cryptographic proof of financial drain or bank reconciliation. It MUST NOT
+be created until independent evidence establishes ALL of the following:
+HD+DE, timers, HTTP, cron, and external signer origins fenced and retained
+throughout maintenance; in-flight/accepted chain receipts reconciled;
+founder claim #889 entitlement preserved with bank/liability review;
+verified fresh post-quiescence state and unit backup; independently reviewed
+live service rollback rehearsal; and proven bank solvency. Source CI alone
+cannot issue that authority.
+
+The controller checks exact original override-free service identity,
+both endpoints and consensus continuity, then serializes operator mutations
+under a root-only nonblocking `flock` file. Promotion stops only the two
+settlement services, creates two exact exclusive-owned drop-ins, reloads
+systemd, starts only those services, and verifies running executables and
+the chain-specific health endpoints. systemd can report a service active before
+its loopback HTTP listener binds, so a **15-second bounded per-lane readiness
+wait** retries only temporary connection-refused/reset/timeout errors. A
+wrong-chain or malformed response, HTTP failure, unexpected process
+executable or consensus PID drift fails immediately. After both lanes pass
+startup readiness, executable identities and both health endpoints are
+checked again. Offline fault tests cover delayed HTTP binding, timeout and
+wrong-chain rejection. A failure triggers **code-only**
+rollback to the original existing binary (not a state-tree restore);
+if rollback also fails, it explicitly blocks financial ingress until
+manual recovery. Interrupted-code recovery can handle exactly owned
+mixed overrides or stopped lanes with the same permit. Foreign drop-ins
+and unexpected executable identities are never overwritten.
+
+Offline CI injects errors at service stop, override installation, reload,
+service start and health, checking original program restoration, unchanged
+simulated request data, no consensus mutation, and no application writer
+resume. **These simulated tests are not a real systemd rehearsal**. PR
+approval is a SOURCE-ONLY milestone; `LIVE_ROLLBACK_CERTIFIED=false` and
+`CUTOVER_AUTHORIZED=false` remain until the operator executes a separately
+approved maintenance rehearsal with recorded results. Do not run a
+mutating mode until that certification and a named go/no-go are documented.
+The protected HD `finish`, eighth schema migration, and dedicated Satchel
+8094 activation require separate explicit approval and receipts.
