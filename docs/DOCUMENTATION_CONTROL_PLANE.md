@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/exact-bdbce-settlement-artifact-receipt-20261017` at `46a0e88391bdd86cf8e34372c90a09dfaaf00ce3`
+Implementation baseline: `fix/exact-bdbce-settlement-artifact-receipt-20261017` at `34f8a76d96858aeffc1fbd24b16d322e8678889d`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
