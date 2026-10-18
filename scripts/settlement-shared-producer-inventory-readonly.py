@@ -92,7 +92,8 @@ def discover_units() -> list[str]:
             name = fields[0]
             if relevant(name):
                 names.add(name)
-    names.update(EXACT_APP)
+    # Do not invent missing units. systemctl show on fabricated service names
+    # can itself fail; log missing exact names separately for operator review.
     return sorted(names)
 
 
@@ -144,7 +145,16 @@ def info(unit: str) -> dict:
 
 
 def inspect() -> dict:
-    units = [info(name) for name in discover_units()]
+    discovered = discover_units()
+    units = []
+    incomplete_units = []
+    for name in discovered:
+        try:
+            units.append(info(name))
+        except (OSError, ValueError, subprocess.SubprocessError):
+            # Keep the successful inventory visible but NEVER silently conclude
+            # a failed inspection is safe or that a writer is inert.
+            incomplete_units.append(name)
     candidates = sorted(
         x["unit"] for x in units if x["isCandidateForExplicitMaintenanceReview"]
     )
@@ -153,6 +163,9 @@ def inspect() -> dict:
         "observedAtUtc": datetime.now(timezone.utc).isoformat(),
         "appUnits": units,
         "activeCandidateUnitsToReview": candidates,
+        "expectedNamedUnitsNotFound": sorted(EXACT_APP - set(discovered)),
+        "unitsWithIncompleteInspection": incomplete_units,
+        "inventoryCompleteForDiscoveredUnits": len(incomplete_units) == 0,
         "neverAutomaticStop": sorted(PROTECTED_WOLO),
         "cannotProve": [
             "no external or independently signed payout origin",
@@ -184,6 +197,9 @@ def main() -> int:
         print("BLOCKED: incomplete systemd unit inventory", file=sys.stderr)
         return 2
     print(json.dumps(report, indent=2))
+    if report["unitsWithIncompleteInspection"]:
+        print("BLOCKED: some discovered units could not be inspected", file=sys.stderr)
+        return 2
     return 3  # deliberately noncertifying even if no units appear active
 
 
