@@ -14,6 +14,7 @@ import sys
 import tempfile
 import unittest
 from unittest.mock import patch
+from urllib.error import URLError
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts" / "settlement-bdbce253-code-cutover.py"
@@ -182,6 +183,62 @@ class GuardedTwoServiceCutover(unittest.TestCase):
                     s.Cutover(fake).promote()
                 self.assertEqual(s.Cutover(fake).inspect(), "old")
                 fake.assert_no_node_or_ledger_change()
+
+    def test_first_transient_connection_refusal_waits_then_succeeds(self):
+        # systemd-active can precede the localhost listener binding.
+        s = self.s
+        fake = FakeLive(s)
+        actual_health = fake.health
+        seen = {"refusals": 0}
+
+        def delayed(port):
+            if port == 8092 and fake.dropins[s.PRIMARY] == "new" and seen["refusals"] == 0:
+                seen["refusals"] += 1
+                raise URLError(ConnectionRefusedError("listener still binding"))
+            return actual_health(port)
+
+        fake.health = delayed
+        with patch.object(s, "STARTUP_HEALTH_POLL_SECONDS", 0):
+            self.assertEqual(s.Cutover(fake).promote(), "new")
+        self.assertEqual(seen["refusals"], 1)
+        self.assertTrue(all(fake.dropins[u] == "new" for u in s.SERVICES))
+        fake.assert_no_node_or_ledger_change()
+
+    def test_persistent_transport_fault_has_bounded_wait_and_rolls_back(self):
+        s = self.s
+        fake = FakeLive(s)
+        healthy = fake.health
+
+        def unavailable(port):
+            if fake.dropins[s.PRIMARY] == "new":
+                raise URLError(ConnectionRefusedError("refused"))
+            return healthy(port)
+
+        fake.health = unavailable
+        with patch.object(s, "STARTUP_HEALTH_GRACE_SECONDS", 0):
+            with self.assertRaisesRegex(s.Blocked, "bounded health deadline"):
+                s.Cutover(fake).promote()
+        self.assertEqual(s.Cutover(fake).inspect(), "old")
+        fake.assert_no_node_or_ledger_change()
+
+    def test_semantic_health_failure_fails_immediately_not_retried(self):
+        s = self.s
+        fake = FakeLive(s)
+        healthy = fake.health
+        errors = []
+
+        def wrong_chain(port):
+            if fake.dropins[s.PRIMARY] == "new":
+                errors.append(port)
+                raise s.Blocked("settlement lane chain/health mismatch")
+            return healthy(port)
+
+        fake.health = wrong_chain
+        with self.assertRaisesRegex(s.Blocked, "chain/health mismatch"):
+            s.Cutover(fake).promote()
+        self.assertEqual(errors, [8092])
+        self.assertEqual(s.Cutover(fake).inspect(), "old")
+        fake.assert_no_node_or_ledger_change()
 
     def test_crash_after_stop_without_written_override_can_recover(self):
         s = self.s
