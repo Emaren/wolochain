@@ -847,3 +847,32 @@ rehearsed current-version controller, producer isolation, independent
 liability reconciliation, and explicit named release approval remain
 mandatory before installing either two-settlement override in
 production.
+
+## October 18: shared HD/DE financial producer enumeration (read only)
+
+`scripts/settlement-shared-producer-inventory-readonly.py --inspect`
+is a root-only, bounded, **noncertifying** inventory of active and
+installed systemd services/timers with the known HD/DE prefixes
+`aoe2hdbets-`, `aoe2war-`, `aoe2dewarwagers-`, and `aoe2-wolo-`, plus
+the four explicit web/API service names and bare application service/timer unit names. The `aoe2-wolo-transfer-heartbeat.timer` family is explicitly covered because prior settlement maintenance listed it as a payout-ingress producer despite its different prefix. It reports unit names,
+active/loading status, the existence (not values) of PIDs,
+and the presence of allowlisted payout/settlement/database **key
+names** in bounded process environments. It never reports passwords,
+database URLs, mnemonics, wallet values or filesystem keyring paths.
+
+The output supplies **candidates for independent maintenance review,
+not units to automatically stop**. In particular the list
+`wolochaind-mainnet.service`,
+`wolochain-mainnet-settlement.service`, and
+`wolochain-founder-rewards-settlement.service` is explicitly
+excluded from app-producer stop candidates. No automation in this
+source stops or restarts any unit.
+
+Absent process environment keys do not prove disabled signers, and
+installed unit enumeration cannot find every cron, container,
+external signer, database job or HTTP caller. Its exit code is 3
+even if every inventoried app unit is inactive. It cannot certify
+a payment freeze. The two settlement units must be changed only
+under a separately reviewed, coordinated operator procedure
+supported by positive HD+DE signing authority and in-flight
+financial drain evidence. The sole consensus node stays untouched.
