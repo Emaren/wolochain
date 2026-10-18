@@ -74,6 +74,11 @@ jobs:
       - name: Current settlement recovery-state planner (nonmutating)
         run: python3 -m unittest discover -s tests -p 'test_settlement_bdbce253_recovery_plan.py' -v
 
+      - name: Settlement-only fault-injection dry run (offline synthetic files)
+        run: |
+          python3 -m unittest discover -s tests -p 'test_settlement_bdbce253_offline_rehearsal.py' -v
+          python3 scripts/settlement_bdbce253_offline_rehearsal.py --simulate-all
+
       - name: Chain invariant guard
         run: WOLO_SKIP_RUNTIME_CHECKS=1 ./scripts/check-chain-invariants.sh
 
