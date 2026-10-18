@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `codex/settlement-source-runtime-authority` at `ce00b56c377b18ec70935f6bad629d78b2586681`
+Implementation baseline: `codex/protected-release-frontier` at `77ff5600cf9b96c31fd8401afe7194abfb8498a9`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 

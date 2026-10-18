@@ -29,6 +29,15 @@ consensus and legacy 8092/8093 authorities.
 
 ## October 18 dated release evidence
 
+The [protected release-frontier receipt](protected-release-frontier-20261018.json)
+records subsequent unchanged runtime identities, local chain progress and
+noncertifying producer/request-store observations. The
+[website HOLD evidence schema](wolo-website-hold-evidence-v1.schema.json) is the
+structural contract for a future app-owned website-only lane; every authority
+flag stays false. It cannot authenticate a baseline, certify financial holds or
+authorize the current website candidate. See the
+[consumer requirements](../war-satchel-controlled-release.md#future-website-only-lane-observational-evidence-separate-authority).
+
 The [exact backend artifact receipt](custody-backend-artifact-20261018.json)
 binds the independently verified Linux AMD64 binary to source `99f32de6`, builder
 `7611946c` and three successful GitHub CI runs. It remains UNDEPLOYED.

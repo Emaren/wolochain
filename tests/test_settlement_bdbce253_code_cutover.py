@@ -159,7 +159,7 @@ class GuardedTwoServiceCutover(unittest.TestCase):
     def test_normal_code_switch_and_approved_code_only_rollback(self):
         s = self.s
         fake = FakeLive(s)
-        ctl = s.Cutover(fake)
+        ctl = s.Cutover(fake, authorize=lambda: None)
         self.assertEqual(ctl.inspect(), "old")
         self.assertEqual(ctl.promote(), "new")
         self.assertEqual(ctl.inspect(), "new")
@@ -183,8 +183,8 @@ class GuardedTwoServiceCutover(unittest.TestCase):
                 fake = FakeLive(s)
                 fake.fail_once = point
                 with self.assertRaisesRegex(RuntimeError, "injected"):
-                    s.Cutover(fake).promote()
-                self.assertEqual(s.Cutover(fake).inspect(), "old")
+                    s.Cutover(fake, authorize=lambda: None).promote()
+                self.assertEqual(s.Cutover(fake, authorize=lambda: None).inspect(), "old")
                 fake.assert_no_node_or_ledger_change()
 
     def test_first_transient_connection_refusal_waits_then_succeeds(self):
@@ -202,7 +202,7 @@ class GuardedTwoServiceCutover(unittest.TestCase):
 
         fake.health = delayed
         with patch.object(s, "STARTUP_HEALTH_POLL_SECONDS", 0):
-            self.assertEqual(s.Cutover(fake).promote(), "new")
+            self.assertEqual(s.Cutover(fake, authorize=lambda: None).promote(), "new")
         self.assertEqual(seen["refusals"], 1)
         self.assertTrue(all(fake.dropins[u] == "new" for u in s.SERVICES))
         fake.assert_no_node_or_ledger_change()
@@ -220,8 +220,8 @@ class GuardedTwoServiceCutover(unittest.TestCase):
         fake.health = unavailable
         with patch.object(s, "STARTUP_HEALTH_GRACE_SECONDS", 0):
             with self.assertRaisesRegex(s.Blocked, "bounded health deadline"):
-                s.Cutover(fake).promote()
-        self.assertEqual(s.Cutover(fake).inspect(), "old")
+                s.Cutover(fake, authorize=lambda: None).promote()
+        self.assertEqual(s.Cutover(fake, authorize=lambda: None).inspect(), "old")
         fake.assert_no_node_or_ledger_change()
 
     def test_semantic_health_failure_fails_immediately_not_retried(self):
@@ -238,9 +238,9 @@ class GuardedTwoServiceCutover(unittest.TestCase):
 
         fake.health = wrong_chain
         with self.assertRaisesRegex(s.Blocked, "chain/health mismatch"):
-            s.Cutover(fake).promote()
+            s.Cutover(fake, authorize=lambda: None).promote()
         self.assertEqual(errors, [8092])
-        self.assertEqual(s.Cutover(fake).inspect(), "old")
+        self.assertEqual(s.Cutover(fake, authorize=lambda: None).inspect(), "old")
         fake.assert_no_node_or_ledger_change()
 
     def test_crash_after_stop_without_written_override_can_recover(self):
@@ -248,9 +248,9 @@ class GuardedTwoServiceCutover(unittest.TestCase):
         fake = FakeLive(s)
         for unit in s.SERVICES:
             fake.systemctl("stop", unit)
-        self.assertEqual(s.Cutover(fake).state(allow_partial=True), "old")
-        s.Cutover(fake).code_only_recover(1009)
-        self.assertEqual(s.Cutover(fake).inspect(), "old")
+        self.assertEqual(s.Cutover(fake, authorize=lambda: None).state(allow_partial=True), "old")
+        s.Cutover(fake, authorize=lambda: None).code_only_recover(1009)
+        self.assertEqual(s.Cutover(fake, authorize=lambda: None).inspect(), "old")
         fake.assert_no_node_or_ledger_change()
 
     def test_crash_after_first_written_override_before_reload_recovers(self):
@@ -259,9 +259,9 @@ class GuardedTwoServiceCutover(unittest.TestCase):
         for unit in s.SERVICES:
             fake.systemctl("stop", unit)
         fake.add_dropin(s.PRIMARY)
-        self.assertEqual(s.Cutover(fake).state(allow_partial=True), "partial")
-        s.Cutover(fake).code_only_recover(1009)
-        self.assertEqual(s.Cutover(fake).inspect(), "old")
+        self.assertEqual(s.Cutover(fake, authorize=lambda: None).state(allow_partial=True), "partial")
+        s.Cutover(fake, authorize=lambda: None).code_only_recover(1009)
+        self.assertEqual(s.Cutover(fake, authorize=lambda: None).inspect(), "old")
         fake.assert_no_node_or_ledger_change()
 
     def test_foreign_override_and_node_drift_block(self):
@@ -269,11 +269,11 @@ class GuardedTwoServiceCutover(unittest.TestCase):
         fake = FakeLive(s)
         fake.loaded[s.PRIMARY] = "new"
         with self.assertRaisesRegex(s.Blocked, "unsynchronized"):
-            s.Cutover(fake).inspect()
+            s.Cutover(fake, authorize=lambda: None).inspect()
         fake.loaded[s.PRIMARY] = "old"
         fake.units[s.CONSENSUS].exe = "evil"
         with self.assertRaises(s.Blocked):
-            s.Cutover(fake).promote()
+            s.Cutover(fake, authorize=lambda: None).promote()
         fake.assert_no_node_or_ledger_change = lambda: None
         self.assertFalse(fake.commands)
 
@@ -295,18 +295,11 @@ class GuardedTwoServiceCutover(unittest.TestCase):
             p.write_text(json.dumps({"approved": True}))
             with self.assertRaisesRegex(s.Blocked, "root:root"):
                 s.load_release_permit(p)
-            p.chmod(0o600)
-            # CI user is not root; fake protected stat without mutating host.
-            st = p.stat()
-            class FakeStat:
-                st_uid = 0
-                st_gid = 0
-                st_mode = 0o100600
-                st_size = st.st_size
-            original = Path.stat
-            def fake_stat(obj, *a, **kw):
-                return FakeStat() if obj == p else original(obj, *a, **kw)
-            with patch.object(Path, "stat", new=fake_stat):
+            # Protected ownership is simulated on the exact fixture FD; the
+            # source validator never trusts a separate path stat for reading.
+            helper = ReleasePermitAcquisition()
+            helper.s = s
+            with helper.protected(p):
                 with self.assertRaisesRegex(s.Blocked, "fields missing"):
                     s.load_release_permit(p)
 
@@ -317,6 +310,383 @@ class GuardedTwoServiceCutover(unittest.TestCase):
         self.assertNotIn("shutil.copytree", src)
         self.assertIn("PAYOUT_PRODUCERS_STILL_FENCED_REQUIRED=true", src)
         self.assertIn("NO_PAYOUT_PRODUCER_RESUME=true", src)
+
+
+class ReleasePermitAcquisition(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.s = load()
+
+    def document(self, now=None):
+        s = self.s
+        now = now or s.datetime.now(s.timezone.utc)
+        return {"schema": "aoe2war.wolochain.two-settlement-code-only.v1",
+                "candidateRevision": s.REV, "candidateSha256": s.NEW_SHA,
+                "operator": "reviewed-operator", "approval": s.EXACT_APPROVAL,
+                "witnessedControls": sorted(s.ATTESTED),
+                "issuedAtUtc": (now - s.timedelta(minutes=1)).isoformat(),
+                "expiresAtUtc": (now + s.timedelta(seconds=1)).isoformat()}
+
+    @contextlib.contextmanager
+    def protected(self, path):
+        # Simulate protected root ownership on the exact opened fixture inode;
+        # no chown, host privilege, production file or real permit is needed.
+        import types
+        s = self.s
+        path.chmod(0o600)
+        original_path_stat, original_fstat = Path.stat, s.os.fstat
+        initial = original_path_stat(path)
+        def root_metadata(st):
+            fields = ("st_dev", "st_ino", "st_mode", "st_size", "st_mtime_ns", "st_ctime_ns", "st_nlink")
+            return types.SimpleNamespace(**{key:getattr(st, key) for key in fields}, st_uid=0, st_gid=0)
+        def path_stat(obj, *args, **kwargs):
+            st = original_path_stat(obj, *args, **kwargs)
+            return root_metadata(st) if obj == path else st
+        def fd_stat(fd):
+            st = original_fstat(fd)
+            return root_metadata(st) if (st.st_dev, st.st_ino) == (initial.st_dev, initial.st_ino) else st
+        with patch.object(Path, "stat", new=path_stat), patch.object(s.os, "fstat", side_effect=fd_stat):
+            yield
+
+    def test_default_clock_is_sampled_after_actual_permit_io(self):
+        s = self.s
+        real_datetime = s.datetime
+        clock = {"now": real_datetime.now(s.timezone.utc)}
+        class Clock:
+            fromisoformat = staticmethod(real_datetime.fromisoformat)
+            @staticmethod
+            def now(_tz):
+                return clock["now"]
+        with tempfile.TemporaryDirectory() as td:
+            p = Path(td) / "permit.json"
+            p.write_text(json.dumps(self.document(clock["now"])))
+            after = clock["now"] + s.timedelta(seconds=2)
+            path_read, fd_read = Path.read_bytes, s.os.read
+            def delayed_path(obj):
+                data = path_read(obj)
+                clock["now"] = after
+                return data
+            def delayed_fd(fd, limit):
+                data = fd_read(fd, limit)
+                clock["now"] = after
+                return data
+            with self.protected(p), patch.object(s, "datetime", Clock), \
+                 patch.object(Path, "read_bytes", new=delayed_path), patch.object(s.os, "read", side_effect=delayed_fd):
+                with self.assertRaisesRegex(s.Blocked, "expired"):
+                    s.load_release_permit(p)
+
+    def test_duplicate_json_fields_cannot_become_operator_approval(self):
+        s = self.s
+        with tempfile.TemporaryDirectory() as td:
+            p = Path(td) / "permit.json"
+            raw = json.dumps(self.document())
+            p.write_text(raw.replace('"operator": "reviewed-operator"', '"operator": "different-operator", "operator": "reviewed-operator"'))
+            with self.protected(p), self.assertRaisesRegex(s.Blocked, "duplicate"):
+                s.load_release_permit(p)
+
+    def test_unsafe_opened_descriptor_metadata_is_refused(self):
+        import types
+        s = self.s
+        for change in ({"st_uid": 1}, {"st_gid": 1}, {"st_mode": 0o100640},
+                       {"st_mode": 0o010600}, {"st_size": 8192}):
+            with self.subTest(change=change), tempfile.TemporaryDirectory() as td:
+                p = Path(td) / "permit.json"
+                p.write_text(json.dumps(self.document()))
+                with self.protected(p):
+                    prior = s.os.fstat
+                    def unsafe(fd):
+                        st = prior(fd)
+                        return types.SimpleNamespace(**{**vars(st), **change})
+                    with patch.object(s.os, "fstat", side_effect=unsafe), self.assertRaises(s.Blocked):
+                        s.load_release_permit(p)
+
+    def test_path_swap_cannot_read_a_replacement_symlink_target(self):
+        s = self.s
+        with tempfile.TemporaryDirectory() as td:
+            p, other = Path(td) / "permit.json", Path(td) / "unapproved.json"
+            p.write_text(json.dumps(self.document()))
+            other.write_text(json.dumps({**self.document(), "operator": "unapproved-operator"}))
+            open_fd, path_read = s.os.open, Path.read_bytes
+            swapped = False
+            def swap():
+                nonlocal swapped
+                if not swapped:
+                    p.rename(Path(td) / "original.json")
+                    p.symlink_to(other)
+                    swapped = True
+            def replaced_read(obj):
+                swap()
+                return path_read(obj)
+            def replaced_open(path, *args, **kwargs):
+                fd = open_fd(path, *args, **kwargs)
+                if str(path) == str(p):
+                    swap()
+                return fd
+            with self.protected(p), patch.object(Path, "read_bytes", new=replaced_read), \
+                 patch.object(s.os, "open", side_effect=replaced_open), self.assertRaises(s.Blocked):
+                s.load_release_permit(p)
+
+    def test_growth_after_metadata_check_is_bounded_and_refused(self):
+        s = self.s
+        with tempfile.TemporaryDirectory() as td:
+            p = Path(td) / "permit.json"
+            p.write_text(json.dumps(self.document()))
+            path_read, fd_read = Path.read_bytes, s.os.read
+            grew, limits = False, []
+            def grow():
+                nonlocal grew
+                if not grew:
+                    with p.open("ab") as stream:
+                        stream.write(b" " * 9000)
+                    grew = True
+            def growing_path(obj):
+                grow()
+                return path_read(obj)
+            def growing_fd(fd, limit):
+                limits.append(limit)
+                grow()
+                return fd_read(fd, limit)
+            with self.protected(p), patch.object(Path, "read_bytes", new=growing_path), \
+                 patch.object(s.os, "read", side_effect=growing_fd), self.assertRaises(s.Blocked):
+                s.load_release_permit(p)
+            self.assertTrue(limits)
+            self.assertLessEqual(sum(limits), 8192)
+
+    def test_permit_descriptor_closes_on_read_metadata_and_parse_errors(self):
+        import types
+        s = self.s
+        for failure in ("read", "metadata", "parse"):
+            with self.subTest(failure=failure), tempfile.TemporaryDirectory() as td:
+                p = Path(td) / "permit.json"
+                raw = json.dumps(self.document())
+                if failure == "parse":
+                    raw = raw.replace('"operator": "reviewed-operator"', '"operator": "first", "operator": "reviewed-operator"')
+                p.write_text(raw)
+                opened, closed = [], []
+                original_open, original_close, original_fstat = s.os.open, s.os.close, s.os.fstat
+                def opening(*args, **kwargs):
+                    fd = original_open(*args, **kwargs)
+                    opened.append(fd)
+                    return fd
+                def closing(fd):
+                    closed.append(fd)
+                    original_close(fd)
+                with self.protected(p), patch.object(s.os, "open", side_effect=opening), \
+                     patch.object(s.os, "close", side_effect=closing), contextlib.ExitStack() as stack:
+                    if failure == "read":
+                        stack.enter_context(patch.object(s.os, "read", side_effect=OSError("fixture read error")))
+                    if failure == "metadata":
+                        protected_stat = s.os.fstat
+                        def unsafe(fd):
+                            return types.SimpleNamespace(**{**vars(protected_stat(fd)), "st_uid": 1})
+                        stack.enter_context(patch.object(s.os, "fstat", side_effect=unsafe))
+                    with self.assertRaises(s.Blocked):
+                        s.load_release_permit(p)
+                self.assertEqual(opened, closed)
+                self.assertEqual(len(opened), 1)
+                with self.assertRaises(OSError):
+                    original_fstat(opened[0])
+
+    def test_deeply_nested_malformed_json_returns_typed_refusal(self):
+        s = self.s
+        with tempfile.TemporaryDirectory() as td:
+            p = Path(td) / "permit.json"
+            p.write_text('{"nested":' + '[' * 1500 + '0' + ']' * 1500 + '}')
+            with self.protected(p), self.assertRaises(s.Blocked):
+                s.load_release_permit(p)
+            # Python JSON implementations have different native nesting
+            # limits. Exercise the recursion-refusal path deterministically.
+            with self.protected(p), patch.object(s.json, "loads", side_effect=RecursionError("fixture nesting limit")), \
+                 self.assertRaisesRegex(s.Blocked, "invalid release permit JSON"):
+                s.load_release_permit(p)
+
+    def test_explicit_now_fixture_still_validates_the_same_public_shape(self):
+        s = self.s
+        now = s.datetime(2026, 10, 18, tzinfo=s.timezone.utc)
+        doc = self.document(now)
+        with tempfile.TemporaryDirectory() as td:
+            p = Path(td) / "permit.json"
+            p.write_text(json.dumps(doc))
+            with self.protected(p):
+                self.assertEqual(s.load_release_permit(p, now=now), doc)
+
+
+class ReleasePermitFreshness(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.s = load()
+
+    def run_promote(self, fake, state, *, mode="promote"):
+        s = self.s
+        original = {"operator": "reviewed-operator", "expiresAtUtc": "original-expiry"}
+        def read(_path):
+            state["checks"] += 1
+            if state.get("expired"):
+                raise s.Blocked("expired release permit")
+            if state.get("revoked"):
+                raise FileNotFoundError("revoked fixture permit")
+            if state.get("changed"):
+                return {**original, "operator": "different-operator"}
+            return dict(original)
+        @contextlib.contextmanager
+        def locked():
+            if state.get("expire_at_lock"):
+                state["expired"] = True
+            yield
+        stderr = io.StringIO()
+        with patch.object(s.os, "geteuid", return_value=0), \
+             patch.object(s, "Live", return_value=fake), \
+             patch.object(s, "load_release_permit", side_effect=read), \
+             patch.object(s, "acquire_mutation_lock", side_effect=locked), \
+             patch.object(sys, "argv", [str(SCRIPT), "--mode", mode, "--permit", "/fixture/permit"]), \
+             contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(stderr):
+            result = s.main()
+        return result, stderr.getvalue()
+
+    def test_expiry_during_slow_preflight_means_zero_mutations(self):
+        s = self.s
+        fake = FakeLive(s)
+        state = {"checks": 0}
+        health = fake.health
+        def preflight(port):
+            health(port)
+            state["expired"] = True
+        fake.health = preflight
+        result, _ = self.run_promote(fake, state)
+        self.assertEqual(result, 2)
+        self.assertEqual(fake.commands, [])
+        fake.assert_no_node_or_ledger_change()
+
+    def test_expiry_between_forward_steps_only_completes_old_code_recovery(self):
+        s = self.s
+        for point in ("stop:" + s.PRIMARY, "stop:" + s.FOUNDER,
+                      "add:" + s.PRIMARY, "add:" + s.FOUNDER,
+                      "daemon-reload:all", "start:" + s.PRIMARY):
+            with self.subTest(point=point):
+                fake = FakeLive(s)
+                state = {"checks": 0}
+                systemctl, add = fake.systemctl, fake.add_dropin
+                new_starts_after_expiry = []
+                def control(action, unit=None):
+                    if state.get("expired") and action == "start" and fake.loaded[unit] == "new":
+                        new_starts_after_expiry.append(unit)
+                    systemctl(action, unit)
+                    if action + ":" + (unit or "all") == point:
+                        state["expired"] = True
+                def override(unit):
+                    add(unit)
+                    if "add:" + unit == point:
+                        state["expired"] = True
+                fake.systemctl, fake.add_dropin = control, override
+                result, _ = self.run_promote(fake, state)
+                self.assertEqual(result, 2)
+                self.assertEqual(new_starts_after_expiry, [])
+                self.assertTrue(all(fake.dropins[unit] == "old" and fake.loaded[unit] == "old" for unit in s.SERVICES))
+                self.assertTrue(all(fake.units[unit].running and fake.units[unit].exe == s.OLD for unit in s.SERVICES))
+                fake.assert_no_node_or_ledger_change()
+
+    def test_changed_or_revoked_permit_after_first_mutation_cannot_continue_rollout(self):
+        s = self.s
+        for failure in ("changed", "revoked"):
+            with self.subTest(failure=failure):
+                fake = FakeLive(s)
+                state = {"checks": 0}
+                control = fake.systemctl
+                def first_stop(action, unit=None):
+                    control(action, unit)
+                    if action == "stop" and unit == s.PRIMARY:
+                        state[failure] = True
+                fake.systemctl = first_stop
+                result, _ = self.run_promote(fake, state)
+                self.assertEqual(result, 2)
+                self.assertFalse(any(command.startswith("add:") for command in fake.commands))
+                self.assertTrue(all(fake.units[unit].exe == s.OLD and fake.units[unit].running for unit in s.SERVICES))
+                fake.assert_no_node_or_ledger_change()
+
+    def test_expiry_during_new_runtime_verification_rolls_back_instead_of_reporting_success(self):
+        s = self.s
+        fake = FakeLive(s)
+        state = {"checks": 0}
+        health = fake.health
+        def verification(port):
+            health(port)
+            if fake.loaded[s.PRIMARY] == "new":
+                state["expired"] = True
+        fake.health = verification
+        result, _ = self.run_promote(fake, state)
+        self.assertEqual(result, 2)
+        self.assertTrue(all(fake.units[unit].running and fake.units[unit].exe == s.OLD for unit in s.SERVICES))
+        fake.assert_no_node_or_ledger_change()
+
+    def test_changed_or_revoked_authority_during_preflight_has_zero_mutations(self):
+        s = self.s
+        for failure in ("changed", "revoked"):
+            with self.subTest(failure=failure):
+                fake = FakeLive(s)
+                state = {"checks": 0}
+                health = fake.health
+                def preflight(port):
+                    health(port)
+                    state[failure] = True
+                fake.health = preflight
+                result, _ = self.run_promote(fake, state)
+                self.assertEqual(result, 2)
+                self.assertEqual(fake.commands, [])
+
+    def test_original_permit_snapshot_does_not_adopt_renewed_or_mutated_authority(self):
+        s = self.s
+        original = {"operator": "reviewer", "expiresAtUtc": "original"}
+        with patch.object(s, "load_release_permit", return_value=original):
+            authority = s.ReleaseAuthority(Path("/fixture/permit"))
+            original["expiresAtUtc"] = "renewed"
+            with self.assertRaisesRegex(s.Blocked, "changed since original"):
+                authority.check()
+
+    def test_unbound_mutation_api_refuses_before_any_side_effect(self):
+        s = self.s
+        fake = FakeLive(s)
+        with self.assertRaisesRegex(s.Blocked, "fresh bound release authority"):
+            s.Cutover(fake).promote()
+        with self.assertRaisesRegex(s.Blocked, "fresh bound release authority"):
+            s.Cutover(fake).code_only_recover(1009)
+        self.assertEqual(fake.commands, [])
+
+    def test_started_rollback_can_finish_only_old_code_cleanup_after_expiry(self):
+        s = self.s
+        fake = FakeLive(s)
+        for unit in s.SERVICES:
+            fake.dropins[unit] = fake.loaded[unit] = "new"
+            fake.units[unit].exe = s.NEW
+        state = {"checks": 0}
+        control = fake.systemctl
+        def expire_after_stop(action, unit=None):
+            control(action, unit)
+            if action == "stop" and unit == s.PRIMARY:
+                state["expired"] = True
+        fake.systemctl = expire_after_stop
+        result, _ = self.run_promote(fake, state, mode="rollback")
+        self.assertEqual(result, 0)
+        self.assertEqual(state["checks"], 2)
+        self.assertEqual(len(fake.commands), 7)
+        self.assertFalse(any(command.startswith("add:") for command in fake.commands))
+        self.assertTrue(all(fake.units[unit].running and fake.units[unit].exe == s.OLD for unit in s.SERVICES))
+        fake.assert_no_node_or_ledger_change()
+
+    def test_rollback_or_recovery_with_expiry_after_initial_validation_has_zero_mutations(self):
+        s = self.s
+        for mode in ("rollback", "recover-interrupted"):
+            with self.subTest(mode=mode):
+                fake = FakeLive(s)
+                for unit in s.SERVICES:
+                    fake.dropins[unit] = fake.loaded[unit] = "new"
+                    fake.units[unit].exe = s.NEW
+                if mode == "recover-interrupted":
+                    fake.units[s.PRIMARY].running = False
+                state = {"checks": 0, "expire_at_lock": True}
+                result, _ = self.run_promote(fake, state, mode=mode)
+                self.assertEqual(result, 2)
+                self.assertEqual(fake.commands, [])
+
 
 
 class SettlementSourceAuthority(unittest.TestCase):
@@ -333,7 +703,7 @@ class SettlementSourceAuthority(unittest.TestCase):
         source = {"revision": revision or s.OLD_REV, "clean": clean,
                   "tracked_index_visible": visible}
         fake.source_checkout = lambda: dict(source)
-        return fake, s.Cutover(fake)
+        return fake, s.Cutover(fake, authorize=lambda: None)
 
     def assert_observation_only(self, receipt, fake):
         for field in ("release_authorized", "financial_drain_certified",

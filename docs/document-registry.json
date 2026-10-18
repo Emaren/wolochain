@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "e2a0d020abea848d4d82cffcdbed61af01d38367e0ead77a4e60b18c36341d60",
+      "sha256": "43201a1f5f8b0666bdfe71491be74bb835c6c19771cd6a17218b2e949a31b5f8",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -312,7 +312,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-18",
       "sensitivity": "restricted",
-      "sha256": "365c7b8c86690a409ee7248329157e1cac777ae632c78de0fa554bf1a096b2e7",
+      "sha256": "c086c14aa1f364611d9a9b0d2b02d1b9b5f36563ef7551b6289799a32c4761fa",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -381,7 +381,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-18",
       "sensitivity": "public",
-      "sha256": "5439e7c4d5291a5d2ca71936083b3fcc38885d1f4cf98582f1c7df842af92908",
+      "sha256": "228bfc2a6c715198e29048fe0bd20af57e6e79d00fef1faf7608b0ff2cddb537",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -450,7 +450,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-18",
       "sensitivity": "restricted",
-      "sha256": "1b94c4c31f8ec08a96b6c568fbb7516b2331203d495aec0f27b7afd1431de878",
+      "sha256": "a9fa3f82b087303db9c5de9657633de19b2aee4837260245beb0e26f1a563e33",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -946,8 +946,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "codex/settlement-source-runtime-authority",
-    "commit": "ce00b56c377b18ec70935f6bad629d78b2586681"
+    "branch": "codex/protected-release-frontier",
+    "commit": "77ff5600cf9b96c31fd8401afe7194abfb8498a9"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

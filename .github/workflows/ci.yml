@@ -89,6 +89,12 @@ jobs:
       - name: Guarded current settlement code-only cutover and fault rollback (offline)
         run: python3 -m unittest discover -s tests -p 'test_settlement_bdbce253_code_cutover.py' -v
 
+      - name: Website HOLD evidence contract (non-authorizing)
+        run: |
+          python3 -m venv "$RUNNER_TEMP/wolo-evidence-contract"
+          "$RUNNER_TEMP/wolo-evidence-contract/bin/python" -m pip install -r tests/requirements-release-evidence.txt
+          "$RUNNER_TEMP/wolo-evidence-contract/bin/python" -m unittest discover -s tests -p 'test_website_hold_evidence_contract.py' -v
+
       - name: Versioned private Satchel wire contract
         run: python3 -m unittest discover -s tests -p 'test_satchel_http_contract.py' -v
 

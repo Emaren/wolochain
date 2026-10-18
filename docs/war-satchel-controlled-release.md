@@ -33,6 +33,56 @@ or a claim that they remain current. The candidate requires a fresh bounded
 identity/financial receipt immediately before protected execution; unresolved
 liabilities stay held until independently proven otherwise.
 
+## Future website-only lane: observational evidence, separate authority
+
+The [website HOLD evidence v1 schema](settlement-contracts/wolo-website-hold-evidence-v1.schema.json)
+defines a bounded handoff for a **future app-owned release controller**. It does
+not implement that lane or make website candidate `7ee1606a0172b9248f3b9c52c92670a5b4e3645a`
+eligible. The existing Wolo source-authority gate continues to report `BLOCKED`;
+the historical `bdbce253` cutover and newer Satchel release remain distinct.
+Every financial, custody and app deployment authorization in this handoff is false.
+
+The consumer must independently authenticate the operator channel and exact
+observer source/hash, and pin an externally reviewed immutable baseline outside
+candidate-supplied JSON. It must retain the complete original source-authority
+receipts, compare both settlement and consensus PID/executable identities and
+source/configuration/hold digests before and after release, and preserve every
+unresolved hold. Ignored-content counts alone cannot establish identical content.
+Schema-valid hashes or `verification_required` fields authenticate nothing.
+
+The app owner must separately implement reviewed candidate-scope admission,
+binding deployed/candidate commits, artifact, policy and unique release attempt.
+That policy must reject financial behavior changes, including transitive build,
+configuration or deployment effects; missing, ambiguous or unauthenticated scope
+evidence refuses admission. A unique controller-generated challenge, bounded
+freshness checked again after I/O, cross-field equality and a durable attempt
+store are required consumer controls, not guarantees provided by JSON Schema.
+No baseline replacement, removed blocker, changed runtime or copied receipt may
+be accepted as a fresh release. Existing inventories cannot certify signer
+isolation, complete liabilities, reserve sufficiency or claim #889 outcomes.
+These remain independent operational evidence requirements. No Wolo-only change
+authorizes the app deployment or certifies preservation of live financial holds.
+
+The v1 consumer must reject documents above 64KiB, duplicate JSON keys and
+non-finite numbers before schema validation, enable date-time format checks,
+and reject unknown fields. Receipt hashes mean SHA-256 of exact retained bytes,
+not a JSON reserialization or a replacement digest supplied by the candidate.
+Private source/configuration/hold manifests must cover actual content and signer
+boundaries; they must already exist and be independently reviewed. The current
+source-authority observer does not collect those complete private manifests.
+Do not fill missing identities with counters, constants or an empty-set hash.
+The reviewed app policy must fix observation freshness and release-window
+bounds, recheck age after I/O, compare every attempt/candidate/baseline identity,
+and durably fence attempts before changing anything. No such admission receipt,
+complete baseline or app-controller implementation is produced by this change.
+
+Contract tests use a synthetic, explicitly nonauthorizing fixture. Run them with
+`python3 -m pip install -r tests/requirements-release-evidence.txt` then
+`python3 -m unittest discover -s tests -p 'test_website_hold_evidence_contract.py'`.
+The tests deliberately demonstrate that schema validity alone does not enforce
+cross-field equality, freshness or authentication. The future controller must
+refuse those semantically invalid inputs even when their shape is valid.
+
 ## Fresh read-only production observation
 
 The [machine-readable receipt](settlement-contracts/satchel-live-readonly-20261017.json)
