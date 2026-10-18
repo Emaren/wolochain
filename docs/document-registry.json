@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "792038bf130d2088b0562abd88044c3272a3a24424d34ecb6d9be90e42db6686",
+      "sha256": "28977a0da10e02792ff53133d45e765edb8d938eed2f616ad3572ae8f481156b",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -946,8 +946,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "codex/financial-release-evidence",
-    "commit": "079919d4157c8762752e302e69dd704e2c2e297a"
+    "branch": "codex/producer-maintenance-plan",
+    "commit": "34942f191258b5cec719bedafe95af3a8ecbaed9"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
