@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `feat/bdbce253-two-lane-nonmutating-cutover-preflight-20261017` at `f5ee1886a5b7ba8a86d0d45e6a0522e1af7635a3`
+Implementation baseline: `feat/bdbce253-rollback-plan-no-live-mutation-20261017` at `4e731a5797fa930f98579f3559720969e7fe1b53`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
