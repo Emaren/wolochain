@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "2200cfcae11bba3999bb2e6d98daf2e7b7105b90280c9f2faf016196a4ed16d4",
+      "sha256": "1716295e37d4f18e510f2bf064512aac4e4a9cb1641570c80ee50a795ef59279",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -809,7 +809,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "fix/exact-bdbce-settlement-artifact-receipt-20261017",
-    "commit": "46a0e88391bdd86cf8e34372c90a09dfaaf00ce3"
+    "commit": "34f8a76d96858aeffc1fbd24b16d322e8678889d"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
