@@ -330,8 +330,8 @@ class Cutover:
             self.running(unit, program, sha)
         require(self.pin_node() == pinned_pid,
                 "consensus changed after settlement startup")
-        self.live.health(8092)
-        self.live.health(8093)
+        for port in (8092, 8093):
+            self.wait_settlement_health(port, pinned_pid)
 
     def inspect(self) -> str:
         generation = self.state()
