@@ -75,6 +75,7 @@ class SharedHdDeProducerInventoryTests(unittest.TestCase):
             "aoe2war-deps@.service disabled -\n"
             "aoe2war-speedos-cloudflare@.service disabled -\n"
             "aoe2war-build@job42.service enabled -\n"
+            "aoe2war-build@.job42.service enabled -\n"
             "aoe2hdbets-web.service enabled -\n"
         )
         def fake(args):
@@ -91,6 +92,7 @@ class SharedHdDeProducerInventoryTests(unittest.TestCase):
             "aoe2war-speedos-cloudflare@.service",
         ])
         self.assertIn("aoe2war-build@job42.service", units)
+        self.assertIn("aoe2war-build@.job42.service", units)
         self.assertNotIn("aoe2war-build@.service", units)
 
         with patch.object(self.inv, "discover_inventory",
