@@ -34,9 +34,9 @@
       "owner": "wolochain-ops",
       "path": "docs/BRANCH_AUTHORITY.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-10-14",
+      "reviewed_at": "2026-10-17",
       "sensitivity": "internal",
-      "sha256": "6daf07f8d2ac62b8461bb4d6c93e50b02014194b0c3a86dddb8e146a9cde890c",
+      "sha256": "b93f5c52967ad34732621b27f51f920e19990f43f84ac9415d4b54bf06eb01a0",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "5e54907f1eb37ac71b97fbae9391a41ba22d65be4462c61647b18fb55e7802d7",
+      "sha256": "6551dac61d936ba82aca591cb915ec326d5e6df3eab229b3690f1a0a5b584359",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -90,6 +90,29 @@
         "aoe2war"
       ],
       "title": "Exact Settlement Confirmation C4",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "source-only-legacy-settlement-hardening",
+      "id": "aoe2war.wolochain.legacy-settlement-hardening",
+      "owner": "wolochain-ops",
+      "path": "docs/legacy-settlement-hardening.md",
+      "review_interval_days": 14,
+      "reviewed_at": "2026-10-17",
+      "sensitivity": "restricted",
+      "sha256": "302fb9f6b0b9729c3b65b072d64d33c7503d1d48b86d85d78572eb6e94d3657c",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "Legacy Settlement Hardening and Protected Release Handoff",
       "type": "reference"
     },
     {
@@ -287,9 +310,9 @@
       "owner": "wolochain-ops",
       "path": "docs/mainnet-settlement-runbook.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-10-16",
+      "reviewed_at": "2026-10-17",
       "sensitivity": "restricted",
-      "sha256": "be4f89894e0ea6ad0defa7f9a4ca128634a526420b7204db807c87c27412b433",
+      "sha256": "2c8af780cdb706cb823622bbe0a0e73ced33b8af78d4b5e70228a96fc4ec7c2b",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -404,7 +427,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-15",
       "sensitivity": "restricted",
-      "sha256": "b24c8e50e6c3692e5a04812def1176747cf24367cc1d3fa5a7d0574a9a80ba2e",
+      "sha256": "65bca93828ccec1f81df1eda4250ea799cb3c59db8aa4dd399d31219cb6a1d35",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -412,6 +435,29 @@
         "aoe2war"
       ],
       "title": "War Satchel C3 Chain Evidence",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "source-integration-proof-not-production-approval",
+      "id": "aoe2war.wolochain.satchel-controlled-release",
+      "owner": "wolochain-ops",
+      "path": "docs/war-satchel-controlled-release.md",
+      "review_interval_days": 14,
+      "reviewed_at": "2026-10-17",
+      "sensitivity": "restricted",
+      "sha256": "77981cac1ac723859b5a5d94da8a5c66f59abafdd5edac3406356fa8b6f0e838",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "War Satchel Controlled Release Gates",
       "type": "reference"
     },
     {
@@ -435,6 +481,98 @@
         "aoe2war"
       ],
       "title": "War Satchel C2 Custody Capability",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "source-artifact-proof-not-runtime-or-financial-approval",
+      "id": "aoe2war.wolochain.war-satchel-exact-source-artifact",
+      "owner": "wolochain-ops",
+      "path": "docs/war-satchel-exact-source-artifact.md",
+      "review_interval_days": 14,
+      "reviewed_at": "2026-10-17",
+      "sensitivity": "restricted",
+      "sha256": "7f5d0ad8f674fe1a044f5593fcdd7745702eb63fa54ebfd5ebabf7fd4c2670d8",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "War Satchel Exact Source Artifact Contract",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "source-integration-proof-not-production-approval",
+      "id": "aoe2war.wolochain.satchel-financial-bridge",
+      "owner": "wolochain-ops",
+      "path": "docs/war-satchel-financial-bridge.md",
+      "review_interval_days": 14,
+      "reviewed_at": "2026-10-17",
+      "sensitivity": "restricted",
+      "sha256": "0a482e2224ec30bbe0698ba1dc86bb04d5be3fd3ef86649abc5fe49b96c1416f",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "Authenticated War Satchel Financial Bridge",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "source-integration-proof-not-production-approval",
+      "id": "aoe2war.wolochain.satchel-integration-readiness",
+      "owner": "wolochain-ops",
+      "path": "docs/war-satchel-integration-readiness.md",
+      "review_interval_days": 14,
+      "reviewed_at": "2026-10-17",
+      "sensitivity": "restricted",
+      "sha256": "b3d59f56e547161b0d99ac244be282934508301f0081a1554dba784d2ed4ac77",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "War Satchel Integration Evidence and Operator Handoff",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "restricted-satchel-execution-and-provisioning-contract",
+      "id": "aoe2war.wolochain.war-satchel-mainnet-execution",
+      "owner": "wolochain-ops",
+      "path": "docs/war-satchel-mainnet-execution.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-10-17",
+      "sensitivity": "restricted",
+      "sha256": "4b68ce72bb92c16eba6703c7b6deb383f4295dbbe87bb08a738fc43d4f66c0fd",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "War Satchel Mainnet Execution and Operator Gates",
       "type": "reference"
     },
     {
@@ -609,9 +747,9 @@
       "owner": "wolochain-ops",
       "path": "mainnet-prep/STATUS.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-10-07",
+      "reviewed_at": "2026-10-17",
       "sensitivity": "restricted",
-      "sha256": "49e98f782dfb00b5010ff242c0882b60742d738cd9799b24ab693480bbbef1a7",
+      "sha256": "00cd2930b67f389df939d525dd2484ab277a14664570773721c7082aae23f9e5",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [

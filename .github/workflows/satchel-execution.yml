@@ -1,0 +1,40 @@
+name: Satchel execution source proof
+
+on:
+  pull_request:
+    branches: [wolo-1-mainnet-prep, codex/satchel-mainnet-execution, codex/satchel-source-integration-proof]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  private-custody:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      GOFLAGS: -tags=go1.27
+      CGO_ENABLED: 0
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Native signing, fencing, owner-return and trust adversarial tests
+        env:
+          CGO_ENABLED: 1
+        run: go test -race ./internal/satchelservice ./internal/satchel ./cmd/wolosatcheld -count=1
+      - name: Independently verify HD signed financial wire fixtures
+        run: node scripts/check-satchel-financial-bridge-fixture.mjs
+      - name: Real isolated SDK to offline financial verifier roundtrip
+        run: python3 scripts/check-satchel-financial-proof-roundtrip.py
+      - name: Reproduce the two immutable baseline defects offline
+        env:
+          CGO_ENABLED: 1
+        run: python3 scripts/check-satchel-multileg-regression.py
+      # Exact artifacts use the shared pinned-profile builder in
+      # composed-satcheld-exact-artifact.yml. This lane remains source testing.

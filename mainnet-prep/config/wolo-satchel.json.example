@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "vault": "<independently-provisioned-canonical-wolo-vault>",
+  "public_key_hex": "<that-vaults-compressed-33-byte-secp256k1-public-key>",
+  "betting_escrow": "<current-independently-reviewed-betting-escrow>",
+  "protected_addresses": [
+    "<current-betting-escrow>",
+    "<every-current-retired-module-and-runtime-alias-role-address>"
+  ],
+  "max_amount_uwolo": 1000000,
+  "rpc": "https://rpc-mainnet.aoe2war.com",
+  "rest": "https://rest-mainnet.aoe2war.com",
+  "witness_rpc": "https://independently-operated-wolo-1-witness.invalid",
+  "trust_anchor": {
+    "height": 0,
+    "hash": "<independently-authenticated-wolo-1-header-hash>",
+    "period_seconds": 3600,
+    "evidence_reference": "<reviewed-trust-anchor-and-independent-witness-evidence>"
+  },
+  "keyring_dir": "/var/lib/wolo-satchel/keyring",
+  "key_name": "satchel-vault",
+  "passphrase_file": "/etc/wolo-satchel/keyring-unlock",
+  "token_file": "/etc/wolo-satchel/service-token",
+  "state_path": "/var/lib/wolo-satchel/state/operations.db",
+  "fees_uwolo": "5000",
+  "gas_limit": 120000,
+  "timeout_blocks": 20,
+  "withdrawal_approval_key_hex": "<independent-withdrawal-approver-ed25519-public-key>",
+  "activation_authority_key_hex": "<separate-activation-reviewer-ed25519-public-key>",
+  "permit_file": "/etc/wolo-satchel/activation-permit.json"
+}

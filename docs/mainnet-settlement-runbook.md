@@ -8,12 +8,85 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "runtime-evidence"
 authority: "mainnet-settlement-operations"
-reviewed_at: "2026-10-16"
+reviewed_at: "2026-10-17"
 review_interval_days: 14
 sensitivity: "restricted"
 ---
 
 # WoloChain Mainnet Settlement Runbook
+
+## October 17, 2026 — authenticated bridge and fresh release HOLD
+
+The [financial bridge](war-satchel-financial-bridge.md),
+[composed artifact](war-satchel-exact-source-artifact.md) and
+[controlled release gates](war-satchel-controlled-release.md) supersede older
+source-readiness observations for this candidate. Fresh read-only runtime
+inspection still finds settlement source `78c25985`, separate consensus
+identity, no 8094 listener and accepted legacy records. No drain, complete
+liability reconciliation, independent vault control or live canary is proved.
+Keep HD financial hold and C2 UNAVAILABLE. Never rebroadcast an uncertain
+request or treat a checkout/artifact change as a changed running process.
+
+
+## October 17, 2026 — dedicated Satchel execution source, no activation
+
+The [Satchel execution/operator contract](war-satchel-mainnet-execution.md)
+describes the new restricted 8094 service, immutable one-shot operation journal,
+independent withdrawal approval, exact HD wire adapters, owner-attributed return
+requirements and staged provisioning/canary procedure. It creates no wallet,
+key, funded deposit, app ledger credit or real transfer. C2 remains
+`UNAVAILABLE` and C3 remains `NONCREDITING` until independently verified custody,
+complete accounting and authenticated chain trust are genuinely established.
+
+8094 must use a dedicated keyring, OS authority, private credential and current
+journal; existing payout, betting escrow, founder, treasury, staking and validator
+keys are excluded. UNKNOWN attempts remain fenced across restart and block new
+operations; neither HTTP success nor a bearer token proves payment or approval.
+No producer may blindly retry, delete holds or restore an older journal.
+
+The current base is PR #24 merge
+`c1210dda37b725a5b141ad63361048d4b37731c2`. It retired the obsolete
+`3ea79363` mutating rollback/rescue paths; do not resurrect them or reuse unrelated
+draft release branches. Existing 8092/8093 source/runtime mismatch, founder #889
+UNKNOWN, fresh ingress/drain and protected recovery holds remain unchanged.
+The dedicated consensus executable must remain untouched and running.
+
+Installation, new custody provisioning, paired settlement maintenance and one
+small real-chain canary each require their separately reviewed operator
+authorization. Current source-readiness evidence is not a deployment controller
+or authorization. Preserve the latest request/run/receipt/prebroadcast state
+through code-only recovery; keep financial producers quiesced if reverting to
+legacy grouped/receipt semantics. No live operation or repeated founder
+investigation was performed by this source work.
+
+## October 17, 2026 — source hardening and protected release remain separate
+
+The [legacy settlement hardening handoff](legacy-settlement-hardening.md)
+records the source-only candidate and precise remaining operator evidence.
+No new VPS observation was made. The `78c25985` live-source observations and
+`bdbce253` reviewed candidate below are dated history; neither is asserted as
+current production truth or the binary containing this new source work.
+The existing no-deploy candidate workflow still builds exactly `bdbce253`.
+A new reviewed immutable artifact must identify the final approved source SHA.
+
+The old provenance, preflight and snapshot helpers remain pinned to historical
+runtime/artifact identities. Their source checks cannot certify a modern
+cutover, and changing their pins alone cannot establish financial drain or
+recovery safety. The preflight now requires the founder bind to be exactly `127.0.0.1:8093`;
+previously it accepted other distinct loopback ports. Six offline release-policy
+tests pass, including the unchanged refusal of `--rollback` and `--rescue`
+before live checks. The retired procedures below
+are retained only as engineering history; their imperative wording is not an
+instruction to execute them.
+
+A future release needs independent HD+DE financial-ingress isolation and active
+job drain, current chain/request-state reconciliation including the unresolved
+founder #889 hold, both private state trees preserved, and a separately reviewed
+`QUIESCED_RECOVERY_ONLY` controller/watchdog. Financial producers remain fenced
+through recovery until named approval. No source test or artifact authorizes
+resuming them. Preserve 8092/8093 signer/state separation, the dedicated consensus
+executable and all current liabilities. Satchel PR #25 remains separate and
+unmerged; C2 custody remains `UNAVAILABLE`.
 
 ## October 16, 2026 — current exact candidate build, NOT a cutover
 

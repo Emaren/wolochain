@@ -1465,9 +1465,10 @@ func (cfg settlementConfig) verifyChallengeFundingDeposit(ctx context.Context, t
 	}
 
 	lookup, err := cfg.lookupSettlementTx(ctx, txHash, settlementLookupExpectations{
-		Sender:      strings.TrimSpace(expectation.Sender),
-		Recipient:   cfg.EscrowAddress,
-		AmountUWolo: strings.TrimSpace(expectation.TotalFundedUWolo),
+		RequireEscrow: true,
+		Sender:        strings.TrimSpace(expectation.Sender),
+		Recipient:     cfg.EscrowAddress,
+		AmountUWolo:   strings.TrimSpace(expectation.TotalFundedUWolo),
 	})
 	if err != nil {
 		return settlementChallengeFundingVerifyResponse{}, err
@@ -1874,7 +1875,7 @@ func (cfg settlementConfig) listRecentChallengeFundingDeposits(ctx context.Conte
 		response.Detail = "limit must be greater than zero"
 		return response, nil
 	}
-	if err := validateChallengeFundingExpectation(settlementChallengeFundingExpectation{
+	expectation := settlementChallengeFundingExpectation{
 		Sender:          response.SenderFilter,
 		SourceApp:       response.SourceApp,
 		SettlementRunID: response.SettlementRunID,
@@ -1882,11 +1883,15 @@ func (cfg settlementConfig) listRecentChallengeFundingDeposits(ctx context.Conte
 		SourceEventID:   response.SourceEventID,
 		ParticipantSide: response.ParticipantSide,
 		ParticipantID:   response.ParticipantID,
-	}, cfg.AddressPrefix); err != nil {
+	}
+	if err := validateChallengeFundingExpectation(expectation, cfg.AddressPrefix); err != nil {
 		response.FailureCode = "INVALID_CHALLENGE"
 		response.Detail = err.Error()
 		return response, nil
 	}
+	// One deadline bounds search and all exact transaction observations together.
+	ctx, cancel := context.WithTimeout(ctx, cfg.LookupTimeout)
+	defer cancel()
 
 	searchLimit := response.Limit * 5
 	if searchLimit < response.Limit {
@@ -1905,44 +1910,28 @@ func (cfg settlementConfig) listRecentChallengeFundingDeposits(ctx context.Conte
 		return response, nil
 	}
 
-	items := make([]settlementChallengeFundingResult, 0, response.Limit)
+	items := make([]settlementChallengeFundingResult, 0, len(escrowRecent.Deposits))
+	seen := make(map[string]struct{}, len(escrowRecent.Deposits))
 	for _, deposit := range escrowRecent.Deposits {
-		lookup := settlementLookupResponse{
-			OK:                         deposit.TxSuccess,
-			Found:                      true,
-			ChainID:                    cfg.ChainID,
-			TxHash:                     deposit.TxHash,
-			TxSuccess:                  deposit.TxSuccess,
-			Kind:                       "escrow_deposit",
-			Height:                     deposit.Height,
-			Memo:                       deposit.Memo,
-			Timestamp:                  deposit.Timestamp,
-			CanonicalTxLookup:          deposit.CanonicalTxLookup,
-			CanonicalTxLookupPreferred: deposit.CanonicalTxLookupPreferred,
-			CanonicalTxLookupInternal:  deposit.CanonicalTxLookupInternal,
-			CanonicalTxLookupPublic:    deposit.CanonicalTxLookupPublic,
-			MatchedTransfer: &settlementTransfer{
-				Sender:    deposit.Sender,
-				Recipient: deposit.Recipient,
-				Amount:    deposit.AmountUWolo,
-				Denom:     cfg.BaseDenom,
-			},
+		if ctx.Err() != nil {
+			break
 		}
-		funding, err := parseChallengeFundingResult(*lookup.MatchedTransfer, lookup, cfg.EscrowAddress)
-		if err != nil {
+		hash := normalizeTxHash(deposit.TxHash)
+		if len(hash) != 64 || !isHexHash(hash) {
 			continue
 		}
-		if mismatch := compareChallengeFundingExpectation(funding, settlementChallengeFundingExpectation{
-			Sender:          response.SenderFilter,
-			SourceApp:       response.SourceApp,
-			SettlementRunID: response.SettlementRunID,
-			ChallengeID:     response.ChallengeID,
-			SourceEventID:   response.SourceEventID,
-			ParticipantSide: response.ParticipantSide,
-			ParticipantID:   response.ParticipantID,
-		}); mismatch != "" {
+		if _, exists := seen[hash]; exists {
 			continue
 		}
+		seen[hash] = struct{}{}
+		// Search events identify candidates only. Reuse the same exact bytes,
+		// committed result, bank effect and memo contract as direct verification
+		// before exposing Funding.OK. Repeated rows never repeat an observation.
+		verified, err := cfg.verifyChallengeFundingDeposit(ctx, hash, expectation)
+		if err != nil || !verified.OK || verified.Funding == nil || !verified.Funding.OK {
+			continue
+		}
+		funding := *verified.Funding
 		funding.Index = len(items)
 		items = append(items, funding)
 		if len(items) >= response.Limit {
@@ -1950,6 +1939,11 @@ func (cfg settlementConfig) listRecentChallengeFundingDeposits(ctx context.Conte
 		}
 	}
 
+	if ctx.Err() != nil {
+		response.FailureCode = "LOOKUP_FAILED"
+		response.Detail = "challenge funding evidence collection was canceled or exceeded the lookup deadline"
+		return response, nil
+	}
 	response.OK = true
 	response.Count = len(items)
 	response.Funding = items

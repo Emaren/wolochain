@@ -22,7 +22,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cosmos/btcutil/bech32"
 	"github.com/emaren/wolochain/internal/chainevents"
+	"github.com/emaren/wolochain/internal/chainjson"
 	"github.com/spf13/cobra"
 )
 
@@ -515,6 +517,7 @@ type settlementLookupExpectations struct {
 	Memo          string
 	RequireMemo   bool
 	RequirePayout bool
+	RequireEscrow bool
 	Sender        string
 	Recipient     string
 	AmountUWolo   string
@@ -1074,11 +1077,7 @@ func newSettlementServeCmd() *cobra.Command {
 				return err
 			}
 
-			server := &http.Server{
-				Addr:              cfg.ListenAddr,
-				Handler:           cfg.newSettlementHTTPHandler(),
-				ReadHeaderTimeout: 5 * time.Second,
-			}
+			server := cfg.newSettlementHTTPServer()
 
 			cmd.Printf("settlement server listening on http://%s\n", cfg.ListenAddr)
 			return server.ListenAndServe()
@@ -1113,7 +1112,7 @@ func (cfg settlementConfig) newSettlementHTTPHandler() http.Handler {
 		}
 
 		var request settlementExecuteRequest
-		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		if err := decodeSettlementRequestJSON(w, r, &request); err != nil {
 			writeJSONResponse(w, http.StatusBadRequest, settlementExecuteResponse{
 				OK:          false,
 				Status:      "failed",
@@ -1153,7 +1152,7 @@ func (cfg settlementConfig) newSettlementHTTPHandler() http.Handler {
 		}
 
 		var request settlementRunRequest
-		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		if err := decodeSettlementRequestJSON(w, r, &request); err != nil {
 			writeJSONResponse(w, http.StatusBadRequest, settlementRunResponse{
 				OK:          false,
 				DryRun:      true,
@@ -1192,7 +1191,7 @@ func (cfg settlementConfig) newSettlementHTTPHandler() http.Handler {
 		}
 
 		var request settlementRunRequest
-		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		if err := decodeSettlementRequestJSON(w, r, &request); err != nil {
 			writeJSONResponse(w, http.StatusBadRequest, settlementRunResponse{
 				OK:          false,
 				DryRun:      false,
@@ -1302,7 +1301,7 @@ func (cfg settlementConfig) newSettlementHTTPHandler() http.Handler {
 		}
 
 		var request settlementChallengeRequest
-		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		if err := decodeSettlementRequestJSON(w, r, &request); err != nil {
 			writeJSONResponse(w, http.StatusBadRequest, settlementChallengeResponse{
 				OK:          false,
 				DryRun:      true,
@@ -1448,7 +1447,7 @@ func (cfg settlementConfig) newSettlementHTTPHandler() http.Handler {
 			}
 
 			var request settlementChallengeRequest
-			if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+			if err := decodeSettlementRequestJSON(w, r, &request); err != nil {
 				writeJSONResponse(w, http.StatusBadRequest, settlementChallengeResponse{
 					OK:          false,
 					DryRun:      false,
@@ -1537,7 +1536,7 @@ func (cfg settlementConfig) newSettlementHTTPHandler() http.Handler {
 		writeJSONResponse(w, statusCode, response)
 	})
 
-	return mux
+	return boundedSettlementHandler(mux)
 }
 
 func loadSettlementConfig() (settlementConfig, error) {
@@ -2861,6 +2860,11 @@ func (cfg settlementConfig) lookupSettlementTx(ctx context.Context, txHash strin
 			response.Status = "confirmed"
 		}
 	}
+	if expectations.RequireEscrow {
+		if failure := cfg.verifySettlementEscrow(ctx, normalizedHash, body, payload, expectations, &response); failure != "" {
+			return cfg.unverifiableSettlementTx(normalizedHash, failure), nil
+		}
+	}
 
 	return response, nil
 }
@@ -2888,7 +2892,8 @@ func (cfg settlementConfig) verifyEscrowDeposit(ctx context.Context, txHash, exp
 
 	expectedAmountUWolo = strings.TrimSpace(expectedAmountUWolo)
 	if expectedAmountUWolo != "" {
-		if _, err := strconv.ParseUint(expectedAmountUWolo, 10, 64); err != nil {
+		amount, err := strconv.ParseUint(expectedAmountUWolo, 10, 64)
+		if err != nil || amount == 0 || strconv.FormatUint(amount, 10) != expectedAmountUWolo {
 			response.FailureCode = "INVALID_AMOUNT"
 			response.Detail = "expected_amount_uwolo must be a positive integer"
 			return response, nil
@@ -2896,9 +2901,10 @@ func (cfg settlementConfig) verifyEscrowDeposit(ctx context.Context, txHash, exp
 	}
 
 	lookup, err := cfg.lookupSettlementTx(ctx, txHash, settlementLookupExpectations{
-		Sender:      expectedSender,
-		Recipient:   cfg.EscrowAddress,
-		AmountUWolo: expectedAmountUWolo,
+		RequireEscrow: true,
+		Sender:        expectedSender,
+		Recipient:     cfg.EscrowAddress,
+		AmountUWolo:   expectedAmountUWolo,
 	})
 	if err != nil {
 		return settlementEscrowVerifyResponse{}, err
@@ -2929,32 +2935,9 @@ func (cfg settlementConfig) verifyEscrowDeposit(ctx context.Context, txHash, exp
 	}
 
 	response.DepositFound = true
-	// Generic lookup permits every bank denomination. A foreign-coin transfer
-	// must never prove the requested uwolo amount just because another uwolo
-	// transfer in the same tx makes its overall kind an escrow deposit.
-	for transferIndex, transfer := range lookup.Transfers {
-		if !strings.EqualFold(transfer.Recipient, cfg.EscrowAddress) || transfer.Denom != cfg.BaseDenom {
-			continue
-		}
-		if expectedSender != "" && !strings.EqualFold(transfer.Sender, expectedSender) {
-			continue
-		}
-		if expectedAmountUWolo != "" && transfer.Amount != expectedAmountUWolo {
-			continue
-		}
-		lookup.MatchingTransferCount++
-		if lookup.MatchingTransferCount == 1 {
-			match := transfer
-			index := transferIndex
-			lookup.MatchedTransfer = &match
-			lookup.MatchedTransferIndex = &index
-		} else {
-			// Keep existing manual verification behavior but never present an
-			// ambiguous ordinal as one creditable Satchel transfer receipt.
-			lookup.MatchedTransferIndex = nil
-		}
-	}
-	if lookup.MatchingTransferCount > 0 {
+	// The unique match was bound to actual transaction bytes and the committed
+	// result by the shared configured-node proof contract above.
+	if lookup.MatchingTransferCount == 1 && lookup.MatchedExpected {
 		lookup.MatchedExpected = true
 		response.Lookup = &lookup
 		response.OK = true
@@ -4508,40 +4491,29 @@ func isHexHash(txHash string) bool {
 
 func isWoloAddress(address, prefix string) bool {
 	address = strings.TrimSpace(address)
-	return address != "" && strings.HasPrefix(strings.ToLower(address), strings.ToLower(prefix)+"1")
+	if address != strings.ToLower(address) || prefix != settlementCanonicalPrefix {
+		return false
+	}
+	hrp, words, err := bech32.Decode(address, 90)
+	if err != nil || hrp != prefix {
+		return false
+	}
+	payload, err := bech32.ConvertBits(words, 5, 8, false)
+	return err == nil && len(payload) == 20
 }
 
 func getJSON(ctx context.Context, target string, dst any) (int, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, target, nil)
+	body, status, err := readSettlementEvidenceJSON(ctx, target)
 	if err != nil {
-		return 0, err
+		return status, err
 	}
-	req.Header.Set("Accept", "application/json")
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return 0, err
+	if status != http.StatusOK {
+		return status, fmt.Errorf("upstream returned %d", status)
 	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return resp.StatusCode, err
+	if _, ok := chainjson.Object(body); !ok {
+		return status, errors.New("upstream must return a JSON object")
 	}
-
-	if resp.StatusCode == http.StatusNotFound {
-		return resp.StatusCode, nil
-	}
-	if resp.StatusCode >= 400 {
-		return resp.StatusCode, fmt.Errorf("upstream returned %d: %s", resp.StatusCode, strings.TrimSpace(string(body)))
-	}
-
-	decoder := json.NewDecoder(bytes.NewReader(body))
-	if err := decoder.Decode(dst); err != nil {
-		return resp.StatusCode, err
-	}
-
-	return resp.StatusCode, nil
+	return status, json.Unmarshal(body, dst)
 }
 
 func writeJSON(writer io.Writer, value any) error {
@@ -4742,8 +4714,7 @@ func readJSONInput(path string, dst any) error {
 		reader = file
 	}
 
-	decoder := json.NewDecoder(reader)
-	return decoder.Decode(dst)
+	return decodeSettlementObject(reader, dst)
 }
 
 func parseOptionalUWoloEnv(key string) (uint64, error) {
