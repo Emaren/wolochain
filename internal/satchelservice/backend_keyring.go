@@ -36,6 +36,49 @@ func secureBackendDir(path string) error {
 	return nil
 }
 
+// The journal lock alone cannot prevent two processes using different journal
+// paths with the same signing key. Lease the existing SDK keyring directory's
+// inode for this backend's lifetime; no file/key/password is created or changed.
+// This is cooperative exclusion, not evidence that another OS principal lacks
+// a copy of the key. Operator key isolation remains an independent requirement.
+func lockSatchelKeyring(directory string) (*os.File, error) {
+	if !filepath.IsAbs(directory) || secureBackendDir(directory) != nil {
+		return nil, ErrBackend
+	}
+	path := filepath.Join(directory, "keyring-file")
+	if real, err := filepath.EvalSymlinks(path); err != nil || real != path || secureBackendDir(path) != nil {
+		return nil, ErrBackend
+	}
+	fd, err := syscall.Open(path, syscall.O_RDONLY|syscall.O_DIRECTORY|syscall.O_NOFOLLOW|syscall.O_NONBLOCK, 0)
+	if err != nil {
+		return nil, ErrBackend
+	}
+	lease := os.NewFile(uintptr(fd), "satchel-keyring-lease")
+	info, err := lease.Stat()
+	observed, observeErr := os.Lstat(path)
+	if err != nil || observeErr != nil || !info.IsDir() || !os.SameFile(info, observed) || syscall.Flock(fd, syscall.LOCK_EX|syscall.LOCK_NB) != nil {
+		lease.Close()
+		return nil, ErrBackend
+	}
+	return lease, nil
+}
+
+// An operator's directory replacement must not turn a lease on an old inode
+// into apparent authority over a new SDK keyring path. Called while the native
+// backend mutex excludes Close, immediately before the SDK signing invocation.
+func (b *KeyringBackend) keyringLeaseCurrent() bool {
+	if b.keyringLease == nil {
+		return true
+	} // Injected test signer, not native SDK.
+	path := filepath.Join(b.cfg.KeyringDir, "keyring-file")
+	if real, err := filepath.EvalSymlinks(path); err != nil || real != path || secureBackendDir(path) != nil {
+		return false
+	}
+	leased, err := b.keyringLease.Stat()
+	current, currentErr := os.Lstat(path)
+	return err == nil && currentErr == nil && leased.IsDir() && os.SameFile(leased, current)
+}
+
 func openSatchelKeyring(cfg BackendConfig, expected *secp256k1.PubKey) (backendSigner, error) {
 	if !filepath.IsAbs(cfg.KeyringDir) || !filepath.IsAbs(cfg.PassphraseFile) || cfg.KeyName == "" || len(cfg.KeyName) > 128 || strings.ContainsAny(cfg.KeyName, "/\\\x00\r\n") {
 		return nil, ErrBackend

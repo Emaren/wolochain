@@ -12,8 +12,10 @@ import (
 	"strings"
 	"time"
 
+	txapi "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"github.com/emaren/wolochain/internal/satchel"
 	bolt "go.etcd.io/bbolt"
+	"google.golang.org/protobuf/proto"
 )
 
 // DepositProofRequest is supplied by the authenticated HD server from its
@@ -49,6 +51,7 @@ type FinancialProofContext struct {
 	WithdrawalApproval *WithdrawalApproval     `json:"withdrawal_approval,omitempty"`
 	OwnerMandate       *OwnerWithdrawalMandate `json:"owner_mandate,omitempty"`
 	ReturnApproval     *ReturnApproval         `json:"return_approval,omitempty"`
+	Reservation        *WagerReservation       `json:"reservation,omitempty"`
 }
 
 // FinancialProof is a transport envelope, not an attestation. A consumer must
@@ -145,10 +148,10 @@ func (e *Engine) DepositProof(ctx context.Context, r DepositProofRequest, reader
 
 func operationContext(r record) (FinancialProofContext, error) {
 	i := r.Request
-	if (i.Kind != "withdrawal" && i.Kind != "wager") || !ownerUIDPattern.MatchString(i.OwnerID) {
+	if (i.Kind != "withdrawal" && i.Kind != "wager") || !ownerUIDPattern.MatchString(i.OwnerID) || (i.Kind == "wager" && i.Reservation == nil) {
 		return FinancialProofContext{}, errors.New("operation_owner_binding_unavailable")
 	}
-	return FinancialProofContext{Protocol: 1, Kind: i.Kind, OwnerID: i.OwnerID, OperationID: i.OperationID, Sender: i.Sender, Recipient: i.Recipient, AmountUWolo: i.AmountUWolo, Memo: i.Memo, TxHash: r.Signed.Hash, WithdrawalApproval: i.Approval, OwnerMandate: i.OwnerMandate}, nil
+	return FinancialProofContext{Protocol: 1, Kind: i.Kind, OwnerID: i.OwnerID, OperationID: i.OperationID, Sender: i.Sender, Recipient: i.Recipient, AmountUWolo: i.AmountUWolo, Memo: i.Memo, TxHash: r.Signed.Hash, WithdrawalApproval: i.Approval, OwnerMandate: i.OwnerMandate, Reservation: i.Reservation}, nil
 }
 
 // operationProofRecord is a read-only snapshot. It never invokes Sign,
@@ -266,7 +269,7 @@ func VerifyFinancialProof(ctx context.Context, cfg FinancialProofVerifierConfig,
 	var evidence satchel.AuthenticatedEvidence
 	switch expected.Kind {
 	case "deposit":
-		if expected.OperationID != "" || expected.FundedAmountUWolo != "" || expected.WithdrawalApproval != nil || expected.OwnerMandate != nil || expected.ReturnApproval != nil || expected.Recipient != policy.Vault {
+		if expected.OperationID != "" || expected.FundedAmountUWolo != "" || expected.WithdrawalApproval != nil || expected.OwnerMandate != nil || expected.ReturnApproval != nil || expected.Reservation != nil || expected.Recipient != policy.Vault {
 			return VerifiedFinancialReceipt{}, errors.New("financial_deposit_context_refused")
 		}
 		_, i, err := depositContext(DepositProofRequest{Protocol: 1, OwnerID: expected.OwnerID, Sender: expected.Sender, AmountUWolo: expected.AmountUWolo, Memo: expected.Memo, CreatedAt: expected.CreatedAt, ExpiresAt: expected.ExpiresAt, TxHash: p.TxHash}, policy.Vault)
@@ -281,7 +284,7 @@ func VerifyFinancialProof(ctx context.Context, cfg FinancialProofVerifierConfig,
 		if expected.CreatedAt != "" || expected.ExpiresAt != "" || expected.FundedAmountUWolo != "" || expected.ReturnApproval != nil {
 			return VerifiedFinancialReceipt{}, errors.New("financial_operation_context_refused")
 		}
-		r := TransferRequest{OperationID: expected.OperationID, Kind: expected.Kind, ChainID: satchel.ChainID, Denom: satchel.Denom, OwnerID: expected.OwnerID, Sender: expected.Sender, Recipient: expected.Recipient, AmountUWolo: expected.AmountUWolo, Memo: expected.Memo, Approval: expected.WithdrawalApproval, OwnerMandate: expected.OwnerMandate}
+		r := TransferRequest{OperationID: expected.OperationID, Kind: expected.Kind, ChainID: satchel.ChainID, Denom: satchel.Denom, OwnerID: expected.OwnerID, Sender: expected.Sender, Recipient: expected.Recipient, AmountUWolo: expected.AmountUWolo, Memo: expected.Memo, Approval: expected.WithdrawalApproval, OwnerMandate: expected.OwnerMandate, Reservation: expected.Reservation}
 		t := time.Now()
 		if r.Kind == "withdrawal" && r.Approval != nil {
 			// This is verification of the original, journaled approval, not a new
@@ -294,6 +297,9 @@ func VerifyFinancialProof(ctx context.Context, cfg FinancialProofVerifierConfig,
 				}
 			}
 		}
+		if r.Kind == "wager" && r.Reservation != nil {
+			t = time.Unix(r.Reservation.IssuedAt, 0) // Verify the journaled grant, never renew execution authority.
+		}
 		if policy.validate(r, t) != nil {
 			return VerifiedFinancialReceipt{}, errors.New("financial_operation_authority_refused")
 		}
@@ -301,8 +307,11 @@ func VerifyFinancialProof(ctx context.Context, cfg FinancialProofVerifierConfig,
 		if err != nil {
 			return VerifiedFinancialReceipt{}, err
 		}
+		if r.Kind == "wager" && verifyWagerProofFee(evidence.Observation().TxBytes, r.Reservation.FeeUWolo) != nil {
+			return VerifiedFinancialReceipt{}, errors.New("financial_wager_fee_mismatch")
+		}
 	case "claim_return":
-		if expected.CreatedAt != "" || expected.ExpiresAt != "" || expected.WithdrawalApproval != nil || expected.OwnerMandate != nil || verifyReturnContext(expected, policy) != nil {
+		if expected.CreatedAt != "" || expected.ExpiresAt != "" || expected.WithdrawalApproval != nil || expected.OwnerMandate != nil || expected.Reservation != nil || verifyReturnContext(expected, policy) != nil {
 			return VerifiedFinancialReceipt{}, errors.New("financial_return_authority_refused")
 		}
 		evidence, err = v.VerifyTransferProof(ctx, satchel.TransferIntent{Sender: expected.Sender, Recipient: expected.Recipient, AmountUWolo: expected.AmountUWolo, Memo: expected.Memo}, p.TxHash, p.Proof)
@@ -317,6 +326,25 @@ func VerifyFinancialProof(ctx context.Context, cfg FinancialProofVerifierConfig,
 		return VerifiedFinancialReceipt{}, errors.New("financial_proof_receipt_mismatch")
 	}
 	return VerifiedFinancialReceipt{Protocol: 1, Kind: expected.Kind, ChainID: satchel.ChainID, Denom: satchel.Denom, OwnerID: expected.OwnerID, OperationID: expected.OperationID, ContextDigest: p.ContextDigest, TxHash: verified.TxHash, ReceiptID: verified.ReceiptID, TransferIndex: verified.TransferIndex, Height: verified.Height, BlockHash: verified.BlockHash}, nil
+}
+
+// These bytes have already passed Comet inclusion/execution authentication.
+// Reuse the SDK protobuf types to bind the actual native transaction fee to the
+// independently approved operating-fee reservation, not an exporter assertion.
+func verifyWagerProofFee(data []byte, expected string) error {
+	var raw txapi.TxRaw
+	var auth txapi.AuthInfo
+	if len(data) == 0 || len(data) > 65536 || !amount(expected, 1000000) ||
+		proto.Unmarshal(data, &raw) != nil || len(raw.ProtoReflect().GetUnknown()) != 0 || len(raw.Signatures) != 1 ||
+		proto.Unmarshal(raw.AuthInfoBytes, &auth) != nil || len(auth.ProtoReflect().GetUnknown()) != 0 || auth.Fee == nil || auth.Tip != nil {
+		return errors.New("financial_wager_fee_mismatch")
+	}
+	f := auth.Fee
+	if len(f.ProtoReflect().GetUnknown()) != 0 || f.Payer != "" || f.Granter != "" || len(f.Amount) != 1 || f.Amount[0] == nil ||
+		len(f.Amount[0].ProtoReflect().GetUnknown()) != 0 || f.Amount[0].Denom != "uwolo" || f.Amount[0].Amount != expected {
+		return errors.New("financial_wager_fee_mismatch")
+	}
+	return nil
 }
 
 // verifyReturnContext verifies the SAME signed v2 messages as the journal. It

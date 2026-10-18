@@ -2,7 +2,7 @@ name: Satchel execution source proof
 
 on:
   pull_request:
-    branches: [wolo-1-mainnet-prep, codex/satchel-mainnet-execution, codex/satchel-source-integration-proof, feat/20261018-guarded-two-service-code-cutover]
+    branches: [wolo-1-mainnet-prep, codex/satchel-mainnet-execution, codex/satchel-source-integration-proof, feat/20261018-guarded-two-service-code-cutover, integration/20261018-satchel-ops-finance-held]
   workflow_dispatch:
 
 permissions:

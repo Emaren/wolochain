@@ -73,6 +73,28 @@ class ComposedProfileTests(unittest.TestCase):
         return self.artifact.create_manifest(self.binary, self.rebuild, self.source, self.identity,
                                             profile="composed-satcheld")
 
+    def test_backend_candidate_is_separately_source_and_workflow_bound(self):
+        identity = dict(self.identity, workflow_ref="Emaren/wolochain/" + self.artifact.BACKEND_WORKFLOW_PATH
+                        + "@refs/heads/codex/satchel-production-backend")
+        with mock.patch.object(self.artifact, "BACKEND_SOURCE", self.revision):
+            manifest = self.artifact.create_manifest(self.binary, self.rebuild, self.source, identity,
+                                                    profile="custody-backend")
+            self.artifact.verify_manifest(manifest, self.binary, self.source, identity, profile="custody-backend")
+            self.assertEqual(manifest["profile"], "custody-backend")
+            self.assertFalse(manifest["authority"]["satchel_activation_authorized"])
+            with self.assertRaises(self.artifact.ArtifactError):
+                self.artifact.verify_manifest(manifest, self.binary, self.source, self.identity, profile="composed-satcheld")
+            with self.assertRaises(self.artifact.ArtifactError):
+                self.artifact.create_manifest(self.binary, self.rebuild, self.source, self.identity, profile="custody-backend")
+            with mock.patch.object(self.artifact, "BACKEND_SOURCE", "f" * 40):
+                with self.assertRaises(self.artifact.ArtifactError):
+                    self.artifact.verify_manifest(manifest, self.binary, self.source, identity, profile="custody-backend")
+
+    def test_missing_backend_source_is_nonaccepting(self):
+        with mock.patch.object(self.artifact, "BACKEND_SOURCE", "NONACCEPTING_PENDING_REVIEWED_SOURCE"):
+            with self.assertRaisesRegex(self.artifact.ArtifactError, "NONACCEPTING backend source"):
+                self.artifact.profile_policy("custody-backend")
+
     def test_real_composed_candidate_has_no_activation_authority(self):
         manifest = self.candidate()
         self.artifact.verify_manifest(manifest, self.binary, self.source, self.identity,

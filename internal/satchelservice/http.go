@@ -59,6 +59,10 @@ type HTTPFinancialProofBackend interface {
 	ReturnProof(context.Context, string) (FinancialProof, error)
 }
 
+type HTTPCustodyJournalBackend interface {
+	CustodyJournal() (CustodyJournal, error)
+}
+
 // HTTPHealth describes the already-verified service identity. This self-report
 // does not certify vault ownership, bank reserves, recovery or chain consensus.
 // Construct it only after the engine verifies its operator-owned authority.
@@ -174,6 +178,25 @@ func (h *privateHTTPHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.health(ctx, w)
 		return
 	}
+	if r.URL.Path == "/satchel/v1/custody/journal" {
+		if r.Method != http.MethodGet {
+			httpFailure(w, http.StatusMethodNotAllowed, "method_not_allowed")
+			return
+		}
+		backend, ok := h.backend.(HTTPCustodyJournalBackend)
+		if !ok || ctx.Err() != nil {
+			httpFailure(w, http.StatusServiceUnavailable, "custody_journal_unavailable")
+			return
+		}
+		snapshot, err := backend.CustodyJournal()
+		if err != nil || ctx.Err() != nil || snapshot.Protocol != 1 || snapshot.ChainID != "wolo-1" || snapshot.Denom != "uwolo" ||
+			snapshot.CreditAuthorized || snapshot.SolvencyAuthorized || snapshot.BankBalanceAuthenticated || snapshot.CustodyCapability != "UNAVAILABLE" {
+			httpFailure(w, http.StatusConflict, "custody_journal_unverifiable")
+			return
+		}
+		httpWrite(w, http.StatusOK, snapshot)
+		return
+	}
 	if strings.HasPrefix(r.URL.Path, "/satchel/v1/operations/") {
 		if r.Method != http.MethodGet {
 			httpFailure(w, http.StatusMethodNotAllowed, "method_not_allowed")
@@ -188,7 +211,7 @@ func (h *privateHTTPHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.result(w, id, result, err, false)
 		return
 	}
-	if r.URL.Path != "/satchel/v1/one-shot" && r.URL.Path != "/v1/satchel/withdrawals" && r.URL.Path != "/satchel/v1/reconcile" &&
+	if r.URL.Path != "/satchel/v1/one-shot" && r.URL.Path != "/satchel/v2/one-shot" && r.URL.Path != "/v1/satchel/withdrawals" && r.URL.Path != "/satchel/v1/reconcile" &&
 		r.URL.Path != "/satchel/v1/returns/prepare" && r.URL.Path != "/satchel/v1/returns/reconcile" &&
 		r.URL.Path != "/satchel/v1/proofs/deposit" && r.URL.Path != "/satchel/v1/proofs/operation" && r.URL.Path != "/satchel/v1/proofs/return" {
 		httpFailure(w, http.StatusNotFound, "private_route_not_found")
@@ -241,6 +264,8 @@ func (h *privateHTTPHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var err error
 	if r.URL.Path == "/v1/satchel/withdrawals" {
 		input, err = decodeWithdrawalHTTP(data)
+	} else if r.URL.Path == "/satchel/v2/one-shot" {
+		input, err = decodeReservedWagerHTTP(data)
 	} else {
 		input, err = decodeWagerHTTP(data)
 	}
@@ -255,7 +280,11 @@ func (h *privateHTTPHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	result, err := h.backend.Submit(ctx, input)
-	h.result(w, input.OperationID, result, err, true)
+	if r.URL.Path == "/satchel/v2/one-shot" {
+		h.result(w, input.OperationID, result, err, false, true)
+	} else {
+		h.result(w, input.OperationID, result, err, true)
+	}
 }
 
 func (h *privateHTTPHandler) claimReturn(ctx context.Context, w http.ResponseWriter, path string, data []byte) {
@@ -343,6 +372,7 @@ func (h *privateHTTPHandler) health(ctx context.Context, w http.ResponseWriter) 
 		"accepting": i.Accepting, "chain_id": "wolo-1", "signer_role": httpCustodyRole,
 		"vault_address": i.VaultAddress, "build_sha256": i.BuildSHA256,
 		"durable_one_shot": true, "replay_after_restart_forbidden": true, "refunds_require_chain_proof": true,
+		"execution_protocol": 2, "owner_bound_wager_reservation_required": true, "custody_capability": "UNAVAILABLE",
 	}
 	if i.Accepting && i.ExclusiveAuthorityVerified {
 		response["custody_mnemonic_shared_with_other_roles"] = false
@@ -350,7 +380,7 @@ func (h *privateHTTPHandler) health(ctx context.Context, w http.ResponseWriter) 
 	httpWrite(w, http.StatusOK, response)
 }
 
-func (h *privateHTTPHandler) result(w http.ResponseWriter, id string, result Result, err error, allowAccepted bool) {
+func (h *privateHTTPHandler) result(w http.ResponseWriter, id string, result Result, err error, allowAccepted bool, reservedACK ...bool) {
 	if err != nil {
 		httpFailure(w, http.StatusConflict, "operation_refused_or_unknown")
 		return
@@ -391,6 +421,11 @@ func (h *privateHTTPHandler) result(w http.ResponseWriter, id string, result Res
 		response["txHash"] = strings.ToUpper(result.TxHash)
 		response["broadcast_status"] = "accepted_once"
 	}
+	if len(reservedACK) == 1 && reservedACK[0] && result.Status == "ACCEPTED" {
+		response["kind"] = "broadcast_accepted"
+		response["confirmed"] = false
+	}
+	response["credit_authorized"] = false
 	httpWrite(w, http.StatusOK, response)
 }
 
@@ -543,6 +578,29 @@ func decodeWagerHTTP(data []byte) (TransferRequest, error) {
 		return TransferRequest{}, errors.New("invalid_wager_identity")
 	}
 	return request, nil
+}
+
+func decodeReservedWagerHTTP(data []byte) (TransferRequest, error) {
+	var input struct {
+		Protocol    int               `json:"protocol"`
+		RequestID   string            `json:"request_id"`
+		ChainID     string            `json:"chain_id"`
+		Role        string            `json:"signer_role"`
+		Sender      string            `json:"from_address"`
+		Recipient   string            `json:"to_address"`
+		Amount      httpCoin          `json:"amount"`
+		Memo        string            `json:"memo"`
+		OwnerID     string            `json:"owner_id"`
+		Reservation *WagerReservation `json:"reservation"`
+	}
+	if strictHTTPJSON(data, &input) != nil || input.Protocol != 2 || input.Role != httpCustodyRole ||
+		!httpOperationPattern.MatchString(input.RequestID) || input.ChainID != "wolo-1" || input.Amount.Denom != "uwolo" ||
+		!ownerUIDPattern.MatchString(input.OwnerID) || input.Reservation == nil {
+		return TransferRequest{}, errors.New("invalid_reserved_wager_contract")
+	}
+	return TransferRequest{OperationID: input.RequestID, ChainID: input.ChainID, Sender: input.Sender, Recipient: input.Recipient,
+		Denom: input.Amount.Denom, AmountUWolo: input.Amount.Amount, Memo: input.Memo, Kind: "wager", OwnerID: input.OwnerID,
+		Reservation: input.Reservation}, nil
 }
 
 type httpWithdrawal struct {

@@ -3,6 +3,7 @@ package satchelservice
 import (
 	"bytes"
 	"context"
+	"crypto/ed25519"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
@@ -123,7 +124,12 @@ func newBackendFixture(t *testing.T) *backendFixture {
 	b.signer = f.signer
 	f.b = b
 	t.Cleanup(b.Close)
-	f.request = TransferRequest{OperationID: "satchel:ticket:7", Kind: "wager", ChainID: "wolo-1", Denom: "uwolo", Sender: vault, Recipient: recipient, AmountUWolo: "7000000", Memo: "AoE2HDBets bet ticket v1 · ticket 7"}
+	f.request = TransferRequest{OperationID: "satchel:ticket:7", Kind: "wager", ChainID: "wolo-1", Denom: "uwolo", Sender: vault, Recipient: recipient, AmountUWolo: "7000000", Memo: "AoE2HDBets bet ticket v1 · ticket 7", OwnerID: "owner-1"}
+	policy := Policy{Vault: vault, BettingEscrow: recipient, MaxAmountUWolo: 1000000000, WithdrawalApprovalKey: engineTestApprovalKey().Public().(ed25519.PublicKey)}
+	f.request.Reservation = testWagerReservation(t, f.request, policy, time.Now())
+	f.request.Reservation.FeeUWolo = b.cfg.FeesUWolo
+	f.request.Reservation.Signature = base64.StdEncoding.EncodeToString(ed25519.Sign(engineTestApprovalKey(), WagerReservationMessage(*f.request.Reservation)))
+	b.cfg.WagerVerifier = policy.VerifyWager
 	return f
 }
 
@@ -347,6 +353,7 @@ func TestBackendWithdrawalFreshAuthorizationAndExpiredRecovery(t *testing.T) {
 	f := newBackendFixture(t)
 	r := f.request
 	r.Kind = "withdrawal"
+	r.Reservation = nil
 	r.OperationID = "satchel:withdrawal:a0000000-0000-4000-8000-000000000007"
 	r.Memo = "aoe2war/satchel/withdraw/v1/a0000000-0000-4000-8000-000000000007"
 	r.Approval = &WithdrawalApproval{WithdrawalID: "a0000000-0000-4000-8000-000000000007"}
@@ -434,6 +441,7 @@ func TestBackendOpensOnlyExistingSDKEncryptedFileKeyring(t *testing.T) {
 	if f.broadcasts.Load() != 0 {
 		t.Fatal("opening/signing keyring transmitted a transaction")
 	}
+	b.Close() // Invalid key/password cases below must reach actual SDK validation.
 	cfg.KeyName = "different-key"
 	if other, err := NewKeyringBackend(cfg); err == nil {
 		other.Close()

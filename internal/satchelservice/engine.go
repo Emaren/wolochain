@@ -36,6 +36,7 @@ type TransferRequest struct {
 	OwnerID      string                  `json:"owner_id,omitempty"`
 	Approval     *WithdrawalApproval     `json:"approval,omitempty"`
 	OwnerMandate *OwnerWithdrawalMandate `json:"owner_mandate,omitempty"`
+	Reservation  *WagerReservation       `json:"reservation,omitempty"`
 }
 type WithdrawalApproval struct {
 	WithdrawalID      string `json:"withdrawal_id"`
@@ -143,6 +144,9 @@ func fingerprint(r TransferRequest) string {
 	if r.OwnerMandate != nil {
 		fields = append(fields, OwnerMandateDigest(*r.OwnerMandate))
 	}
+	if r.Reservation != nil {
+		fields = append(fields, "wager-reservation-v1", hashJSON(r.Reservation))
+	}
 	return hashJSON(fields)
 }
 
@@ -178,7 +182,11 @@ func (p Policy) validate(r TransferRequest, now time.Time) error {
 		if n > 1000000000 || n%1000000 != 0 || !wagerIDs.MatchString(r.OperationID) || r.Recipient != p.BettingEscrow || r.Approval != nil || r.OwnerMandate != nil || (r.OwnerID != "" && !ownerUIDPattern.MatchString(r.OwnerID)) || !ticketMemo.MatchString(r.Memo) {
 			return errors.New("wager_policy_refused")
 		}
+		return p.verifyWager(r, now)
 	case "withdrawal":
+		if r.Reservation != nil {
+			return errors.New("withdrawal_authority_conflict")
+		}
 		if satchel.IsKnownRoleAddress(r.Recipient) {
 			return errors.New("withdrawal_destination_refused")
 		}
@@ -191,7 +199,6 @@ func (p Policy) validate(r TransferRequest, now time.Time) error {
 	default:
 		return errors.New("operation_kind_refused")
 	}
-	return nil
 }
 func validMemo(s string) bool {
 	for _, c := range s {
@@ -339,6 +346,20 @@ func held(r record, reason string) record {
 func (e *Engine) Submit(ctx context.Context, req TransferRequest) (Result, error) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
+	// Keep accepted authority independent of mutable pointers retained by an
+	// in-process caller. The original approvals stay bound to this journal.
+	if req.Approval != nil {
+		v := *req.Approval
+		req.Approval = &v
+	}
+	if req.OwnerMandate != nil {
+		v := *req.OwnerMandate
+		req.OwnerMandate = &v
+	}
+	if req.Reservation != nil {
+		v := *req.Reservation
+		req.Reservation = &v
+	}
 	// Economic identity check precedes approval freshness: replay of an already
 	// fenced request still works after its original short-lived approval expires.
 	var r record
@@ -388,6 +409,9 @@ func (e *Engine) Submit(ctx context.Context, req TransferRequest) (Result, error
 				return err
 			}
 		}
+		if err := e.reserveExecutionAuthority(ctx, tx, req); err != nil {
+			return err
+		}
 		r = record{Request: req, Fingerprint: fingerprint(req), Result: Result{OperationID: req.OperationID, Status: "UNKNOWN", Reason: "intent_persisted", DurableFenced: true}}
 		if err := save(tx, r); err != nil {
 			return err
@@ -398,6 +422,25 @@ func (e *Engine) Submit(ctx context.Context, req TransferRequest) (Result, error
 		return Result{}, err
 	}
 	if exists {
+		return r.Result, nil
+	}
+	if ctx.Err() != nil || e.policy.validate(req, e.now()) != nil {
+		// No signing invocation has started, but retain the accepted economic
+		// identity and consumed authority so this operation cannot be renewed.
+		r.Result.Status = "REFUSED"
+		r.Result.Reason = "authority_expired_before_signing"
+		err = e.db.Update(func(tx *bolt.Tx) error {
+			if err := save(tx, r); err != nil {
+				return err
+			}
+			if string(tx.Bucket(meta).Get([]byte("active"))) != req.OperationID {
+				return errors.New("active_state_conflict")
+			}
+			return tx.Bucket(meta).Delete([]byte("active"))
+		})
+		if err != nil {
+			return Result{}, errors.New("durability_failed")
+		}
 		return r.Result, nil
 	}
 	// Every persisted pre-send phase is a HOLD on retry. We deliberately trade
@@ -446,10 +489,14 @@ func (e *Engine) Submit(ctx context.Context, req TransferRequest) (Result, error
 	if err = e.write(r); err != nil {
 		return Result{}, errors.New("durability_failed")
 	}
-	if req.Kind == "withdrawal" && e.policy.validate(req, e.now()) != nil {
+	if ctx.Err() != nil || e.policy.validate(req, e.now()) != nil {
 		// A signature already exists: expiry cannot release its sequence/hold,
 		// authorize a replacement or turn this into a retryable refusal.
-		r = held(r, "withdrawal_authority_expired_before_broadcast")
+		reason := "wager_authority_expired_before_broadcast"
+		if req.Kind == "withdrawal" {
+			reason = "withdrawal_authority_expired_before_broadcast"
+		}
+		r = held(r, reason)
 		if err = e.write(r); err != nil {
 			return Result{}, errors.New("durability_failed")
 		}

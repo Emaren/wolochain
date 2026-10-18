@@ -121,6 +121,7 @@ func TestBackendRechecksIndependentApprovalAfterAccountIOBeforeSigning(t *testin
 	f := newBackendFixture(t)
 	r := f.request
 	r.Kind = "withdrawal"
+	r.Reservation = nil
 	r.OperationID = "satchel:withdrawal:a0000000-0000-4000-8000-000000000007"
 	r.Memo = "aoe2war/satchel/withdraw/v1/a0000000-0000-4000-8000-000000000007"
 	r.Approval = &WithdrawalApproval{WithdrawalID: "a0000000-0000-4000-8000-000000000007"}

@@ -129,7 +129,10 @@ func (e *Engine) validateAllocation(tx *bolt.Tx, a ReturnApproval, fresh bool) (
 	if err != nil {
 		return ReturnEntitlement{}, err
 	}
-	if r.Result.Status != "CONFIRMED" || p.BankHeight < r.Confirmation.Height || r.Request.Kind != "wager" || r.Request.Recipient != e.policy.BettingEscrow || r.Result.TxHash != p.FundingTxHash || r.Request.Memo != "AoE2HDBets bet ticket v1 · ticket "+p.TicketID || e.backend.ValidateSigned(r.Request, r.Signed) != nil || (r.Request.OwnerID != "" && r.Request.OwnerID != a.OwnerID) {
+	// A reviewer can partition an already owned obligation, but cannot assign
+	// an owner to a historical ownerless debit. Preserve those records on hold;
+	// the original durable request must independently supply the exact owner.
+	if r.Result.Status != "CONFIRMED" || p.BankHeight < r.Confirmation.Height || r.Request.Kind != "wager" || r.Request.Recipient != e.policy.BettingEscrow || r.Result.TxHash != p.FundingTxHash || r.Request.Memo != "AoE2HDBets bet ticket v1 · ticket "+p.TicketID || e.backend.ValidateSigned(r.Request, r.Signed) != nil || r.Request.OwnerID != a.OwnerID {
 		return refuse()
 	}
 	funded, ok := positive(r.Request.AmountUWolo, 1000000000)
@@ -330,7 +333,7 @@ func (e *Engine) reserveAllocation(tx *bolt.Tx, a ReturnApproval, newClaim bool)
 
 // Bound every variable-sized field before constructing signature preimages.
 func boundedAllocation(p *ReturnAllocation) bool {
-	if p == nil || len(p.Legs) == 0 || len(p.Legs) > 16 || len(p.Signature) != 88 || !ids.MatchString(p.OperationID) || !ids.MatchString(p.OwnerID) || len(p.AllocationID) > 128 || len(p.TicketID) > 12 || len(p.FundingTxHash) != 64 || len(p.ReturnCapUWolo) > 15 || len(p.FundsBudgetID) > 128 || len(p.FundsAvailableUWolo) > 15 || len(p.BankEvidenceDigest) != 64 || len(p.BankBlockHash) != 64 {
+	if p == nil || len(p.Legs) == 0 || len(p.Legs) > 16 || len(p.Signature) != 88 || !ids.MatchString(p.OperationID) || !ownerUIDPattern.MatchString(p.OwnerID) || len(p.AllocationID) > 128 || len(p.TicketID) > 12 || len(p.FundingTxHash) != 64 || len(p.ReturnCapUWolo) > 15 || len(p.FundsBudgetID) > 128 || len(p.FundsAvailableUWolo) > 15 || len(p.BankEvidenceDigest) != 64 || len(p.BankBlockHash) != 64 {
 		return false
 	}
 	count := 0

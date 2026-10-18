@@ -122,7 +122,20 @@ func engineTestOpen(t *testing.T, b Backend) (*Engine, string, Policy) {
 }
 func engineTestWager(t *testing.T, n string) TransferRequest {
 	p := engineTestPolicy(t)
-	return TransferRequest{OperationID: "satchel:ticket:" + n, ChainID: "wolo-1", Denom: "uwolo", Sender: p.Vault, Recipient: p.BettingEscrow, AmountUWolo: "1000000", Memo: "AoE2HDBets bet ticket v1 · ticket " + n, Kind: "wager"}
+	r := TransferRequest{OperationID: "satchel:ticket:" + n, ChainID: "wolo-1", Denom: "uwolo", Sender: p.Vault, Recipient: p.BettingEscrow, AmountUWolo: "1000000", Memo: "AoE2HDBets bet ticket v1 · ticket " + n, Kind: "wager", OwnerID: "owner-1"}
+	r.Reservation = testWagerReservation(t, r, p, time.Unix(1800000000, 0))
+	return r
+}
+
+func testWagerReservation(t *testing.T, r TransferRequest, p Policy, now time.Time) *WagerReservation {
+	t.Helper()
+	digest := sha256.Sum256([]byte("test-only-ledger-reservation:" + r.OperationID))
+	a := &WagerReservation{Version: 1, OperationID: r.OperationID, OwnerID: r.OwnerID,
+		Vault: p.Vault, Recipient: p.BettingEscrow, AmountUWolo: r.AmountUWolo, Memo: r.Memo,
+		ReservationDigest: hex.EncodeToString(digest[:]), LedgerRevision: strings.Repeat("a", 64),
+		ConsentDigest: strings.Repeat("b", 64), FeeUWolo: "5000", IssuedAt: now.Unix() - 1, ExpiresAt: now.Unix() + 120}
+	a.Signature = base64.StdEncoding.EncodeToString(ed25519.Sign(engineTestApprovalKey(), WagerReservationMessage(*a)))
+	return a
 }
 func engineTestWithdrawal(t *testing.T) TransferRequest {
 	p := engineTestPolicy(t)

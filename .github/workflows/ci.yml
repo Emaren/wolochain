@@ -89,6 +89,9 @@ jobs:
       - name: Guarded current settlement code-only cutover and fault rollback (offline)
         run: python3 -m unittest discover -s tests -p 'test_settlement_bdbce253_code_cutover.py' -v
 
+      - name: Versioned private Satchel wire contract
+        run: python3 -m unittest discover -s tests -p 'test_satchel_http_contract.py' -v
+
       - name: Build isolated Satchel service
         run: go build ./cmd/wolosatcheld
 

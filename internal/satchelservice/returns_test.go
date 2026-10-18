@@ -16,6 +16,10 @@ import (
 func testReturnApproval(t *testing.T, operationID, claimID string) ReturnApproval {
 	ticket := strings.TrimPrefix(operationID, "satchel:ticket:")
 	request := engineTestWager(t, ticket)
+	// Preserve the public historical financial fixture; this is not a request
+	// submitted through the current execution authority.
+	request.OwnerID = ""
+	request.Reservation = nil
 	plan := ReturnAllocation{Version: 2, AllocationID: "allocation:" + ticket, Revision: 1, OperationID: operationID, OwnerID: "owner-1", TicketID: ticket,
 		FundingTxHash: engineTestSigned(request).Hash, ReturnCapUWolo: "50000000000", FundsBudgetID: "bank-review-1", FundsAvailableUWolo: "50000000000", BankEvidenceDigest: strings.Repeat("E", 64), BankHeight: 200, BankBlockHash: strings.Repeat("B", 64),
 		Legs: []ReturnLeg{{LegID: "winner", MarketID: "501", StakeUWolo: "1000000", Entitlements: []ReturnEntitlement{{EntitlementID: "entitlement:" + claimID, ClaimID: claimID, ClaimKind: "bet_refund", PrincipalUWolo: "1000000", AmountUWolo: "1000000"}}}}, IssuedAt: 1799999990, ExpiresAt: 1800000100}
@@ -35,10 +39,20 @@ func testReturnEngine(t *testing.T) (*Engine, string, Policy, *engineTestBackend
 	backend := &engineTestBackend{confirmationStatus: "CONFIRMED"}
 	engine, path, policy := engineTestOpen(t, backend)
 	request := engineTestWager(t, "1")
-	if _, err := engine.Submit(t.Context(), request); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := engine.Reconcile(t.Context(), request.OperationID); err != nil {
+	// Explicit historical-state injection, never admission of a new ownerless
+	// wager. Production paths cannot construct a confirmed record this way.
+	request.OwnerID = ""
+	request.Reservation = nil
+	signed := engineTestSigned(request)
+	r := record{Request: request, Fingerprint: fingerprint(request), Signed: signed,
+		Result:       Result{OperationID: request.OperationID, Status: "CONFIRMED", TxHash: signed.Hash, DurableFenced: true},
+		Confirmation: Confirmation{Status: "CONFIRMED", ReceiptID: "wolo-1:" + signed.Hash + ":0", Height: 123, BlockHash: strings.Repeat("B", 64)}}
+	if err := engine.db.Update(func(tx *bolt.Tx) error {
+		if err := save(tx, r); err != nil {
+			return err
+		}
+		return tx.Bucket(effects).Put([]byte("wolo-1:"+signed.Hash), []byte(request.OperationID))
+	}); err != nil {
 		t.Fatal(err)
 	}
 	return engine, path, policy, backend, request
@@ -62,9 +76,35 @@ func testStoredReturn(t *testing.T, e *Engine, claimID string) returnRecord {
 	return out
 }
 
+func testOwnedReturnApproval(t *testing.T, operationID, claimID string) ReturnApproval {
+	t.Helper()
+	a := testReturnApproval(t, operationID, claimID)
+	r := engineTestWager(t, strings.TrimPrefix(operationID, "satchel:ticket:"))
+	r.OwnerID = a.OwnerID
+	a.Allocation.FundingTxHash = engineTestSigned(r).Hash
+	testSignAllocation(a.Allocation, engineTestPolicy(t))
+	a.AllocationDigest = AllocationDigest(*a.Allocation, engineTestPolicy(t))
+	testSignReturnApproval(&a, engineTestPolicy(t))
+	return a
+}
+func testOwnedReturnEngine(t *testing.T) (*Engine, string, Policy, *engineTestBackend, TransferRequest) {
+	t.Helper()
+	backend := &engineTestBackend{confirmationStatus: "CONFIRMED"}
+	engine, path, policy := engineTestOpen(t, backend)
+	request := engineTestWager(t, "1")
+	request.OwnerID = "owner-1"
+	if _, err := engine.Submit(t.Context(), request); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := engine.Reconcile(t.Context(), request.OperationID); err != nil {
+		t.Fatal(err)
+	}
+	return engine, path, policy, backend, request
+}
+
 func TestReturnPreparationUsesEscrowRunAndFullUnmatchedStake(t *testing.T) {
-	engine, _, policy, backend, request := testReturnEngine(t)
-	approval := testReturnApproval(t, request.OperationID, "101")
+	engine, _, policy, backend, request := testOwnedReturnEngine(t)
+	approval := testOwnedReturnApproval(t, request.OperationID, "101")
 	run, err := engine.PrepareReturnRun(t.Context(), approval)
 	if err != nil {
 		t.Fatal(err)
@@ -109,8 +149,8 @@ func TestReturnApprovalRejectsInvalidOwnershipFinancialAndSignatureEvidence(t *t
 		{"noncanonical signature", func(a *ReturnApproval) { a.Signature += "\n" }, false},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			engine, _, policy, backend, request := testReturnEngine(t)
-			approval := testReturnApproval(t, request.OperationID, "101")
+			engine, _, policy, backend, request := testOwnedReturnEngine(t)
+			approval := testOwnedReturnApproval(t, request.OperationID, "101")
 			test.mutate(&approval)
 			if test.resign {
 				testSignReturnApproval(&approval, policy)
@@ -126,8 +166,8 @@ func TestReturnApprovalRejectsInvalidOwnershipFinancialAndSignatureEvidence(t *t
 }
 
 func TestReturnApprovalCannotCrossWithdrawalSignatureDomain(t *testing.T) {
-	engine, _, _, _, request := testReturnEngine(t)
-	a := testReturnApproval(t, request.OperationID, "101")
+	engine, _, _, _, request := testOwnedReturnEngine(t)
+	a := testOwnedReturnApproval(t, request.OperationID, "101")
 	w := engineTestWithdrawal(t)
 	a.Signature = w.Approval.Signature
 	if _, err := engine.PrepareReturnRun(t.Context(), a); err == nil {
@@ -137,8 +177,8 @@ func TestReturnApprovalCannotCrossWithdrawalSignatureDomain(t *testing.T) {
 
 func TestReturnRequiresConfirmedOriginalWagerAndOwner(t *testing.T) {
 	for _, test := range []struct{ name, status, owner string }{
-		{"accepted broadcast not confirmed", "ACCEPTED", ""},
-		{"untrusted observation not confirmed", "OBSERVED_NONCREDITING", ""},
+		{"accepted broadcast not confirmed", "ACCEPTED", "owner-1"},
+		{"untrusted observation not confirmed", "OBSERVED_NONCREDITING", "owner-1"},
 		{"confirmed belongs to different owner", "CONFIRMED", "another-owner"},
 	} {
 		t.Run(test.name, func(t *testing.T) {
@@ -146,6 +186,7 @@ func TestReturnRequiresConfirmedOriginalWagerAndOwner(t *testing.T) {
 			engine, _, _ := engineTestOpen(t, backend)
 			request := engineTestWager(t, "1")
 			request.OwnerID = test.owner
+			request.Reservation = testWagerReservation(t, request, engineTestPolicy(t), time.Unix(1800000000, 0))
 			if _, err := engine.Submit(t.Context(), request); err != nil {
 				t.Fatal(err)
 			}
@@ -154,7 +195,7 @@ func TestReturnRequiresConfirmedOriginalWagerAndOwner(t *testing.T) {
 					t.Fatal(err)
 				}
 			}
-			a := testReturnApproval(t, request.OperationID, "101")
+			a := testOwnedReturnApproval(t, request.OperationID, "101")
 			if _, err := engine.PrepareReturnRun(t.Context(), a); err == nil {
 				t.Fatal("unconfirmed or foreign-owner wager generated claim return")
 			}
@@ -174,8 +215,8 @@ func TestReturnClaimAndOperationAllocationCannotBeReassigned(t *testing.T) {
 		{"different allocation same claim", func(a *ReturnApproval) { a.AllocationDigest = strings.Repeat("E", 64) }},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			engine, _, policy, _, request := testReturnEngine(t)
-			a := testReturnApproval(t, request.OperationID, "101")
+			engine, _, policy, _, request := testOwnedReturnEngine(t)
+			a := testOwnedReturnApproval(t, request.OperationID, "101")
 			if _, err := engine.PrepareReturnRun(t.Context(), a); err != nil {
 				t.Fatal(err)
 			}
@@ -189,8 +230,8 @@ func TestReturnClaimAndOperationAllocationCannotBeReassigned(t *testing.T) {
 }
 
 func TestReturnCancellationCannotCreateNewAllocation(t *testing.T) {
-	engine, _, _, _, request := testReturnEngine(t)
-	a := testReturnApproval(t, request.OperationID, "101")
+	engine, _, _, _, request := testOwnedReturnEngine(t)
+	a := testOwnedReturnApproval(t, request.OperationID, "101")
 	ctx, cancel := context.WithCancel(t.Context())
 	cancel()
 	if _, err := engine.PrepareReturnRun(ctx, a); err == nil {
@@ -208,8 +249,8 @@ func TestReturnCancellationCannotCreateNewAllocation(t *testing.T) {
 }
 
 func TestReturnMissingTrustedProofNeverInfersPayment(t *testing.T) {
-	engine, _, _, backend, request := testReturnEngine(t)
-	a := testReturnApproval(t, request.OperationID, "101")
+	engine, _, _, backend, request := testOwnedReturnEngine(t)
+	a := testOwnedReturnApproval(t, request.OperationID, "101")
 	if _, err := engine.PrepareReturnRun(t.Context(), a); err != nil {
 		t.Fatal(err)
 	}
@@ -228,8 +269,8 @@ func testFaultInjectedReturnReceipt(a ReturnApproval, hash string, index int) Re
 func TestReturnDuplicatePhysicalEffectsCannotBecomeOwnerCredits(t *testing.T) {
 	for _, index := range []int{0, 1} {
 		t.Run("alternate_observed_ordinal="+string(rune('0'+index)), func(t *testing.T) {
-			engine, _, policy, _, request := testReturnEngine(t)
-			first := testReturnApproval(t, request.OperationID, "101")
+			engine, _, policy, _, request := testOwnedReturnEngine(t)
+			first := testOwnedReturnApproval(t, request.OperationID, "101")
 			if _, err := engine.PrepareReturnRun(t.Context(), first); err != nil {
 				t.Fatal(err)
 			}
@@ -240,15 +281,18 @@ func TestReturnDuplicatePhysicalEffectsCannotBecomeOwnerCredits(t *testing.T) {
 				t.Fatal(err)
 			}
 			secondRequest := engineTestWager(t, "2")
+			secondRequest.OwnerID = "owner-2"
+			secondRequest.Reservation = testWagerReservation(t, secondRequest, policy, time.Unix(1800000000, 0))
 			if _, err := engine.Submit(t.Context(), secondRequest); err != nil {
 				t.Fatal(err)
 			}
 			if _, err := engine.Reconcile(t.Context(), secondRequest.OperationID); err != nil {
 				t.Fatal(err)
 			}
-			second := testReturnApproval(t, secondRequest.OperationID, "102")
+			second := testOwnedReturnApproval(t, secondRequest.OperationID, "102")
 			second.OwnerID = "owner-2"
 			second.Allocation.OwnerID = second.OwnerID
+			second.Allocation.FundingTxHash = engineTestSigned(secondRequest).Hash
 			testSignAllocation(second.Allocation, policy)
 			second.AllocationDigest = AllocationDigest(*second.Allocation, policy)
 			testSignReturnApproval(&second, policy)
@@ -266,8 +310,8 @@ func TestReturnDuplicatePhysicalEffectsCannotBecomeOwnerCredits(t *testing.T) {
 }
 
 func TestReturnReceiptReplayRemainsOwnerBoundAcrossRestart(t *testing.T) {
-	engine, path, policy, _, request := testReturnEngine(t)
-	a := testReturnApproval(t, request.OperationID, "101")
+	engine, path, policy, _, request := testOwnedReturnEngine(t)
+	a := testOwnedReturnApproval(t, request.OperationID, "101")
 	if _, err := engine.PrepareReturnRun(t.Context(), a); err != nil {
 		t.Fatal(err)
 	}
@@ -305,8 +349,8 @@ func TestReturnPoisonedReceiptCannotBeReplayed(t *testing.T) {
 		{"invented ledger credit", func(r *ReturnReceipt) { r.CreditAuthorized = true }},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			engine, _, _, _, request := testReturnEngine(t)
-			a := testReturnApproval(t, request.OperationID, "101")
+			engine, _, _, _, request := testOwnedReturnEngine(t)
+			a := testOwnedReturnApproval(t, request.OperationID, "101")
 			if _, err := engine.PrepareReturnRun(t.Context(), a); err != nil {
 				t.Fatal(err)
 			}

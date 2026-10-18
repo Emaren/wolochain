@@ -19,6 +19,7 @@ func multiLegFixture(t *testing.T) (*Engine, string, Policy, *engineTestBackend,
 	r := engineTestWager(t, "1")
 	r.AmountUWolo = "2000000"
 	r.OwnerID = "owner-1"
+	r.Reservation = testWagerReservation(t, r, policy, time.Unix(1800000000, 0))
 	if _, err := engine.Submit(t.Context(), r); err != nil {
 		t.Fatal(err)
 	}
@@ -109,6 +110,89 @@ func TestMultiLegPartialUnmatchedPrincipalRefundsAllWithoutFee(t *testing.T) {
 	reserved, _ := multiLegReserved(t, e, plan.OperationID)
 	if reserved != 400000 {
 		t.Fatal("partial principal reservation changed")
+	}
+}
+
+func TestMultiLegUnmatchedPrincipalCompletesAcrossRevisionsAndRestart(t *testing.T) {
+	e, path, p, backend, plan := multiLegFixture(t)
+	plan.ReturnCapUWolo = "2000000"
+	plan.Legs[0].Entitlements[0].PrincipalUWolo = "400000"
+	plan.Legs[0].Entitlements[0].AmountUWolo = "400000"
+	plan.Legs[1].Entitlements = nil
+	testSignAllocation(&plan, p)
+	first := multiLegApproval(t, plan, "102", p)
+	if _, err := e.PrepareReturnRun(t.Context(), first); err != nil {
+		t.Fatal(err)
+	}
+	// These explicit test-only receipts exercise durable consumption, not chain
+	// authentication; production reconciliation still requires TrustedReader.
+	if err := e.recordReturn(testStoredReturn(t, e, first.ClaimID), testFaultInjectedReturnReceipt(first, strings.Repeat("2", 64), 0)); err != nil {
+		t.Fatal(err)
+	}
+	if err := e.Close(); err != nil {
+		t.Fatal(err)
+	}
+	afterRestart := &engineTestBackend{}
+	reopened, err := Open(path, p, afterRestart)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer reopened.Close()
+	reopened.now = func() time.Time { return time.Unix(1800000000, 0) }
+	plan.Revision++
+	plan.Legs[0].Entitlements = append(plan.Legs[0].Entitlements, ReturnEntitlement{EntitlementID: "desync-refund-b", ClaimID: "103", ClaimKind: "bet_refund", PrincipalUWolo: "600000", AmountUWolo: "600000"})
+	plan.Legs[1].Entitlements = []ReturnEntitlement{{EntitlementID: "winner-refund", ClaimID: "101", ClaimKind: "bet_refund", PrincipalUWolo: "1000000", AmountUWolo: "1000000"}}
+	testSignAllocation(&plan, p)
+	for _, claim := range []string{"101", "103"} {
+		a := multiLegApproval(t, plan, claim, p)
+		run, err := reopened.PrepareReturnRun(t.Context(), a)
+		if err != nil || len(run.Payouts) != 1 || run.Payouts[0].AmountUWolo != a.AmountUWolo {
+			t.Fatalf("complete unmatched principal changed: %+v %v", run, err)
+		}
+		hash := strings.Repeat("1", 64)
+		if claim == "103" {
+			hash = strings.Repeat("3", 64)
+		}
+		if err := reopened.recordReturn(testStoredReturn(t, reopened, claim), testFaultInjectedReturnReceipt(a, hash, 0)); err != nil {
+			t.Fatal(err)
+		}
+	}
+	// The old partial claim can be delivered again after the newer complete
+	// plan. It must retain its original effect and consume no further capital.
+	for _, a := range []ReturnApproval{first, multiLegApproval(t, plan, "101", p), multiLegApproval(t, plan, "103", p)} {
+		if _, err := reopened.PrepareReturnRun(t.Context(), a); err != nil {
+			t.Fatal(err)
+		}
+	}
+	reserved, global := multiLegReserved(t, reopened, plan.OperationID)
+	if reserved != 2000000 || global != 2000000 {
+		t.Fatalf("all unmatched principal must return once without deduction: %d/%d", reserved, global)
+	}
+	if err := reopened.db.View(func(tx *bolt.Tx) error {
+		if tx.Bucket(returns).Stats().KeyN != 3 {
+			return errors.New("duplicate_unmatched_refund_receipt")
+		}
+		var refunded uint64
+		for _, claim := range []string{"101", "102", "103"} {
+			var r returnRecord
+			if err := json.Unmarshal(tx.Bucket(returns).Get([]byte(claim)), &r); err != nil {
+				return err
+			}
+			if r.Receipt == nil || !validReturnReceipt(r, *r.Receipt) || r.Receipt.OwnerID != plan.OwnerID {
+				return errors.New("missing_owned_unmatched_refund")
+			}
+			n, _ := positive(r.Receipt.AmountUWolo, 2000000)
+			refunded += n
+		}
+		if refunded != 2000000 {
+			return errors.New("unmatched_principal_not_conserved")
+		}
+		return nil
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if backend.signs.Load() != 1 || backend.broadcasts.Load() != 1 || afterRestart.signs.Load() != 0 || afterRestart.broadcasts.Load() != 0 {
+		t.Fatal("refund preparation or reconciliation retried a financial send")
 	}
 }
 
@@ -245,6 +329,7 @@ func TestMultiLegReviewedGlobalFundsCannotBeSpentByTwoTickets(t *testing.T) {
 	r := engineTestWager(t, "2")
 	r.AmountUWolo = "2000000"
 	r.OwnerID = "owner-1"
+	r.Reservation = testWagerReservation(t, r, p, time.Unix(1800000000, 0))
 	if _, err := e.Submit(t.Context(), r); err != nil {
 		t.Fatal(err)
 	}

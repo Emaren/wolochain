@@ -8,12 +8,24 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "machine-readable-settlement-contract-index"
-reviewed_at: "2026-10-10"
+reviewed_at: "2026-10-18"
 review_interval_days: 30
 sensitivity: "public"
 ---
 
 # Settlement Contracts
+
+## Private War Satchel contract
+
+[War Satchel OpenAPI 1.0.0](war-satchel-http-v1.openapi.json) describes the exact
+loopback 8094 bearer protocol, including owner-reserved protocol-2 wagers,
+owner-approved withdrawals, signed multi-leg return preparation/reconciliation,
+portable proof export, durable operation lookup and safe failure states. ABI
+tests compare routes and Go JSON structs to the document. This is a source
+contract, not a live vault destination, custody attestation or release permit.
+The [operator procedure](../war-satchel-controlled-release.md) preserves separate
+consensus and legacy 8092/8093 authorities.
+
 
 ## Review Scope — 2026-10-10 UTC
 

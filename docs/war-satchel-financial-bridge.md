@@ -8,7 +8,7 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "source-integration-proof-not-production-approval"
-reviewed_at: "2026-10-17"
+reviewed_at: "2026-10-18"
 review_interval_days: 14
 sensitivity: "restricted"
 ---
@@ -21,6 +21,12 @@ verification command. Every exported and verified receipt remains
 `credit_authorized: false`. The HD financial activation hold remains required;
 C2 custody remains **UNAVAILABLE**. Source CI does not certify a vault, key,
 balance, liability reconciliation, endpoint operator or protected release.
+
+The exact private wire schemas and safe failure semantics are versioned in
+[OpenAPI 1.0.0](settlement-contracts/war-satchel-http-v1.openapi.json).
+Source ABI tests fail on route or Go JSON-field drift. The
+[controlled installation and recovery procedure](war-satchel-controlled-release.md)
+keeps the dedicated signer separate from legacy services and consensus.
 
 ## Authority and transport
 
@@ -45,6 +51,12 @@ concurrency limits apply. Proof collection additionally retains C3's bounded
 responses and Comet provider budgets. The response cap is
 `MaxFinancialProofBytes = MaxPortableProofBytes + 64 KiB`; the portable proof
 limit is 14 MiB plus 128 KiB framing, at most 80 bounded transcript responses.
+
+The additional `GET /satchel/v1/custody/journal` route exports a bounded,
+consistent local execution-history checkpoint for reconciliation. It does not
+export the app ledger or authenticate a bank balance. Its bank, credit and
+solvency authorization flags are always false and custody remains UNAVAILABLE;
+see the [operator contract](war-satchel-mainnet-execution.md).
 
 ## Read-only proof requests
 
