@@ -69,6 +69,59 @@ class SharedHdDeProducerInventoryTests(unittest.TestCase):
         self.assertFalse(self.inv.relevant("wolochaind-mainnet.service"))
         self.assertFalse(self.inv.relevant("wolochain-mainnet-settlement.service"))
 
+    def test_template_definitions_do_not_block_but_real_instances_do(self):
+        fake_files = (
+            "aoe2war-build@.service disabled -\\n"
+            "aoe2war-deps@.service disabled -\\n"
+            "aoe2war-speedos-cloudflare@.service disabled -\\n"
+            "aoe2war-build@job42.service enabled -\\n"
+            "aoe2hdbets-web.service enabled -\\n"
+        )
+        def fake(args):
+            if args[0] == "list-units":
+                return "aoe2hdbets-web.service loaded active running -\\n"
+            if args[0] == "list-unit-files":
+                return fake_files
+            raise AssertionError(args)
+        with patch.object(self.inv, "run_systemctl", side_effect=fake):
+            units, templates = self.inv.discover_inventory()
+        self.assertEqual(templates, [
+            "aoe2war-build@.service",
+            "aoe2war-deps@.service",
+            "aoe2war-speedos-cloudflare@.service",
+        ])
+        self.assertIn("aoe2war-build@job42.service", units)
+        self.assertNotIn("aoe2war-build@.service", units)
+
+        with patch.object(self.inv, "discover_inventory",
+                          return_value=(units, templates)):
+            with patch.object(self.inv, "info", side_effect=lambda unit: (
+                {"unit": unit, "active": True,
+                 "isCandidateForExplicitMaintenanceReview": True}
+                if unit != "aoe2war-build@job42.service"
+                else (_ for _ in ()).throw(subprocess.CalledProcessError(
+                    1, ["systemctl", "show"]))
+            )):
+                report = self.inv.inspect()
+        self.assertEqual(
+            report["templateDefinitionsNotServiceInstances"], templates)
+        self.assertIn("aoe2war-build@job42.service",
+                      report["unitsWithIncompleteInspection"])
+        self.assertFalse(report["inventoryCompleteForDiscoveredUnits"])
+        self.assertFalse(report["financialProducersFenced"])
+
+    def test_template_only_is_informational_and_never_a_release_approval(self):
+        templates = ["aoe2war-deps@.service"]
+        with patch.object(self.inv, "discover_inventory",
+                          return_value=([], templates)):
+            report = self.inv.inspect()
+        self.assertEqual(report["unitsWithIncompleteInspection"], [])
+        self.assertTrue(report["inventoryCompleteForDiscoveredUnits"])
+        self.assertEqual(report["templateDefinitionsNotServiceInstances"],
+                         templates)
+        self.assertFalse(report["productionCutoverAuthorized"])
+        self.assertFalse(report["financialProducersFenced"])
+
     def test_uninstalled_expected_units_not_invented_or_show_queried(self):
         def fake(args):
             if args[0] == "list-units":
@@ -90,9 +143,9 @@ class SharedHdDeProducerInventoryTests(unittest.TestCase):
             "active": True,
             "isCandidateForExplicitMaintenanceReview": True,
         }
-        with patch.object(self.inv, "discover_units", return_value=[
+        with patch.object(self.inv, "discover_inventory", return_value=([
             "aoe2-wolo-transfer-heartbeat.timer", "aoe2hdbets-web.service",
-        ]):
+        ], [])):
             def fake_info(name):
                 if name.endswith(".timer"):
                     raise subprocess.CalledProcessError(1, ["systemctl", "show"])
@@ -108,7 +161,7 @@ class SharedHdDeProducerInventoryTests(unittest.TestCase):
         self.assertIn("aoe2hdbets-api.service", report["expectedNamedUnitsNotFound"])
 
     def test_fully_inspected_inventory_still_does_not_certify_freeze(self):
-        with patch.object(self.inv, "discover_units", return_value=["aoe2hdbets-web.service"]):
+        with patch.object(self.inv, "discover_inventory", return_value=(["aoe2hdbets-web.service"], [])):
             with patch.object(self.inv, "info", return_value={
                 "unit": "aoe2hdbets-web.service",
                 "active": True,
@@ -141,7 +194,7 @@ class SharedHdDeProducerInventoryTests(unittest.TestCase):
         self.assertNotIn("PASSWORD", json.dumps(keys))
 
     def test_incomplete_or_unknown_proc_never_certifies_finance(self):
-        with patch.object(self.inv, "discover_units", return_value=["aoe2hdbets-web.service"]):
+        with patch.object(self.inv, "discover_inventory", return_value=(["aoe2hdbets-web.service"], [])):
             with patch.object(self.inv, "info", return_value={
                 "unit": "aoe2hdbets-web.service",
                 "active": True,
