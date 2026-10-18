@@ -37,6 +37,7 @@ jobs:
         uses: bufbuild/buf-setup-action@v1
         with:
           version: 1.54.0
+          github_token: ${{ github.token }}
 
       - name: Build wolochaind
         run: go build ./cmd/wolochaind
