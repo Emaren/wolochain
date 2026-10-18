@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `test/bdbce253-two-lane-fault-rehearsal-20261017` at `782691e15889fe15f3f2d7ed6f9c7759544c4c13`
+Implementation baseline: `feat/shared-hd-de-financial-ingress-inventory-20261017` at `9b421ece575c77e81fbd83b1ba3fd4d33d6b6574`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
