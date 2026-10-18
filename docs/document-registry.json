@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "1716295e37d4f18e510f2bf064512aac4e4a9cb1641570c80ee50a795ef59279",
+      "sha256": "d8f127c0cf056fb59d0d39fdc1de481cf97b4ed9ef19d6897cc84e40982ea129",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -289,7 +289,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-16",
       "sensitivity": "restricted",
-      "sha256": "5aede3f478266915cf8555d2567eac5db8d236a52ea79b716a28c5400de8c498",
+      "sha256": "35c92cf5658dcc2af4785d6a87d9d586bdd4795d8f2625ef8933e0cbefbaf139",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -808,8 +808,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/exact-bdbce-settlement-artifact-receipt-20261017",
-    "commit": "34f8a76d96858aeffc1fbd24b16d322e8678889d"
+    "branch": "feat/bdbce253-two-lane-nonmutating-cutover-preflight-20261017",
+    "commit": "72f605e327e0e0de23be8f70194828819cfa564b"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
