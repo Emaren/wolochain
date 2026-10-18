@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "1cb50ffda3af533b7cc272a0c6ee824e6a1d1f190446f2539e1a34a66a8863ba",
+      "sha256": "2aa38abc13778b58dcd1177d7eddf496109088acbdd42fe3f2d04599593304ca",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -809,7 +809,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "ops/20261018-predeploy-capacity-guard",
-    "commit": "9fb8508173e10d13f62798831ac778df7d277e1b"
+    "commit": "5b4088fc3d23ea22cccbc5eabe6fb3e781fbcb72"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
