@@ -89,18 +89,48 @@ def expected_override() -> bytes:
     ).encode()
 
 
+def _read_release_permit(path: Path) -> bytes:
+    require(path.is_absolute(), "release permit must be an absolute protected file")
+    require(hasattr(os, "O_NOFOLLOW"), "no-follow permit reads unavailable")
+    try:
+        fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    except OSError as exc:
+        raise Blocked("release permit must be a regular non-symlink protected file") from exc
+    try:
+        before = os.fstat(fd)
+        require(stat.S_ISREG(before.st_mode) and before.st_uid == 0 and before.st_gid == 0 and
+                stat.S_IMODE(before.st_mode) == 0o600 and 0 <= before.st_size < 8192,
+                "release permit requires root:root mode 0600 regular file and size below 8KiB")
+        data = os.read(fd, 8192)
+        require(len(data) == before.st_size and len(data) < 8192,
+                "release permit changed or exceeded read limit")
+        after = os.fstat(fd)
+        fields = ("st_dev", "st_ino", "st_uid", "st_gid", "st_mode", "st_size",
+                  "st_mtime_ns", "st_ctime_ns", "st_nlink")
+        require(all(getattr(before, key) == getattr(after, key) for key in fields),
+                "release permit changed during read")
+        current = os.stat(path, follow_symlinks=False)
+        require(stat.S_ISREG(current.st_mode) and
+                (current.st_dev, current.st_ino) == (before.st_dev, before.st_ino),
+                "release permit path changed during read")
+        return data
+    finally:
+        os.close(fd)
+
+
+def _unique_permit_object(pairs):
+    result = {}
+    for key, value in pairs:
+        require(key not in result, "duplicate release permit JSON field")
+        result[key] = value
+    return result
+
+
 def load_release_permit(path: Path, *, now: datetime | None = None) -> dict:
     """Operator-issued receipt; NEVER inferred from CI/test booleans."""
-    now = now or datetime.now(timezone.utc)
-    require(path.is_absolute() and path.is_file() and not path.is_symlink(),
-            "release permit must be regular absolute file, not symlink")
-    meta = path.stat()
-    require(meta.st_uid == 0 and meta.st_gid == 0 and
-            stat.S_IMODE(meta.st_mode) == 0o600 and meta.st_size < 8192,
-            "release permit requires root:root mode 0600 and size below 8KiB")
     try:
-        permit = json.loads(path.read_bytes())
-    except (ValueError, OSError) as exc:
+        permit = json.loads(_read_release_permit(path), object_pairs_hook=_unique_permit_object)
+    except (ValueError, OSError, RecursionError) as exc:
         raise Blocked("invalid release permit JSON") from exc
     require(isinstance(permit, dict), "invalid permit document")
     require(set(permit) == {"schema", "candidateRevision", "candidateSha256",
@@ -117,6 +147,7 @@ def load_release_permit(path: Path, *, now: datetime | None = None) -> dict:
             "operator identity missing")
     require(isinstance(permit["witnessedControls"], list) and
             len(permit["witnessedControls"]) == len(ATTESTED) and
+            all(isinstance(control, str) for control in permit["witnessedControls"]) and
             set(permit["witnessedControls"]) == ATTESTED,
             "release permit lacks independent finance/control reviews")
     try:
@@ -127,10 +158,34 @@ def load_release_permit(path: Path, *, now: datetime | None = None) -> dict:
     require(created.tzinfo is not None and expiry.tzinfo is not None and
             created.utcoffset() == timedelta(0) and expiry.utcoffset() == timedelta(0),
             "permit timestamps must be UTC")
+    # Acquisition and parsing may have consumed the entire authorization
+    # window. Production time is sampled only after those operations finish.
+    now = now if now is not None else datetime.now(timezone.utc)
     require(now - timedelta(minutes=5) <= created <= now and
             now < expiry <= created + timedelta(minutes=10),
             "expired, future, or overlong release permit")
     return permit
+
+
+class ReleaseAuthority:
+    """Revalidate the original operator approval; never adopt a renewal mid-run.
+
+    The existing public permit shape is unchanged. The binding covers every
+    validated field (including operator, times and witnessed controls). File
+    removal, invalid ownership, expiry or any changed field fails closed.
+    """
+    def __init__(self, path: Path):
+        self.path = path
+        self.original = self._binding(load_release_permit(path))
+
+    @staticmethod
+    def _binding(permit: dict) -> str:
+        return json.dumps(permit, sort_keys=True, separators=(",", ":"))
+
+    def check(self) -> None:
+        current = load_release_permit(self.path)
+        require(self._binding(current) == self.original,
+                "release permit changed since original approval")
 
 
 class Live:
@@ -301,8 +356,13 @@ class Live:
 
 
 class Cutover:
-    def __init__(self, live: Live):
+    def __init__(self, live: Live, authorize=None):
         self.live = live
+        self.authorize = authorize
+
+    def require_authority(self) -> None:
+        require(callable(self.authorize), "fresh bound release authority required")
+        self.authorize()
 
     def pin_node(self) -> int:
         self.live.check_binary(NODE, NODE_SHA)
@@ -471,8 +531,21 @@ class Cutover:
                 "claim_889_resolved": False, "production_mutated": False}
 
     def code_only_recover(self, pinned_pid: int) -> None:
-        # Requires human operator's still-valid external finance permit.
-        # Never rewinds request/run trees and never resumes app payment producers.
+        # A newly requested rollback/recovery needs fresh original authority
+        # after its slow preflight and immediately before its first mutation.
+        require(self.pin_node() == pinned_pid, "consensus changed before recovery")
+        self.require_authority()
+        self._complete_code_recovery(pinned_pid)
+
+    def _complete_code_recovery(self, pinned_pid: int) -> None:
+        # Cleanup continuation is authorized only by an already-started,
+        # freshly approved mutation. Expiry/revocation stops forward rollout,
+        # but must not strand half-switched lanes: complete only this fixed
+        # at-most-seven-step OLD-code recovery (two stops, <=two owned override
+        # removals, one reload, two starts). No new rollout, permit renewal,
+        # producer resume, consensus mutation or financial-state restore.
+        # A later process must obtain fresh authority to request recovery.
+
         for unit in SERVICES:
             self.live.systemctl("stop", unit)
         for unit in SERVICES:
@@ -489,22 +562,30 @@ class Cutover:
         pinned = self.pin_node()
         self.assert_services("old", pinned)
         started = False
-        try:
+        def forward(call, *args):
+            nonlocal started
+            # Slow I/O must not spend an authorization window checked earlier.
+            # Mark cleanup eligibility only after this fresh check succeeds,
+            # immediately before invoking a possibly uncertain side effect.
+            self.require_authority()
             started = True
+            call(*args)
+        try:
             for unit in SERVICES:
-                self.live.systemctl("stop", unit)
+                forward(self.live.systemctl, "stop", unit)
             for unit in SERVICES:
-                self.live.add_dropin(unit)
-            self.live.systemctl("daemon-reload")
+                forward(self.live.add_dropin, unit)
+            forward(self.live.systemctl, "daemon-reload")
             for unit in SERVICES:
-                self.live.systemctl("start", unit)
+                forward(self.live.systemctl, "start", unit)
             require(self.state() == "new", "two-lane promotion not complete")
             self.assert_services("new", pinned)
+            self.require_authority()
             return "new"
         except BaseException:
             if started:
                 try:
-                    self.code_only_recover(pinned)
+                    self._complete_code_recovery(pinned)
                 except BaseException as recovery:
                     raise Blocked(
                         "CRITICAL: automatic code-only recovery failed; payment "
@@ -578,12 +659,13 @@ def main() -> int:
     args = parser.parse_args()
     try:
         require(os.geteuid() == 0, "root needed to inspect/operate exact systemd units")
+        authority = None
         if args.mode not in READ_ONLY_MODES:
             require(bool(args.permit), "mutations require explicit finance permit")
-            load_release_permit(Path(args.permit))
+            authority = ReleaseAuthority(Path(args.permit))
         elif args.permit:
             raise Blocked("read-only mode must not be presented as financial authorization")
-        controller = Cutover(Live())
+        controller = Cutover(Live(), authorize=authority.check if authority else None)
         if args.mode in READ_ONLY_MODES:
             run_mode(args, controller)
         else:
