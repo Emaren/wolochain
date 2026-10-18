@@ -53,6 +53,22 @@ class SharedHdDeProducerInventoryTests(unittest.TestCase):
         self.assertIn("aoe2dewarwagers-api.service", names)
         self.assertNotIn("wolochaind-mainnet.service", names)
 
+    def test_legacy_transfer_heartbeat_and_bare_app_timers_included(self):
+        # Historical controlled-promotion PROD producer list includes this
+        # exact finance timer, which lacks the usual app-name prefixes.
+        for unit in (
+            "aoe2-wolo-transfer-heartbeat.timer",
+            "aoe2-wolo-transfer-heartbeat.service",
+            "aoe2hdbets.timer",
+            "aoe2hdbets.service",
+            "aoe2war.timer",
+            "aoe2war.service",
+        ):
+            with self.subTest(unit=unit):
+                self.assertTrue(self.inv.relevant(unit))
+        self.assertFalse(self.inv.relevant("wolochaind-mainnet.service"))
+        self.assertFalse(self.inv.relevant("wolochain-mainnet-settlement.service"))
+
     def test_only_allowlisted_key_names_pass_through(self):
         fields = b"DATABASE_URL=postgres://a:SECRET@db/s\0" + (
             b"WOLO_SETTLEMENT_AUTH_TOKEN=VERY_SECRET\0"
