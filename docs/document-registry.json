@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "26f8459ca4a995bff8641971b061179fa73806f80f97de6e5a83e313d4aacc4c",
+      "sha256": "e06011cabc9839983baff1a12e0f1be3820676bfea6d8f7f118d011acff5b54b",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -289,7 +289,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-16",
       "sensitivity": "restricted",
-      "sha256": "3aeed1cd0581fa05a2ece4dd7c019e26f9dc7c0bad0491d1a846ec0477bfddc3",
+      "sha256": "d42a63ff229ebaeedf020f02e0a66f5c697f5298d73c7151db7d24a7cb55bfef",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -808,8 +808,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "feat/bdbce253-rollback-plan-no-live-mutation-20261017",
-    "commit": "4e731a5797fa930f98579f3559720969e7fe1b53"
+    "branch": "test/bdbce253-two-lane-fault-rehearsal-20261017",
+    "commit": "782691e15889fe15f3f2d7ed6f9c7759544c4c13"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

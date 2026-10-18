@@ -817,3 +817,33 @@ switch **code only** for the two settlement services: never restore
 old request/run-state trees into live directories and never
 automatically reopen payout ingress. Production website Finish,
 database migration and Satchel enablement are separate approval rails.
+
+## October 18: fault-injected OFFLINE cutover rehearsal (not live certification)
+
+`scripts/settlement_bdbce253_offline_rehearsal.py --simulate-all`
+creates disposable synthetic systemd-unit override directories and
+artificial settlement request records under Python's private
+`TemporaryDirectory`. It never calls `systemctl`, SSH, RPC, wallet
+signers, database clients, or an actual WoloChain runtime.
+
+The simulation models both exact service names, the root-private
+`bdbce253` executable identity, a code-only switch using the same
+override bytes as the read-only recovery-state planner, two service
+stops/starts, and a recovery that removes **only** the exact owned
+override content. Fault injection covers before stop, after stop,
+after first/second override, after simulated reload, after first/second
+start, and a clean switch/rollback. Each path must return to both
+original executables, preserve the synthetic request files exactly,
+never alter the synthetic consensus process identity, and keep payout
+producer ingress fenced. A foreign or symlinked override is rejected
+rather than overwritten; the simulation accepts no live action flags.
+
+This is a useful **design regression**, not a rehearsed real rollback,
+not a snapshot, not financial drain, and not evidence of host systemd
+semantics. No real services or funds move. It MUST NOT set
+`CURRENT_VERSION_ROLLBACK_CERTIFIED=true` or
+`FINANCIAL_DRAIN_CERTIFIED=true`. A separate reviewed, operationally
+rehearsed current-version controller, producer isolation, independent
+liability reconciliation, and explicit named release approval remain
+mandatory before installing either two-settlement override in
+production.

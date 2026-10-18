@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `feat/bdbce253-rollback-plan-no-live-mutation-20261017` at `4e731a5797fa930f98579f3559720969e7fe1b53`
+Implementation baseline: `test/bdbce253-two-lane-fault-rehearsal-20261017` at `782691e15889fe15f3f2d7ed6f9c7759544c4c13`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
