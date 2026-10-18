@@ -876,3 +876,33 @@ a payment freeze. The two settlement units must be changed only
 under a separately reviewed, coordinated operator procedure
 supported by positive HD+DE signing authority and in-flight
 financial drain evidence. The sole consensus node stays untouched.
+
+## 2026-10-18: independent root + Wolo-volume predeployment capacity guard
+
+The source-only `scripts/settlement-predeploy-capacity-readonly.py --inspect`
+checks **both** mounted filesystems before a production Next.js build, a large
+bank/ledger snapshot, or a settlement candidate switch. A previous operator
+receipt showed approximately **50 GiB free** on the dedicated Wolo volume
+(83% used), but older system information showed only **4–5 GiB free** on
+the **separate OS root disk**. These are historical observations, not current
+capacity evidence.
+
+The guard demands at least **8 GiB available** for unprivileged processes on
+`/` and at least **20 GiB available** on the dedicated Wolo state volume,
+`/mnt/HC_Volume_105319120`. It refuses a symlink/missing/unmounted Wolo
+volume and any volume mapped to the OS root device, so an unexpectedly
+unmounted data disk cannot silently consume root space. It performs no writes
+or subprocess invocations. No override of these fixed floors is supported.
+Missing mount information returns exit code 2; inadequate space returns exit
+code 3. A passing minimum headroom check returns exit code 0 but still
+reports `productionAuthorized=false`, `financialDrainCertified=false`,
+`rollbackCertified=false`.
+
+This is a **screening floor**, not a measured production build, database
+backup, state-copy, or rollback footprint. Size the actual backups separately
+and retain independent protected snapshots with sufficient capacity. Never
+prune chain state, receipt journals, financial backups, or payout records just
+to make this check pass. If root is low, add verified storage or otherwise
+recover unrelated expendable capacity under a separately reviewed procedure.
+Do not attempt protected Finish or wallet maintenance based solely on this
+capacity report.
