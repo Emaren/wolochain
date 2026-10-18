@@ -8,7 +8,7 @@ set -euo pipefail
 VOL=/mnt/HC_Volume_105319120
 BASE="$VOL/wolochain-mainnet"
 BACKUP="$BASE/settlement-backups/20261014T091735Z-two-settlement-node-untouched"
-CANDIDATE="$BASE/settlement-candidates/3ea79363/wolochaind-settlement-only-linux-amd64"
+CANDIDATE="$BASE/settlement-candidates/bdbce253-UNDEPLOYED/wolochaind-settlement-only-linux-amd64"
 OLD=/usr/local/bin/wolochaind-mainnet
 NODE=/usr/local/bin/wolochaind-mainnet-node-prewartrophy
 REPO=/var/www/WoloChain-wolo-1
@@ -17,7 +17,7 @@ FOUNDER=wolochain-founder-rewards-settlement.service
 NODE_UNIT=wolochaind-mainnet.service
 OLD_SHA=040126a2884946caf1651a50b7d8115c5a6fb2d5aa94fcbbe150694602d451a5
 NODE_SHA=4b77f622191db7550cb87cafb8f1886a0aadebee3eb6565f9f90036f809e61d3
-NEW_SHA=af18e18bd32ef5763d3e414a37dd7886fe4065b640bb5a89ae742ee860fb9b87
+NEW_SHA=44d8aed5550d1b33635c734c1a359d0cb69e854093ef8c9a8a3da4f99d416ede
 CHECKOUT_REV=78c25985420ee41a6678c42fab8ea8d6c3b1b519
 
 fail() { echo "BLOCKED: $*" >&2; exit 2; }
@@ -63,6 +63,19 @@ mountpoint -q "$VOL" || fail "dedicated volume not mounted"
 assert_hash "unmodified old shared executable" "$OLD" "$OLD_SHA"
 assert_hash "preserved dedicated consensus executable" "$NODE" "$NODE_SHA"
 assert_hash "verified staged candidate" "$CANDIDATE" "$NEW_SHA"
+# The artifact was built from this exact financial source. A checksum alone
+# cannot distinguish a stale artifact from the reviewed implementation.
+go_bin="$(command -v go || true)"
+[[ -n "$go_bin" ]] || go_bin=/usr/local/go/bin/go
+[[ -x "$go_bin" ]] || fail "Go binary provenance inspector unavailable"
+build_metadata="$("$go_bin" version -m "$CANDIDATE")" || fail "candidate Go metadata unavailable"
+grep -Fq 'vcs.revision=bdbce253c524d6faac14f61cd129ac5072287c3f' <<<"$build_metadata" ||
+  fail "candidate source revision differs from reviewed financial implementation"
+grep -Fq 'vcs.modified=false' <<<"$build_metadata" ||
+  fail "candidate built from modified source"
+grep -Fq 'GOOS=linux' <<<"$build_metadata" || fail "candidate target OS differs"
+grep -Fq 'GOARCH=amd64' <<<"$build_metadata" || fail "candidate target architecture differs"
+echo "PASS exact current candidate source and linux/amd64 provenance"
 check_proc "$PRIMARY" "$OLD" "$OLD_SHA"
 check_proc "$FOUNDER" "$OLD" "$OLD_SHA"
 check_proc "$NODE_UNIT" "$NODE" "$NODE_SHA"
@@ -115,6 +128,11 @@ for dir in "$BASE/settlement-state" "$BASE/founder-rewards-settlement-state"; do
     fail "in-flight lock under $dir; cannot treat as quiesced"
 done
 echo "PASS no current request/run lock files observed"
+# A lock-free filesystem is not a financial drain. Accepted requests, active
+# HD/DE payout producers, and bank proof require independent attestation.
+echo "FINANCIAL_DRAIN_CERTIFIED=false"
+echo "PARALLEL_HD_DE_SIGNER_FREEZE_CERTIFIED=false"
+echo "CURRENT_VERSION_ROLLBACK_CERTIFIED=false"
 df -h "$VOL"
 echo "PREFLIGHT_PASS: repository, backup, binaries, units, binds and current health align"
 echo "NOT A DEPLOY AUTHORIZATION: app-side financial drain and protected rollback still required"

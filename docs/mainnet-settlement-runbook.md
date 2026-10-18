@@ -715,3 +715,65 @@ WOLO_COMMUNITY_TREASURY_ADDRESS=wolo1hlfvzuv4dc46ngvh3zlteuegx0xga20hj20zd2
 ```
 
 Leave `127.0.0.1:8091` out of every mainnet app env.
+
+## 2026-10-18: current `bdbce253` release candidate and two-service review
+
+The **current** settlement candidate at source
+`bdbce253c524d6faac14f61cd129ac5072287c3f` passed the
+source-pinned GitHub Actions build and Go financial/race tests. The immutable
+candidate artifact `settlement-bdbce253-linux-amd64-UNDEPLOYED` from
+run `39083111834` was independently checksum-verified on Mac and VPS.
+The root-owned, non-live executable path is:
+
+`/mnt/HC_Volume_105319120/wolochain-mainnet/settlement-candidates/bdbce253-UNDEPLOYED/wolochaind-settlement-only-linux-amd64`
+
+The executable SHA-256 is
+`44d8aed5550d1b33635c734c1a359d0cb69e854093ef8c9a8a3da4f99d416ede`.
+Do not substitute the retired `3ea79363` binary or any historical promotion
+controller. The candidate's authority receipt explicitly says
+`production_authorized=false`; checksum validation does not change that.
+
+The root read-only provenance report dated
+`2026-10-18T00:47:32Z` confirmed the two existing settlement processes
+at `78c25985420ee41a6678c42fab8ea8d6c3b1b519`, PIDs 1012/1010,
+original executable SHA-256 `040126a2884946caf1651a50b7d8115c5a6fb2d5aa94fcbbe150694602d451a5`,
+and separately preserved consensus PID 1009 / executable
+`4b77f622191db7550cb87cafb8f1886a0aadebee3eb6565f9f90036f809e61d3`.
+No consensus upgrades/restarts are authorized.
+
+The **current-version** source-controlled
+`scripts/settlement-dual-service-release-preflight.sh` and
+`scripts/settlement-dual-service-snapshot.sh` now recognize the exact
+root-owned `bdbce253` artifact and source pins. Run only reviewed sources
+and use the former's read-only preflight and the latter's
+`--inspect` option to review invariants before any backup.
+The snapshot's `--snapshot` mode creates restricted historical evidence
+only; **never restore copied payout request/run state over live state**.
+Even when preflight succeeds, it does not prove HD or DE payout ingress
+is quiesced, request drain, chain finality, a tested rollback/watchdog,
+or authorization to promote. The historical
+`scripts/settlement-two-service-code-rollback.sh` remains deliberately
+`--inspect`-only and refuses `--rollback` or `--rescue`.
+
+The primary settlement durable-request census has since shown
+908 confirmed, 5 failed and one accepted request (versus 904 confirmed
+at an earlier comparable observation). The accepted request's public
+transaction `D5B4CFAA5E9063F8342EA9E2B6119FCFF28DEE20B2E1DD6803944933B237D699`
+was matched by the configured RPC/REST interfaces to a successful
+`wolo-1` bank transfer at height `1078913` with the original sender,
+recipient, memo and amount. This is **not** signed independent light-client
+proof or authority to delete, rebroadcast, or unilaterally finalize its
+stored `accepted` state. Founder bonus #15 / claim #889 remains
+a separate unresolved legacy liability.
+
+**Still blocking production code cutover:** independently certify HD+DE
+payment-producer isolation and no in-flight writes; reconcile live durable
+requests against canonically finalized bank effects without replay;
+prove exact reserves and liabilities; capture a checksum-verified
+restricted backup after protected quiescence; rehearse a current-version
+rollback/watchdog that reverts **only** the two settlement units while
+leaving the consensus executable, PID, state and chain height untouched;
+and obtain explicit named operator approval. App protected Finish and
+War Satchel live custody require their own separate migration and
+financial-bridge release gates.
+

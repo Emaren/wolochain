@@ -68,6 +68,9 @@ jobs:
       - name: Current settlement candidate provenance (offline)
         run: python3 -m unittest discover -s tests -p 'test_settlement_current_provenance.py' -v
 
+      - name: Current two-service release preflight and snapshot guards (offline)
+        run: python3 -m unittest discover -s tests -p 'test_settlement_current_two_lane_preflight.py' -v
+
       - name: Chain invariant guard
         run: WOLO_SKIP_RUNTIME_CHECKS=1 ./scripts/check-chain-invariants.sh
 

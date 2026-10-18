@@ -21,12 +21,12 @@ FOUNDER_UNIT=wolochain-founder-rewards-settlement.service
 NODE_UNIT=wolochaind-mainnet.service
 OLD_BIN=/usr/local/bin/wolochaind-mainnet
 NODE_BIN=/usr/local/bin/wolochaind-mainnet-node-prewartrophy
-CANDIDATE="$ROOT/settlement-candidates/3ea79363/wolochaind-settlement-only-linux-amd64"
+CANDIDATE="$ROOT/settlement-candidates/bdbce253-UNDEPLOYED/wolochaind-settlement-only-linux-amd64"
 REPO=/var/www/WoloChain-wolo-1
 EXPECTED_VPS_REV=78c25985420ee41a6678c42fab8ea8d6c3b1b519
 EXPECTED_OLD=040126a2884946caf1651a50b7d8115c5a6fb2d5aa94fcbbe150694602d451a5
 EXPECTED_NODE=4b77f622191db7550cb87cafb8f1886a0aadebee3eb6565f9f90036f809e61d3
-EXPECTED_NEW=af18e18bd32ef5763d3e414a37dd7886fe4065b640bb5a89ae742ee860fb9b87
+EXPECTED_NEW=44d8aed5550d1b33635c734c1a359d0cb69e854093ef8c9a8a3da4f99d416ede
 
 stop() { echo "STOP: $*" >&2; exit 2; }
 hash() { sha256sum "$1" | awk '{print $1}'; }
@@ -92,6 +92,10 @@ mountpoint -q "$VOL" || stop "settlement volume not mounted"
 check_file "original shared settlement binary" "$OLD_BIN" "$EXPECTED_OLD"
 check_file "preserved consensus binary" "$NODE_BIN" "$EXPECTED_NODE"
 check_file "staged verifier candidate" "$CANDIDATE" "$EXPECTED_NEW"
+# Snapshot captures rollback evidence, NOT a restart-safe financial point.
+# A shared bank/chain writer may still be active after this local check.
+echo "FINANCIAL_DRAIN_CERTIFIED=false"
+echo "REPLAY_SAFETY_CERTIFIED=false"
 check_env "$PRIMARY_ENV"
 check_env "$FOUNDER_ENV"
 check_unit "$PRIMARY_UNIT" "$OLD_BIN" "$EXPECTED_OLD"
