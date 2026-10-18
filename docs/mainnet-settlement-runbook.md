@@ -977,7 +977,14 @@ both endpoints and consensus continuity, then serializes operator mutations
 under a root-only nonblocking `flock` file. Promotion stops only the two
 settlement services, creates two exact exclusive-owned drop-ins, reloads
 systemd, starts only those services, and verifies running executables and
-the chain-specific health endpoints. A failure triggers **code-only**
+the chain-specific health endpoints. systemd can report a service active before
+its loopback HTTP listener binds, so a **15-second bounded per-lane readiness
+wait** retries only temporary connection-refused/reset/timeout errors. A
+wrong-chain or malformed response, HTTP failure, unexpected process
+executable or consensus PID drift fails immediately. After both lanes pass
+startup readiness, executable identities and both health endpoints are
+checked again. Offline fault tests cover delayed HTTP binding, timeout and
+wrong-chain rejection. A failure triggers **code-only**
 rollback to the original existing binary (not a state-tree restore);
 if rollback also fails, it explicitly blocks financial ingress until
 manual recovery. Interrupted-code recovery can handle exactly owned
