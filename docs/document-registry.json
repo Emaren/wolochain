@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "e06011cabc9839983baff1a12e0f1be3820676bfea6d8f7f118d011acff5b54b",
+      "sha256": "cca5b0324536b3f818270d8269a498746dbf5209516ccfb8761c7724ba6b3c02",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -289,7 +289,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-16",
       "sensitivity": "restricted",
-      "sha256": "d42a63ff229ebaeedf020f02e0a66f5c697f5298d73c7151db7d24a7cb55bfef",
+      "sha256": "769ceee0c71041a098e0b3bbd568ffd259326e7e45ee2ee3362e5fc6564abd32",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -808,8 +808,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "test/bdbce253-two-lane-fault-rehearsal-20261017",
-    "commit": "782691e15889fe15f3f2d7ed6f9c7759544c4c13"
+    "branch": "feat/shared-hd-de-financial-ingress-inventory-20261017",
+    "commit": "9b421ece575c77e81fbd83b1ba3fd4d33d6b6574"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
