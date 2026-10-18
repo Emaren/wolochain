@@ -7,7 +7,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import importlib.util
+import contextlib
+import io
 import json
+import re
 from pathlib import Path
 import subprocess
 import sys
@@ -314,6 +317,246 @@ class GuardedTwoServiceCutover(unittest.TestCase):
         self.assertNotIn("shutil.copytree", src)
         self.assertIn("PAYOUT_PRODUCERS_STILL_FENCED_REQUIRED=true", src)
         self.assertIn("NO_PAYOUT_PRODUCER_RESUME=true", src)
+
+
+class SettlementSourceAuthority(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.s = load()
+
+    def state(self, *, runtime="old", revision=None, clean=True, visible=True):
+        s = self.s
+        fake = FakeLive(s)
+        for unit in s.SERVICES:
+            fake.dropins[unit] = fake.loaded[unit] = runtime
+            fake.units[unit].exe = s.NEW if runtime == "new" else s.OLD
+        source = {"revision": revision or s.OLD_REV, "clean": clean,
+                  "tracked_index_visible": visible}
+        fake.source_checkout = lambda: dict(source)
+        return fake, s.Cutover(fake)
+
+    def assert_observation_only(self, receipt, fake):
+        for field in ("release_authorized", "financial_drain_certified",
+                      "custody_authorized", "claim_889_resolved", "production_mutated"):
+            self.assertIs(receipt[field], False)
+        self.assertEqual(fake.commands, [])
+        fake.assert_no_node_or_ledger_change()
+
+    def test_old_runtime_and_old_checkout_require_both_real_transitions(self):
+        fake, ctl = self.state()
+        receipt = ctl.source_authority()
+        self.assertEqual(receipt["status"], "BLOCKED")
+        self.assertTrue(receipt["code_cutover_required"])
+        self.assertTrue(receipt["source_transition_required"])
+        self.assertFalse(receipt["source_transition_runtime_prerequisite_met"])
+        self.assertEqual(receipt["expected_revision"], self.s.REV)
+        self.assert_observation_only(receipt, fake)
+
+    def test_checkout_only_advance_never_clears_old_runtime(self):
+        fake, ctl = self.state(revision=self.s.REV)
+        receipt = ctl.source_authority()
+        self.assertFalse(receipt["source_runtime_aligned"])
+        self.assertTrue(receipt["code_cutover_required"])
+        self.assertFalse(receipt["source_transition_required"])
+        self.assertIn("PROTECTED_TWO_SERVICE_CODE_CUTOVER_REQUIRED", receipt["blockers"])
+        self.assert_observation_only(receipt, fake)
+
+    def test_real_new_runtime_precedes_source_checkout_transition(self):
+        fake, ctl = self.state(runtime="new")
+        receipt = ctl.source_authority()
+        self.assertFalse(receipt["source_runtime_aligned"])
+        self.assertFalse(receipt["code_cutover_required"])
+        self.assertTrue(receipt["source_transition_required"])
+        self.assertTrue(receipt["source_transition_runtime_prerequisite_met"])
+        self.assert_observation_only(receipt, fake)
+
+    def test_both_new_align_only_source_authority_with_all_financial_holds(self):
+        fake, ctl = self.state(runtime="new", revision=self.s.REV)
+        receipt = ctl.source_authority()
+        self.assertTrue(receipt["source_runtime_aligned"])
+        self.assertEqual(receipt["status"], "SOURCE_RUNTIME_ALIGNED_FINANCIAL_HOLD")
+        self.assertEqual(receipt["blockers"], [])
+        self.assertEqual(receipt["live_settlement_sha256"], self.s.NEW_SHA)
+        self.assertEqual(receipt["settlement_pids"], {unit: fake.units[unit].pid for unit in self.s.SERVICES})
+        self.assertEqual(receipt["consensus_pid"], 1009)
+        self.assertTrue(receipt["observed_at_utc"].endswith("Z"))
+        self.s.datetime.fromisoformat(receipt["observed_at_utc"].replace("Z", "+00:00"))
+        self.assert_observation_only(receipt, fake)
+
+    def test_dirty_hidden_or_unreviewed_checkout_never_aligns(self):
+        for args in ({"clean": False}, {"clean": False, "visible": False}, {"clean": True, "visible": False},
+                     {"revision": "a" * 40}):
+            with self.subTest(args=args):
+                case = {"runtime": "new", "revision": self.s.REV, **args}
+                fake, ctl = self.state(**case)
+                receipt = ctl.source_authority()
+                self.assertFalse(receipt["source_runtime_aligned"])
+                self.assert_observation_only(receipt, fake)
+
+    def test_source_changing_during_read_never_returns_alignment(self):
+        fake, ctl = self.state(runtime="new", revision=self.s.REV)
+        observations = iter([{"revision": self.s.REV,"clean":True,"tracked_index_visible":True},
+                             {"revision": self.s.OLD_REV,"clean":True,"tracked_index_visible":True}])
+        fake.source_checkout = lambda: next(observations)
+        with self.assertRaisesRegex(self.s.Blocked, "source changed"):
+            ctl.source_authority()
+        self.assertEqual(fake.commands, [])
+
+    def test_settlement_rollback_exit_or_pid_change_during_second_git_refuses_alignment(self):
+        s = self.s
+        for change in ("rollback", "exit", "pid"):
+            with self.subTest(change=change):
+                fake, ctl = self.state(runtime="new", revision=s.REV)
+                original = fake.source_checkout
+                calls = 0
+                def checkout():
+                    nonlocal calls
+                    calls += 1
+                    if calls == 2:
+                        if change == "rollback":
+                            for unit in s.SERVICES:
+                                fake.dropins[unit] = fake.loaded[unit] = "old"
+                                fake.units[unit].exe = s.OLD
+                        elif change == "exit":
+                            fake.units[s.PRIMARY].running = False
+                        else:
+                            fake.units[s.PRIMARY].pid += 1
+                    return original()
+                fake.source_checkout = checkout
+                with self.assertRaises(s.Blocked):
+                    ctl.source_authority()
+                self.assertEqual(fake.commands, [])
+
+    def test_settlement_pid_change_during_last_health_refuses_alignment(self):
+        s = self.s
+        fake, ctl = self.state(runtime="new", revision=s.REV)
+        after_source = False
+        original_source, original_health = fake.source_checkout, fake.health
+        calls = 0
+        def checkout():
+            nonlocal calls, after_source
+            calls += 1
+            after_source = calls == 2
+            return original_source()
+        def health(port):
+            original_health(port)
+            if after_source and port == 8093:
+                fake.units[s.FOUNDER].pid += 1
+        fake.source_checkout, fake.health = checkout, health
+        with self.assertRaises(s.Blocked):
+            ctl.source_authority()
+        self.assertEqual(fake.commands, [])
+
+    def test_mixed_runtime_and_consensus_drift_refuse_source_gate(self):
+        fake, ctl = self.state(runtime="new", revision=self.s.REV)
+        fake.dropins[self.s.FOUNDER] = fake.loaded[self.s.FOUNDER] = "old"
+        with self.assertRaisesRegex(self.s.Blocked, "mixed service"):
+            ctl.source_authority()
+        fake, ctl = self.state(runtime="new", revision=self.s.REV)
+        fake.units[self.s.CONSENSUS].exe = "unreviewed"
+        with self.assertRaisesRegex(self.s.Blocked, "consensus running identity"):
+            ctl.source_authority()
+        self.assertEqual(fake.commands, [])
+
+    def test_bounded_inspection_refuses_excess_stdout_or_stderr(self):
+        for stream in ("stdout", "stderr"):
+            with self.subTest(stream=stream):
+                with self.assertRaisesRegex(self.s.Blocked, "output exceeds limit"):
+                    self.s.Live().command(sys.executable, "-c", "import sys;sys."+stream+".write('x'*1048577)")
+
+    def test_real_git_read_only_hidden_index_and_ignored_source_guards(self):
+        s = self.s
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            def git(*args):
+                return subprocess.run(["git", "-C", td, *args], check=True,
+                                      capture_output=True, text=True).stdout.strip()
+            git("init", "--quiet")
+            (root / "source.go").write_text("package source\n")
+            (root / ".gitignore").write_text("cache\n")
+            git("add", ".")
+            git("-c", "user.name=Offline Fixture", "-c", "user.email=fixture@example.invalid",
+                "commit", "--quiet", "-m", "source fixture")
+            before = (root / ".git/index").read_bytes()
+            with patch.object(s, "CHECKOUT", td):
+                self.assertTrue(s.Live().source_checkout()["clean"])
+                self.assertEqual((root / ".git/index").read_bytes(), before)
+                git("update-index", "--assume-unchanged", "source.go")
+                self.assertFalse(s.Live().source_checkout()["tracked_index_visible"])
+                git("update-index", "--no-assume-unchanged", "source.go")
+                git("update-index", "--skip-worktree", "source.go")
+                self.assertFalse(s.Live().source_checkout()["clean"])
+                git("update-index", "--no-skip-worktree", "source.go")
+                (root / "cache").write_text("ignored source contamination")
+                self.assertFalse(s.Live().source_checkout()["clean"])
+                (root / "cache").unlink()
+                (root / "untracked").write_text("preserve me")
+                self.assertFalse(s.Live().source_checkout()["clean"])
+                self.assertTrue((root / "untracked").exists())
+
+    def test_inherited_git_repository_overlay_cannot_redirect_source_authority(self):
+        s = self.s
+        with tempfile.TemporaryDirectory() as td:
+            roots = [Path(td) / name for name in ("actual", "overlay")]
+            for root in roots:
+                root.mkdir()
+                def git(*args):
+                    return subprocess.run(["git", "-C", str(root), *args], check=True,
+                                          capture_output=True, text=True).stdout.strip()
+                git("init", "--quiet")
+                (root / "source.go").write_text("package " + root.name + "\n")
+                git("add", ".")
+                git("-c", "user.name=Offline Fixture", "-c", "user.email=fixture@example.invalid",
+                    "commit", "--quiet", "-m", root.name)
+            actual, overlay = roots
+            expected = subprocess.check_output(["git", "-C", str(actual), "rev-parse", "HEAD"], text=True).strip()
+            with patch.object(s, "CHECKOUT", str(actual)), patch.dict(s.os.environ, {
+                "GIT_DIR": str(overlay / ".git"), "GIT_WORK_TREE": str(overlay),
+                "GIT_INDEX_FILE": str(overlay / ".git/index"),
+                "GIT_CONFIG_COUNT": "1", "GIT_CONFIG_KEY_0": "core.worktree", "GIT_CONFIG_VALUE_0": str(overlay),
+            }):
+                result = s.Live().source_checkout()
+            self.assertEqual(result["revision"], expected)
+            self.assertTrue(result["clean"])
+
+    def test_read_only_main_never_loads_permit_or_takes_mutation_lock(self):
+        s = self.s
+        fake, _ = self.state()
+        output = io.StringIO()
+        with patch.object(s.os, "geteuid", return_value=0), \
+             patch.object(s, "Live", return_value=fake), \
+             patch.object(s, "load_release_permit", side_effect=AssertionError("permit read")), \
+             patch.object(s, "acquire_mutation_lock", side_effect=AssertionError("mutation lock")), \
+             patch.object(sys, "argv", [str(SCRIPT), "--mode", "source-authority"]), \
+             contextlib.redirect_stdout(output), contextlib.redirect_stderr(io.StringIO()):
+            self.assertEqual(s.main(), 2)
+        receipt = json.loads(output.getvalue())
+        self.assertTrue(receipt["code_cutover_required"])
+        self.assertFalse(receipt["production_mutated"])
+        self.assertEqual(fake.commands, [])
+
+    def test_operator_source_transition_is_self_contained_and_gated_before_mutations(self):
+        text = (ROOT / "docs/mainnet-settlement-runbook.md").read_text()
+        block = re.search(r"```sh\n(\(\nset -eu.*?\n\))\n```", text, re.S)[1]
+        with tempfile.NamedTemporaryFile("w", suffix=".sh") as stream:
+            stream.write(block)
+            stream.flush()
+            subprocess.run(["bash", "-n", stream.name], check=True, capture_output=True)
+        self.assertEqual(block.count("\nrequire_source_transition\n"), 2)
+        self.assertLess(block.index("\nrequire_source_transition\n"), block.index("wgit fetch "))
+        self.assertLess(block.rindex("\nrequire_source_transition\n"), block.index("wgit merge --ff-only"))
+        self.assertIn('"code_cutover_required": False', block)
+        self.assertIn('"checkout_revision": "' + self.s.OLD_REV + '"', block)
+        self.assertIn('"release_authorized": False', block)
+        self.assertIn('"source_runtime_aligned": False', block)
+        self.assertIn('type(r.get(k)) is type(v)', block)
+        self.assertIn('core.hooksPath=/dev/null', block)
+
+    def test_read_only_mode_never_accepts_a_finance_permit(self):
+        args = [sys.executable, str(SCRIPT), "--mode", "source-authority", "--permit", "/never/read/permit"]
+        proc = subprocess.run(args, capture_output=True, text=True, timeout=5)
+        self.assertEqual(proc.returncode, 2)
+        self.assertIn("BLOCKED:", proc.stderr)
 
 
 if __name__ == "__main__":

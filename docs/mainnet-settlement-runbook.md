@@ -8,12 +8,149 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "runtime-evidence"
 authority: "mainnet-settlement-operations"
-reviewed_at: "2026-10-17"
+reviewed_at: "2026-10-18"
 review_interval_days: 14
 sensitivity: "restricted"
 ---
 
 # WoloChain Mainnet Settlement Runbook
+
+## October 18 — machine-readable source/runtime authority gate
+
+The website's `vps-source-drift` hold must not be cleared by changing a Git SHA
+while 8092/8093 still execute the legacy code. Source authority and running
+executable authority are independently inspected by the existing controller:
+
+```sh
+sudo python3 scripts/settlement-bdbce253-code-cutover.py --mode source-authority
+```
+
+This mode is strictly read-only, accepts no financial permit, and returns one
+`aoe2war.wolo.settlement-source-authority.v1` JSON receipt. Exit 2 means source
+or runtime is blocked/unverifiable; exit 0 means only
+`SOURCE_RUNTIME_ALIGNED_FINANCIAL_HOLD`. All financial/custody/release authority
+flags remain false. It verifies both active legacy lanes, exact executable
+hashes and units, canonical health, unchanged consensus identity, and stable
+Git observations before/after runtime inspection, final settlement generation/health
+and stable PID checks, and a final UTC observation timestamp. The receipt names
+both settlement PIDs and the consensus PID; it proves a bounded observation,
+not continuing authority. Git repository/index/config environment overlays are
+cleared and the canonical checkout top-level is verified. Hidden tracked index flags,
+ignored/untracked source, dirty files, output/resource refusal and source drift
+cannot pass. It never prints source filenames or secret configuration.
+
+| Actual runtime | Actual checkout | Result and next protected action |
+| --- | --- | --- |
+| old `78c25985` | old `78c25985` | Both `code_cutover_required` and `source_transition_required`; separately approved guarded two-service cutover comes first. |
+| old `78c25985` | new `bdbce253` | Still blocked; a checkout-only change is not a deployment and cannot clear the website gate. |
+| both new `bdbce253` | old `78c25985` | Runtime prerequisite met; source transition remains separately protected and required. |
+| both new `bdbce253` | clean exact `bdbce253` | Source/runtime aligned; existing financial, custody, #889 and app release gates remain held. |
+
+The reviewed source is exactly
+`bdbce253c524d6faac14f61cd129ac5072287c3f` and its staged binary is exactly
+`44d8aed5550d1b33635c734c1a359d0cb69e854093ef8c9a8a3da4f99d416ede`.
+The new Satchel backend has a different source/artifact authority and must not
+replace either identity. In particular, aligned `bdbce253` is only the exact
+issue #5 legacy authority target: later integrated escrow-evidence source
+`7a830e8` and custody source `99f32de` need their own exact release review and
+artifacts. This gate does not certify their deployment or the complete hardened
+backend. All financial producers remain fenced. No live checkout or process is changed by this source
+fix. A successful web-only build or KingdomIndex merge cannot supply the
+missing live execution proof.
+
+After the **separately approved** existing paired cutover has succeeded, retain
+its exact two-lane/PID/health receipt and unchanged consensus receipt. Only then
+may the operator, under explicit source-transition authorization and the same
+fenced maintenance window, advance the clean checkout. The operator must first
+prove no service launches consensus or financial execution from that source
+working tree. Never reset, force, clean, discard work, run build/install, or
+invoke old release/rollback scripts to clear this hold. The intended source
+transition is narrowly:
+
+```sh
+(
+set -eu
+umask 077
+: "${REVIEWED_CONTROLLER:?retained exact reviewed operator-tool path}"
+unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_COMMON_DIR GIT_OBJECT_DIRECTORY \
+  GIT_ALTERNATE_OBJECT_DIRECTORIES GIT_NAMESPACE GIT_CONFIG GIT_CONFIG_COUNT \
+  GIT_CONFIG_PARAMETERS GIT_CONFIG_SYSTEM GIT_CONFIG_GLOBAL GIT_CONFIG_NOSYSTEM \
+  GIT_CEILING_DIRECTORIES GIT_DISCOVERY_ACROSS_FILESYSTEM
+export GIT_OPTIONAL_LOCKS=0 GIT_NO_REPLACE_OBJECTS=1
+wgit() {
+  command git --no-optional-locks --no-replace-objects \
+    -c core.fsmonitor=false -c core.hooksPath=/dev/null \
+    -C /var/www/WoloChain-wolo-1 "$@"
+}
+SOURCE_RECEIPT="$(mktemp)"
+trap 'rm -f -- "$SOURCE_RECEIPT"' EXIT
+require_source_transition() {
+  GATE_STATUS=0
+  sudo python3 -I "$REVIEWED_CONTROLLER" --mode source-authority > "$SOURCE_RECEIPT" || GATE_STATUS=$?
+  test "$GATE_STATUS" -eq 2
+  python3 -I - "$SOURCE_RECEIPT" <<'PY'
+import json, sys
+from datetime import datetime, timezone
+with open(sys.argv[1], "rb") as stream:
+    data = stream.read(65537)
+assert len(data) <= 65536
+r = json.loads(data)
+expected = {
+    "schema": "aoe2war.wolo.settlement-source-authority.v1",
+    "mode": "READ_ONLY", "status": "BLOCKED",
+    "expected_revision": "bdbce253c524d6faac14f61cd129ac5072287c3f",
+    "checkout_revision": "78c25985420ee41a6678c42fab8ea8d6c3b1b519",
+    "checkout_clean": True, "tracked_index_visible": True,
+    "ignored_entries": 0, "untracked_entries": 0, "tracked_change_entries": 0,
+    "live_code_state": "new",
+    "live_settlement_revision": "bdbce253c524d6faac14f61cd129ac5072287c3f",
+    "live_settlement_sha256": "44d8aed5550d1b33635c734c1a359d0cb69e854093ef8c9a8a3da4f99d416ede",
+    "code_cutover_required": False, "source_transition_required": True,
+    "source_transition_runtime_prerequisite_met": True,
+    "source_runtime_aligned": False, "consensus_unchanged": True,
+    "release_authorized": False, "financial_drain_certified": False,
+    "custody_authorized": False, "claim_889_resolved": False,
+    "production_mutated": False,
+    "blockers": ["SOURCE_TRANSITION_REQUIRED_AFTER_VERIFIED_CODE_CUTOVER"],
+}
+assert all(type(r.get(k)) is type(v) and r[k] == v for k, v in expected.items())
+pids = r["settlement_pids"]
+assert set(pids) == {"wolochain-mainnet-settlement.service", "wolochain-founder-rewards-settlement.service"}
+assert all(type(pid) is int and pid > 0 for pid in [*pids.values(), r["consensus_pid"]])
+observed = datetime.fromisoformat(r["observed_at_utc"].replace("Z", "+00:00"))
+assert observed.utcoffset().total_seconds() == 0
+assert 0 <= (datetime.now(timezone.utc) - observed).total_seconds() <= 30
+PY
+  test "$(wgit symbolic-ref --quiet --short HEAD)" = wolo-1-mainnet-prep
+  test "$(wgit rev-parse HEAD)" = 78c25985420ee41a6678c42fab8ea8d6c3b1b519
+  test -z "$(wgit status --porcelain=v1 --untracked-files=all --ignored=matching)"
+}
+# Requires explicit source-transition approval and the existing exclusive,
+# fenced maintenance window. A checkout-only operation cannot satisfy this.
+require_source_transition
+case "$(wgit remote get-url origin)" in
+  https://github.com/Emaren/wolochain.git|git@github.com:Emaren/wolochain.git) ;;
+  *) exit 2 ;;
+esac
+wgit fetch --no-tags --no-write-fetch-head origin bdbce253c524d6faac14f61cd129ac5072287c3f
+test "$(wgit rev-parse 'bdbce253c524d6faac14f61cd129ac5072287c3f^{commit}')" = bdbce253c524d6faac14f61cd129ac5072287c3f
+wgit merge-base --is-ancestor 78c25985420ee41a6678c42fab8ea8d6c3b1b519 bdbce253c524d6faac14f61cd129ac5072287c3f
+require_source_transition
+wgit merge --ff-only --no-edit bdbce253c524d6faac14f61cd129ac5072287c3f
+# The old source predates this mode; use the retained reviewed tooling path.
+sudo python3 -I "$REVIEWED_CONTROLLER" --mode source-authority
+)
+```
+
+The exact-object fetch and fast-forward above require their own authorization;
+none was executed during this engineering work. The procedure never pulls an
+unreviewed branch, detaches the protected branch or executes new source. Retain both
+old/new source identities and all current request/run histories for recovery.
+If code rollback becomes necessary, source alignment is blocked again until its
+separate controlled transition is reviewed; financial producers stay fenced.
+Only a fresh aligned receipt supports rerunning the app engineer's existing
+web-only Finish dry-run. It grants no financial activation or Finish bypass.
+
 
 ## October 17, 2026 — authenticated bridge and fresh release HOLD
 

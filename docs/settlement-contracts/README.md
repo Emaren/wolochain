@@ -27,6 +27,17 @@ The [operator procedure](../war-satchel-controlled-release.md) preserves separat
 consensus and legacy 8092/8093 authorities.
 
 
+## October 18 dated release evidence
+
+The [exact backend artifact receipt](custody-backend-artifact-20261018.json)
+binds the independently verified Linux AMD64 binary to source `99f32de6`, builder
+`7611946c` and three successful GitHub CI runs. It remains UNDEPLOYED.
+The [read-only source/runtime receipt](settlement-source-authority-20261018.json)
+records old `78c25985` settlement runtime and checkout, unchanged consensus and
+one preserved ignored build-output directory. The source gate correctly remains
+BLOCKED. Neither receipt authorizes funds, claim retries, custody or deployment;
+see the [protected authority procedure](../mainnet-settlement-runbook.md).
+
 ## Review Scope — 2026-10-10 UTC
 
 Source contract boundaries reviewed. Live settlement signers, balances and execution endpoints were not independently reverified.
