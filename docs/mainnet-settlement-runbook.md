@@ -868,6 +868,41 @@ not units to automatically stop**. In particular the list
 excluded from app-producer stop candidates. No automation in this
 source stops or restarts any unit.
 
+The 2026-10-18 VPS read-only inventory returned
+`BLOCKED: incomplete systemd unit inventory` with exit code 2 because
+the original discovery path **synthesized** extra expected unit names
+and attempted `systemctl show` against units that may not be installed.
+That generic error did **not** establish that a real signer was active,
+missing, or misconfigured. The corrected inventory enumerates only
+actual loaded/installed units, lists known exact-name units absent from
+the discovery separately as `expectedNamedUnitsNotFound`, and prints
+successful per-unit observations even when a particular installed unit
+cannot be inspected. The unresolved unit names are retained in
+`unitsWithIncompleteInspection`, with exit code 2, never reported
+as safe. An entirely inspected inventory still deliberately exits 3,
+not a financial fence certificate.
+
+**2026-10-18T03:37:46Z VPS receipt:** The corrected real-unit inventory
+identified active HD and DE web/API processes with database keys, HD web
+with both settlement endpoint/token key names and staking/faucet CLI key
+names, and active WOLO transfer heartbeat, stake reconcile, challenge
+reconcile, replay recovery, staking rewards, trophy tributes and
+prewarm timers. It printed **no secret values** and changed no services.
+Three unresolved inspection errors were `aoe2war-build@.service`,
+`aoe2war-deps@.service`, and
+`aoe2war-speedos-cloudflare@.service`. They are uninstantiated systemd
+`@.` **template definitions** rather than runnable unit instances.
+The repaired discovery explicitly records these names in
+`templateDefinitionsNotServiceInstances` without asking
+`systemctl show` to inspect them. Instantiated template units such as
+`aoe2war-build@job42.service` remain included and a failed inspection
+of one still produces exit 2. With only template definitions skipped,
+a complete report returns noncertifying exit 3 as designed. The HD
+and DE active web/API and timer list is for **human classification**,
+not a blanket stop list; an active timer can trigger an inactive
+financial service while maintenance is underway, and unit environment
+key presence alone is not evidence of an active wallet key.
+
 Absent process environment keys do not prove disabled signers, and
 installed unit enumeration cannot find every cron, container,
 external signer, database job or HTTP caller. Its exit code is 3
@@ -876,3 +911,33 @@ a payment freeze. The two settlement units must be changed only
 under a separately reviewed, coordinated operator procedure
 supported by positive HD+DE signing authority and in-flight
 financial drain evidence. The sole consensus node stays untouched.
+
+## 2026-10-18: independent root + Wolo-volume predeployment capacity guard
+
+The source-only `scripts/settlement-predeploy-capacity-readonly.py --inspect`
+checks **both** mounted filesystems before a production Next.js build, a large
+bank/ledger snapshot, or a settlement candidate switch. A previous operator
+receipt showed approximately **50 GiB free** on the dedicated Wolo volume
+(83% used), but older system information showed only **4–5 GiB free** on
+the **separate OS root disk**. These are historical observations, not current
+capacity evidence.
+
+The guard demands at least **8 GiB available** for unprivileged processes on
+`/` and at least **20 GiB available** on the dedicated Wolo state volume,
+`/mnt/HC_Volume_105319120`. It refuses a symlink/missing/unmounted Wolo
+volume and any volume mapped to the OS root device, so an unexpectedly
+unmounted data disk cannot silently consume root space. It performs no writes
+or subprocess invocations. No override of these fixed floors is supported.
+Missing mount information returns exit code 2; inadequate space returns exit
+code 3. A passing minimum headroom check returns exit code 0 but still
+reports `productionAuthorized=false`, `financialDrainCertified=false`,
+`rollbackCertified=false`.
+
+This is a **screening floor**, not a measured production build, database
+backup, state-copy, or rollback footprint. Size the actual backups separately
+and retain independent protected snapshots with sufficient capacity. Never
+prune chain state, receipt journals, financial backups, or payout records just
+to make this check pass. If root is low, add verified storage or otherwise
+recover unrelated expendable capacity under a separately reviewed procedure.
+Do not attempt protected Finish or wallet maintenance based solely on this
+capacity report.

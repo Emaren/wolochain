@@ -73,7 +73,13 @@ def relevant(name: str) -> bool:
     ))
 
 
-def discover_units() -> list[str]:
+def discover_inventory() -> tuple[list[str], list[str]]:
+    """Separate inactive systemd TEMPLATE DEFINITIONS from real unit instances.
+
+    A unit like aoe2war-build@.service is an installable template without a
+    service instance. systemctl show may refuse it. Real instances like
+    aoe2war-build@job42.service MUST still be inspected and can block.
+    """
     listed = run_systemctl([
         "list-units", "--all", "--type=service", "--type=timer", "--plain", "--no-legend",
     ])
@@ -81,6 +87,7 @@ def discover_units() -> list[str]:
         "list-unit-files", "--type=service", "--type=timer", "--no-legend",
     ])
     names: set[str] = set()
+    templates: set[str] = set()
     for payload in (listed, installed):
         lines = payload.splitlines()
         if len(lines) > MAX_UNITS:
@@ -90,10 +97,20 @@ def discover_units() -> list[str]:
             if not fields:
                 continue
             name = fields[0]
-            if relevant(name):
-                names.add(name)
-    names.update(EXACT_APP)
-    return sorted(names)
+            if not relevant(name):
+                continue
+            if re.fullmatch(r"[^@]+@\.(?:service|timer)", name):
+                # Template definition, not a runnable unit instance.
+                templates.add(name)
+                continue
+            names.add(name)
+    # Do not synthesize absent exact names: they are reported separately.
+    return sorted(names), sorted(templates)
+
+
+def discover_units() -> list[str]:
+    # Preserve the established small test/helper interface.
+    return discover_inventory()[0]
 
 
 def process_keys(pid: str) -> tuple[bool, list[str]]:
@@ -144,7 +161,16 @@ def info(unit: str) -> dict:
 
 
 def inspect() -> dict:
-    units = [info(name) for name in discover_units()]
+    discovered, templates = discover_inventory()
+    units = []
+    incomplete_units = []
+    for name in discovered:
+        try:
+            units.append(info(name))
+        except (OSError, ValueError, subprocess.SubprocessError):
+            # Keep the successful inventory visible but NEVER silently conclude
+            # a failed inspection is safe or that a writer is inert.
+            incomplete_units.append(name)
     candidates = sorted(
         x["unit"] for x in units if x["isCandidateForExplicitMaintenanceReview"]
     )
@@ -153,6 +179,10 @@ def inspect() -> dict:
         "observedAtUtc": datetime.now(timezone.utc).isoformat(),
         "appUnits": units,
         "activeCandidateUnitsToReview": candidates,
+        "expectedNamedUnitsNotFound": sorted(EXACT_APP - set(discovered)),
+        "templateDefinitionsNotServiceInstances": templates,
+        "unitsWithIncompleteInspection": incomplete_units,
+        "inventoryCompleteForDiscoveredUnits": len(incomplete_units) == 0,
         "neverAutomaticStop": sorted(PROTECTED_WOLO),
         "cannotProve": [
             "no external or independently signed payout origin",
@@ -184,6 +214,9 @@ def main() -> int:
         print("BLOCKED: incomplete systemd unit inventory", file=sys.stderr)
         return 2
     print(json.dumps(report, indent=2))
+    if report["unitsWithIncompleteInspection"]:
+        print("BLOCKED: some discovered units could not be inspected", file=sys.stderr)
+        return 2
     return 3  # deliberately noncertifying even if no units appear active
 
 

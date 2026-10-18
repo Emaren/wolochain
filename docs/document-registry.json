@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "7457fc661f31515dc682281e520e06c41dd32112b4b98fddde110cf9d94511d2",
+      "sha256": "2aa38abc13778b58dcd1177d7eddf496109088acbdd42fe3f2d04599593304ca",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -289,7 +289,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-16",
       "sensitivity": "restricted",
-      "sha256": "bcf5dcd7c3aa264fa143f7897631c6b92934305cc8aa08f49bb7accfdfb77498",
+      "sha256": "4382d217c90ada8f1ca70369b43291ca72d5ca7bc5cbbd1de4aa109139d60bd6",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -808,8 +808,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "feat/shared-hd-de-financial-ingress-inventory-20261017",
-    "commit": "59b0b2039c15d91240656ad92f97375327bae976"
+    "branch": "ops/20261018-predeploy-capacity-guard",
+    "commit": "5b4088fc3d23ea22cccbc5eabe6fb3e781fbcb72"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
