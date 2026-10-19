@@ -125,10 +125,10 @@ func newBackendFixture(t *testing.T) *backendFixture {
 	f.b = b
 	t.Cleanup(b.Close)
 	f.request = TransferRequest{OperationID: "satchel:ticket:7", Kind: "wager", ChainID: "wolo-1", Denom: "uwolo", Sender: vault, Recipient: recipient, AmountUWolo: "7000000", Memo: "AoE2HDBets bet ticket v1 · ticket 7", OwnerID: "owner-1"}
-	policy := Policy{Vault: vault, BettingEscrow: recipient, MaxAmountUWolo: 1000000000, WithdrawalApprovalKey: engineTestApprovalKey().Public().(ed25519.PublicKey)}
+	policy := Policy{Vault: vault, BettingEscrow: recipient, MaxAmountUWolo: 1000000000, WithdrawalApprovalKey: engineTestApprovalKey().Public().(ed25519.PublicKey), WagerApprovalKey: engineTestWagerApprovalKey().Public().(ed25519.PublicKey)}
 	f.request.Reservation = testWagerReservation(t, f.request, policy, time.Now())
 	f.request.Reservation.FeeUWolo = b.cfg.FeesUWolo
-	f.request.Reservation.Signature = base64.StdEncoding.EncodeToString(ed25519.Sign(engineTestApprovalKey(), WagerReservationMessage(*f.request.Reservation)))
+	f.request.Reservation.Signature = base64.StdEncoding.EncodeToString(ed25519.Sign(engineTestWagerApprovalKey(), WagerReservationMessage(*f.request.Reservation)))
 	b.cfg.WagerVerifier = policy.VerifyWager
 	return f
 }
