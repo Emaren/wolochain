@@ -23,14 +23,23 @@ SELECT current_user,
        current_setting('transaction_read_only'),
        COALESCE((
          SELECT rolsuper OR rolcreatedb OR rolcreaterole OR rolbypassrls
-         FROM pg_roles WHERE rolname=current_user
+         FROM pg_catalog.pg_roles WHERE rolname=current_user
        ),true),
-       has_table_privilege(current_user,'war_satchel_wager_authorizations','INSERT') OR
-       has_table_privilege(current_user,'war_satchel_wager_authorizations','UPDATE') OR
-       has_table_privilege(current_user,'war_satchel_wager_authorizations','DELETE') OR
-       has_table_privilege(current_user,'war_satchel_funded_balances','UPDATE') OR
-       has_table_privilege(current_user,'war_satchel_wager_approvals','INSERT') OR
-       has_table_privilege(current_user,'bet_auto_executions','UPDATE')
+       has_table_privilege(current_user,'public.war_satchel_funded_reservations','INSERT') OR
+       has_table_privilege(current_user,'public.war_satchel_funded_reservations','UPDATE') OR
+       has_table_privilege(current_user,'public.war_satchel_funded_reservations','DELETE') OR
+       has_table_privilege(current_user,'public.war_satchel_wager_broadcasts','INSERT') OR
+       has_table_privilege(current_user,'public.war_satchel_auto_spend_consents','UPDATE') OR
+       has_table_privilege(current_user,'public.war_satchel_auto_spend_mandates','UPDATE') OR
+       has_table_privilege(current_user,'public.bet_stake_tickets','UPDATE') OR
+       has_table_privilege(current_user,'public.bet_markets','UPDATE') OR
+       has_table_privilege(current_user,'public.users','UPDATE') OR
+       has_table_privilege(current_user,'public.war_satchel_wager_authorizations','INSERT') OR
+       has_table_privilege(current_user,'public.war_satchel_wager_authorizations','UPDATE') OR
+       has_table_privilege(current_user,'public.war_satchel_wager_authorizations','DELETE') OR
+       has_table_privilege(current_user,'public.war_satchel_funded_balances','UPDATE') OR
+       has_table_privilege(current_user,'public.war_satchel_wager_approvals','INSERT') OR
+       has_table_privilege(current_user,'public.bet_auto_executions','UPDATE')
 `
 
 const reviewerPGOriginalQuery = `
@@ -44,19 +53,19 @@ SELECT a.snapshot_json::text,a.operation_id,a.reservation_id,a.owner_user_id,
        t.id,t.status,t.source,t.wallet_provider,t.wallet_address,
        t.stake_tx_hash,t.total_amount_wolo,
        b.reserved_uwolo::text,
-       EXISTS (SELECT 1 FROM war_satchel_wager_approvals ap
+       EXISTS (SELECT 1 FROM public.war_satchel_wager_approvals ap
          WHERE ap.operation_id=a.operation_id),
-       EXISTS (SELECT 1 FROM war_satchel_wager_broadcasts br
+       EXISTS (SELECT 1 FROM public.war_satchel_wager_broadcasts br
          WHERE br.operation_id=a.operation_id)
-FROM war_satchel_wager_authorizations a
-JOIN war_satchel_funded_reservations r
+FROM public.war_satchel_wager_authorizations a
+JOIN public.war_satchel_funded_reservations r
  ON r.id=a.reservation_id AND r.owner_user_id=a.owner_user_id
-JOIN bet_auto_executions e ON e.id=r.execution_id
-JOIN bet_auto_presets p ON p.id=e.preset_id AND p.user_id=a.owner_user_id
-JOIN users u ON u.id=a.owner_user_id
-JOIN bet_stake_tickets t
+JOIN public.bet_auto_executions e ON e.id=r.execution_id
+JOIN public.bet_auto_presets p ON p.id=e.preset_id AND p.user_id=a.owner_user_id
+JOIN public.users u ON u.id=a.owner_user_id
+JOIN public.bet_stake_tickets t
  ON t.user_id=a.owner_user_id AND t.client_request_id=r.ticket_request_id
-JOIN war_satchel_funded_balances b ON b.owner_user_id=a.owner_user_id
+JOIN public.war_satchel_funded_balances b ON b.owner_user_id=a.owner_user_id
 WHERE a.operation_id=$1
 `
 
