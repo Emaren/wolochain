@@ -177,7 +177,7 @@ func TestReviewerLiveFirstStakeRequiresSourceRosterButNotFutureStakeLock(t *test
  _,w,checkpoint,pub,key,_:=reviewerLiveCheckpointFixture(t)
  w.original.RosterLockedAtMS=0
  w.original.CapturedAtMS=now.Add(-100*time.Second).UnixMilli()
- w.original.ObservedAtMS=now.Add(-99*time.Second).UnixMilli()
+ w.original.ObservedAtMS=now.Add(-20*time.Second).UnixMilli()
  w.original.ExpiresAtMS=now.Add(20*time.Second).UnixMilli()
  w.original.Signature=base64.StdEncoding.EncodeToString(
   ed25519.Sign(key,ReviewerWatcherLiveWitnessMessage(w.original)))
