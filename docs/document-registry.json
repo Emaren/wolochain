@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "aae96f7faf2f5d59f9f51dde7c57d265d9a1ee29a5524585b3ac74372a630f19",
+      "sha256": "74a638585fbc048e7adfd0ced390f88847d08fcacb8582e1214ce70f89311f58",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -519,7 +519,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-18",
       "sensitivity": "restricted",
-      "sha256": "ee1cca8cb18f0c09590a68c05083cd8ac6bd98a8867130a8dabc451da9149fd9",
+      "sha256": "9a8f02a720aae56255406623428023be9fbbcc255bb4b55a2ebb285a45ba8370",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -618,7 +618,7 @@
         "wolochain",
         "aoe2war"
       ],
-      "title": "Codex Mission: WoloChain Mainnet \u2194 Osmosis IBC Prep",
+      "title": "Codex Mission: WoloChain Mainnet ↔ Osmosis IBC Prep",
       "type": "historical"
     },
     {
@@ -779,7 +779,7 @@
         "wolochain",
         "aoe2war"
       ],
-      "title": "WoloChain Mainnet \u2192 Osmosis Liquidity Transfer",
+      "title": "WoloChain Mainnet → Osmosis Liquidity Transfer",
       "type": "historical"
     },
     {
@@ -848,7 +848,7 @@
         "wolochain",
         "aoe2war"
       ],
-      "title": "WoloChain Mainnet \u2192 Osmosis Test Transfer",
+      "title": "WoloChain Mainnet → Osmosis Test Transfer",
       "type": "historical"
     },
     {
@@ -946,8 +946,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "codex/satchel-production-backend",
-    "commit": "ab293c896d9f58f7e37aca0090c533a94c0488e4"
+    "branch": "feature/20261019-satchel-reviewer-budget-contract",
+    "commit": "2471c6e9d440d05e7940a7095c6102a7bfb0e856"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
