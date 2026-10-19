@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/20261019-satchel-wager-withdrawal-key-separation` at `f506945110794393ce1f447d031b0582e1140131`
+Implementation baseline: `fix/20261019-reviewer-final-evidence-revalidation` at `0b49350f7a3d34bf3beabae4b8a065cf0a5c357d`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
