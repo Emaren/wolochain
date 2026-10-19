@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `feature/20261019-independent-watcher-witness-signature` at `3389a2c58e6e6fa2ca56626957399614d338459a`
+Implementation baseline: `fix/20261019-satchel-wager-withdrawal-key-separation` at `f506945110794393ce1f447d031b0582e1140131`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 

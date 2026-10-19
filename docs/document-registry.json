@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "5199753f938d27d4ebd06995c973ab5d71f76e92cea2cfd25585a809277d087c",
+      "sha256": "6cba0d570f48c4299bff6fce00f40fd8f7cffd9ed252a20dfab125e0eef1fa2b",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -519,7 +519,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-18",
       "sensitivity": "restricted",
-      "sha256": "dbd1bc533ec824d443cc05e97cbb7d016f05d949adedf7a7bb2f7f4543f322ec",
+      "sha256": "c7092cd7f3bba0a6d678de85ace35a8823a736568cda31b06986e76022b48fec",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -946,8 +946,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "feature/20261019-independent-watcher-witness-signature",
-    "commit": "3389a2c58e6e6fa2ca56626957399614d338459a"
+    "branch": "fix/20261019-satchel-wager-withdrawal-key-separation",
+    "commit": "f506945110794393ce1f447d031b0582e1140131"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

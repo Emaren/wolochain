@@ -17,7 +17,7 @@ import (
 func TestWagerReservationExactCrossLanguageFixture(t *testing.T) {
 	r := engineTestWager(t, "1")
 	f := map[string]any{"fixture_only": true, "mainnet_authority": false,
-		"approval_public_key_hex": hex.EncodeToString(engineTestPolicy(t).WithdrawalApprovalKey),
+		"approval_public_key_hex": hex.EncodeToString(engineTestPolicy(t).WagerApprovalKey),
 		"reservation":             r.Reservation, "reservation_sign_bytes": string(WagerReservationMessage(*r.Reservation))}
 	want, _ := json.Marshal(f)
 	actual, err := os.ReadFile("testdata/wager-reservation-v1.json")
@@ -126,7 +126,7 @@ func TestWagerReservationCannotFundAnotherOperationAfterConfirmation(t *testing.
 	}
 	other := engineTestWager(t, "2")
 	other.Reservation.ReservationDigest = r.Reservation.ReservationDigest
-	other.Reservation.Signature = base64.StdEncoding.EncodeToString(ed25519.Sign(engineTestApprovalKey(), WagerReservationMessage(*other.Reservation)))
+	other.Reservation.Signature = base64.StdEncoding.EncodeToString(ed25519.Sign(engineTestWagerApprovalKey(), WagerReservationMessage(*other.Reservation)))
 	if err := p.verifyWager(other, e.now()); err != nil {
 		t.Fatal(err)
 	}

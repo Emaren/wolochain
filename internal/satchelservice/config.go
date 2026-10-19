@@ -40,6 +40,7 @@ type Config struct {
 	GasLimit                  uint64              `json:"gas_limit"`
 	TimeoutBlocks             uint64              `json:"timeout_blocks"`
 	WithdrawalApprovalKeyHex  string              `json:"withdrawal_approval_key_hex"`
+	WagerApprovalKeyHex       string              `json:"wager_approval_key_hex"`
 	ActivationAuthorityKeyHex string              `json:"activation_authority_key_hex"`
 	PermitFile                string              `json:"permit_file"`
 }
@@ -134,6 +135,10 @@ func LoadConfig(path string) (Config, string, error) {
 	}
 	w, e := hex.DecodeString(c.WithdrawalApprovalKeyHex)
 	if e != nil || len(w) != ed25519.PublicKeySize || bytes.Equal(a, w) {
+		return c, "", errors.New("independent_approval_keys_required")
+	}
+	g, e := hex.DecodeString(c.WagerApprovalKeyHex)
+	if e != nil || len(g) != ed25519.PublicKeySize || bytes.Equal(a, g) || bytes.Equal(w, g) {
 		return c, "", errors.New("independent_approval_keys_required")
 	}
 	for _, p := range []string{c.KeyringDir, c.PassphraseFile, c.TokenFile, c.StatePath, c.PermitFile} {

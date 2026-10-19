@@ -3,6 +3,7 @@
 package satchelservice
 
 import (
+	"bytes"
 	"context"
 	"crypto/ed25519"
 	"crypto/sha256"
@@ -83,6 +84,7 @@ type Policy struct {
 	ProtectedAddresses    []string `json:"protected_addresses"`
 	MaxAmountUWolo        uint64   `json:"max_amount_uwolo"`
 	WithdrawalApprovalKey []byte   `json:"withdrawal_approval_key"`
+	WagerApprovalKey []byte `json:"wager_approval_key"`
 }
 type record struct {
 	Request      TransferRequest
@@ -213,7 +215,7 @@ func validMemo(s string) bool {
 // prevents two signer processes sharing this history. No state auto-reset or
 // pruning API exists: restoring an old DB can resurrect spending authority.
 func Open(path string, p Policy, b Backend) (*Engine, error) {
-	if b == nil || !validAddress(p.Vault) || satchel.IsKnownRoleAddress(p.Vault) || !validAddress(p.BettingEscrow) || p.Vault == p.BettingEscrow || p.MaxAmountUWolo == 0 || p.MaxAmountUWolo > 50000000000 {
+	if b == nil || (len(p.WithdrawalApprovalKey)==ed25519.PublicKeySize && len(p.WagerApprovalKey)==ed25519.PublicKeySize && bytes.Equal(p.WithdrawalApprovalKey,p.WagerApprovalKey)) || !validAddress(p.Vault) || satchel.IsKnownRoleAddress(p.Vault) || !validAddress(p.BettingEscrow) || p.Vault == p.BettingEscrow || p.MaxAmountUWolo == 0 || p.MaxAmountUWolo > 50000000000 {
 		return nil, errors.New("invalid_custody_policy")
 	}
 	for _, a := range p.ProtectedAddresses {
@@ -261,6 +263,7 @@ func Open(path string, p Policy, b Backend) (*Engine, error) {
 	}
 	p.ProtectedAddresses = append([]string(nil), p.ProtectedAddresses...)
 	p.WithdrawalApprovalKey = append([]byte(nil), p.WithdrawalApprovalKey...)
+	p.WagerApprovalKey = append([]byte(nil), p.WagerApprovalKey...)
 	e = db.Update(func(tx *bolt.Tx) error {
 		m, e := tx.CreateBucketIfNotExists(meta)
 		if e != nil {

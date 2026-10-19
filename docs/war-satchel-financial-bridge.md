@@ -481,3 +481,38 @@ unconditionally `ErrReviewerHeld`; this uncalled primitive
 liability checks also remain hard-held. No 8095 / 8094 service,
 systemd unit, app release, Wolo node, private production key,
 balance, consensus or transaction was touched.
+
+## Separate Wager and Withdrawal approval roots — source-only preproduction correction
+
+The 8094 signer previously used `WithdrawalApprovalKey` to verify both
+owner-withdrawal approvals and autonomous wager reviews. The two messages
+were domain-separated, but relying on the same Ed25519 key unnecessarily
+joined two financially distinct responsibilities.
+
+**The held signer now requires three different keys, not one:**
+`activation_authority_key_hex` (operator release permit),
+`withdrawal_approval_key_hex` (one-use owner-withdrawal approval), and
+**`wager_approval_key_hex`** (automatic wager reviewer grant).
+Config loading rejects absent, malformed, or equal keys across all
+three roles. Wager signatures are verified **only** with the wager
+public key; withdrawal approval signatures **only** with the
+withdrawal public key. The 8095 reviewer refuses to open unless
+the private approval key it holds derives the pinned wager key and
+that key differs from the withdrawal approval key. The 8094
+runtime policy copies both keys and refuses a role collision.
+Synthetic regression tests prove each role cannot substitute
+for the other; a missing wager key cannot fall back to withdrawals.
+The historical **withdrawal, claim-return and allocation** signing fixture
+remains bit-identical, while the isolated wager-only Ed25519 golden fixture
+was independently regenerated from its unchanged exact sign bytes.
+
+**Operational consequence:** this changes the protected signer
+configuration contract and requires independently provisioned,
+distinct production roles and a new source/config-bound permit.
+There is no existing 8094 production signer to hot-swap, and
+none is installed here. Do **not** copy or repurpose an existing
+withdrawal key as the automatic wager key. A source-green PR
+does not authorize Wolo deposits, game wagering, withdrawals,
+recovery or treasury actions. 8095 bank/Watcher trust and the
+six financial-release controls remain HOLD. No keys were generated
+on a production machine or placed into GitHub.
