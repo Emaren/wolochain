@@ -86,6 +86,11 @@ jobs:
       - name: Settlement journal amount evidence and uncertainty (read only)
         run: python3 -m unittest discover -s tests -p 'test_settlement_state_evidence.py' -v
 
+      - name: Financial six-control evidence HOLD audit (offline, never approval)
+        run: |
+          python3 scripts/financial_release_checklist_audit.py
+          python3 -m unittest discover -s tests -p 'test_financial_release_checklist_audit.py' -v
+
       - name: Two-filesystem predeploy capacity gate (nonmutating)
         run: python3 -m unittest discover -s tests -p 'test_settlement_predeploy_capacity_readonly.py' -v
 
