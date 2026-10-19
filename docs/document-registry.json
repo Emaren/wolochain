@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "74a638585fbc048e7adfd0ced390f88847d08fcacb8582e1214ce70f89311f58",
+      "sha256": "bdfb9cb2af10cf81835b776d1eb97907a86892385fc0fef2cf264bc42f841f6c",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -519,7 +519,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-18",
       "sensitivity": "restricted",
-      "sha256": "9a8f02a720aae56255406623428023be9fbbcc255bb4b55a2ebb285a45ba8370",
+      "sha256": "b3647141517ea12d33fe240c779a9c72b6ea6d664c00ff93411923f1b96e6640",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -946,8 +946,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "feature/20261019-satchel-reviewer-budget-contract",
-    "commit": "2471c6e9d440d05e7940a7095c6102a7bfb0e856"
+    "branch": "feature/20261019-satchel-reviewer-issuer-core",
+    "commit": "74f43e22f5029b33932bfc6f95ed46061f799368"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
