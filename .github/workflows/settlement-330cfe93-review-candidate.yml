@@ -1,0 +1,81 @@
+# Reviewed current WoloChain implementation baseline, distinct from historical bdbce253.
+# This lane NEVER deploys, signs, reads keys, accesses mainnet RPC or restarts a service.
+name: Federated 330c settlement implementation candidate (NO DEPLOY)
+
+on:
+  pull_request:
+    branches: [codex/financial-release-evidence]
+    paths:
+      - ".github/workflows/settlement-330cfe93-review-candidate.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  source-verified-candidate:
+    name: Build exact 330c source without finance authority
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    env:
+      EXPECTED_SOURCE: 330cfe9394ec1cb8ad0b45829ee873b70d5de9d8
+      CANDIDATE_DIR: /tmp/wolo-settlement-330cfe93
+    steps:
+      - name: Checkout exact federated implementation, NOT branch or PR head
+        uses: actions/checkout@v4
+        with:
+          ref: 330cfe9394ec1cb8ad0b45829ee873b70d5de9d8
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify immutable source identity and clean checkout
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_SOURCE"
+          test -z "$(git status --porcelain)"
+          test "$(git rev-parse --is-shallow-repository)" = true
+          echo "SOURCE VERIFIED: $EXPECTED_SOURCE"
+          echo "CANDIDATE BUILD ONLY — FINANCIAL PROMOTION NOT AUTHORIZED"
+
+      - name: Use the implementation's pinned Go toolchain
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Exact settlement source contracts, Go race tests and vet
+        shell: bash
+        run: |
+          set -euo pipefail
+          go test -tags go1.27 ./cmd/wolochaind/cmd -count=1
+          go test -tags go1.27 -race ./cmd/wolochaind/cmd -count=1
+          go test -tags go1.27 -race ./internal/satchel ./internal/chainevents -count=1
+          go vet -tags go1.27 ./cmd/wolochaind/cmd
+
+      - name: Build exact Linux AMD64 executable with portable source provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$CANDIDATE_DIR"
+          GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -tags go1.27 -o "$CANDIDATE_DIR/wolochaind-settlement-only-linux-amd64" ./cmd/wolochaind
+          go version -m "$CANDIDATE_DIR/wolochaind-settlement-only-linux-amd64" > "$CANDIDATE_DIR/go-build-metadata.txt"
+          grep -F "vcs.revision=$EXPECTED_SOURCE" "$CANDIDATE_DIR/go-build-metadata.txt"
+          grep -F 'vcs.modified=false' "$CANDIDATE_DIR/go-build-metadata.txt"
+          grep -F 'GOOS=linux' "$CANDIDATE_DIR/go-build-metadata.txt"
+          grep -F 'GOARCH=amd64' "$CANDIDATE_DIR/go-build-metadata.txt"
+          printf 'implementation_sha=%s\nworkflow_repository=%s\nworkflow_ref=%s\nworkflow_trigger_sha=%s\nworkflow_run_id=%s\nproduction_authorized=false\nmainnet_financial_activation_authorized=false\nproducer_isolation_certified=false\ninflight_reconciled=false\nfounder_889_resolved=false\nquiesced_backup_certified=false\nrollback_certified=false\nindependent_solvency_certified=false\nconsensus_upgrade_authorized=false\n' \
+            "$EXPECTED_SOURCE" "$GITHUB_REPOSITORY" "$GITHUB_WORKFLOW_REF" "$GITHUB_SHA" "$GITHUB_RUN_ID" \
+            > "$CANDIDATE_DIR/AUTHORITY.txt"
+          (cd "$CANDIDATE_DIR" && sha256sum wolochaind-settlement-only-linux-amd64 > SHA256SUMS)
+          (cd "$CANDIDATE_DIR" && sha256sum -c SHA256SUMS)
+          (cd "$CANDIDATE_DIR" && sha256sum wolochaind-settlement-only-linux-amd64 go-build-metadata.txt SHA256SUMS AUTHORITY.txt > PROVENANCE.sha256)
+          (cd "$CANDIDATE_DIR" && sha256sum -c PROVENANCE.sha256)
+          echo "EXACT SOURCE CANDIDATE READY FOR REVIEW; NOTHING DEPLOYED"
+
+      - name: Retain undeployed, nonsecret binary and evidence for independent review
+        uses: actions/upload-artifact@v4
+        with:
+          name: settlement-330cfe93-linux-amd64-UNDEPLOYED
+          path: /tmp/wolo-settlement-330cfe93/
+          if-no-files-found: error
+          retention-days: 14
