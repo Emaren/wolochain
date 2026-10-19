@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `feature/20261019-reviewer-watcher-market-boundary` at `7a66102db2ef377d4e624e013eb6abf089ef208d`
+Implementation baseline: `feature/20261019-independent-watcher-witness-signature` at `3389a2c58e6e6fa2ca56626957399614d338459a`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
