@@ -272,3 +272,46 @@ The first automatic-reviewer source milestone is `internal/satchelservice/review
 The arithmetic refuses wrong chain/denomination/operation, mismatched fee, duplicate or invalid pending operation IDs, bad/capped/overflowing integers and oversized pending lists. UNKNOWN stays gas-reserved. A declared incomplete census returns `CENSUS_INCOMPLETE`; apparently sufficient sums return only `BUDGET_SUFFICIENT_NONAUTHORIZING`, with `SpendingAuthorized=false`, `BankAuthenticated=false` and `OwnerLedgerAuthenticated=false` **always**. A caller saying `PendingOperationsComplete=true` does not authenticate its inventory or guarantee completeness. Neither the result nor the supplied bank number can authorize a reviewer signature.
 
 **Remaining functional work:** independently authenticated owner mandate, immutable HD reservation, canonical Watcher market/identity, custody bank and all HD/DE/external financial liabilities; completeness proof for competing signer operations; independently controlled Ed25519 approval service with durable idempotent issuance and atomic ingestion; and isolated end-to-end reviewer→8094→escrow→return/withdraw tests. The pure arithmetic has no signer key, RPC, database, transport, side effects or live activation. All mainnet financial and protected release controls remain held. See WoloChain issue #46 for the complete reviewer integration gate and issue #5 for legacy financial-release HOLD.
+
+## Independent 8095 reviewer issuer core — source milestone, NOT production authority
+
+`internal/satchelservice/reviewer_issuer.go` and `reviewer_http.go`
+implement the separately controlled reviewer's **internal approval engine**
+and fixed-loopback HTTP contract. It accepts only an authenticated
+`POST /reviewer/v1/wagers` containing `{"protocol":1,"operation_id":"satchel:ticket:…"}`,
+never a client-provided hold, bank balance, key, destination, fee, approval
+or proposed stake. The original exact owner-bound financial reservation
+must come from the independent `ReviewerEvidenceSource.OriginalHold` adapter.
+Separate `VerifyOwnerMandate`, `VerifyWatcherMarket` and
+`AuthenticatedFeeCensus` adapters must establish all upstream evidence
+independently. The gas assessment binds the original wager's exact fee and
+operation to all owner liabilities and pending/uncertain operations. The
+reviewer signs only `WagerReservationMessage` with a distinct Ed25519
+review key, never the Satchel Cosmos custody key. On the wire, this exactly
+matches the app's PR #708 signed-approval pickup: PENDING or SIGNED with
+an owner-bound, 60-second signed reservation.
+
+A separate private bbolt journal durably fences the original
+operation-and-economics fingerprint **before signing**. It never signs again
+after a crash on PENDING, never renews expired approvals, and never reveals
+a cached grant if the independent source ceases to verify or its economics
+change. Crash/uncertainty needs separate witnessed reconciliation, not a
+retry. The bounded loopback transport authenticates a private bearer and
+refuses duplicate JSON keys, unexpected fields, nonloopback callers,
+oversize bodies and arbitrary destinations. The app and the reviewer
+must run under distinct private OS identities with separately protected keys.
+
+**NOT YET IMPLEMENTED / RELEASED:** There is deliberately **no**
+production-wired `ReviewerEvidenceSource` adapter, independent read-only HD
+database principal, authentic Comet bank/liabilities trust reader,
+complete external-producer census, operator-managed Ed25519 key deployment,
+independently attested daemon configuration/startup, activation permit
+or production systemd service for 8095. Tests inject synthetic adapters;
+they are not proof of operational source independence. The library is
+not wired into `cmd/wolosatcheld` or any chain/consensus service, and cannot
+start an authorization listener by itself. Only separately reviewed
+authentic evidence adapters and release authority may make it live.
+
+This source does not change the protected Wolo financial HOLD (#5), founder
+claim #889, 8092/8093 settlement, Satchel 8094 custody,
+`SATCHEL_FINANCIAL_BRIDGE_READY=false`, operator approvals or real funds.
