@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "50ec092dc32764337a8a6f590ccab568d3b598cd79fa1845df458bc063536883",
+      "sha256": "eb0ebf99cd397d82fe5fafa91940b895794933dc844471a31d1311e4619fe889",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -946,8 +946,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "audit/20261019-330c-settlement-candidate",
-    "commit": "8453e3002e3df320664509f9645ab29d9ec3bbf1"
+    "branch": "audit/20261019-de-source-producer-fence",
+    "commit": "c99dc0de10cfdff5958a0f058a08ddc5749defc7"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

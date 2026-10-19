@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `audit/20261019-330c-settlement-candidate` at `8453e3002e3df320664509f9645ab29d9ec3bbf1`
+Implementation baseline: `audit/20261019-de-source-producer-fence` at `c99dc0de10cfdff5958a0f058a08ddc5749defc7`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
