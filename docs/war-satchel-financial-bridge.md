@@ -594,3 +594,50 @@ unconditionally returns `ErrReviewerHeld`. Bank, all liabilities,
 pending gas, global producers and the Wolo issue #5 controls
 remain HOLD. Nothing has been installed on the app, replay API,
 8094/8095, settlement processes or consensus.
+
+## First automatic wager: no circular first-stake roster lock (V1 correctness)
+
+A verified cross-repository source audit found a genuine **first-wager
+deadlock** in the earlier read-only Watcher reviewer: it required
+`bet_markets.roster_locked_at` to exist BEFORE the 8095 reviewer could
+authorize a reservation. But the actual app
+`lib/betStakeTickets.ts` and `lib/betWagering.ts` write both
+`roster_locked_at` and `first_stake_accepted_at` **only when the
+first stake is recorded**. The real
+`lib/betAutomationShadowWorker.ts` writes `rosterLockedAt: null`
+to its original 17-key shadow evidence if no stake was accepted.
+Therefore an automatic first bet cannot require its own future lock.
+
+The corrected reviewer now reads `m.first_stake_accepted_at` and
+`m.betting_locked_at` alongside the original market and source hash.
+For an **unstaked live winner market**, it requires all three
+(`roster_locked_at`, `first_stake_accepted_at`,
+`betting_locked_at`) to be NULL, and that the historical shadow
+evidence also explicitly declares the roster lock NULL. The
+independently witnessed exact Steam user, parsed source roster SHA256,
+market proposition, roster resolution confidence, game and source
+iteration remain mandatory. This is NOT a waiver of roster identity
+or market integrity.
+
+For a **previously staked market**, the reviewer requires a nonnull
+roster lock equal to the first-stake acceptance time, with a
+past timestamp relative to the newly admitted auto execution.
+A fake lock, unmatched first-stake timestamp, or market state
+asymmetry always refuses. The signed **live checkpoint v2** binds a
+literal `roster_locked_at_ms = 0` for a valid unstaked market;
+its capture must be within the early-game execution window.
+Capture is not required to follow a stake that has not happened
+yet. A forged positive lock in a previously unstaked original
+source cannot verify against the reviewer candidate.
+
+Source tests exercise the exact first-bet NULL status, prior-stake
+consistent lock, mismatched first stake, unexpected market lock,
+source-JSON injection, and v2 first-bet Ed25519 signature binding.
+
+**Live funds remain HARD HELD.** Source-correct first-stake
+eligibility is necessary for the V1 user experience but does not
+supply independent live Watcher witness keys/attested bytes,
+Comet-authenticated bank balances, complete outstanding liabilities,
+pending transaction fees, custody operator keys or the six Wolo
+financial release controls. The bank census still always returns
+`ErrReviewerHeld`. Neither app nor chain production changed.
