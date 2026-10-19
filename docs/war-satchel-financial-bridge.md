@@ -548,3 +548,37 @@ through signing/broadcast. The current PG evidence source still
 unconditionally refuses `VerifyWatcherMarket` and
 `AuthenticatedFeeCensus`. These controls do NOT activate customer
 WOLO, deploy 8095/8094, provision keys or clear Wolo issue #5.
+
+## Signed Watcher receipt + independently hashed original replay bridge (held)
+
+`internal/satchelservice/reviewer_watcher_replay_bridge.go` connects the
+previously independent Watcher database observation and Ed25519 receipt
+verifier. It introduces two distinct *source* contracts:
+`ReviewerSignedWatcherReceiptReader` fetches the separately signed original
+event receipt; `ReviewerOriginalReplayReader` opens the independently
+authenticated original replay bytes for that specific operation, Steam
+identity, game, roster and market. The 8095 library computes SHA256 itself
+over the returned bytes, bounded to 64 MiB. It refuses absent or empty
+bytes, oversized archives, read/close errors, an absent trust root, a
+forged/stale signature or any discrepancy with the original read-only
+PostgreSQL Watcher candidate. After verifying, it reads the original
+market a second time and rejects changes during replay verification.
+
+The new `ReviewerIndependentWatcherSource` implements the existing
+reviewer evidence interface and may satisfy **only the Watcher evidence
+method**, conditional on independently provisioned providers and a trusted
+Ed25519 public key. It delegates to the existing restricted PostgreSQL
+source for the original reservation and real Keplr owner authorization.
+The inherited `AuthenticatedFeeCensus` method STILL ALWAYS returns
+`ErrReviewerHeld`, preventing any live wager approval even when test
+replay evidence and a synthetic witness are valid.
+
+**A key boundary remains unimplemented:** code injection of an interface
+does not independently certify the authenticity of replay bytes. Neither
+independent source-pinned replay archive/operator, root-governed event
+signer/key, external roster/Steam attribution nor continuous source-to-
+broadcast authority exists in production yet. A replay copy supplied by
+the app or its own database must NOT count as independent provenance.
+No production keys, credentials, watcher daemon, 8094/8095, bank proofs,
+customer balances or Wolo mainnet services were activated. Standalone
+Go tests prove only verifier behavior and financial HOLD preservation.
