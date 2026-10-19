@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 from datetime import datetime, timezone
 import json
+import os
 from pathlib import Path
 import re
 import stat
@@ -49,9 +50,17 @@ def read_packet(p: Path) -> dict:
         stat_result = p.lstat()
         if not stat.S_ISREG(stat_result.st_mode) or not (0 < stat_result.st_size <= MAX_BYTES):
             raise ValueError("PACKET_SIZE_OR_TYPE")
-        raw = p.read_bytes()
-        if len(raw) != stat_result.st_size:
-            raise ValueError("PACKET_CHANGED")
+        fd = os.open(p, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0))
+        try:
+            opened = os.fstat(fd)
+            if (not stat.S_ISREG(opened.st_mode) or opened.st_ino != stat_result.st_ino
+                    or opened.st_dev != stat_result.st_dev or opened.st_size != stat_result.st_size):
+                raise ValueError("PACKET_CHANGED")
+            raw = os.read(fd, MAX_BYTES + 1)
+            if len(raw) != opened.st_size:
+                raise ValueError("PACKET_CHANGED")
+        finally:
+            os.close(fd)
         data = json.loads(raw, object_pairs_hook=unique_json,
                           parse_constant=lambda _: (_ for _ in ()).throw(ValueError("NONFINITE_JSON")))
         if not isinstance(data, dict):
