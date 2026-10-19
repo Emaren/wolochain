@@ -183,7 +183,7 @@ func TestNativeEngineSDKExecutionRetainsUnknownAfterLostAcknowledgement(t *testi
 			}))
 			defer server.Close()
 			cfg.RPC, cfg.REST = server.URL, server.URL
-			policy := Policy{Vault: cfg.Vault, BettingEscrow: escrow.String(), ProtectedAddresses: []string{escrow.String()}, MaxAmountUWolo: 1000000000, WithdrawalApprovalKey: engineTestApprovalKey().Public().(ed25519.PublicKey)}
+			policy := Policy{Vault: cfg.Vault, BettingEscrow: escrow.String(), ProtectedAddresses: []string{escrow.String()}, MaxAmountUWolo: 1000000000, WithdrawalApprovalKey: engineTestApprovalKey().Public().(ed25519.PublicKey), WagerApprovalKey: engineTestWagerApprovalKey().Public().(ed25519.PublicKey)}
 			cfg.WagerVerifier = policy.VerifyWager
 			native, err := NewKeyringBackend(cfg)
 			require.NoError(t, err)
