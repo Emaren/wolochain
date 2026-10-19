@@ -1,0 +1,42 @@
+name: Seal isolated DE audit documentation (one shot)
+
+on:
+  push:
+    branches:
+      - audit/20261019-de-source-producer-fence
+    paths:
+      - ".de-audit-doc-refresh-trigger"
+
+permissions:
+  contents: write
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout branch with full doc ancestry
+        uses: actions/checkout@v4
+        with:
+          ref: audit/20261019-de-source-producer-fence
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Remove one-shot worker and update source-bound documentation
+        run: |
+          set -euo pipefail
+          test "$(git branch --show-current)" = "audit/20261019-de-source-producer-fence"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/refresh-de-audit-docs.yml .de-audit-doc-refresh-trigger
+          git commit -m "chore(finance): retire one-shot DE documentation refresh worker"
+          python3 scripts/docs_v2_check.py --write --refresh-baseline \
+            --branch audit/20261019-de-source-producer-fence \
+            --head "$(git rev-parse HEAD)"
+          python3 scripts/docs_v2_check.py
+          git add docs/DOCUMENTATION_CONTROL_PLANE.md docs/document-registry.json catalog-info.yaml
+          if ! git diff --cached --quiet; then
+            git commit -m "docs(finance): seal DE producer audit against exact cleaned source"
+          fi
+          test -z "$(git status --porcelain)"
+          git push origin HEAD:audit/20261019-de-source-producer-fence
