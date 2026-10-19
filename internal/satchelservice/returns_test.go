@@ -29,10 +29,10 @@ func testReturnApproval(t *testing.T, operationID, claimID string) ReturnApprova
 	return a
 }
 func testSignAllocation(a *ReturnAllocation, p Policy) {
-	a.Signature = base64.StdEncoding.EncodeToString(ed25519.Sign(engineTestApprovalKey(), AllocationMessage(*a, p)))
+	a.Signature = base64.StdEncoding.EncodeToString(ed25519.Sign(engineTestWithdrawalApprovalKey(), AllocationMessage(*a, p)))
 }
 func testSignReturnApproval(a *ReturnApproval, p Policy) {
-	a.Signature = base64.StdEncoding.EncodeToString(ed25519.Sign(engineTestApprovalKey(), ReturnApprovalMessage(*a, p)))
+	a.Signature = base64.StdEncoding.EncodeToString(ed25519.Sign(engineTestWithdrawalApprovalKey(), ReturnApprovalMessage(*a, p)))
 }
 func testReturnEngine(t *testing.T) (*Engine, string, Policy, *engineTestBackend, TransferRequest) {
 	t.Helper()
