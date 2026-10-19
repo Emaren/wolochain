@@ -23,6 +23,14 @@ func reviewerMarketFixture(t *testing.T)(ReviewerPGMarketRow,ReviewerHDOriginRes
   "exactUploaderUidMatch":true,"marketIntegrityStatus":"verified",
   "ownerUid":orig.OwnerUID,"propositionHash":orig.PropositionHash,
   "canonicalSessionKey":orig.GameIdentityKey,
+  "teamResolutionStatus":"resolved","teamConfidence":"high",
+  "winnerMarketId":int64(74),"desyncMarketId":nil,
+  "linkedSessionKey":"watcher-session-7",
+  "ownerSteamId":"76561198000000077",
+  "sourceParseIteration":int64(2),
+  "sourceRosterHash":strings.Repeat("a",64),
+  "teamResolutionProvenance":"watcher",
+  "rosterLockedAt":now.Add(-110*time.Second).Format("2006-01-02T15:04:05.000Z"),
  }
  raw,_:=json.Marshal(evidence)
  signed:=now.Add(-3*time.Minute)
@@ -37,6 +45,13 @@ func reviewerMarketFixture(t *testing.T)(ReviewerPGMarketRow,ReviewerHDOriginRes
   LinkedSession:sql.NullString{Valid:true,String:"watcher-session-7"},
   MarketCreated:now.Add(-2*time.Minute),
   OwnerSignedAt:sql.NullTime{Valid:true,Time:signed},
+  TeamResolutionStatus:sql.NullString{Valid:true,String:"resolved"},
+  TeamConfidence:sql.NullString{Valid:true,String:"high"},
+  TeamResolutionProvenance:sql.NullString{Valid:true,String:"watcher"},
+  SourceParseIteration:sql.NullInt64{Valid:true,Int64:2},
+  SourceRosterHash:sql.NullString{Valid:true,String:strings.Repeat("a",64)},
+  RosterLockedAt:sql.NullTime{Valid:true,Time:now.Add(-110*time.Second)},
+  OwnerSteamID:sql.NullString{Valid:true,String:"76561198000000077"},
  }
  row.MarketCreated=now.Add(-2*time.Minute+time.Second*10)
  // A market must be created at or before the submitted outbox execution.
@@ -59,7 +74,9 @@ func TestReviewerWatcherMarketRejectsAllInvalidSourceAndOutcomeCases(t *testing.
   "late_game_stats","linked_game_stats","old_game","market_after_execution",
   "market_before_consent","future_execution","cutoff","phase_before_open",
   "source_absent","shadow_absent","wrong_uid","roster_unverified",
-  "uploader_unverified","wrong_original_hash","extra_source_flag"}
+  "uploader_unverified","wrong_original_hash","extra_source_flag",
+  "wrong_winner_market","wrong_steam_id","altered_roster_hash",
+  "altered_parse_iteration","missing_roster_lock","unresolved_team"}
  for _,scenario:=range scenarios{
   t.Run(scenario,func(t *testing.T){
    row,orig,now:=reviewerMarketFixture(t)
@@ -93,6 +110,12 @@ func TestReviewerWatcherMarketRejectsAllInvalidSourceAndOutcomeCases(t *testing.
    case "uploader_unverified":row.SourceEvidence.String=strings.Replace(row.SourceEvidence.String,`"exactUploaderUidMatch":true`,`"exactUploaderUidMatch":false`,1)
    case "wrong_original_hash":row.SourceEvidence.String=strings.Replace(row.SourceEvidence.String,strings.Repeat("3",64),strings.Repeat("4",64),1)
    case "extra_source_flag":row.SourceEvidence.String=strings.Replace(row.SourceEvidence.String,`"mode":"shadow"`,`"mode":"shadow","financialApproved":true`,1)
+   case "wrong_winner_market":row.SourceEvidence.String=strings.Replace(row.SourceEvidence.String,`"winnerMarketId":74`,`"winnerMarketId":75`,1)
+   case "wrong_steam_id":row.SourceEvidence.String=strings.Replace(row.SourceEvidence.String,`"ownerSteamId":"76561198000000077"`,`"ownerSteamId":"other"`,1)
+   case "altered_roster_hash":row.SourceEvidence.String=strings.Replace(row.SourceEvidence.String,strings.Repeat("a",64),strings.Repeat("b",64),1)
+   case "altered_parse_iteration":row.SourceEvidence.String=strings.Replace(row.SourceEvidence.String,`"sourceParseIteration":2`,`"sourceParseIteration":3`,1)
+   case "missing_roster_lock":row.RosterLockedAt=sql.NullTime{}
+   case "unresolved_team":row.TeamResolutionStatus=sql.NullString{Valid:true,String:"unresolved"}
    }
    if _,e:=row.validate(now,orig);!errors.Is(e,ErrReviewerHeld){
     t.Fatalf("%s unsafe Watcher row passed as independently bounded: %v",scenario,e)
