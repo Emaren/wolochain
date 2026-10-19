@@ -417,3 +417,32 @@ transaction-wide financial coordination are not established. No
 consensus operation or WOLO movement was activated. The reviewer
 **cannot issue any approval** until those remaining checks are
 independently implemented, wired and certified.
+
+## Watcher market source boundary — actual shadow producer, still NOT independent approval
+
+`internal/satchelservice/reviewer_watcher_market.go` implements a
+bounded READ-ONLY diagnostic query for the original live Watcher market.
+The source is the **actual** 17-field shadow producer from app
+`lib/betAutomationShadowWorker.ts`, not a fabricated 7-field test
+fixture. It cross-checks winner market ID, original HD game and
+proposition identities, exact user Steam ID, verified roster-match flags,
+team resolution/high confidence, parse iteration, original source
+roster hash, canonical and linked session identities, and roster-lock
+timestamp against the current market row and original immutable stake
+leg. It refuses scheduled, settled, refunded, voided, late/final-stat,
+cutoff-passed, future, reordered, and older-than-four-minutes games.
+A strict 17-key JSON evidence record also rejects data injected
+outside the canonical shadow-source schema.
+
+**Authority distinction:** a web application's `integrity_status`
+database column, even if `verified`, is NOT an independently
+authenticated Watcher or Steam event. The source exports only
+`InspectWatcherMarket` as an observation method; its actual
+`VerifyWatcherMarket` spending-approval method continues to
+return `ErrReviewerHeld` without exception. The separate Watcher
+provenance signature, independent raw replay/archive reader,
+attested game/roster/source origin and trustworthy issuer-key boundary
+remain to be wired before approving customer WOLO. The
+`AuthenticatedFeeCensus` bank/liability/gas evidence method is
+also still hard held. No 8095 listener, DB credential, treasury,
+signer, wallet, consensus, balances or production setting changed.
