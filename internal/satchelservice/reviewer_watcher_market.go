@@ -18,11 +18,14 @@ SELECT e.source_evidence::text,e.status,e.created_at,e.game_identity_key,
        m.close_at,m.phase_opens_at,m.phase_closes_at,
        m.winner_side,m.settled_at,m.voided_at,m.refund_status,
        m.settlement_executed_at,m.linked_game_stats_id,m.late_final_game_stats_id,
-       c.signed_at
+       m.team_resolution_status,m.team_confidence,m.team_resolution_provenance,
+       m.source_parse_iteration,m.source_roster_hash,m.roster_locked_at,
+       u.steam_id,c.signed_at
 FROM public.war_satchel_wager_authorizations a
 JOIN public.war_satchel_funded_reservations r ON r.id=a.reservation_id
 JOIN public.bet_auto_executions e ON e.id=r.execution_id
 JOIN public.bet_markets m ON m.id=e.winner_market_id
+JOIN public.users u ON u.id=a.owner_user_id
 JOIN public.war_satchel_auto_spend_consents c
  ON c.id::text=a.snapshot_json->>'consentId' AND c.owner_user_id=a.owner_user_id
 WHERE a.operation_id=$1
@@ -46,6 +49,11 @@ type ReviewerPGMarketRow struct{
  RefundStatus sql.NullString
  SettlementExecutedAt sql.NullTime
  LinkedGameStats, LateFinalGameStats sql.NullInt64
+ TeamResolutionStatus,TeamConfidence,TeamResolutionProvenance sql.NullString
+ SourceParseIteration sql.NullInt64
+ SourceRosterHash sql.NullString
+ RosterLockedAt sql.NullTime
+ OwnerSteamID sql.NullString
  OwnerSignedAt sql.NullTime
 }
 func (x *ReviewerPGMarketRow)scan(row *sql.Row)error{
@@ -56,7 +64,9 @@ func (x *ReviewerPGMarketRow)scan(row *sql.Row)error{
   &x.CloseAt,&x.PhaseOpensAt,&x.PhaseClosesAt,&x.WinnerSide,
   &x.SettledAt,&x.VoidedAt,&x.RefundStatus,
   &x.SettlementExecutedAt,&x.LinkedGameStats,&x.LateFinalGameStats,
-  &x.OwnerSignedAt)
+  &x.TeamResolutionStatus,&x.TeamConfidence,&x.TeamResolutionProvenance,
+  &x.SourceParseIteration,&x.SourceRosterHash,&x.RosterLockedAt,
+  &x.OwnerSteamID,&x.OwnerSignedAt)
 }
 type ReviewerWatcherCandidate struct {
  OriginalOperationID string
@@ -82,6 +92,11 @@ func (x ReviewerPGMarketRow)validate(now time.Time,original ReviewerHDOriginResu
   x.MarketProposition.String!=original.PropositionHash||
   x.WinnerMarketID<1||x.ScheduledMatchID.Valid||
   !x.LinkedSession.Valid||strings.TrimSpace(x.LinkedSession.String)==""||
+  !x.OwnerSteamID.Valid||strings.TrimSpace(x.OwnerSteamID.String)==""||
+  !x.TeamResolutionStatus.Valid||x.TeamResolutionStatus.String!="resolved"||
+  !x.TeamConfidence.Valid||x.TeamConfidence.String!="high"||
+  !x.RosterLockedAt.Valid||x.RosterLockedAt.Time.Before(x.OwnerSignedAt.Time)||
+  x.RosterLockedAt.Time.After(x.ExecutionCreated)||
   x.WinnerSide.Valid||x.SettledAt.Valid||x.VoidedAt.Valid||
   x.RefundStatus.Valid||x.SettlementExecutedAt.Valid||
   x.LinkedGameStats.Valid||x.LateFinalGameStats.Valid||
@@ -108,16 +123,51 @@ func (x ReviewerPGMarketRow)validate(now time.Time,original ReviewerHDOriginResu
  if e!=nil{return held()}
  evidence,ok:=raw.(map[string]any)
  if !ok||!reviewerRecord(evidence,[]string{
-  "mode","exactSteamRosterMatch","exactUploaderUidMatch","marketIntegrityStatus",
-  "ownerUid","propositionHash","canonicalSessionKey",
+  "mode","exactSteamRosterMatch","exactUploaderUidMatch",
+  "marketIntegrityStatus","teamResolutionStatus","teamConfidence",
+  "winnerMarketId","desyncMarketId","canonicalSessionKey",
+  "linkedSessionKey","ownerUid","ownerSteamId","propositionHash",
+  "sourceParseIteration","sourceRosterHash","teamResolutionProvenance",
+  "rosterLockedAt",
  }){return held()}
+ eqNullable:=func(src any,actual sql.NullString)bool{
+  if !actual.Valid{return src==nil}
+  return src==actual.String
+ }
+ eqNumber:=func(src any,actual sql.NullInt64)bool{
+  if !actual.Valid{return src==nil}
+  v,ok:=src.(int64);return ok&&v==actual.Int64
+ }
+ var locked any
+ if x.RosterLockedAt.Valid {
+  locked=x.RosterLockedAt.Time.UTC().Format("2006-01-02T15:04:05.000Z")
+ }
  if evidence["mode"]!="shadow"||
   evidence["exactSteamRosterMatch"]!=true||
   evidence["exactUploaderUidMatch"]!=true||
   evidence["marketIntegrityStatus"]!="verified"||
+  evidence["teamResolutionStatus"]!="resolved"||
+  evidence["teamConfidence"]!="high"||
   evidence["ownerUid"]!=original.OwnerUID||
+  evidence["ownerSteamId"]!=x.OwnerSteamID.String||
   evidence["propositionHash"]!=original.PropositionHash||
-  evidence["canonicalSessionKey"]!=original.GameIdentityKey{return held()}
+  evidence["canonicalSessionKey"]!=original.GameIdentityKey||
+  evidence["linkedSessionKey"]!=x.LinkedSession.String||
+  evidence["winnerMarketId"]!=x.WinnerMarketID||
+  !eqNumber(evidence["sourceParseIteration"],x.SourceParseIteration)||
+  !eqNullable(evidence["sourceRosterHash"],x.SourceRosterHash)||
+  !eqNullable(evidence["teamResolutionProvenance"],x.TeamResolutionProvenance)||
+  evidence["rosterLockedAt"]!=locked{return held()}
+ // Desync is either absent from the winner-only session, or a positive
+ // market ID separately validated by the wager's original immutable legs.
+ desync:=evidence["desyncMarketId"]
+ if desync!=nil {
+  n,ok:=desync.(int64)
+  if !ok||n<1||n==x.WinnerMarketID{return held()}
+  found:=0
+  for _,leg:=range original.Legs{if leg.MarketID==n{found++}}
+  if found!=1{return held()}
+ }else if len(original.Legs)!=1{return held()}
  return ReviewerWatcherCandidate{OriginalOperationID:original.OperationID,
   OwnerUID:original.OwnerUID,GameIdentityKey:original.GameIdentityKey,
   MarketID:x.WinnerMarketID,PropositionHash:original.PropositionHash,
