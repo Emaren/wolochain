@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `codex/financial-release-evidence` at `079919d4157c8762752e302e69dd704e2c2e297a`
+Implementation baseline: `audit/20261019-financial-evidence-target-hold` at `1fd2f84bd0c6eb951de9fe347dc02b304a85e679`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
