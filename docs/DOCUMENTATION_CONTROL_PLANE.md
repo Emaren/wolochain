@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `feature/20261019-reviewer-readonly-hd-snapshot` at `745bdd18c9678fa5bd5fdb29acc3b94de3c197d7`
+Implementation baseline: `feature/20261019-reviewer-watcher-market-boundary` at `7a66102db2ef377d4e624e013eb6abf089ef208d`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
