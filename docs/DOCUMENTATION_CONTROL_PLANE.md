@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `feature/20261019-independent-replay-verifier-bridge` at `c396081b107a29c98e1197f03ef4730a390c9431`
+Implementation baseline: `fix/20261019-live-first-stake-roster-lock-circularity` at `cb6bd310d506c43173520c74283a5fd7f6da0f09`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
