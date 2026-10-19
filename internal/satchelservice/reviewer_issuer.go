@@ -5,6 +5,7 @@ package satchelservice
 // original owner-bound HD reservation. No chain keys, wallet RPC or broadcast.
 // This library alone is NOT a production evidence loader or release authority.
 import (
+ "bytes"
  "context"
  "crypto/ed25519"
  "crypto/sha256"
@@ -57,7 +58,7 @@ type ReviewerIssuer struct {
 func OpenReviewerIssuer(statePath string, source ReviewerEvidenceSource, key ed25519.PrivateKey, policy Policy) (*ReviewerIssuer,error) {
  if statePath=="" || source==nil || len(key)!=ed25519.PrivateKeySize ||
   len(policy.WithdrawalApprovalKey)!=ed25519.PublicKeySize ||
-  !ed25519.PublicKey(key.Public().(ed25519.PublicKey)).Equal(policy.WithdrawalApprovalKey) ||
+  !bytes.Equal(key.Public().(ed25519.PublicKey),policy.WithdrawalApprovalKey) ||
   !validAddress(policy.Vault) || !validAddress(policy.BettingEscrow) ||
   policy.Vault==policy.BettingEscrow || policy.MaxAmountUWolo==0 {
   return nil,ErrReviewerHeld
@@ -142,11 +143,11 @@ func (r *ReviewerIssuer)ReviewOne(ctx context.Context,id string)ReviewerIssuedRe
  if err!=nil||budget.Status!="BUDGET_SUFFICIENT_NONAUTHORIZING" ||
   budget.SpendingAuthorized||budget.BankAuthenticated||budget.OwnerLedgerAuthenticated{return pending}
  now:=r.now().Unix()
- // 60 seconds of fixed authority; never take timestamps from HD or the HTTP
- // request. Original snapshot must not contain a preapproved expiration.
+ // The source fingerprint EXCLUDES authority timestamps. It must remain
+ // invariant over repeated lookups: an old approval cannot be renewed.
  if original.IssuedAt!=0||original.ExpiresAt!=0{return pending}
- original.IssuedAt=now;original.ExpiresAt=now+60
  fingerprint:=reviewerFingerprint(original)
+ original.IssuedAt=now;original.ExpiresAt=now+60
  current,err:=r.loadEntry(id)
  if err!=nil{return pending}
  if current.Fingerprint!=""{
