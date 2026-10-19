@@ -161,7 +161,7 @@ func TestEngineReservationCannotCrossWagerAndWithdrawalKinds(t *testing.T) {
 			wager := engineTestWager(t, "1")
 			withdrawal := engineTestWithdrawal(t)
 			wager.Reservation.ReservationDigest = strings.ToLower(withdrawal.Approval.ReservationDigest)
-			wager.Reservation.Signature = base64.StdEncoding.EncodeToString(ed25519.Sign(engineTestApprovalKey(), WagerReservationMessage(*wager.Reservation)))
+			wager.Reservation.Signature = base64.StdEncoding.EncodeToString(ed25519.Sign(engineTestWagerApprovalKey(), WagerReservationMessage(*wager.Reservation)))
 			if p.verifyWager(wager, e.now()) != nil {
 				t.Fatal("invalid approved fixture")
 			}
