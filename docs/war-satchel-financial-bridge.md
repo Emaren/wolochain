@@ -446,3 +446,38 @@ remain to be wired before approving customer WOLO. The
 `AuthenticatedFeeCensus` bank/liability/gas evidence method is
 also still hard held. No 8095 listener, DB credential, treasury,
 signer, wallet, consensus, balances or production setting changed.
+
+## Independently signed Watcher replay witness — crypto contract only, HARD HOLD
+
+`internal/satchelservice/reviewer_watcher_witness.go` defines the
+first **Ed25519-authenticated Watcher observation receipt**. It signs
+a fixed, domain-separated ordered message bound to `wolo-1` and the
+original operation ID, exact owner UID/Steam ID, game identity,
+winner market and selected side, proposition, linked session,
+parse iteration, exact source roster hash and roster-lock time,
+execution created time, an independently computed SHA256 of the
+**raw replay**, and a maximum 60-second issuer interval.
+
+The strict verifier takes a separately provisioned witness public
+key, the unchanged `ReviewerWatcherCandidate` read from the
+restricted PostgreSQL role, and a digest provided by a genuinely
+**independent, source-pinned raw replay reader**. A signed response
+cannot substitute the owner, market, game, roster, source parsing,
+original source digest or timestamp without rejection. Synthetic
+test signing keys and forged receipts prove validation semantics
+but are not production Watcher trust roots.
+
+**This is NOT yet real event authentication.** No independently
+governed Watcher witness signing daemon, root-trusted raw replay
+reader, user/Steam roster verification, approved signing key,
+raw replay provenance ledger or external digest source has been
+installed or attested. A caller who copies a digest from the
+app database or a self-reported HTTP body cannot satisfy the
+required trust boundary, regardless of whether the hash matches.
+Therefore `ReviewerReadOnlyPGSource.VerifyWatcherMarket` remains
+unconditionally `ErrReviewerHeld`; this uncalled primitive
+**does not issue approvals or activate the watcher**. Global
+`AuthenticatedFeeCensus` and authenticated CometBFT bank/gas
+liability checks also remain hard-held. No 8095 / 8094 service,
+systemd unit, app release, Wolo node, private production key,
+balance, consensus or transaction was touched.
