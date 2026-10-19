@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `feature/20261019-satchel-reviewer-budget-contract` at `2471c6e9d440d05e7940a7095c6102a7bfb0e856`
+Implementation baseline: `feature/20261019-satchel-reviewer-issuer-core` at `74f43e22f5029b33932bfc6f95ed46061f799368`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
