@@ -56,7 +56,7 @@ func setupIssuer(t *testing.T)(*ReviewerIssuer,*fakeReviewerEvidence,Policy,stri
  source:=&fakeReviewerEvidence{original:*r.Reservation,census:census}
  policy:=engineTestPolicy(t)
  state:=filepath.Join(t.TempDir(),"approval.db")
- issuer,err:=OpenReviewerIssuer(state,source,engineTestApprovalKey(),policy)
+ issuer,err:=OpenReviewerIssuer(state,source,engineTestWagerApprovalKey(),policy)
  if err!=nil{t.Fatalf("issuer: %v",err)}
  t.Cleanup(func(){_ = issuer.Close()})
  return issuer,source,policy,state
@@ -97,7 +97,7 @@ func TestReviewerRestartReusesOriginalSignatureAndRejectsChangedHold(t *testing.
  result:=i.ReviewOne(t.Context(),"satchel:ticket:7")
  if result.Approval==nil{t.Fatal("no first grant")}
  if e:=i.Close();e!=nil{t.Fatal(e)}
- recovered,e:=OpenReviewerIssuer(state,s,engineTestApprovalKey(),policy)
+ recovered,e:=OpenReviewerIssuer(state,s,engineTestWagerApprovalKey(),policy)
  if e!=nil{t.Fatal(e)}
  defer recovered.Close()
  same:=recovered.ReviewOne(t.Context(),"satchel:ticket:7")
@@ -135,7 +135,7 @@ func TestReviewerCannotRenewExpiredGrant(t *testing.T){
 func TestReviewerRefusesWrongRoleKeyAndMissingSource(t *testing.T){
  i,s,policy,state:=setupIssuer(t)
  _=i.Close()
- _,bad:=OpenReviewerIssuer(state,nil,engineTestApprovalKey(),policy)
+ _,bad:=OpenReviewerIssuer(state,nil,engineTestWagerApprovalKey(),policy)
  if !errors.Is(bad,ErrReviewerHeld){t.Fatal("nil evidence source admitted")}
  _,wrong,e:=ed25519.GenerateKey(nil)
  if e!=nil{t.Fatal(e)}
