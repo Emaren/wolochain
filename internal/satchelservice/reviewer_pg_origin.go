@@ -9,7 +9,6 @@ package satchelservice
 import (
  "context"
  "database/sql"
- "errors"
  "regexp"
  "strconv"
  "time"
@@ -201,4 +200,3 @@ func (*ReviewerReadOnlyPGSource) AuthenticatedFeeCensus(context.Context,WagerRes
  return ReviewerFeeCensus{},ErrReviewerHeld
 }
 var _ ReviewerEvidenceSource = (*ReviewerReadOnlyPGSource)(nil)
-var _ = errors.Is
