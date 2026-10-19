@@ -23,6 +23,8 @@ type fakeReviewerEvidence struct{
  failMarket bool
  failBank bool
  loads int
+ censusReads int
+ afterFirstCensus func(*fakeReviewerEvidence)
 }
 func (f *fakeReviewerEvidence)OriginalHold(_ context.Context,id string)(WagerReservation,error){
  f.loads++
@@ -37,7 +39,14 @@ func (f *fakeReviewerEvidence)VerifyWatcherMarket(_ context.Context,_ WagerReser
 }
 func (f *fakeReviewerEvidence)AuthenticatedFeeCensus(_ context.Context,_ WagerReservation)(ReviewerFeeCensus,error){
  if f.failBank{return ReviewerFeeCensus{},ErrReviewerHeld}
- return f.census,nil
+ f.censusReads++
+ result:=f.census
+ if f.censusReads==1 && f.afterFirstCensus!=nil {
+  change:=f.afterFirstCensus
+  f.afterFirstCensus=nil
+  change(f)
+ }
+ return result,nil
 }
 func setupIssuer(t *testing.T)(*ReviewerIssuer,*fakeReviewerEvidence,Policy,string){
  t.Helper()
@@ -72,7 +81,7 @@ func TestReviewerIndependentEvidenceSignsOneRealProtocolTwoGrant(t *testing.T){
   Memo:result.Approval.Memo,Reservation:result.Approval}
  if err:=policy.verifyWager(transfer,time.Now());err!=nil{t.Fatalf("signer refused exact grant: %v",err)}
  again:=i.ReviewOne(t.Context(),"satchel:ticket:7")
- if again.Status!="SIGNED"||again.Approval.Signature!=result.Approval.Signature||source.loads!=2{
+ if again.Status!="SIGNED"||again.Approval.Signature!=result.Approval.Signature||source.loads!=4||source.censusReads!=4{
   t.Fatalf("duplicate lookup changed signature or skipped source: %+v",again)
  }
 }
@@ -186,4 +195,62 @@ func TestPrivateReviewerHTTPDoesNotAcceptNilIssuer(t *testing.T){
  if !errors.Is(e,ErrReviewerHeld){t.Fatal("nil issuer served approvals")}
  _,e=NewReviewerHTTPServer(nil)
  if !errors.Is(e,ErrReviewerHeld){t.Fatal("nil server bound port")}
+}
+
+func TestReviewerFinalPreSignFenceRejectsSourceMutationDuringBankEvidence(t *testing.T){
+ for _,which:=range []string{
+  "revoked_owner","market_closed","changed_hold","rebound_owner","drained_gas","inventory_incomplete",
+ }{
+  t.Run(which,func(t *testing.T){
+   issuer,source,_,_:=setupIssuer(t)
+   source.afterFirstCensus=func(s *fakeReviewerEvidence){
+    switch which{
+    case "revoked_owner":s.failOwner=true
+    case "market_closed":s.failMarket=true
+    case "changed_hold":s.original.ReservationDigest=strings.Repeat("a",64)
+    case "rebound_owner":s.original.OwnerID="another_owner"
+    case "drained_gas":s.census.BankBalanceUWolo="100000004"
+    case "inventory_incomplete":s.census.PendingOperationsComplete=false
+    }
+   }
+   result:=issuer.ReviewOne(t.Context(),"satchel:ticket:7")
+   if result.Status!="PENDING"||result.Approval!=nil{
+    t.Fatalf("%s change between checks resulted in signed grant: %+v",which,result)
+   }
+   if source.censusReads!=1&&source.censusReads!=2{
+    t.Fatalf("%s: unexpected census count %d",which,source.censusReads)
+   }
+   entry,e:=issuer.loadEntry("satchel:ticket:7")
+   if e!=nil||entry.Fingerprint!=""||entry.Status!=""||entry.Approval!=nil{
+    t.Fatalf("%s left durable signing intent before final evidence validation: %+v %v",which,entry,e)
+   }
+  })
+ }
+}
+func TestReviewerFinalPreSignFenceRechecksStableSourcesBeforeEveryGrant(t *testing.T){
+ issuer,source,policy,_:=setupIssuer(t)
+ first:=issuer.ReviewOne(t.Context(),"satchel:ticket:7")
+ if first.Status!="SIGNED"||first.Approval==nil||source.loads!=2||source.censusReads!=2{
+  t.Fatalf("initial grant did not do final evidence pass: %+v loads=%d census=%d",first,source.loads,source.censusReads)
+ }
+ // A second lookup must not disclose a signed grant when the current
+ // owner has revoked consent, even though durable SIGNED remains fenced.
+ source.failOwner=true
+ denied:=issuer.ReviewOne(t.Context(),"satchel:ticket:7")
+ if denied.Status!="PENDING"||denied.Approval!=nil{
+  t.Fatal("revoked owner recovered a previously signed grant")
+ }
+ source.failOwner=false
+ recovered:=issuer.ReviewOne(t.Context(),"satchel:ticket:7")
+ if recovered.Status!="SIGNED"||recovered.Approval==nil||
+  recovered.Approval.Signature!=first.Approval.Signature||
+  policy.verifyWager(TransferRequest{
+   OperationID:recovered.Approval.OperationID,OwnerID:recovered.Approval.OwnerID,
+   ChainID:"wolo-1",Denom:"uwolo",Kind:"wager",
+   Sender:recovered.Approval.Vault,Recipient:recovered.Approval.Recipient,
+   AmountUWolo:recovered.Approval.AmountUWolo,Memo:recovered.Approval.Memo,
+   Reservation:recovered.Approval,
+  },time.Now())!=nil {
+  t.Fatal("source recovery reissued or damaged original signed grant")
+ }
 }
