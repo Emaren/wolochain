@@ -137,7 +137,8 @@ func TestReviewerRefusesWrongRoleKeyAndMissingSource(t *testing.T){
  _=i.Close()
  _,bad:=OpenReviewerIssuer(state,nil,engineTestApprovalKey(),policy)
  if !errors.Is(bad,ErrReviewerHeld){t.Fatal("nil evidence source admitted")}
- _,wrong:=ed25519.GenerateKey(nil)
+ _,wrong,e:=ed25519.GenerateKey(nil)
+ if e!=nil{t.Fatal(e)}
  if wrong==nil{t.Fatal("no synthetic key")}
  _,bad=OpenReviewerIssuer(state,s,wrong,policy)
  if !errors.Is(bad,ErrReviewerHeld){t.Fatal("unrelated approval key admitted")}
