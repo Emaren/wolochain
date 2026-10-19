@@ -500,8 +500,11 @@ withdrawal public key. The 8095 reviewer refuses to open unless
 the private approval key it holds derives the pinned wager key and
 that key differs from the withdrawal approval key. The 8094
 runtime policy copies both keys and refuses a role collision.
-Real synthetic test signatures prove each role cannot substitute
+Synthetic regression tests prove each role cannot substitute
 for the other; a missing wager key cannot fall back to withdrawals.
+The historical **withdrawal, claim-return and allocation** signing fixture
+remains bit-identical, while the isolated wager-only Ed25519 golden fixture
+was independently regenerated from its unchanged exact sign bytes.
 
 **Operational consequence:** this changes the protected signer
 configuration contract and requires independently provisioned,
