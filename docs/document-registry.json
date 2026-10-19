@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "ca5e937dd1fa2c08f693f0d5ad94ece3f33c83c9efe133ae69a2b020413aafd1",
+      "sha256": "5199753f938d27d4ebd06995c973ab5d71f76e92cea2cfd25585a809277d087c",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -519,7 +519,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-18",
       "sensitivity": "restricted",
-      "sha256": "673d69dfab6f460b13f2d085ff6ef2714d2ad03a2f4a565b1ac64c26e973542f",
+      "sha256": "dbd1bc533ec824d443cc05e97cbb7d016f05d949adedf7a7bb2f7f4543f322ec",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -946,8 +946,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "feature/20261019-reviewer-watcher-market-boundary",
-    "commit": "7a66102db2ef377d4e624e013eb6abf089ef208d"
+    "branch": "feature/20261019-independent-watcher-witness-signature",
+    "commit": "3389a2c58e6e6fa2ca56626957399614d338459a"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
