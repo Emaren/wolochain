@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `feature/20261019-independent-replay-verifier-bridge` at `7a1a0d01ba50e1c3580e8be1424ece505071f010`
+Implementation baseline: `feature/20261019-independent-replay-verifier-bridge` at `e21b0a9150836ab2921d52c00b01fe6252b9d777`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
