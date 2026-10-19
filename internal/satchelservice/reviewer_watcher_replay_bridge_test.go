@@ -5,122 +5,162 @@ import (
  "context"
  "crypto/ed25519"
  "crypto/sha256"
+ "database/sql"
  "encoding/base64"
  "encoding/hex"
  "errors"
  "io"
  "testing"
  "time"
- "database/sql"
 )
 
-type testSignedReceiptSource struct{
- original ReviewerWatcherWitness
+type testSignedLiveSource struct{
+ original ReviewerWatcherLiveWitness
  err error
  calls int
 }
-func (r *testSignedReceiptSource) FetchOriginalWitness(ctx context.Context,id string)(ReviewerWatcherWitness,error){
+func (r *testSignedLiveSource)FetchOriginalLiveWitness(ctx context.Context,id string)(ReviewerWatcherLiveWitness,error){
  r.calls++
- if r.err!=nil||ctx.Err()!=nil{return ReviewerWatcherWitness{},ErrReviewerHeld}
- if id!=r.original.OperationID{return ReviewerWatcherWitness{},ErrReviewerHeld}
+ if r.err!=nil||ctx.Err()!=nil||id!=r.original.OperationID{
+  return ReviewerWatcherLiveWitness{},ErrReviewerHeld
+ }
  return r.original,nil
 }
-type testReplayBytes struct{
+type testLiveCheckpointBytes struct{
  data []byte
  err error
  calls int
 }
-func (r *testReplayBytes) OpenAuthenticatedReplay(ctx context.Context,c ReviewerWatcherCandidate)(io.ReadCloser,error){
+func (r *testLiveCheckpointBytes)OpenAuthenticatedLiveCheckpoint(
+ ctx context.Context,c ReviewerWatcherCandidate)(io.ReadCloser,error){
  r.calls++
- if r.err!=nil||ctx.Err()!=nil||c.GameIdentityKey==""{return nil,ErrReviewerHeld}
+ if r.err!=nil||ctx.Err()!=nil||c.GameIdentityKey==""{
+  return nil,ErrReviewerHeld
+ }
  return io.NopCloser(bytes.NewReader(r.data)),nil
 }
-func reviewerConnectedReplayFixture(t *testing.T)(ReviewerWatcherCandidate,*testSignedReceiptSource,*testReplayBytes,ed25519.PublicKey,ed25519.PrivateKey,time.Time){
+func reviewerLiveCheckpointFixture(t *testing.T)(
+ ReviewerWatcherCandidate,*testSignedLiveSource,*testLiveCheckpointBytes,
+ ed25519.PublicKey,ed25519.PrivateKey,time.Time){
  t.Helper()
- candidate,w,pub,key,now:=reviewerWitnessFixture(t)
- raw:=[]byte("independently archived original AoE2 HD replay bytes - test only")
- hash:=sha256.Sum256(raw)
- w.RawReplaySHA256=hex.EncodeToString(hash[:])
- w.Signature=base64.StdEncoding.EncodeToString(ed25519.Sign(key,ReviewerWatcherWitnessMessage(w)))
- return candidate,&testSignedReceiptSource{original:w},&testReplayBytes{data:raw},pub,key,now
-}
-func TestReviewerIndependentReplayActuallyHashesBytesAndChecksPinnedSigner(t *testing.T){
- candidate,witness,replay,pub,_,now:=reviewerConnectedReplayFixture(t)
- if err:=VerifyIndependentReviewerWatcher(t.Context(),candidate,witness,replay,pub,now);err!=nil{
-  t.Fatalf("independent raw replay + exact signed source rejected: %v",err)
+ c,_,pub,key,now:=reviewerWitnessFixture(t)
+ checkpoint:=[]byte("frozen partial live AoE2HD game-start Watcher data - synthetic fixture")
+ h:=sha256.Sum256(checkpoint)
+ w:=ReviewerWatcherLiveWitness{
+  Version:2,OperationID:c.OriginalOperationID,OwnerUID:c.OwnerUID,
+  OwnerSteamID:c.OwnerSteamID,GameIdentityKey:c.GameIdentityKey,
+  MarketID:c.MarketID,SelectedSide:c.SelectedSide,PropositionHash:c.PropositionHash,
+  LinkedSession:c.LinkedSession,SourceParseIteration:c.SourceParseIteration,
+  SourceRosterHash:c.SourceRosterHash,RosterLockedAtMS:c.RosterLockedAtMS,
+  ExecutionCreatedAtMS:c.CreatedAt.UnixMilli(),
+  LiveCheckpointSHA256:hex.EncodeToString(h[:]),
+  CapturedAtMS:now.Add(-25*time.Second).UnixMilli(),
+  ObservedAtMS:now.Add(-20*time.Second).UnixMilli(),
+  ExpiresAtMS:now.Add(20*time.Second).UnixMilli(),
  }
- if witness.calls!=1||replay.calls!=1{t.Fatal("did not read BOTH independent sources")}
+ w.Signature=base64.StdEncoding.EncodeToString(
+  ed25519.Sign(key,ReviewerWatcherLiveWitnessMessage(w)))
+ return c,&testSignedLiveSource{original:w},
+  &testLiveCheckpointBytes{data:checkpoint},pub,key,now
 }
-func TestReviewerIndependentReplayDeniesSignerReplayAndMarketSpoofing(t *testing.T){
- for _,which:=range []string{
-  "forged_witness","changed_raw_bytes","wrong_key","other_operation",
-  "changed_market","changed_roster","expired_signature","empty_replay",
-  "missing_witness","missing_replay","unreadable_witness","unreadable_replay",
-  "canceled","oversized","missing_public_key",
- }{
+func TestReviewerPreBetLiveWatcherWitnessHashesRealCheckpointBytes(t *testing.T){
+ c,w,checkpoint,pub,_,now:=reviewerLiveCheckpointFixture(t)
+ if e:=VerifyIndependentReviewerLiveWatcher(t.Context(),c,w,checkpoint,pub,now);e!=nil{
+  t.Fatalf("signed original LIVE snapshot rejected: %v",e)
+ }
+ if w.calls!=1||checkpoint.calls!=1{
+  t.Fatal("pre-bet verifier did not read both independent source contracts")
+ }
+}
+func TestReviewerLiveWatcherRejectsPostGameOrChangedSourceWithoutSpending(t *testing.T){
+ cases:=[]string{
+  "forged_signature","changed_checkpoint_bytes","wrong_key","other_game",
+  "other_market","changed_steam","changed_roster","wrong_owner",
+  "late_final_replay","capture_before_roster_lock","wrong_live_digest",
+  "expired","missing_witness","missing_checkpoint","unreadable_witness",
+  "unreadable_checkpoint","empty_checkpoint","oversize","canceled",
+  "missing_public_key","other_receipt_protocol",
+ }
+ for _,which:=range cases{
   t.Run(which,func(t *testing.T){
-   candidate,witness,replay,pub,_,now:=reviewerConnectedReplayFixture(t)
+   c,w,checkpoint,pub,key,now:=reviewerLiveCheckpointFixture(t)
    ctx:=t.Context()
-   var witnessReader ReviewerSignedWatcherReceiptReader = witness
-   var replayReader ReviewerOriginalReplayReader = replay
+   var wr ReviewerSignedLiveWatcherReader=w
+   var cr ReviewerIndependentLiveCheckpointReader=checkpoint
    switch which{
-   case "forged_witness":witness.original.Signature=base64.StdEncoding.EncodeToString(make([]byte,64))
-   case "changed_raw_bytes":replay.data=[]byte("forged independent replay bytes")
+   case "forged_signature":w.original.Signature=base64.StdEncoding.EncodeToString(make([]byte,64))
+   case "changed_checkpoint_bytes":checkpoint.data=[]byte("not the observed game-start checkpoint")
    case "wrong_key":pub=ed25519.PublicKey(make([]byte,ed25519.PublicKeySize))
-   case "other_operation":witness.original.OperationID="satchel:ticket:999"
-   case "changed_market":candidate.MarketID++
-   case "changed_roster":candidate.SourceRosterHash="wrong"
-   case "expired_signature":now=now.Add(90*time.Second)
-   case "empty_replay":replay.data=nil
-   case "missing_witness":witnessReader=nil
-   case "missing_replay":replayReader=nil
-   case "unreadable_witness":witness.err=errors.New("archive offline")
-   case "unreadable_replay":replay.err=errors.New("archive offline")
+   case "other_game":w.original.GameIdentityKey="other-game"
+   case "other_market":c.MarketID++
+   case "changed_steam":c.OwnerSteamID="76561198000000088"
+   case "changed_roster":c.SourceRosterHash="wrong-roster-hash"
+   case "wrong_owner":w.original.OwnerUID="another_owner"
+   case "late_final_replay":
+    w.original.CapturedAtMS=w.original.ExecutionCreatedAtMS+180000
+    w.original.ObservedAtMS=w.original.CapturedAtMS
+    w.original.ExpiresAtMS=w.original.ObservedAtMS+30000
+   case "capture_before_roster_lock":
+    w.original.CapturedAtMS=w.original.RosterLockedAtMS-1
+   case "wrong_live_digest":w.original.LiveCheckpointSHA256=hex.EncodeToString(make([]byte,32))
+   case "expired":now=now.Add(90*time.Second)
+   case "missing_witness":wr=nil
+   case "missing_checkpoint":cr=nil
+   case "unreadable_witness":w.err=errors.New("witness offline")
+   case "unreadable_checkpoint":checkpoint.err=errors.New("checkpoint offline")
+   case "empty_checkpoint":checkpoint.data=nil
+   case "oversize":checkpoint.data=make([]byte,reviewerMaxLiveCheckpointBytes+1)
    case "canceled":var cancel context.CancelFunc;ctx,cancel=context.WithCancel(ctx);cancel()
-   case "oversized":replay.data=make([]byte,reviewerMaxRawReplayBytes+1)
    case "missing_public_key":pub=nil
+   case "other_receipt_protocol":w.original.Version=1
    }
-   if err:=VerifyIndependentReviewerWatcher(ctx,candidate,witnessReader,replayReader,pub,now);!errors.Is(err,ErrReviewerHeld){
-    t.Fatalf("%s bypassed independent source refusal: %v",which,err)
+   if which!="forged_signature" && which!="changed_checkpoint_bytes" &&
+    which!="wrong_key" && which!="other_market" &&
+    which!="changed_steam" && which!="changed_roster" &&
+    which!="expired" && which!="missing_witness" &&
+    which!="missing_checkpoint" && which!="unreadable_witness" &&
+    which!="unreadable_checkpoint" && which!="empty_checkpoint" &&
+    which!="oversize" && which!="canceled" && which!="missing_public_key" {
+    w.original.Signature=base64.StdEncoding.EncodeToString(
+     ed25519.Sign(key,ReviewerWatcherLiveWitnessMessage(w.original)))
+   }
+   if e:=VerifyIndependentReviewerLiveWatcher(ctx,c,wr,cr,pub,now);!errors.Is(e,ErrReviewerHeld){
+    t.Fatalf("%s passed without authenticated pre-bet source: %v",which,e)
    }
   })
  }
 }
-type testCloseErrorReader struct{io.Reader}
-func (r testCloseErrorReader)Close()error{return errors.New("replay_archive_verification_failed")}
-type testCloseErrorArchive struct{data []byte}
-func (r testCloseErrorArchive)OpenAuthenticatedReplay(_ context.Context,_ ReviewerWatcherCandidate)(io.ReadCloser,error){
- return testCloseErrorReader{bytes.NewReader(r.data)},nil
+type testCheckpointCloseError struct{io.Reader}
+func (r testCheckpointCloseError)Close()error{return errors.New("checkpoint_archive_not_fully_verified")}
+type testCloseFailCheckpoint struct{data []byte}
+func (r testCloseFailCheckpoint)OpenAuthenticatedLiveCheckpoint(_ context.Context,_ ReviewerWatcherCandidate)(io.ReadCloser,error){
+ return testCheckpointCloseError{bytes.NewReader(r.data)},nil
 }
-func TestReviewerIndependentReplayRequiresSourceFinalization(t *testing.T){
- c,w,raw,pub,_,now:=reviewerConnectedReplayFixture(t)
- closeFailure:=testCloseErrorArchive{data:raw.data}
- if err:=VerifyIndependentReviewerWatcher(t.Context(),c,w,closeFailure,pub,now);!errors.Is(err,ErrReviewerHeld){
-  t.Fatal("unfinalized replay source incorrectly accepted")
+func TestReviewerLiveCheckpointFailsWhenSourceFinalizationFails(t *testing.T){
+ c,w,cr,pub,_,now:=reviewerLiveCheckpointFixture(t)
+ if e:=VerifyIndependentReviewerLiveWatcher(t.Context(),c,w,testCloseFailCheckpoint{cr.data},pub,now);!errors.Is(e,ErrReviewerHeld){
+  t.Fatal("partial or unverifiable early source accepted")
  }
 }
-func TestReviewerIndependentReplayBridgeCannotAuthorizeMoney(t *testing.T){
- c,w,raw,pub,_,now:=reviewerConnectedReplayFixture(t)
- if VerifyIndependentReviewerWatcher(t.Context(),c,w,raw,pub,now)!=nil{
-  t.Fatal("unit proof fixture should be valid")
- }
- db:=&sql.DB{}
- pg,e:=NewReviewerReadOnlyPGSource(db,"satchel_reviewer_v1","1",
+func TestReviewerLiveWitnessProofCannotOverrideHardHeldSolvency(t *testing.T){
+ c,w,checkpoint,pub,_,now:=reviewerLiveCheckpointFixture(t)
+ if e:=VerifyIndependentReviewerLiveWatcher(t.Context(),c,w,checkpoint,pub,now);e!=nil{t.Fatal(e)}
+ pg,e:=NewReviewerReadOnlyPGSource(&sql.DB{},"satchel_reviewer_v1","1",
   testHTTPAddress(t,101),testHTTPAddress(t,102))
  if e!=nil{t.Fatal(e)}
- bridge,e:=NewReviewerIndependentWatcherSource(pg,w,raw,pub)
+ bridge,e:=NewReviewerIndependentWatcherSource(pg,w,checkpoint,pub)
  if e!=nil{t.Fatal(e)}
  census,e:=bridge.AuthenticatedFeeCensus(t.Context(),WagerReservation{OperationID:c.OriginalOperationID})
  if !errors.Is(e,ErrReviewerHeld)||census.PendingOperationsComplete{
-  t.Fatal("Watcher proof was mistaken for a verified bank or liability inventory")
+  t.Fatal("signed live Watcher event incorrectly created customer bank/fee authority")
  }
- if _,e=NewReviewerIndependentWatcherSource(pg,nil,raw,pub);!errors.Is(e,ErrReviewerHeld){
-  t.Fatal("missing independent receipt provider admitted")
+ if _,e=NewReviewerIndependentWatcherSource(pg,nil,checkpoint,pub);!errors.Is(e,ErrReviewerHeld){
+  t.Fatal("absent independently operated Watcher signer admitted")
  }
  if _,e=NewReviewerIndependentWatcherSource(pg,w,nil,pub);!errors.Is(e,ErrReviewerHeld){
-  t.Fatal("missing independently authenticated raw replay provider admitted")
+  t.Fatal("absent immutable game-start capture reader admitted")
  }
- if _,e=NewReviewerIndependentWatcherSource(nil,w,raw,pub);!errors.Is(e,ErrReviewerHeld){
-  t.Fatal("missing original read-only SQL source admitted")
+ if _,e=NewReviewerIndependentWatcherSource(nil,w,checkpoint,pub);!errors.Is(e,ErrReviewerHeld){
+  t.Fatal("absent original SQL evidence source admitted")
  }
 }
