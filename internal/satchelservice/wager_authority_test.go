@@ -126,7 +126,7 @@ func TestWagerReservationCannotFundAnotherOperationAfterConfirmation(t *testing.
 	}
 	other := engineTestWager(t, "2")
 	other.Reservation.ReservationDigest = r.Reservation.ReservationDigest
-	other.Reservation.Signature = base64.StdEncoding.EncodeToString(ed25519.Sign(engineTestApprovalKey(), WagerReservationMessage(*other.Reservation)))
+	other.Reservation.Signature = base64.StdEncoding.EncodeToString(ed25519.Sign(engineTestWagerApprovalKey(), WagerReservationMessage(*other.Reservation)))
 	if err := p.verifyWager(other, e.now()); err != nil {
 		t.Fatal(err)
 	}
