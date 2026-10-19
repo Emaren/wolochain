@@ -61,6 +61,8 @@ func TestReviewerIndependentReplayDeniesSignerReplayAndMarketSpoofing(t *testing
   t.Run(which,func(t *testing.T){
    candidate,witness,replay,pub,_,now:=reviewerConnectedReplayFixture(t)
    ctx:=t.Context()
+   var witnessReader ReviewerSignedWatcherReceiptReader = witness
+   var replayReader ReviewerOriginalReplayReader = replay
    switch which{
    case "forged_witness":witness.original.Signature=base64.StdEncoding.EncodeToString(make([]byte,64))
    case "changed_raw_bytes":replay.data=[]byte("forged independent replay bytes")
@@ -70,15 +72,15 @@ func TestReviewerIndependentReplayDeniesSignerReplayAndMarketSpoofing(t *testing
    case "changed_roster":candidate.SourceRosterHash="wrong"
    case "expired_signature":now=now.Add(90*time.Second)
    case "empty_replay":replay.data=nil
-   case "missing_witness":witness=nil
-   case "missing_replay":replay=nil
+   case "missing_witness":witnessReader=nil
+   case "missing_replay":replayReader=nil
    case "unreadable_witness":witness.err=errors.New("archive offline")
    case "unreadable_replay":replay.err=errors.New("archive offline")
    case "canceled":var cancel context.CancelFunc;ctx,cancel=context.WithCancel(ctx);cancel()
    case "oversized":replay.data=make([]byte,reviewerMaxRawReplayBytes+1)
    case "missing_public_key":pub=nil
    }
-   if err:=VerifyIndependentReviewerWatcher(ctx,candidate,witness,replay,pub,now);!errors.Is(err,ErrReviewerHeld){
+   if err:=VerifyIndependentReviewerWatcher(ctx,candidate,witnessReader,replayReader,pub,now);!errors.Is(err,ErrReviewerHeld){
     t.Fatalf("%s bypassed independent source refusal: %v",which,err)
    }
   })
