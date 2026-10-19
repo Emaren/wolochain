@@ -1,7 +1,6 @@
 package satchelservice
 
 import (
-	"math"
 	"strings"
 	"testing"
 )
@@ -101,7 +100,6 @@ func TestReviewerFeeBudgetRejectsOverflowAndOversizedInventory(t *testing.T){
 	if _,err:=AssessReviewerFeeBudget(c,reviewerTestWager());err==nil{t.Fatal("unbounded inventory accepted")}
 	c=reviewerTestCensus();c.BankBalanceUWolo="9223372036854775808"
 	if _,err:=AssessReviewerFeeBudget(c,reviewerTestWager());err==nil{t.Fatal("bank out of range accepted")}
-	_ = math.MaxInt64
 }
 func TestReviewerFeeBudgetZeroOrMissingInventoryIsNotProof(t *testing.T){
 	c:=reviewerTestCensus();c.PendingOperations=nil;c.PendingOperationsComplete=false
