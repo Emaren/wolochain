@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "9a28f72c1d2757bf10779515bc68f5bdd2f837dddd0f16eec9863b927972522c",
+      "sha256": "5d43b8b7677117788149dfdb4fbc1d32d41587616fa61a5ee1a46c0b8babae82",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -519,7 +519,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-18",
       "sensitivity": "restricted",
-      "sha256": "256f84bb220dc12815b9befbe086648537da7a4a08ff81ffb33d9da39ef3ec25",
+      "sha256": "c7092cd7f3bba0a6d678de85ace35a8823a736568cda31b06986e76022b48fec",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -947,7 +947,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "fix/20261019-satchel-wager-withdrawal-key-separation",
-    "commit": "6f6d70095055afd4d4677cf78f8316bb70fb54e4"
+    "commit": "a5c78867b68d451a90d7c8482f200d4ea689ce39"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
