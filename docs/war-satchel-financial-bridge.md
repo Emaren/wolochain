@@ -567,7 +567,10 @@ iteration and roster-lock time, signed checkpoint SHA256, capture and
 observation timestamps, and a maximum 60-second receipt TTL.
 Capture and observation must occur within the first 120 seconds after
 the original admitted live execution and not precede roster-lock time.
-A final replay captured only after the match ends is NOT eligible.
+A final replay captured only after the match ends is NOT eligible. The
+verifier also advances receipt-expiry evaluation by monotonic elapsed
+source-read time: a receipt that expires while checkpoint bytes are being
+read refuses even if it was valid when the request began.
 
 `reviewer_watcher_replay_bridge.go` implements
 `ReviewerSignedLiveWatcherReader` and
