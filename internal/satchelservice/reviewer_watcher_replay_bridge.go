@@ -36,14 +36,11 @@ type ReviewerOriginalReplayReader interface {
 // source by itself. That requires independent deployment/source certification.
 type ReviewerIndependentWatcherSource struct {
  *ReviewerReadOnlyPGSource
- witness ReaderOnlyWatcherWitness
+ witness ReviewerSignedWatcherReceiptReader
  replay ReviewerOriginalReplayReader
  trustedKey ed25519.PublicKey
  now func()time.Time
 }
-
-// Distinct alias keeps the public producer contract short for providers.
-type ReaderOnlyWatcherWitness = ReviewerSignedWatcherReceiptReader
 
 func NewReviewerIndependentWatcherSource(
  pg *ReviewerReadOnlyPGSource,
