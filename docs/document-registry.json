@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "792038bf130d2088b0562abd88044c3272a3a24424d34ecb6d9be90e42db6686",
+      "sha256": "d3387bca5101eb00308279da1a9ecd8fc48bac378102e25e367f4a8a227f1f57",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -946,8 +946,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "codex/financial-release-evidence",
-    "commit": "079919d4157c8762752e302e69dd704e2c2e297a"
+    "branch": "audit/20261019-financial-evidence-target-hold",
+    "commit": "1fd2f84bd0c6eb951de9fe347dc02b304a85e679"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
