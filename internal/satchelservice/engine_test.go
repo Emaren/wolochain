@@ -96,10 +96,13 @@ func (b *engineTestBackend) Confirm(_ context.Context, _ TransferRequest, s Sign
 
 func engineTestPolicy(t *testing.T) Policy {
 	return Policy{Vault: testHTTPAddress(t, 110), BettingEscrow: testHTTPAddress(t, 111), ProtectedAddresses: []string{testHTTPAddress(t, 111), testHTTPAddress(t, 112)},
-		MaxAmountUWolo: 1000000000, WithdrawalApprovalKey: engineTestApprovalKey().Public().(ed25519.PublicKey)}
+		MaxAmountUWolo: 1000000000, WithdrawalApprovalKey: engineTestWithdrawalApprovalKey().Public().(ed25519.PublicKey), WagerApprovalKey: engineTestApprovalKey().Public().(ed25519.PublicKey)}
 }
 func engineTestApprovalKey() ed25519.PrivateKey {
 	return ed25519.NewKeyFromSeed(bytes.Repeat([]byte{77}, ed25519.SeedSize))
+}
+func engineTestWithdrawalApprovalKey() ed25519.PrivateKey {
+	return ed25519.NewKeyFromSeed(bytes.Repeat([]byte{78}, ed25519.SeedSize))
 }
 func engineTestOpen(t *testing.T, b Backend) (*Engine, string, Policy) {
 	t.Helper()
@@ -158,7 +161,7 @@ func engineTestWithdrawal(t *testing.T) TransferRequest {
 	return TransferRequest{OperationID: "satchel:withdrawal:" + id, ChainID: "wolo-1", Denom: "uwolo", Sender: p.Vault, Recipient: a.Recipient, AmountUWolo: a.AmountUWolo, Memo: a.Memo, Kind: "withdrawal", OwnerID: a.OwnerID, Approval: &a, OwnerMandate: m}
 }
 func engineTestSignApproval(a *WithdrawalApproval, vault string) {
-	a.Signature = base64.StdEncoding.EncodeToString(ed25519.Sign(engineTestApprovalKey(), ApprovalMessage(*a, vault)))
+	a.Signature = base64.StdEncoding.EncodeToString(ed25519.Sign(engineTestWithdrawalApprovalKey(), ApprovalMessage(*a, vault)))
 }
 
 func TestEnginePersistsIntentAndSignedBytesBeforeNetworkBoundary(t *testing.T) {
