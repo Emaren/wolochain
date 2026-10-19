@@ -51,6 +51,8 @@ func reviewerMarketFixture(t *testing.T)(ReviewerPGMarketRow,ReviewerHDOriginRes
   SourceParseIteration:sql.NullInt64{Valid:true,Int64:2},
   SourceRosterHash:sql.NullString{Valid:true,String:strings.Repeat("a",64)},
   RosterLockedAt:sql.NullTime{Valid:true,Time:now.Add(-110*time.Second)},
+  FirstStakeAcceptedAt:sql.NullTime{Valid:true,Time:now.Add(-110*time.Second)},
+  BettingLockedAt:sql.NullTime{Valid:true,Time:now.Add(-110*time.Second)},
   OwnerSteamID:sql.NullString{Valid:true,String:"76561198000000077"},
  }
  row.MarketCreated=now.Add(-2*time.Minute+time.Second*10)
@@ -76,7 +78,8 @@ func TestReviewerWatcherMarketRejectsAllInvalidSourceAndOutcomeCases(t *testing.
   "source_absent","shadow_absent","wrong_uid","roster_unverified",
   "uploader_unverified","wrong_original_hash","extra_source_flag",
   "wrong_winner_market","wrong_steam_id","altered_roster_hash",
-  "altered_parse_iteration","missing_roster_lock","unresolved_team"}
+  "altered_parse_iteration","missing_roster_lock","unresolved_team",
+  "mismatched_first_stake_lock","lock_later_than_execution","first_stake_lock_before_owner"}
  for _,scenario:=range scenarios{
   t.Run(scenario,func(t *testing.T){
    row,orig,now:=reviewerMarketFixture(t)
@@ -115,6 +118,11 @@ func TestReviewerWatcherMarketRejectsAllInvalidSourceAndOutcomeCases(t *testing.
    case "altered_roster_hash":row.SourceEvidence.String=strings.Replace(row.SourceEvidence.String,strings.Repeat("a",64),strings.Repeat("b",64),1)
    case "altered_parse_iteration":row.SourceEvidence.String=strings.Replace(row.SourceEvidence.String,`"sourceParseIteration":2`,`"sourceParseIteration":3`,1)
    case "missing_roster_lock":row.RosterLockedAt=sql.NullTime{}
+   case "mismatched_first_stake_lock":row.FirstStakeAcceptedAt.Time=row.FirstStakeAcceptedAt.Time.Add(time.Second)
+   case "lock_later_than_execution":row.RosterLockedAt.Time=row.ExecutionCreated.Add(time.Second)
+   case "first_stake_lock_before_owner":
+    row.FirstStakeAcceptedAt.Time=row.OwnerSignedAt.Time.Add(-time.Second)
+    row.RosterLockedAt.Time=row.FirstStakeAcceptedAt.Time
    case "unresolved_team":row.TeamResolutionStatus=sql.NullString{Valid:true,String:"unresolved"}
    }
    if _,e:=row.validate(now,orig);!errors.Is(e,ErrReviewerHeld){
@@ -136,5 +144,47 @@ func TestReviewerWatcherMarketDoesNotGrantApprovalWhenSourceSelfReportsVerified(
  if !strings.Contains(reviewerPGMarketQuery,"JOIN public.bet_markets m")||
   !strings.Contains(reviewerPGMarketQuery,"WHERE a.operation_id=$1"){
   t.Fatal("independent market query not bound to original HD operation")
+ }
+}
+
+func reviewerUnstakedLiveMarket(t *testing.T)(ReviewerPGMarketRow,ReviewerHDOriginResult,time.Time){
+ t.Helper()
+ row,orig,now:=reviewerMarketFixture(t)
+ // Real first-stake admission is the FIRST writer of these three values.
+ // The shadow preview materializes an explicitly null rosterLockedAt.
+ row.RosterLockedAt=sql.NullTime{}
+ row.FirstStakeAcceptedAt=sql.NullTime{}
+ row.BettingLockedAt=sql.NullTime{}
+ record:=map[string]any{}
+ if e:=json.Unmarshal([]byte(row.SourceEvidence.String),&record);e!=nil{t.Fatal(e)}
+ record["rosterLockedAt"]=nil
+ encoded,e:=json.Marshal(record)
+ if e!=nil{t.Fatal(e)}
+ row.SourceEvidence=sql.NullString{Valid:true,String:string(encoded)}
+ return row,orig,now
+}
+func TestReviewerBeforeFirstAutoBetDoesNotRequireItsOwnFutureStakeLock(t *testing.T){
+ row,orig,now:=reviewerUnstakedLiveMarket(t)
+ c,e:=row.validate(now,orig)
+ if e!=nil||c.RosterLockedAtMS!=0||
+  c.SourceRosterHash!=strings.Repeat("a",64)||c.MarketID!=74{
+  t.Fatalf("first-ever auto bet circular lock deadlock: %+v %v",c,e)
+ }
+}
+func TestReviewerPreFirstStakeMustNotAcceptPreexistingMarketOrRosterLock(t *testing.T){
+ for _,scenario:=range []string{"roster_lock_only","betting_lock_only","evidence_fake_lock"}{
+  t.Run(scenario,func(t *testing.T){
+   row,orig,now:=reviewerUnstakedLiveMarket(t)
+   switch scenario{
+   case "roster_lock_only":row.RosterLockedAt=sql.NullTime{Valid:true,Time:now}
+   case "betting_lock_only":row.BettingLockedAt=sql.NullTime{Valid:true,Time:now}
+   case "evidence_fake_lock":
+    row.SourceEvidence.String=strings.Replace(row.SourceEvidence.String,
+     `"rosterLockedAt":null`,`"rosterLockedAt":"2026-10-19T22:00:00.000Z"`,1)
+   }
+   if _,e:=row.validate(now,orig);!errors.Is(e,ErrReviewerHeld){
+    t.Fatalf("unstaked market accepted inconsistent lock %s",scenario)
+   }
+  })
  }
 }
