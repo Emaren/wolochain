@@ -22,7 +22,7 @@ func TestWagerAndWithdrawalKeysAreIndependentCryptographicAuthorities(t *testing
  wager:=engineTestWager(t,"7")
  if e:=policy.verifyWager(wager,time.Unix(1800000000,0));e!=nil{t.Fatalf("true wager signer rejected: %v",e)}
  wager.Reservation.Signature=base64.StdEncoding.EncodeToString(
-  ed25519.Sign(engineTestWithdrawalApprovalKey(),WagerReservationMessage(*wager.Reservation)))
+  ed25519.Sign(engineTestApprovalKey(),WagerReservationMessage(*wager.Reservation)))
  if e:=policy.verifyWager(wager,time.Unix(1800000000,0));e==nil{
   t.Fatal("withdrawal Ed25519 key also authorized an unattended wager")
  }
@@ -31,7 +31,7 @@ func TestWagerAndWithdrawalKeysAreIndependentCryptographicAuthorities(t *testing
   t.Fatalf("true withdrawal signer rejected: %v",e)
  }
  withdrawal.Approval.Signature=base64.StdEncoding.EncodeToString(
-  ed25519.Sign(engineTestApprovalKey(),ApprovalMessage(*withdrawal.Approval,policy.Vault)))
+  ed25519.Sign(engineTestWagerApprovalKey(),ApprovalMessage(*withdrawal.Approval,policy.Vault)))
  if e:=policy.verifyWithdrawal(withdrawal,time.Unix(1800000000,0));e==nil{
   t.Fatal("unattended wager reviewer key also authorized a withdrawal")
  }
