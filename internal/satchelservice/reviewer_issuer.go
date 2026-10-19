@@ -144,6 +144,30 @@ func (r *ReviewerIssuer)ReviewOne(ctx context.Context,id string)ReviewerIssuedRe
  budget,err:=AssessReviewerFeeBudget(census,original)
  if err!=nil||budget.Status!="BUDGET_SUFFICIENT_NONAUTHORIZING" ||
   budget.SpendingAuthorized||budget.BankAuthenticated||budget.OwnerLedgerAuthenticated{return pending}
+ // Re-read AFTER the first independent bank/fee census. A revocation,
+ // closed market, changed immutable hold or drained gas reserve that appears
+ // while the earlier source calls run must not become a signed approval.
+ // This is an additional *final pre-sign source fence*, not an atomic
+ // financial checkpoint or authenticated bank proof. Production remains
+ // HOLD until the externally governed evidence authority establishes those.
+ fresh,err:=r.source.OriginalHold(ctx,id)
+ if err!=nil||ctx.Err()!=nil||fresh.OperationID!=id||
+  fresh.Version!=1||fresh.Signature!=""||
+  fresh.IssuedAt!=0||fresh.ExpiresAt!=0||
+  reviewerFingerprint(fresh)!=reviewerFingerprint(original)||
+  fresh.Vault!=r.policy.Vault||fresh.Recipient!=r.policy.BettingEscrow||
+  r.source.VerifyOwnerMandate(ctx,fresh)!=nil||
+  r.source.VerifyWatcherMarket(ctx,fresh)!=nil||ctx.Err()!=nil {
+  return pending
+ }
+ freshCensus,err:=r.source.AuthenticatedFeeCensus(ctx,fresh)
+ if err!=nil||ctx.Err()!=nil{return pending}
+ finalBudget,err:=AssessReviewerFeeBudget(freshCensus,fresh)
+ if err!=nil||finalBudget.Status!="BUDGET_SUFFICIENT_NONAUTHORIZING"||
+  finalBudget.SpendingAuthorized||finalBudget.BankAuthenticated||
+  finalBudget.OwnerLedgerAuthenticated{return pending}
+ // Preserve the final-read values: never sign a superseded initial snapshot.
+ original=fresh
  now:=r.now().Unix()
  // The source fingerprint EXCLUDES authority timestamps. It must remain
  // invariant over repeated lookups: an old approval cannot be renewed.
