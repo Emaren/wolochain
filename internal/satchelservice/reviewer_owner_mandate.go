@@ -5,9 +5,7 @@ package satchelservice
 // records; neither a signedAt flag nor a mutable app API may substitute for
 // the exact compressed secp256k1 wallet signature.
 import (
- "crypto/sha256"
  "encoding/base64"
- "encoding/hex"
  "encoding/json"
  "errors"
  "fmt"
@@ -156,7 +154,7 @@ func VerifyReviewerOwnerMandate(m ReviewerStoredOwnerMandate,x ReviewerOwnerExpe
   m.ChallengeExpiresAt.Sub(m.IssuedAt)>5*time.Minute ||
   m.SpendExpiresAt.Sub(m.ChallengeExpiresAt)<=0||
   m.SpendExpiresAt.Sub(m.IssuedAt)>24*time.Hour ||
-  m.SignedAt.Before(m.IssuedAt)||!m.SignedAt.Before(m.ChallengeExpiresAt)||
+  m.SignedAt.Before(m.IssuedAt)||m.SignedAt.After(now)||!m.SignedAt.Before(m.ChallengeExpiresAt)||
   !m.SpendExpiresAt.After(now) || signed=="" {
   return ErrReviewerOwnerMandate
  }
@@ -183,15 +181,3 @@ func VerifyReviewerOwnerMandate(m ReviewerStoredOwnerMandate,x ReviewerOwnerExpe
  return nil
 }
 
-// ConsentDigestFromSnapshot still requires exact source-bound JSONB canonical
-// hash evidence; do not substitute a mere signature match for the independent
-// reservation+ledger digest verification.
-func reviewerConsentEvidenceDigest(consentID,challenge string,signature any)(string,error){
- // The canonical encoder is a separate cross-language proof requirement.
- // Until implemented, no caller may use this stub for approving funds.
- _,_,_=consentID,challenge,signature
- return "",ErrReviewerHeld
-}
-
-var _ = sha256.Sum256
-var _ = hex.EncodeToString
