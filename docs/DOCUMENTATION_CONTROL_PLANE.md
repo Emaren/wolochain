@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `feature/20261019-reviewer-keplr-adr36-authority` at `17f2e00709cd69bb232a30bd45695bd8a9b39fe0`
+Implementation baseline: `feature/20261019-reviewer-hd-snapshot-digests` at `5f776a7740936571cdac6900c1b09dc01bec3b8a`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
