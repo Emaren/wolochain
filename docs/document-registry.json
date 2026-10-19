@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "f827ef5552e7f58a8ca416c498be642a779ada99a416bfe0bc218fe2a5e366d8",
+      "sha256": "eb1b794f64d0cbcd604472b38f3647513a560b85e756a8fa35fdbd0b454763f7",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -519,7 +519,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-18",
       "sensitivity": "restricted",
-      "sha256": "e1d22b1ac4e83248c82d771c099e7d0a57b6b0d2b716e6ef88f5cf3659f5fc4d",
+      "sha256": "85d971e9349d0b6042894c459f432be108e160f6ef9d40960f5ce67a6afabc9e",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -946,8 +946,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "feature/20261019-reviewer-keplr-adr36-authority",
-    "commit": "17f2e00709cd69bb232a30bd45695bd8a9b39fe0"
+    "branch": "feature/20261019-reviewer-hd-snapshot-digests",
+    "commit": "5f776a7740936571cdac6900c1b09dc01bec3b8a"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

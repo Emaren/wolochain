@@ -342,3 +342,33 @@ Comet bank/liability/fee census, multi-producer source closure and
 protected 8095 service activation do **not** yet exist. The six issue #5
 financial controls, unknown chain transactions and founder claim #889
 remain held. No production custody keys or transactions are touched.
+
+## HD financial-origin digest agreement — independently implemented (October 19)
+
+The reviewer source now contains
+`internal/satchelservice/reviewer_hd_snapshot.go`. It independently
+reconstructs the exact TypeScript
+`buildSatchelWagerAuthorization` triplet:
+`consentDigest`, `ledgerRevision`, and `reservationDigest`, using
+bounded, recursive sorted-key JSON and SHA256. The Go tests contain an
+independently generated **CosmJS/TypeScript golden vector** for an original
+HD wager, rather than comparing two implementations with the same
+unknown defect. A source record is rejected for a mismatched DB column
+identity/digest, changed owner, vault, escrow, amount, memo, game,
+proposition, ticket leg, original owner signature field, extra/duplicate
+JSON keys, noninteger economics or unsafe excessive amounts.
+
+This adds *original-source integrity verification*, not evidence that
+the HD database writer was independently controlled, that a valid
+wallet owner signed it, or that any chain transfer was finalized.
+The independent Keplr ADR-36 verifier is a distinct component from
+reviewer source PR #49, and the signer's Ed25519 reservation key
+remains separate from the player's Cosmos wallet. **Next:** a
+read-only, independently governed PostgreSQL adapter must fetch the
+original DB columns and verify these hashes AND run the Keplr
+signature checker; a separate authenticated Watcher/market adapter,
+Comet light-client bank proof, and complete global financial
+producer/liability/fee census must approve within a coordinated
+atomic reviewer issue step. These verified-source capabilities have
+not been activated or deployed. 8092/8093, 8094, 8095 and all
+financial HOLDs remain unchanged.
