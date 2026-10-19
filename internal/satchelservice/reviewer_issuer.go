@@ -57,7 +57,9 @@ type ReviewerIssuer struct {
 // not open a listener or any chain connection.
 func OpenReviewerIssuer(statePath string, source ReviewerEvidenceSource, key ed25519.PrivateKey, policy Policy) (*ReviewerIssuer,error) {
  if statePath=="" || source==nil || len(key)!=ed25519.PrivateKeySize ||
+  len(policy.WagerApprovalKey)!=ed25519.PublicKeySize ||
   len(policy.WithdrawalApprovalKey)!=ed25519.PublicKeySize ||
+  bytes.Equal(policy.WagerApprovalKey,policy.WagerApprovalKey) ||
   !bytes.Equal(key.Public().(ed25519.PublicKey),policy.WithdrawalApprovalKey) ||
   !validAddress(policy.Vault) || !validAddress(policy.BettingEscrow) ||
   policy.Vault==policy.BettingEscrow || policy.MaxAmountUWolo==0 {
