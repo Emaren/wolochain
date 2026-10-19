@@ -378,7 +378,7 @@ financial HOLDs remain unchanged.
 `internal/satchelservice/reviewer_pg_origin.go` is the first
 **real SQL source adapter** for the separate 8095 reviewer. It opens
 a repeatable-read READ ONLY PostgreSQL transaction as a required
-`satchel_reviewer_*` account, checks `current_user`,
+`satchel_reviewer_*` account, pins all source tables to the literal `public` schema, checks `current_user`,
 `transaction_read_only=on`, nonprivileged role flags, and **absence
 of financial table INSERT/UPDATE/DELETE privileges**. It executes
 only a fixed parameterized original operation query; the remote
