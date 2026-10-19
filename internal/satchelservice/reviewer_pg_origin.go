@@ -195,13 +195,9 @@ func (s *ReviewerReadOnlyPGSource) OriginalHold(ctx context.Context,id string)(W
  return original,nil
 }
 
-// The following remain disabled even though the source supports OriginalHold.
-// A separate read-only Keplr ADR36 verification adapter, trusted Watcher
-// identity reader, and globally complete Comet bank+gas census are required.
+// OriginalHold and VerifyOwnerMandate now independently read SQL; the
+// critical trusted Watcher and global Comet/fee census checks remain held.
 // Plugging this incomplete adapter into 8095 CANNOT cause an approval.
-func (*ReviewerReadOnlyPGSource) VerifyOwnerMandate(context.Context,WagerReservation)error{
- return ErrReviewerHeld
-}
 func (*ReviewerReadOnlyPGSource) VerifyWatcherMarket(context.Context,WagerReservation)error{
  return ErrReviewerHeld
 }
