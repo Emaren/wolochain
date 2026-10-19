@@ -8,11 +8,9 @@ import (
  "crypto/sha256"
  "crypto/subtle"
  "encoding/json"
- "errors"
  "io"
  "net"
  "net/http"
- "strconv"
  "time"
 )
 
@@ -67,6 +65,7 @@ func (h *reviewerHTTPHandler)ServeHTTP(w http.ResponseWriter,r *http.Request){
  secret:=r.Header.Get("Authorization")
  if err!=nil||ip==nil||!ip.IsLoopback()||
   len(secret)<len("Bearer ")||secret[:len("Bearer ")]!="Bearer "||
+  !httpTokenPattern.MatchString(secret[len("Bearer "):])||
   subtle.ConstantTimeCompare(h.tokenHash[:],hashReviewerToken(secret[len("Bearer "):]))!=1{
   http.Error(w,"private_authentication_required",http.StatusUnauthorized);return
  }
@@ -86,5 +85,3 @@ func (h *reviewerHTTPHandler)ServeHTTP(w http.ResponseWriter,r *http.Request){
 func hashReviewerToken(s string)[]byte{
  h:=sha256.Sum256([]byte(s));return h[:]
 }
-var _ = errors.New
-var _ = strconv.Itoa
