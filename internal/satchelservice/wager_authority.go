@@ -57,12 +57,12 @@ func (p Policy) verifyWager(r TransferRequest, now time.Time) error {
 		!nonzeroDigest(a.ConsentDigest) || a.ConsentDigest != strings.ToLower(a.ConsentDigest) ||
 		!amount(a.FeeUWolo, 1000000) || a.IssuedAt > now.Unix() || a.ExpiresAt <= now.Unix() ||
 		a.ExpiresAt <= a.IssuedAt || uint64(a.ExpiresAt)-uint64(a.IssuedAt) > 300 ||
-		len(p.WithdrawalApprovalKey) != ed25519.PublicKeySize {
+		len(p.WagerApprovalKey) != ed25519.PublicKeySize {
 		return errors.New("owner_bound_wager_reservation_required")
 	}
 	sig, err := base64.StdEncoding.Strict().DecodeString(a.Signature)
 	if err != nil || len(sig) != ed25519.SignatureSize || base64.StdEncoding.EncodeToString(sig) != a.Signature ||
-		!ed25519.Verify(p.WithdrawalApprovalKey, WagerReservationMessage(*a), sig) {
+		!ed25519.Verify(p.WagerApprovalKey, WagerReservationMessage(*a), sig) {
 		return errors.New("wager_reservation_signature_refused")
 	}
 	return nil
