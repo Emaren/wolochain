@@ -372,3 +372,48 @@ producer/liability/fee census must approve within a coordinated
 atomic reviewer issue step. These verified-source capabilities have
 not been activated or deployed. 8092/8093, 8094, 8095 and all
 financial HOLDs remain unchanged.
+
+## Independent SELECT-only HD PostgreSQL original-wager reader (source, HELD)
+
+`internal/satchelservice/reviewer_pg_origin.go` is the first
+**real SQL source adapter** for the separate 8095 reviewer. It opens
+a repeatable-read READ ONLY PostgreSQL transaction as a required
+`satchel_reviewer_*` account, pins all source tables to the literal `public` schema, checks `current_user`,
+`transaction_read_only=on`, nonprivileged role flags, and **absence
+of financial table INSERT/UPDATE/DELETE privileges**. It executes
+only a fixed parameterized original operation query; the remote
+caller supplies no SQL, amount, bank claim, key or wallet identity.
+
+The original wager row is joined, at the same SQL snapshot, against
+the existing funded reservation, Watcher execution, player preset,
+original owner/wallet, provisional stake ticket and owner reserved
+balance. The result must agree with the independently recomputed
+three hashes of the immutable HD authorization, and with canonical
+ticket, amount, memo, game identity, proposition, profile/version,
+and vault/escrow. Any altered owner, market, state, already-broadcast
+ticket, insufficient original reserved amount, expired four-minute
+game or unattempted-holder mismatch refuses. Every source read is
+bounded and never writes application or chain state.
+
+**Still financially incomplete:** the adapter now implements
+`OriginalHold` **and** `VerifyOwnerMandate` with a separate
+repeatable-read, SELECT-only PostgreSQL query. It re-reads the
+original consent row, original mandate signature bytes and current
+enabled owner preset; matches the persisted challenge and signature
+JSON against the original cryptographically hashed source; and
+independently reconstructs and verifies the real Keplr ADR-36
+secp256k1 signature. A changed wallet, disabled or revoked mandate,
+increased future game allowance, altered stake/preset, missing or
+wrong public key, expired signature, or changed original digest
+returns `ErrReviewerHeld`.
+
+**HARD HOLD remains:** `VerifyWatcherMarket` and
+`AuthenticatedFeeCensus` still always refuse. Signed Watcher/Steam
+source attribution, Comet-authenticated bank, complete global
+liability/pending-gas producer census, provenance, reviewer
+private-key provisioning, live credentials and protected
+transaction-wide financial coordination are not established. No
+8095 service, PostgreSQL role, database changes, wallet signer,
+consensus operation or WOLO movement was activated. The reviewer
+**cannot issue any approval** until those remaining checks are
+independently implemented, wired and certified.
