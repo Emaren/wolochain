@@ -395,17 +395,25 @@ ticket, insufficient original reserved amount, expired four-minute
 game or unattempted-holder mismatch refuses. Every source read is
 bounded and never writes application or chain state.
 
-**Deliberately incomplete:** the present adapter implements only
-`OriginalHold` of the reviewer evidence interface. Its
-`VerifyOwnerMandate`, `VerifyWatcherMarket`, and
-`AuthenticatedFeeCensus` methods all return `ErrReviewerHeld`
-even if the SQL original wager is valid. The Go Keplr signature
-verifier, signed Watcher/game evidence, full financial bank/fee
-census, source attestation, live reviewer credential provisioning,
-and protected transaction-wide bank/liability coordination still
-need to be independently *wired* and tested. No 8095 process,
-PostgreSQL credential, service file, consensus operation or
-user-funds movement is configured by this code; it **cannot
-issue an approval** while these three methods remain disabled.
-It is not proof that the required read-only role has actually
-been provisioned or independently reviewed in production.
+**Still financially incomplete:** the adapter now implements
+`OriginalHold` **and** `VerifyOwnerMandate` with a separate
+repeatable-read, SELECT-only PostgreSQL query. It re-reads the
+original consent row, original mandate signature bytes and current
+enabled owner preset; matches the persisted challenge and signature
+JSON against the original cryptographically hashed source; and
+independently reconstructs and verifies the real Keplr ADR-36
+secp256k1 signature. A changed wallet, disabled or revoked mandate,
+increased future game allowance, altered stake/preset, missing or
+wrong public key, expired signature, or changed original digest
+returns `ErrReviewerHeld`.
+
+**HARD HOLD remains:** `VerifyWatcherMarket` and
+`AuthenticatedFeeCensus` still always refuse. Signed Watcher/Steam
+source attribution, Comet-authenticated bank, complete global
+liability/pending-gas producer census, provenance, reviewer
+private-key provisioning, live credentials and protected
+transaction-wide financial coordination are not established. No
+8095 service, PostgreSQL role, database changes, wallet signer,
+consensus operation or WOLO movement was activated. The reviewer
+**cannot issue any approval** until those remaining checks are
+independently implemented, wired and certified.
