@@ -5,7 +5,6 @@ import (
  "crypto/ed25519"
  "encoding/base64"
  "encoding/json"
- "errors"
  "os"
  "path/filepath"
  "testing"
@@ -65,7 +64,7 @@ func TestConfigRequiresThreeDistinctEd25519Authorities(t *testing.T){
    b,e:=json.Marshal(c);if e!=nil{t.Fatal(e)}
    path:=filepath.Join(filepath.Dir(c.PermitFile),"invalid-three-role-config.json")
    if e=os.WriteFile(path,b,0600);e!=nil{t.Fatal(e)}
-   if _,_,e=LoadConfig(path);!errors.Is(e,errors.New("independent_approval_keys_required"))&&e==nil{
+   if _,_,e=LoadConfig(path);e==nil||e.Error()!="independent_approval_keys_required"{
     t.Fatalf("%s unsafe reviewer key configuration admitted",which)
    }
   })
