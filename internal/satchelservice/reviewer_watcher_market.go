@@ -76,6 +76,10 @@ type ReviewerWatcherCandidate struct {
  PropositionHash string
  SelectedSide string
  LinkedSession string
+ OwnerSteamID string
+ SourceParseIteration int64
+ SourceRosterHash string
+ RosterLockedAtMS int64
  CreatedAt time.Time
  // NEVER include a boolean that implies authenticated or spend authority.
 }
@@ -93,6 +97,8 @@ func (x ReviewerPGMarketRow)validate(now time.Time,original ReviewerHDOriginResu
   x.WinnerMarketID<1||x.ScheduledMatchID.Valid||
   !x.LinkedSession.Valid||strings.TrimSpace(x.LinkedSession.String)==""||
   !x.OwnerSteamID.Valid||strings.TrimSpace(x.OwnerSteamID.String)==""||
+  !x.SourceParseIteration.Valid||x.SourceParseIteration.Int64<1||
+  !x.SourceRosterHash.Valid||!reviewerHexDigest.MatchString(x.SourceRosterHash.String)||
   !x.TeamResolutionStatus.Valid||x.TeamResolutionStatus.String!="resolved"||
   !x.TeamConfidence.Valid||x.TeamConfidence.String!="high"||
   !x.RosterLockedAt.Valid||x.RosterLockedAt.Time.Before(x.OwnerSignedAt.Time)||
@@ -172,6 +178,10 @@ func (x ReviewerPGMarketRow)validate(now time.Time,original ReviewerHDOriginResu
   OwnerUID:original.OwnerUID,GameIdentityKey:original.GameIdentityKey,
   MarketID:x.WinnerMarketID,PropositionHash:original.PropositionHash,
   SelectedSide:x.SelectedSide.String,LinkedSession:x.LinkedSession.String,
+  OwnerSteamID:x.OwnerSteamID.String,
+  SourceParseIteration:x.SourceParseIteration.Int64,
+  SourceRosterHash:x.SourceRosterHash.String,
+  RosterLockedAtMS:x.RosterLockedAt.Time.UnixMilli(),
   CreatedAt:x.ExecutionCreated},nil
 }
 
