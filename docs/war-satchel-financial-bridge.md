@@ -315,3 +315,30 @@ authentic evidence adapters and release authority may make it live.
 This source does not change the protected Wolo financial HOLD (#5), founder
 claim #889, 8092/8093 settlement, Satchel 8094 custody,
 `SATCHEL_FINANCIAL_BRIDGE_READY=false`, operator approvals or real funds.
+
+## Independently verified Keplr ADR-36 consent (October 19, 2026)
+
+The held 8095 reviewer now has a **real Go secp256k1 owner-mandate
+verification primitive** in `internal/satchelservice/reviewer_owner_mandate.go`
+with source tests. It rebuilds the exact HD/CosmJS challenge text from
+the original persisted owner UID, wallet, preset/version, per-game stake,
+daily and per-game ceilings, finite-games/until-out allowance, nonce,
+and issue/expiry dates. It reconstructs CosmJS's canonical
+`makeSignDoc`/`serializeSignDoc` for `sign/MsgSignData`, verifies the
+original 64-byte Keplr ADR-36 signature against the compressed
+secp256k1 public key and its derived `wolo` address, and binds the
+record to *current* owner and preset state. Revocation, expiry, late
+signing, a changed wallet/stake/nonce, increasing finite allowance, an
+unbounded cap or forged challenge all refuse verification.
+
+A `signedAt` field, a correct hash, or a service bearer is NOT a
+signature. The method always returns only an error/non-error predicate
+and cannot itself authorize an approval or WOLO transfer. It must be fed
+original read-only SQL records by the separately governed 8095 evidence
+adapter, and the app's immutable reservation/ledger/consent digests
+still need exact cross-language recomputation and comparison. Live
+database credentials, independent read-only PostgreSQL role, cryptographic
+Comet bank/liability/fee census, multi-producer source closure and
+protected 8095 service activation do **not** yet exist. The six issue #5
+financial controls, unknown chain transactions and founder claim #889
+remain held. No production custody keys or transactions are touched.

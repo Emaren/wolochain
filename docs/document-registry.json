@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "bdfb9cb2af10cf81835b776d1eb97907a86892385fc0fef2cf264bc42f841f6c",
+      "sha256": "f827ef5552e7f58a8ca416c498be642a779ada99a416bfe0bc218fe2a5e366d8",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -519,7 +519,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-18",
       "sensitivity": "restricted",
-      "sha256": "b3647141517ea12d33fe240c779a9c72b6ea6d664c00ff93411923f1b96e6640",
+      "sha256": "e1d22b1ac4e83248c82d771c099e7d0a57b6b0d2b716e6ef88f5cf3659f5fc4d",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -946,8 +946,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "feature/20261019-satchel-reviewer-issuer-core",
-    "commit": "74f43e22f5029b33932bfc6f95ed46061f799368"
+    "branch": "feature/20261019-reviewer-keplr-adr36-authority",
+    "commit": "17f2e00709cd69bb232a30bd45695bd8a9b39fe0"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

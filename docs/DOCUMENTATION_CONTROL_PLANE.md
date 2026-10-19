@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `feature/20261019-satchel-reviewer-issuer-core` at `74f43e22f5029b33932bfc6f95ed46061f799368`
+Implementation baseline: `feature/20261019-reviewer-keplr-adr36-authority` at `17f2e00709cd69bb232a30bd45695bd8a9b39fe0`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
