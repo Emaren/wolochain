@@ -7,8 +7,6 @@ package satchelservice
 import (
  "context"
  "database/sql"
- "encoding/json"
- "errors"
  "strings"
  "time"
 )
@@ -156,5 +154,3 @@ func (s *ReviewerReadOnlyPGSource)InspectWatcherMarket(ctx context.Context,input
  if e!=nil||tx.Commit()!=nil{return ReviewerWatcherCandidate{},ErrReviewerHeld}
  return candidate,nil
 }
-var _ = errors.Is
-var _ = json.Valid
