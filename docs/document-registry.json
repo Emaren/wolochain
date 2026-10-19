@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "2e699ab3ff373cd33f31d07a01d3a6c666bc9eee8ff65af68daeefa4ea9b2563",
+      "sha256": "91bbaaba67fe816fac14931afdadbaf58be3da107e08ab363b856c18cf98ee7c",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -519,7 +519,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-18",
       "sensitivity": "restricted",
-      "sha256": "f057ed792b4887d90a8eb4caab0f421a08131cf4073448f01536b6a0ab6bafdd",
+      "sha256": "430bc38f4d7e9e7b21e011abbed250a7e98536ed48679de08038d4ff76bc4fea",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -947,7 +947,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "feature/20261019-independent-replay-verifier-bridge",
-    "commit": "e21b0a9150836ab2921d52c00b01fe6252b9d777"
+    "commit": "c396081b107a29c98e1197f03ef4730a390c9431"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
