@@ -83,7 +83,12 @@ func run(ctx context.Context, args []string, out, errout io.Writer) int {
 		fmt.Fprintln(errout, "satchel: withdrawal authority refused")
 		return 2
 	}
-	policy := satchelservice.Policy{Vault: cfg.Vault, BettingEscrow: cfg.BettingEscrow, ProtectedAddresses: cfg.ProtectedAddresses, MaxAmountUWolo: cfg.MaxAmountUWolo, WithdrawalApprovalKey: approvalKey}
+	wagerKey, err := hex.DecodeString(cfg.WagerApprovalKeyHex)
+	if err != nil || bytes.Equal(wagerKey,approvalKey) {
+		fmt.Fprintln(errout, "satchel: wager authority refused")
+		return 2
+	}
+	policy := satchelservice.Policy{Vault: cfg.Vault, BettingEscrow: cfg.BettingEscrow, ProtectedAddresses: cfg.ProtectedAddresses, MaxAmountUWolo: cfg.MaxAmountUWolo, WithdrawalApprovalKey: approvalKey, WagerApprovalKey: wagerKey}
 	backend, err := satchelservice.NewKeyringBackend(satchelservice.BackendConfig{RPC: cfg.RPC, REST: cfg.REST, WitnessRPC: cfg.WitnessRPC, Vault: cfg.Vault, PublicKeyHex: cfg.PublicKeyHex, KeyringDir: cfg.KeyringDir, KeyName: cfg.KeyName, PassphraseFile: cfg.PassphraseFile, FeesUWolo: cfg.FeesUWolo, MaxAmountUWolo: strconv.FormatUint(cfg.MaxAmountUWolo, 10), GasLimit: cfg.GasLimit, TimeoutBlocks: cfg.TimeoutBlocks, ApprovedDestinations: []string{cfg.BettingEscrow}, ProtectedAddresses: cfg.ProtectedAddresses, WithdrawalVerifier: policy.VerifyWithdrawal, WagerVerifier: policy.VerifyWager, ConfirmTransaction: func(ctx context.Context, request satchelservice.TransferRequest, signed satchelservice.SignedTransaction) (satchelservice.Confirmation, error) {
 		evidence, err := trusted.ReadTransfer(ctx, satchel.TransferIntent{Sender: request.Sender, Recipient: request.Recipient, AmountUWolo: request.AmountUWolo, Memo: request.Memo}, signed.Hash)
 		if err != nil || !evidence.ConsensusAuthenticated() || evidence.CreditAuthorized() {
