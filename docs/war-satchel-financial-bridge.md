@@ -372,3 +372,40 @@ producer/liability/fee census must approve within a coordinated
 atomic reviewer issue step. These verified-source capabilities have
 not been activated or deployed. 8092/8093, 8094, 8095 and all
 financial HOLDs remain unchanged.
+
+## Independent SELECT-only HD PostgreSQL original-wager reader (source, HELD)
+
+`internal/satchelservice/reviewer_pg_origin.go` is the first
+**real SQL source adapter** for the separate 8095 reviewer. It opens
+a repeatable-read READ ONLY PostgreSQL transaction as a required
+`satchel_reviewer_*` account, checks `current_user`,
+`transaction_read_only=on`, nonprivileged role flags, and **absence
+of financial table INSERT/UPDATE/DELETE privileges**. It executes
+only a fixed parameterized original operation query; the remote
+caller supplies no SQL, amount, bank claim, key or wallet identity.
+
+The original wager row is joined, at the same SQL snapshot, against
+the existing funded reservation, Watcher execution, player preset,
+original owner/wallet, provisional stake ticket and owner reserved
+balance. The result must agree with the independently recomputed
+three hashes of the immutable HD authorization, and with canonical
+ticket, amount, memo, game identity, proposition, profile/version,
+and vault/escrow. Any altered owner, market, state, already-broadcast
+ticket, insufficient original reserved amount, expired four-minute
+game or unattempted-holder mismatch refuses. Every source read is
+bounded and never writes application or chain state.
+
+**Deliberately incomplete:** the present adapter implements only
+`OriginalHold` of the reviewer evidence interface. Its
+`VerifyOwnerMandate`, `VerifyWatcherMarket`, and
+`AuthenticatedFeeCensus` methods all return `ErrReviewerHeld`
+even if the SQL original wager is valid. The Go Keplr signature
+verifier, signed Watcher/game evidence, full financial bank/fee
+census, source attestation, live reviewer credential provisioning,
+and protected transaction-wide bank/liability coordination still
+need to be independently *wired* and tested. No 8095 process,
+PostgreSQL credential, service file, consensus operation or
+user-funds movement is configured by this code; it **cannot
+issue an approval** while these three methods remain disabled.
+It is not proof that the required read-only role has actually
+been provisioned or independently reviewed in production.
