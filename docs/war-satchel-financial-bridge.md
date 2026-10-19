@@ -264,3 +264,11 @@ its financial proof through the actual offline CLI with actual-clock freshness,
 checks identical read-only receipt identity on repeat verification, and rejects
 wrong expected hash/owner, wrong checkpoint and fabricated REST-only evidence.
 It creates only temporary isolated test files and never contacts production.
+
+## Automatic reviewer economics source contract (October 19, 2026)
+
+The first automatic-reviewer source milestone is `internal/satchelservice/reviewer_fee_budget.go`, with adversarial tests in `reviewer_fee_budget_test.go`. This is a deliberately **pure, NONAUTHORIZING prerequisite**, corresponding to the app-side held `warSatchelFeeHeadroom.ts`. It binds a proposed ticket operation and its exact signed-protocol fee to bounded integer arithmetic: all owner liability principal + the possible gas of every prepared/uncertain operation + the prospective wager gas + an unencumbered operating-gas cushion must fit inside the observed bank amount.
+
+The arithmetic refuses wrong chain/denomination/operation, mismatched fee, duplicate or invalid pending operation IDs, bad/capped/overflowing integers and oversized pending lists. UNKNOWN stays gas-reserved. A declared incomplete census returns `CENSUS_INCOMPLETE`; apparently sufficient sums return only `BUDGET_SUFFICIENT_NONAUTHORIZING`, with `SpendingAuthorized=false`, `BankAuthenticated=false` and `OwnerLedgerAuthenticated=false` **always**. A caller saying `PendingOperationsComplete=true` does not authenticate its inventory or guarantee completeness. Neither the result nor the supplied bank number can authorize a reviewer signature.
+
+**Remaining functional work:** independently authenticated owner mandate, immutable HD reservation, canonical Watcher market/identity, custody bank and all HD/DE/external financial liabilities; completeness proof for competing signer operations; independently controlled Ed25519 approval service with durable idempotent issuance and atomic ingestion; and isolated end-to-end reviewer→8094→escrow→return/withdraw tests. The pure arithmetic has no signer key, RPC, database, transport, side effects or live activation. All mainnet financial and protected release controls remain held. See WoloChain issue #46 for the complete reviewer integration gate and issue #5 for legacy financial-release HOLD.
