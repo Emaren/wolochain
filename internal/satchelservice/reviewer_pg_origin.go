@@ -163,7 +163,7 @@ func NewReviewerReadOnlyPGSource(db *sql.DB,role,fee,vault,escrow string)(*Revie
 // BEGIN READ ONLY is necessary but NOT sufficient: the connected principal
 // must also lack INSERT/UPDATE/DELETE and superuser/role-mgmt permissions.
 func (s *ReviewerReadOnlyPGSource) OriginalHold(ctx context.Context,id string)(WagerReservation,error){
- if s==nil||!wagerIDs.MatchString(id)||ctx.Err()!=nil{
+ if s==nil||s.db==nil||ctx==nil||!wagerIDs.MatchString(id)||ctx.Err()!=nil{
   return WagerReservation{},ErrReviewerHeld
  }
  ctx,cancel:=context.WithTimeout(ctx,2*time.Second)
