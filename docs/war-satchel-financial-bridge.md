@@ -549,36 +549,45 @@ unconditionally refuses `VerifyWatcherMarket` and
 `AuthenticatedFeeCensus`. These controls do NOT activate customer
 WOLO, deploy 8095/8094, provision keys or clear Wolo issue #5.
 
-## Signed Watcher receipt + independently hashed original replay bridge (held)
+## Live-game Watcher v2 receipt + frozen pre-bet source bytes (held)
 
-`internal/satchelservice/reviewer_watcher_replay_bridge.go` connects the
-previously independent Watcher database observation and Ed25519 receipt
-verifier. It introduces two distinct *source* contracts:
-`ReviewerSignedWatcherReceiptReader` fetches the separately signed original
-event receipt; `ReviewerOriginalReplayReader` opens the independently
-authenticated original replay bytes for that specific operation, Steam
-identity, game, roster and market. The 8095 library computes SHA256 itself
-over the returned bytes, bounded to 64 MiB. It refuses absent or empty
-bytes, oversized archives, read/close errors, an absent trust root, a
-forged/stale signature or any discrepancy with the original read-only
-PostgreSQL Watcher candidate. After verifying, it reads the original
-market a second time and rejects changes during replay verification.
+**IMPORTANT product timing:** Auto Betting must fire DURING the next
+Watcher-detected Age of Empires II match. The existing content-addressed
+`aoe2-replay-archive` stores the final replay and is **post-game**
+evidence. Requiring that final replay before a wager would prevent the
+minimum viable product from working. The earlier
+`ReviewerWatcherWitness` v1 `raw_replay_sha256` signature stays
+available for post-game audits only; it must not grant pre-bet authority.
 
-The new `ReviewerIndependentWatcherSource` implements the existing
-reviewer evidence interface and may satisfy **only the Watcher evidence
-method**, conditional on independently provisioned providers and a trusted
-Ed25519 public key. It delegates to the existing restricted PostgreSQL
-source for the original reservation and real Keplr owner authorization.
-The inherited `AuthenticatedFeeCensus` method STILL ALWAYS returns
-`ErrReviewerHeld`, preventing any live wager approval even when test
-replay evidence and a synthetic witness are valid.
+`internal/satchelservice/reviewer_watcher_live_witness.go` introduces
+a new **separately domain-separated v2** Ed25519 signed receipt for a
+frozen **live game-start checkpoint**. It binds exact original operation,
+Steam user, game/market/side/proposition, source roster hash, parse
+iteration and roster-lock time, signed checkpoint SHA256, capture and
+observation timestamps, and a maximum 60-second receipt TTL.
+Capture and observation must occur within the first 120 seconds after
+the original admitted live execution and not precede roster-lock time.
+A final replay captured only after the match ends is NOT eligible.
 
-**A key boundary remains unimplemented:** code injection of an interface
-does not independently certify the authenticity of replay bytes. Neither
-independent source-pinned replay archive/operator, root-governed event
-signer/key, external roster/Steam attribution nor continuous source-to-
-broadcast authority exists in production yet. A replay copy supplied by
-the app or its own database must NOT count as independent provenance.
-No production keys, credentials, watcher daemon, 8094/8095, bank proofs,
-customer balances or Wolo mainnet services were activated. Standalone
-Go tests prove only verifier behavior and financial HOLD preservation.
+`reviewer_watcher_replay_bridge.go` implements
+`ReviewerSignedLiveWatcherReader` and
+`ReviewerIndependentLiveCheckpointReader`. The reviewer does **not**
+accept a caller-provided hash. It computes SHA256 itself over the
+frozen game-start bytes, strictly bounded to 64 MiB, and verifies
+the separate pinned v2 signature against the read-only original
+market/Steam source. Empty, corrupt, oversized, unreadable or
+unfinalized checkpoints, forged receipts, cross-version v1 signatures
+and late-final evidence refuse. The original market is re-read
+after verification and must remain unchanged.
+
+**Not live, not independently attested:** the interface providers
+are synthetic in source tests. There is no separately administered
+frozen live-checkpoint producer, independent signing key or OS role,
+Steam/game-start trust audit, or signed receipt serving operation
+yet. A screenshot, HD database flag, final replay, old legacy
+Watcher receipt or self-reported API hash cannot substitute.
+The inherited independent `AuthenticatedFeeCensus` method STILL
+unconditionally returns `ErrReviewerHeld`. Bank, all liabilities,
+pending gas, global producers and the Wolo issue #5 controls
+remain HOLD. Nothing has been installed on the app, replay API,
+8094/8095, settlement processes or consensus.
