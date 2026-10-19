@@ -30,10 +30,12 @@ type testLiveCheckpointBytes struct{
  data []byte
  err error
  calls int
+ delay time.Duration
 }
 func (r *testLiveCheckpointBytes)OpenAuthenticatedLiveCheckpoint(
  ctx context.Context,c ReviewerWatcherCandidate)(io.ReadCloser,error){
  r.calls++
+ if r.delay>0{time.Sleep(r.delay)}
  if r.err!=nil||ctx.Err()!=nil||c.GameIdentityKey==""{
   return nil,ErrReviewerHeld
  }
@@ -79,7 +81,7 @@ func TestReviewerLiveWatcherRejectsPostGameOrChangedSourceWithoutSpending(t *tes
   "late_final_replay","capture_before_roster_lock","wrong_live_digest",
   "expired","missing_witness","missing_checkpoint","unreadable_witness",
   "unreadable_checkpoint","empty_checkpoint","oversize","canceled",
-  "missing_public_key","other_receipt_protocol",
+  "missing_public_key","other_receipt_protocol","expired_during_checkpoint_read",
  }
  for _,which:=range cases{
   t.Run(which,func(t *testing.T){
@@ -113,6 +115,9 @@ func TestReviewerLiveWatcherRejectsPostGameOrChangedSourceWithoutSpending(t *tes
    case "canceled":var cancel context.CancelFunc;ctx,cancel=context.WithCancel(ctx);cancel()
    case "missing_public_key":pub=nil
    case "other_receipt_protocol":w.original.Version=1
+   case "expired_during_checkpoint_read":
+    w.original.ExpiresAtMS=now.Add(time.Millisecond).UnixMilli()
+    checkpoint.delay=25*time.Millisecond
    }
    if which!="forged_signature" && which!="changed_checkpoint_bytes" &&
     which!="wrong_key" && which!="other_market" &&
