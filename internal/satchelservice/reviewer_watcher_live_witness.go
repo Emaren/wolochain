@@ -74,9 +74,9 @@ func VerifyReviewerWatcherLiveWitness(
   !reviewerHexDigest.MatchString(w.SourceRosterHash)||
   w.RosterLockedAtMS!=c.RosterLockedAtMS||
   w.ExecutionCreatedAtMS!=c.CreatedAt.UnixMilli()||
-  w.RosterLockedAtMS<=0||
+  w.RosterLockedAtMS<0||
   w.RosterLockedAtMS>w.ExecutionCreatedAtMS||
-  w.CapturedAtMS<w.RosterLockedAtMS||
+  w.CapturedAtMS<w.ExecutionCreatedAtMS-120000||
   w.CapturedAtMS>w.ExecutionCreatedAtMS+120000||
   w.ObservedAtMS<w.CapturedAtMS||
   w.ObservedAtMS>w.ExecutionCreatedAtMS+120000||
