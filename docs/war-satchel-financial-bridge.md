@@ -516,3 +516,35 @@ does not authorize Wolo deposits, game wagering, withdrawals,
 recovery or treasury actions. 8095 bank/Watcher trust and the
 six financial-release controls remain HOLD. No keys were generated
 on a production machine or placed into GitHub.
+
+## Final reviewer evidence-revalidation fence (October 19)
+
+The held 8095 `ReviewerIssuer.ReviewOne` now **revalidates the original
+financial hold, signed owner mandate, live Watcher market, and complete
+fee/bank census after the initial evidence sequence**, immediately before
+writing its durable PENDING intent and performing any Ed25519 approval
+signature. It demands the same original immutable operation fingerprint,
+zero provisional issuer timestamps, exact signer vault and escrow, and
+a second independently verified `BUDGET_SUFFICIENT_NONAUTHORIZING`
+arithmetic result. A changed source during the first fee-census read
+refuses rather than signing a stale earlier observation. An already
+SIGNED grant is still returned only under fresh source verification
+and the existing immutable same-signature + expiration fence.
+
+Adversarial tests force owner revocation, market closure, a changed
+reservation digest, rebinding of owner UID, bank-gas headroom loss,
+and incomplete producer inventory **between** the initial and final
+evidence reads. Each case refuses without even writing a new durable
+signing intent. On a stable source, the tests require two independent
+source reads and fee-census passes and prohibit reissuance after a
+revocation.
+
+**This is necessary but not sufficient for real spending safety.**
+Repeated reads are not a single cross-system atomic snapshot and
+cannot prove solvency or authenticity. Live reviewer operation
+requires an independently governed, bounded bank/liability/fee
+checkpoint and real Watcher replay trust root, plus source freshness
+through signing/broadcast. The current PG evidence source still
+unconditionally refuses `VerifyWatcherMarket` and
+`AuthenticatedFeeCensus`. These controls do NOT activate customer
+WOLO, deploy 8095/8094, provision keys or clear Wolo issue #5.
