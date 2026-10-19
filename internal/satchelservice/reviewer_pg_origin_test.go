@@ -112,7 +112,11 @@ func TestReadonlyPGRoleCannotBeAppOrPrivilegedOperator(t *testing.T){
  if reviewerPGOriginalQuery==""||reviewerPGIdentityQuery==""||
   !strings.Contains(reviewerPGIdentityQuery,"has_table_privilege")||
   !strings.Contains(reviewerPGIdentityQuery,"transaction_read_only")||
-  !strings.Contains(reviewerPGOriginalQuery,"WHERE a.operation_id=$1"){
+  !strings.Contains(reviewerPGOriginalQuery,"WHERE a.operation_id=$1")||
+  !strings.Contains(reviewerPGOriginalQuery,"FROM public.war_satchel_wager_authorizations")||
+  !strings.Contains(reviewerPGOriginalQuery,"JOIN public.bet_auto_executions")||
+  !strings.Contains(reviewerPGIdentityQuery,"'public.war_satchel_wager_authorizations'")||
+  !strings.Contains(reviewerPGIdentityQuery,"'public.war_satchel_auto_spend_mandates'"){
   t.Fatal("independent SQL principal or parameterization gate missing")
  }
 }
