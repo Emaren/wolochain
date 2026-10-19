@@ -71,13 +71,18 @@ func VerifyIndependentReviewerLiveWatcher(
 )error{
  if ctx==nil||ctx.Err()!=nil||witness==nil||checkpoint==nil||
   len(pinnedKey)!=ed25519.PublicKeySize{return ErrReviewerHeld}
+ started:=time.Now()
  ctx,cancel:=context.WithTimeout(ctx,3*time.Second)
  defer cancel()
  proof,e:=witness.FetchOriginalLiveWitness(ctx,c.OriginalOperationID)
  if e!=nil||ctx.Err()!=nil{return ErrReviewerHeld}
  originalDigest,e:=reviewerHashLiveCheckpoint(ctx,checkpoint,c)
  if e!=nil||ctx.Err()!=nil{return ErrReviewerHeld}
- if VerifyReviewerWatcherLiveWitness(c,proof,pinnedKey,originalDigest,now)!=nil{
+ // A signed live checkpoint can expire DURING source I/O. The caller's
+ // original wall clock is advanced using monotonic elapsed time before
+ // verifying the TTL; never approve a stale receipt on a slow archive read.
+ verifiedAt:=now.Add(time.Since(started))
+ if VerifyReviewerWatcherLiveWitness(c,proof,pinnedKey,originalDigest,verifiedAt)!=nil{
   return ErrReviewerHeld
  }
  return nil
