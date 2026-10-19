@@ -137,8 +137,7 @@ func (r ReviewerPGOriginalRow)validate(now time.Time,fee string,vault string,esc
   evidence.GameIdentityKey!=r.GameIdentityKey||
   evidence.PropositionHash!=r.PropositionHash||
   evidence.PresetID!=r.ExecutionPresetID||
-  evidence.PresetVersion!=r.ExecutionPresetVersion||
-  evidence.TicketID!=r.TicketID {
+  evidence.PresetVersion!=r.ExecutionPresetVersion {
   return held()
  }
  amount,_:=strconv.ParseUint(r.ReservationAmount,10,64)
