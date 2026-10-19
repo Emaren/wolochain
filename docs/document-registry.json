@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "3c793b9ad0c4b847fe0cb71889106c8f66d5872b023936a141a6176de5fe50e6",
+      "sha256": "e84671f48b84efdcfe84b25e8c70d203fd911fab91cc13a31fc0eb9e627882b8",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -947,7 +947,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "feature/20261019-reviewer-readonly-hd-snapshot",
-    "commit": "72368af7b27adde6dde0dc1965249c83c5360330"
+    "commit": "745bdd18c9678fa5bd5fdb29acc3b94de3c197d7"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
