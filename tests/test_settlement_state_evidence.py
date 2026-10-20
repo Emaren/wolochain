@@ -484,5 +484,87 @@ class SettlementStateEvidenceTest(unittest.TestCase):
         self.assertEqual(self.inspect()["reader_source_sha256"], hashlib.sha256(SCRIPT.read_bytes()).hexdigest())
 
 
+    def _focus_escrow_fixture(self, request_id, status="confirmed", tx=None):
+        record = self.request(request_id, status=status,
+                              tx=tx if tx is not None else "A" * 64, role="escrow")
+        record["request"]["amount_uwolo"] = "100000000"
+        self.refresh_request(record)
+        self.put("requests", request_id + ".json", record)
+        return record
+
+    def test_focus_escrow_100_returns_accepted_and_bounded_confirmed_without_wallets(self):
+        accepted = self._focus_escrow_fixture("escrow-accepted", "accepted", "B" * 64)
+        for i in range(20):
+            self._focus_escrow_fixture(f"escrow-conf-{i:03d}", "confirmed",
+                                       f"{i+1:064x}")
+        one = self.request("other-amount", status="confirmed", tx="C" * 64,
+                           role="escrow")
+        self.put("requests", "other-amount.json", one)
+        normal = evidence.inspect_state((self.root,))
+        self.assertNotIn("escrow100Focus", normal)
+        focused = evidence.inspect_state((self.root,), focus_escrow_100=True)
+        focus = focused["escrow100Focus"]
+        self.assertEqual(focus["matchedAcceptedCount"], 1)
+        self.assertEqual(focus["matchedConfirmedCount"], 20)
+        self.assertEqual(len(focus["acceptedRecords"]), 1)
+        self.assertEqual(len(focus["recentlyModifiedConfirmedRecords"]), 16)
+        self.assertEqual(focus["confirmedRecordsOmitted"], 4)
+        self.assertEqual(focus["acceptedRecords"][0]["recordedPublicTxHash"], "B" * 64)
+        self.assertEqual(focus["acceptedRecords"][0]["requestIdSha256"],
+                         hashlib.sha256(b"escrow-accepted").hexdigest())
+        self.assertTrue(focus["publicTxHashesAreUnauthenticatedJournalClaims"])
+        self.assertFalse(focus["selectionProvesLatest8NewRequests"])
+        self.assertFalse(focus["mtimeIsTrustedTransferTime"])
+        self.assertFalse(focus["independentChainProofVerified"])
+        self.assertFalse(focus["retryAuthorized"])
+        self.assertFalse(focused["chain_proof_verified"])
+        excerpt = json.dumps(focus)
+        for token in ("PRIVATE_MEMO", "PRIVATE_DETAIL", "PRIVATE_SIGNER",
+                      "wolo1recipient", "escrow-accepted", "other-amount"):
+            self.assertNotIn(token, excerpt)
+
+    def test_focus_does_not_promote_wrong_role_or_amount(self):
+        self.put("requests", "request-001.json",
+                 self.request("request-001", status="confirmed", tx="A" * 64,
+                              role="payout"))
+        r = evidence.inspect_state((self.root,), focus_escrow_100=True)
+        self.assertEqual(r["escrow100Focus"]["matchedAcceptedCount"], 0)
+        self.assertEqual(r["escrow100Focus"]["matchedConfirmedCount"], 0)
+        self.assertFalse(r["escrow100Focus"]["financialReleaseAuthorized"])
+
+    def test_focus_still_rejects_invalid_confirmed_transaction(self):
+        record = self._focus_escrow_fixture("escrow-accepted", "confirmed", "A" * 64)
+        record["response"]["tx_hash"] = "not-a-valid-hash"
+        self.put("requests", "escrow-accepted.json", record)
+        with self.assertRaisesRegex(evidence.EvidenceError, "INVALID_TX_HASH"):
+            evidence.inspect_state((self.root,), focus_escrow_100=True)
+
+    def test_focus_overflow_and_nonboolean_mode_fail_closed(self):
+        with self.assertRaisesRegex(evidence.EvidenceError, "INVALID_FOCUS_MODE"):
+            evidence.inspect_state((self.root,), focus_escrow_100=1)
+        for i in range(17):
+            self._focus_escrow_fixture(f"accepted-{i:03d}", "accepted",
+                                       f"{i+17:064x}")
+        with self.assertRaisesRegex(evidence.EvidenceError, "FOCUS_ACCEPTED_LIMIT"):
+            evidence.inspect_state((self.root,), focus_escrow_100=True)
+
+    def test_stdin_focus_cli_never_edits_journals_or_claims_release(self):
+        self._focus_escrow_fixture("escrow-accepted", "accepted", "B" * 64)
+        before = {str(p): p.read_bytes() for p in self.root.rglob("*")
+                  if p.is_file()}
+        result = subprocess.run([sys.executable, "-I", "-",
+                                 "--state-root", str(self.root),
+                                 "--focus-escrow-100"],
+                                input=SCRIPT.read_bytes(), capture_output=True,
+                                timeout=10, check=False)
+        self.assertEqual(result.returncode, 3, result.stderr)
+        data = json.loads(result.stdout)
+        self.assertIsNone(data["reader_source_sha256"])
+        self.assertEqual(data["escrow100Focus"]["matchedAcceptedCount"], 1)
+        self.assertFalse(data["escrow100Focus"]["financialReleaseAuthorized"])
+        self.assertEqual(before, {str(p): p.read_bytes() for p in self.root.rglob("*")
+                                  if p.is_file()})
+
+
 if __name__ == "__main__":
     unittest.main()
