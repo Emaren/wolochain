@@ -368,8 +368,10 @@ def _reader_identity():
             os.close(fd)
 
 
-def inspect_state(roots, *, focus_escrow_100=False):
-    if type(focus_escrow_100) is not bool:
+def inspect_state(roots, *, focus_escrow_100=False, escrow_identity_manifest=False):
+    if (type(focus_escrow_100) is not bool or
+            type(escrow_identity_manifest) is not bool or
+            (escrow_identity_manifest and not focus_escrow_100)):
         fail("INVALID_FOCUS_MODE")
     if not 1 <= len(roots) <= MAX_ROOTS:
         fail("ROOT_COUNT_LIMIT")
@@ -561,6 +563,27 @@ def inspect_state(roots, *, focus_escrow_100=False):
             "financialReleaseAuthorized": False,
             "retryAuthorized": False,
         }
+    if escrow_identity_manifest:
+        # Full scoped identity list, never user wallet/memo/private request ID.
+        # The count is bounded by the existing FOCUS_MATCH_LIMIT. This gives a
+        # future independent reader exact record-delta leads, not chain finality
+        # or proof that a particular request arrived between observations.
+        rows = sorted((
+            {"laneIndex": row["laneIndex"],
+             "recordedStatus": row["recordedStatus"],
+             "requestIdSha256": row["requestIdSha256"],
+             "requestRecordSha256": row["requestRecordSha256"]}
+            for row in focused_escrow
+        ), key=lambda row: (row["laneIndex"], row["requestIdSha256"]))
+        result["escrow100IdentityManifest"] = {
+            "schema": "wolo.settlement.escrow100-identity-manifest.v1",
+            "count": len(rows),
+            "complete_for_observed_100_wolo_requests": True,
+            "records": rows,
+            "private_request_ids_or_wallets_emitted": False,
+            "authoritative_chain_evidence": False,
+            "financial_release_authorized": False,
+        }
     return result
 
 
@@ -569,10 +592,13 @@ def main(argv=None):
     parser.add_argument("--state-root", action="append", required=True, type=Path)
     parser.add_argument("--focus-escrow-100", action="store_true",
                         help="Include bounded, nonauthorizing public tx leads without wallets/memos")
+    parser.add_argument("--full-escrow-100-manifest", action="store_true",
+                        help="Add all bounded hashed request identities for future nonauthorizing delta comparison")
     args = parser.parse_args(argv)
     try:
         output = inspect_state(args.state_root,
-                               focus_escrow_100=args.focus_escrow_100)
+                               focus_escrow_100=(args.focus_escrow_100 or args.full_escrow_100_manifest),
+                               escrow_identity_manifest=args.full_escrow_100_manifest)
     except EvidenceError as error:
         print(json.dumps({"version": VERSION, "status": "HELD", "observation_complete": False,
                           "error": str(error), "release_authorized": False, "retry_authorized": False,

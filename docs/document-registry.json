@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "abdb3e94c89ed0f239db1381f70896aafed06df771a214c0b75b405c280bafa6",
+      "sha256": "48f948fe790a653540265a25a1c635e1473e586f1d254f34197c104541e3d338",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -312,7 +312,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-18",
       "sensitivity": "restricted",
-      "sha256": "186ec93e08e25341e5031e95209de9d2d5b818e45ceae7c6322da794ff84e26d",
+      "sha256": "95c046854976975cf080fef3eae36b6716abde316d76c6b3c1303ff39a9769e1",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -970,8 +970,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "ops/20261020-escrow-100-reconciliation-focus",
-    "commit": "0a83aebbe2dd3b6af99bf7b1b87a4d5af8dbaea7"
+    "branch": "ops/20261020-escrow100-exact-delta-held",
+    "commit": "97597b0763c756bafcbb62725135b22f1fb61dee"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

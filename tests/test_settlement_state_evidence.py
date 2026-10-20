@@ -566,5 +566,127 @@ class SettlementStateEvidenceTest(unittest.TestCase):
                                   if p.is_file()})
 
 
+    def _load_escrow_delta(self):
+        path = SCRIPT.with_name("compare_settlement_escrow_100_manifests.py")
+        spec = importlib.util.spec_from_file_location("escrow_observed_delta", path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module
+
+    def test_full_manifest_proves_observed_identity_deltas_not_chain_payments(self):
+        delta = self._load_escrow_delta()
+        self._focus_escrow_fixture("escrow-accepted", "accepted", "B" * 64)
+        before = evidence.inspect_state((self.root,), focus_escrow_100=True,
+                                        escrow_identity_manifest=True)
+        self.assertEqual(before["escrow100IdentityManifest"]["count"], 1)
+        self.assertFalse(before["escrow100IdentityManifest"]["financial_release_authorized"])
+        self.assertNotIn("escrow100IdentityManifest",
+                         evidence.inspect_state((self.root,), focus_escrow_100=True))
+        self._focus_escrow_fixture("escrow-added", "confirmed", "C" * 64)
+        after = evidence.inspect_state((self.root,), focus_escrow_100=True,
+                                       escrow_identity_manifest=True)
+        compared = delta.compare(before, after)
+        self.assertEqual((compared["added_count"], compared["removed_count"],
+                          compared["changed_count"]), (1, 0, 0))
+        self.assertEqual(compared["added"][0]["requestIdSha256"],
+                         hashlib.sha256(b"escrow-added").hexdigest())
+        self.assertFalse(compared["historical_arrival_time_proven"])
+        self.assertFalse(compared["snapshots_atomic"])
+        self.assertFalse(compared["chain_proof_verified"])
+        self.assertFalse(compared["financial_release_authorized"])
+        self.assertFalse(compared["retry_authorized"])
+        exposed = json.dumps(after["escrow100IdentityManifest"])
+        for secret in ("escrow-added", "escrow-accepted", "PRIVATE_MEMO",
+                       "PRIVATE_SIGNER", "wolo1recipient", "B" * 64, "C" * 64):
+            self.assertNotIn(secret, exposed)
+
+    def test_full_manifest_tracks_changed_and_removed_original_records(self):
+        delta = self._load_escrow_delta()
+        rec = self._focus_escrow_fixture("escrow-001", "accepted", "B" * 64)
+        earlier = evidence.inspect_state((self.root,), focus_escrow_100=True,
+                                         escrow_identity_manifest=True)
+        rec["response"]["status"] = "confirmed"
+        rec["response"]["confirmation_status"] = "confirmed"
+        rec["response"]["ok"] = True
+        self.put("requests", "escrow-001.json", rec)
+        later = evidence.inspect_state((self.root,), focus_escrow_100=True,
+                                       escrow_identity_manifest=True)
+        changes = delta.compare(earlier, later)
+        self.assertEqual((changes["changed_count"], changes["added_count"]), (1, 0))
+        self.assertEqual(changes["changed"][0]["beforeStatus"], "accepted")
+        self.assertEqual(changes["changed"][0]["afterStatus"], "confirmed")
+        (self.root / "requests" / "escrow-001.json").unlink()
+        absent = evidence.inspect_state((self.root,), focus_escrow_100=True,
+                                        escrow_identity_manifest=True)
+        removed = delta.compare(later, absent)
+        self.assertEqual(removed["removed_count"], 1)
+        self.assertEqual(removed["added_count"], 0)
+        self.assertFalse(removed["payment_outcome_certified"])
+
+    def test_full_manifest_refuses_partial_reordered_tampered_or_untrusted_input(self):
+        import copy
+        delta = self._load_escrow_delta()
+        self._focus_escrow_fixture("escrow-001", "accepted", "B" * 64)
+        self._focus_escrow_fixture("escrow-002", "confirmed", "C" * 64)
+        valid = evidence.inspect_state((self.root,), focus_escrow_100=True,
+                                       escrow_identity_manifest=True)
+        for mutated in (
+            lambda x: x.pop("escrow100IdentityManifest"),
+            lambda x: x["escrow100IdentityManifest"].update(count=1),
+            lambda x: x["escrow100IdentityManifest"]["records"].reverse(),
+            lambda x: x["escrow100IdentityManifest"]["records"][0].update(
+                requestRecordSha256="not-a-digest"),
+            lambda x: x["escrow100Focus"].update(matchedConfirmedCount=500),
+            lambda x: x.update(observation_atomic=True),
+            lambda x: x.update(chain_proof_verified=True),
+            lambda x: x.update(release_authorized=True),
+            lambda x: x.update(roots_observed=0),
+        ):
+            bad = copy.deepcopy(valid)
+            mutated(bad)
+            with self.assertRaises(delta.InvalidManifest):
+                delta.compare(valid, bad)
+        incomplete = evidence.inspect_state((self.root,), focus_escrow_100=True)
+        with self.assertRaises(delta.InvalidManifest):
+            delta.compare(incomplete, valid)
+        with self.assertRaisesRegex(evidence.EvidenceError, "INVALID_FOCUS_MODE"):
+            evidence.inspect_state((self.root,), escrow_identity_manifest=True)
+
+    def test_escrow_manifest_cli_is_read_only_and_comparator_exit_three_held(self):
+        delta = self._load_escrow_delta()
+        self._focus_escrow_fixture("escrow-001", "accepted", "B" * 64)
+        before_bytes = {str(p): p.read_bytes() for p in self.root.rglob("*")
+                        if p.is_file()}
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            self.assertEqual(evidence.main(["--state-root", str(self.root),
+                                            "--full-escrow-100-manifest"]), 3)
+        sample = json.loads(output.getvalue())
+        self.assertEqual(sample["escrow100IdentityManifest"]["count"], 1)
+        old = Path(self.tmp.name) / "before.json"
+        new = Path(self.tmp.name) / "after.json"
+        old.write_text(json.dumps(sample))
+        new.write_text(json.dumps(sample))
+        p = subprocess.run([sys.executable, str(SCRIPT.with_name(
+            "compare_settlement_escrow_100_manifests.py")),
+            "--before", str(old), "--after", str(new)],
+            capture_output=True, timeout=10, check=False)
+        self.assertEqual(p.returncode, 3, p.stderr)
+        compared = json.loads(p.stdout)
+        self.assertEqual(compared["added_count"], 0)
+        self.assertFalse(compared["financial_release_authorized"])
+        self.assertTrue(compared["comparison_complete_for_supplied_manifests"])
+        self.assertEqual(before_bytes, {str(path): path.read_bytes()
+                                         for path in self.root.rglob("*") if path.is_file()})
+        old.unlink()
+        old.symlink_to(new)
+        bad = subprocess.run([sys.executable, str(SCRIPT.with_name(
+            "compare_settlement_escrow_100_manifests.py")),
+            "--before", str(old), "--after", str(new)],
+            capture_output=True, timeout=10, check=False)
+        self.assertEqual(bad.returncode, 2)
+        self.assertFalse(json.loads(bad.stdout)["financial_release_authorized"])
+
+
 if __name__ == "__main__":
     unittest.main()
