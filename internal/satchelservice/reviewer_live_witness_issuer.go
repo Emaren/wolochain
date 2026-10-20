@@ -22,7 +22,7 @@ import (
 )
 
 var independentLiveIssues=[]byte("original-live-watcher-issues-v1")
-var originalLiveSteamID=regexp.MustCompile(\`^[0-9]{17}$\`)
+var originalLiveSteamID=regexp.MustCompile(`^[0-9]{17}$`)
 
 // OriginalLiveCapture is sourced from the original append-only game-start
 // recorder. It must NOT be assembled from HD user-supplied market fields.
