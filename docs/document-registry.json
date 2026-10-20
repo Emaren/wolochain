@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "71f662c069a5601697cb8b6cbf09894b183c73bdede12462aa85ee36f88038eb",
+      "sha256": "2e10eeeaa7a8dbe1551f69876b595dbd5492ddad567e7b3c04b2bbc4a94f346c",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -402,9 +402,9 @@
       "owner": "wolochain-ops",
       "path": "docs/settlement-contracts/producer-owner-correlation.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-10-19",
+      "reviewed_at": "2026-10-20",
       "sensitivity": "internal",
-      "sha256": "1028cccedf4eb7d39dba54d6c115fc61b304ba276fe2673cdc65004ea5a67834",
+      "sha256": "e331b411030bf4481abff6cfa356753a20cc53c8ebac8427be607012b5a70a37",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -642,7 +642,7 @@
         "wolochain",
         "aoe2war"
       ],
-      "title": "Codex Mission: WoloChain Mainnet \u2194 Osmosis IBC Prep",
+      "title": "Codex Mission: WoloChain Mainnet ↔ Osmosis IBC Prep",
       "type": "historical"
     },
     {
@@ -803,7 +803,7 @@
         "wolochain",
         "aoe2war"
       ],
-      "title": "WoloChain Mainnet \u2192 Osmosis Liquidity Transfer",
+      "title": "WoloChain Mainnet → Osmosis Liquidity Transfer",
       "type": "historical"
     },
     {
@@ -872,7 +872,7 @@
         "wolochain",
         "aoe2war"
       ],
-      "title": "WoloChain Mainnet \u2192 Osmosis Test Transfer",
+      "title": "WoloChain Mainnet → Osmosis Test Transfer",
       "type": "historical"
     },
     {
@@ -970,8 +970,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "audit/20261019-producer-evidence-join",
-    "commit": "eecca4574cbda30887014e9a6f7869123106bd48"
+    "branch": "ops/20261020-financial-hold-remediation-board",
+    "commit": "97a48d041f02da53869c018306c95f8a81b4f81d"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
