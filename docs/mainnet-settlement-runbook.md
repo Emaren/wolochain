@@ -178,6 +178,25 @@ spool/scheduled directory symlinks and unbounded listings fail closed.
 The parent `/var/spool/cron` and child `crontabs` are separately enumerated,
 so the child folder is not counted as a job or silently ignored.
 
+**Observed Ubuntu 24.04 VPS layout (October 20, 2026):** the correct-host
+read-only `lstat` census on `ubuntu-4gb-hel1-11` showed exactly the
+`atjobs` and `atspool` directories under `/var/spool/cron`, with no
+unexpected entry types in the other seven scheduler roots. Their existence
+triggered the old `UNSAFE_SCHEDULER_ENTRY` despite being ordinary `at(1)`
+queue storage, **not additional user crontab files**. The corrected scanner
+accepts these two names **only as actual non-symlink directories in the
+conventional parent cron spool**. It still rejects files/symlinks under those
+names, unexpected nested directories and hard-linked files, and it never
+opens or prints `at` job bodies. Its source-controlled fields
+`atSpoolDirectoriesObserved`, `atSpoolDirectoriesMissingOrUnverified`,
+`atSpoolJobPayloadsInspected:false`, and
+`atSpoolFinancialWriterCapabilityExcluded:false` preserve an explicit
+unresolved queue-signer coverage boundary. `atq` is still a **separate
+read-only count**, with an unavailable queue recorded as `UNOBSERVED`.
+These facts do not certify producer isolation, source ownership, custody or
+solvency; a new PINNED **live VPS** collection is required.
+
+
 **Diagnostic STOP semantics:** the collector intentionally makes no
 financial-release claim even on a complete root-host observation. When a
 critical enumeration fails, it emits only the allowlisted
