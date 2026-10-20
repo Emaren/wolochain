@@ -128,3 +128,49 @@ Use real tx hashes and real `wolo1...` addresses before submitting an example pa
 7. Use `wolochaind settlement challenge audit --settlement-id <settlement_run_id>` for read-only operator reconciliation.
 
 The read-only funding, inspect, recent, and audit surfaces are WoloChain truth. Challenge disposition fields such as no-show, winner, refund reason, or treasury policy remain caller-supplied AoE2HDBets truth.
+
+## October 20 — independent PRE-BET live Watcher receipt issuer (SOURCE HOLD)
+
+`internal/satchelservice/reviewer_live_witness_issuer.go` is a new
+library-only, independently provisioned **v2 Ed25519 live game-start
+witness signer**. The original `ReviewerWatcherLiveWitnessMessage`
+protocol already exists and is verified at the independent reviewer;
+this change closes the issuer-side primitive without creating an HTTP
+ingress, a chain signing key or a payout worker.
+
+Its operator-owned interfaces are separate: an **original append-only
+live capture source** supplies the immutable operation/Steam/game/
+market/proposition/roster identity, original captured/observed times
+and checksum; an independently configured checkpoint reader opens the
+actual immutable game-start bytes and recomputes their SHA-256. Neither
+source is permitted to accept claims from the requesting user, a
+mutable app projection or the wallet-funded ledger. Two original
+capture reads and two original-byte digests must agree before signing.
+
+The issuer checks the existing signed witness protocol's captured/
+roster timing and source freshness, bounds the new receipt to at most
+30 seconds from current time and 60 seconds from original observation,
+and pins the exact operation into a private 0600 bbolt journal. The
+journal saves **PENDING before signing**, and permanently refuses to
+regenerate or extend the witness after an interrupted PENDING. An
+already signed valid witness is returned only after fresh original
+source/bytes verification; expiry never renews. The witness public
+key is distinct from **both** financial approval keys.
+
+Negative tests cover missing/changed original captures, wrong roster,
+expired records, mismatched original bytes, wrong keys, invalid
+financial-key reuse, symlink/world-readable state, and crash-safe
+idempotence. Any failed source or signature stays PENDING; there is
+no transfer request, wallet interface, ledger mutation or Wolo
+broadcast in the issuer.
+
+**Not deployment-ready:** the independently governed production
+`OriginalLiveCaptureSource` and immutable
+`ReviewerIndependentLiveCheckpointReader` adapters, dedicated
+private witness signing-key custody, provenance-backed API-to-HD
+original operation binding, separately authenticated fee/bank/global
+liability census, six Wolo historical financial release controls,
+and live funded end-to-end Keplr/Watcher/wager/withdrawal replay
+are still separate **HOLD** gates. The source-only issuer does
+not activate 8094 or 8095 and must never be interpreted as a
+financial authorization. No production runtime or keys were changed.
