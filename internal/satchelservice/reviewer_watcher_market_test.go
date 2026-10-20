@@ -188,3 +188,53 @@ func TestReviewerPreFirstStakeMustNotAcceptPreexistingMarketOrRosterLock(t *test
   })
  }
 }
+
+func reviewerPostShadowFirstStake(t *testing.T)(ReviewerPGMarketRow,ReviewerHDOriginResult,time.Time){
+ t.Helper()
+ row,orig,now:=reviewerUnstakedLiveMarket(t)
+ // A different player's first wager is recorded AFTER this owner's
+ // original shadow auto-bet execution. The original JSON MUST stay NULL.
+ first:=now.Add(-60*time.Second)
+ row.FirstStakeAcceptedAt=sql.NullTime{Valid:true,Time:first}
+ row.RosterLockedAt=sql.NullTime{Valid:true,Time:first}
+ row.BettingLockedAt=sql.NullTime{Valid:true,Time:first}
+ return row,orig,now
+}
+func TestReviewerSecondAutoBettorMayFollowRealOtherPlayersFirstStake(t *testing.T){
+ row,orig,now:=reviewerPostShadowFirstStake(t)
+ result,e:=row.validate(now,orig)
+ if e!=nil||result.RosterLockedAtMS!=row.FirstStakeAcceptedAt.Time.UnixMilli()||
+  !strings.Contains(row.SourceEvidence.String,`"rosterLockedAt":null`){
+  t.Fatalf("legitimate first-stake transition rejected or rewrote frozen source: %+v %v",result,e)
+ }
+}
+func TestReviewerRejectsUnbackedPostShadowRosterLockMutations(t *testing.T){
+ for _,which:=range []string{
+  "first_stake_missing","first_stake_timestamp_changed","future_lock",
+  "faked_original_locked_before_transition","changed_market_roster",
+  "missing_betting_lock_transition",
+ }{
+  t.Run(which,func(t *testing.T){
+   row,orig,now:=reviewerPostShadowFirstStake(t)
+   switch which{
+   case "first_stake_missing":row.FirstStakeAcceptedAt=sql.NullTime{}
+   case "first_stake_timestamp_changed":row.FirstStakeAcceptedAt.Time=row.FirstStakeAcceptedAt.Time.Add(time.Second)
+   case "future_lock":
+    future:=now.Add(time.Second)
+    row.RosterLockedAt.Time=future
+    row.FirstStakeAcceptedAt.Time=future
+   case "faked_original_locked_before_transition":
+    source:=map[string]any{}
+    if e:=json.Unmarshal([]byte(row.SourceEvidence.String),&source);e!=nil{t.Fatal(e)}
+    source["rosterLockedAt"]=row.RosterLockedAt.Time.UTC().Format("2006-01-02T15:04:05.000Z")
+    data,e:=json.Marshal(source);if e!=nil{t.Fatal(e)}
+    row.SourceEvidence.String=string(data)
+   case "changed_market_roster":row.SourceRosterHash=sql.NullString{Valid:true,String:strings.Repeat("f",64)}
+   case "missing_betting_lock_transition":row.BettingLockedAt=sql.NullTime{}
+   }
+   if _,e:=row.validate(now,orig);!errors.Is(e,ErrReviewerHeld){
+    t.Fatalf("%s bypassed immutable shadow-to-first-stake transition check: %v",which,e)
+   }
+  })
+ }
+}
