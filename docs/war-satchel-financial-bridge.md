@@ -565,8 +565,11 @@ frozen **live game-start checkpoint**. It binds exact original operation,
 Steam user, game/market/side/proposition, source roster hash, parse
 iteration and roster-lock time, signed checkpoint SHA256, capture and
 observation timestamps, and a maximum 60-second receipt TTL.
-Capture and observation must occur within the first 120 seconds after
-the original admitted live execution and not precede roster-lock time.
+The source capture must occur within 120 seconds either side of the
+original admitted live execution; observation must be within its early
+live window. Capture can precede the first stake, since it is a game-start
+checkpoint. A positive lock may only be claimed after the independent
+witness has observed that first accepted stake.
 A final replay captured only after the match ends is NOT eligible. The
 verifier also advances receipt-expiry evaluation by monotonic elapsed
 source-read time: a receipt that expires while checkpoint bytes are being
@@ -620,19 +623,33 @@ iteration remain mandatory. This is NOT a waiver of roster identity
 or market integrity.
 
 For a **previously staked market**, the reviewer requires a nonnull
-roster lock equal to the first-stake acceptance time, with a
-past timestamp relative to the newly admitted auto execution.
-A fake lock, unmatched first-stake timestamp, or market state
-asymmetry always refuses. The signed **live checkpoint v2** binds a
-literal `roster_locked_at_ms = 0` for a valid unstaked market;
-its capture must be within the early-game execution window.
-Capture is not required to follow a stake that has not happened
-yet. A forged positive lock in a previously unstaked original
-source cannot verify against the reviewer candidate.
+roster lock equal to the first-stake acceptance time, plus a valid
+betting lock. There are TWO legitimate immutable-source cases:
+(a) first stake predated this owner's original shadow row, so its
+original evidence contains the **exact same** positive lock;
+(b) another player's first stake arrived AFTER the shadow row was
+frozen, so its historical evidence correctly remains **NULL** while
+the current market lock is positive. Only this strictly one-way
+NULL-to-first-stake transition is permitted, and only when the
+current first-stake and roster-lock timestamps match, the new lock
+postdates the shadow execution, the recorded market is still live,
+and original Steam/roster/parse/proposition identity is unchanged.
+A fake lock, unmatched first-stake timestamp, missing betting lock,
+rollback or market source mismatch always refuses.
 
-Source tests exercise the exact first-bet NULL status, prior-stake
-consistent lock, mismatched first stake, unexpected market lock,
-source-JSON injection, and v2 first-bet Ed25519 signature binding.
+The signed **live checkpoint v2** binds literal
+`roster_locked_at_ms = 0` for a genuinely unstaked market, or the
+currently observed first-stake lock timestamp for a previously
+staked one. The independently signed observation must occur AFTER
+any claimed positive lock, although the original game-start bytes
+can have been captured earlier. A forged positive lock that has not
+actually occurred cannot be backdated into the original evidence.
+
+Source tests exercise the exact first-bet NULL status, a real other
+player's subsequent first stake, previous-stake immutable lock,
+mismatched first-stake timing, missing betting lock, forged or
+backdated original source evidence, roster hash tampering, and v2
+Ed25519 receipt proof that a positive lock cannot predate observation.
 
 **Live funds remain HARD HELD.** Source-correct first-stake
 eligibility is necessary for the V1 user experience but does not
