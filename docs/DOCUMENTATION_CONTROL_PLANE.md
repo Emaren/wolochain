@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/20261020-finance-cron-coverage-held` at `94f8f98621b30db2ba06dd6b30c5d077634d1c30`
+Implementation baseline: `fix/20261020-finance-cron-coverage-held` at `1050c5def779e837ad6d49afeac9a95d1d7f8287`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
