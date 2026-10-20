@@ -16,10 +16,19 @@ import (
 
 var reviewerPGRole = regexp.MustCompile(`^satchel_reviewer_[a-z0-9_]{1,48}$`)
 
+// PostgreSQL SET ROLE can conceal the login principal's original powers.
+// Requiring both session_user and current_user to match the operator-pinned,
+// independently provisioned reviewer account denies that impersonation.
+func reviewerPGTrustIdentity(login, effective, readonly string, privileged, canWrite bool, expected string) bool {
+ return reviewerPGRole.MatchString(expected) &&
+  login == expected && effective == expected &&
+  readonly == "on" && !privileged && !canWrite
+}
+
 // SQL strings are static and positional; a consumer-supplied operation ID
 // is never SQL, a table name, a financial amount or an authorization.
 const reviewerPGIdentityQuery = `
-SELECT current_user,
+SELECT session_user, current_user,
        current_setting('transaction_read_only'),
        COALESCE((
          SELECT rolsuper OR rolcreatedb OR rolcreaterole OR rolbypassrls
@@ -179,10 +188,10 @@ func (s *ReviewerReadOnlyPGSource) OriginalHold(ctx context.Context,id string)(W
  tx,e:=s.db.BeginTx(ctx,&sql.TxOptions{Isolation:sql.LevelRepeatableRead,ReadOnly:true})
  if e!=nil{return WagerReservation{},ErrReviewerHeld}
  defer func(){_ = tx.Rollback()}()
- var role,readonly string
+ var login,role,readonly string
  var privileged,hasWrite bool
- if tx.QueryRowContext(ctx,reviewerPGIdentityQuery).Scan(&role,&readonly,&privileged,&hasWrite)!=nil||
-  role!=s.expectedRole||readonly!="on"||privileged||hasWrite{
+ if tx.QueryRowContext(ctx,reviewerPGIdentityQuery).Scan(&login,&role,&readonly,&privileged,&hasWrite)!=nil||
+  !reviewerPGTrustIdentity(login,role,readonly,privileged,hasWrite,s.expectedRole){
   return WagerReservation{},ErrReviewerHeld
  }
  var row ReviewerPGOriginalRow
