@@ -112,11 +112,35 @@ func TestReadonlyPGRoleCannotBeAppOrPrivilegedOperator(t *testing.T){
  if reviewerPGOriginalQuery==""||reviewerPGIdentityQuery==""||
   !strings.Contains(reviewerPGIdentityQuery,"has_table_privilege")||
   !strings.Contains(reviewerPGIdentityQuery,"transaction_read_only")||
+  !strings.Contains(reviewerPGIdentityQuery,"SELECT session_user, current_user")||
   !strings.Contains(reviewerPGOriginalQuery,"WHERE a.operation_id=$1")||
   !strings.Contains(reviewerPGOriginalQuery,"FROM public.war_satchel_wager_authorizations")||
   !strings.Contains(reviewerPGOriginalQuery,"JOIN public.bet_auto_executions")||
   !strings.Contains(reviewerPGIdentityQuery,"'public.war_satchel_wager_authorizations'")||
   !strings.Contains(reviewerPGIdentityQuery,"'public.war_satchel_auto_spend_mandates'"){
   t.Fatal("independent SQL principal or parameterization gate missing")
+ }
+}
+
+func TestReviewerPGTrustIdentityRejectsPrivilegedRoleImpersonation(t *testing.T) {
+ const expected="satchel_reviewer_v1"
+ for _,tc:=range []struct{
+  name,login,effective,readonly string
+  privileged,canWrite,accept bool
+ }{
+  {"real dedicated login",expected,expected,"on",false,false,true},
+  {"privileged operator SET ROLE","postgres",expected,"on",false,false,false},
+  {"other service SET ROLE","aoe2war_app",expected,"on",false,false,false},
+  {"wrong active role",expected,"postgres","on",false,false,false},
+  {"writable dedicated login",expected,expected,"on",false,true,false},
+  {"superuser dedicated login",expected,expected,"on",true,false,false},
+  {"writable transaction",expected,expected,"off",false,false,false},
+  {"missing login","",expected,"on",false,false,false},
+ }{
+  t.Run(tc.name,func(t *testing.T){
+   if reviewerPGTrustIdentity(tc.login,tc.effective,tc.readonly,tc.privileged,tc.canWrite,expected)!=tc.accept{
+    t.Fatal("PostgreSQL reviewer identity allowed unauthorized login or rejected dedicated read-only role")
+   }
+  })
  }
 }
