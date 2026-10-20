@@ -78,7 +78,7 @@ func TestReviewerLiveWatcherRejectsPostGameOrChangedSourceWithoutSpending(t *tes
  cases:=[]string{
   "forged_signature","changed_checkpoint_bytes","wrong_key","other_game",
   "other_market","changed_steam","changed_roster","wrong_owner",
-  "late_final_replay","capture_before_roster_lock","wrong_live_digest",
+  "late_final_replay","capture_outside_game_start","wrong_live_digest",
   "expired","missing_witness","missing_checkpoint","unreadable_witness",
   "unreadable_checkpoint","empty_checkpoint","oversize","canceled",
   "missing_public_key","other_receipt_protocol","expired_during_checkpoint_read",
@@ -102,8 +102,8 @@ func TestReviewerLiveWatcherRejectsPostGameOrChangedSourceWithoutSpending(t *tes
     w.original.CapturedAtMS=w.original.ExecutionCreatedAtMS+180000
     w.original.ObservedAtMS=w.original.CapturedAtMS
     w.original.ExpiresAtMS=w.original.ObservedAtMS+30000
-   case "capture_before_roster_lock":
-    w.original.CapturedAtMS=w.original.RosterLockedAtMS-1
+   case "capture_outside_game_start":
+    w.original.CapturedAtMS=w.original.ExecutionCreatedAtMS-120001
    case "wrong_live_digest":w.original.LiveCheckpointSHA256=hex.EncodeToString(make([]byte,32))
    case "expired":now=now.Add(90*time.Second)
    case "missing_witness":wr=nil
@@ -167,5 +167,54 @@ func TestReviewerLiveWitnessProofCannotOverrideHardHeldSolvency(t *testing.T){
  }
  if _,e=NewReviewerIndependentWatcherSource(nil,w,checkpoint,pub);!errors.Is(e,ErrReviewerHeld){
   t.Fatal("absent original SQL evidence source admitted")
+ }
+}
+
+func TestReviewerLiveFirstStakeRequiresSourceRosterButNotFutureStakeLock(t *testing.T){
+ market,orig,now:=reviewerUnstakedLiveMarket(t)
+ candidate,e:=market.validate(now,orig)
+ if e!=nil||candidate.RosterLockedAtMS!=0{t.Fatalf("early original source rejected: %+v %v",candidate,e)}
+ _,w,checkpoint,pub,key,_:=reviewerLiveCheckpointFixture(t)
+ w.original.RosterLockedAtMS=0
+ w.original.CapturedAtMS=now.Add(-100*time.Second).UnixMilli()
+ w.original.ObservedAtMS=now.Add(-20*time.Second).UnixMilli()
+ w.original.ExpiresAtMS=now.Add(20*time.Second).UnixMilli()
+ w.original.Signature=base64.StdEncoding.EncodeToString(
+  ed25519.Sign(key,ReviewerWatcherLiveWitnessMessage(w.original)))
+ if e:=VerifyIndependentReviewerLiveWatcher(t.Context(),candidate,w,checkpoint,pub,now);e!=nil{
+  t.Fatalf("live first-ever bet required its own later roster lock: %v",e)
+ }
+ // Requiring a nonexistent lock is wrong; accepting an invented lock is
+ // equally wrong. The read-only original first-stake status must agree.
+ w.original.RosterLockedAtMS=now.Add(-110*time.Second).UnixMilli()
+ w.original.Signature=base64.StdEncoding.EncodeToString(
+  ed25519.Sign(key,ReviewerWatcherLiveWitnessMessage(w.original)))
+ if e:=VerifyIndependentReviewerLiveWatcher(t.Context(),candidate,w,checkpoint,pub,now);!errors.Is(e,ErrReviewerHeld){
+  t.Fatal("forged preexisting roster lock bypassed first-stake source")
+ }
+}
+
+func TestReviewerLiveMultiPlayerMarketAdmitsRecordedFirstStakeAfterShadow(t *testing.T){
+ market,original,now:=reviewerPostShadowFirstStake(t)
+ c,e:=market.validate(now,original)
+ if e!=nil||c.RosterLockedAtMS==0{t.Fatalf("frozen shadow later-stake transition invalid: %+v %v",c,e)}
+ _,w,checkpoint,pub,key,_:=reviewerLiveCheckpointFixture(t)
+ w.original.RosterLockedAtMS=c.RosterLockedAtMS
+ w.original.CapturedAtMS=now.Add(-100*time.Second).UnixMilli()
+ w.original.ObservedAtMS=now.Add(-20*time.Second).UnixMilli()
+ w.original.ExpiresAtMS=now.Add(20*time.Second).UnixMilli()
+ w.original.Signature=base64.StdEncoding.EncodeToString(
+  ed25519.Sign(key,ReviewerWatcherLiveWitnessMessage(w.original)))
+ if e:=VerifyIndependentReviewerLiveWatcher(t.Context(),c,w,checkpoint,pub,now);e!=nil{
+  t.Fatalf("second bettor blocked by valid first stake from another player: %v",e)
+ }
+ // A witness cannot claim a first stake existed BEFORE it was actually
+ // observed in the independent signed game-start checkpoint.
+ w.original.ObservedAtMS=now.Add(-80*time.Second).UnixMilli()
+ w.original.ExpiresAtMS=now.Add(-40*time.Second).UnixMilli()
+ w.original.Signature=base64.StdEncoding.EncodeToString(
+  ed25519.Sign(key,ReviewerWatcherLiveWitnessMessage(w.original)))
+ if e:=VerifyIndependentReviewerLiveWatcher(t.Context(),c,w,checkpoint,pub,now.Add(-60*time.Second));!errors.Is(e,ErrReviewerHeld){
+  t.Fatal("witness signed an as-yet-unobserved roster lock")
  }
 }

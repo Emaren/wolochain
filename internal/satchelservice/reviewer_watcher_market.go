@@ -20,6 +20,7 @@ SELECT e.source_evidence::text,e.status,e.created_at,e.game_identity_key,
        m.settlement_executed_at,m.linked_game_stats_id,m.late_final_game_stats_id,
        m.team_resolution_status,m.team_confidence,m.team_resolution_provenance,
        m.source_parse_iteration,m.source_roster_hash,m.roster_locked_at,
+       m.first_stake_accepted_at,m.betting_locked_at,
        u.steam_id,c.signed_at
 FROM public.war_satchel_wager_authorizations a
 JOIN public.war_satchel_funded_reservations r ON r.id=a.reservation_id
@@ -53,6 +54,7 @@ type ReviewerPGMarketRow struct{
  SourceParseIteration sql.NullInt64
  SourceRosterHash sql.NullString
  RosterLockedAt sql.NullTime
+ FirstStakeAcceptedAt,BettingLockedAt sql.NullTime
  OwnerSteamID sql.NullString
  OwnerSignedAt sql.NullTime
 }
@@ -66,6 +68,7 @@ func (x *ReviewerPGMarketRow)scan(row *sql.Row)error{
   &x.SettlementExecutedAt,&x.LinkedGameStats,&x.LateFinalGameStats,
   &x.TeamResolutionStatus,&x.TeamConfidence,&x.TeamResolutionProvenance,
   &x.SourceParseIteration,&x.SourceRosterHash,&x.RosterLockedAt,
+  &x.FirstStakeAcceptedAt,&x.BettingLockedAt,
   &x.OwnerSteamID,&x.OwnerSignedAt)
 }
 type ReviewerWatcherCandidate struct {
@@ -101,8 +104,6 @@ func (x ReviewerPGMarketRow)validate(now time.Time,original ReviewerHDOriginResu
   !x.SourceRosterHash.Valid||!reviewerHexDigest.MatchString(x.SourceRosterHash.String)||
   !x.TeamResolutionStatus.Valid||x.TeamResolutionStatus.String!="resolved"||
   !x.TeamConfidence.Valid||x.TeamConfidence.String!="high"||
-  !x.RosterLockedAt.Valid||x.RosterLockedAt.Time.Before(x.OwnerSignedAt.Time)||
-  x.RosterLockedAt.Time.After(x.ExecutionCreated)||
   x.WinnerSide.Valid||x.SettledAt.Valid||x.VoidedAt.Valid||
   x.RefundStatus.Valid||x.SettlementExecutedAt.Valid||
   x.LinkedGameStats.Valid||x.LateFinalGameStats.Valid||
@@ -114,6 +115,26 @@ func (x ReviewerPGMarketRow)validate(now time.Time,original ReviewerHDOriginResu
   x.PhaseClosesAt.Valid&&!x.PhaseClosesAt.Time.After(now)||
   x.PhaseOpensAt.Valid&&x.PhaseOpensAt.Time.After(now) {
   return held()
+ }
+ // In the real app, roster_locked_at is set TOGETHER WITH
+ // first_stake_accepted_at by betStakeTickets/betWagering after a stake
+ // is recorded. It cannot be required for the *first* automatic wager.
+ // Before first stake, the immutable signed source roster hash+parse+
+ // proposition provide identity; market integrity must already be verified.
+ // Once a prior stake locks the market, the original shadow observation
+ // may still be NULL because all players' shadow rows were created before
+ // that first stake. Allow ONLY this one-way NULL -> locked transition,
+ // proven by the current first_stake_accepted_at time and exact immutable
+ // Steam/roster/proposition identity. Never accept lock rollback or mutation.
+ if !x.FirstStakeAcceptedAt.Valid{
+  if x.RosterLockedAt.Valid||x.BettingLockedAt.Valid{return held()}
+ }else{
+  if !x.RosterLockedAt.Valid||!x.BettingLockedAt.Valid||
+   !x.RosterLockedAt.Time.Equal(x.FirstStakeAcceptedAt.Time)||
+   x.RosterLockedAt.Time.Before(x.OwnerSignedAt.Time)||
+   x.RosterLockedAt.Time.After(now){
+   return held()
+  }
  }
  // Original selected side and winner proposition must agree with the
  // canonical immutable stake leg, not merely the mutable market row.
@@ -148,6 +169,18 @@ func (x ReviewerPGMarketRow)validate(now time.Time,original ReviewerHDOriginResu
  if x.RosterLockedAt.Valid {
   locked=x.RosterLockedAt.Time.UTC().Format("2006-01-02T15:04:05.000Z")
  }
+ // The original shadow row freezes its own roster lock at outbox
+ // creation. Another player's legitimate first stake may lock the market
+ // afterward, but it may not alter the frozen original source.
+ // - Existing locked state: exact current/original equality.
+ // - New lock after shadow creation: original NULL only, current first stake
+ //   and roster-lock timestamps must be exactly equal (checked above).
+ // - Unstaked state: original and current both NULL.
+ expectedOriginalLock:=locked
+ if x.RosterLockedAt.Valid&&x.RosterLockedAt.Time.After(x.ExecutionCreated){
+  expectedOriginalLock=nil
+ }
+ if evidence["rosterLockedAt"]!=expectedOriginalLock{return held()}
  if evidence["mode"]!="shadow"||
   evidence["exactSteamRosterMatch"]!=true||
   evidence["exactUploaderUidMatch"]!=true||
@@ -162,8 +195,7 @@ func (x ReviewerPGMarketRow)validate(now time.Time,original ReviewerHDOriginResu
   evidence["winnerMarketId"]!=x.WinnerMarketID||
   !eqNumber(evidence["sourceParseIteration"],x.SourceParseIteration)||
   !eqNullable(evidence["sourceRosterHash"],x.SourceRosterHash)||
-  !eqNullable(evidence["teamResolutionProvenance"],x.TeamResolutionProvenance)||
-  evidence["rosterLockedAt"]!=locked{return held()}
+  !eqNullable(evidence["teamResolutionProvenance"],x.TeamResolutionProvenance){return held()}
  // Desync is either absent from the winner-only session, or a positive
  // market ID separately validated by the wager's original immutable legs.
  desync:=evidence["desyncMarketId"]
@@ -181,7 +213,7 @@ func (x ReviewerPGMarketRow)validate(now time.Time,original ReviewerHDOriginResu
   OwnerSteamID:x.OwnerSteamID.String,
   SourceParseIteration:x.SourceParseIteration.Int64,
   SourceRosterHash:x.SourceRosterHash.String,
-  RosterLockedAtMS:x.RosterLockedAt.Time.UnixMilli(),
+  RosterLockedAtMS:func()int64{if x.RosterLockedAt.Valid{return x.RosterLockedAt.Time.UnixMilli()};return 0}(),
   CreatedAt:x.ExecutionCreated},nil
 }
 

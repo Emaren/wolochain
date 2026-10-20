@@ -74,9 +74,12 @@ func VerifyReviewerWatcherLiveWitness(
   !reviewerHexDigest.MatchString(w.SourceRosterHash)||
   w.RosterLockedAtMS!=c.RosterLockedAtMS||
   w.ExecutionCreatedAtMS!=c.CreatedAt.UnixMilli()||
-  w.RosterLockedAtMS<=0||
-  w.RosterLockedAtMS>w.ExecutionCreatedAtMS||
-  w.CapturedAtMS<w.RosterLockedAtMS||
+  w.RosterLockedAtMS<0||
+  // A second player's shadow row may predate the first accepted stake.
+  // A positive roster lock must be known by the independently witnessed
+  // live observation; the ORIGINAL shadow lock remains separately bound.
+  w.RosterLockedAtMS>w.ObservedAtMS||
+  w.CapturedAtMS<w.ExecutionCreatedAtMS-120000||
   w.CapturedAtMS>w.ExecutionCreatedAtMS+120000||
   w.ObservedAtMS<w.CapturedAtMS||
   w.ObservedAtMS>w.ExecutionCreatedAtMS+120000||

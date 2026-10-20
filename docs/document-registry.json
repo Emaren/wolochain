@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "91bbaaba67fe816fac14931afdadbaf58be3da107e08ab363b856c18cf98ee7c",
+      "sha256": "b8f8cb209d3716ffadd1ac653361a647640fb7b73afea97c316ccdc23d3de860",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -519,7 +519,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-18",
       "sensitivity": "restricted",
-      "sha256": "430bc38f4d7e9e7b21e011abbed250a7e98536ed48679de08038d4ff76bc4fea",
+      "sha256": "685d43698fc7d37adb2741697f83f4e6b676828275f504e926b31497ab5a1c79",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -946,8 +946,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "feature/20261019-independent-replay-verifier-bridge",
-    "commit": "c396081b107a29c98e1197f03ef4730a390c9431"
+    "branch": "fix/20261019-live-first-stake-roster-lock-circularity",
+    "commit": "ee6df65acc956a79efa9785960ce9d10d1e1014c"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

@@ -565,8 +565,11 @@ frozen **live game-start checkpoint**. It binds exact original operation,
 Steam user, game/market/side/proposition, source roster hash, parse
 iteration and roster-lock time, signed checkpoint SHA256, capture and
 observation timestamps, and a maximum 60-second receipt TTL.
-Capture and observation must occur within the first 120 seconds after
-the original admitted live execution and not precede roster-lock time.
+The source capture must occur within 120 seconds either side of the
+original admitted live execution; observation must be within its early
+live window. Capture can precede the first stake, since it is a game-start
+checkpoint. A positive lock may only be claimed after the independent
+witness has observed that first accepted stake.
 A final replay captured only after the match ends is NOT eligible. The
 verifier also advances receipt-expiry evaluation by monotonic elapsed
 source-read time: a receipt that expires while checkpoint bytes are being
@@ -594,3 +597,64 @@ unconditionally returns `ErrReviewerHeld`. Bank, all liabilities,
 pending gas, global producers and the Wolo issue #5 controls
 remain HOLD. Nothing has been installed on the app, replay API,
 8094/8095, settlement processes or consensus.
+
+## First automatic wager: no circular first-stake roster lock (V1 correctness)
+
+A verified cross-repository source audit found a genuine **first-wager
+deadlock** in the earlier read-only Watcher reviewer: it required
+`bet_markets.roster_locked_at` to exist BEFORE the 8095 reviewer could
+authorize a reservation. But the actual app
+`lib/betStakeTickets.ts` and `lib/betWagering.ts` write both
+`roster_locked_at` and `first_stake_accepted_at` **only when the
+first stake is recorded**. The real
+`lib/betAutomationShadowWorker.ts` writes `rosterLockedAt: null`
+to its original 17-key shadow evidence if no stake was accepted.
+Therefore an automatic first bet cannot require its own future lock.
+
+The corrected reviewer now reads `m.first_stake_accepted_at` and
+`m.betting_locked_at` alongside the original market and source hash.
+For an **unstaked live winner market**, it requires all three
+(`roster_locked_at`, `first_stake_accepted_at`,
+`betting_locked_at`) to be NULL, and that the historical shadow
+evidence also explicitly declares the roster lock NULL. The
+independently witnessed exact Steam user, parsed source roster SHA256,
+market proposition, roster resolution confidence, game and source
+iteration remain mandatory. This is NOT a waiver of roster identity
+or market integrity.
+
+For a **previously staked market**, the reviewer requires a nonnull
+roster lock equal to the first-stake acceptance time, plus a valid
+betting lock. There are TWO legitimate immutable-source cases:
+(a) first stake predated this owner's original shadow row, so its
+original evidence contains the **exact same** positive lock;
+(b) another player's first stake arrived AFTER the shadow row was
+frozen, so its historical evidence correctly remains **NULL** while
+the current market lock is positive. Only this strictly one-way
+NULL-to-first-stake transition is permitted, and only when the
+current first-stake and roster-lock timestamps match, the new lock
+postdates the shadow execution, the recorded market is still live,
+and original Steam/roster/parse/proposition identity is unchanged.
+A fake lock, unmatched first-stake timestamp, missing betting lock,
+rollback or market source mismatch always refuses.
+
+The signed **live checkpoint v2** binds literal
+`roster_locked_at_ms = 0` for a genuinely unstaked market, or the
+currently observed first-stake lock timestamp for a previously
+staked one. The independently signed observation must occur AFTER
+any claimed positive lock, although the original game-start bytes
+can have been captured earlier. A forged positive lock that has not
+actually occurred cannot be backdated into the original evidence.
+
+Source tests exercise the exact first-bet NULL status, a real other
+player's subsequent first stake, previous-stake immutable lock,
+mismatched first-stake timing, missing betting lock, forged or
+backdated original source evidence, roster hash tampering, and v2
+Ed25519 receipt proof that a positive lock cannot predate observation.
+
+**Live funds remain HARD HELD.** Source-correct first-stake
+eligibility is necessary for the V1 user experience but does not
+supply independent live Watcher witness keys/attested bytes,
+Comet-authenticated bank balances, complete outstanding liabilities,
+pending transaction fees, custody operator keys or the six Wolo
+financial release controls. The bank census still always returns
+`ErrReviewerHeld`. Neither app nor chain production changed.
