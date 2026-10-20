@@ -8,7 +8,7 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "machine-readable-settlement-contract-index"
-reviewed_at: "2026-10-18"
+reviewed_at: "2026-10-20"
 review_interval_days: 30
 sensitivity: "public"
 ---
