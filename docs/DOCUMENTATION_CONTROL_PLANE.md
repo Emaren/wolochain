@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/20261020-satchel-reviewer-pg-session-identity` at `b409bc8f42960750bedf91f055a8132ede8ed2ba`
+Implementation baseline: `fix/20261020-satchel-reviewer-pg-session-identity` at `a37e08bd265871129f43796d47650a6f62b32e61`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
