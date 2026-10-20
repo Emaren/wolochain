@@ -107,7 +107,8 @@ def summarize(checklist: dict, triage: dict | None, *,
                     or name in seen or who not in OWNERS
                     or unit.get("reviewStatus") != "OWNER_REVIEW_REQUIRED"
                     or unit.get("runtimeSignerProof") != "UNKNOWN"
-                    or unit.get("activeObserved") not in {True, False, None}):
+                    or (unit.get("activeObserved") is not None
+                        and type(unit.get("activeObserved")) is not bool)):
                 raise BoardFailure("UNTRUSTED_PRODUCER_CLASSIFICATION")
             seen.add(name)
             safe_units.append({"unit": name, "reviewOwnerCategory": who,
