@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "48f948fe790a653540265a25a1c635e1473e586f1d254f34197c104541e3d338",
+      "sha256": "487199e62c37b4b85bfbe2f86a23d241ca7da2f34035a40c9cba7d4d582af0ad",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -312,7 +312,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-18",
       "sensitivity": "restricted",
-      "sha256": "95c046854976975cf080fef3eae36b6716abde316d76c6b3c1303ff39a9769e1",
+      "sha256": "4e2654d3f145a22743f7e4b57f8e33d0fc442629a278a42e40ef4da70e038c4c",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -970,8 +970,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "ops/20261020-escrow100-exact-delta-held",
-    "commit": "97597b0763c756bafcbb62725135b22f1fb61dee"
+    "branch": "fix/20261020-finance-cron-coverage-held",
+    "commit": "1050c5def779e837ad6d49afeac9a95d1d7f8287"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

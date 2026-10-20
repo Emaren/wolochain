@@ -36,6 +36,103 @@ class AuxiliaryProducerTests(unittest.TestCase):
         self.assertNotIn("DO_NOT_ECHO",str(r))
         self.assertNotIn("never-output-this-secret",str(r))
 
+    def test_all_spool_users_and_periodic_scripts_observed_without_secret_leaks(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d)
+            etc=root/"etc"
+            spool=root/"var"/"spool"/"cron"
+            users=spool/"crontabs"
+            daily=etc/"cron.daily"
+            hourly=etc/"cron.hourly"
+            for p in (etc,users,daily,hourly):
+                p.mkdir(parents=True,exist_ok=True)
+            (etc/"crontab").write_text(
+                "# root cron\n*/5 * * * * root /bin/true # PRIVATE_MAIN\n")
+            (etc/"anacrontab").write_text(
+                "1 5 cron.daily run-parts /etc/cron.daily # PRIVATE_ANACRON\n")
+            (users/"alice").write_text(
+                "WOLO_SECRET=KEEP_PRIVATE\n0 * * * * /private/send-wallet # PRIVATE_ALICE\n")
+            (users/"bob").write_text(
+                "0 2 * * * /private/ordinary # PRIVATE_BOB\n")
+            (spool/"legacyuser").write_text(
+                "0 4 * * * /private/another # PRIVATE_LEGACY\n")
+            script=daily/"payment-run"
+            script.write_text("#!/bin/sh\necho PRIVATE_SCRIPT_BODY\n")
+            script.chmod(0o755)
+            (hourly/".placeholder").write_text("PRIVATE_PLACEHOLDER")
+            with patch.object(A,"command",return_value=(0,
+                        "12  Wed Oct 21 13:10:00 2026 root PRIVATE_AT\n")):
+                observed=A.cron_sources(
+                    etc,(users,spool),
+                )
+            self.assertEqual(observed["spoolCrontabsObserved"],3)
+            self.assertEqual(observed["totalJobLines"],5)
+            self.assertEqual(observed["filesObserved"],5)
+            self.assertEqual(observed["periodic"]["filesObserved"],2)
+            self.assertEqual(observed["periodic"]["runPartsNameAndExecutableCandidates"],1)
+            self.assertEqual(observed["atQueue"]["pendingJobs"],1)
+            self.assertIn("cron.daily",observed["periodic"]["directoriesObserved"])
+            self.assertFalse(observed["allFinancialWritersIdentified"])
+            self.assertFalse(observed["otherSpoolAndNonstandardCronSourcesExcluded"])
+            for secret in ("WOLO_SECRET","KEEP_PRIVATE","PRIVATE_MAIN",
+                           "PRIVATE_ANACRON","PRIVATE_ALICE","PRIVATE_BOB",
+                           "PRIVATE_LEGACY","PRIVATE_SCRIPT_BODY","PRIVATE_AT"):
+                self.assertNotIn(secret,json.dumps(observed))
+
+    def test_missing_cron_roots_never_prove_scheduler_absence(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d)
+            with patch.object(A,"command",return_value=(127,"")):
+                observed=A.cron_sources(root/"etc", (
+                    root/"var"/"spool"/"cron"/"crontabs",
+                    root/"var"/"spool"/"cron",
+                ))
+            self.assertEqual(observed["spoolDirectoriesObserved"],[])
+            self.assertEqual(observed["spoolDirectoriesMissingOrUnverified"],
+                             ["crontabs","cron"])
+            self.assertEqual(observed["periodic"]["directoriesObserved"],[])
+            self.assertEqual(len(observed["periodic"]["directoriesMissingOrUnverified"]),5)
+            self.assertEqual(observed["atQueue"]["status"],"UNOBSERVED")
+            self.assertIsNone(observed["atQueue"]["pendingJobs"])
+            self.assertFalse(observed["allFinancialWritersIdentified"])
+
+    def test_unknown_nested_cron_source_and_links_refuse_coverage(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d)
+            etc=root/"etc";etc.mkdir()
+            sp=root/"cron";sp.mkdir()
+            source=sp/"otheruser"
+            source.write_text("* * * * * /usr/bin/true\n")
+            other=sp/"evil-directory"
+            other.mkdir()
+            with patch.object(A,"command",return_value=(127,"")):
+                with self.assertRaises(A.InventoryError):
+                    A.cron_sources(etc,(sp,))
+            other.rmdir()
+            evil=sp/"link"
+            evil.symlink_to(source)
+            with patch.object(A,"command",return_value=(127,"")):
+                with self.assertRaises(A.InventoryError):
+                    A.cron_sources(etc,(sp,))
+            evil.unlink()
+            (etc/"cron.daily").symlink_to(sp,target_is_directory=True)
+            with patch.object(A,"command",return_value=(127,"")):
+                with self.assertRaises(A.InventoryError):
+                    A.cron_sources(etc,(sp,))
+
+    def test_at_queue_is_an_observation_not_finance_exclusion(self):
+        with patch.object(A,"command",return_value=(0,
+                "1 Tue Oct 20 2026 a PRIVATE_WALLET\n"
+                "2 Tue Oct 20 2026 b PRIVATE_PASSWORD\n")):
+            q=A._at_queue()
+        self.assertEqual(q,{"status":"OBSERVED_ONLY","pendingJobs":2,
+                            "financialWriterCapabilityExcluded":False})
+        self.assertNotIn("PRIVATE_WALLET",json.dumps(q))
+        with patch.object(A,"command",return_value=(126,"inaccessible")):
+            q=A._at_queue()
+        self.assertEqual(q["status"],"UNOBSERVED")
+        self.assertFalse(q["financialWriterCapabilityExcluded"])
+
     def test_symlink_cron_path_is_not_trusted(self):
         with tempfile.TemporaryDirectory() as d:
             secret=Path(d)/"secret-crontab"
