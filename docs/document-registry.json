@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "5986e1f034100027852ad7c18927b900d8ea956a903f143f9a2e41adb1e3a385",
+      "sha256": "487199e62c37b4b85bfbe2f86a23d241ca7da2f34035a40c9cba7d4d582af0ad",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -971,7 +971,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "fix/20261020-finance-cron-coverage-held",
-    "commit": "94f8f98621b30db2ba06dd6b30c5d077634d1c30"
+    "commit": "1050c5def779e837ad6d49afeac9a95d1d7f8287"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
