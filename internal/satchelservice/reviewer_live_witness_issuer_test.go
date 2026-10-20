@@ -98,7 +98,7 @@ func TestIndependentLiveIssuerRejectsMutatedSourcesAndCheckpoint(t *testing.T){
   case "unknown_operation":c.OriginalOperationID="satchel:ticket:999999"
   case "expired_source":issuer.now=func()time.Time{return now.Add(65*time.Second)}
   case "future_observation":src.original.ObservedAt=now.Add(time.Second)
-  case "invalid_steam":src.original.Candidate.OwnerSteamID=""
+  case "invalid_steam":src.original.Candidate.OwnerSteamID="not-a-steam-account"
   case "wrong_roster_lock":src.original.Candidate.RosterLockedAtMS=now.Add(time.Minute).UnixMilli()
   }
   answer:=issuer.IssueOne(t.Context(),c.OriginalOperationID)
