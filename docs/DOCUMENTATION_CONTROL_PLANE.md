@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `ops/20261020-escrow100-exact-delta-held` at `97597b0763c756bafcbb62725135b22f1fb61dee`
+Implementation baseline: `fix/20261020-finance-cron-coverage-held` at `94f8f98621b30db2ba06dd6b30c5d077634d1c30`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
