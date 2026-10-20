@@ -192,3 +192,80 @@ reconciliation source and reversible resume procedure. A list of units or
 restart policy is not by itself financial isolation; Wolo issue #5's six
 controls and Satchel custody release remain held.
 
+
+## October 20 — operator source-census / cron / user-manager / container discovery
+
+Fresh owner-supplied Mac source census, from the certified app `main`
+checkout, observed **all 21 known HD financial edges** and returned
+`known_source_edges_intact=true`. This is a static source fingerprint,
+not `cross_repo_runtime_attestation`, producer isolation or permission
+to release. The source graph confirms GET `/`, `/api/lobby`, and
+`/api/live-games` can schedule asynchronous `ensureBetMarkets`,
+settlement, unmatched claims and founder-payment work. The app's
+process-local single-flight and one queue preview flag cannot globally
+quiesce or fence those paths. `GET /api/bets` has an explicit
+`ensureMarkets:false` exception, not a guarantee for other routes.
+
+The owner separately enumerated *names only* on the live VPS. A
+per-user crontab `/var/spool/cron/crontabs/tony` exists but its
+contents were NOT read. `/etc/crontab` exists and ordinary
+`/etc/cron.d` and periodic run-parts directories contain named OS
+jobs; names alone do not prove no WOLO side effects. Active systemd
+**user** managers `user@0.service` and `user@1000.service` were
+observed, but their user-level units and timers were not listed.
+The Docker container running Hasura was observed;
+its network, role, credentials, database write capability and restart
+paths are unverified. These gaps are outside the earlier *system*
+systemd topology (18 discovered units, 7 active timers).
+
+### New auxiliary inspection contract
+
+`scripts/settlement_auxiliary_producer_surfaces.py --inspect` is
+an entirely separate **read-only** inspection from the Mac-driven SSH
+pipeline. It completes the bounded discovery without printing private
+material:
+
+- Bounded `O_NOFOLLOW` reads of known root/tony/system cron files:
+  only source path, scheduled job-line count and **heuristic** finance
+  keyword count are emitted. No scheduled commands, tokens, passwords,
+  shell parameters, env assignments, script content or user secrets.
+  Keyword absence never proves a cron job harmless.
+- System-level `user@*.service` discovery followed by a read-only
+  `systemctl --user list-units` query through `runuser` for each
+  visible account, preserving the actual UID. It emits public unit
+  names and active timer names, **not** user-manager env, ExecStart,
+  logs, credential or service file content. Missing or inaccessible
+  user DBus creates `NOT_INSPECTED`, not empty evidence.
+- Read-only `docker ps`/`podman ps` container names with their
+  restart-policy boolean. It does not inspect volume mounts,
+  environment, tokens, network bindings, grants, or database contents.
+  A running Hasura service is treated as a *potential* financial
+  writer until independently classified; absent Docker/Podman tooling
+  is `ENGINE_UNAVAILABLE`, not complete host coverage.
+- All financial-ready, producer-fenced and Satchel activation flags
+  stay false; successful observational output exits **3** and
+  critical evidence failures exit 2. It cannot start/stop systemd,
+  write a DB, contact the chain, sign, retry a payment, move WOLO,
+  or alter the protected 8092/8093 settlement services.
+- GitHub Foundation CI explicitly runs all three safety-contract suites:
+  `test_settlement_maintenance_board.py`,
+  `test_settlement_producer_activation_topology.py`, and
+  `test_settlement_auxiliary_producer_surfaces.py`. The previous
+  workflow invoked Python contracts by individual filenames, so a
+  newly added test file was not automatically covered by a green
+  workflow. This permanently closes that testing omission.
+- It does **not** establish host-wide `/etc/cron.*` external
+  runner semantics, any unenumerated alternate crontab spool or
+  out-of-band keyring, external/off-host signer or manual payouts.
+  All still require separate authorization and independent proof.
+
+Do not publish raw cron contents, Docker inspect output, env files,
+process command lines, or passwords in the task tracker or chat. The
+exact source-bound command may be piped from a reviewed Git commit
+over SSH onto the live VPS *without changing its Wolo checkout*.
+The result is one more classification packet, not authorization to
+disable timers. Production cutoff still requires a specific,
+independently reviewed freeze/drain/rollback scope and Wolo issue #5's
+six financial-control proofs. The app's held War Satchel and Mecha
+Auto Betting cannot activate from this inventory.
+
