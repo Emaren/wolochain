@@ -8,7 +8,7 @@ systems: ["wolochain","aoe2war","aoe2dewarwagers"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "non-authorizing-financial-producer-evidence-correlation"
-reviewed_at: "2026-10-19"
+reviewed_at: "2026-10-20"
 review_interval_days: 14
 sensitivity: "internal"
 ---
@@ -37,3 +37,93 @@ The report marks the following **false unconditionally**: deployed-source-to-run
 ## Protected implementation boundaries
 
 This is source evidence for WoloChain issue #5 and held financial-evidence PR #42. It is **not** a live Satchel or Auto Bets enabler, an authorization for the website-only lane, or a reason to change the documentation implementation baseline to the running VPS Git SHA. Source-only tests prove parsing/guard invariants, not independent chain or financial truth. All six controls continue in HOLD until accepted by the existing operator approval flow.
+
+## October 20 — institutionalized maintenance lessons and the HOLD board
+
+Owner authorization to arrange maintenance **is not an independently
+authenticated six-control release permit**. The owner reported no present
+player activity and authorized coordinated financial maintenance. Historical
+production records still contain possible obligations: an accepted 100-WOLO
+request with no independent finality, founder claim #889 (300 WOLO, attempted
+with no recorded hash), and a scoped HD pending-claims observation of 947
+claims / 993,189 WOLO. These amounts are from dated observations, may overlap
+and cannot be added into a global solvency sum. Activity level is not debt
+extinction or authority to retry uncertain payments.
+
+`scripts/settlement_maintenance_board.py` is the **small, offline
+read-only bridge** between our current six-control evidence checklist,
+the previously reviewed source/producer triage, and a human-maintenance
+task queue. It:
+
+- Reads the canonical existing checklist through
+  `financial_release_checklist_audit.audit` first, so missing evidence,
+  noncanonical controls, forged PASS status, changed hashes or removed
+  liabilities fail before reporting.
+- Optionally reads the original sanitized
+  `settlement_producer_owner_triage.py` JSON, refusing unreviewed owners,
+  impossible counts, unsafe unit names, symlinks, duplicate JSON keys and
+  attempts to promote a source observation into producer isolation proof.
+- Projects **only named public systemd units and fixed owner-review
+  categories**, never copied process environment variables, mnemonics,
+  complete shell arguments, payout keys or user balances.
+- Prints an ordered finite operator review path: classify all HD/DE/external
+  signers, cover user managers/containers/cron and hidden HTTP writers, approve
+  the scoped fence/drain, resolve all uncertain payments, preserve #889,
+  verify independent bank/global liability/gas, take fresh quiesced
+  checksummed backups, witness paired code-only recovery and seek a **separate**
+  cutover permit.
+- Always returns exit **3 on a valid HOLD board**, exit 2 on invalid or
+  missing evidence. It cannot produce success/exit 0, sign, transfer, change
+  systemd or issue production permission. A green unit test is not a live
+  witness. This remains true even when someone asserts there are zero users.
+
+Example, in an **isolated, code-reviewed checkout** containing these scripts
+(not by changing the live Wolo working tree):
+
+```sh
+python3 scripts/settlement_maintenance_board.py
+# Expected: JSON status HOLD; process exit 3 (deliberate).
+# Optional: --triage /path/to/sanitized-triage.json
+```
+
+The original **production** source checkout and both settlement services
+MUST remain unchanged while collecting this diagnostic. To obtain fresh
+read-only operator inputs, separately use the already reviewed protected
+tools from a safely pinned checkout:
+
+```sh
+sudo python3 scripts/settlement-shared-producer-inventory-readonly.py --inspect
+sudo python3 scripts/settlement-parallel-de-authority-inventory.py
+sudo python3 scripts/settlement-bdbce253-code-cutover.py --mode inspect
+```
+
+These tools are intentionally nonauthorizing (some exit 3); do not chain
+them with `&&` as though exit 0 meant financial clearance. Do not
+paste raw private receipts into GitHub, an AI chat or public logs.
+Keep sensitive raw evidence root-private and share only scrubbed,
+scope-labeled summaries. No tool automatically fences producers.
+
+### Incident-to-permanent-guard register
+
+| Observed failure | Root cause / distinction | Permanent defense |
+| --- | --- | --- |
+| Watcher v1.6.5 docs sync crash | Public release state and README prepublication heading disagreed | Verify immutable artifact publication separately from historical README prose; CI contracts must distinguish current vs historical release |
+| Cascade of central/docs/context P1 warnings | Generated source registry and dated archive snapshots lagged reviewed source | Use isolated `aoe2war update --maintenance-only` with checksum/ancestry checks; do not touch runtime or erase historical context |
+| The app `finish --dry-run` blocked despite certified website | Active 8092/8093 binary/source at `78c25985` is NOT checked-in implementation baseline; code-only candidate `bdbce253` is neither current runtime nor newer Satchel | Keep binary SHA, running PID/exe, checkout and consensus attestation distinct. Never edit metadata or fast-forward checkout to fabricate parity |
+| PostgreSQL reviewer impersonation gap | Checking `current_user` alone permits a privileged login to `SET ROLE` | Require both `session_user` and `current_user` pinned read-only/least-privilege for hold, signed owner mandate and market reads; regression-test every call site |
+| App wager approval verified with withdrawal key | Multiple modules shared a generic “reviewer key” despite separate Wolo signing roles | Purpose-specific keys in pickup, ledger, signer and offline Comet proof; prevent role collision, symlinks, permissive files and prebroadcast file swaps |
+| Signed HTTP/REST ACK treated as potential financial finality | Receipt transport, real chain bank effects and full asset/liability/fee reconciliation are different trust domains | One-shot durable request fence, no retries of UNKNOWN, original operation digest, independent canonical Comet finality and global solvency before credit/spend |
+| Green CI mistaken for mainnet permission | Synthetic SDK fixtures cannot prove live wallet custody, unknown old payouts, operator approvals or producer drain | Maintain literal financial HOLD and six independently witnessed controls; require separate signed live production approval and end-to-end funded canary |
+| Repeated uncertain obligations / incomplete producer ownership | Active units and idle player count do not enumerate cron, DE/HD side effects, keyrings, user units, containers and external signers | Sanitize and correlate all source/runtime producer paths; explicit owner classifications and maintenance window before scoped fence, quiesced snapshot and recovery test |
+| Documentation temptation during difficult debugging | A stale registry or manually changed baseline can turn real financial drift into fake green | No documentation-only source-alignment bypass. The release board always exits HOLD and public source reports never become financial permits |
+
+**Stop/go authority remains with WoloChain issue #5 and its single
+six-control checklist.** Its historical target `bdbce253` is separate
+from app PR #684, Wolo Satchel signer PR #39 and Replay API original
+Watcher/market proof. The later automatic-wager service must establish
+its own independently witnessed market, original signed owner mandate,
+full global assets/liabilities and gas census, dedicated custody keys,
+funded deposit/settlement/refund/withdrawal canary and separately
+authorized production release. No amount of “no active players” can
+replace those financial controls.
+
