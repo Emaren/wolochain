@@ -73,6 +73,10 @@ const reviewerPGFinanceIdentityQuery = `
 SELECT session_user, current_user, current_setting('transaction_read_only'),
  COALESCE((SELECT rolsuper OR rolcreatedb OR rolcreaterole OR rolbypassrls OR rolreplication
            FROM pg_catalog.pg_roles WHERE rolname=current_user),true) OR
+ EXISTS (SELECT 1 FROM pg_catalog.pg_auth_members WHERE member=
+  (SELECT oid FROM pg_catalog.pg_roles WHERE rolname=current_user)) OR
+ pg_catalog.has_database_privilege(current_user,current_database(),'CREATE') OR
+ pg_catalog.has_schema_privilege(current_user,'public','CREATE') OR
  (SELECT count(*) <> 3 FROM pg_catalog.pg_class c
   JOIN pg_catalog.pg_namespace n ON n.oid=c.relnamespace
   WHERE n.nspname='public' AND c.relname IN
@@ -125,6 +129,9 @@ func (s *ReviewerReadOnlyPGSource) readOwnerLedger(ctx context.Context) (reviewe
 		return reviewerOwnerLedger{}, ReviewerFinanceUnavailable
 	}
 	defer func() { _ = tx.Rollback() }()
+	if _, err = tx.ExecContext(ctx, `SET LOCAL search_path = pg_catalog, public`); err != nil {
+		return reviewerOwnerLedger{}, ReviewerFinanceUnavailable
+	}
 	// Fixed limits apply on the server as well as the client's cancellation.
 	if _, err = tx.ExecContext(ctx, `SET LOCAL statement_timeout = '1500ms'`); err != nil {
 		return reviewerOwnerLedger{}, ReviewerFinanceUnavailable

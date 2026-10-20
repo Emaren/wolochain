@@ -123,6 +123,7 @@ func TestReviewerFinancePostgresIndependentReadOnlyLedger(t *testing.T) {
 	defer cancel()
 	fixture := `
 CREATE ROLE satchel_reviewer_finance_it LOGIN PASSWORD 'isolated-test-only' NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOREPLICATION NOBYPASSRLS;
+REVOKE CREATE ON SCHEMA public FROM PUBLIC;
 CREATE TABLE public.war_satchel_funded_balances(owner_user_id integer PRIMARY KEY, available_uwolo bigint NOT NULL, reserved_uwolo bigint NOT NULL, committed_uwolo bigint NOT NULL, withdrawal_pending_uwolo bigint NOT NULL, version bigint NOT NULL);
 CREATE TABLE public.war_satchel_funded_journal(owner_user_id integer NOT NULL,delta_available_uwolo bigint NOT NULL,delta_reserved_uwolo bigint NOT NULL,delta_committed_uwolo bigint NOT NULL,delta_withdrawal_pending_uwolo bigint NOT NULL);
 CREATE TABLE public.war_satchel_funded_receipts(vault_address text NOT NULL,chain_id text NOT NULL,canonical_height bigint NOT NULL,amount_uwolo bigint NOT NULL);
@@ -156,6 +157,16 @@ INSERT INTO public.war_satchel_funded_journal VALUES(1,112000000,0,0,0),(1,-1200
 		if e != nil || total != want {
 			t.Fatalf("actual PG total=%s error=%v want=%s", total, e, want)
 		}
+	}
+	read("117000000")
+	if _, err = admin.ExecContext(ctx, `GRANT CREATE ON SCHEMA public TO satchel_reviewer_finance_it`); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = s.readOwnerLedger(ctx); !errors.Is(err, ReviewerFinanceRoleDenied) {
+		t.Fatalf("DDL-capable reviewer accepted: %v", err)
+	}
+	if _, err = admin.ExecContext(ctx, `REVOKE CREATE ON SCHEMA public FROM satchel_reviewer_finance_it`); err != nil {
+		t.Fatal(err)
 	}
 	read("117000000")
 	// A SELECT-only RLS principal can otherwise see a reconciled subset (or
