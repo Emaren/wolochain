@@ -269,3 +269,161 @@ independently reviewed freeze/drain/rollback scope and Wolo issue #5's
 six financial-control proofs. The app's held War Satchel and Mecha
 Auto Betting cannot activate from this inventory.
 
+
+## October 20, 04:35 UTC — current auxiliary inventory reconciled with October 18 producer-capability assessment
+
+The owner ran the independently reviewed auxiliary observer at source commit
+`29948f5bbf992618f7d3c69dafe81993a57e08b2` over root SSH on the
+production host. Receipt: `2026-10-20T04:35:27.956008+00:00`,
+`AUXILIARY_FINANCIAL_SURFACES_EXIT=3`, no mutation, all finance authority
+flags false.
+
+| Auxiliary surface | Latest observed fact | Earlier source/host assessment | Release decision |
+| --- | --- | --- | --- |
+| Tony's crontab | 0 active job lines | Earlier inventory classified no active Wolo user cron entry | No specific cron writer identified; still not full cron/spool or manual signer exclusion |
+| System cron | 9 job lines across 6 files, 0 WOLO financial keyword hits | Earlier 44-entry scheduler classification contained ordinary OS maintenance; keyword heuristic was not signer proof | Do not stop `cron.service` wholesale; keep in scope for any independently demonstrated financial side effect |
+| Root user-manager | Active; `launchpadlib-cache-clean.timer` observed active | Earlier user-manager observations contained no Wolo job | No identified Wolo-specific timer; `user@0` must not be blanket stopped |
+| UID 1000 user-manager | Active; same cache-clean timer | Earlier user-manager observations contained no Wolo job | No identified Wolo-specific timer; `user@1000` must not be blanket stopped |
+| Hasura container | Running, restart policy disabled, no env/mount/DB privilege inspection in this receipt | Historical producer-capability document classified separate indexer / DB-writable consumer, separate DB, no identified Wolo signer or scheduled payment actions | Provisional separate-indexer exclusion **only after** current DB separation/role/capability corroboration; neither a verified Wolo signer nor provably harmless |
+| Podman | Tool unavailable | No active Podman application identified | Tool absence is not comprehensive container absence |
+
+The comprehensive earlier source-bound capability work has **already been done**
+and MUST NOT be discarded or reinvented. The historical,
+non-merged [producer-plan PR #43](https://github.com/Emaren/wolochain/pull/43)
+on `codex/producer-maintenance-plan` contains
+`docs/settlement-contracts/producer-capabilities-20261018.json`
+(schema `aoe2war.wolo.producer-capability-observations.v1`,
+18 October 19:07–19:15 UTC), including **17 HD system units,
+2 DE app units, 44 scheduler entries, manual/external paths, queue
+requirements, Hasura capability and a proposed minimum fence**.
+It is dated, unmerged source/host evidence, **not a live readiness
+certificate**. Reconcile today's 18-unit systemd topology and auxiliary
+observations against it. Do not call the prior 19-unit inventory
+`aoe2hdbets-bet-stake-reconcile-plan.service` permanently absent simply
+because it did not appear in the later `systemctl list-units --all` set.
+
+### Proposed bounded financial-maintenance scope — PLAN ONLY, NOT AN ORDER TO EXECUTE
+
+**Financial ingress / app ownership (four original currently active services):**
+`aoe2hdbets-web.service`,
+`aoe2hdbets-api.service`,
+`aoe2dewarwagers-web.service`,
+`aoe2dewarwagers-api.service`.
+
+All four are in the conservative **proposed app-level fence** pending
+independent review of actual runtime source, startup/health, aliases and
+DB/CLI signing paths. The HD web is a confirmed primary/founder payout
+initiator and independent faucet/staking CLI signer. Its `GET /`,
+`GET /api/lobby`, `GET /api/live-games` and detached timers can
+initiate settlement; HTTP GET/read-only and the one preview flag are not
+an isolation boundary. The HD API can update recipient identity and
+commit/retry replay post-ingest callbacks into HD payout routes.
+DE web and API remain possible financial writers/identity sources.
+**Any fence therefore causes a bounded HD/DE website/API outage.**
+This is not the protected Wolo consensus or 8092/8093 settlement outage.
+
+**Scheduled reactivation / work (six timer+service pairs):**
+`aoe2hdbets-bet-stake-reconcile`,
+`aoe2hdbets-challenge-reconcile`,
+`aoe2hdbets-replay-auto-recovery`,
+`aoe2hdbets-staking-rewards`,
+`aoe2hdbets-trophy-tributes`,
+`aoe2war-prewarm`.
+The seven-timer live observation also contains
+`aoe2-wolo-transfer-heartbeat`, a chain-cache writer previously
+classified *nonpaying*: keep it running if exclusively settling
+payout state; determine separately if a whole-DB quiescent snapshot
+requires a cache write pause. The inactive
+`aoe2hdbets-bet-stake-reconcile-plan.service` was previously
+classified read-only, but must be rechecked against its live unit
+activation and should never be started as part of the freeze.
+Existing `Wants`/`Requires` relations mean replay, reward or tribute
+jobs may wake HD web; freezing the web alone cannot seal ingress.
+
+**Keep outside app-producer fence unless separately established:**
+`wolochaind-mainnet.service`, the consensus executable and canonical
+RPC/REST; `wolochain-mainnet-settlement.service` and
+`wolochain-founder-rewards-settlement.service` at their old binary
+until a **separately approved paired code-only cutover**; root and
+UID-1000 user managers; generic cron; and Hasura (only after
+independently corroborating separation). Do not stop public
+chain access to prevent already-signed user WalletConnect/Keplr
+transactions; their late effects require finality and liability
+accounting, not censorship or guessed absence.
+
+**Out-of-band signer scope:** existing/manual signed transfers,
+CLI/keyring faucet and staking sends, direct account/wallet
+transactions, old accepted/unknown requests, off-host/CI,
+Operator Bridge, DE signing and an optional dormant relayer
+must have a named owner and a witnessed freeze/late-arrival rule
+before the window. A server process list cannot revoke a wallet
+signature already broadcast.
+
+### Explicit proposed human-reviewed sequence — no mutating commands authorized
+
+1. **Pre-window admission:** verify source and runtime for every named
+   HD/DE service and timer, distinct Wolo code/consensus PID+SHA
+   boundaries and actual DB/access role paths. Confirm historical
+   capability classifications, real service and API aliases, systemd
+   restart/activation behavior and exact four-app/six-pair scope.
+   Validate separate indexer/Hasura database boundaries. Inventory
+   direct/off-host signing and queues; establish a named operator,
+   start/end and reversible availability impact.
+2. **Pre-approve a narrow outage** specifying upstream HTTP blocking
+   *and* scheduled triggers, direct signers, DB callback writers,
+   in-process WarGraph leases, and all queued/accepted/uncertain
+   payment sources. Record the current unit and timer states,
+   restart/dependency paths, pending intents, and an exact restore
+   map. **Do not infer** that `systemctl mask --runtime` can
+   reliably override custom `/etc/systemd/system` units; prove
+   the mechanism, its error recovery and triggers in a rehearsal
+   before applying it to production.
+3. **Future explicit operator-executed reversible fence:** only under
+   that separately signed scope, close all newly admitted ingress
+   and approved external signers; quiesce the six reviewed
+   scheduled families and all four app producer processes; prove
+   there are no remaining or reawakened writer PIDs, open signers,
+   active callbacks, concurrent DB writers or queued future
+   triggers. A process stop does not by itself certify payout
+   finality. Any missing or newly discovered writer means stop
+   the maintenance, preserve the HOLD and evaluate recovery.
+4. **Two bounded, independently verified observations** across
+   quiescence, including no additional money-moving commits or
+   unreviewed database writes; classify late/mempool signed
+   deposits without giving them free credit. Reconcile Wolo main
+   journal's accepted 100-WOLO operation and founder claim #889's
+   pending 300-WOLO attempt with *independent authenticated
+   finality*. Never automatically retry UNKNOWN or double-pay.
+5. **Fresh checked backups, paired code-only recovery and global
+   solvency:** snapshot exactly preserved state/config and
+   manifests after independent DB/chain quiescence, reproduce
+   checksums off-host, independently attest *all* HD, DE,
+   external, escrow, overlapping/unsettled customer liabilities
+   and pending gas. Obtain separate witnessed approval for the
+   `bdbce253` historical two-service code-only release, and
+   preserve consensus and both original financial-state journals.
+6. **Restore only when independently authorized:** verify original
+   or reviewed paired runtime, PID/hash/health, unchanged
+   consensus and full financial state. Restore previously active
+   app services/timers **one at a time** and prove each restart
+   policy, `Persistent` catch-up and queued task will not
+   replay old payouts. Previously inactive one-shot services
+   stay inactive until intentionally activated. Never assume
+   a missing tx hash means payment was absent. Reopen HTTP
+   and resume external signers only under a separate owner
+   decision and rollback plan.
+
+If any of these prerequisites remains unproved, do **not** execute
+the fence or downstream cutover. Owner willingness to arrange
+maintenance grants preparation, not an assertion that unresolved
+funds or customer liabilities can be discarded. All existing issue
+#5 six financial controls remain BLOCKED/UNKNOWN; War Satchel
+and Auto Betting 8094/8095 have an additional independent Watcher
+witness, funded lifecycle and custody-release gate.
+
+**Engineering lesson:** avoid repeatedly rediscovering source
+capabilities already established in an independently dated study.
+Treat a past static classification, today's real-time PID/state
+inspection and a protected financial authorization as **three
+different evidence types**, joined by explicit references—not
+interchangeable documents or a single green flag.
