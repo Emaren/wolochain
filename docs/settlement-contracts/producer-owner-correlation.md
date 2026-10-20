@@ -213,7 +213,7 @@ contents were NOT read. `/etc/crontab` exists and ordinary
 jobs; names alone do not prove no WOLO side effects. Active systemd
 **user** managers `user@0.service` and `user@1000.service` were
 observed, but their user-level units and timers were not listed.
-The Docker container `tokenchain-hasura` was observed running;
+The Docker container running Hasura was observed;
 its network, role, credentials, database write capability and restart
 paths are unverified. These gaps are outside the earlier *system*
 systemd topology (18 discovered units, 7 active timers).
