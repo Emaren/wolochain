@@ -128,3 +128,67 @@ funded deposit/settlement/refund/withdrawal canary and separately
 authorized production release. No amount of “no active players” can
 replace those financial controls.
 
+
+## October 20 — first fresh root-runtime observations and activation-topology follow-up
+
+The operator ran exact old runtime inspection and two original-source-pinned
+root read-only inventories at **2026-10-20 03:37 UTC**. This is a *dated*
+observation, not continuous release proof. The runtime control returned
+`LIVE_CODE_STATE=old` (exit 0), `FINANCIAL_DRAIN_CERTIFIED=false`,
+`RELEASE_AUTHORIZED=false`. The HD/DE shared inventory observed 19
+discoverable app service/timer units, zero incomplete discovered-unit
+inspections, 11 active finance-maintenance *candidates* and deliberate
+exit 3; no runtime mutation. Exactly 11 candidates means **not** 11
+independently proven money-moving signers.
+
+The HD website was active with *variable names* evidencing settlement URLs,
+settlement bearer credentials, wallet payout-address configuration and local
+faucet/staking CLI routes. A public GET lobby or live-games read may call
+market-ensure and then settlement; HTTP inactivity or simply suppressing POST
+does **not** isolate its financial ingress. The shared prewarm timer remains
+active and may trigger those GETs. The HD staking reward, bet-stake,
+challenge reconciliation and trophy tribute timers are active; their one-shot
+services being inactive is not proof that a scheduled financial writer is
+quiescent. The transfer heartbeat timer also remains active. **Do not
+blanket stop these units** without the exact activation/ingress plan and
+independently classified authorizations.
+
+The DE web and API processes were active. In the separate DE inventory,
+the web's process exposed WOLO RPC and payout account variable **names**,
+but neither DE service exposed signing-secret variable names. Both tools
+explicitly warn this cannot exclude app-loaded dotenv, CLI-keyring, remote
+or external signing. Keep DE classified as potentially capable until
+source/runtime/credentials/queues are independently established.
+
+### Read-only activation dependency inspection
+
+`scripts/settlement_producer_activation_topology.py --inspect` adds one
+pure runtime metadata view to the existing financial HOLD, with no
+`ExecStart`, env, command lines, wallets, request state or secret values:
+all whitelisted HD/DE/shared systemd service and timer names, active state,
+whether a PID exists, timer `Triggers` and `TriggeredBy`, and public unit
+dependency/restart metadata. An unseen unit name is surfaced instead of
+silently excluded. It intentionally omits consensus and both protected
+settlement units from the candidate set, and every output remains
+`cutoverAuthorized=false`, `financialIngressFenced=false`.
+It returns exit 3 on an observation, exit 2 if any critical property is
+missing/changed/unsafe. It discovers **only systemd system** units and
+cannot prove cron, user-manager, container, external signer or API path
+silence. Review named activated services; classify which can create
+WOLO transfers, how they are triggered, and which upstream fences must
+be verified before any side effect.
+
+From the Mac, fetch the exact reviewed source commit into the local
+*Git object database* only (do not change live Wolo checkout), then
+pipe its `git show REV:scripts/settlement_producer_activation_topology.py`
+to `ssh root@hel1 'python3 - --inspect'`. Never run
+`systemctl stop`, `disable`, `daemon-reload`, `restart`,
+a financial payout API or `git reset` from the observation report.
+
+For the next **separately approved** scoped fence packet, include unit to
+owner, entry point, timer and HTTP trigger, signer/account class, process
+restart/cron/container/user-systemd path, drain method, pending request
+reconciliation source and reversible resume procedure. A list of units or
+restart policy is not by itself financial isolation; Wolo issue #5's six
+controls and Satchel custody release remain held.
+
