@@ -147,6 +147,17 @@ Never use these deltas to approve retry, spend, release, solvency or promotion.
 
 ### All-user cron, periodic cron and at-queue financial-writer census (HELD)
 
+**Operator host preflight:** this collector must run inside the Linux VPS
+SSH session, not in the Mac terminal used to launch SSH. Check `hostname`
+and `uname -s` on the remote shell before collecting financial evidence.
+On macOS, the reviewed collector now returns exit 2 with
+`WRONG_HOST_LINUX_REQUIRED` **without executing any host inventory commands**.
+That is not evidence about the VPS. Do not upload a Mac-generated `STOP`
+report as a VPS financial inventory. The host identity itself must still be
+verified by the operator; simply seeing `Linux` does not prove connection
+to the correct VPS.
+
+
 Before *any* approved producer fence/drain, the root-side read-only
 `scripts/settlement_auxiliary_producer_surfaces.py --inspect` collector now
 enumerates accessible crontab files in both conventional spool directories,
