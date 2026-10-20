@@ -14,6 +14,7 @@ import (
  "encoding/hex"
  "encoding/json"
  "os"
+ "regexp"
  "sync"
  "time"
 
@@ -21,6 +22,30 @@ import (
 )
 
 var independentLiveIssues=[]byte("original-live-watcher-issues-v1")
+var originalLiveSteamID=regexp.MustCompile(`^[0-9]{17}package satchelservice
+
+// Independent pre-bet Watcher receipt issuance, WITHOUT custody, bank,
+// payout, Wolo RPC, REST admission, or any financial approval authority.
+// All source interfaces must be implemented from independently provisioned
+// original Watcher/game-start records, NOT HTTP parameters or the HD app DB.
+// A Go signature alone is not proof the operator has deployed those sources.
+import (
+ "bytes"
+ "context"
+ "crypto/ed25519"
+ "crypto/sha256"
+ "encoding/base64"
+ "encoding/hex"
+ "encoding/json"
+ "os"
+ "regexp"
+ "sync"
+ "time"
+
+ bolt "go.etcd.io/bbolt"
+)
+
+)
 
 // OriginalLiveCapture is sourced from the original append-only game-start
 // recorder. It must NOT be assembled from HD user-supplied market fields.
@@ -126,7 +151,7 @@ func captureToWitness(original OriginalLiveCapture,now time.Time)(ReviewerWatche
  if now.IsZero()||c.CreatedAt.IsZero()||
   !wagerIDs.MatchString(c.OriginalOperationID)||
   !ownerUIDPattern.MatchString(c.OwnerUID)||
-  c.OwnerSteamID==""||c.GameIdentityKey==""||len(c.GameIdentityKey)>255||
+  !originalLiveSteamID.MatchString(c.OwnerSteamID)||c.GameIdentityKey==""||len(c.GameIdentityKey)>255||
   c.MarketID<1||(c.SelectedSide!="left"&&c.SelectedSide!="right")||
   !reviewerHexDigest.MatchString(c.PropositionHash)||
   c.LinkedSession==""||len(c.LinkedSession)>255||
