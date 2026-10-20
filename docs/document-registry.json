@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "680e5a7c2f3cc4bad80e983cf3677c3f25e86b04d55ffca8f6f2b74eee77d24e",
+      "sha256": "9aa1359bc3cf77df48c7dbcdbe4c314ba36e55eb5e152ac402bfbfbc46b24a48",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -971,7 +971,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "ops/20261020-live-producer-activation-topology",
-    "commit": "6ef08d259c6ee7701f0b87b6b73a669ddbf67f6a"
+    "commit": "961768f80d541c28f09c5f70dc392d6608fd3507"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
