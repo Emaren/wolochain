@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/20261019-live-first-stake-roster-lock-circularity` at `cb6bd310d506c43173520c74283a5fd7f6da0f09`
+Implementation baseline: `fix/20261019-live-first-stake-roster-lock-circularity` at `ee6df65acc956a79efa9785960ce9d10d1e1014c`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
