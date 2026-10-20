@@ -87,6 +87,64 @@ When invoked through stdin without remote files, the reader's own source hash
 is unavailable; the collecting operator must retain the exact input-byte hash
 separately. Never infer provenance from a self-declared field.
 
+### Complete escrow-100 identity snapshots and read-only deltas (HELD)
+
+The existing `--focus-escrow-100` mode deliberately returns **at most sixteen
+recently filesystem-modified confirmed** 100-WOLO escrow records plus accepted
+records. That subset cannot certify which eight local confirmations appeared
+between October 18 and 20; their earlier full request identities were not
+captured. Never infer that filesystem mtime is a payment timestamp.
+
+The optional `--full-escrow-100-manifest` mode reuses the same strict, bounded,
+read-only two-root journal reader. It emits a complete sorted identity manifest
+**only for observed exact 100000000-uwolo escrow accepted/confirmed requests**,
+up to the existing 2,500-match fail-closed limit. Each row contains only lane
+index, status, SHA-256 of the private request ID and SHA-256 of original record
+bytes. It does not emit raw request IDs, addresses, signers or memos. This mode
+is opt-in because full manifests are larger than the normal sixteen-row focus.
+
+Use the *same root order* (primary then founder), separately verify source Git
+identity and capture the exact producer state conditions. No live file, service,
+wallet, payout or state mutation is required; output is saved on the operator's
+Mac, **not written on the VPS**. Example after checkout/fetching the reviewed
+held source, using a privately verified exact commit:
+
+```sh
+umask 077
+cd ~/projects/WoloChain-wolo-1
+REV=<independently-reviewed-exact-commit-sha>
+set -o pipefail
+git show "${REV}:scripts/settlement-state-evidence.py" |
+  ssh root@hel1 'python3 - --full-escrow-100-manifest \
+    --state-root /mnt/HC_Volume_105319120/wolochain-mainnet/settlement-state \
+    --state-root /mnt/HC_Volume_105319120/wolochain-mainnet/founder-rewards-settlement-state' \
+  > ~/escrow100-observation-A.private.json
+echo "COLLECT_EXIT=$?"
+```
+
+A **3** is a valid but financially HELD observed snapshot; **2** is invalid.
+Retain the source Git SHA, exact source-byte SHA-256, capture time, user,
+root-order attestation and JSON-file SHA-256 separately. An stdin invocation
+cannot self-attest its reader source. Repeat for observation B in the identical
+order. The comparison is local/read-only:
+
+```sh
+python3 scripts/compare_settlement_escrow_100_manifests.py \
+  --before ~/escrow100-observation-A.private.json \
+  --after ~/escrow100-observation-B.private.json
+echo "COMPARE_EXIT=$?"
+```
+
+The comparator strictly rejects incomplete/malformed/unordered/duplicate
+manifests and differing root counts, and returns hashed added, removed and
+changed request identities. **Exit 3 means a valid financial HOLD comparison**;
+exit 2 means invalid evidence. The operator must still independently authenticate
+the original captures and the root-lane mapping; neither file has a trusted
+signature merely by containing SHA-256 values. Even a changed `accepted` to
+`confirmed` journal status remains an unauthenticated local claim, not chain
+finality or payment proof. Missing prior identities cannot be reconstructed.
+Never use these deltas to approve retry, spend, release, solvency or promotion.
+
 ### Shortest protected operator sequence
 
 1. Independently classify the remaining producer/signing paths and designate HD,
