@@ -113,6 +113,7 @@ func TestReadonlyPGRoleCannotBeAppOrPrivilegedOperator(t *testing.T){
   !strings.Contains(reviewerPGIdentityQuery,"has_table_privilege")||
   !strings.Contains(reviewerPGIdentityQuery,"transaction_read_only")||
   !strings.Contains(reviewerPGIdentityQuery,"SELECT session_user, current_user")||
+  !strings.Contains(reviewerPGMarketQuery,"WHERE a.operation_id=$1")||
   !strings.Contains(reviewerPGOriginalQuery,"WHERE a.operation_id=$1")||
   !strings.Contains(reviewerPGOriginalQuery,"FROM public.war_satchel_wager_authorizations")||
   !strings.Contains(reviewerPGOriginalQuery,"JOIN public.bet_auto_executions")||
