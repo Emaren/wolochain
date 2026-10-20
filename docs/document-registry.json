@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "6fe45093213631a05ea5a527b83173029788804f9a4e23fcf690053b75ee5a43",
+      "sha256": "7fcda239b19b216ffddd792cfcc6c5c89b19da741754b5277f2f0dd73f7f8e1a",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -312,7 +312,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-18",
       "sensitivity": "restricted",
-      "sha256": "748b885f0008319068b45b697fafa4bfea543d6b709953f039e5ba655aeea8f2",
+      "sha256": "61564b04fc339e7bb7d327963c1833923e060ac47c489be4613ab1f71069655b",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -970,8 +970,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/20261020-finance-collector-failure-codes-held",
-    "commit": "ea7d73eb169e2a3f405ceacbee238e8843569d64"
+    "branch": "fix/20261020-finance-atspool-layout-held",
+    "commit": "2d175e7ced19c843af784b3ec7d2c189d2d5a01d"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
