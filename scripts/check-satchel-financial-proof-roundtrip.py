@@ -95,7 +95,78 @@ def main():
             rejected = subprocess.run(command, cwd=ROOT, capture_output=True, text=True, timeout=30)
             assert rejected.returncode == 2 and not rejected.stdout, case
             assert "UNVERIFIABLE" in rejected.stderr, case
-        print("PASS: real isolated SDK bank execution and portable Comet proof verified by offline financial bridge; identical read-only receipt; four forged-context/root/REST cases rejected; no credit authority")
+        # Export AFTER the binary build and financial roundtrip so the native
+        # SDK bank observation is genuinely fresh at the offline CLI boundary.
+        # This continuous fixture includes actual IAVL state and Comet AppHash
+        # commitments. The fixed-date bank unit fixture cannot replace it.
+        environment.pop("SATCHEL_LIFECYCLE_RECIPE", None)
+        environment["SATCHEL_LIFECYCLE_FIXTURE_DIR"] = str(directory)
+        run(["go", "test", "-tags=go1.27", "./internal/satchel", "-run",
+             "^TestAuthenticatedContinuousSDKLifecycle/full_unmatched_refund$",
+             "-count=1"], env=environment)
+        lifecycle = json.loads((directory / "full_unmatched_refund" /
+                                "isolated-sdk-lifecycle.json").read_text())
+        assert lifecycle["fixture_only"] and not lifecycle["mainnet_authority"]
+        assert lifecycle["production_custody_available"] is False
+        step = lifecycle["steps"][0]
+        assert step["name"] == "deposit"
+        bank_authority = {
+            "trust_anchor": lifecycle["anchor"],
+            "vault": lifecycle["roles"]["vault"],
+            "betting_escrow": lifecycle["roles"]["escrow"],
+            "approval_public_key_hex": signatures["approval_public_key_hex"],
+        }
+        bank_proof = step["vault_bank_proof"]
+        bank_proof_path = directory / "bank-proof.json"
+        write(authority_path, bank_authority)
+        write(bank_proof_path, bank_proof)
+        bank_command = [str(binary), "verify-bank-proof", "--authority",
+                        str(authority_path), "--height", str(step["height"]),
+                        "--proof", str(bank_proof_path)]
+        bank = json.loads(run(bank_command).stdout)
+        assert bank["protocol"] == 1
+        assert bank["status"] == "AUTHENTICATED_BANK_NONAUTHORIZING"
+        assert bank["chain_id"] == "wolo-1" and bank["denom"] == "uwolo"
+        assert bank["vault"] == bank_authority["vault"]
+        assert bank["balance_uwolo"] == step["vault_balance_uwolo"] == "100000100"
+        assert bank["height"] == step["height"]
+        assert bank["commit_height"] == step["height"] + 1
+        commits = [r["body"]["result"]["signed_header"]["header"]
+                   for r in bank_proof["responses"]
+                   if r["path"] == "/commit" and
+                   r["query"] == f"height={bank['commit_height']}"]
+        assert commits and all(h["app_hash"] == bank["app_hash"] for h in commits)
+        assert len(bank["block_hash"]) == len(bank["app_hash"]) == 64
+        assert bank["credit_authorized"] is False
+        assert bank["spending_authorized"] is False
+        assert bank["solvency_authorized"] is False
+        assert json.loads(run(bank_command).stdout) == bank
+        for case in ("wrong bank root", "wrong bank vault", "wrong bank height",
+                     "forged bank REST only"):
+            bad_authority = copy.deepcopy(bank_authority)
+            bad_proof = copy.deepcopy(bank_proof)
+            bad_command = list(bank_command)
+            if case == "wrong bank root":
+                bad_authority["trust_anchor"]["hash"] = "F" * 64
+            elif case == "wrong bank vault":
+                bad_authority["vault"] = lifecycle["roles"]["owner"]
+            elif case == "wrong bank height":
+                bad_command[bad_command.index("--height") + 1] = str(step["height"] + 1)
+            else:
+                bad_proof["responses"] = [{
+                    "source": "rest", "path": "/cosmos/bank/v1beta1/balances/" + bank_authority["vault"],
+                    "query": "", "body": {"balances": [{"denom": "uwolo", "amount": "100000100"}]},
+                }]
+            write(authority_path, bad_authority)
+            write(bank_proof_path, bad_proof)
+            rejected = subprocess.run(bad_command, cwd=ROOT, capture_output=True,
+                                      text=True, timeout=30)
+            assert rejected.returncode == 2 and not rejected.stdout, case
+            assert "UNVERIFIABLE" in rejected.stderr, case
+        print("PASS: real isolated SDK execution and portable Comet financial proof; "
+              "fresh native bank/IAVL AppHash proof verified at exact H/H+1; "
+              "identical read-only receipts; eight forged-context/root/vault/height/REST "
+              "cases rejected; no credit, spending or solvency authority")
 
 
 if __name__ == "__main__":

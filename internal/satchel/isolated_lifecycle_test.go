@@ -75,25 +75,40 @@ type lifecycleStep struct {
 // separately from the owner's 100-WOLO custody principal. Identical-byte replay
 // is committed after each payment and fails without changing the role balances.
 func TestAuthenticatedContinuousSDKLifecycle(t *testing.T) {
+	if path := os.Getenv("SATCHEL_LIFECYCLE_RECIPE"); path != "" {
+		recipe := readLifecycleRecipe(t, path)
+		t.Run(recipe.Scenario, func(t *testing.T) { runContinuousSDKLifecycle(t, recipe.Scenario, false, &recipe) })
+		return
+	}
 	for _, matched := range []bool{false, true} {
 		name := "full_unmatched_refund"
 		if matched {
 			name = "matched_counterparty_payout"
 		}
-		t.Run(name, func(t *testing.T) { runContinuousSDKLifecycle(t, name, matched) })
+		t.Run(name, func(t *testing.T) { runContinuousSDKLifecycle(t, name, matched, nil) })
 	}
+	recipe := twelveCanonicalTicketRecipe()
+	t.Run(recipe.Scenario, func(t *testing.T) { runContinuousSDKLifecycle(t, recipe.Scenario, false, &recipe) })
 }
 
 // This exercises native execution and authenticated proof plumbing. Entitlement
 // decisions, HD ledger mutations, Watcher triggers and live custody are outside
 // this fixture; its supplied transfer intents are not a substitute for them.
-func runContinuousSDKLifecycle(t *testing.T, scenario string, matched bool) {
+func runContinuousSDKLifecycle(t *testing.T, scenario string, matched bool, recipe *sdkLifecycleRecipe) {
 	t.Helper()
 	exportDir := os.Getenv("SATCHEL_LIFECYCLE_FIXTURE_DIR")
 	now := time.Date(2026, 10, 19, 12, 0, 0, 0, time.UTC)
 	if exportDir != "" {
 		require.True(t, filepath.IsAbs(exportDir))
 		now = time.Now().UTC().Truncate(time.Millisecond)
+	}
+	if recipe != nil && recipe.Now != "" {
+		frozen, e := time.Parse(time.RFC3339Nano, recipe.Now)
+		require.NoError(t, e)
+		actual := time.Now().UTC()
+		require.False(t, frozen.After(actual.Add(5*time.Second)), "test recipe clock cannot manufacture future finality")
+		require.True(t, frozen.After(actual.Add(-30*time.Second)), "test recipe replay must remain currently fresh")
+		now = frozen
 	}
 	wallet := func(name string) lifecycleWallet {
 		key := secp256k1.GenPrivKeyFromSecret([]byte("isolated-satchel-lifecycle-test-only/" + name))
@@ -115,15 +130,18 @@ func runContinuousSDKLifecycle(t *testing.T, scenario string, matched bool) {
 		authtypes.NewBaseAccount(escrow.address, escrow.key.PubKey(), 2, 0),
 	}
 	var opponentInitial int64
-	if matched {
+	if matched || recipe != nil {
 		accounts = append(accounts, authtypes.NewBaseAccount(opponent.address, opponent.key.PubKey(), 3, 0))
 		opponentInitial = 12000001 // independently supplied counterparty principal plus ante fee
+		if recipe != nil {
+			opponentInitial = 100000004
+		}
 	}
 	balance := func(w lifecycleWallet, amount int64) banktypes.Balance {
 		return banktypes.Balance{Address: w.address.String(), Coins: sdk.NewCoins(sdk.NewInt64Coin(Denom, amount))}
 	}
 	balances := []banktypes.Balance{balance(owner, 100000001), balance(vault, 100), balance(escrow, 100)}
-	if matched {
+	if matched || recipe != nil {
 		balances = append(balances, balance(opponent, opponentInitial))
 	}
 	genesis, err := simtestutil.GenesisStateWithValSet(application.AppCodec(), application.DefaultGenesis(), vals, accounts, balances...)
@@ -169,7 +187,7 @@ func runContinuousSDKLifecycle(t *testing.T, scenario string, matched bool) {
 			cometTxs[n] = cmt.Tx(tx)
 		}
 		h := &cmt.Header{Version: cmtversion.Consensus{Block: version.BlockProtocol}, ChainID: ChainID, Height: height,
-			Time: start.Add(time.Duration(height) * 100 * time.Millisecond), ValidatorsHash: vals.Hash(), NextValidatorsHash: vals.Hash(),
+			Time: start.Add(time.Duration(height) * 10 * time.Millisecond), ValidatorsHash: vals.Hash(), NextValidatorsHash: vals.Hash(),
 			ConsensusHash: bytes.Repeat([]byte{2}, 32), AppHash: appHash, ProposerAddress: validator.PubKey().Address(),
 			DataHash: cometTxs.Hash(), LastResultsHash: cmt.NewResults(lastResults).Hash()}
 		if height > 1 {
@@ -242,6 +260,20 @@ func runContinuousSDKLifecycle(t *testing.T, scenario string, matched bool) {
 		specs = append(specs,
 			paymentSpec{"full_unmatched_refund", escrow, vault, 12000000, "aoe2war/satchel/claim-return/v1/101", [3]int64{0, 100000099, 99}, 0},
 			paymentSpec{"withdrawal", vault, owner, 100000000, "aoe2war/satchel/withdraw/v1/00000000-0000-4000-8000-000000000001", [3]int64{100000000, 98, 99}, 0})
+	}
+	if recipe != nil {
+		specs = nil
+		wallets := map[string]lifecycleWallet{"owner": owner, "vault": vault, "escrow": escrow, "opponent": opponent}
+		remaining := map[string]int64{"owner": 100000001, "vault": 100, "escrow": 100, "opponent": opponentInitial}
+		for _, transfer := range recipe.Steps {
+			amount, e := strconv.ParseInt(transfer.AmountUWolo, 10, 64)
+			require.NoError(t, e)
+			require.GreaterOrEqual(t, remaining[transfer.SenderRole], amount+1, "manifest cannot invent funds: "+transfer.Name)
+			remaining[transfer.SenderRole] -= amount + 1
+			remaining[transfer.RecipientRole] += amount
+			specs = append(specs, paymentSpec{transfer.Name, wallets[transfer.SenderRole], wallets[transfer.RecipientRole], amount, transfer.Memo,
+				[3]int64{remaining["owner"], remaining["vault"], remaining["escrow"]}, remaining["opponent"]})
+		}
 	}
 	for n, spec := range specs {
 		data := signSend(spec.from, spec.to, spec.amount, spec.memo)
@@ -394,8 +426,8 @@ func runContinuousSDKLifecycle(t *testing.T, scenario string, matched bool) {
 		exportDir = filepath.Join(exportDir, scenario)
 		require.NoError(t, os.MkdirAll(exportDir, 0700))
 		fixture := map[string]any{"fixture_only": true, "mainnet_authority": false, "chain_id": ChainID, "denom": Denom, "now": now, "anchor": anchor,
-			"roles":    map[string]any{"owner_id": "lifecycle-owner", "owner": owner.address.String(), "vault": vault.address.String(), "escrow": escrow.address.String(), "opponent": opponent.address.String(), "owner_public_key_hex": hex.EncodeToString(owner.key.PubKey().Bytes())},
-			"scenario": scenario, "bank_states": bankStates, "steps": steps, "committed_block_count": height, "successful_transfers": len(steps), "total_fee_uwolo": strconv.Itoa(len(steps)), "production_custody_available": false}
+			"roles":  map[string]any{"owner_id": "lifecycle-owner", "owner": owner.address.String(), "vault": vault.address.String(), "escrow": escrow.address.String(), "opponent": opponent.address.String(), "owner_public_key_hex": hex.EncodeToString(owner.key.PubKey().Bytes()), "owner_private_key_hex_test_only": hex.EncodeToString(owner.key.Bytes()), "owner_private_key_warning": "DETERMINISTIC ISOLATED FIXTURE ONLY; NEVER FUND OR PROVISION"},
+			"recipe": recipe, "scenario": scenario, "bank_states": bankStates, "steps": steps, "committed_block_count": height, "successful_transfers": len(steps), "total_fee_uwolo": strconv.Itoa(len(steps)), "production_custody_available": false}
 		encoded, err := json.MarshalIndent(fixture, "", "  ")
 		require.NoError(t, err)
 		require.NoError(t, os.WriteFile(filepath.Join(exportDir, "isolated-sdk-lifecycle.json"), encoded, 0600))
