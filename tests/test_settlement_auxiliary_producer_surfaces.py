@@ -3,7 +3,9 @@
 from __future__ import annotations
 from pathlib import Path
 import importlib.util
+import io
 import json
+from contextlib import redirect_stdout
 import os
 import sys
 import tempfile
@@ -216,6 +218,21 @@ class AuxiliaryProducerTests(unittest.TestCase):
         with patch.object(A,"command",return_value=(4,"")):
             r=A.container_inventory("docker")
         self.assertEqual(r["status"],"NOT_INSPECTED")
+
+    def test_wrong_host_is_explicit_stop_before_any_linux_inventory(self):
+        output=io.StringIO()
+        with patch.object(A.sys,"platform","darwin"), \\
+             patch.object(A,"inspect",side_effect=AssertionError(
+                 "Must not inspect operator Mac")), redirect_stdout(output):
+            self.assertEqual(A.main(["--inspect"]),2)
+        result=json.loads(output.getvalue())
+        self.assertEqual(result["status"],"STOP")
+        self.assertEqual(result["reason"],"WRONG_HOST_LINUX_REQUIRED")
+        self.assertFalse(result["financialReleaseAuthorized"])
+        self.assertFalse(result["satchelActivationAuthorized"])
+        self.assertFalse(result["productionMutated"])
+        self.assertNotIn("username",output.getvalue())
+        self.assertNotIn("hostName",output.getvalue())
 
     def test_no_mutation_and_no_success_exit(self):
         report={
