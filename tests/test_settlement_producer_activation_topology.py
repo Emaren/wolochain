@@ -45,7 +45,7 @@ class TopologyTests(unittest.TestCase):
                     "cutoverAuthorized", "satchelActivationAuthorized",
                     "cronUserContainersAndExternalSignersCovered"):
             self.assertIs(report[key], False)
-        self.assertIn(SERVICE, report["expectedAbsentUnitNames"] if False else [SERVICE])
+        self.assertFalse(report["cutoverAuthorized"])
 
     def test_hidden_configuration_can_never_escape_projection(self):
         raw = show(TIMER, Restart="always") + (
