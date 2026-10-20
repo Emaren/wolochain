@@ -221,9 +221,10 @@ class AuxiliaryProducerTests(unittest.TestCase):
 
     def test_wrong_host_is_explicit_stop_before_any_linux_inventory(self):
         output=io.StringIO()
-        with patch.object(A.sys,"platform","darwin"), \\
-             patch.object(A,"inspect",side_effect=AssertionError(
-                 "Must not inspect operator Mac")), redirect_stdout(output):
+        with (patch.object(A.sys,"platform","darwin"),
+              patch.object(A,"inspect",side_effect=AssertionError(
+                  "Must not inspect operator Mac")),
+              redirect_stdout(output)):
             self.assertEqual(A.main(["--inspect"]),2)
         result=json.loads(output.getvalue())
         self.assertEqual(result["status"],"STOP")
