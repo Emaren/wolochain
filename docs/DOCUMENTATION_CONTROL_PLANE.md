@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `integration/20261020-codex-satchel-recovered-lifecycle-held` at `d2b442b0de19837b0001a1137cb00c044d47bd67`
+Implementation baseline: `fix/20261020-custody-artifact-pin-recovered-lifecycle-held` at `1fd186202969798127ee155d974ac72546d5498b`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 

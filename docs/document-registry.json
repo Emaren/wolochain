@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "181667dcd3aa56ef072273c530c1349ae0ddf98646d23be9e514de41518abc4a",
+      "sha256": "0b6fefec483bcfe2954197f9a9a70846cfb4c2c62b86b54f9ada2aedf8e3de31",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -496,7 +496,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-17",
       "sensitivity": "restricted",
-      "sha256": "7f5d0ad8f674fe1a044f5593fcdd7745702eb63fa54ebfd5ebabf7fd4c2670d8",
+      "sha256": "90df0efb2a3f550f8cb0e28f83090f6cfe58d686beca6252442c77970fcb9844",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -946,8 +946,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "integration/20261020-codex-satchel-recovered-lifecycle-held",
-    "commit": "d2b442b0de19837b0001a1137cb00c044d47bd67"
+    "branch": "fix/20261020-custody-artifact-pin-recovered-lifecycle-held",
+    "commit": "1fd186202969798127ee155d974ac72546d5498b"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
