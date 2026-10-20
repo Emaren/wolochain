@@ -157,7 +157,8 @@ SPOOL_DIR_NAMES = ("crontabs", "cron")
 RUN_PARTS_NAME = re.compile(r"[A-Za-z0-9_-]{1,100}\\Z")
 
 
-def _list_regular_entries(folder: Path, *, allow_dot_names: bool = False) -> list[Path] | None:
+def _list_regular_entries(folder: Path, *, allow_dot_names: bool = False,
+                          skip_expected_child: str | None = None) -> list[Path] | None:
     """Bounded local listing. A missing directory is UNKNOWN, never an empty proof."""
     try:
         info = folder.lstat()
@@ -179,11 +180,15 @@ def _list_regular_entries(folder: Path, *, allow_dot_names: bool = False) -> lis
             info = entry.lstat()
         except OSError as exc:
             raise InventoryError("SCHEDULER_ENTRY_UNOBSERVED") from exc
+        if (skip_expected_child is not None and name == skip_expected_child and
+                stat.S_ISDIR(info.st_mode) and not entry.is_symlink()):
+            # This child is independently enumerated as a different spool root.
+            continue
         if not stat.S_ISREG(info.st_mode) or entry.is_symlink() or info.st_nlink != 1:
             # An unknown nested cron source/symlink must not quietly become
             # "zero known financial writers".
             raise InventoryError("UNSAFE_SCHEDULER_ENTRY")
-    return entries
+    return [entry for entry in entries if entry.name != skip_expected_child]
 
 
 def _periodic_cron_scripts(etc_root: Path) -> dict:
@@ -250,7 +255,9 @@ def cron_sources(
     for spool in spool_roots:
         if spool.name not in SPOOL_DIR_NAMES:
             raise InventoryError("UNEXPECTED_SPOOL_ROOT")
-        entries = _list_regular_entries(spool)
+        entries = _list_regular_entries(
+            spool, skip_expected_child="crontabs" if spool.name == "cron" else None,
+        )
         if entries is None:
             spool_missing.append(spool.name)
             continue
