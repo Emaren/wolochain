@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/20261019-live-first-stake-roster-lock-circularity` at `ee6df65acc956a79efa9785960ce9d10d1e1014c`
+Implementation baseline: `fix/20261020-satchel-reviewer-pg-session-identity` at `b409bc8f42960750bedf91f055a8132ede8ed2ba`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
