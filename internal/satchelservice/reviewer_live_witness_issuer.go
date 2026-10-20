@@ -37,6 +37,8 @@ type OriginalLiveCaptureSource interface {
 }
 type originalLiveIssueEntry struct {
  Fingerprint string `json:"fingerprint"`
+ OwnerGame string `json:"owner_game,omitempty"`
+ OwnerCapture string `json:"owner_capture,omitempty"`
  Status string `json:"status"`
  Witness *ReviewerWatcherLiveWitness `json:"witness,omitempty"`
 }
@@ -77,7 +79,9 @@ func OpenOriginalLiveWitnessIssuer(path string,
  db,e:=bolt.Open(path,0600,&bolt.Options{Timeout:100*time.Millisecond})
  if e!=nil{return nil,ErrReviewerHeld}
  if e=db.Update(func(tx *bolt.Tx)error{
-  _,err:=tx.CreateBucketIfNotExists(independentLiveIssues);return err
+  if _,err:=tx.CreateBucketIfNotExists(independentLiveIssues);err!=nil{return err}
+  if _,err:=tx.CreateBucketIfNotExists(independentLiveOwnerGames);err!=nil{return err}
+  return recoverOriginalLiveOwnerGames(tx,key.Public().(ed25519.PublicKey))
  });e!=nil{_ = db.Close();return nil,ErrReviewerHeld}
  return &OriginalLiveWitnessIssuer{
   db:db,source:source,checkpoint:checkpoint,
@@ -101,6 +105,13 @@ func (r *OriginalLiveWitnessIssuer)entry(id string)(originalLiveIssueEntry,error
    (v.Status!="PENDING"&&v.Status!="SIGNED")||
    (v.Status=="SIGNED"&&v.Witness==nil)|| 
    (v.Status=="PENDING"&&v.Witness!=nil){return ErrReviewerHeld}
+  ownerGame:=v.OwnerGame
+  ownerCapture:=v.OwnerCapture
+  if ownerGame==""&&v.Witness!=nil{ownerGame=originalLiveOwnerGame(v.Witness.OwnerUID,v.Witness.GameIdentityKey)}
+  if ownerCapture==""&&v.Witness!=nil{ownerCapture=originalLiveOwnerCapture(v.Witness.OwnerUID,v.Witness.LiveCheckpointSHA256)}
+  games:=tx.Bucket(independentLiveOwnerGames)
+  if games==nil||!reviewerHexDigest.MatchString(ownerGame)||!reviewerHexDigest.MatchString(ownerCapture)||
+   string(games.Get([]byte(ownerGame)))!=id||string(games.Get([]byte(ownerCapture)))!=id{return ErrReviewerHeld}
   return nil
  })
  return v,e
@@ -108,14 +119,23 @@ func (r *OriginalLiveWitnessIssuer)entry(id string)(originalLiveIssueEntry,error
 func (r *OriginalLiveWitnessIssuer)record(id string,
  value originalLiveIssueEntry,expected string)error{
  return r.db.Update(func(tx *bolt.Tx)error{
-  b:=tx.Bucket(independentLiveIssues);previous:=b.Get([]byte(id))
+  b,games:=tx.Bucket(independentLiveIssues),tx.Bucket(independentLiveOwnerGames)
+  if b==nil||games==nil||!reviewerHexDigest.MatchString(value.OwnerGame)||!reviewerHexDigest.MatchString(value.OwnerCapture){return ErrReviewerHeld}
+  previous:=b.Get([]byte(id))
+  bound:=games.Get([]byte(value.OwnerGame))
+  if bound!=nil&&string(bound)!=id{return ErrReviewerHeld}
+  captureBound:=games.Get([]byte(value.OwnerCapture))
+  if captureBound!=nil&&string(captureBound)!=id{return ErrReviewerHeld}
   if expected=="" {
    if previous!=nil{return ErrReviewerHeld}
   }else{
    var old originalLiveIssueEntry
    if previous==nil||json.Unmarshal(previous,&old)!=nil||
-    old.Fingerprint!=value.Fingerprint||old.Status!=expected{return ErrReviewerHeld}
+    old.Fingerprint!=value.Fingerprint||old.OwnerGame!=value.OwnerGame||old.OwnerCapture!=value.OwnerCapture||old.Status!=expected{return ErrReviewerHeld}
   }
+  // Canonical owner/game and PENDING intent share one durable commit.
+  if err:=games.Put([]byte(value.OwnerGame),[]byte(id));err!=nil{return err}
+  if err:=games.Put([]byte(value.OwnerCapture),[]byte(id));err!=nil{return err}
   raw,e:=json.Marshal(value);if e!=nil{return ErrReviewerHeld}
   return b.Put([]byte(id),raw)
  })
@@ -196,6 +216,8 @@ func (r *OriginalLiveWitnessIssuer)IssueOne(ctx context.Context,id string)Origin
  w,e=captureToWitness(fresh,r.now())
  if e!=nil{return pending}
  fingerprint:=independentLiveFingerprint(w)
+ ownerGame:=originalLiveOwnerGame(w.OwnerUID,w.GameIdentityKey)
+ ownerCapture:=originalLiveOwnerCapture(w.OwnerUID,w.LiveCheckpointSHA256)
  prior,e:=r.entry(id)
  if e!=nil{return pending}
  if prior.Fingerprint!=""{
@@ -207,14 +229,14 @@ func (r *OriginalLiveWitnessIssuer)IssueOne(ctx context.Context,id string)Origin
    r.key.Public().(ed25519.PublicKey),check,r.now())!=nil{return pending}
   return OriginalLiveWitnessReply{Status:"SIGNED",OperationID:id,Witness:prior.Witness}
  }
- if r.record(id,originalLiveIssueEntry{Fingerprint:fingerprint,Status:"PENDING"},"")!=nil||
+ if r.record(id,originalLiveIssueEntry{Fingerprint:fingerprint,OwnerGame:ownerGame,OwnerCapture:ownerCapture,Status:"PENDING"},"")!=nil||
   ctx.Err()!=nil{return pending}
  w.Signature=base64.StdEncoding.EncodeToString(
   ed25519.Sign(r.key,ReviewerWatcherLiveWitnessMessage(w)))
  if VerifyReviewerWatcherLiveWitness(fresh.Candidate,w,
   r.key.Public().(ed25519.PublicKey),check,r.now())!=nil||ctx.Err()!=nil{return pending}
  if r.record(id,originalLiveIssueEntry{
-  Fingerprint:fingerprint,Status:"SIGNED",Witness:&w,
+  Fingerprint:fingerprint,OwnerGame:ownerGame,OwnerCapture:ownerCapture,Status:"SIGNED",Witness:&w,
  },"PENDING")!=nil{return pending}
  return OriginalLiveWitnessReply{Status:"SIGNED",OperationID:id,Witness:&w}
 }

@@ -114,6 +114,8 @@ func TestIndependentLiveIssuerPendingCrashFencing(t *testing.T){
  fp:=independentLiveFingerprint(w)
  if e=issuer.record(c.OriginalOperationID,originalLiveIssueEntry{
   Status:"PENDING",Fingerprint:fp,
+  OwnerGame:originalLiveOwnerGame(c.OwnerUID,c.GameIdentityKey),
+  OwnerCapture:originalLiveOwnerCapture(c.OwnerUID,w.LiveCheckpointSHA256),
  },"");e!=nil{t.Fatal(e)}
  for i:=0;i<3;i++{
   a:=issuer.IssueOne(t.Context(),c.OriginalOperationID)

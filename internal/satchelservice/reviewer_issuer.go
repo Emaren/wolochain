@@ -124,14 +124,17 @@ func reviewerPending(id string)ReviewerIssuedReply{
 // This is an *approval*, NOT a transfer; no retry of chain sends is possible.
 func (r *ReviewerIssuer)ReviewOne(ctx context.Context,id string)ReviewerIssuedReply {
  pending:=reviewerPending(id)
- if r==nil || !wagerIDs.MatchString(id)||ctx.Err()!=nil{return pending}
+ if r==nil || ctx==nil || !wagerIDs.MatchString(id)||ctx.Err()!=nil{return pending}
  r.mu.Lock();defer r.mu.Unlock()
  if r.db==nil{return pending}
  original,err:=r.source.OriginalHold(ctx,id)
  if err!=nil||ctx.Err()!=nil||original.OperationID!=id||
   original.Version!=1||original.Signature!=""||
   original.Vault!=r.policy.Vault||original.Recipient!=r.policy.BettingEscrow||
-  original.Memo!="AoE2HDBets bet ticket v1 · ticket "+id[len("satchel:ticket:"):] ||
+  // Operation suffix is the execution ID, not the independently numbered
+  // BetStakeTicket ID. The original PG adapter authenticates the exact memo
+  // against immutable ticketId; retain those bytes in the signed grant.
+  !ticketMemo.MatchString(original.Memo) ||
   !nonzeroDigest(original.ReservationDigest)||!nonzeroDigest(original.LedgerRevision)||
   !nonzeroDigest(original.ConsentDigest)||!ownerUIDPattern.MatchString(original.OwnerID) {
   return pending

@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "b66e8323d00fd575f6e5faeff48c80a24358d6c925a3d53260597943c12d0825",
+      "sha256": "181667dcd3aa56ef072273c530c1349ae0ddf98646d23be9e514de41518abc4a",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -946,8 +946,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "feature/20261020-independent-live-watcher-issuer-held",
-    "commit": "7a04c8b9821d4ca59dfdf495acb03d53933856da"
+    "branch": "integration/20261020-codex-satchel-recovered-lifecycle-held",
+    "commit": "d2b442b0de19837b0001a1137cb00c044d47bd67"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

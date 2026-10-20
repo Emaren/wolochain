@@ -33,6 +33,9 @@ func main() {
 // run returns only fixed public diagnostic labels. Sensitive configuration,
 // source responses, filesystem paths and keyring errors are never printed.
 func run(ctx context.Context, args []string, out, errout io.Writer) int {
+	if len(args)>0 && (args[0]=="read-bank-proof" || args[0]=="verify-bank-proof") {
+		return bankProofCommand(ctx,args[0],args[1:],out,errout)
+	}
 	if len(args) > 0 && args[0] == "verify-financial-proof" {
 		return verifyFinancialProofCommand(ctx, args[1:], out, errout)
 	}
