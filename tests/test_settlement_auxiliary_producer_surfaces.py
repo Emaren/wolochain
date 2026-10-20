@@ -98,6 +98,78 @@ class AuxiliaryProducerTests(unittest.TestCase):
             self.assertIsNone(observed["atQueue"]["pendingJobs"])
             self.assertFalse(observed["allFinancialWritersIdentified"])
 
+    def test_ubuntu_at_spool_directories_are_known_but_financially_unverified(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            etc = root / "etc"
+            parent = root / "var" / "spool" / "cron"
+            users = parent / "crontabs"
+            atjobs = parent / "atjobs"
+            atspool = parent / "atspool"
+            for folder in (etc, users, atjobs, atspool):
+                folder.mkdir(parents=True, exist_ok=True)
+            (users / "tony").write_text("0 * * * * /bin/true # PRIVATE_CRON_COMMAND\\n")
+            # These intentionally do not meet CRON_FILE: at payloads are NOT
+            # crontabs, and their names/contents must not enter any output.
+            (atjobs / "SECRET_JOB_\t").write_text("PRIVATE_AT_JOB_PAYLOAD")
+            (atspool / "SECRET_OUTPUT_\t").write_text("PRIVATE_AT_SPOOL_PAYLOAD")
+            with patch.object(A, "command", return_value=(0, "1 Tue 2026 PRIVATE_ATQ\\n")):
+                result = A.cron_sources(etc, (users, parent))
+            self.assertEqual(result["spoolCrontabsObserved"], 1)
+            self.assertEqual(result["totalJobLines"], 1)
+            self.assertEqual(result["atSpoolDirectoriesObserved"],
+                             ["atjobs", "atspool"])
+            self.assertEqual(result["atSpoolDirectoriesMissingOrUnverified"], [])
+            self.assertFalse(result["atSpoolJobPayloadsInspected"])
+            self.assertFalse(result["atSpoolFinancialWriterCapabilityExcluded"])
+            self.assertEqual(result["atQueue"]["pendingJobs"], 1)
+            self.assertFalse(result["allFinancialWritersIdentified"])
+            serialized = json.dumps(result)
+            for secret in ("PRIVATE_CRON_COMMAND", "PRIVATE_AT_JOB_PAYLOAD",
+                           "PRIVATE_AT_SPOOL_PAYLOAD", "PRIVATE_ATQ",
+                           "SECRET_JOB", "SECRET_OUTPUT"):
+                self.assertNotIn(secret, serialized)
+
+    def test_at_queue_unavailable_or_spool_absent_never_proves_zero_writers(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            etc = root / "etc"
+            users = root / "cron" / "crontabs"
+            users.mkdir(parents=True)
+            with patch.object(A, "command", return_value=(127, "")):
+                result = A.cron_sources(etc, (users, users.parent))
+            self.assertEqual(result["atSpoolDirectoriesObserved"], [])
+            self.assertEqual(result["atSpoolDirectoriesMissingOrUnverified"],
+                             ["atjobs", "atspool"])
+            self.assertEqual(result["atQueue"]["status"], "UNOBSERVED")
+            self.assertIsNone(result["atQueue"]["pendingJobs"])
+            self.assertFalse(result["atSpoolFinancialWriterCapabilityExcluded"])
+
+    def test_fake_or_symlinked_at_directories_and_unknown_nested_entries_fail(self):
+        for name in ("atjobs", "atspool"):
+            for bad in ("symlink", "ordinary-file", "unknown-dir"):
+                with self.subTest(name=name, bad=bad), tempfile.TemporaryDirectory() as d:
+                    root = Path(d)
+                    etc = root / "etc"
+                    parent = root / "cron"
+                    users = parent / "crontabs"
+                    users.mkdir(parents=True)
+                    (parent / "atjobs").mkdir()
+                    (parent / "atspool").mkdir()
+                    target = parent / name
+                    if bad == "symlink":
+                        target.rmdir()
+                        target.symlink_to(users, target_is_directory=True)
+                    elif bad == "ordinary-file":
+                        target.rmdir()
+                        target.write_text("not-a-directory")
+                    else:
+                        (parent / "unrelated-service").mkdir()
+                    with patch.object(A, "command", return_value=(127, "")):
+                        with self.assertRaises(A.InventoryError) as caught:
+                            A.cron_sources(etc, (users, parent))
+                    self.assertEqual(str(caught.exception), "UNSAFE_SCHEDULER_ENTRY")
+
     def test_unknown_nested_cron_source_and_links_refuse_coverage(self):
         with tempfile.TemporaryDirectory() as d:
             root=Path(d)
