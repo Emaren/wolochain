@@ -60,6 +60,12 @@ jobs:
       - name: Operator script syntax
         run: for script in scripts/*.sh; do bash -n "$script" || exit; done
 
+      - name: Financial maintenance and activation blind-spot contracts (read only)
+        run: |
+          python3 -m unittest discover -s tests -p 'test_settlement_maintenance_board.py' -v
+          python3 -m unittest discover -s tests -p 'test_settlement_producer_activation_topology.py' -v
+          python3 -m unittest discover -s tests -p 'test_settlement_auxiliary_producer_surfaces.py' -v
+
       - name: Founder request-state forensics contracts (read only)
         run: python3 -m unittest discover -s tests -p 'test_settlement_founder15_state_readonly.py' -v
 
