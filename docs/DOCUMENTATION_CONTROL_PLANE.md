@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `feature/20261020-independent-live-watcher-issuer-held` at `7a04c8b9821d4ca59dfdf495acb03d53933856da`
+Implementation baseline: `integration/20261020-codex-satchel-recovered-lifecycle-held` at `d2b442b0de19837b0001a1137cb00c044d47bd67`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
