@@ -23,6 +23,9 @@ MAX_ROOTS = 2
 MAX_ENTRIES = 10000
 MAX_FILE_BYTES = 1 << 20
 MAX_TOTAL_BYTES = 16 << 20
+FOCUS_MAX_MATCHES = 2500
+FOCUS_RECENT_LIMIT = 16
+FOCUS_ACCEPTED_LIMIT = 16
 MAX_JSON_DEPTH = 32
 MAX_JSON_NODES = 100000
 ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9._:-]{2,127}\Z")
@@ -365,12 +368,14 @@ def _reader_identity():
             os.close(fd)
 
 
-def inspect_state(roots):
+def inspect_state(roots, *, focus_escrow_100=False):
+    if type(focus_escrow_100) is not bool:
+        fail("INVALID_FOCUS_MODE")
     if not 1 <= len(roots) <= MAX_ROOTS:
         fail("ROOT_COUNT_LIMIT")
     counts, blockers = collections.Counter(), {"LOCAL_STATE_CANNOT_CERTIFY_GLOBAL_DRAIN"}
     manifest, requests, receipts, observed_hashes, budget = [], {}, [], {}, [0, 0]
-    leaves, run_children = {}, []
+    leaves, run_children, focused_escrow = {}, [], []
     seen_roots = set()
     try:
         for lane, root in enumerate(roots):
@@ -433,6 +438,29 @@ def inspect_state(roots):
                                         fail("REQUEST_CONTEXT_MISMATCH")
                                 fingerprint = _fingerprint(record, request, signer)
                                 tx = _response(response, counts, blockers)
+                                if (focus_escrow_100 and request_role == "escrow"
+                                        and request["amount_uwolo"] == "100000000"
+                                        and response["status"] in ("accepted", "confirmed")):
+                                    if len(focused_escrow) >= FOCUS_MAX_MATCHES:
+                                        fail("FOCUS_MATCH_LIMIT")
+                                    # The entry mtime is solely an untrusted ordering
+                                    # hint; it is NOT a transfer or creation timestamp.
+                                    updated = os.stat(name, dir_fd=child,
+                                                      follow_symlinks=False)
+                                    if not stat.S_ISREG(updated.st_mode):
+                                        fail("FOCUS_ENTRY_CHANGED")
+                                    focused_escrow.append({
+                                        "laneIndex": lane,
+                                        "recordedStatus": response["status"],
+                                        "recordedRequestedPrincipalUwolo": "100000000",
+                                        "requestIdSha256": hashlib.sha256(
+                                            request_id.encode("utf8")).hexdigest(),
+                                        "requestRecordSha256": hashlib.sha256(data).hexdigest(),
+                                        "recordedPublicTxHash": tx or None,
+                                        "filesystemMtimeNsHint": str(updated.st_mtime_ns),
+                                        "recordedStatusIsChainProof": False,
+                                        "retryAuthorized": False,
+                                    })
                                 requests[(lane, request_id)] = (fingerprint, signer, tx)
                                 leaves[(lane, request_id)] = (_economic_context(request, request_role), response["status"])
                                 if tx:
@@ -490,7 +518,7 @@ def inspect_state(roots):
         if key in receipt_keys:
             blockers.add("CROSS_LANE_RECEIPT_REUSE")
         receipt_keys.add(key)
-    return {
+    result = {
         "version": VERSION, "status": "HELD", "observation_complete": True,
         "observation_atomic": False, "roots_observed": len(roots),
         "source_tree_sha256": hashlib.sha256(_go_json(manifest)).hexdigest(),
@@ -504,14 +532,47 @@ def inspect_state(roots):
         "retry_authorized": False, "filesystem_writes": False,
         "accounting": _accounting(leaves, run_children, blockers),
     }
+    if focus_escrow_100:
+        # Include EVERY accepted 100-WOLO request, then a bounded selection
+        # of confirmed records using untrusted filesystem mtime. No inference
+        # that these are the eight new Oct18→Oct20 ledger additions is allowed.
+        accepted = [row for row in focused_escrow
+                    if row["recordedStatus"] == "accepted"]
+        if len(accepted) > FOCUS_ACCEPTED_LIMIT:
+            fail("FOCUS_ACCEPTED_LIMIT")
+        confirmed = [row for row in focused_escrow
+                     if row["recordedStatus"] == "confirmed"]
+        confirmed.sort(key=lambda x: (int(x["filesystemMtimeNsHint"]),
+                                       x["requestIdSha256"]), reverse=True)
+        result["escrow100Focus"] = {
+            "mode": "PRIVACY_MINIMIZED_READ_ONLY_100_WOLO_RECONCILIATION_LEADS",
+            "matchedAcceptedCount": len(accepted),
+            "matchedConfirmedCount": len(confirmed),
+            "acceptedRecords": sorted(accepted, key=lambda x: x["requestIdSha256"]),
+            "recentlyModifiedConfirmedRecords": confirmed[:FOCUS_RECENT_LIMIT],
+            "confirmedRecordsOmitted": max(0, len(confirmed) - FOCUS_RECENT_LIMIT),
+            "selectionProvesLatest8NewRequests": False,
+            "mtimeIsTrustedTransferTime": False,
+            "individualRequestRecordIdsEmitted": False,
+            "individualWalletAddressesOrMemosEmitted": False,
+            "publicTxHashesAreUnauthenticatedJournalClaims": True,
+            "independentChainProofVerified": False,
+            "globalObligationsReconciled": False,
+            "financialReleaseAuthorized": False,
+            "retryAuthorized": False,
+        }
+    return result
 
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--state-root", action="append", required=True, type=Path)
+    parser.add_argument("--focus-escrow-100", action="store_true",
+                        help="Include bounded, nonauthorizing public tx leads without wallets/memos")
     args = parser.parse_args(argv)
     try:
-        output = inspect_state(args.state_root)
+        output = inspect_state(args.state_root,
+                               focus_escrow_100=args.focus_escrow_100)
     except EvidenceError as error:
         print(json.dumps({"version": VERSION, "status": "HELD", "observation_complete": False,
                           "error": str(error), "release_authorized": False, "retry_authorized": False,
