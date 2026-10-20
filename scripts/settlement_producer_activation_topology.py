@@ -22,6 +22,7 @@ PROTECTED = (
     "wolochain-founder-rewards-settlement.service",
 )
 UNIT = re.compile(r"[a-zA-Z0-9_.@:-]{1,120}\.(?:service|timer)\Z")
+EDGE = re.compile(r"[a-zA-Z0-9_.@:\\\\-]{1,160}\\.(?:service|timer|target|socket|mount|path|slice|scope|device|automount|swap)\\Z")
 STATES = frozenset({
     "active", "inactive", "failed", "activating", "deactivating",
     "reloading", "maintenance", "unknown", "not-found", "loaded", "masked",
@@ -114,7 +115,7 @@ def parse_show(raw: str, expected: str) -> dict:
     edges: dict[str, list[str]] = {}
     for rel in RELATIONS:
         raw_values = fields[rel].split()
-        if len(raw_values) > MAX_RELATIONS or any(not UNIT.fullmatch(x) for x in raw_values):
+        if len(raw_values) > MAX_RELATIONS or any(not EDGE.fullmatch(x) for x in raw_values):
             raise TopologyError("INVALID_RELATION_NAMES")
         if len(set(raw_values)) != len(raw_values):
             raise TopologyError("DUPLICATED_RELATION")
