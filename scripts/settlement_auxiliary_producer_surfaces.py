@@ -210,11 +210,15 @@ def cron_count(lines: list[str]) -> dict:
 CRON_SCHEDULE_DIRS = ("cron.hourly", "cron.daily", "cron.weekly",
                       "cron.monthly", "cron.yearly")
 SPOOL_DIR_NAMES = ("crontabs", "cron")
+# Ordinary Ubuntu at(1) queue storage: directories, never crontab sources.
+# Their payloads are intentionally not read; atq is inspected separately.
+AT_SPOOL_DIRECTORY_NAMES = ("atjobs", "atspool")
 RUN_PARTS_NAME = re.compile(r"[A-Za-z0-9_-]{1,100}\Z")
 
 
 def _list_regular_entries(folder: Path, *, allow_dot_names: bool = False,
-                          skip_expected_child: str | None = None) -> list[Path] | None:
+                          skip_expected_child: str | None = None,
+                          allow_at_spool_dirs: bool = False) -> list[Path] | None:
     """Bounded local listing. A missing directory is UNKNOWN, never an empty proof."""
     try:
         info = folder.lstat()
@@ -240,11 +244,23 @@ def _list_regular_entries(folder: Path, *, allow_dot_names: bool = False,
                 stat.S_ISDIR(info.st_mode) and not entry.is_symlink()):
             # This child is independently enumerated as a different spool root.
             continue
+        if allow_at_spool_dirs and name in AT_SPOOL_DIRECTORY_NAMES:
+            # Only the two known *real directories* in the top-level cron
+            # spool are recognized. They are not crontab files and their
+            # pending payloads remain uninspected/non-excluded. Wrong types,
+            # symlinks, and any unexpected directories still fail closed.
+            if not stat.S_ISDIR(info.st_mode) or entry.is_symlink():
+                raise InventoryError("UNSAFE_SCHEDULER_ENTRY")
+            continue
         if not stat.S_ISREG(info.st_mode) or entry.is_symlink() or info.st_nlink != 1:
             # An unknown nested cron source/symlink must not quietly become
             # "zero known financial writers".
             raise InventoryError("UNSAFE_SCHEDULER_ENTRY")
-    return [entry for entry in entries if entry.name != skip_expected_child]
+    return [
+        entry for entry in entries
+        if entry.name != skip_expected_child
+        and not (allow_at_spool_dirs and entry.name in AT_SPOOL_DIRECTORY_NAMES)
+    ]
 
 
 def _periodic_cron_scripts(etc_root: Path) -> dict:
@@ -312,7 +328,9 @@ def cron_sources(
         if spool.name not in SPOOL_DIR_NAMES:
             raise InventoryError("UNEXPECTED_SPOOL_ROOT")
         entries = _list_regular_entries(
-            spool, skip_expected_child="crontabs" if spool.name == "cron" else None,
+            spool,
+            skip_expected_child="crontabs" if spool.name == "cron" else None,
+            allow_at_spool_dirs=spool.name == "cron",
         )
         if entries is None:
             spool_missing.append(spool.name)
@@ -325,6 +343,27 @@ def cron_sources(
         spool_files += len(entries)
     if len(paths) > MAX_FILES:
         raise InventoryError("TOO_MANY_CRON_FILES")
+
+    # Metadata only. Do not inspect at-job payloads: the atq count is a
+    # separate untrusted observation and neither path proves financial
+    # writer capability absent. Existence must be an actual non-symlink dir.
+    at_spool_dirs_observed: list[str] = []
+    at_spool_dirs_missing: list[str] = []
+    for spool in spool_roots:
+        if spool.name != "cron":
+            continue
+        for name in AT_SPOOL_DIRECTORY_NAMES:
+            candidate = spool / name
+            try:
+                info = candidate.lstat()
+            except FileNotFoundError:
+                at_spool_dirs_missing.append(name)
+                continue
+            except OSError as exc:
+                raise InventoryError("SCHEDULER_ENTRY_UNOBSERVED") from exc
+            if not stat.S_ISDIR(info.st_mode) or candidate.is_symlink():
+                raise InventoryError("UNSAFE_SCHEDULER_ENTRY")
+            at_spool_dirs_observed.append(name)
 
     records = []
     for path in paths:
@@ -349,6 +388,10 @@ def cron_sources(
             "spoolDirectoriesObserved": spool_observed,
             "spoolDirectoriesMissingOrUnverified": spool_missing,
             "periodic": periodic, "atQueue": queue,
+            "atSpoolDirectoriesObserved": at_spool_dirs_observed,
+            "atSpoolDirectoriesMissingOrUnverified": at_spool_dirs_missing,
+            "atSpoolJobPayloadsInspected": False,
+            "atSpoolFinancialWriterCapabilityExcluded": False,
             "allFinancialWritersIdentified": False,
             "otherSpoolAndNonstandardCronSourcesExcluded": False}
 
