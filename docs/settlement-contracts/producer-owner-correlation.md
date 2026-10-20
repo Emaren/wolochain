@@ -247,6 +247,13 @@ material:
   critical evidence failures exit 2. It cannot start/stop systemd,
   write a DB, contact the chain, sign, retry a payment, move WOLO,
   or alter the protected 8092/8093 settlement services.
+- GitHub Foundation CI explicitly runs all three safety-contract suites:
+  `test_settlement_maintenance_board.py`,
+  `test_settlement_producer_activation_topology.py`, and
+  `test_settlement_auxiliary_producer_surfaces.py`. The previous
+  workflow invoked Python contracts by individual filenames, so a
+  newly added test file was not automatically covered by a green
+  workflow. This permanently closes that testing omission.
 - It does **not** establish host-wide `/etc/cron.*` external
   runner semantics, any unenumerated alternate crontab spool or
   out-of-band keyring, external/off-host signer or manual payouts.
