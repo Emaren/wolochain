@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `ops/20261020-aux-financial-producer-surfaces` at `abf6b697e4ec7649b21de6832e2db4558bda880b`
+Implementation baseline: `ops/20261020-aux-financial-producer-surfaces` at `e4836a9cc90a3061497e0b4c16bb783c10b996ae`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
