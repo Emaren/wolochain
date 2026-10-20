@@ -123,7 +123,8 @@ def summarize(checklist: dict, triage: dict | None, *,
                                                     for u in safe_units)):
             raise BoardFailure("PRODUCER_COUNTS_MISMATCH")
         producer = {"triageAvailable": True,
-                    "fresh": triage.get("runtimeFresh") is True,
+                    "fresh": False,  # No dated live runtime evidence revalidated here.
+                    "triageReportedFreshAtCreation": triage.get("runtimeFresh") is True,
                     "unitsObserved": len(safe_units),
                     "activeObserved": counts["activeObserved"],
                     "unknownOwnerUnits": counts["unknownOwnerUnits"],
