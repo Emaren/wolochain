@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "a11971b8f3fed7bf347f473b62af8f7282da515e837fcb8eed2e8be8bf7b1149",
+      "sha256": "abdb3e94c89ed0f239db1381f70896aafed06df771a214c0b75b405c280bafa6",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -404,7 +404,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-20",
       "sensitivity": "internal",
-      "sha256": "dcd054f404b4c9d1ebba5a877569eae57054e1cd31433827c2c2c66e29ce94e3",
+      "sha256": "0c64850fec32b6a983e117d4a7b6d5d1f9fef9ac91c2b27c84c0d5c186691ea0",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -970,8 +970,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "ops/20261020-aux-financial-producer-surfaces",
-    "commit": "e4836a9cc90a3061497e0b4c16bb783c10b996ae"
+    "branch": "ops/20261020-escrow-100-reconciliation-focus",
+    "commit": "0a83aebbe2dd3b6af99bf7b1b87a4d5af8dbaea7"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
