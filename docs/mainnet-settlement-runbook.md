@@ -145,6 +145,36 @@ signature merely by containing SHA-256 values. Even a changed `accepted` to
 finality or payment proof. Missing prior identities cannot be reconstructed.
 Never use these deltas to approve retry, spend, release, solvency or promotion.
 
+### All-user cron, periodic cron and at-queue financial-writer census (HELD)
+
+Before *any* approved producer fence/drain, the root-side read-only
+`scripts/settlement_auxiliary_producer_surfaces.py --inspect` collector now
+enumerates accessible crontab files in both conventional spool directories,
+not only the historically named `tony` and `root` entries. It additionally
+counts `/etc/crontab`, `/etc/anacrontab`, `/etc/cron.d` entries, files in
+`/etc/cron.hourly`, `cron.daily`, `cron.weekly`, `cron.monthly`, and
+`cron.yearly`, and an `atq` pending-job count (where accessible).
+It records filenames only for the original fixed crontab sources and never
+prints cron command bodies, secret environment assignments, periodic script
+contents or `atq` job details. Any discovered cron job, even one whose command
+does not mention money, still requires operator classification.
+
+The scan is **not a complete inventory guarantee**: directory absence,
+an inaccessible `atq`, unexpected nested/spool paths, unknown runtime
+scheduler implementations, containers, user managers, HTTP-triggered writes,
+external signers, or unobserved direct bank transfers remain unresolved. Unsafe
+spool/scheduled directory symlinks and unbounded listings fail closed.
+The parent `/var/spool/cron` and child `crontabs` are separately enumerated,
+so the child folder is not counted as a job or silently ignored.
+
+Run the **reviewed, exact-version source** with no sudo shell expansion,
+financial flags, cron modifications or systemctl operations. Exit code **3**
+means metadata observed and FINANCIAL HOLD; code **2** means STOP / unsafe
+observation. Do not interpret a zero job count, absent directory or missing
+`atq` binary as producer isolation. The six release controls and global
+solvency remain BLOCKED/UNKNOWN until separately witnessed, complete
+operator/finance evidence exists.
+
 ### Shortest protected operator sequence
 
 1. Independently classify the remaining producer/signing paths and designate HD,
