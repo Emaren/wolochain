@@ -129,7 +129,7 @@ func (x ReviewerPGMarketRow)validate(now time.Time,original ReviewerHDOriginResu
  if !x.FirstStakeAcceptedAt.Valid{
   if x.RosterLockedAt.Valid||x.BettingLockedAt.Valid{return held()}
  }else{
-  if !x.RosterLockedAt.Valid||
+  if !x.RosterLockedAt.Valid||!x.BettingLockedAt.Valid||
    !x.RosterLockedAt.Time.Equal(x.FirstStakeAcceptedAt.Time)||
    x.RosterLockedAt.Time.Before(x.OwnerSignedAt.Time)||
    x.RosterLockedAt.Time.After(now){
