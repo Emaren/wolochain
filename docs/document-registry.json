@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "504ba888806e4b98afd4da21ee20dff4a33bafd81e0e1661ca02736e2f0a5347",
+      "sha256": "2afcb79c18a0efe6b20c10a6d9849b2a439ea222e6e95b3d5790391ae060bcc0",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -971,7 +971,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "ops/20261020-financial-hold-remediation-board",
-    "commit": "c81e3ead16fb436056b88d9fb547f55d686c526a"
+    "commit": "c90032e88bf682c84d3ffec454643d050154467e"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
