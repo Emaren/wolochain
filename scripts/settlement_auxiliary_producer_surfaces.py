@@ -148,22 +148,126 @@ def cron_count(lines: list[str]) -> dict:
             "requiresHumanClassification":bool(jobs)}
 
 
-def cron_sources() -> dict:
-    paths = [Path("/etc/crontab"), Path("/var/spool/cron/crontabs/tony"),
-             Path("/var/spool/cron/crontabs/root")]
-    directory = Path("/etc/cron.d")
-    seen = []
-    if directory.is_dir():
-        sources = sorted(directory.iterdir(), key=lambda p: p.name)
-        if len(sources) > MAX_FILES:
-            raise InventoryError("TOO_MANY_CRON_FILES")
-        for source in sources:
-            if not CRON_FILE.fullmatch(source.name):
-                raise InventoryError("UNSAFE_CRON_FILENAME")
-            paths.append(source)
+# Schedule entrypoints are a potential financial writer even if their command
+# body has no financial keyword. Names and paths below are fixed operator-known
+# directories, not values supplied through remote requests.
+CRON_SCHEDULE_DIRS = ("cron.hourly", "cron.daily", "cron.weekly",
+                      "cron.monthly", "cron.yearly")
+SPOOL_DIR_NAMES = ("crontabs", "cron")
+RUN_PARTS_NAME = re.compile(r"[A-Za-z0-9_-]{1,100}\\Z")
+
+
+def _list_regular_entries(folder: Path, *, allow_dot_names: bool = False) -> list[Path] | None:
+    """Bounded local listing. A missing directory is UNKNOWN, never an empty proof."""
+    try:
+        info = folder.lstat()
+    except FileNotFoundError:
+        return None
+    if not stat.S_ISDIR(info.st_mode) or folder.is_symlink():
+        raise InventoryError("UNSAFE_SCHEDULER_DIRECTORY")
+    try:
+        entries = sorted(folder.iterdir(), key=lambda item: item.name)
+    except OSError as exc:
+        raise InventoryError("SCHEDULER_DIRECTORY_UNOBSERVED") from exc
+    if len(entries) > MAX_FILES:
+        raise InventoryError("TOO_MANY_SCHEDULER_ENTRIES")
+    for entry in entries:
+        name = entry.name
+        if not CRON_FILE.fullmatch(name) or (not allow_dot_names and name.startswith(".")):
+            raise InventoryError("UNSAFE_SCHEDULER_FILENAME")
+        try:
+            info = entry.lstat()
+        except OSError as exc:
+            raise InventoryError("SCHEDULER_ENTRY_UNOBSERVED") from exc
+        if not stat.S_ISREG(info.st_mode) or entry.is_symlink() or info.st_nlink != 1:
+            # An unknown nested cron source/symlink must not quietly become
+            # "zero known financial writers".
+            raise InventoryError("UNSAFE_SCHEDULER_ENTRY")
+    return entries
+
+
+def _periodic_cron_scripts(etc_root: Path) -> dict:
+    """Names-only scheduling surface census; never read script source bodies."""
+    covered = []
+    missing = []
+    scripts = 0
+    eligible_executable = 0
+    for name in CRON_SCHEDULE_DIRS:
+        entries = _list_regular_entries(etc_root / name, allow_dot_names=True)
+        if entries is None:
+            missing.append(name)
+            continue
+        covered.append(name)
+        for entry in entries:
+            scripts += 1
+            try:
+                info = entry.lstat()
+            except OSError as exc:
+                raise InventoryError("CRON_PERIODIC_ENTRY_UNOBSERVED") from exc
+            if RUN_PARTS_NAME.fullmatch(entry.name) and info.st_mode & 0o111:
+                eligible_executable += 1
+    return {"directoriesObserved": covered,
+            "directoriesMissingOrUnverified": missing,
+            "filesObserved": scripts,
+            "runPartsNameAndExecutableCandidates": eligible_executable,
+            "scriptBodiesReadOrPrinted": False,
+            "financialWriterCapabilityExcluded": False}
+
+
+def _at_queue() -> dict:
+    # atq displays scheduled job IDs/user/time, never the underlying command.
+    # Emit the COUNT only. Missing/inaccessible atq remains unresolved.
+    code, listing = command(["atq"])
+    if code != 0:
+        return {"status": "UNOBSERVED", "pendingJobs": None,
+                "financialWriterCapabilityExcluded": False}
+    lines = [line for line in listing.splitlines() if line.strip()]
+    if len(lines) > MAX_FILES:
+        raise InventoryError("TOO_MANY_AT_JOBS")
+    return {"status": "OBSERVED_ONLY", "pendingJobs": len(lines),
+            "financialWriterCapabilityExcluded": False}
+
+
+def cron_sources(
+    etc_root: Path = Path("/etc"),
+    spool_roots: tuple[Path, ...] = (
+        Path("/var/spool/cron/crontabs"), Path("/var/spool/cron"),
+    ),
+) -> dict:
+    """Count all enumerable user crontabs, cron.d and periodic entrypoints.
+
+    This is still NOT evidence that every scheduler/financial signer on the VPS
+    is known. Do not label any source financially harmless by keyword matching.
+    """
+    paths = [etc_root / "crontab", etc_root / "anacrontab"]
+    cron_d = _list_regular_entries(etc_root / "cron.d", allow_dot_names=True)
+    if cron_d is not None:
+        paths.extend(cron_d)
+
+    spool_observed = []
+    spool_missing = []
+    spool_files = 0
+    for spool in spool_roots:
+        if spool.name not in SPOOL_DIR_NAMES:
+            raise InventoryError("UNEXPECTED_SPOOL_ROOT")
+        entries = _list_regular_entries(spool)
+        if entries is None:
+            spool_missing.append(spool.name)
+            continue
+        spool_observed.append(spool.name)
+        # The parent /var/spool/cron may contain the child directory
+        # 'crontabs'; treat that specifically as an already-inspected sibling,
+        # never as a cron file or silent evidence omission.
+        paths.extend(entries)
+        spool_files += len(entries)
+    if len(paths) > MAX_FILES:
+        raise InventoryError("TOO_MANY_CRON_FILES")
+
     records = []
     for path in paths:
-        if not path.exists() and not path.is_symlink():
+        try:
+            path.lstat()
+        except FileNotFoundError:
             continue
         if path.is_symlink():
             raise InventoryError("SYMLINK_CRON_SOURCE")
@@ -171,11 +275,19 @@ def cron_sources() -> dict:
             summary = cron_count(safe_file_lines(path))
         except (OSError, UnicodeError) as exc:
             raise InventoryError("CRON_FILE_UNOBSERVED") from exc
-        records.append({"source":str(path), **summary})
-    return {"filesObserved":len(records),
-            "totalJobLines":sum(r["jobLinesObserved"] for r in records),
-            "sources":records, "commandsOrVariablesPrinted":False,
-            "otherSpoolAndNonstandardCronSourcesExcluded":False}
+        records.append({"source": str(path), **summary})
+    periodic = _periodic_cron_scripts(etc_root)
+    queue = _at_queue()
+    return {"filesObserved": len(records),
+            "totalJobLines": sum(r["jobLinesObserved"] for r in records),
+            "sources": records, "commandsOrVariablesPrinted": False,
+            "allEnumeratedSpoolUsersIncluded": True,
+            "spoolCrontabsObserved": spool_files,
+            "spoolDirectoriesObserved": spool_observed,
+            "spoolDirectoriesMissingOrUnverified": spool_missing,
+            "periodic": periodic, "atQueue": queue,
+            "allFinancialWritersIdentified": False,
+            "otherSpoolAndNonstandardCronSourcesExcluded": False}
 
 
 def container_inventory(engine: str) -> dict:
