@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `audit/20261019-producer-evidence-join` at `eecca4574cbda30887014e9a6f7869123106bd48`
+Implementation baseline: `ops/20261020-financial-hold-remediation-board` at `97a48d041f02da53869c018306c95f8a81b4f81d`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
