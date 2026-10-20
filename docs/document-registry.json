@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "d85a250372cd50b1facec06f221ecdd2a1344906ef672018cea604a6f7f14634",
+      "sha256": "a11971b8f3fed7bf347f473b62af8f7282da515e837fcb8eed2e8be8bf7b1149",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -404,7 +404,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-20",
       "sensitivity": "internal",
-      "sha256": "8aa4ec207860296191c5312fb7146b355339f4aca7468653d5585a9a316f4228",
+      "sha256": "b6c421880dfa071c8d232adbfedbe56fe538991d5549483d694a81e19083e823",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -971,7 +971,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "ops/20261020-aux-financial-producer-surfaces",
-    "commit": "abf6b697e4ec7649b21de6832e2db4558bda880b"
+    "commit": "e4836a9cc90a3061497e0b4c16bb783c10b996ae"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
