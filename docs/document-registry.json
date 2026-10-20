@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "9aa1359bc3cf77df48c7dbcdbe4c314ba36e55eb5e152ac402bfbfbc46b24a48",
+      "sha256": "f2569d8adb4825a752ff94e88356208daeba35f9f7f3a76e21cc5ecef3fca9f3",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -404,7 +404,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-20",
       "sensitivity": "internal",
-      "sha256": "46be6d87bbce4e7a7616903dc0dab8327a1f818c4f981c05ace81a248cbe77c1",
+      "sha256": "d75b4f9a22766b92681486a8f03cb8c5e9a8af22933caef11f43e24efdf7d7e9",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -970,8 +970,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "ops/20261020-live-producer-activation-topology",
-    "commit": "961768f80d541c28f09c5f70dc392d6608fd3507"
+    "branch": "ops/20261020-aux-financial-producer-surfaces",
+    "commit": "ac1949bb354f8bb178275641246de0b0e0b65450"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
