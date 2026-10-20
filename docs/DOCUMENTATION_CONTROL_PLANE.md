@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `ops/20261020-live-producer-activation-topology` at `961768f80d541c28f09c5f70dc392d6608fd3507`
+Implementation baseline: `ops/20261020-aux-financial-producer-surfaces` at `ac1949bb354f8bb178275641246de0b0e0b65450`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
