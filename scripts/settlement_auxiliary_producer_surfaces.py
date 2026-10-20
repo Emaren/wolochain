@@ -154,7 +154,7 @@ def cron_count(lines: list[str]) -> dict:
 CRON_SCHEDULE_DIRS = ("cron.hourly", "cron.daily", "cron.weekly",
                       "cron.monthly", "cron.yearly")
 SPOOL_DIR_NAMES = ("crontabs", "cron")
-RUN_PARTS_NAME = re.compile(r"[A-Za-z0-9_-]{1,100}\\Z")
+RUN_PARTS_NAME = re.compile(r"[A-Za-z0-9_-]{1,100}\Z")
 
 
 def _list_regular_entries(folder: Path, *, allow_dot_names: bool = False,
