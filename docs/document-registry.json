@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "727b5d15fb2648f3524821c07b4aa35cdc7d8e4123b0e3cc4fe25ea3a28612bd",
+      "sha256": "363d784a3f63f7ca02fe7d4187cf20215b05cd6d76e1f6c826f552f6a6d86f48",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -947,7 +947,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "fix/20261020-satchel-reviewer-pg-session-identity",
-    "commit": "b409bc8f42960750bedf91f055a8132ede8ed2ba"
+    "commit": "a37e08bd265871129f43796d47650a6f62b32e61"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
