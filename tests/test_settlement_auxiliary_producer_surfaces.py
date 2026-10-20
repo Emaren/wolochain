@@ -47,21 +47,21 @@ class AuxiliaryProducerTests(unittest.TestCase):
             for p in (etc,users,daily,hourly):
                 p.mkdir(parents=True,exist_ok=True)
             (etc/"crontab").write_text(
-                "# root cron\\n*/5 * * * * root /bin/true # PRIVATE_MAIN\\n")
+                "# root cron\n*/5 * * * * root /bin/true # PRIVATE_MAIN\n")
             (etc/"anacrontab").write_text(
-                "1 5 cron.daily run-parts /etc/cron.daily # PRIVATE_ANACRON\\n")
+                "1 5 cron.daily run-parts /etc/cron.daily # PRIVATE_ANACRON\n")
             (users/"alice").write_text(
-                "WOLO_SECRET=KEEP_PRIVATE\\n0 * * * * /private/send-wallet # PRIVATE_ALICE\\n")
+                "WOLO_SECRET=KEEP_PRIVATE\n0 * * * * /private/send-wallet # PRIVATE_ALICE\n")
             (users/"bob").write_text(
-                "0 2 * * * /private/ordinary # PRIVATE_BOB\\n")
+                "0 2 * * * /private/ordinary # PRIVATE_BOB\n")
             (spool/"legacyuser").write_text(
-                "0 4 * * * /private/another # PRIVATE_LEGACY\\n")
+                "0 4 * * * /private/another # PRIVATE_LEGACY\n")
             script=daily/"payment-run"
-            script.write_text("#!/bin/sh\\necho PRIVATE_SCRIPT_BODY\\n")
+            script.write_text("#!/bin/sh\necho PRIVATE_SCRIPT_BODY\n")
             script.chmod(0o755)
             (hourly/".placeholder").write_text("PRIVATE_PLACEHOLDER")
             with patch.object(A,"command",return_value=(0,
-                        "12  Wed Oct 21 13:10:00 2026 root PRIVATE_AT\\n")):
+                        "12  Wed Oct 21 13:10:00 2026 root PRIVATE_AT\n")):
                 observed=A.cron_sources(
                     etc,(users,spool),
                 )
@@ -102,7 +102,7 @@ class AuxiliaryProducerTests(unittest.TestCase):
             etc=root/"etc";etc.mkdir()
             sp=root/"cron";sp.mkdir()
             source=sp/"otheruser"
-            source.write_text("* * * * * /usr/bin/true\\n")
+            source.write_text("* * * * * /usr/bin/true\n")
             other=sp/"evil-directory"
             other.mkdir()
             with patch.object(A,"command",return_value=(127,"")):
@@ -122,8 +122,8 @@ class AuxiliaryProducerTests(unittest.TestCase):
 
     def test_at_queue_is_an_observation_not_finance_exclusion(self):
         with patch.object(A,"command",return_value=(0,
-                "1 Tue Oct 20 2026 a PRIVATE_WALLET\\n"
-                "2 Tue Oct 20 2026 b PRIVATE_PASSWORD\\n")):
+                "1 Tue Oct 20 2026 a PRIVATE_WALLET\n"
+                "2 Tue Oct 20 2026 b PRIVATE_PASSWORD\n")):
             q=A._at_queue()
         self.assertEqual(q,{"status":"OBSERVED_ONLY","pendingJobs":2,
                             "financialWriterCapabilityExcluded":False})
