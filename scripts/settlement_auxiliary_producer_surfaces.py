@@ -35,6 +35,62 @@ MAX_FILES = 150
 class InventoryError(ValueError):
     pass
 
+class StagedInventoryError(InventoryError):
+    """Source-classified failure; original exception text is never published."""
+
+    def __init__(self, stage: str, code: str):
+        super().__init__(code)
+        self.stage = stage
+        self.code = code
+
+
+# These are audited constant strings from this source file, never raw exception
+# text. Paths, command output, filenames, and environment values are forbidden.
+SAFE_FAILURE_CODES = frozenset((
+    "CRON_CHANGED_DURING_READ",
+    "CRON_FILE_UNOBSERVED",
+    "CRON_PERIODIC_ENTRY_UNOBSERVED",
+    "INVALID_USER_MANAGER_LIST",
+    "SCHEDULER_DIRECTORY_UNOBSERVED",
+    "SCHEDULER_ENTRY_UNOBSERVED",
+    "SYMLINK_CRON_SOURCE",
+    "SYSTEM_USER_MANAGERS_UNOBSERVED",
+    "TOO_MANY_AT_JOBS",
+    "TOO_MANY_CRON_FILES",
+    "TOO_MANY_SCHEDULER_ENTRIES",
+    "TOO_MANY_UNITS",
+    "TOO_MUCH_COMMAND_OUTPUT",
+    "UNEXPECTED_SPOOL_ROOT",
+    "UNEXPECTED_USER_MANAGER",
+    "UNKNOWN_UNIT_STATUS",
+    "UNSAFE_COMMAND",
+    "UNSAFE_CONTAINER_LIST",
+    "UNSAFE_CRON_FILE",
+    "UNSAFE_OR_DUPLICATE_UNIT",
+    "UNSAFE_SCHEDULER_DIRECTORY",
+    "UNSAFE_SCHEDULER_ENTRY",
+    "UNSAFE_SCHEDULER_FILENAME",
+    "UNSAFE_USERNAME",
+    "HOST_INTERFACE_UNOBSERVED",
+    "INVENTORY_EXCEPTION_REDACTED",
+))
+
+
+def observed_section(stage: str, fn):
+    """Preserve the strict STOP and report only known, sanitized failure codes."""
+    if stage not in {"CRON", "USER_SYSTEMD", "DOCKER", "PODMAN"}:
+        raise InventoryError("UNSAFE_COMMAND")
+    try:
+        return fn()
+    except InventoryError as exc:
+        code = str(exc)
+        if code not in SAFE_FAILURE_CODES:
+            code = "INVENTORY_EXCEPTION_REDACTED"
+        raise StagedInventoryError(stage, code) from None
+    except (OSError, ValueError):
+        raise StagedInventoryError(stage, "HOST_INTERFACE_UNOBSERVED") from None
+
+
 
 def command(args: list[str], *, environment: dict | None = None) -> tuple[int, str]:
     if not args or not all(isinstance(x, str) and x for x in args):
@@ -331,10 +387,10 @@ def inspect() -> dict:
         "observedAtUtc":datetime.now(timezone.utc).isoformat(),
         "mode":"READ_ONLY_NONAUTHORIZING",
         "status":"HOLD",
-        "cron":cron_sources(),
-        "userSystemd":user_managers(),
-        "containers":[container_inventory("docker"),
-                      container_inventory("podman")],
+        "cron":observed_section("CRON", cron_sources),
+        "userSystemd":observed_section("USER_SYSTEMD", user_managers),
+        "containers":[observed_section("DOCKER", lambda: container_inventory("docker")),
+                      observed_section("PODMAN", lambda: container_inventory("podman"))],
         "systemdSystemUnitTopologyCoveredBySeparateInspector":True,
         "externalAndManualSignersExcluded":False,
         "financialIngressFenced":False,
@@ -366,6 +422,17 @@ def main(argv: list[str] | None = None) -> int:
         return 2
     try:
         result=inspect()
+    except StagedInventoryError as exc:
+        print(json.dumps({
+            "status": "STOP",
+            "reason": "INCOMPLETE_OR_UNSAFE_AUXILIARY_PRODUCER_INVENTORY",
+            "failureStage": exc.stage,
+            "failureCode": exc.code,
+            "financialReleaseAuthorized": False,
+            "satchelActivationAuthorized": False,
+            "productionMutated": False,
+        }, sort_keys=True))
+        return 2
     except (InventoryError, OSError, ValueError):
         print(json.dumps({"status":"STOP","financialReleaseAuthorized":False,
             "reason":"INCOMPLETE_OR_UNSAFE_AUXILIARY_PRODUCER_INVENTORY"},sort_keys=True))
