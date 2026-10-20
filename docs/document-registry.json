@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "8532939b3e0d4c5f4c86eadc50bd4992ad73732a759602a6ddc29a8681ee0867",
+      "sha256": "e5314b9e13471f581e2029559d4da414d2c08e1ef7e8694b411d24527af88243",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -947,7 +947,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "feature/20261020-independent-live-watcher-issuer-held",
-    "commit": "7234faa2e13c078c522d35a421fe4cee8a1c522f"
+    "commit": "ee268353879f2612156014a5df48fcb37e3d9362"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
