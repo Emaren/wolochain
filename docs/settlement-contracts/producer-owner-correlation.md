@@ -63,6 +63,7 @@ task queue. It:
   `settlement_producer_owner_triage.py` JSON, refusing unreviewed owners,
   impossible counts, unsafe unit names, symlinks, duplicate JSON keys and
   attempts to promote a source observation into producer isolation proof.
+- Never equates an earlier triage freshness flag with a fresh current live runtime observation: the report revalidates neither chain height nor producer status.
 - Projects **only named public systemd units and fixed owner-review
   categories**, never copied process environment variables, mnemonics,
   complete shell arguments, payout keys or user balances.
