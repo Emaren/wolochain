@@ -138,6 +138,10 @@ class FinancialMaintenanceBoardTests(unittest.TestCase):
 
     def test_untrusted_packet_must_not_become_a_reconciliation_receipt(self):
         p = triage()
+        del p["unitOwnerReview"][0]["activeObserved"]
+        with self.assertRaises(BOARD.BoardFailure):
+            self.summarize(triage_packet=p)
+        p = triage()
         p["unitOwnerReview"][0]["runtimeSignerProof"] = "CERTIFIED"
         with self.assertRaises(BOARD.BoardFailure):
             self.summarize(triage_packet=p)
