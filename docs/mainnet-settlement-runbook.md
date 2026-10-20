@@ -112,7 +112,7 @@ held source, using a privately verified exact commit:
 ```sh
 umask 077
 cd ~/projects/WoloChain-wolo-1
-REV=<independently-reviewed-exact-commit-sha>
+REV='REPLACE_WITH_REVIEWED_FULL_GIT_SHA'
 set -o pipefail
 git show "${REV}:scripts/settlement-state-evidence.py" |
   ssh root@hel1 'python3 - --full-escrow-100-manifest \
