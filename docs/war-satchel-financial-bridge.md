@@ -8,12 +8,129 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "source-integration-proof-not-production-approval"
-reviewed_at: "2026-10-18"
+reviewed_at: "2026-10-20"
 review_interval_days: 14
 sensitivity: "restricted"
 ---
 
 # Authenticated War Satchel Financial Bridge
+
+## October 20: original LIVE source and authenticated bank state
+
+The current held app candidate is [PR #729](https://github.com/Emaren/app-prodn/pull/729)
+at `91a532689b00bdb19edea1c3f3d7532905110d82`; the older #684 is not its
+merge path. This source builds on Wolo #39 at
+`5a50b1d6d7bed61e9eaf030ecd25aa7709a2e0b1`. Nothing here changes app's
+literal `SATCHEL_FINANCIAL_BRIDGE_READY=false`, production or the six-control
+checklist on the separately held financial-evidence branch.
+
+`satchel.TrustedReader.ReadBankProof(ctx,vault,H)` now reads the exact SDK
+bank key for the separately configured account and `uwolo`. Native SDK
+collections codecs and the SDK ICS23 IAVL/multistore verifier authenticate
+the value (or absence), against **header H+1 AppHash**, not H. The existing
+Comet light client authenticates that header and both observed heads from an
+independently provisioned checkpoint. Status time/hash must equal the actual
+verified commits. The bounded portable `BankProof` transcript is untrusted;
+`ProofVerifier.VerifyBankProof` repeats authentication offline. The separate
+`wolosatcheld read-bank-proof` and `verify-bank-proof` commands reuse the
+existing operator-owned public financial authority file and exact `--height`;
+they return before service startup and open no keyring, journal or listener.
+The latter's `AUTHENTICATED_BANK_NONAUTHORIZING` result explicitly denies
+credit, spending and solvency authority. Only these
+verifiers mint opaque `AuthenticatedBankEvidence`; JSON cannot mint one.
+Proof/key/root/height/denom substitution, forged heads, stale trust, cancellation
+and oversized transcripts refuse. Authenticating assets grants no credit or
+spending authority and does not establish a complete liability inventory.
+
+`ReviewerFinanceSource.ObserveFinance` combines that proof with a real
+repeatable-read, READ ONLY PostgreSQL observation under the pinned dedicated
+reviewer login. It sums **all four** funded buckets, including committed and
+withdrawal-pending principal, and reconciles journal deltas **per owner** before
+aggregation. Offsetting owner corruption, orphan journals, wrong-vault receipts,
+overflow, privileged/writable/impersonated logins, column-write grants, RLS,
+views and missing tables refuse. SQL execution/lock timeouts and a post-I/O
+freshness check bound the read. The observations are not an atomic chain/DB
+snapshot. Known HD owner totals are not global liabilities or free gas.
+
+**The finance method remains HELD with typed
+`reviewer_finance_global_coverage_unknown`.** No available evidence bounds all
+HD manual/founder, DE/external, staking/treasury encumbrances and all signers'
+pending/uncertain/unmaterialized transfers and fees, or resolves their overlaps.
+There is no `complete=true`, environment switch, invented upper bound or signed
+self-certification path. The new observation is useful input to that missing
+reconciliation, not a replacement certificate. `AuthenticatedFeeCensus` cannot
+sign a wager until that independent global coverage actually exists.
+
+`ReviewerOriginalLiveSource` joins the existing SELECT-only HD original hold
+and market reader to a separately governed Replay API source. Its pinned
+HTTPS CA + SPKI and private Bearer transport reads
+`POST /satchel-source/v1/live` with only `{owner_uid,linked_session}` and
+`GET /satchel-source/v1/checkpoints/<sha256>`. These are **private source
+adapter routes**, not 8094 custody or public application routes. Metadata is
+limited to 32 KiB, checkpoint bytes to 64 MiB, requests to two seconds/four
+inflight calls; redirects and compressed responses refuse. The Go adapter
+recomputes exact Steam roster/team/proposition hashes and self-side, binds the
+original session/parse iteration, and verifies original byte size/SHA and age.
+It reuses the existing issuer's double original reread/rehash and v2 Ed25519
+witness, with at most 30 seconds signed lifetime. A durable owner+canonical-game
+index and a separately domain-bound owner+original-checkpoint index share the
+PENDING commit, preventing another operation ID from obtaining a second witness
+for that owner/game or copied original bytes under another game/session alias
+after a race or restart. Old unknown
+PENDING state stays HELD; only authentic old signed evidence can rebuild an
+index. Recovery scans are bounded to 8 MiB and 16 KiB per entry.
+
+The real Watcher uploads a **growing, signed, nonfinal `.aoe2record`** during
+play. A final recording is never pre-bet authority. The API companion must
+freeze the earliest actual upload and reject late/unknown body clocks,
+postgame evidence and missing original timestamps. Generic undated sources
+remain unavailable; upload time or parser temporary-file mtime cannot invent
+game start. A second endpoint under the same operator is not independent
+governance. Production needs separate source service/DB/archive/clock/TLS and
+event-key control, a dedicated SELECT-only HD role, a provisioned Comet root
+and independent witness, and authenticated complete finances. None is
+provisioned or certified by a source test.
+
+The reviewer also preserves **distinct execution and ticket identities**:
+`satchel:ticket:<executionId>` does not imply the same `ticketId` in the memo.
+The original SQL snapshot authenticates the exact canonical ticket memo; the
+signed reservation and durable fingerprint retain it unchanged. A regression
+first failed on execution 7 / ticket 891 before this correction. Altered memo
+and invalid/nil-context requests still refuse.
+
+The continuous native SDK lifecycle tests exercise real signed 100-WOLO
+deposit, 12-WOLO funding, full unmatched return or separately funded matched
+return, and withdrawal, with actual fees, balance conservation, per-step bank
+state proofs and H+1 execution proofs. This is a chain fixture. It is **not**
+one integrated PostgreSQL/Watcher/reviewer/signer product acceptance receipt.
+The fixture's synthetic validator and account keys confer no mainnet authority.
+
+The additional twelve-ticket SDK scenario uses serial 25-WOLO stakes under
+the existing V1 caps: eight full unmatched refunds, two owner wins and two
+owner losses against separately funded counterparties. Existing whole-WOLO
+settlement rounding yields 49-WOLO winning returns and four WOLO matched fees;
+the owner withdraws 98 WOLO. Thirty successful single sends, thirty rejected
+byte replays, exact gas and 121 committed fixture blocks conserve all assets.
+A bounded test-only recipe lets actual PostgreSQL-assigned ticket/claim IDs and
+withdrawal UUIDs determine memos; a two-phase rebuild verifies the original
+transaction/header/bank-proof prefix is unchanged. This remains a chain
+fixture until the separate app lifecycle runner supplies its actual DB receipt.
+
+The reproducible custody artifact profile now targets exact implementation
+`d2b442b0de19837b0001a1137cb00c044d47bd67`, compiled with pinned Go 1.24.6.
+The builder's later Git revision and the embedded implementation revision are
+distinct. Historical `99f32de6`/`d431` artifacts remain historical; never relabel
+them or substitute them for the new independent archive/manifest/binary receipt.
+Source CI and a new artifact still do not certify production custody.
+
+Before a mainnet canary, retain the existing protected procedure in
+[controlled release](war-satchel-controlled-release.md): independently resolve
+issue #5's six controls, preserve claim #889/accepted 100 WOLO/aggregate-only
+1,323,000 WOLO uncertainty, provision isolated authorities, rehearse the exact
+app candidate and paired settlement recovery, then obtain separately scoped
+installation, cutover and tiny-transfer approval. No checkout advance,
+8092/8093 operation, consensus restart, journal reset or financial retry is
+authorized here. Earlier dated milestones below remain historical evidence.
 
 This source contract composes PR #28's durable dedicated signer with the C3
 CometBFT reader. It introduces portable evidence and an independent offline

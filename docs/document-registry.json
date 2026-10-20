@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "b66e8323d00fd575f6e5faeff48c80a24358d6c925a3d53260597943c12d0825",
+      "sha256": "a970c8f2be306154c89a080121ea558cd2c304c9192eec4d2fd6c082c67bd302",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -517,9 +517,9 @@
       "owner": "wolochain-ops",
       "path": "docs/war-satchel-financial-bridge.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-10-18",
+      "reviewed_at": "2026-10-20",
       "sensitivity": "restricted",
-      "sha256": "685d43698fc7d37adb2741697f83f4e6b676828275f504e926b31497ab5a1c79",
+      "sha256": "b4d4daa11a749daa7597533f0c757f12aa8d01e98f1fbe47f9315d480de8e16c",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -618,7 +618,7 @@
         "wolochain",
         "aoe2war"
       ],
-      "title": "Codex Mission: WoloChain Mainnet ↔ Osmosis IBC Prep",
+      "title": "Codex Mission: WoloChain Mainnet \u2194 Osmosis IBC Prep",
       "type": "historical"
     },
     {
@@ -779,7 +779,7 @@
         "wolochain",
         "aoe2war"
       ],
-      "title": "WoloChain Mainnet → Osmosis Liquidity Transfer",
+      "title": "WoloChain Mainnet \u2192 Osmosis Liquidity Transfer",
       "type": "historical"
     },
     {
@@ -848,7 +848,7 @@
         "wolochain",
         "aoe2war"
       ],
-      "title": "WoloChain Mainnet → Osmosis Test Transfer",
+      "title": "WoloChain Mainnet \u2192 Osmosis Test Transfer",
       "type": "historical"
     },
     {
@@ -946,8 +946,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "feature/20261020-independent-live-watcher-issuer-held",
-    "commit": "7a04c8b9821d4ca59dfdf495acb03d53933856da"
+    "branch": "codex/satchel-authenticated-finance",
+    "commit": "459539bf21bbd8d93a2d18cad3e87ba4f96a0543"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
