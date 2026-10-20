@@ -91,7 +91,7 @@ class AuxiliaryProducerTests(unittest.TestCase):
     def test_container_restart_policy_is_not_financial_exclusion(self):
         def mock_command(args,**kw):
             if args[1]=="ps":
-                return 0,"tokenchain-hasura\n"
+                return 0,"historical-hasura\n"
             if args[1]=="inspect":
                 self.assertIn("HostConfig.RestartPolicy.Name",args[3])
                 return 0,"always\n"
@@ -99,7 +99,7 @@ class AuxiliaryProducerTests(unittest.TestCase):
         with patch.object(A,"command",side_effect=mock_command):
             out=A.container_inventory("docker")
         self.assertEqual(out["status"],"OBSERVED_ONLY")
-        self.assertEqual(out["names"],[{"name":"tokenchain-hasura",
+        self.assertEqual(out["names"],[{"name":"historical-hasura",
                                        "restartConfigured":True,
                                        "potentialFinancialWriter":True}])
         self.assertFalse(out["containerEnvOrMountsInspected"])
