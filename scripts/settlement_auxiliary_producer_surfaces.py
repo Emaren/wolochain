@@ -352,6 +352,18 @@ def main(argv: list[str] | None = None) -> int:
     if args not in ([], ["--inspect"]):
         print("BLOCKED: read-only --inspect only",file=sys.stderr)
         return 2
+    # The collector needs Linux systemd, user managers and cron spools.
+    # On an operator's macOS shell it cannot observe the VPS at all.
+    # Refuse before running any host inventory queries.
+    if sys.platform != "linux":
+        print(json.dumps({
+            "status": "STOP",
+            "reason": "WRONG_HOST_LINUX_REQUIRED",
+            "financialReleaseAuthorized": False,
+            "satchelActivationAuthorized": False,
+            "productionMutated": False,
+        }, sort_keys=True))
+        return 2
     try:
         result=inspect()
     except (InventoryError, OSError, ValueError):
