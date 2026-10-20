@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "cded3f7f7cae8bb3da93aa76b5065a7f68c62e339a066aa4e714dea74b0ab3d6",
+      "sha256": "6fe45093213631a05ea5a527b83173029788804f9a4e23fcf690053b75ee5a43",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -312,7 +312,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-18",
       "sensitivity": "restricted",
-      "sha256": "6fbf42624621f7e2813c2d8cdf35377b29d77bfd9f3b9428cd860b1be14a46f9",
+      "sha256": "748b885f0008319068b45b697fafa4bfea543d6b709953f039e5ba655aeea8f2",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -970,8 +970,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/20261020-finance-collector-wrong-host-held",
-    "commit": "b5b528abb43d8e4f02b92863892effa196d89bf3"
+    "branch": "fix/20261020-finance-collector-failure-codes-held",
+    "commit": "ea7d73eb169e2a3f405ceacbee238e8843569d64"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

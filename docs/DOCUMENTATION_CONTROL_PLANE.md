@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/20261020-finance-collector-wrong-host-held` at `b5b528abb43d8e4f02b92863892effa196d89bf3`
+Implementation baseline: `fix/20261020-finance-collector-failure-codes-held` at `ea7d73eb169e2a3f405ceacbee238e8843569d64`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 

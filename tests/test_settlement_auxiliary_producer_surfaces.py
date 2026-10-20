@@ -235,6 +235,60 @@ class AuxiliaryProducerTests(unittest.TestCase):
         self.assertNotIn("username",output.getvalue())
         self.assertNotIn("hostName",output.getvalue())
 
+    def test_failure_codes_identify_critical_stage_without_secret_strings(self):
+        sample = {
+            "CRON": "UNSAFE_SCHEDULER_ENTRY",
+            "USER_SYSTEMD": "SYSTEM_USER_MANAGERS_UNOBSERVED",
+            "DOCKER": "UNSAFE_CONTAINER_LIST",
+            "PODMAN": "TOO_MUCH_COMMAND_OUTPUT",
+        }
+        for stage, code in sample.items():
+            with self.subTest(stage=stage):
+                output = io.StringIO()
+                with (patch.object(A.sys, "platform", "linux"),
+                      patch.object(A, "inspect",
+                                   side_effect=A.StagedInventoryError(stage, code)),
+                      redirect_stdout(output)):
+                    self.assertEqual(A.main(["--inspect"]), 2)
+                result = json.loads(output.getvalue())
+                self.assertEqual(result["status"], "STOP")
+                self.assertEqual(result["failureStage"], stage)
+                self.assertEqual(result["failureCode"], code)
+                self.assertFalse(result["financialReleaseAuthorized"])
+                self.assertFalse(result["satchelActivationAuthorized"])
+                self.assertFalse(result["productionMutated"])
+
+    def test_unknown_inventory_error_cannot_exfiltrate_file_path_or_secret(self):
+        secret = "SECRET_WALLET_MNEMONIC_NEVER_PRINT_ME"
+        def bad():
+            raise A.InventoryError(secret)
+        with self.assertRaises(A.StagedInventoryError) as caught:
+            A.observed_section("CRON", bad)
+        self.assertEqual(caught.exception.stage, "CRON")
+        self.assertEqual(caught.exception.code, "INVENTORY_EXCEPTION_REDACTED")
+        self.assertNotIn(secret, str(caught.exception))
+        with self.assertRaises(A.StagedInventoryError) as caught:
+            A.observed_section("DOCKER", lambda: (_ for _ in ()).throw(
+                OSError("/home/tony/private/" + secret)))
+        self.assertEqual(caught.exception.code, "HOST_INTERFACE_UNOBSERVED")
+        self.assertNotIn(secret, str(caught.exception))
+        with self.assertRaises(A.InventoryError):
+            A.observed_section("WRONG_STAGE", bad)
+
+    def test_real_inspection_pipeline_attributes_cron_failure_before_later_queries(self):
+        out = io.StringIO()
+        with (patch.object(A.sys, "platform", "linux"),
+              patch.object(A, "cron_sources",
+                           side_effect=A.InventoryError("UNSAFE_SCHEDULER_DIRECTORY")),
+              patch.object(A, "user_managers",
+                           side_effect=AssertionError("later scan must not run")),
+              redirect_stdout(out)):
+            self.assertEqual(A.main(["--inspect"]), 2)
+        result = json.loads(out.getvalue())
+        self.assertEqual(result["failureStage"], "CRON")
+        self.assertEqual(result["failureCode"], "UNSAFE_SCHEDULER_DIRECTORY")
+        self.assertFalse(result["financialReleaseAuthorized"])
+
     def test_no_mutation_and_no_success_exit(self):
         report={
             "schema":"wolo.financial.auxiliary-producer-surfaces.v1",
