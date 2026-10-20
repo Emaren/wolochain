@@ -104,12 +104,18 @@ def parse_show(raw: str, expected: str) -> dict:
         if key not in PROPS or key in fields:
             raise TopologyError("UNEXPECTED_UNIT_PROPERTY")
         fields[key] = value
-    if set(fields) != set(PROPS) or fields["Id"] != expected:
+    # MainPID and Restart belong to service units; systemd may omit them
+    # entirely for timers. Absence is not proof of an inert timer.
+    required = set(PROPS) - {"MainPID", "Restart"}
+    if not required.issubset(fields) or fields["Id"] != expected:
         raise TopologyError("INCOMPLETE_OR_WRONG_UNIT")
     if fields["LoadState"] not in STATES or fields["ActiveState"] not in STATES:
         raise TopologyError("UNRECOGNIZED_SYSTEMD_STATUS")
-    if not fields["MainPID"].isdecimal():
+    pid = fields.get("MainPID", "")
+    if pid and not pid.isdecimal():
         raise TopologyError("INVALID_PID")
+    if expected.endswith(".service") and not pid:
+        raise TopologyError("SERVICE_PID_UNOBSERVED")
     # SubState/UnitFileState/Restart are never printed verbatim, so unusual
     # values cannot smuggle sensitive strings into the redacted report.
     edges: dict[str, list[str]] = {}
@@ -123,9 +129,9 @@ def parse_show(raw: str, expected: str) -> dict:
     return {
         "unit": expected, "activeObserved": fields["ActiveState"] == "active",
         "loadedObserved": fields["LoadState"] == "loaded",
-        "mainPidPresent": int(fields["MainPID"]) > 0,
+        "mainPidPresent": int(pid or "0") > 0,
         "unitType": "timer" if expected.endswith(".timer") else "service",
-        "restartConfigured": fields["Restart"] not in ("", "no"),
+        "restartConfigured": fields.get("Restart", "") not in ("", "no"),
         "relations": edges,
         "owner": "DE" if expected.startswith("aoe2dewarwagers-") else "HD_OR_SHARED",
         "sourceRuntimeParityProven": False,
