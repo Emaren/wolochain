@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "363d784a3f63f7ca02fe7d4187cf20215b05cd6d76e1f6c826f552f6a6d86f48",
+      "sha256": "8532939b3e0d4c5f4c86eadc50bd4992ad73732a759602a6ddc29a8681ee0867",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -379,9 +379,9 @@
       "owner": "wolochain-ops",
       "path": "docs/settlement-contracts/README.md",
       "review_interval_days": 30,
-      "reviewed_at": "2026-10-18",
+      "reviewed_at": "2026-10-20",
       "sensitivity": "public",
-      "sha256": "21e7c39daf59145f6777b40484e0b86c69e00ec75e56b944dddb87191dba5bf7",
+      "sha256": "abd8fdb499ae637f1aaa8894ae214108fc5f9f80ce9b41b6810f5c24883627aa",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -946,8 +946,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/20261020-satchel-reviewer-pg-session-identity",
-    "commit": "a37e08bd265871129f43796d47650a6f62b32e61"
+    "branch": "feature/20261020-independent-live-watcher-issuer-held",
+    "commit": "7234faa2e13c078c522d35a421fe4cee8a1c522f"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
