@@ -427,3 +427,78 @@ Treat a past static classification, today's real-time PID/state
 inspection and a protected financial authorization as **three
 different evidence types**, joined by explicit references—not
 interchangeable documents or a single green flag.
+
+## October 20 — targeted 100-WOLO escrow evidence after 8 new confirmed journal rows
+
+The owner ran the original two-root `settlement-state-evidence.py` over
+root SSH. The current complete bounded **non-atomic** source-tree digest
+was `2a8155ee589dce276ac93313449ad1808b5aead71d1295941e3de1eed2f36025`.
+Against the previously preserved October 18 receipt, the primary
+escrow `confirmed` request count grew **724 to 732** (plus eight),
+and recorded requested principal increased **800 WOLO**. Total
+requests grew 1566→1574 and runs 793→801. Accepted primary escrow
+100-WOLO status remains one; failures remain 42; founder claim #889
+remains pending; aggregate-only child **1,323,000 WOLO** remains a
+prebroadcast-refused local observation without independent chain proof.
+
+The prior Wolo configured-node bank observation for the accepted
+request reported a matching transaction hash/bytes with code zero at
+block 1078913, **not** independently authenticated finality. Never
+retry that accepted request, the aggregate-only child or claim #889
+solely because its local record is not confirmed.
+
+The existing, source-validating journal parser now offers explicit
+`--focus-escrow-100` while retaining the original default report:
+- It runs all old bounded strict root and JSON parsing checks,
+  Go-compatible request fingerprint validation, role and recipient
+  integrity tests and duplicate receipt/tx checks first. It cannot
+  turn an invalid journal into a permissive targeted report.
+- It filters the **primary or founder 100-WOLO escrow** records
+  carrying `accepted` or `confirmed` local status and includes
+  all accepted records (with conservative limit 16). It presents
+  at most **16 recently filesystem-modified confirmed records**;
+  more are explicitly counted as omitted.
+- Per focus record it prints only the lane, local status, principal,
+  SHA256 of the durable request ID, SHA256 of the recorded JSON bytes,
+  a journal-claimed **public tx hash** (no raw wallet address, private
+  memo, signer key, or raw request ID), and file mtime nanoseconds
+  as a **non-trusted sorting hint**.
+- File mtime is not a creation date, transaction date, immutable
+  receipt, or evidence that those 16 are the eight newly
+  observed requests. An accepted status and a transaction hash
+  **never imply safe retry or independently authenticated on-chain
+  settlement**, and the whole reader is non-atomic while production
+  writers remain active.
+- Exit remains 3 on a valid observation, 2 on any unsafe/malformed
+  journal. `chain_proof_verified=false`, `retry_authorized=false`,
+  global liability upper bound null, and the financial six-control
+  issue remain held. The opt-in focus flag never changes the
+  behavior, custody or zero-output-credentials guarantees of the
+  original default reader.
+
+Once tests and exact-source workflow pass, the operator can run a
+single restricted streaming command from the source-pinned Git object:
+
+```sh
+cd ~/projects/WoloChain-wolo-1
+git fetch origin
+REV=<merge-commit-from-green-held-Wolo-PR>
+git cat-file -e "${REV}^{commit}" || exit 1
+set -o pipefail
+git show "${REV}:scripts/settlement-state-evidence.py" |
+  ssh root@hel1 'python3 - --focus-escrow-100 \
+    --state-root /mnt/HC_Volume_105319120/wolochain-mainnet/settlement-state \
+    --state-root /mnt/HC_Volume_105319120/wolochain-mainnet/founder-rewards-settlement-state'
+```
+
+Private transaction correlation is the next authority boundary:
+the output's public transaction hashes are leads requiring a pinned
+independent CometBFT consensus checkpoint, cryptographic bank-event
+authentication, identity/amount/account/fee attribution, and de-dup
+against HD/DE/external pending obligations. Public hash comparisons
+or two calls to the same node are not independence. For the eight
+new journal rows, an immutable per-request before/after checkpoint
+would be required to **prove** their identities; aggregate count delta
+and file mtime alone cannot prove membership. Do not turn journal
+recording into chain solvency, finance approval, replay, refund, or
+automatic betting permission.
