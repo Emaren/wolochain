@@ -47,6 +47,17 @@ class TopologyTests(unittest.TestCase):
             self.assertIs(report[key], False)
         self.assertFalse(report["cutoverAuthorized"])
 
+    def test_timer_without_service_specific_pid_or_restart_properties_is_still_live(self):
+        # systemd timer types can omit these service-only fields completely.
+        raw="\n".join(line for line in show(TIMER).splitlines()
+                      if not line.startswith(("MainPID=", "Restart=")))+"\n"
+        got=MOD.parse_show(raw,TIMER)
+        self.assertTrue(got["activeObserved"])
+        self.assertFalse(got["mainPidPresent"])
+        self.assertFalse(got["restartConfigured"])
+        self.assertIn(SERVICE,got["relations"]["Triggers"])
+        self.assertFalse(got["safeToStop"])
+
     def test_hidden_configuration_can_never_escape_projection(self):
         raw = show(TIMER, Restart="always") + (
             "Environment=SEED=TOP_SECRET\n"
