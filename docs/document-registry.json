@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "b8f8cb209d3716ffadd1ac653361a647640fb7b73afea97c316ccdc23d3de860",
+      "sha256": "363d784a3f63f7ca02fe7d4187cf20215b05cd6d76e1f6c826f552f6a6d86f48",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -946,8 +946,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/20261019-live-first-stake-roster-lock-circularity",
-    "commit": "ee6df65acc956a79efa9785960ce9d10d1e1014c"
+    "branch": "fix/20261020-satchel-reviewer-pg-session-identity",
+    "commit": "a37e08bd265871129f43796d47650a6f62b32e61"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

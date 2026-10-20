@@ -136,10 +136,10 @@ func (s *ReviewerReadOnlyPGSource)VerifyOwnerMandate(ctx context.Context,input W
  tx,e:=s.db.BeginTx(ctx,&sql.TxOptions{Isolation:sql.LevelRepeatableRead,ReadOnly:true})
  if e!=nil{return ErrReviewerHeld}
  defer func(){_ = tx.Rollback()}()
- var user,readonly string
+ var login,user,readonly string
  var privileged,canWrite bool
- if tx.QueryRowContext(ctx,reviewerPGIdentityQuery).Scan(&user,&readonly,&privileged,&canWrite)!=nil||
-  user!=s.expectedRole||readonly!="on"||privileged||canWrite{return ErrReviewerHeld}
+ if tx.QueryRowContext(ctx,reviewerPGIdentityQuery).Scan(&login,&user,&readonly,&privileged,&canWrite)!=nil||
+  !reviewerPGTrustIdentity(login,user,readonly,privileged,canWrite,s.expectedRole){return ErrReviewerHeld}
  var row ReviewerPGMandateRow
  if row.scan(tx.QueryRowContext(ctx,reviewerPGMandateQuery,input.OperationID))!=nil{return ErrReviewerHeld}
  // The original immutable source is re-read in the same transaction as the

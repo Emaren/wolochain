@@ -226,10 +226,10 @@ func (s *ReviewerReadOnlyPGSource)InspectWatcherMarket(ctx context.Context,input
  tx,e:=s.db.BeginTx(ctx,&sql.TxOptions{Isolation:sql.LevelRepeatableRead,ReadOnly:true})
  if e!=nil{return ReviewerWatcherCandidate{},ErrReviewerHeld}
  defer func(){_ = tx.Rollback()}()
- var user,readonly string
+ var login,user,readonly string
  var priv,write bool
- if tx.QueryRowContext(ctx,reviewerPGIdentityQuery).Scan(&user,&readonly,&priv,&write)!=nil||
-  user!=s.expectedRole||readonly!="on"||priv||write{return ReviewerWatcherCandidate{},ErrReviewerHeld}
+ if tx.QueryRowContext(ctx,reviewerPGIdentityQuery).Scan(&login,&user,&readonly,&priv,&write)!=nil||
+  !reviewerPGTrustIdentity(login,user,readonly,priv,write,s.expectedRole){return ReviewerWatcherCandidate{},ErrReviewerHeld}
  var row ReviewerPGOriginalRow
  if row.scan(tx.QueryRowContext(ctx,reviewerPGOriginalQuery,input.OperationID))!=nil{return ReviewerWatcherCandidate{},ErrReviewerHeld}
  head,e:=row.validate(s.now(),s.fee,s.vault,s.escrow)
