@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `ops/20261020-escrow-100-reconciliation-focus` at `0a83aebbe2dd3b6af99bf7b1b87a4d5af8dbaea7`
+Implementation baseline: `ops/20261020-escrow100-exact-delta-held` at `97597b0763c756bafcbb62725135b22f1fb61dee`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
