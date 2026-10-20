@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `ops/20261020-financial-hold-remediation-board` at `c90032e88bf682c84d3ffec454643d050154467e`
+Implementation baseline: `ops/20261020-live-producer-activation-topology` at `6ef08d259c6ee7701f0b87b6b73a669ddbf67f6a`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
