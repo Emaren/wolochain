@@ -178,6 +178,19 @@ spool/scheduled directory symlinks and unbounded listings fail closed.
 The parent `/var/spool/cron` and child `crontabs` are separately enumerated,
 so the child folder is not counted as a job or silently ignored.
 
+**Diagnostic STOP semantics:** the collector intentionally makes no
+financial-release claim even on a complete root-host observation. When a
+critical enumeration fails, it emits only the allowlisted
+`failureStage` (`CRON`, `USER_SYSTEMD`, `DOCKER`, or `PODMAN`) and a
+fixed `failureCode` taken from the audited collector source; it never
+prints raw OSError, command output, cron contents, secrets or exception
+parameters. Unknown/unclassified errors are redacted, not silently treated
+as empty sources. A `STOP` report remains code 2 and financially **HELD**.
+The operator should capture a redacted report, investigate the named
+failure stage read-only, and never work around the STOP by deleting files,
+stopping services, changing permissions, skipping a section or setting
+an activation flag.
+
 Run the **reviewed, exact-version source** with no sudo shell expansion,
 financial flags, cron modifications or systemctl operations. Exit code **3**
 means metadata observed and FINANCIAL HOLD; code **2** means STOP / unsafe
