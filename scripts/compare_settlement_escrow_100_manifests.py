@@ -117,6 +117,7 @@ def _extract(doc):
                                     "requestRecordSha256"}
                 or type(row["laneIndex"]) is not int
                 or not 0 <= row["laneIndex"] < doc["roots_observed"]
+                or type(row["recordedStatus"]) is not str
                 or row["recordedStatus"] not in STATUS
                 or not _digest(row["requestIdSha256"])
                 or not _digest(row["requestRecordSha256"])):
