@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `feature/20261020-independent-live-watcher-issuer-held` at `ee268353879f2612156014a5df48fcb37e3d9362`
+Implementation baseline: `feature/20261020-independent-live-watcher-issuer-held` at `7a04c8b9821d4ca59dfdf495acb03d53933856da`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
