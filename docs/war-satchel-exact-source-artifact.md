@@ -35,6 +35,38 @@ GitHub execution. These identities have different meanings and must all match
 the independently inspected run. Caller-supplied identity strings alone do
 not authenticate a run.
 
+## Recovered custody-backend candidate — reviewed source, NO DEPLOY
+
+The third named artifact profile, `custody-backend`, builds the isolated
+`wolosatcheld` executable from **exact source commit**
+`d2b442b0de19837b0001a1137cb00c044d47bd67`, which includes the
+authenticated bank inclusion/absence proof and offline no-keyring bank
+verifier, original LIVE Watcher source/owner-game reviewer constraints,
+the independently checked PostgreSQL reviewer interface, and twelve
+canonical isolated SDK settlement/lifecycle proof scenarios.
+
+This pin supersedes only the older custody-backend profile's source
+`99f32de617964565875ed4689bea0d688bb99147`.
+Historical `legacy526` and `composed-satcheld` source pins are retained.
+The review baseline is the implementation source `d2b442b0`, not the
+subsequent GitHub builder, registry, workflow or documentation commit.
+
+The [dedicated custody-backend workflow](../.github/workflows/custody-backend-satcheld-exact-artifact.yml)
+checks out two independent trees. Its implementation tree must match
+the exact `d2b442b0` commit; its artifact tooling may advance only
+through separately reviewed changes. Native tests, full race/vet checks,
+two clean-cache reproducible Linux AMD64 builds and the authenticated
+workflow/artifact receipt are all required. A green CI job alone
+cannot attest a production vault, live application integration or current
+mainnet WOLO chain state.
+
+**UNDEPLOYED candidate only.** No financial authority is granted by
+this new artifact profile. It cannot authorize production transfers,
+Satchel signer activation, historical settlement reconciliation, producer
+fencing, global solvency or legacy settlement service changes.
+Additional interrupted Codex local patches are not represented by
+this source pin until recovered, reviewed and committed. Preserve them.
+
 ## Building and checking the candidate
 
 The workflow invokes the same builder used for the legacy profile:
