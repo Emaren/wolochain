@@ -193,3 +193,28 @@ func TestReviewerLiveFirstStakeRequiresSourceRosterButNotFutureStakeLock(t *test
   t.Fatal("forged preexisting roster lock bypassed first-stake source")
  }
 }
+
+func TestReviewerLiveMultiPlayerMarketAdmitsRecordedFirstStakeAfterShadow(t *testing.T){
+ market,original,now:=reviewerPostShadowFirstStake(t)
+ c,e:=market.validate(now,original)
+ if e!=nil||c.RosterLockedAtMS==0{t.Fatalf("frozen shadow later-stake transition invalid: %+v %v",c,e)}
+ _,w,checkpoint,pub,key,_:=reviewerLiveCheckpointFixture(t)
+ w.original.RosterLockedAtMS=c.RosterLockedAtMS
+ w.original.CapturedAtMS=now.Add(-100*time.Second).UnixMilli()
+ w.original.ObservedAtMS=now.Add(-20*time.Second).UnixMilli()
+ w.original.ExpiresAtMS=now.Add(20*time.Second).UnixMilli()
+ w.original.Signature=base64.StdEncoding.EncodeToString(
+  ed25519.Sign(key,ReviewerWatcherLiveWitnessMessage(w.original)))
+ if e:=VerifyIndependentReviewerLiveWatcher(t.Context(),c,w,checkpoint,pub,now);e!=nil{
+  t.Fatalf("second bettor blocked by valid first stake from another player: %v",e)
+ }
+ // A witness cannot claim a first stake existed BEFORE it was actually
+ // observed in the independent signed game-start checkpoint.
+ w.original.ObservedAtMS=now.Add(-80*time.Second).UnixMilli()
+ w.original.ExpiresAtMS=now.Add(-40*time.Second).UnixMilli()
+ w.original.Signature=base64.StdEncoding.EncodeToString(
+  ed25519.Sign(key,ReviewerWatcherLiveWitnessMessage(w.original)))
+ if e:=VerifyIndependentReviewerLiveWatcher(t.Context(),c,w,checkpoint,pub,now.Add(-60*time.Second));!errors.Is(e,ErrReviewerHeld){
+  t.Fatal("witness signed an as-yet-unobserved roster lock")
+ }
+}
