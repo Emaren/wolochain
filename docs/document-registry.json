@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "7dc1a2a212781dccfef8e4028c83a026f2d22cfbbd43c2ed0c60a5753409c690",
+      "sha256": "7937927a1ba84469b1fed580f9eb2893869c563a7757323d12c4832d1e4ae6bc",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -970,8 +970,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "ops/20261021-bearer-holder-recovery-held",
-    "commit": "bedfae8948a95849d4ba1113cf549b755f4190d1"
+    "branch": "fix/wolo-hd-financial-obligation-envelope-20261021",
+    "commit": "68b546408c40957072ccb4fc56eaef884ed8a1fd"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
