@@ -1,0 +1,192 @@
+{
+  "schema": "aoe2war.wolo.financial-release-checklist.v1",
+  "updated_at_utc": "2026-10-18T18:18:43.997778+00:00",
+  "canonical_issue": "https://github.com/Emaren/wolochain/issues/5",
+  "role": "Single current observational six-control index; never a release permit or autonomous controller",
+  "overall_status": "HOLD",
+  "exact_historical_candidate": {
+    "revision": "bdbce253c524d6faac14f61cd129ac5072287c3f",
+    "binary_sha256": "44d8aed5550d1b33635c734c1a359d0cb69e854093ef8c9a8a3da4f99d416ede"
+  },
+  "live_settlement_revision": "78c25985420ee41a6678c42fab8ea8d6c3b1b519",
+  "controls": {
+    "hd_de_producers_isolated": {
+      "status": "BLOCKED",
+      "observed_at_utc": "2026-10-18T18:12:00.829108Z",
+      "evidence": [
+        "producer-refresh-handoff.json",
+        "settlement-shared-producer-inventory-readonly.json",
+        "settlement-parallel-de-authority-inventory.json",
+        "producer-surface-metadata.json",
+        "producer-containers-identities.json"
+      ],
+      "established": "19 named systemd candidates inspected;11 active. Cron, user managers, container and independent HD staking/faucet configuration observed. No fence performed.",
+      "unknowns": [
+        "nonprefix/user/cron/container/external financial authority",
+        "all signers, queues, HTTP and independently signed paths"
+      ],
+      "next_action": "Named HD/DE/external owners classify exact producer and signer paths; obtain explicit approval for coordinated financial fence. Do not blanket-stop candidates.",
+      "requires_production_approval": true
+    },
+    "inflight_requests_and_accepted_tx_reconciled": {
+      "status": "BLOCKED",
+      "observed_at_utc": "2026-10-18T18:16:25.644586+00:00",
+      "evidence": [
+        "bank-chain-observations.json",
+        "settlement-state-evidence.json",
+        "settlement-state-collection.json",
+        "aggregate-only-child-followup.json"
+      ],
+      "established": "One100WOLO accepted primary escrow request; configured-node tx bytes/hash agree, code0 at1078913. Recorded statuses are not independently reconciled. Sensor found one aggregate-only1323000WOLO requested child and886 deduplicated run references. Its local parent/child record describes a prebroadcast reserve/funds refusal with attempted=false and no hash; this is neither independently proved absence of payment nor a certified debt.",
+      "unknowns": [
+        "independently authenticated complete bank effects and receipt ownership",
+        "missing aggregate child outcome, uncertain/retryable records",
+        "complete external and application obligation coverage"
+      ],
+      "next_action": "In approved fenced window reconcile each immutable obligation to authenticated canonical transfer effect; preserve unknowns and do not broadcast or retry.",
+      "requires_production_approval": true
+    },
+    "claim_889_liability_preserved_and_release_reviewed": {
+      "status": "BLOCKED",
+      "observed_at_utc": "2026-10-18T18:12:23.812Z",
+      "evidence": [
+        "hd-liability-observations.json"
+      ],
+      "established": "Same pending300WOLO founder15/market4476 claim, attempted2026-07-04T22:23:41.342Z, no stored payout hash. Existing financial hold retained; no exhausted historical search repeated.",
+      "unknowns": [
+        "paid/unpaid proof across all historical paths",
+        "independently approved continuing-hold or corrective disposition"
+      ],
+      "next_action": "Finance/claim owner reviews exact entitlement and prior attempt, preserves300WOLO potential obligation and obtains independent disposition without reset, rescind or retry.",
+      "requires_production_approval": false
+    },
+    "fresh_quiesced_backup_hash_verified": {
+      "status": "BLOCKED",
+      "observed_at_utc": "2026-10-18T18:12:48Z",
+      "evidence": [
+        "snapshot-inspection.txt",
+        "capacity-observation.json"
+      ],
+      "established": "Read-only source/runtime/config/state/capacity screening passed; no current quiesced snapshot created.",
+      "unknowns": [
+        "fresh exclusive/quiesced state/config/unit backup identities and checksums",
+        "maintained producer fence and measured backup capacity"
+      ],
+      "next_action": "After explicit maintenance/fence approval, capture restricted fresh snapshot, checksum and independently verify both state roots/config/units and exclusive ownership; never restore old financial state as binary rollback.",
+      "requires_production_approval": true
+    },
+    "reviewed_code_only_rollback_rehearsed": {
+      "status": "BLOCKED",
+      "observed_at_utc": "2026-10-18T18:12:48Z",
+      "evidence": [
+        "snapshot-inspection.txt",
+        "source-authority-initial.json"
+      ],
+      "established": "Original/candidate/consensus hashes match pinned identities. Existing45 offline controller contracts are source tests, not a live rehearsal.",
+      "unknowns": [
+        "named live rollback/recovery authority and bounded downtime proof",
+        "real paired service and partial rollout recovery under maintained fence"
+      ],
+      "next_action": "Explicitly approve and witness reviewed two-settlement-only rehearsal/recovery. Keep consensus PID/hash and financial state unchanged; retain fence on every failure.",
+      "requires_production_approval": true
+    },
+    "bank_solvent_and_independently_checked": {
+      "status": "UNKNOWN",
+      "observed_at_utc": "2026-10-18T18:12:23.812Z",
+      "evidence": [
+        "bank-chain-observations.json",
+        "hd-liability-observations.json",
+        "settlement-state-evidence.json"
+      ],
+      "established": "Configured-node three distinct bank accounts and configured floors observed. HD947pending claims total993189WOLO; claim889included. These may overlap journals and exclude other liabilities.",
+      "unknowns": [
+        "authenticated exact-height bank values",
+        "DE/external, escrow and unmaterialized obligations, all fee liabilities",
+        "global complete liability amount, account attribution and overlaps"
+      ],
+      "next_action": "Finance and independent chain reviewer reconcile exact accounts, all liabilities and fees at coordinated height; do not treat escrow as Satchel collateral or add overlapping journal/claim sums.",
+      "requires_production_approval": false
+    }
+  },
+  "evidence": {
+    "aggregate-only-child-followup.json": {
+      "path": "docs/settlement-contracts/financial-release-evidence-20261018/aggregate-only-child-followup.json",
+      "sha256": "09ff9dedf24fce4d045236d47745f4923dbe7bf2bd2935ff3fa9722518d8a0a5"
+    },
+    "bank-chain-observations.json": {
+      "path": "docs/settlement-contracts/financial-release-evidence-20261018/bank-chain-observations.json",
+      "sha256": "40b0c440133d4c4a4200aa721cd77c3ef471ea6e674c155f0f5bb97618a4d6d0"
+    },
+    "capacity-observation.json": {
+      "path": "docs/settlement-contracts/financial-release-evidence-20261018/capacity-observation.json",
+      "sha256": "7a85875853faae3df20a5f87b6d424039c214569e109762f9d5218fd754e4e9a"
+    },
+    "collection-provenance.json": {
+      "path": "docs/settlement-contracts/financial-release-evidence-20261018/collection-provenance.json",
+      "sha256": "34410fe3e2a22cf127cedadda508370f3fe749df4d14dfa5260f6901ca0a148c"
+    },
+    "hd-liability-observations.json": {
+      "path": "docs/settlement-contracts/financial-release-evidence-20261018/hd-liability-observations.json",
+      "sha256": "bf65057dd9832c2b7978c26d28edbaf9054ce514283db6df6dd63edf75912a30"
+    },
+    "producer-containers-identities.json": {
+      "path": "docs/settlement-contracts/financial-release-evidence-20261018/producer-containers-identities.json",
+      "sha256": "f4ee1d8c08c85adae2bbcd03a566a15652443b1f49acf09153d5eb82acfd57dd"
+    },
+    "producer-refresh-handoff.json": {
+      "path": "docs/settlement-contracts/financial-release-evidence-20261018/producer-refresh-handoff.json",
+      "sha256": "542a6efa627e15aa4c70bf75853bf26362c946e9263acf64ccb01ca47303978f"
+    },
+    "producer-surface-metadata.json": {
+      "path": "docs/settlement-contracts/financial-release-evidence-20261018/producer-surface-metadata.json",
+      "sha256": "679c15fc806479e998a5d10a320d81969b55f973cadeebc5d2d3055c6df64dbd"
+    },
+    "settlement-parallel-de-authority-inventory.json": {
+      "path": "docs/settlement-contracts/financial-release-evidence-20261018/settlement-parallel-de-authority-inventory.json",
+      "sha256": "19cf7a9a6b65e1780798dd3683f5e38d204a6b8280f4f6a2eaaa7d51341f5171"
+    },
+    "settlement-shared-producer-inventory-readonly.json": {
+      "path": "docs/settlement-contracts/financial-release-evidence-20261018/settlement-shared-producer-inventory-readonly.json",
+      "sha256": "2b96836fa5c1155d4c2d80a490c845c60448f063a9fcc43ef2b2de99f961db2e"
+    },
+    "settlement-state-collection.json": {
+      "path": "docs/settlement-contracts/financial-release-evidence-20261018/settlement-state-collection.json",
+      "sha256": "e4ad421ec559265bcc7e4369578a38462b584bad33b089365b7667f6586655b5"
+    },
+    "settlement-state-evidence.json": {
+      "path": "docs/settlement-contracts/financial-release-evidence-20261018/settlement-state-evidence.json",
+      "sha256": "51d136a5ddb081e8b4ec0d42dfca336cf48bea7e8c90a51ed442955a9dc85905"
+    },
+    "snapshot-inspection.txt": {
+      "path": "docs/settlement-contracts/financial-release-evidence-20261018/snapshot-inspection.txt",
+      "sha256": "9f072b913303f34d643336d00966cc9763fe20f125a78cafd4bf9b37b8eef54f"
+    },
+    "source-authority-initial.json": {
+      "path": "docs/settlement-contracts/financial-release-evidence-20261018/source-authority-initial.json",
+      "sha256": "5965e76010f107d3471cb1c22a02c6f0dc961cefe84f3c91ca6bf826ab769417"
+    },
+    "website-release-observation.json": {
+      "path": "docs/settlement-contracts/financial-release-evidence-20261018/website-release-observation.json",
+      "sha256": "38152b5c3840a31689073f195588303a912fda70e055b4931fc57929edb6cdd3"
+    }
+  },
+  "independent_consensus_authentication_proven": false,
+  "complete_financial_producer_inventory_proven": false,
+  "global_liability_upper_bound_uwolo": null,
+  "global_liability_bound": "UNBOUNDED_NOT_PROVEN",
+  "financial_drain_certified": false,
+  "claim_889_reconciled": false,
+  "fresh_quiesced_snapshot_certified": false,
+  "live_rollback_certified": false,
+  "financial_release_authorized": false,
+  "custody_capability": "UNAVAILABLE",
+  "chain_evidence": "NONCREDITING",
+  "production_mutated": false,
+  "website": {
+    "commit": "78d2a3329096c25b9429a3536f08c33d1d9dc96f",
+    "status": "CERTIFIED_INDEPENDENT_APP_RELEASE",
+    "financial_release_dependency": false
+  },
+  "shortest_next_operator_action": "Classify outstanding producer/signing paths with named HD/DE/external owners, then explicitly approve a bounded coordinated financial fence/drain, quiesced snapshot and two-service recovery rehearsal window. This is not cutover approval.",
+  "later_cutover_approval": "Only after six independent controls pass, separately approve paired historical-bdbce253 code-only promotion; use exact short-lived root-private permit. Consensus, financial state, producer resumption and Satchel activation are excluded."
+}

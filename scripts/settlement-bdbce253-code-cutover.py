@@ -21,6 +21,8 @@ import json
 import os
 from pathlib import Path
 import re
+import selectors
+import signal
 import stat
 import subprocess
 import sys
@@ -37,6 +39,10 @@ OLD_SHA = "040126a2884946caf1651a50b7d8115c5a6fb2d5aa94fcbbe150694602d451a5"
 NODE_SHA = "4b77f622191db7550cb87cafb8f1886a0aadebee3eb6565f9f90036f809e61d3"
 NEW_SHA = "44d8aed5550d1b33635c734c1a359d0cb69e854093ef8c9a8a3da4f99d416ede"
 REV = "bdbce253c524d6faac14f61cd129ac5072287c3f"
+OLD_REV = "78c25985420ee41a6678c42fab8ea8d6c3b1b519"
+CHECKOUT = "/var/www/WoloChain-wolo-1"
+READ_ONLY_MODES = {"inspect", "source-authority"}
+MAX_COMMAND_BYTES = 1 << 20
 PRIMARY = "wolochain-mainnet-settlement.service"
 FOUNDER = "wolochain-founder-rewards-settlement.service"
 CONSENSUS = "wolochaind-mainnet.service"
@@ -83,18 +89,48 @@ def expected_override() -> bytes:
     ).encode()
 
 
+def _read_release_permit(path: Path) -> bytes:
+    require(path.is_absolute(), "release permit must be an absolute protected file")
+    require(hasattr(os, "O_NOFOLLOW"), "no-follow permit reads unavailable")
+    try:
+        fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    except OSError as exc:
+        raise Blocked("release permit must be a regular non-symlink protected file") from exc
+    try:
+        before = os.fstat(fd)
+        require(stat.S_ISREG(before.st_mode) and before.st_uid == 0 and before.st_gid == 0 and
+                stat.S_IMODE(before.st_mode) == 0o600 and 0 <= before.st_size < 8192,
+                "release permit requires root:root mode 0600 regular file and size below 8KiB")
+        data = os.read(fd, 8192)
+        require(len(data) == before.st_size and len(data) < 8192,
+                "release permit changed or exceeded read limit")
+        after = os.fstat(fd)
+        fields = ("st_dev", "st_ino", "st_uid", "st_gid", "st_mode", "st_size",
+                  "st_mtime_ns", "st_ctime_ns", "st_nlink")
+        require(all(getattr(before, key) == getattr(after, key) for key in fields),
+                "release permit changed during read")
+        current = os.stat(path, follow_symlinks=False)
+        require(stat.S_ISREG(current.st_mode) and
+                (current.st_dev, current.st_ino) == (before.st_dev, before.st_ino),
+                "release permit path changed during read")
+        return data
+    finally:
+        os.close(fd)
+
+
+def _unique_permit_object(pairs):
+    result = {}
+    for key, value in pairs:
+        require(key not in result, "duplicate release permit JSON field")
+        result[key] = value
+    return result
+
+
 def load_release_permit(path: Path, *, now: datetime | None = None) -> dict:
     """Operator-issued receipt; NEVER inferred from CI/test booleans."""
-    now = now or datetime.now(timezone.utc)
-    require(path.is_absolute() and path.is_file() and not path.is_symlink(),
-            "release permit must be regular absolute file, not symlink")
-    meta = path.stat()
-    require(meta.st_uid == 0 and meta.st_gid == 0 and
-            stat.S_IMODE(meta.st_mode) == 0o600 and meta.st_size < 8192,
-            "release permit requires root:root mode 0600 and size below 8KiB")
     try:
-        permit = json.loads(path.read_bytes())
-    except (ValueError, OSError) as exc:
+        permit = json.loads(_read_release_permit(path), object_pairs_hook=_unique_permit_object)
+    except (ValueError, OSError, RecursionError) as exc:
         raise Blocked("invalid release permit JSON") from exc
     require(isinstance(permit, dict), "invalid permit document")
     require(set(permit) == {"schema", "candidateRevision", "candidateSha256",
@@ -111,6 +147,7 @@ def load_release_permit(path: Path, *, now: datetime | None = None) -> dict:
             "operator identity missing")
     require(isinstance(permit["witnessedControls"], list) and
             len(permit["witnessedControls"]) == len(ATTESTED) and
+            all(isinstance(control, str) for control in permit["witnessedControls"]) and
             set(permit["witnessedControls"]) == ATTESTED,
             "release permit lacks independent finance/control reviews")
     try:
@@ -121,19 +158,106 @@ def load_release_permit(path: Path, *, now: datetime | None = None) -> dict:
     require(created.tzinfo is not None and expiry.tzinfo is not None and
             created.utcoffset() == timedelta(0) and expiry.utcoffset() == timedelta(0),
             "permit timestamps must be UTC")
+    # Acquisition and parsing may have consumed the entire authorization
+    # window. Production time is sampled only after those operations finish.
+    now = now if now is not None else datetime.now(timezone.utc)
     require(now - timedelta(minutes=5) <= created <= now and
             now < expiry <= created + timedelta(minutes=10),
             "expired, future, or overlong release permit")
     return permit
 
 
+class ReleaseAuthority:
+    """Revalidate the original operator approval; never adopt a renewal mid-run.
+
+    The existing public permit shape is unchanged. The binding covers every
+    validated field (including operator, times and witnessed controls). File
+    removal, invalid ownership, expiry or any changed field fails closed.
+    """
+    def __init__(self, path: Path):
+        self.path = path
+        self.original = self._binding(load_release_permit(path))
+
+    @staticmethod
+    def _binding(permit: dict) -> str:
+        return json.dumps(permit, sort_keys=True, separators=(",", ":"))
+
+    def check(self) -> None:
+        current = load_release_permit(self.path)
+        require(self._binding(current) == self.original,
+                "release permit changed since original approval")
+
+
 class Live:
     """All live external operations (mocked in offline CI)."""
 
     def command(self, *argv: str) -> str:
-        result = subprocess.run(argv, check=True, timeout=30,
-                                capture_output=True, text=True)
-        return result.stdout.strip()
+        # Bound combined command output as well as runtime. Git index/status
+        # output is untrusted and must not allocate unbounded capture buffers.
+        env = os.environ.copy()
+        if argv and Path(argv[0]).name == "git":
+            # Inspection is of CHECKOUT, never an inherited alternate index,
+            # repository, namespace or command-line configuration overlay.
+            for key in tuple(env):
+                if key.startswith("GIT_"):
+                    del env[key]
+        env.update({"GIT_OPTIONAL_LOCKS": "0", "GIT_NO_REPLACE_OBJECTS": "1"})
+        process = subprocess.Popen(argv, stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE, env=env,
+                                   start_new_session=True)
+        selector = selectors.DefaultSelector()
+        output = bytearray()
+        total = 0
+        deadline = time.monotonic() + 30
+        try:
+            for stream in (process.stdout, process.stderr):
+                selector.register(stream, selectors.EVENT_READ)
+            while selector.get_map():
+                require(time.monotonic() < deadline, "inspection command timed out")
+                for key, _ in selector.select(min(.2, max(0, deadline-time.monotonic()))):
+                    data = os.read(key.fileobj.fileno(), 65536)
+                    if not data:
+                        selector.unregister(key.fileobj)
+                        continue
+                    total += len(data)
+                    require(total <= MAX_COMMAND_BYTES, "inspection output exceeds limit")
+                    if key.fileobj is process.stdout:
+                        output.extend(data)
+            require(process.wait(timeout=max(.001, deadline-time.monotonic())) == 0,
+                    "inspection command failed")
+            return output.decode("utf-8", errors="strict").strip()
+        except subprocess.TimeoutExpired as exc:
+            raise Blocked("inspection command timed out") from exc
+        finally:
+            try:
+                os.killpg(process.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+            process.wait()
+            selector.close()
+            process.stdout.close()
+            process.stderr.close()
+
+    def source_checkout(self) -> dict:
+        def git(*args):
+            return self.command("git", "--no-optional-locks", "--no-replace-objects",
+                                "-c", "core.fsmonitor=false", "-C", CHECKOUT, *args)
+        top = git("rev-parse", "--show-toplevel")
+        require(Path(top).resolve() == Path(CHECKOUT).resolve(),
+                "source checkout top-level differs from reviewed path")
+        revision = git("rev-parse", "HEAD")
+        require(re.fullmatch(r"[a-f0-9]{40}", revision) is not None,
+                "source checkout revision unverifiable")
+        index = git("ls-files", "-v").splitlines()
+        visible = bool(index) and all(line.startswith("H ") for line in index)
+        status = git("status", "--porcelain=v1", "--untracked-files=all",
+                     "--ignored=matching")
+        lines = status.splitlines()
+        return {"revision": revision, "clean": not status and visible,
+                "tracked_index_visible": visible,
+                "ignored_entries": sum(line.startswith("!!") for line in lines),
+                "untracked_entries": sum(line.startswith("??") for line in lines),
+                "tracked_change_entries": sum(not line.startswith(("!!", "??")) for line in lines)}
 
     def systemctl(self, action: str, unit: str | None = None) -> str:
         require(action in {"show", "stop", "start", "daemon-reload"},
@@ -232,8 +356,13 @@ class Live:
 
 
 class Cutover:
-    def __init__(self, live: Live):
+    def __init__(self, live: Live, authorize=None):
         self.live = live
+        self.authorize = authorize
+
+    def require_authority(self) -> None:
+        require(callable(self.authorize), "fresh bound release authority required")
+        self.authorize()
 
     def pin_node(self) -> int:
         self.live.check_binary(NODE, NODE_SHA)
@@ -339,9 +468,84 @@ class Cutover:
         self.assert_services(generation, pinned)
         return generation
 
+    def source_authority(self) -> dict:
+        # A checkout update alone cannot turn the old executable into the new
+        # implementation. Require exact two-lane runtime proof independently.
+        before = self.live.source_checkout()
+        node = self.pin_node()
+        settlement_pids = {unit: self.pid(unit) for unit in SERVICES}
+        generation = self.inspect()
+        after = self.live.source_checkout()
+        require(before == after, "source changed during authority inspection")
+        # The second Git observation may take time. Recheck exact generations,
+        # process identities and health afterwards; a rollback/exit/restart
+        # during those reads must never retain the earlier green generation.
+        require(self.state() == generation, "settlement generation changed during authority inspection")
+        self.assert_services(generation, node)
+        require(self.state() == generation, "settlement generation changed after final health")
+        program, digest = (OLD, OLD_SHA) if generation == "old" else (NEW, NEW_SHA)
+        for unit in SERVICES:
+            self.running(unit, program, digest)
+            require(self.pid(unit) == settlement_pids[unit],
+                    "settlement PID changed during authority inspection")
+        require(self.pin_node() == node, "consensus changed during authority inspection")
+        require(type(after.get("clean")) is bool and
+                type(after.get("tracked_index_visible")) is bool and
+                re.fullmatch(r"[a-f0-9]{40}", after.get("revision", "")) is not None,
+                "source checkout observation unverifiable")
+        code_required = generation != "new"
+        source_required = after["revision"] != REV
+        visible = after["tracked_index_visible"]
+        known_source = after["revision"] in (OLD_REV, REV)
+        aligned = not code_required and not source_required and after["clean"] and visible
+        blockers = []
+        if not after["clean"] or not visible:
+            blockers.append("SOURCE_TREE_OR_INDEX_NOT_CLEAN")
+        if not known_source:
+            blockers.append("SOURCE_REVISION_NOT_APPROVED")
+        if code_required:
+            blockers.append("PROTECTED_TWO_SERVICE_CODE_CUTOVER_REQUIRED")
+        if source_required:
+            blockers.append("SOURCE_TRANSITION_REQUIRED_AFTER_VERIFIED_CODE_CUTOVER")
+        return {"schema": "aoe2war.wolo.settlement-source-authority.v1",
+                "mode": "READ_ONLY",
+                "observed_at_utc": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+                "settlement_pids": settlement_pids, "consensus_pid": node,
+                "status": "SOURCE_RUNTIME_ALIGNED_FINANCIAL_HOLD" if aligned else "BLOCKED",
+                "expected_revision": REV, "checkout_revision": after["revision"],
+                "checkout_clean": after["clean"],
+                "tracked_index_visible": after["tracked_index_visible"],
+                "ignored_entries": after.get("ignored_entries"),
+                "untracked_entries": after.get("untracked_entries"),
+                "tracked_change_entries": after.get("tracked_change_entries"),
+                "live_code_state": generation,
+                "live_settlement_revision": REV if generation == "new" else OLD_REV,
+                "live_settlement_sha256": NEW_SHA if generation == "new" else OLD_SHA,
+                "code_cutover_required": code_required,
+                "source_transition_required": source_required,
+                "source_transition_runtime_prerequisite_met": not code_required and after["clean"] and visible and known_source,
+                "source_runtime_aligned": aligned,
+                "consensus_unchanged": True,
+                "blockers": blockers, "release_authorized": False,
+                "financial_drain_certified": False, "custody_authorized": False,
+                "claim_889_resolved": False, "production_mutated": False}
+
     def code_only_recover(self, pinned_pid: int) -> None:
-        # Requires human operator's still-valid external finance permit.
-        # Never rewinds request/run trees and never resumes app payment producers.
+        # A newly requested rollback/recovery needs fresh original authority
+        # after its slow preflight and immediately before its first mutation.
+        require(self.pin_node() == pinned_pid, "consensus changed before recovery")
+        self.require_authority()
+        self._complete_code_recovery(pinned_pid)
+
+    def _complete_code_recovery(self, pinned_pid: int) -> None:
+        # Cleanup continuation is authorized only by an already-started,
+        # freshly approved mutation. Expiry/revocation stops forward rollout,
+        # but must not strand half-switched lanes: complete only this fixed
+        # at-most-seven-step OLD-code recovery (two stops, <=two owned override
+        # removals, one reload, two starts). No new rollout, permit renewal,
+        # producer resume, consensus mutation or financial-state restore.
+        # A later process must obtain fresh authority to request recovery.
+
         for unit in SERVICES:
             self.live.systemctl("stop", unit)
         for unit in SERVICES:
@@ -358,22 +562,30 @@ class Cutover:
         pinned = self.pin_node()
         self.assert_services("old", pinned)
         started = False
-        try:
+        def forward(call, *args):
+            nonlocal started
+            # Slow I/O must not spend an authorization window checked earlier.
+            # Mark cleanup eligibility only after this fresh check succeeds,
+            # immediately before invoking a possibly uncertain side effect.
+            self.require_authority()
             started = True
+            call(*args)
+        try:
             for unit in SERVICES:
-                self.live.systemctl("stop", unit)
+                forward(self.live.systemctl, "stop", unit)
             for unit in SERVICES:
-                self.live.add_dropin(unit)
-            self.live.systemctl("daemon-reload")
+                forward(self.live.add_dropin, unit)
+            forward(self.live.systemctl, "daemon-reload")
             for unit in SERVICES:
-                self.live.systemctl("start", unit)
+                forward(self.live.systemctl, "start", unit)
             require(self.state() == "new", "two-lane promotion not complete")
             self.assert_services("new", pinned)
+            self.require_authority()
             return "new"
         except BaseException:
             if started:
                 try:
-                    self.code_only_recover(pinned)
+                    self._complete_code_recovery(pinned)
                 except BaseException as recovery:
                     raise Blocked(
                         "CRITICAL: automatic code-only recovery failed; payment "
@@ -413,6 +625,11 @@ def run_mode(args, controller: Cutover) -> None:
         print("LIVE_CODE_STATE=" + controller.inspect())
         print("FINANCIAL_DRAIN_CERTIFIED=false")
         print("RELEASE_AUTHORIZED=false")
+    elif args.mode == "source-authority":
+        receipt = controller.source_authority()
+        print(json.dumps(receipt, sort_keys=True))
+        if not receipt["source_runtime_aligned"]:
+            raise Blocked("source/runtime authority remains mismatched; no checkout-only bypass")
     elif args.mode == "promote":
         print("NEW_CODE_STATE=" + controller.promote())
         print("PAYOUT_PRODUCERS_STILL_FENCED_REQUIRED=true")
@@ -437,18 +654,19 @@ def run_mode(args, controller: Cutover) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--mode", default="inspect",
-                        choices=["inspect", "promote", "rollback", "recover-interrupted"])
+                        choices=["inspect", "source-authority", "promote", "rollback", "recover-interrupted"])
     parser.add_argument("--permit", help="absolute root-owned finance approval JSON")
     args = parser.parse_args()
     try:
         require(os.geteuid() == 0, "root needed to inspect/operate exact systemd units")
-        if args.mode != "inspect":
+        authority = None
+        if args.mode not in READ_ONLY_MODES:
             require(bool(args.permit), "mutations require explicit finance permit")
-            load_release_permit(Path(args.permit))
+            authority = ReleaseAuthority(Path(args.permit))
         elif args.permit:
-            raise Blocked("inspect must not be presented as financial authorization")
-        controller = Cutover(Live())
-        if args.mode == "inspect":
+            raise Blocked("read-only mode must not be presented as financial authorization")
+        controller = Cutover(Live(), authorize=authority.check if authority else None)
+        if args.mode in READ_ONLY_MODES:
             run_mode(args, controller)
         else:
             with acquire_mutation_lock():
