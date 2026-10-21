@@ -379,7 +379,7 @@
       "owner": "wolochain-ops",
       "path": "docs/settlement-contracts/README.md",
       "review_interval_days": 30,
-      "reviewed_at": "2026-10-18",
+      "reviewed_at": "2026-10-20",
       "sensitivity": "public",
       "sha256": "a9f0cf936efa4be75bd68352cc0672a1012afa5f073aa5ab5c81ca504fb9584d",
       "source_of_truth": "git",
