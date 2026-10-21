@@ -15,6 +15,56 @@ sensitivity: "public"
 
 # Settlement Contracts
 
+## October 21, 2026 — proof-bound reserve reviewer contract (source-only)
+
+The package `internal/satchelservice/reserve_review.go` implements
+`EvaluateProofBoundReserveReview(now, evidence, review, operatorAuthority)`,
+a **NON-ACTIVATING** reviewer of potential dedicated Satchel-vault reserves.
+
+The bank input is the actual `satchel.AuthenticatedBankEvidence` value
+returned by the native CometBFT/SDK ICS23 bank-state proof verifier; callers
+cannot construct an authenticated instance by putting
+`"consensus_authenticated":true` in a JSON payload. It must be **current**,
+with both independently obtained head observations identifying the same exact
+H+1 committing header, matching vault, full account balance, height and block
+hash. A stale/historical bank proof is explicitly rejected.
+
+The *other* input is `SignedReserveReview`, independently prepared from a
+fresh quiesced and complete liability inventory. It records separate
+confirmed obligations, **maximum uncertain obligations** (historical unknowns
+including founder #889 and unreconciled legacy transfer when relevant), gas
+reserve and a minimum unencumbered cushion. It also commits cryptographically
+to the liability inventory, journal snapshot, nonoverlap witness, exact running
+binary/configuration and currently approved execution permit. Two separately
+provisioned Ed25519 reviewer public keys must verify signatures over the same
+full canonical statement: one accounting reviewer and one custody reviewer.
+Reusing the same public key for both roles fails.
+
+A read-only source decision requires
+
+`authenticated current bank >= confirmed liabilities + uncertain maximum + gas reserve + unencumbered minimum`.
+
+All strings are canonical bounded `uwolo` integers, with big-integer sums and
+overflow refusal. Freshness is bounded to 120 seconds or the bank-proof expiry,
+whichever comes first. Any missing/unknown evidence, claim coverage assertion,
+bank reconciliation, duplicate reviewer key, incomplete overlap witness,
+stale permit/config/build, mismatched header, expired attestation or insufficient
+assets fails closed. Even a positive source decision only reports the
+checked conservative balance: **`CustodyCapability()` remains
+`"UNAVAILABLE"`**. This module is intentionally **not wired to** HTTP health,
+deposit intake, execution signing, the HD financial bridge or an operator
+permit. It cannot create reserves, prove inventory completeness by itself,
+establish reviewer independence, discharge founder claim #889 or activate
+funded Auto Bets.
+
+Before a future activation issuer may use this decision, operators must
+independently prove signers' authority, reviewer identity/independence,
+completeness and non-overlap of every historical/current liability and
+customer Satchel ledger, dedicated vault key isolation, authenticated bank
+consensus trust root, actual fresh state, backup/rollback and explicit bounded
+financial release permits. **Do not set Wolo's `custody_capability` to
+AVAILABLE just because this signed reserve arithmetic succeeds.**
+
 ## October 21, 2026 — historical accepted 100-WOLO proof, offline and non-authorizing
 
 The accepted legacy escrow send, transaction
