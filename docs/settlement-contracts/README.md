@@ -38,7 +38,11 @@ to the liability inventory, journal snapshot, nonoverlap witness, exact running
 binary/configuration and currently approved execution permit. Two separately
 provisioned Ed25519 reviewer public keys must verify signatures over the same
 full canonical statement: one accounting reviewer and one custody reviewer.
-Reusing the same public key for both roles fails.
+Reusing the same public key for both roles fails. Both reviewer keys
+must also be different from **all three** operator-provisioned execution permit,
+wager approval and withdrawal approval public keys, and those three operational
+roles must remain distinct from each other. No signer or financial reviewer may
+attest their own role's supposed independence.
 
 A read-only source decision requires
 
