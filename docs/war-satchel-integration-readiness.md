@@ -8,12 +8,50 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "source-integration-proof-not-production-approval"
-reviewed_at: "2026-10-17"
+reviewed_at: "2026-10-21"
 review_interval_days: 14
 sensitivity: "restricted"
 ---
 
 # War Satchel Integration Evidence and Operator Handoff
+
+## Controlled OS-process qualification, October 21
+
+Implementation `32f0d73d4509db074b5baf095c2338cb27c35132` adds
+`internal/satchelservice/native_http_execution_test.go`. It runs the production
+private HTTP server, encrypted SDK file keyring and durable engine in a separate
+test process. An isolated SDK application commits the actual signed 7-WOLO
+wager, and the test kills only its signer child with SIGKILL before the RPC
+acknowledgement. After reopening the same journal and keyring, four concurrent
+retries retain UNKNOWN without signing or broadcasting. Portable proof retrieval
+leaves that hold unchanged; explicit authenticated read-only reconciliation
+alone confirms the original transfer.
+
+The fixture supplies real retained SDK bank proofs and signed continuous Comet
+headers. Offline verification binds the exact owner, reservation, native fee,
+recipient, amount, memo and transaction bytes. Identical-byte SDK replay fails
+ante sequence validation. Vault `2,997,500 uwolo`, escrow `7,000,000 uwolo` and
+fee collector/distribution `2,500 uwolo` conserve the initial `10,000,000 uwolo`.
+Wrong bearer, signer role, owner, recipient, amount, fee and approval role fail
+before signing. A competing process cannot acquire the active keyring lease.
+Revoking the fixture permit stops submissions while proof reads and recovery
+remain available; the custody capability stays UNAVAILABLE.
+
+Run `go test ./internal/satchelservice -run '^TestNativePrivateHTTPServiceSDKRecovery$' -count=1`
+to reproduce. At that source, full Go tests passed 1,799 tests including subtests
+with seven existing skips; the targeted keyring/native SDK/HTTP race suite passed
+12 tests including subtests. Service/command vet and independent source review
+passed. The test is part of the existing repository CI, including its custody
+execution race job.
+
+This is a controlled Go test process on an ephemeral loopback port, **not** an
+execution receipt for the pinned Linux release artifact or mainnet. Its signed
+permit is bound to the test executable and synthetic evidence only. The two
+local proof endpoints share one isolated validator; they do not establish
+independent production operators. No mainnet key, transfer, installation, service
+restart, app ledger or financial activation is exercised. The pinned artifact,
+legacy services, outstanding liabilities and protected release holds remain
+separate requirements.
 
 ## Authenticated bridge continuation, October 17
 
