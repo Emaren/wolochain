@@ -135,13 +135,23 @@ def held_bank(doc: dict) -> dict:
             if amount(role.get("health_reported_uwolo")) != balance:
                 stop("BANK_SAME_NODE_BALANCE_CONFLICT")
             earlier = accounts.get(key)
-            if earlier is not None and earlier != (role["role"], balance):
-                stop("BANK_SHARED_IDENTITY_CONFLICT")
+            if earlier is not None:
+                if earlier != (role["role"], balance):
+                    stop("BANK_SHARED_IDENTITY_CONFLICT")
+                if role["role"] != "escrow":
+                    stop("BANK_UNEXPECTED_SHARED_PAYOUT_IDENTITY")
             accounts[key] = (role["role"], balance)
             if len(accounts) > MAX_ACCOUNTS:
                 stop("BANK_ACCOUNT_LIMIT")
+        if local_roles != ROLES:
+            stop("BANK_ROLE_COVERAGE_INVALID")
     if lane_ids != {"primary", "founder"}:
         stop("BANK_LANE_COVERAGE_INVALID")
+    if len(accounts) != 3 or sum(
+        1 for lane in lanes for role in lane["roles"]
+        if role["role"] == "escrow"
+    ) != 2:
+        stop("BANK_EXPECTED_THREE_ACCOUNT_BOUNDARY_MISSING")
     totals = {role: sum(balance for k, (r, balance) in accounts.items() if r == role)
               for role in sorted(ROLES)}
     return {
