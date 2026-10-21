@@ -39,6 +39,9 @@ func run(ctx context.Context, args []string, out, errout io.Writer) int {
 	if len(args) > 0 && args[0] == "verify-financial-proof" {
 		return verifyFinancialProofCommand(ctx, args[1:], out, errout)
 	}
+	if len(args) > 0 && args[0] == "verify-historical-transfer" {
+		return verifyHistoricalTransferCommand(ctx, args[1:], out, errout)
+	}
 	flags := flag.NewFlagSet("wolosatcheld", flag.ContinueOnError)
 	flags.SetOutput(io.Discard)
 	path := flags.String("config", "", "absolute operator-managed config path")
