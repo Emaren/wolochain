@@ -18,9 +18,9 @@ sensitivity: "restricted"
 ## October 20: original LIVE source and authenticated bank state
 
 The current held app candidate is [PR #729](https://github.com/Emaren/app-prodn/pull/729)
-at `91a532689b00bdb19edea1c3f3d7532905110d82`; the older #684 is not its
+at `57f3451a12d30b68d56e1abcc7bd99f7a5aaa9a2`; the older #684 is not its
 merge path. This source builds on Wolo #39 at
-`5a50b1d6d7bed61e9eaf030ecd25aa7709a2e0b1`. Nothing here changes app's
+`ad886c91b5469f0290886fc0aca77e7344285054`. Nothing here changes app's
 literal `SATCHEL_FINANCIAL_BRIDGE_READY=false`, production or the six-control
 checklist on the separately held financial-evidence branch.
 
@@ -110,14 +110,14 @@ the existing V1 caps: eight full unmatched refunds, two owner wins and two
 owner losses against separately funded counterparties. Existing whole-WOLO
 settlement rounding yields 49-WOLO winning returns and four WOLO matched fees;
 the owner withdraws 98 WOLO. Thirty successful single sends, thirty rejected
-byte replays, exact gas and 121 committed fixture blocks conserve all assets.
+byte replays, exact gas and 151 committed fixture blocks conserve all assets.
 A bounded test-only recipe lets actual PostgreSQL-assigned ticket/claim IDs and
 withdrawal UUIDs determine memos; a two-phase rebuild verifies the original
 transaction/header/bank-proof prefix is unchanged. This remains a chain
 fixture until the separate app lifecycle runner supplies its actual DB receipt.
 
 The reproducible custody artifact profile now targets exact implementation
-`d2b442b0de19837b0001a1137cb00c044d47bd67`, compiled with pinned Go 1.24.6.
+`0cce716d928945be47c7a02916a7574fabae3c7b`, compiled with pinned Go 1.24.6.
 The builder's later Git revision and the embedded implementation revision are
 distinct. Historical `99f32de6`/`d431` artifacts remain historical; never relabel
 them or substitute them for the new independent archive/manifest/binary receipt.
@@ -144,6 +144,38 @@ The exact private wire schemas and safe failure semantics are versioned in
 Source ABI tests fail on route or Go JSON-field drift. The
 [controlled installation and recovery procedure](war-satchel-controlled-release.md)
 keeps the dedicated signer separate from legacy services and consensus.
+
+## October 21: current-state bank transport and release-bound mandates
+
+The private authenticated read-only `POST /satchel/v1/proofs/bank` accepts only
+`{"protocol":1}`. The server selects its immutable vault and state H at the
+observed primary head minus one. The complete SDK/Comet proof must authenticate
+that same head at H+1; a head advance during collection refuses. This remains a
+bounded observation, not an atomic chain/database snapshot or a guarantee that
+a source has disclosed a newer head within the permitted freshness window.
+The offline command adds authenticated head identity/time and the original
+minimum expiration across both heads, the state commit and the trust root.
+The app must verify the transcript through the exact pinned binary, retain
+opaque immutable evidence and recheck that expiration after database locks.
+REST JSON and structural object copies cannot mint bank authority.
+
+Funded wager proof verification uses the explicit public
+`wager_approval_public_key_hex`, separately from the withdrawal/return
+`approval_public_key_hex`. An absent wager key, wrong-role signature or key
+collision refuses; there is no fallback to a withdrawal key. Actual committed
+SDK wager proofs test both the Go verifier and the offline executable, including
+signed fee, owner, amount, memo and trust-root substitution.
+
+Original ADR-36 Mecha challenges bind protocol
+`aoe2war/satchel/mecha-auto-spend/v2` and source epoch
+`aoe2war/satchel/mecha/v2/held-integration-1`. Pure signature verification grants
+no spending authority; the financial PostgreSQL reviewer refuses this HELD
+epoch before database I/O. Activation requires reviewed matching source epoch
+rotation in both repositories and fresh owner signatures. Historical, absent
+and future epochs have no compatibility fallback. The companion app keeps
+owner-authenticated revocation available while new issuance is disabled.
+No production migration, signer activation, custody certification or financial
+release authorization follows from these changes.
 
 ## Authority and transport
 
