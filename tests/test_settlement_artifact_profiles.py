@@ -7,6 +7,7 @@ import io
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import tempfile
@@ -15,6 +16,41 @@ from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[1]
+REVIEWED_BACKEND_SOURCE = "8c509e8f62ca3ec60711dc2654a03b12f22b0773"
+HISTORICAL_BACKEND_SOURCE = "99f32de617964565875ed4689bea0d688bb99147"
+
+
+class BackendArtifactSourceContractTests(unittest.TestCase):
+    """A builder must name the current reviewed implementation explicitly."""
+
+    def test_backend_workflow_and_profile_share_exact_new_implementation_pin(self):
+        specification = importlib.util.spec_from_file_location(
+            "backend_artifact_source_contract", ROOT / "scripts" / "settlement-artifact.py")
+        artifact = importlib.util.module_from_spec(specification)
+        specification.loader.exec_module(artifact)
+        workflow = (ROOT / artifact.BACKEND_WORKFLOW_PATH).read_text()
+        self.assertEqual(artifact.profile_policy("custody-backend")["source"],
+                         REVIEWED_BACKEND_SOURCE)
+        self.assertEqual(re.findall(r"^\s+EXPECTED_SOURCE: ([0-9a-f]{40})$", workflow,
+                                    re.MULTILINE), [REVIEWED_BACKEND_SOURCE])
+        self.assertNotEqual(REVIEWED_BACKEND_SOURCE, HISTORICAL_BACKEND_SOURCE)
+        self.assertEqual(artifact.profile_policy("legacy526")["source"],
+                         "526d5eb6123f6cc0394b5e78489c668e77e46106")
+        self.assertEqual(artifact.profile_policy("composed-satcheld")["source"],
+                         "155fcf67fb2127a2227de5ea785e51bdbb0155c0")
+
+    def test_backend_artifact_trigger_includes_current_held_base(self):
+        workflow = (ROOT / ".github/workflows/custody-backend-satcheld-exact-artifact.yml").read_text()
+        branches = re.findall(r"^\s+branches: \[([^\]]+)\]$", workflow, re.MULTILINE)
+        self.assertEqual(len(branches), 1)
+        self.assertEqual({value.strip() for value in branches[0].split(",")}, {
+            "integration/20261018-satchel-ops-finance-held",
+            "codex/satchel-production-backend",
+        })
+        self.assertIn("ref: ${{ env.EXPECTED_SOURCE }}", workflow)
+        self.assertIn("ref: ${{ env.BUILDER_COMMIT }}", workflow)
+        self.assertIn("contents: read", workflow)
+        self.assertNotIn("contents: write", workflow)
 
 
 class ComposedProfileTests(unittest.TestCase):
@@ -94,6 +130,39 @@ class ComposedProfileTests(unittest.TestCase):
         with mock.patch.object(self.artifact, "BACKEND_SOURCE", "NONACCEPTING_PENDING_REVIEWED_SOURCE"):
             with self.assertRaisesRegex(self.artifact.ArtifactError, "NONACCEPTING backend source"):
                 self.artifact.profile_policy("custody-backend")
+
+    def test_backend_metadata_rejects_historical_revision_dirty_vcs_and_wrong_configuration(self):
+        metadata = self.run_tool(["go", "version", "-m", str(self.binary)]).stdout
+        with mock.patch.object(self.artifact, "BACKEND_SOURCE", self.revision):
+            self.artifact._parse_go_metadata(metadata, profile="custody-backend")
+            for before, after in (
+                (self.revision, HISTORICAL_BACKEND_SOURCE),
+                ("vcs.modified=false", "vcs.modified=true"),
+                ("go1.24.6", "go1.24.7"),
+                ("GOARCH=amd64", "GOARCH=arm64"),
+                ("CGO_ENABLED=0", "CGO_ENABLED=1"),
+                ("-trimpath=true", "-trimpath=false"),
+                ("-tags=go1.27", "-tags=unreviewed"),
+            ):
+                with self.subTest(setting=before):
+                    self.assertIn(before, metadata)
+                    with self.assertRaises(self.artifact.ArtifactError):
+                        self.artifact._parse_go_metadata(metadata.replace(before, after),
+                                                         profile="custody-backend")
+
+    def test_historical_embedded_backend_revision_cannot_be_relabeled_current(self):
+        # Alter only the fixture's embedded textual VCS revision. The actual Go
+        # inspector must read and reject the historical source, even though the
+        # filename, package and Linux architecture still match the new profile.
+        directory = self.root / "historical-backend"
+        directory.mkdir(exist_ok=True)
+        historical = directory / "wolosatcheld"
+        data = self.binary.read_bytes()
+        self.assertGreaterEqual(data.count(self.revision.encode()), 1)
+        historical.write_bytes(data.replace(self.revision.encode(),
+                                           HISTORICAL_BACKEND_SOURCE.encode()))
+        with self.assertRaisesRegex(self.artifact.ArtifactError, "vcs.revision"):
+            self.artifact.inspect_binary(historical, profile="custody-backend")
 
     def test_real_composed_candidate_has_no_activation_authority(self):
         manifest = self.candidate()

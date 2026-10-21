@@ -54,7 +54,7 @@ func bankProofCommand(ctx context.Context, mode string, args []string, out, erro
 		}
 		defer reader.Close()
 		evidence, proof, err := reader.ReadBankProof(ctx, authority.Vault, *height)
-		if err != nil || !evidence.FreshAt(time.Now()) || ctx.Err() != nil {
+		if err != nil || !evidence.CurrentAt(time.Now()) || ctx.Err() != nil {
 			return fail()
 		}
 		if json.NewEncoder(out).Encode(proof) != nil {
@@ -78,26 +78,30 @@ func bankProofCommand(ctx context.Context, mode string, args []string, out, erro
 		return fail()
 	}
 	evidence, err := verifier.VerifyBankProof(ctx, authority.Vault, *height, proof)
-	if err != nil || !evidence.FreshAt(time.Now()) || ctx.Err() != nil {
+	if err != nil || !evidence.CurrentAt(time.Now()) || ctx.Err() != nil {
 		return fail()
 	}
 	// All fields below derive from opaque authenticated evidence. This is an
 	// asset observation, never a complete customer-liability or gas certificate.
 	result := struct {
-		Protocol           int    `json:"protocol"`
-		Status             string `json:"status"`
-		ChainID            string `json:"chain_id"`
-		Denom              string `json:"denom"`
-		Vault              string `json:"vault"`
-		BalanceUWolo       string `json:"balance_uwolo"`
-		Height             int64  `json:"height"`
-		CommitHeight       int64  `json:"commit_height"`
-		BlockHash          string `json:"block_hash"`
-		AppHash            string `json:"app_hash"`
-		CreditAuthorized   bool   `json:"credit_authorized"`
-		SpendingAuthorized bool   `json:"spending_authorized"`
-		SolvencyAuthorized bool   `json:"solvency_authorized"`
-	}{1, "AUTHENTICATED_BANK_NONAUTHORIZING", evidence.ChainID(), evidence.Denom(), evidence.VaultAddress(), evidence.BalanceUWolo(), evidence.Height(), evidence.CommitHeight(), evidence.BlockHash(), evidence.AppHash(), false, false, false}
+		Protocol               int    `json:"protocol"`
+		Status                 string `json:"status"`
+		ChainID                string `json:"chain_id"`
+		Denom                  string `json:"denom"`
+		Vault                  string `json:"vault"`
+		BalanceUWolo           string `json:"balance_uwolo"`
+		Height                 int64  `json:"height"`
+		CommitHeight           int64  `json:"commit_height"`
+		BlockHash              string `json:"block_hash"`
+		AppHash                string `json:"app_hash"`
+		HeadHeight             int64  `json:"head_height"`
+		HeadBlockHash          string `json:"head_block_hash"`
+		HeadTime               string `json:"head_time"`
+		AuthenticatedExpiresAt string `json:"authenticated_expires_at"`
+		CreditAuthorized       bool   `json:"credit_authorized"`
+		SpendingAuthorized     bool   `json:"spending_authorized"`
+		SolvencyAuthorized     bool   `json:"solvency_authorized"`
+	}{1, "AUTHENTICATED_BANK_NONAUTHORIZING", evidence.ChainID(), evidence.Denom(), evidence.VaultAddress(), evidence.BalanceUWolo(), evidence.Height(), evidence.CommitHeight(), evidence.BlockHash(), evidence.AppHash(), evidence.HeadHeight(), evidence.HeadBlockHash(), evidence.HeadTime().UTC().Format(time.RFC3339Nano), evidence.ExpiresAt().UTC().Format(time.RFC3339Nano), false, false, false}
 	if json.NewEncoder(out).Encode(result) != nil {
 		return fail()
 	}

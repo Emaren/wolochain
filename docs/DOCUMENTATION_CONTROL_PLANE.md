@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `integration/20261020-codex-satchel-recovered-lifecycle-held` at `d2b442b0de19837b0001a1137cb00c044d47bd67`
+Implementation baseline: `codex/satchel-authenticated-finance` at `c68b82d67c2dcaf1add27d73e4c82252de6d199b`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 

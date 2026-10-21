@@ -77,10 +77,11 @@ type FinancialProof struct {
 // FinancialProofVerifierConfig contains only public, independently provisioned
 // authority. Never populate it from an HTTP response or proof artifact.
 type FinancialProofVerifierConfig struct {
-	TrustAnchor          satchel.TrustAnchor `json:"trust_anchor"`
-	Vault                string              `json:"vault"`
-	BettingEscrow        string              `json:"betting_escrow"`
-	ApprovalPublicKeyHex string              `json:"approval_public_key_hex"`
+	TrustAnchor               satchel.TrustAnchor `json:"trust_anchor"`
+	Vault                     string              `json:"vault"`
+	BettingEscrow             string              `json:"betting_escrow"`
+	ApprovalPublicKeyHex      string              `json:"approval_public_key_hex"`
+	WagerApprovalPublicKeyHex string              `json:"wager_approval_public_key_hex,omitempty"`
 }
 
 type VerifiedFinancialReceipt struct {
@@ -246,7 +247,17 @@ func verifierPolicy(c FinancialProofVerifierConfig) (Policy, error) {
 	if err != nil || len(key) != ed25519.PublicKeySize || !validAddress(c.Vault) || satchel.IsKnownRoleAddress(c.Vault) || !validAddress(c.BettingEscrow) || c.Vault == c.BettingEscrow {
 		return Policy{}, errors.New("invalid_financial_verifier_authority")
 	}
-	return Policy{Vault: c.Vault, BettingEscrow: c.BettingEscrow, ProtectedAddresses: []string{c.BettingEscrow}, MaxAmountUWolo: 50000000000, WithdrawalApprovalKey: key}, nil
+	var wagerKey []byte
+	if c.WagerApprovalPublicKeyHex != "" {
+		wagerKey, err = hex.DecodeString(c.WagerApprovalPublicKeyHex)
+		if err != nil || len(wagerKey) != ed25519.PublicKeySize || bytes.Equal(key, wagerKey) {
+			return Policy{}, errors.New("invalid_financial_wager_authority")
+		}
+	}
+	// The historical approval key remains the withdrawal/return authority.
+	// Missing wager authority must fail wager validation, never fall back to
+	// that other role. Deposit and historical non-wager proofs remain readable.
+	return Policy{Vault: c.Vault, BettingEscrow: c.BettingEscrow, ProtectedAddresses: []string{c.BettingEscrow}, MaxAmountUWolo: 50000000000, WithdrawalApprovalKey: key, WagerApprovalKey: wagerKey}, nil
 }
 
 // VerifyFinancialProof performs independent, offline Comet authentication and

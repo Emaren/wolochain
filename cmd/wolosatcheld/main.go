@@ -33,8 +33,8 @@ func main() {
 // run returns only fixed public diagnostic labels. Sensitive configuration,
 // source responses, filesystem paths and keyring errors are never printed.
 func run(ctx context.Context, args []string, out, errout io.Writer) int {
-	if len(args)>0 && (args[0]=="read-bank-proof" || args[0]=="verify-bank-proof") {
-		return bankProofCommand(ctx,args[0],args[1:],out,errout)
+	if len(args) > 0 && (args[0] == "read-bank-proof" || args[0] == "verify-bank-proof") {
+		return bankProofCommand(ctx, args[0], args[1:], out, errout)
 	}
 	if len(args) > 0 && args[0] == "verify-financial-proof" {
 		return verifyFinancialProofCommand(ctx, args[1:], out, errout)
@@ -87,7 +87,7 @@ func run(ctx context.Context, args []string, out, errout io.Writer) int {
 		return 2
 	}
 	wagerKey, err := hex.DecodeString(cfg.WagerApprovalKeyHex)
-	if err != nil || bytes.Equal(wagerKey,approvalKey) {
+	if err != nil || bytes.Equal(wagerKey, approvalKey) {
 		fmt.Fprintln(errout, "satchel: wager authority refused")
 		return 2
 	}
@@ -169,6 +169,9 @@ func (e *serviceEngine) ReconcileClaimReturn(ctx context.Context, a satchelservi
 
 func (e *serviceEngine) DepositProof(ctx context.Context, r satchelservice.DepositProofRequest) (satchelservice.FinancialProof, error) {
 	return e.Engine.DepositProof(ctx, r, e.trusted)
+}
+func (e *serviceEngine) BankProof(ctx context.Context) (satchel.BankProof, error) {
+	return e.Engine.BankProof(ctx, e.trusted)
 }
 func (e *serviceEngine) OperationProof(ctx context.Context, id string) (satchelservice.FinancialProof, error) {
 	return e.Engine.OperationProof(ctx, id, e.trusted)

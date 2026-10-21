@@ -139,6 +139,13 @@ func (s *ReviewerReadOnlyPGSource) readOwnerLedger(ctx context.Context) (reviewe
 	if _, err = tx.ExecContext(ctx, `SET LOCAL lock_timeout = '100ms'`); err != nil {
 		return reviewerOwnerLedger{}, ReviewerFinanceUnavailable
 	}
+	// Keep the checked table identities and RLS posture stable through the
+	// aggregate. ACCESS SHARE permits financial writers; only concurrent DDL
+	// waits. Without this, RLS/table replacement could hide liabilities after
+	// the role check and before the query, even in a repeatable-read snapshot.
+	if _, err = tx.ExecContext(ctx, `LOCK TABLE public.war_satchel_funded_balances, public.war_satchel_funded_journal, public.war_satchel_funded_receipts IN ACCESS SHARE MODE`); err != nil {
+		return reviewerOwnerLedger{}, ReviewerFinanceUnavailable
+	}
 	var login, role, readonly string
 	var privileged, writable bool
 	if tx.QueryRowContext(ctx, reviewerPGFinanceIdentityQuery).Scan(&login, &role, &readonly, &privileged, &writable) != nil ||
