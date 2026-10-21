@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "b660923da00d24d67258b820674d21cd21ec5d614b0caef24ead0d9dbc3faff3",
+      "sha256": "6393dea0d6b2823c18542bc3cc16cc7984acf7eb4a73dfb364fd1766f03dcc4f",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -540,9 +540,9 @@
       "owner": "wolochain-ops",
       "path": "docs/war-satchel-integration-readiness.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-10-17",
+      "reviewed_at": "2026-10-21",
       "sensitivity": "restricted",
-      "sha256": "b3d59f56e547161b0d99ac244be282934508301f0081a1554dba784d2ed4ac77",
+      "sha256": "9b54610222554481602d7e3deddec93b737e899ea44d0e365563043a19cbb8b9",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -946,8 +946,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "codex/satchel-authenticated-finance",
-    "commit": "c68b82d67c2dcaf1add27d73e4c82252de6d199b"
+    "branch": "codex/satchel-service-qualification",
+    "commit": "32f0d73d4509db074b5baf095c2338cb27c35132"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
