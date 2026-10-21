@@ -69,6 +69,19 @@ class ObligationEnvelopeTests(unittest.TestCase):
         a[1]["roles"][1]["configured_node_bank_uwolo"] = "825469500001"
         self.rejected("BANK_SHARED_IDENTITY_CONFLICT")
 
+    def test_duplicate_payout_identity_between_lanes_is_not_permitted(self):
+        lanes = self.bank["bank_role_observations"]
+        other = lanes[1]["roles"][0]
+        first = lanes[0]["roles"][0]
+        other["account_fingerprint_sha256"] = first["account_fingerprint_sha256"]
+        other["health_reported_uwolo"] = first["health_reported_uwolo"]
+        other["configured_node_bank_uwolo"] = first["configured_node_bank_uwolo"]
+        self.rejected("BANK_UNEXPECTED_SHARED_PAYOUT_IDENTITY")
+
+    def test_missing_escrow_in_one_lane_cannot_claim_both_covered(self):
+        self.bank["bank_role_observations"][1]["roles"].pop()
+        self.rejected("BANK_ROLE_COVERAGE_INVALID")
+
     def test_consensus_claim_cannot_create_authentication(self):
         self.bank["consensus_authenticated"] = True
         self.rejected("UNSUPPORTED_AUTHORITY_ASSERTION")
