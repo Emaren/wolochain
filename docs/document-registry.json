@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "a970c8f2be306154c89a080121ea558cd2c304c9192eec4d2fd6c082c67bd302",
+      "sha256": "b1c47067f913d3a2c13bc1087c0ad28e9b1b826f40b057034024d77eee535a7a",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -519,7 +519,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-20",
       "sensitivity": "restricted",
-      "sha256": "b4d4daa11a749daa7597533f0c757f12aa8d01e98f1fbe47f9315d480de8e16c",
+      "sha256": "35b44d8bbe1df3a089e5bad8bfe5aca710454da160503aab797d4af9caf7e3ab",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -947,7 +947,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "codex/satchel-authenticated-finance",
-    "commit": "459539bf21bbd8d93a2d18cad3e87ba4f96a0543"
+    "commit": "07083be18c3e48ce337ffa2b771abd2904daeddd"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
