@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `ops/20261021-bearer-holder-recovery-held` at `bedfae8948a95849d4ba1113cf549b755f4190d1`
+Implementation baseline: `fix/wolo-hd-financial-obligation-envelope-20261021` at `68b546408c40957072ccb4fc56eaef884ed8a1fd`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
