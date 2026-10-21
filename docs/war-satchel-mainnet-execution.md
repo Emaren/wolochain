@@ -8,7 +8,7 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "restricted-satchel-execution-and-provisioning-contract"
-reviewed_at: "2026-10-17"
+reviewed_at: "2026-10-18"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -27,6 +27,12 @@ implementation baseline. Existing consensus code, 8092/8093 financial roles and
 historical liabilities remain separate from the dedicated Satchel execution
 process. App/API source is owned by its separate release; this PR changes neither.
 
+The exact private wire schemas and safe failure semantics are versioned in
+[OpenAPI 1.0.0](settlement-contracts/war-satchel-http-v1.openapi.json).
+Source ABI tests fail on route or Go JSON-field drift. The
+[controlled installation and recovery procedure](war-satchel-controlled-release.md)
+keeps the dedicated signer separate from legacy services and consensus.
+
 ## HD interface and custody boundary
 
 [HD PR #638](https://github.com/Emaren/app-prodn/pull/638), inspected at
@@ -40,8 +46,9 @@ permission to change the destination.
 
 The authoritative Go transport is **`127.0.0.1:8094` with Bearer
 authentication**. `warSatchelDedicatedSignerClient.ts` targets this protocol.
-The Go service accepts the complete snake-case wager object or its existing
-protocol-1 camel-case compatibility form and refuses mixed/unknown fields.
+The Go service requires the protocol-2 signed owner reservation for a new wager.
+Its existing snake-case and protocol-1 camel-case forms support exact historical
+replay; they cannot initiate a new bearer-only wager. Mixed/unknown fields fail.
 HD's competing `warSatchelIsolatedSignerClient.ts` targets `127.0.0.1:8194`,
 `/v1/*` and HMAC envelopes; that client is not this Go protocol and cannot be
 enabled against it. HD must select the 8094 adapter in its separate release.
@@ -49,7 +56,9 @@ enabled against it. HD must select the 8094 adapter in its separate release.
 | Private endpoint | Contract |
 | --- | --- |
 | `GET /satchel/v1/health` | Authenticated loopback health, including the exact configured vault, custody role and service identity expected by the selected HD adapter. Health is a process assertion, not independent custody proof. |
-| `POST /satchel/v1/one-shot` | Snake-case `request_id`, `chain_id`, `signer_role`, `from_address`, `to_address`, `amount:{denom,amount}`, `memo`; or protocol-1 camel-case `requestId`, `chainId`, `senderAddress`, `recipientAddress`, `denom`, `amountUwolo`, `memo`. |
+| `POST /satchel/v2/one-shot` | Protocol 2 snake-case wager with required independently signed owner ledger reservation; exact schema is in the versioned OpenAPI contract. |
+| `POST /satchel/v1/one-shot` | Legacy replay compatibility; a new bearer-only wager is refused. Snake-case `request_id`, `chain_id`, `signer_role`, `from_address`, `to_address`, `amount:{denom,amount}`, `memo`; or protocol-1 camel-case `requestId`, `chainId`, `senderAddress`, `recipientAddress`, `denom`, `amountUwolo`, `memo`. |
+| `GET /satchel/v1/custody/journal` | Bounded consistent execution-history checkpoint, exact journal/policy digests and unresolved/confirmed totals; bank, credit and solvency authority always false. |
 | `GET /satchel/v1/operations/<operation-id>` | Read an existing durable operation; never signs or resubmits. |
 | `POST /satchel/v1/reconcile` | Strict `operation_id`; observes the original signed transaction without transmitting it. |
 | `POST /v1/satchel/withdrawals` | Owner-bound withdrawal plus independent approval; a service token alone is insufficient. |
@@ -69,6 +78,35 @@ ticket commit independently verifies the exact funding transaction before a
 wager can become accepted. Timeout, malformed acknowledgment, process failure or
 uncertain broadcast returns UNKNOWN/HOLD; no caller may interpret HTTP 200 alone
 as payment or nonpayment.
+
+## App contract for new owner-reserved wagers
+
+`POST /satchel/v2/one-shot` requires `protocol:2`, `request_id`,
+`chain_id:"wolo-1"`, `signer_role:"exclusive-war-satchel-v1"`, `from_address`,
+`to_address`, `amount:{denom:"uwolo",amount:<canonical positive units>}`,
+`memo`, `owner_id` and `reservation`. See the exact machine-readable
+[request schema](settlement-contracts/war-satchel-http-v1.openapi.json).
+The app must atomically create and retain its real owner reservation before
+requesting independent review; a service token does not prove an owner balance.
+
+The reservation is version 1 and binds operation, owner, vault, escrow, amount,
+memo, `reservation_digest`, `ledger_revision`, `consent_digest`, `fee_uwolo`,
+issue and expiry times. All three digests are lowercase SHA-256 and the time
+window is at most 300 seconds. The independent approver signs the exact bytes
+returned by `satchelservice.WagerReservationMessage` with its configured
+Ed25519 review key. It must independently validate the app's durable hold,
+owner mandate/caps/revocation, still-open market and operating-fee headroom;
+there is no approval/key generator or generic signing endpoint here. This
+boundary does not invent a second customer ledger or certify a bank balance.
+The separate activation authority cannot substitute for this ledger reviewer.
+
+A new v1 request without this authority is refused. Historical exact v1 replay
+can still read its existing durable result without broadcasting. Protocol 2
+returns actual `ACCEPTED`/`UNKNOWN`/`CONFIRMED` state instead of the historical
+`broadcast_confirmed` acknowledgment label. Only authenticated reconciliation
+of the original signed bytes proves committed successful execution. Changed
+owner, ledger hold, consent, amount, destination or fee under the same durable
+identity must never produce another transfer.
 
 ## Persistent one-shot execution and recovery
 
@@ -92,6 +130,29 @@ bytes. Accepted, confirmed, failed and UNKNOWN remain distinct. An administrativ
 decision or a token-authenticated caller cannot invent a successful transfer.
 Backups and rollback preserve the latest journal generation, including all
 pending liabilities, request fences and signed bytes.
+
+## Custody reconciliation checkpoint
+
+`GET /satchel/v1/custody/journal` returns one consistent local bbolt snapshot
+without signing, broadcasting, network I/O, journal writes or release of holds.
+The versioned schema defines every field: exact framed `journal_digest`,
+`policy_digest`, bounded scan counts/bytes, six operation status counts,
+unresolved operation count, held outbound amount, confirmed outbound amount,
+and durably reconciled return receipt count/amount. UNKNOWN, ACCEPTED and
+OBSERVED_NONCREDITING principal remain held; zero unresolved operations do not
+prove zero external liabilities or permission to spend the vault balance.
+
+The digest binds actual bucket/key/value boundaries and bytes, including
+historical authority/reservation indexes; the scan refuses more than 8 MiB,
+100,000 framed records or depth 64, arithmetic overflow and inconsistent
+receipt/effect history. It is a checkpoint of execution history, not a public
+balance API or customer ledger. Always expect
+`bank_balance_authenticated:false`, `credit_authorized:false`,
+`solvency_authorized:false`, `custody_capability:"UNAVAILABLE"`. No netting of
+reported totals proves fees, complete deposits, app liabilities or bank reserves.
+A real reserve attestation still needs independently authenticated exact-height
+bank evidence and the app's quiesced complete liability/reservation snapshot.
+Neither a digest nor a reviewer's signature can invent those financial facts.
 
 ## Consensus authentication requires an independent checkpoint
 

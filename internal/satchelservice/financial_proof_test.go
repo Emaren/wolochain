@@ -116,7 +116,12 @@ func TestFinancialProofRefusesOwnerlessWagerAndUnreconciledReturn(t *testing.T) 
 	if _, _, err := e.operationProofRecord(r.OperationID); err == nil || err.Error() != "operation_owner_binding_unavailable" {
 		t.Fatal("ownerless legacy wager adopted an owner")
 	}
-	a := testReturnApproval(t, r.OperationID, "101")
+	ownerless := testReturnApproval(t, r.OperationID, "101")
+	if _, err := e.PrepareReturnRun(t.Context(), ownerless); err == nil {
+		t.Fatal("ownerless historical wager acquired a return owner")
+	}
+	e, _, p, _, r = testOwnedReturnEngine(t)
+	a := testOwnedReturnApproval(t, r.OperationID, "101")
 	if _, err := e.PrepareReturnRun(t.Context(), a); err != nil {
 		t.Fatal(err)
 	}
@@ -219,6 +224,7 @@ func TestFinancialProofSupportsExistingHDDotOwnerUIDContract(t *testing.T) {
 	e, _, _ := engineTestOpen(t, b)
 	wager := engineTestWager(t, "1")
 	wager.OwnerID = r.OwnerID
+	wager.Reservation = testWagerReservation(t, wager, engineTestPolicy(t), e.now())
 	if _, err := e.Submit(t.Context(), wager); err != nil {
 		t.Fatalf("HD owner field refused by wager contract: %v", err)
 	}

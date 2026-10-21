@@ -8,12 +8,129 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "source-integration-proof-not-production-approval"
-reviewed_at: "2026-10-17"
+reviewed_at: "2026-10-20"
 review_interval_days: 14
 sensitivity: "restricted"
 ---
 
 # Authenticated War Satchel Financial Bridge
+
+## October 20: original LIVE source and authenticated bank state
+
+The current held app candidate is [PR #729](https://github.com/Emaren/app-prodn/pull/729)
+at `57f3451a12d30b68d56e1abcc7bd99f7a5aaa9a2`; the older #684 is not its
+merge path. This source builds on Wolo #39 at
+`ad886c91b5469f0290886fc0aca77e7344285054`. Nothing here changes app's
+literal `SATCHEL_FINANCIAL_BRIDGE_READY=false`, production or the six-control
+checklist on the separately held financial-evidence branch.
+
+`satchel.TrustedReader.ReadBankProof(ctx,vault,H)` now reads the exact SDK
+bank key for the separately configured account and `uwolo`. Native SDK
+collections codecs and the SDK ICS23 IAVL/multistore verifier authenticate
+the value (or absence), against **header H+1 AppHash**, not H. The existing
+Comet light client authenticates that header and both observed heads from an
+independently provisioned checkpoint. Status time/hash must equal the actual
+verified commits. The bounded portable `BankProof` transcript is untrusted;
+`ProofVerifier.VerifyBankProof` repeats authentication offline. The separate
+`wolosatcheld read-bank-proof` and `verify-bank-proof` commands reuse the
+existing operator-owned public financial authority file and exact `--height`;
+they return before service startup and open no keyring, journal or listener.
+The latter's `AUTHENTICATED_BANK_NONAUTHORIZING` result explicitly denies
+credit, spending and solvency authority. Only these
+verifiers mint opaque `AuthenticatedBankEvidence`; JSON cannot mint one.
+Proof/key/root/height/denom substitution, forged heads, stale trust, cancellation
+and oversized transcripts refuse. Authenticating assets grants no credit or
+spending authority and does not establish a complete liability inventory.
+
+`ReviewerFinanceSource.ObserveFinance` combines that proof with a real
+repeatable-read, READ ONLY PostgreSQL observation under the pinned dedicated
+reviewer login. It sums **all four** funded buckets, including committed and
+withdrawal-pending principal, and reconciles journal deltas **per owner** before
+aggregation. Offsetting owner corruption, orphan journals, wrong-vault receipts,
+overflow, privileged/writable/impersonated logins, column-write grants, RLS,
+views and missing tables refuse. SQL execution/lock timeouts and a post-I/O
+freshness check bound the read. The observations are not an atomic chain/DB
+snapshot. Known HD owner totals are not global liabilities or free gas.
+
+**The finance method remains HELD with typed
+`reviewer_finance_global_coverage_unknown`.** No available evidence bounds all
+HD manual/founder, DE/external, staking/treasury encumbrances and all signers'
+pending/uncertain/unmaterialized transfers and fees, or resolves their overlaps.
+There is no `complete=true`, environment switch, invented upper bound or signed
+self-certification path. The new observation is useful input to that missing
+reconciliation, not a replacement certificate. `AuthenticatedFeeCensus` cannot
+sign a wager until that independent global coverage actually exists.
+
+`ReviewerOriginalLiveSource` joins the existing SELECT-only HD original hold
+and market reader to a separately governed Replay API source. Its pinned
+HTTPS CA + SPKI and private Bearer transport reads
+`POST /satchel-source/v1/live` with only `{owner_uid,linked_session}` and
+`GET /satchel-source/v1/checkpoints/<sha256>`. These are **private source
+adapter routes**, not 8094 custody or public application routes. Metadata is
+limited to 32 KiB, checkpoint bytes to 64 MiB, requests to two seconds/four
+inflight calls; redirects and compressed responses refuse. The Go adapter
+recomputes exact Steam roster/team/proposition hashes and self-side, binds the
+original session/parse iteration, and verifies original byte size/SHA and age.
+It reuses the existing issuer's double original reread/rehash and v2 Ed25519
+witness, with at most 30 seconds signed lifetime. A durable owner+canonical-game
+index and a separately domain-bound owner+original-checkpoint index share the
+PENDING commit, preventing another operation ID from obtaining a second witness
+for that owner/game or copied original bytes under another game/session alias
+after a race or restart. Old unknown
+PENDING state stays HELD; only authentic old signed evidence can rebuild an
+index. Recovery scans are bounded to 8 MiB and 16 KiB per entry.
+
+The real Watcher uploads a **growing, signed, nonfinal `.aoe2record`** during
+play. A final recording is never pre-bet authority. The API companion must
+freeze the earliest actual upload and reject late/unknown body clocks,
+postgame evidence and missing original timestamps. Generic undated sources
+remain unavailable; upload time or parser temporary-file mtime cannot invent
+game start. A second endpoint under the same operator is not independent
+governance. Production needs separate source service/DB/archive/clock/TLS and
+event-key control, a dedicated SELECT-only HD role, a provisioned Comet root
+and independent witness, and authenticated complete finances. None is
+provisioned or certified by a source test.
+
+The reviewer also preserves **distinct execution and ticket identities**:
+`satchel:ticket:<executionId>` does not imply the same `ticketId` in the memo.
+The original SQL snapshot authenticates the exact canonical ticket memo; the
+signed reservation and durable fingerprint retain it unchanged. A regression
+first failed on execution 7 / ticket 891 before this correction. Altered memo
+and invalid/nil-context requests still refuse.
+
+The continuous native SDK lifecycle tests exercise real signed 100-WOLO
+deposit, 12-WOLO funding, full unmatched return or separately funded matched
+return, and withdrawal, with actual fees, balance conservation, per-step bank
+state proofs and H+1 execution proofs. This is a chain fixture. It is **not**
+one integrated PostgreSQL/Watcher/reviewer/signer product acceptance receipt.
+The fixture's synthetic validator and account keys confer no mainnet authority.
+
+The additional twelve-ticket SDK scenario uses serial 25-WOLO stakes under
+the existing V1 caps: eight full unmatched refunds, two owner wins and two
+owner losses against separately funded counterparties. Existing whole-WOLO
+settlement rounding yields 49-WOLO winning returns and four WOLO matched fees;
+the owner withdraws 98 WOLO. Thirty successful single sends, thirty rejected
+byte replays, exact gas and 151 committed fixture blocks conserve all assets.
+A bounded test-only recipe lets actual PostgreSQL-assigned ticket/claim IDs and
+withdrawal UUIDs determine memos; a two-phase rebuild verifies the original
+transaction/header/bank-proof prefix is unchanged. This remains a chain
+fixture until the separate app lifecycle runner supplies its actual DB receipt.
+
+The reproducible custody artifact profile now targets exact implementation
+`8c509e8f62ca3ec60711dc2654a03b12f22b0773`, compiled with pinned Go 1.24.6.
+The builder's later Git revision and the embedded implementation revision are
+distinct. Historical `99f32de6`/`d431` artifacts remain historical; never relabel
+them or substitute them for the new independent archive/manifest/binary receipt.
+Source CI and a new artifact still do not certify production custody.
+
+Before a mainnet canary, retain the existing protected procedure in
+[controlled release](war-satchel-controlled-release.md): independently resolve
+issue #5's six controls, preserve claim #889/accepted 100 WOLO/aggregate-only
+1,323,000 WOLO uncertainty, provision isolated authorities, rehearse the exact
+app candidate and paired settlement recovery, then obtain separately scoped
+installation, cutover and tiny-transfer approval. No checkout advance,
+8092/8093 operation, consensus restart, journal reset or financial retry is
+authorized here. Earlier dated milestones below remain historical evidence.
 
 This source contract composes PR #28's durable dedicated signer with the C3
 CometBFT reader. It introduces portable evidence and an independent offline
@@ -21,6 +138,46 @@ verification command. Every exported and verified receipt remains
 `credit_authorized: false`. The HD financial activation hold remains required;
 C2 custody remains **UNAVAILABLE**. Source CI does not certify a vault, key,
 balance, liability reconciliation, endpoint operator or protected release.
+
+The exact private wire schemas and safe failure semantics are versioned in
+[OpenAPI 1.0.0](settlement-contracts/war-satchel-http-v1.openapi.json).
+Source ABI tests fail on route or Go JSON-field drift. The
+[controlled installation and recovery procedure](war-satchel-controlled-release.md)
+keeps the dedicated signer separate from legacy services and consensus.
+
+## October 21: current-state bank transport and release-bound mandates
+
+The private authenticated read-only `POST /satchel/v1/proofs/bank` accepts only
+`{"protocol":1}`. The server selects its immutable vault and state H at the
+observed primary head minus one. The complete SDK/Comet proof must authenticate
+that same head at H+1; both authenticated primary and witness heads must equal
+that commit in height, hash and time. A newer signed witness or a head advance
+during collection refuses. Historical library bank proofs remain nonauthorizing. This remains a
+bounded observation, not an atomic chain/database snapshot or a guarantee that
+a source has disclosed a newer head within the permitted freshness window.
+The offline command adds authenticated head identity/time and the original
+minimum expiration across both heads, the state commit and the trust root.
+The app must verify the transcript through the exact pinned binary, retain
+opaque immutable evidence and recheck that expiration after database locks.
+REST JSON and structural object copies cannot mint bank authority.
+
+Funded wager proof verification uses the explicit public
+`wager_approval_public_key_hex`, separately from the withdrawal/return
+`approval_public_key_hex`. An absent wager key, wrong-role signature or key
+collision refuses; there is no fallback to a withdrawal key. Actual committed
+SDK wager proofs test both the Go verifier and the offline executable, including
+signed fee, owner, amount, memo and trust-root substitution.
+
+Original ADR-36 Mecha challenges bind protocol
+`aoe2war/satchel/mecha-auto-spend/v2` and source epoch
+`aoe2war/satchel/mecha/v2/held-integration-1`. Pure signature verification grants
+no spending authority; the financial PostgreSQL reviewer refuses this HELD
+epoch before database I/O. Activation requires reviewed matching source epoch
+rotation in both repositories and fresh owner signatures. Historical, absent
+and future epochs have no compatibility fallback. The companion app keeps
+owner-authenticated revocation available while new issuance is disabled.
+No production migration, signer activation, custody certification or financial
+release authorization follows from these changes.
 
 ## Authority and transport
 
@@ -45,6 +202,12 @@ concurrency limits apply. Proof collection additionally retains C3's bounded
 responses and Comet provider budgets. The response cap is
 `MaxFinancialProofBytes = MaxPortableProofBytes + 64 KiB`; the portable proof
 limit is 14 MiB plus 128 KiB framing, at most 80 bounded transcript responses.
+
+The additional `GET /satchel/v1/custody/journal` route exports a bounded,
+consistent local execution-history checkpoint for reconciliation. It does not
+export the app ledger or authenticate a bank balance. Its bank, credit and
+solvency authorization flags are always false and custody remains UNAVAILABLE;
+see the [operator contract](war-satchel-mainnet-execution.md).
 
 ## Read-only proof requests
 
@@ -252,3 +415,397 @@ its financial proof through the actual offline CLI with actual-clock freshness,
 checks identical read-only receipt identity on repeat verification, and rejects
 wrong expected hash/owner, wrong checkpoint and fabricated REST-only evidence.
 It creates only temporary isolated test files and never contacts production.
+
+## Automatic reviewer economics source contract (October 19, 2026)
+
+The first automatic-reviewer source milestone is `internal/satchelservice/reviewer_fee_budget.go`, with adversarial tests in `reviewer_fee_budget_test.go`. This is a deliberately **pure, NONAUTHORIZING prerequisite**, corresponding to the app-side held `warSatchelFeeHeadroom.ts`. It binds a proposed ticket operation and its exact signed-protocol fee to bounded integer arithmetic: all owner liability principal + the possible gas of every prepared/uncertain operation + the prospective wager gas + an unencumbered operating-gas cushion must fit inside the observed bank amount.
+
+The arithmetic refuses wrong chain/denomination/operation, mismatched fee, duplicate or invalid pending operation IDs, bad/capped/overflowing integers and oversized pending lists. UNKNOWN stays gas-reserved. A declared incomplete census returns `CENSUS_INCOMPLETE`; apparently sufficient sums return only `BUDGET_SUFFICIENT_NONAUTHORIZING`, with `SpendingAuthorized=false`, `BankAuthenticated=false` and `OwnerLedgerAuthenticated=false` **always**. A caller saying `PendingOperationsComplete=true` does not authenticate its inventory or guarantee completeness. Neither the result nor the supplied bank number can authorize a reviewer signature.
+
+**Remaining functional work:** independently authenticated owner mandate, immutable HD reservation, canonical Watcher market/identity, custody bank and all HD/DE/external financial liabilities; completeness proof for competing signer operations; independently controlled Ed25519 approval service with durable idempotent issuance and atomic ingestion; and isolated end-to-end reviewer→8094→escrow→return/withdraw tests. The pure arithmetic has no signer key, RPC, database, transport, side effects or live activation. All mainnet financial and protected release controls remain held. See WoloChain issue #46 for the complete reviewer integration gate and issue #5 for legacy financial-release HOLD.
+
+## Independent 8095 reviewer issuer core — source milestone, NOT production authority
+
+`internal/satchelservice/reviewer_issuer.go` and `reviewer_http.go`
+implement the separately controlled reviewer's **internal approval engine**
+and fixed-loopback HTTP contract. It accepts only an authenticated
+`POST /reviewer/v1/wagers` containing `{"protocol":1,"operation_id":"satchel:ticket:…"}`,
+never a client-provided hold, bank balance, key, destination, fee, approval
+or proposed stake. The original exact owner-bound financial reservation
+must come from the independent `ReviewerEvidenceSource.OriginalHold` adapter.
+Separate `VerifyOwnerMandate`, `VerifyWatcherMarket` and
+`AuthenticatedFeeCensus` adapters must establish all upstream evidence
+independently. The gas assessment binds the original wager's exact fee and
+operation to all owner liabilities and pending/uncertain operations. The
+reviewer signs only `WagerReservationMessage` with a distinct Ed25519
+review key, never the Satchel Cosmos custody key. On the wire, this exactly
+matches the app's PR #708 signed-approval pickup: PENDING or SIGNED with
+an owner-bound, 60-second signed reservation.
+
+A separate private bbolt journal durably fences the original
+operation-and-economics fingerprint **before signing**. It never signs again
+after a crash on PENDING, never renews expired approvals, and never reveals
+a cached grant if the independent source ceases to verify or its economics
+change. Crash/uncertainty needs separate witnessed reconciliation, not a
+retry. The bounded loopback transport authenticates a private bearer and
+refuses duplicate JSON keys, unexpected fields, nonloopback callers,
+oversize bodies and arbitrary destinations. The app and the reviewer
+must run under distinct private OS identities with separately protected keys.
+
+**NOT YET IMPLEMENTED / RELEASED:** There is deliberately **no**
+production-wired `ReviewerEvidenceSource` adapter, independent read-only HD
+database principal, authentic Comet bank/liabilities trust reader,
+complete external-producer census, operator-managed Ed25519 key deployment,
+independently attested daemon configuration/startup, activation permit
+or production systemd service for 8095. Tests inject synthetic adapters;
+they are not proof of operational source independence. The library is
+not wired into `cmd/wolosatcheld` or any chain/consensus service, and cannot
+start an authorization listener by itself. Only separately reviewed
+authentic evidence adapters and release authority may make it live.
+
+This source does not change the protected Wolo financial HOLD (#5), founder
+claim #889, 8092/8093 settlement, Satchel 8094 custody,
+`SATCHEL_FINANCIAL_BRIDGE_READY=false`, operator approvals or real funds.
+
+## Independently verified Keplr ADR-36 consent (October 19, 2026)
+
+The held 8095 reviewer now has a **real Go secp256k1 owner-mandate
+verification primitive** in `internal/satchelservice/reviewer_owner_mandate.go`
+with source tests. It rebuilds the exact HD/CosmJS challenge text from
+the original persisted owner UID, wallet, preset/version, per-game stake,
+daily and per-game ceilings, finite-games/until-out allowance, nonce,
+and issue/expiry dates. It reconstructs CosmJS's canonical
+`makeSignDoc`/`serializeSignDoc` for `sign/MsgSignData`, verifies the
+original 64-byte Keplr ADR-36 signature against the compressed
+secp256k1 public key and its derived `wolo` address, and binds the
+record to *current* owner and preset state. Revocation, expiry, late
+signing, a changed wallet/stake/nonce, increasing finite allowance, an
+unbounded cap or forged challenge all refuse verification.
+
+A `signedAt` field, a correct hash, or a service bearer is NOT a
+signature. The method always returns only an error/non-error predicate
+and cannot itself authorize an approval or WOLO transfer. It must be fed
+original read-only SQL records by the separately governed 8095 evidence
+adapter, and the app's immutable reservation/ledger/consent digests
+still need exact cross-language recomputation and comparison. Live
+database credentials, independent read-only PostgreSQL role, cryptographic
+Comet bank/liability/fee census, multi-producer source closure and
+protected 8095 service activation do **not** yet exist. The six issue #5
+financial controls, unknown chain transactions and founder claim #889
+remain held. No production custody keys or transactions are touched.
+
+## HD financial-origin digest agreement — independently implemented (October 19)
+
+The reviewer source now contains
+`internal/satchelservice/reviewer_hd_snapshot.go`. It independently
+reconstructs the exact TypeScript
+`buildSatchelWagerAuthorization` triplet:
+`consentDigest`, `ledgerRevision`, and `reservationDigest`, using
+bounded, recursive sorted-key JSON and SHA256. The Go tests contain an
+independently generated **CosmJS/TypeScript golden vector** for an original
+HD wager, rather than comparing two implementations with the same
+unknown defect. A source record is rejected for a mismatched DB column
+identity/digest, changed owner, vault, escrow, amount, memo, game,
+proposition, ticket leg, original owner signature field, extra/duplicate
+JSON keys, noninteger economics or unsafe excessive amounts.
+
+This adds *original-source integrity verification*, not evidence that
+the HD database writer was independently controlled, that a valid
+wallet owner signed it, or that any chain transfer was finalized.
+The independent Keplr ADR-36 verifier is a distinct component from
+reviewer source PR #49, and the signer's Ed25519 reservation key
+remains separate from the player's Cosmos wallet. **Next:** a
+read-only, independently governed PostgreSQL adapter must fetch the
+original DB columns and verify these hashes AND run the Keplr
+signature checker; a separate authenticated Watcher/market adapter,
+Comet light-client bank proof, and complete global financial
+producer/liability/fee census must approve within a coordinated
+atomic reviewer issue step. These verified-source capabilities have
+not been activated or deployed. 8092/8093, 8094, 8095 and all
+financial HOLDs remain unchanged.
+
+## Independent SELECT-only HD PostgreSQL original-wager reader (source, HELD)
+
+`internal/satchelservice/reviewer_pg_origin.go` is the first
+**real SQL source adapter** for the separate 8095 reviewer. It opens
+a repeatable-read READ ONLY PostgreSQL transaction as a required
+`satchel_reviewer_*` account, pins all source tables to the literal `public` schema, checks `current_user`,
+`transaction_read_only=on`, nonprivileged role flags, and **absence
+of financial table INSERT/UPDATE/DELETE privileges**. It executes
+only a fixed parameterized original operation query; the remote
+caller supplies no SQL, amount, bank claim, key or wallet identity.
+
+The original wager row is joined, at the same SQL snapshot, against
+the existing funded reservation, Watcher execution, player preset,
+original owner/wallet, provisional stake ticket and owner reserved
+balance. The result must agree with the independently recomputed
+three hashes of the immutable HD authorization, and with canonical
+ticket, amount, memo, game identity, proposition, profile/version,
+and vault/escrow. Any altered owner, market, state, already-broadcast
+ticket, insufficient original reserved amount, expired four-minute
+game or unattempted-holder mismatch refuses. Every source read is
+bounded and never writes application or chain state.
+
+**Still financially incomplete:** the adapter now implements
+`OriginalHold` **and** `VerifyOwnerMandate` with a separate
+repeatable-read, SELECT-only PostgreSQL query. It re-reads the
+original consent row, original mandate signature bytes and current
+enabled owner preset; matches the persisted challenge and signature
+JSON against the original cryptographically hashed source; and
+independently reconstructs and verifies the real Keplr ADR-36
+secp256k1 signature. A changed wallet, disabled or revoked mandate,
+increased future game allowance, altered stake/preset, missing or
+wrong public key, expired signature, or changed original digest
+returns `ErrReviewerHeld`.
+
+**HARD HOLD remains:** `VerifyWatcherMarket` and
+`AuthenticatedFeeCensus` still always refuse. Signed Watcher/Steam
+source attribution, Comet-authenticated bank, complete global
+liability/pending-gas producer census, provenance, reviewer
+private-key provisioning, live credentials and protected
+transaction-wide financial coordination are not established. No
+8095 service, PostgreSQL role, database changes, wallet signer,
+consensus operation or WOLO movement was activated. The reviewer
+**cannot issue any approval** until those remaining checks are
+independently implemented, wired and certified.
+
+## Watcher market source boundary — actual shadow producer, still NOT independent approval
+
+`internal/satchelservice/reviewer_watcher_market.go` implements a
+bounded READ-ONLY diagnostic query for the original live Watcher market.
+The source is the **actual** 17-field shadow producer from app
+`lib/betAutomationShadowWorker.ts`, not a fabricated 7-field test
+fixture. It cross-checks winner market ID, original HD game and
+proposition identities, exact user Steam ID, verified roster-match flags,
+team resolution/high confidence, parse iteration, original source
+roster hash, canonical and linked session identities, and roster-lock
+timestamp against the current market row and original immutable stake
+leg. It refuses scheduled, settled, refunded, voided, late/final-stat,
+cutoff-passed, future, reordered, and older-than-four-minutes games.
+A strict 17-key JSON evidence record also rejects data injected
+outside the canonical shadow-source schema.
+
+**Authority distinction:** a web application's `integrity_status`
+database column, even if `verified`, is NOT an independently
+authenticated Watcher or Steam event. The source exports only
+`InspectWatcherMarket` as an observation method; its actual
+`VerifyWatcherMarket` spending-approval method continues to
+return `ErrReviewerHeld` without exception. The separate Watcher
+provenance signature, independent raw replay/archive reader,
+attested game/roster/source origin and trustworthy issuer-key boundary
+remain to be wired before approving customer WOLO. The
+`AuthenticatedFeeCensus` bank/liability/gas evidence method is
+also still hard held. No 8095 listener, DB credential, treasury,
+signer, wallet, consensus, balances or production setting changed.
+
+## Independently signed Watcher replay witness — crypto contract only, HARD HOLD
+
+`internal/satchelservice/reviewer_watcher_witness.go` defines the
+first **Ed25519-authenticated Watcher observation receipt**. It signs
+a fixed, domain-separated ordered message bound to `wolo-1` and the
+original operation ID, exact owner UID/Steam ID, game identity,
+winner market and selected side, proposition, linked session,
+parse iteration, exact source roster hash and roster-lock time,
+execution created time, an independently computed SHA256 of the
+**raw replay**, and a maximum 60-second issuer interval.
+
+The strict verifier takes a separately provisioned witness public
+key, the unchanged `ReviewerWatcherCandidate` read from the
+restricted PostgreSQL role, and a digest provided by a genuinely
+**independent, source-pinned raw replay reader**. A signed response
+cannot substitute the owner, market, game, roster, source parsing,
+original source digest or timestamp without rejection. Synthetic
+test signing keys and forged receipts prove validation semantics
+but are not production Watcher trust roots.
+
+**This is NOT yet real event authentication.** No independently
+governed Watcher witness signing daemon, root-trusted raw replay
+reader, user/Steam roster verification, approved signing key,
+raw replay provenance ledger or external digest source has been
+installed or attested. A caller who copies a digest from the
+app database or a self-reported HTTP body cannot satisfy the
+required trust boundary, regardless of whether the hash matches.
+Therefore `ReviewerReadOnlyPGSource.VerifyWatcherMarket` remains
+unconditionally `ErrReviewerHeld`; this uncalled primitive
+**does not issue approvals or activate the watcher**. Global
+`AuthenticatedFeeCensus` and authenticated CometBFT bank/gas
+liability checks also remain hard-held. No 8095 / 8094 service,
+systemd unit, app release, Wolo node, private production key,
+balance, consensus or transaction was touched.
+
+## Separate Wager and Withdrawal approval roots — source-only preproduction correction
+
+The 8094 signer previously used `WithdrawalApprovalKey` to verify both
+owner-withdrawal approvals and autonomous wager reviews. The two messages
+were domain-separated, but relying on the same Ed25519 key unnecessarily
+joined two financially distinct responsibilities.
+
+**The held signer now requires three different keys, not one:**
+`activation_authority_key_hex` (operator release permit),
+`withdrawal_approval_key_hex` (one-use owner-withdrawal approval), and
+**`wager_approval_key_hex`** (automatic wager reviewer grant).
+Config loading rejects absent, malformed, or equal keys across all
+three roles. Wager signatures are verified **only** with the wager
+public key; withdrawal approval signatures **only** with the
+withdrawal public key. The 8095 reviewer refuses to open unless
+the private approval key it holds derives the pinned wager key and
+that key differs from the withdrawal approval key. The 8094
+runtime policy copies both keys and refuses a role collision.
+Synthetic regression tests prove each role cannot substitute
+for the other; a missing wager key cannot fall back to withdrawals.
+The historical **withdrawal, claim-return and allocation** signing fixture
+remains bit-identical, while the isolated wager-only Ed25519 golden fixture
+was independently regenerated from its unchanged exact sign bytes.
+
+**Operational consequence:** this changes the protected signer
+configuration contract and requires independently provisioned,
+distinct production roles and a new source/config-bound permit.
+There is no existing 8094 production signer to hot-swap, and
+none is installed here. Do **not** copy or repurpose an existing
+withdrawal key as the automatic wager key. A source-green PR
+does not authorize Wolo deposits, game wagering, withdrawals,
+recovery or treasury actions. 8095 bank/Watcher trust and the
+six financial-release controls remain HOLD. No keys were generated
+on a production machine or placed into GitHub.
+
+## Final reviewer evidence-revalidation fence (October 19)
+
+The held 8095 `ReviewerIssuer.ReviewOne` now **revalidates the original
+financial hold, signed owner mandate, live Watcher market, and complete
+fee/bank census after the initial evidence sequence**, immediately before
+writing its durable PENDING intent and performing any Ed25519 approval
+signature. It demands the same original immutable operation fingerprint,
+zero provisional issuer timestamps, exact signer vault and escrow, and
+a second independently verified `BUDGET_SUFFICIENT_NONAUTHORIZING`
+arithmetic result. A changed source during the first fee-census read
+refuses rather than signing a stale earlier observation. An already
+SIGNED grant is still returned only under fresh source verification
+and the existing immutable same-signature + expiration fence.
+
+Adversarial tests force owner revocation, market closure, a changed
+reservation digest, rebinding of owner UID, bank-gas headroom loss,
+and incomplete producer inventory **between** the initial and final
+evidence reads. Each case refuses without even writing a new durable
+signing intent. On a stable source, the tests require two independent
+source reads and fee-census passes and prohibit reissuance after a
+revocation.
+
+**This is necessary but not sufficient for real spending safety.**
+Repeated reads are not a single cross-system atomic snapshot and
+cannot prove solvency or authenticity. Live reviewer operation
+requires an independently governed, bounded bank/liability/fee
+checkpoint and real Watcher replay trust root, plus source freshness
+through signing/broadcast. The current PG evidence source still
+unconditionally refuses `VerifyWatcherMarket` and
+`AuthenticatedFeeCensus`. These controls do NOT activate customer
+WOLO, deploy 8095/8094, provision keys or clear Wolo issue #5.
+
+## Live-game Watcher v2 receipt + frozen pre-bet source bytes (held)
+
+**IMPORTANT product timing:** Auto Betting must fire DURING the next
+Watcher-detected Age of Empires II match. The existing content-addressed
+`aoe2-replay-archive` stores the final replay and is **post-game**
+evidence. Requiring that final replay before a wager would prevent the
+minimum viable product from working. The earlier
+`ReviewerWatcherWitness` v1 `raw_replay_sha256` signature stays
+available for post-game audits only; it must not grant pre-bet authority.
+
+`internal/satchelservice/reviewer_watcher_live_witness.go` introduces
+a new **separately domain-separated v2** Ed25519 signed receipt for a
+frozen **live game-start checkpoint**. It binds exact original operation,
+Steam user, game/market/side/proposition, source roster hash, parse
+iteration and roster-lock time, signed checkpoint SHA256, capture and
+observation timestamps, and a maximum 60-second receipt TTL.
+The source capture must occur within 120 seconds either side of the
+original admitted live execution; observation must be within its early
+live window. Capture can precede the first stake, since it is a game-start
+checkpoint. A positive lock may only be claimed after the independent
+witness has observed that first accepted stake.
+A final replay captured only after the match ends is NOT eligible. The
+verifier also advances receipt-expiry evaluation by monotonic elapsed
+source-read time: a receipt that expires while checkpoint bytes are being
+read refuses even if it was valid when the request began.
+
+`reviewer_watcher_replay_bridge.go` implements
+`ReviewerSignedLiveWatcherReader` and
+`ReviewerIndependentLiveCheckpointReader`. The reviewer does **not**
+accept a caller-provided hash. It computes SHA256 itself over the
+frozen game-start bytes, strictly bounded to 64 MiB, and verifies
+the separate pinned v2 signature against the read-only original
+market/Steam source. Empty, corrupt, oversized, unreadable or
+unfinalized checkpoints, forged receipts, cross-version v1 signatures
+and late-final evidence refuse. The original market is re-read
+after verification and must remain unchanged.
+
+**Not live, not independently attested:** the interface providers
+are synthetic in source tests. There is no separately administered
+frozen live-checkpoint producer, independent signing key or OS role,
+Steam/game-start trust audit, or signed receipt serving operation
+yet. A screenshot, HD database flag, final replay, old legacy
+Watcher receipt or self-reported API hash cannot substitute.
+The inherited independent `AuthenticatedFeeCensus` method STILL
+unconditionally returns `ErrReviewerHeld`. Bank, all liabilities,
+pending gas, global producers and the Wolo issue #5 controls
+remain HOLD. Nothing has been installed on the app, replay API,
+8094/8095, settlement processes or consensus.
+
+## First automatic wager: no circular first-stake roster lock (V1 correctness)
+
+A verified cross-repository source audit found a genuine **first-wager
+deadlock** in the earlier read-only Watcher reviewer: it required
+`bet_markets.roster_locked_at` to exist BEFORE the 8095 reviewer could
+authorize a reservation. But the actual app
+`lib/betStakeTickets.ts` and `lib/betWagering.ts` write both
+`roster_locked_at` and `first_stake_accepted_at` **only when the
+first stake is recorded**. The real
+`lib/betAutomationShadowWorker.ts` writes `rosterLockedAt: null`
+to its original 17-key shadow evidence if no stake was accepted.
+Therefore an automatic first bet cannot require its own future lock.
+
+The corrected reviewer now reads `m.first_stake_accepted_at` and
+`m.betting_locked_at` alongside the original market and source hash.
+For an **unstaked live winner market**, it requires all three
+(`roster_locked_at`, `first_stake_accepted_at`,
+`betting_locked_at`) to be NULL, and that the historical shadow
+evidence also explicitly declares the roster lock NULL. The
+independently witnessed exact Steam user, parsed source roster SHA256,
+market proposition, roster resolution confidence, game and source
+iteration remain mandatory. This is NOT a waiver of roster identity
+or market integrity.
+
+For a **previously staked market**, the reviewer requires a nonnull
+roster lock equal to the first-stake acceptance time, plus a valid
+betting lock. There are TWO legitimate immutable-source cases:
+(a) first stake predated this owner's original shadow row, so its
+original evidence contains the **exact same** positive lock;
+(b) another player's first stake arrived AFTER the shadow row was
+frozen, so its historical evidence correctly remains **NULL** while
+the current market lock is positive. Only this strictly one-way
+NULL-to-first-stake transition is permitted, and only when the
+current first-stake and roster-lock timestamps match, the new lock
+postdates the shadow execution, the recorded market is still live,
+and original Steam/roster/parse/proposition identity is unchanged.
+A fake lock, unmatched first-stake timestamp, missing betting lock,
+rollback or market source mismatch always refuses.
+
+The signed **live checkpoint v2** binds literal
+`roster_locked_at_ms = 0` for a genuinely unstaked market, or the
+currently observed first-stake lock timestamp for a previously
+staked one. The independently signed observation must occur AFTER
+any claimed positive lock, although the original game-start bytes
+can have been captured earlier. A forged positive lock that has not
+actually occurred cannot be backdated into the original evidence.
+
+Source tests exercise the exact first-bet NULL status, a real other
+player's subsequent first stake, previous-stake immutable lock,
+mismatched first-stake timing, missing betting lock, forged or
+backdated original source evidence, roster hash tampering, and v2
+Ed25519 receipt proof that a positive lock cannot predate observation.
+
+**Live funds remain HARD HELD.** Source-correct first-stake
+eligibility is necessary for the V1 user experience but does not
+supply independent live Watcher witness keys/attested bytes,
+Comet-authenticated bank balances, complete outstanding liabilities,
+pending transaction fees, custody operator keys or the six Wolo
+financial release controls. The bank census still always returns
+`ErrReviewerHeld`. Neither app nor chain production changed.

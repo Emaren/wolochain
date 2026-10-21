@@ -1,0 +1,123 @@
+name: Custody backend wolosatcheld exact-source artifact (NO DEPLOY)
+
+on:
+  pull_request:
+    branches: [integration/20261018-satchel-ops-finance-held, codex/satchel-production-backend]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: custody-backend-artifact-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  artifact:
+    name: Reproducible custody backend wolosatcheld artifact — UNDEPLOYED
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    env:
+      EXPECTED_SOURCE: 8c509e8f62ca3ec60711dc2654a03b12f22b0773
+      BUILDER_COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
+      GOTOOLCHAIN: local
+      GOFLAGS: -tags=go1.27
+      PYTHONDONTWRITEBYTECODE: '1'
+
+    steps:
+      - name: Checkout reviewed artifact machinery
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ env.BUILDER_COMMIT }}
+          path: artifact-tools
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Checkout exact reviewed custody backend implementation, never the builder branch
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ env.EXPECTED_SOURCE }}
+          path: implementation
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Pin Go compiler and disable toolchain substitution
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version: '1.24.6'
+          check-latest: false
+          cache: false
+
+      - name: Adversarial offline artifact contracts
+        working-directory: artifact-tools
+        run: python3 -m unittest discover -s tests -p 'test_settlement_artifact*.py' -v
+
+      - name: Full tests, financial race contracts and vet at exact implementation
+        working-directory: implementation
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_SOURCE"
+          test -z "$(git status --porcelain --untracked-files=all --ignored=matching)"
+          test "$(go env GOVERSION)" = go1.24.6
+          go test ./... -count=1
+          go test -race ./cmd/wolosatcheld ./internal/satchelservice ./internal/satchel ./internal/chainevents ./internal/chainjson -count=1
+          go vet ./...
+
+      - name: Two fresh-cache builds and strict candidate verification
+        run: |
+          set -euo pipefail
+          bash artifact-tools/scripts/build-settlement-artifact.sh --profile custody-backend \
+            "$GITHUB_WORKSPACE/implementation" "$RUNNER_TEMP/custody-backend-candidate"
+
+      - name: Upload immutable UNDEPLOYED candidate
+        id: candidate
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: custody-backend-${{ env.EXPECTED_SOURCE }}-linux-amd64-${{ github.run_id }}-${{ github.run_attempt }}-UNDEPLOYED
+          path: ${{ runner.temp }}/custody-backend-candidate/
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 30
+
+      - name: Record external GitHub archive receipt
+        env:
+          CANDIDATE_ARTIFACT_ID: ${{ steps.candidate.outputs.artifact-id }}
+          CANDIDATE_ARTIFACT_DIGEST: ${{ steps.candidate.outputs.artifact-digest }}
+          CANDIDATE_ARTIFACT_URL: ${{ steps.candidate.outputs.artifact-url }}
+          GITHUB_WORKFLOW_REF: ${{ github.workflow_ref }}
+          GITHUB_WORKFLOW_SHA: ${{ github.workflow_sha }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib, json, os, pathlib, re
+          root = pathlib.Path(os.environ['RUNNER_TEMP'])
+          manifest_path = root / 'custody-backend-candidate' / 'manifest.json'
+          manifest = json.loads(manifest_path.read_text())
+          artifact_id = os.environ['CANDIDATE_ARTIFACT_ID']
+          digest = os.environ['CANDIDATE_ARTIFACT_DIGEST']
+          assert re.fullmatch(r'[1-9][0-9]*', artifact_id)
+          assert re.fullmatch(r'[0-9a-f]{64}', digest)
+          receipt = {
+              'schema_version': 1, 'production_authorized': False,
+              'source_commit': os.environ['EXPECTED_SOURCE'], 'profile': 'custody-backend',
+              'github': manifest['github'],
+              'artifact_id': artifact_id, 'artifact_digest_sha256': digest,
+              'artifact_url': os.environ['CANDIDATE_ARTIFACT_URL'],
+              'manifest_sha256': hashlib.sha256(manifest_path.read_bytes()).hexdigest(),
+              'binary_sha256': manifest['binary']['sha256'],
+          }
+          destination = root / 'custody-backend-receipt'
+          destination.mkdir()
+          (destination / 'github-artifact-receipt.json').write_text(json.dumps(receipt, indent=2) + '\n')
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as summary:
+              summary.write('UNDEPLOYED custody backend wolosatcheld candidate; no runtime, custody or release authority.\n\n')
+              summary.write(json.dumps(receipt, indent=2) + '\n')
+          PY
+
+      - name: Preserve external receipt for independent cross-checking
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: custody-backend-${{ env.EXPECTED_SOURCE }}-${{ github.run_id }}-${{ github.run_attempt }}-github-receipt
+          path: ${{ runner.temp }}/custody-backend-receipt/
+          if-no-files-found: error
+          retention-days: 30

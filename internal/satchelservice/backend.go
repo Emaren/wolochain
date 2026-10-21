@@ -15,9 +15,11 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 	"unicode/utf8"
 
@@ -58,6 +60,7 @@ type BackendConfig struct {
 	ApprovedDestinations                []string
 	ProtectedAddresses                  []string
 	WithdrawalVerifier                  func(TransferRequest) error
+	WagerVerifier                       func(TransferRequest) error
 	ConfirmTransaction                  func(context.Context, TransferRequest, SignedTransaction) (Confirmation, error)
 }
 
@@ -66,13 +69,15 @@ type backendSigner interface {
 }
 
 type KeyringBackend struct {
-	cfg       BackendConfig
-	publicKey *sdksecp.PubKey
-	signer    backendSigner
-	rpc, rest *url.URL
-	client    *http.Client
-	reader    *satchel.ChainReader
-	mu        sync.Mutex
+	cfg          BackendConfig
+	publicKey    *sdksecp.PubKey
+	signer       backendSigner
+	rpc, rest    *url.URL
+	client       *http.Client
+	reader       *satchel.ChainReader
+	mu           sync.Mutex
+	keyringLease *os.File
+	closed       atomic.Bool
 }
 
 func NewKeyringBackend(cfg BackendConfig) (*KeyringBackend, error) {
@@ -80,6 +85,12 @@ func NewKeyringBackend(cfg BackendConfig) (*KeyringBackend, error) {
 	if err != nil {
 		return nil, err
 	}
+	lease, err := lockSatchelKeyring(cfg.KeyringDir)
+	if err != nil {
+		b.Close()
+		return nil, ErrBackend
+	}
+	b.keyringLease = lease
 	signer, err := openSatchelKeyring(cfg, b.publicKey)
 	if err != nil {
 		b.Close()
@@ -146,11 +157,20 @@ func newBackend(cfg BackendConfig) (*KeyringBackend, error) {
 
 func (b *KeyringBackend) Close() {
 	if b != nil {
+		b.mu.Lock()
+		defer b.mu.Unlock()
+		if b.closed.Swap(true) {
+			return
+		}
 		if b.client != nil {
 			b.client.CloseIdleConnections()
 		}
 		if b.reader != nil {
 			b.reader.Close()
+		}
+		if b.keyringLease != nil {
+			_ = b.keyringLease.Close()
+			b.keyringLease = nil
 		}
 	}
 }
@@ -199,6 +219,9 @@ func (b *KeyringBackend) validateRequest(r TransferRequest, fresh bool) error {
 		if !wagerIDs.MatchString(r.OperationID) || r.Approval != nil || !ticketMemo.MatchString(r.Memo) || err != nil || whole%1000000 != 0 {
 			return ErrBackend
 		}
+		if fresh && (r.Reservation == nil || r.Reservation.FeeUWolo != b.cfg.FeesUWolo || b.cfg.WagerVerifier == nil || b.cfg.WagerVerifier(r) != nil) {
+			return ErrBackend
+		}
 		for _, destination := range b.cfg.ApprovedDestinations {
 			if r.Recipient == destination {
 				return nil
@@ -210,7 +233,7 @@ func (b *KeyringBackend) validateRequest(r TransferRequest, fresh bool) error {
 				return ErrBackend
 			}
 		}
-		if satchel.IsKnownRoleAddress(r.Recipient) || r.Approval == nil || r.Memo != "aoe2war/satchel/withdraw/v1/"+r.Approval.WithdrawalID || (fresh && (b.cfg.WithdrawalVerifier == nil || b.cfg.WithdrawalVerifier(r) != nil)) {
+		if satchel.IsKnownRoleAddress(r.Recipient) || r.Reservation != nil || r.Approval == nil || r.Memo != "aoe2war/satchel/withdraw/v1/"+r.Approval.WithdrawalID || (fresh && (b.cfg.WithdrawalVerifier == nil || b.cfg.WithdrawalVerifier(r) != nil)) {
 			return ErrBackend
 		}
 		return nil
@@ -228,7 +251,7 @@ func (b *KeyringBackend) Sign(ctx context.Context, r TransferRequest) (SignedTra
 	defer cancel()
 	b.mu.Lock()
 	defer b.mu.Unlock()
-	if ctx.Err() != nil {
+	if b.closed.Load() || ctx.Err() != nil {
 		return SignedTransaction{}, ErrPreSignRefused
 	}
 	height, err := b.head(ctx)
@@ -249,7 +272,7 @@ func (b *KeyringBackend) Sign(ctx context.Context, r TransferRequest) (SignedTra
 	signBytes, _ := proto.Marshal(&txapi.SignDoc{BodyBytes: bodyBytes, AuthInfoBytes: authBytes, ChainId: "wolo-1", AccountNumber: number})
 	// Account/head I/O must not allow owner consent or the independent approval
 	// to expire between validation and entering the irreversible signing call.
-	if ctx.Err() != nil || b.validateRequest(r, true) != nil {
+	if ctx.Err() != nil || b.validateRequest(r, true) != nil || !b.keyringLeaseCurrent() {
 		return SignedTransaction{}, ErrPreSignRefused
 	}
 	signature, public, err := b.signer.Sign(b.cfg.KeyName, signBytes, signing.SignMode_SIGN_MODE_DIRECT)
@@ -268,7 +291,7 @@ func (b *KeyringBackend) Sign(ctx context.Context, r TransferRequest) (SignedTra
 // insufficient: it verifies the exact signer, chain-bound DIRECT signature,
 // transfer, memo, fee, gas policy, sequence and supported transaction shape.
 func (b *KeyringBackend) ValidateSigned(r TransferRequest, s SignedTransaction) error {
-	if b == nil || b.validateRequest(r, false) != nil || len(s.Bytes) == 0 || len(s.Bytes) > 65536 || len(s.Hash) != 64 || !strings.EqualFold(s.Hash, hex.EncodeToString(cmttypes.Tx(s.Bytes).Hash())) {
+	if b == nil || b.closed.Load() || b.validateRequest(r, false) != nil || len(s.Bytes) == 0 || len(s.Bytes) > 65536 || len(s.Hash) != 64 || !strings.EqualFold(s.Hash, hex.EncodeToString(cmttypes.Tx(s.Bytes).Hash())) {
 		return ErrBackend
 	}
 	var raw txapi.TxRaw
@@ -403,6 +426,11 @@ func (b *KeyringBackend) account(ctx context.Context) (uint64, uint64, error) {
 func (b *KeyringBackend) Broadcast(ctx context.Context, s SignedTransaction) (BroadcastResult, error) {
 	unknown := BroadcastResult{Status: "UNKNOWN"}
 	if b == nil || len(s.Bytes) == 0 || len(s.Bytes) > 65536 || len(s.Hash) != 64 || !strings.EqualFold(s.Hash, hex.EncodeToString(cmttypes.Tx(s.Bytes).Hash())) {
+		return unknown, ErrBackend
+	}
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	if b.closed.Load() {
 		return unknown, ErrBackend
 	}
 	ctx, cancel := context.WithTimeout(ctx, 4*time.Second)

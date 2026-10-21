@@ -54,3 +54,17 @@ assert.equal(verify(null, Buffer.from(returnBytes), ed, b64(ret.signature)), tru
 assert.equal(verify(null, Buffer.from(returnBytes.replace(ret.owner_id, 'forged-owner')), ed, b64(ret.signature)), false);
 assert.equal(verify(null, Buffer.from(allocationBytes.replace(p.funds_available_uwolo, '99999999999')), ed, b64(p.signature)), false);
 console.log('PASS: exact HD ADR36 text, owner secp256k1 signature, independent Ed25519 approval/allocation/return signatures, hold binding and tamper rejection');
+
+// Versioned owner-bound wager approval: independently verify Go's exact bytes.
+const wf = JSON.parse(readFileSync(new URL('../internal/satchelservice/testdata/wager-reservation-v1.json', import.meta.url), 'utf8'));
+assert.equal(wf.fixture_only, true); assert.equal(wf.mainnet_authority, false);
+const w = wf.reservation;
+const wagerBytes = json(['aoe2war/satchel/wager-reservation/v1', w.version, 'wolo-1', 'uwolo', w.operation_id, w.owner_id, w.vault, w.recipient, w.amount_uwolo, w.memo, w.reservation_digest, w.ledger_revision, w.consent_digest, w.fee_uwolo, w.issued_at, w.expires_at]);
+assert.equal(wagerBytes, wf.reservation_sign_bytes);
+const wk = createPublicKey({format:'der',type:'spki',key:Buffer.concat([Buffer.from('302a300506032b6570032100','hex'),Buffer.from(wf.approval_public_key_hex,'hex')])});
+assert.equal(verify(null, Buffer.from(wagerBytes), wk, b64(w.signature)), true);
+for (const field of ['owner_id','operation_id','reservation_digest','ledger_revision','consent_digest','amount_uwolo','fee_uwolo']) {
+  const bad = wagerBytes.replace(JSON.stringify(w[field]), JSON.stringify('forged-' + field));
+  assert.equal(verify(null, Buffer.from(bad), wk, b64(w.signature)), false, field);
+}
+console.log('PASS: owner-bound wager reservation bytes and Ed25519 signature independently verified; seven authority/economic tamper cases refused');

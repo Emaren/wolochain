@@ -33,6 +33,9 @@ func main() {
 // run returns only fixed public diagnostic labels. Sensitive configuration,
 // source responses, filesystem paths and keyring errors are never printed.
 func run(ctx context.Context, args []string, out, errout io.Writer) int {
+	if len(args) > 0 && (args[0] == "read-bank-proof" || args[0] == "verify-bank-proof") {
+		return bankProofCommand(ctx, args[0], args[1:], out, errout)
+	}
 	if len(args) > 0 && args[0] == "verify-financial-proof" {
 		return verifyFinancialProofCommand(ctx, args[1:], out, errout)
 	}
@@ -83,8 +86,13 @@ func run(ctx context.Context, args []string, out, errout io.Writer) int {
 		fmt.Fprintln(errout, "satchel: withdrawal authority refused")
 		return 2
 	}
-	policy := satchelservice.Policy{Vault: cfg.Vault, BettingEscrow: cfg.BettingEscrow, ProtectedAddresses: cfg.ProtectedAddresses, MaxAmountUWolo: cfg.MaxAmountUWolo, WithdrawalApprovalKey: approvalKey}
-	backend, err := satchelservice.NewKeyringBackend(satchelservice.BackendConfig{RPC: cfg.RPC, REST: cfg.REST, WitnessRPC: cfg.WitnessRPC, Vault: cfg.Vault, PublicKeyHex: cfg.PublicKeyHex, KeyringDir: cfg.KeyringDir, KeyName: cfg.KeyName, PassphraseFile: cfg.PassphraseFile, FeesUWolo: cfg.FeesUWolo, MaxAmountUWolo: strconv.FormatUint(cfg.MaxAmountUWolo, 10), GasLimit: cfg.GasLimit, TimeoutBlocks: cfg.TimeoutBlocks, ApprovedDestinations: []string{cfg.BettingEscrow}, ProtectedAddresses: cfg.ProtectedAddresses, WithdrawalVerifier: policy.VerifyWithdrawal, ConfirmTransaction: func(ctx context.Context, request satchelservice.TransferRequest, signed satchelservice.SignedTransaction) (satchelservice.Confirmation, error) {
+	wagerKey, err := hex.DecodeString(cfg.WagerApprovalKeyHex)
+	if err != nil || bytes.Equal(wagerKey, approvalKey) {
+		fmt.Fprintln(errout, "satchel: wager authority refused")
+		return 2
+	}
+	policy := satchelservice.Policy{Vault: cfg.Vault, BettingEscrow: cfg.BettingEscrow, ProtectedAddresses: cfg.ProtectedAddresses, MaxAmountUWolo: cfg.MaxAmountUWolo, WithdrawalApprovalKey: approvalKey, WagerApprovalKey: wagerKey}
+	backend, err := satchelservice.NewKeyringBackend(satchelservice.BackendConfig{RPC: cfg.RPC, REST: cfg.REST, WitnessRPC: cfg.WitnessRPC, Vault: cfg.Vault, PublicKeyHex: cfg.PublicKeyHex, KeyringDir: cfg.KeyringDir, KeyName: cfg.KeyName, PassphraseFile: cfg.PassphraseFile, FeesUWolo: cfg.FeesUWolo, MaxAmountUWolo: strconv.FormatUint(cfg.MaxAmountUWolo, 10), GasLimit: cfg.GasLimit, TimeoutBlocks: cfg.TimeoutBlocks, ApprovedDestinations: []string{cfg.BettingEscrow}, ProtectedAddresses: cfg.ProtectedAddresses, WithdrawalVerifier: policy.VerifyWithdrawal, WagerVerifier: policy.VerifyWager, ConfirmTransaction: func(ctx context.Context, request satchelservice.TransferRequest, signed satchelservice.SignedTransaction) (satchelservice.Confirmation, error) {
 		evidence, err := trusted.ReadTransfer(ctx, satchel.TransferIntent{Sender: request.Sender, Recipient: request.Recipient, AmountUWolo: request.AmountUWolo, Memo: request.Memo}, signed.Hash)
 		if err != nil || !evidence.ConsensusAuthenticated() || evidence.CreditAuthorized() {
 			return satchelservice.Confirmation{Status: "UNKNOWN"}, errors.New("authenticated_confirmation_unavailable")
@@ -161,6 +169,9 @@ func (e *serviceEngine) ReconcileClaimReturn(ctx context.Context, a satchelservi
 
 func (e *serviceEngine) DepositProof(ctx context.Context, r satchelservice.DepositProofRequest) (satchelservice.FinancialProof, error) {
 	return e.Engine.DepositProof(ctx, r, e.trusted)
+}
+func (e *serviceEngine) BankProof(ctx context.Context) (satchel.BankProof, error) {
+	return e.Engine.BankProof(ctx, e.trusted)
 }
 func (e *serviceEngine) OperationProof(ctx context.Context, id string) (satchelservice.FinancialProof, error) {
 	return e.Engine.OperationProof(ctx, id, e.trusted)

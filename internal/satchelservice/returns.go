@@ -102,7 +102,7 @@ func (e *Engine) validateReturn(tx *bolt.Tx, a ReturnApproval) error {
 	return e.validateReturnAt(tx, a, true)
 }
 func (e *Engine) validateReturnAt(tx *bolt.Tx, a ReturnApproval, fresh bool) error {
-	if a.Version != 2 || !ids.MatchString(a.OwnerID) || !claimIDs.MatchString(a.ClaimID) || a.ClaimID == "889" || !validReviewTime(a.IssuedAt, a.ExpiresAt, e.now().Unix(), fresh) || !verifyReview(e.policy.WithdrawalApprovalKey, ReturnApprovalMessage(a, e.policy), a.Signature) {
+	if a.Version != 2 || !ownerUIDPattern.MatchString(a.OwnerID) || !claimIDs.MatchString(a.ClaimID) || a.ClaimID == "889" || !validReviewTime(a.IssuedAt, a.ExpiresAt, e.now().Unix(), fresh) || !verifyReview(e.policy.WithdrawalApprovalKey, ReturnApprovalMessage(a, e.policy), a.Signature) {
 		return errors.New("owner_return_approval_refused")
 	}
 	_, err := e.validateAllocation(tx, a, fresh)
@@ -256,5 +256,5 @@ func (e *Engine) recordReturn(r returnRecord, receipt ReturnReceipt) error {
 }
 
 func validReturnReceipt(r returnRecord, p ReturnReceipt) bool {
-	return p.Version == 2 && r.Approval.Version == 2 && r.Approval.Allocation != nil && p.TicketID == r.Approval.TicketID && p.MarketID == r.Approval.MarketID && p.LegID == r.Approval.LegID && p.EntitlementID == r.Approval.EntitlementID && p.AllocationID == r.Approval.Allocation.AllocationID && p.OperationID == r.Approval.OperationID && p.ClaimID == r.Approval.ClaimID && p.OwnerID == r.Approval.OwnerID && p.ClaimKind == r.Approval.ClaimKind && p.AmountUWolo == r.Approval.AmountUWolo && !p.CreditAuthorized && p.Height > 0 && nonzeroDigest(p.BlockHash) && digestRE.MatchString(p.TxHash) && p.TxHash == strings.ToUpper(p.TxHash) && (p.ReceiptID == "wolo-1:"+p.TxHash+":0" || p.ReceiptID == "wolo-1:"+p.TxHash+":1")
+	return p.Version == 2 && r.Approval.Version == 2 && r.Approval.Allocation != nil && p.TicketID == r.Approval.TicketID && p.MarketID == r.Approval.MarketID && p.LegID == r.Approval.LegID && p.EntitlementID == r.Approval.EntitlementID && p.AllocationID == r.Approval.Allocation.AllocationID && p.OperationID == r.Approval.OperationID && p.ClaimID == r.Approval.ClaimID && p.OwnerID == r.Approval.OwnerID && p.ClaimKind == r.Approval.ClaimKind && p.AmountUWolo == r.Approval.AmountUWolo && !p.CreditAuthorized && p.Height > 0 && nonzeroDigest(p.BlockHash) && nonzeroDigest(p.TxHash) && p.TxHash == strings.ToUpper(p.TxHash) && (p.ReceiptID == "wolo-1:"+p.TxHash+":0" || p.ReceiptID == "wolo-1:"+p.TxHash+":1")
 }

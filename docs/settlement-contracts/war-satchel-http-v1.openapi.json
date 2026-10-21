@@ -1,0 +1,2500 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "AoE2WAR private WoloChain Satchel service",
+    "version": "1.0.0",
+    "description": "Source wire contract. No live destination or activation authority. Financial capability remains UNAVAILABLE until independently provisioned custody/accounting/trust and operator approval."
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:8094"
+    }
+  ],
+  "security": [
+    {
+      "PrivateBearer": []
+    }
+  ],
+  "x-transport": {
+    "literal_loopback_peer_required": true,
+    "origin_header_forbidden": true,
+    "proxy_headers_confer_authority": false,
+    "url_query_forbidden": true,
+    "escaped_raw_path_forbidden": true,
+    "unknown_duplicate_case_aliased_json_fields_forbidden": true,
+    "max_request_bytes": 16384,
+    "max_financial_proof_bytes": 14876672,
+    "max_portable_proof_bytes": 14811136,
+    "default_request_timeout_ms": 7000,
+    "maximum_request_timeout_ms": 8000,
+    "default_concurrent_requests": 4,
+    "maximum_concurrent_requests": 16,
+    "automatic_financial_retries": false
+  },
+  "x-state-semantics": {
+    "ACCEPTED": "Original bytes durably fenced; one broadcast acknowledgment, no committed execution proof.",
+    "UNKNOWN": "Signing/broadcast/result uncertainty; maintain reservation and global signer fence, never rebroadcast.",
+    "OBSERVED_NONCREDITING": "Observed evidence lacks independent authentication; maintain hold.",
+    "CONFIRMED": "Exact original bytes and successful committed bank effect authenticated against independent operator checkpoint; consumer still owns ledger consumption.",
+    "FAILED": "Authenticated terminal original transaction failure only; never implies permission to replay same obligation.",
+    "REFUSED": "No authorization for this request; durable identity and any earlier uncertainty remain authoritative."
+  },
+  "paths": {
+    "/satchel/v1/health": {
+      "get": {
+        "operationId": "health",
+        "summary": "Private process health; never independent custody certification",
+        "x-financial-effect": "observe",
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/Failure400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Failure401"
+          },
+          "404": {
+            "$ref": "#/components/responses/Failure404"
+          },
+          "405": {
+            "$ref": "#/components/responses/Failure405"
+          },
+          "408": {
+            "$ref": "#/components/responses/Failure408"
+          },
+          "409": {
+            "$ref": "#/components/responses/Failure409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Failure413"
+          },
+          "415": {
+            "$ref": "#/components/responses/Failure415"
+          },
+          "503": {
+            "$ref": "#/components/responses/Failure503"
+          },
+          "200": {
+            "description": "Exact typed result; HTTP success alone is not financial confirmation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/satchel/v1/custody/journal": {
+      "get": {
+        "operationId": "custodyJournal",
+        "summary": "Bounded exact execution-journal checkpoint; never bank or customer-ledger attestation",
+        "x-financial-effect": "observe",
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/Failure400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Failure401"
+          },
+          "404": {
+            "$ref": "#/components/responses/Failure404"
+          },
+          "405": {
+            "$ref": "#/components/responses/Failure405"
+          },
+          "408": {
+            "$ref": "#/components/responses/Failure408"
+          },
+          "409": {
+            "$ref": "#/components/responses/Failure409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Failure413"
+          },
+          "415": {
+            "$ref": "#/components/responses/Failure415"
+          },
+          "503": {
+            "$ref": "#/components/responses/Failure503"
+          },
+          "200": {
+            "description": "Exact typed result; HTTP success alone is not financial confirmation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustodyJournal"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/satchel/v1/one-shot": {
+      "post": {
+        "operationId": "submitWager",
+        "summary": "Legacy exact replay only; new unsigned bearer-only wagers are refused",
+        "x-financial-effect": "legacy-replay-only",
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/Failure400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Failure401"
+          },
+          "404": {
+            "$ref": "#/components/responses/Failure404"
+          },
+          "405": {
+            "$ref": "#/components/responses/Failure405"
+          },
+          "408": {
+            "$ref": "#/components/responses/Failure408"
+          },
+          "409": {
+            "$ref": "#/components/responses/Failure409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Failure413"
+          },
+          "415": {
+            "$ref": "#/components/responses/Failure415"
+          },
+          "503": {
+            "$ref": "#/components/responses/Failure503"
+          },
+          "200": {
+            "description": "Exact typed result; HTTP success alone is not financial confirmation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OperationResult"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/WagerSnake"
+                  },
+                  {
+                    "$ref": "#/components/schemas/WagerCamel"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/satchel/v2/one-shot": {
+      "post": {
+        "operationId": "submitReservedWager",
+        "summary": "Require independently signed owner reservation and attempt at most one broadcast",
+        "x-financial-effect": "single-transmission",
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/Failure400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Failure401"
+          },
+          "404": {
+            "$ref": "#/components/responses/Failure404"
+          },
+          "405": {
+            "$ref": "#/components/responses/Failure405"
+          },
+          "408": {
+            "$ref": "#/components/responses/Failure408"
+          },
+          "409": {
+            "$ref": "#/components/responses/Failure409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Failure413"
+          },
+          "415": {
+            "$ref": "#/components/responses/Failure415"
+          },
+          "503": {
+            "$ref": "#/components/responses/Failure503"
+          },
+          "200": {
+            "description": "Exact typed result; HTTP success alone is not financial confirmation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReservedOperationResult"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReservedWagerRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/satchel/v1/operations/{operation_id}": {
+      "get": {
+        "operationId": "lookupOperation",
+        "summary": "Read original durable operation; never sign or broadcast",
+        "x-financial-effect": "observe",
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/Failure400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Failure401"
+          },
+          "404": {
+            "$ref": "#/components/responses/Failure404"
+          },
+          "405": {
+            "$ref": "#/components/responses/Failure405"
+          },
+          "408": {
+            "$ref": "#/components/responses/Failure408"
+          },
+          "409": {
+            "$ref": "#/components/responses/Failure409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Failure413"
+          },
+          "415": {
+            "$ref": "#/components/responses/Failure415"
+          },
+          "503": {
+            "$ref": "#/components/responses/Failure503"
+          },
+          "200": {
+            "description": "Exact typed result; HTTP success alone is not financial confirmation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OperationResult"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "operation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/OperationID"
+            }
+          }
+        ]
+      }
+    },
+    "/satchel/v1/reconcile": {
+      "post": {
+        "operationId": "reconcileOperation",
+        "summary": "Authenticate original bytes/hash; record outcome without a new broadcast",
+        "x-financial-effect": "reconcile-journal",
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/Failure400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Failure401"
+          },
+          "404": {
+            "$ref": "#/components/responses/Failure404"
+          },
+          "405": {
+            "$ref": "#/components/responses/Failure405"
+          },
+          "408": {
+            "$ref": "#/components/responses/Failure408"
+          },
+          "409": {
+            "$ref": "#/components/responses/Failure409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Failure413"
+          },
+          "415": {
+            "$ref": "#/components/responses/Failure415"
+          },
+          "503": {
+            "$ref": "#/components/responses/Failure503"
+          },
+          "200": {
+            "description": "Exact typed result; HTTP success alone is not financial confirmation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OperationResult"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OperationIdentity"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/satchel/withdrawals": {
+      "post": {
+        "operationId": "submitWithdrawal",
+        "summary": "Owner ADR-36 consent plus independent exact-hold approval",
+        "x-financial-effect": "single-transmission",
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/Failure400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Failure401"
+          },
+          "404": {
+            "$ref": "#/components/responses/Failure404"
+          },
+          "405": {
+            "$ref": "#/components/responses/Failure405"
+          },
+          "408": {
+            "$ref": "#/components/responses/Failure408"
+          },
+          "409": {
+            "$ref": "#/components/responses/Failure409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Failure413"
+          },
+          "415": {
+            "$ref": "#/components/responses/Failure415"
+          },
+          "503": {
+            "$ref": "#/components/responses/Failure503"
+          },
+          "200": {
+            "description": "Exact typed result; HTTP success alone is not financial confirmation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OperationResult"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WithdrawalRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/satchel/v1/returns/prepare": {
+      "post": {
+        "operationId": "prepareReturn",
+        "summary": "Reserve signed version-2 entitlement; produce but never execute 8092 escrow run",
+        "x-financial-effect": "reserve-entitlement",
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/Failure400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Failure401"
+          },
+          "404": {
+            "$ref": "#/components/responses/Failure404"
+          },
+          "405": {
+            "$ref": "#/components/responses/Failure405"
+          },
+          "408": {
+            "$ref": "#/components/responses/Failure408"
+          },
+          "409": {
+            "$ref": "#/components/responses/Failure409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Failure413"
+          },
+          "415": {
+            "$ref": "#/components/responses/Failure415"
+          },
+          "503": {
+            "$ref": "#/components/responses/Failure503"
+          },
+          "200": {
+            "description": "Exact typed result; HTTP success alone is not financial confirmation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReturnPrepared"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReturnApproval"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/satchel/v1/returns/reconcile": {
+      "post": {
+        "operationId": "reconcileReturn",
+        "summary": "Authenticate escrow return and consume its physical receipt once",
+        "x-financial-effect": "reconcile-journal",
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/Failure400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Failure401"
+          },
+          "404": {
+            "$ref": "#/components/responses/Failure404"
+          },
+          "405": {
+            "$ref": "#/components/responses/Failure405"
+          },
+          "408": {
+            "$ref": "#/components/responses/Failure408"
+          },
+          "409": {
+            "$ref": "#/components/responses/Failure409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Failure413"
+          },
+          "415": {
+            "$ref": "#/components/responses/Failure415"
+          },
+          "503": {
+            "$ref": "#/components/responses/Failure503"
+          },
+          "200": {
+            "description": "Exact typed result; HTTP success alone is not financial confirmation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReturnReceipt"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReturnReconcileRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/satchel/v1/proofs/deposit": {
+      "post": {
+        "operationId": "exportDepositProof",
+        "summary": "Export untrusted bounded evidence for independent offline verification",
+        "x-financial-effect": "observe",
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/Failure400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Failure401"
+          },
+          "404": {
+            "$ref": "#/components/responses/Failure404"
+          },
+          "405": {
+            "$ref": "#/components/responses/Failure405"
+          },
+          "408": {
+            "$ref": "#/components/responses/Failure408"
+          },
+          "409": {
+            "$ref": "#/components/responses/Proof409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Failure413"
+          },
+          "415": {
+            "$ref": "#/components/responses/Failure415"
+          },
+          "503": {
+            "$ref": "#/components/responses/Failure503"
+          },
+          "200": {
+            "description": "Exact typed result; HTTP success alone is not financial confirmation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinancialProof"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DepositProofRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/satchel/v1/proofs/operation": {
+      "post": {
+        "operationId": "exportOperationProof",
+        "summary": "Export untrusted bounded evidence for independent offline verification",
+        "x-financial-effect": "observe",
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/Failure400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Failure401"
+          },
+          "404": {
+            "$ref": "#/components/responses/Failure404"
+          },
+          "405": {
+            "$ref": "#/components/responses/Failure405"
+          },
+          "408": {
+            "$ref": "#/components/responses/Failure408"
+          },
+          "409": {
+            "$ref": "#/components/responses/Proof409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Failure413"
+          },
+          "415": {
+            "$ref": "#/components/responses/Failure415"
+          },
+          "503": {
+            "$ref": "#/components/responses/Failure503"
+          },
+          "200": {
+            "description": "Exact typed result; HTTP success alone is not financial confirmation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinancialProof"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OperationIdentity"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/satchel/v1/proofs/return": {
+      "post": {
+        "operationId": "exportReturnProof",
+        "summary": "Export untrusted bounded evidence for independent offline verification",
+        "x-financial-effect": "observe",
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/Failure400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Failure401"
+          },
+          "404": {
+            "$ref": "#/components/responses/Failure404"
+          },
+          "405": {
+            "$ref": "#/components/responses/Failure405"
+          },
+          "408": {
+            "$ref": "#/components/responses/Failure408"
+          },
+          "409": {
+            "$ref": "#/components/responses/Proof409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Failure413"
+          },
+          "415": {
+            "$ref": "#/components/responses/Failure415"
+          },
+          "503": {
+            "$ref": "#/components/responses/Failure503"
+          },
+          "200": {
+            "description": "Exact typed result; HTTP success alone is not financial confirmation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinancialProof"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReturnIdentity"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/satchel/v1/proofs/bank": {
+      "post": {
+        "operationId": "exportCurrentBankProof",
+        "summary": "Export untrusted current-head bank-state proof for independent offline authentication",
+        "x-financial-effect": "observe",
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/Failure400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Failure401"
+          },
+          "404": {
+            "$ref": "#/components/responses/Failure404"
+          },
+          "405": {
+            "$ref": "#/components/responses/Failure405"
+          },
+          "408": {
+            "$ref": "#/components/responses/Failure408"
+          },
+          "409": {
+            "$ref": "#/components/responses/Proof409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Failure413"
+          },
+          "415": {
+            "$ref": "#/components/responses/Failure415"
+          },
+          "503": {
+            "$ref": "#/components/responses/Failure503"
+          },
+          "200": {
+            "description": "Exact typed result; HTTP success alone is not financial confirmation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BankStateProof"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BankProofRequest"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "PrivateBearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Exactly one Authorization header; Bearer plus private 48–512 character base64url token. Literal loopback only and no Origin header. Token is not owner consent, custody attestation or withdrawal approval."
+      }
+    },
+    "schemas": {
+      "Amount": {
+        "type": "string",
+        "pattern": "^[1-9][0-9]*$",
+        "maxLength": 15
+      },
+      "Hash": {
+        "type": "string",
+        "pattern": "^[A-Fa-f0-9]{64}$"
+      },
+      "UpperHash": {
+        "type": "string",
+        "pattern": "^[A-F0-9]{64}$"
+      },
+      "Digest": {
+        "type": "string",
+        "pattern": "^[a-fA-F0-9]{64}$"
+      },
+      "OperationID": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9:._-]{0,127}$"
+      },
+      "OwnerID": {
+        "type": "string",
+        "pattern": "^[a-zA-Z0-9_.:-]{1,100}$"
+      },
+      "Address": {
+        "type": "string",
+        "pattern": "^wolo1[023456789acdefghjklmnpqrstuvwxyz]{38}$"
+      },
+      "Memo": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      },
+      "CustodyJournal": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "protocol",
+          "chain_id",
+          "denom",
+          "kind",
+          "journal_digest",
+          "policy_digest",
+          "records_read",
+          "bytes_read",
+          "operations_count",
+          "operation_status_counts",
+          "unresolved_count",
+          "held_outbound_uwolo",
+          "confirmed_outbound_uwolo",
+          "confirmed_return_receipt_count",
+          "confirmed_return_uwolo",
+          "bank_balance_authenticated",
+          "credit_authorized",
+          "solvency_authorized",
+          "custody_capability"
+        ],
+        "properties": {
+          "protocol": {
+            "const": 1
+          },
+          "chain_id": {
+            "const": "wolo-1"
+          },
+          "denom": {
+            "const": "uwolo"
+          },
+          "kind": {
+            "const": "execution_journal_checkpoint"
+          },
+          "journal_digest": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "policy_digest": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "records_read": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000
+          },
+          "bytes_read": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 8388608
+          },
+          "operations_count": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000
+          },
+          "operation_status_counts": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "UNKNOWN",
+              "ACCEPTED",
+              "OBSERVED_NONCREDITING",
+              "CONFIRMED",
+              "FAILED",
+              "REFUSED"
+            ],
+            "properties": {
+              "UNKNOWN": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100000
+              },
+              "ACCEPTED": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100000
+              },
+              "OBSERVED_NONCREDITING": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100000
+              },
+              "CONFIRMED": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100000
+              },
+              "FAILED": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100000
+              },
+              "REFUSED": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100000
+              }
+            }
+          },
+          "unresolved_count": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000
+          },
+          "held_outbound_uwolo": {
+            "type": "string",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "maxLength": 20
+          },
+          "confirmed_outbound_uwolo": {
+            "type": "string",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "maxLength": 20
+          },
+          "confirmed_return_receipt_count": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000
+          },
+          "confirmed_return_uwolo": {
+            "type": "string",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "maxLength": 20
+          },
+          "bank_balance_authenticated": {
+            "const": false
+          },
+          "credit_authorized": {
+            "const": false
+          },
+          "solvency_authorized": {
+            "const": false
+          },
+          "custody_capability": {
+            "const": "UNAVAILABLE"
+          }
+        },
+        "x-go-type": "internal/satchelservice/custody_journal.go:CustodyJournal",
+        "description": "One consistent bounded local execution-journal checkpoint (8MiB/100000 framed records/max64 bucket depth). Digest includes exact stored bucket/key/value bytes and current policy identity. Held outbound includes UNKNOWN/ACCEPTED/OBSERVED_NONCREDITING operations; confirmed totals are journal history, not independently reauthenticated bank balance. Does not describe the app customer ledger, fees, outside liabilities, deposits or available reserves; no subtraction of these totals establishes solvency. Corrupt, over-limit, conflicting or unsupported history refuses the entire checkpoint."
+      },
+      "WagerReservation": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "operation_id",
+          "owner_id",
+          "vault",
+          "recipient",
+          "amount_uwolo",
+          "memo",
+          "reservation_digest",
+          "ledger_revision",
+          "consent_digest",
+          "fee_uwolo",
+          "issued_at",
+          "expires_at",
+          "signature"
+        ],
+        "properties": {
+          "version": {
+            "const": 1
+          },
+          "operation_id": {
+            "$ref": "#/components/schemas/WagerOperationID"
+          },
+          "owner_id": {
+            "$ref": "#/components/schemas/OwnerID"
+          },
+          "vault": {
+            "$ref": "#/components/schemas/Address"
+          },
+          "recipient": {
+            "$ref": "#/components/schemas/Address"
+          },
+          "amount_uwolo": {
+            "type": "string",
+            "pattern": "^(?:[1-9][0-9]{0,2}|1000)000000$"
+          },
+          "memo": {
+            "$ref": "#/components/schemas/WagerMemo"
+          },
+          "reservation_digest": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "ledger_revision": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "consent_digest": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "fee_uwolo": {
+            "$ref": "#/components/schemas/Amount"
+          },
+          "issued_at": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "signature": {
+            "type": "string"
+          }
+        },
+        "x-go-type": "internal/satchelservice/wager_authority.go:WagerReservation",
+        "description": "New wagering authority v1, independently Ed25519-signed with exported WagerReservationMessage. Approval binds exact durable app reservation, owner consent, ledger revision, vault, recipient, amount, memo, operating fee and <=300 second window. Source token alone cannot authorize a new wager. Digests do not prove actual ledger balances or solvency."
+      },
+      "Coin": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "denom",
+          "amount"
+        ],
+        "properties": {
+          "denom": {
+            "const": "uwolo"
+          },
+          "amount": {
+            "$ref": "#/components/schemas/Amount"
+          }
+        },
+        "x-go-type": "internal/satchelservice/http.go:httpCoin"
+      },
+      "WagerSnake": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "request_id",
+          "chain_id",
+          "signer_role",
+          "from_address",
+          "to_address",
+          "amount",
+          "memo"
+        ],
+        "properties": {
+          "request_id": {
+            "$ref": "#/components/schemas/WagerOperationID"
+          },
+          "chain_id": {
+            "const": "wolo-1"
+          },
+          "signer_role": {
+            "const": "exclusive-war-satchel-v1"
+          },
+          "from_address": {
+            "$ref": "#/components/schemas/Address"
+          },
+          "to_address": {
+            "$ref": "#/components/schemas/Address"
+          },
+          "amount": {
+            "$ref": "#/components/schemas/WagerCoin"
+          },
+          "memo": {
+            "$ref": "#/components/schemas/WagerMemo"
+          },
+          "owner_id": {
+            "$ref": "#/components/schemas/OwnerID"
+          }
+        },
+        "x-go-type": "internal/satchelservice/http.go:httpSnakeWager"
+      },
+      "WagerCamel": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "protocol",
+          "requestId",
+          "chainId",
+          "senderAddress",
+          "recipientAddress",
+          "denom",
+          "amountUwolo",
+          "memo"
+        ],
+        "properties": {
+          "protocol": {
+            "const": 1
+          },
+          "requestId": {
+            "$ref": "#/components/schemas/WagerOperationID"
+          },
+          "chainId": {
+            "const": "wolo-1"
+          },
+          "senderAddress": {
+            "$ref": "#/components/schemas/Address"
+          },
+          "recipientAddress": {
+            "$ref": "#/components/schemas/Address"
+          },
+          "denom": {
+            "const": "uwolo"
+          },
+          "amountUwolo": {
+            "type": "string",
+            "pattern": "^(?:[1-9][0-9]{0,2}|1000)000000$"
+          },
+          "memo": {
+            "$ref": "#/components/schemas/WagerMemo"
+          },
+          "ownerId": {
+            "$ref": "#/components/schemas/OwnerID"
+          }
+        },
+        "x-go-type": "internal/satchelservice/http.go:httpCamelWager",
+        "description": "Compatibility spelling selected only by protocol:1. Never mix camel-case and snake-case fields. ownerId is required for portable owner-bound proofs; absence cannot prove an owner."
+      },
+      "WithdrawalRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "protocol",
+          "operation_id",
+          "chain_id",
+          "from_address",
+          "to_address",
+          "amount",
+          "memo",
+          "owner_id",
+          "approval",
+          "owner_mandate"
+        ],
+        "properties": {
+          "protocol": {
+            "const": 1
+          },
+          "operation_id": {
+            "type": "string",
+            "pattern": "^satchel:withdrawal:[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$"
+          },
+          "chain_id": {
+            "const": "wolo-1"
+          },
+          "from_address": {
+            "$ref": "#/components/schemas/Address"
+          },
+          "to_address": {
+            "$ref": "#/components/schemas/Address"
+          },
+          "amount": {
+            "$ref": "#/components/schemas/Coin"
+          },
+          "memo": {
+            "$ref": "#/components/schemas/Memo"
+          },
+          "owner_id": {
+            "$ref": "#/components/schemas/OwnerID"
+          },
+          "approval": {
+            "$ref": "#/components/schemas/WithdrawalApproval"
+          },
+          "owner_mandate": {
+            "$ref": "#/components/schemas/OwnerWithdrawalMandate"
+          }
+        },
+        "x-go-type": "internal/satchelservice/http.go:httpWithdrawal"
+      },
+      "WithdrawalApproval": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "withdrawal_id",
+          "challenge_id",
+          "owner_id",
+          "recipient",
+          "amount_uwolo",
+          "memo",
+          "hold_digest",
+          "reservation_digest",
+          "issued_at",
+          "expires_at",
+          "signature"
+        ],
+        "properties": {
+          "withdrawal_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "challenge_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "owner_id": {
+            "$ref": "#/components/schemas/OwnerID"
+          },
+          "recipient": {
+            "$ref": "#/components/schemas/Address"
+          },
+          "amount_uwolo": {
+            "$ref": "#/components/schemas/Amount"
+          },
+          "memo": {
+            "$ref": "#/components/schemas/Memo"
+          },
+          "hold_digest": {
+            "$ref": "#/components/schemas/Digest"
+          },
+          "reservation_digest": {
+            "$ref": "#/components/schemas/Digest"
+          },
+          "issued_at": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "signature": {
+            "type": "string"
+          }
+        },
+        "x-go-type": "internal/satchelservice/engine.go:WithdrawalApproval",
+        "description": "Both ADR-36 owner consent and independent Ed25519 approval are mandatory. Use Go ApprovalMessage, OwnerMandateDigest and WithdrawalHoldDigest; do not invent a JSON canonicalizer. Approval expires after at most 300 seconds and binds the durable app hold."
+      },
+      "OwnerWithdrawalMandate": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "challenge",
+          "pub_key",
+          "signature"
+        ],
+        "properties": {
+          "challenge": {
+            "$ref": "#/components/schemas/OwnerWithdrawalChallenge"
+          },
+          "pub_key": {
+            "$ref": "#/components/schemas/OwnerWithdrawalPublicKey"
+          },
+          "signature": {
+            "type": "string"
+          }
+        },
+        "x-go-type": "internal/satchelservice/withdrawal_owner.go:OwnerWithdrawalMandate"
+      },
+      "OwnerWithdrawalChallenge": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "owner_uid",
+          "wallet_address",
+          "amount_uwolo",
+          "issued_at_utc",
+          "expires_at_utc"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "owner_uid": {
+            "$ref": "#/components/schemas/OwnerID"
+          },
+          "wallet_address": {
+            "$ref": "#/components/schemas/Address"
+          },
+          "amount_uwolo": {
+            "$ref": "#/components/schemas/Amount"
+          },
+          "issued_at_utc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expires_at_utc": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "x-go-type": "internal/satchelservice/withdrawal_owner.go:OwnerWithdrawalChallenge"
+      },
+      "OwnerWithdrawalPublicKey": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "type",
+          "value"
+        ],
+        "properties": {
+          "type": {
+            "const": "tendermint/PubKeySecp256k1"
+          },
+          "value": {
+            "type": "string"
+          }
+        },
+        "x-go-type": "internal/satchelservice/withdrawal_owner.go:OwnerWithdrawalPublicKey"
+      },
+      "DepositProofRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "protocol",
+          "owner_id",
+          "sender",
+          "amount_uwolo",
+          "memo",
+          "created_at",
+          "expires_at",
+          "tx_hash"
+        ],
+        "properties": {
+          "protocol": {
+            "const": 1
+          },
+          "owner_id": {
+            "$ref": "#/components/schemas/OwnerID"
+          },
+          "sender": {
+            "$ref": "#/components/schemas/Address"
+          },
+          "amount_uwolo": {
+            "$ref": "#/components/schemas/Amount"
+          },
+          "memo": {
+            "$ref": "#/components/schemas/Memo"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "tx_hash": {
+            "$ref": "#/components/schemas/Hash"
+          }
+        },
+        "x-go-type": "internal/satchelservice/financial_proof.go:DepositProofRequest"
+      },
+      "FinancialProofContext": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "protocol",
+          "kind",
+          "owner_id",
+          "sender",
+          "recipient",
+          "amount_uwolo",
+          "memo",
+          "tx_hash"
+        ],
+        "properties": {
+          "protocol": {
+            "const": 1
+          },
+          "kind": {
+            "enum": [
+              "deposit",
+              "wager",
+              "withdrawal",
+              "claim_return"
+            ]
+          },
+          "owner_id": {
+            "$ref": "#/components/schemas/OwnerID"
+          },
+          "operation_id": {
+            "$ref": "#/components/schemas/OperationID"
+          },
+          "sender": {
+            "$ref": "#/components/schemas/Address"
+          },
+          "recipient": {
+            "$ref": "#/components/schemas/Address"
+          },
+          "amount_uwolo": {
+            "$ref": "#/components/schemas/Amount"
+          },
+          "memo": {
+            "$ref": "#/components/schemas/Memo"
+          },
+          "tx_hash": {
+            "$ref": "#/components/schemas/Hash"
+          },
+          "funded_amount_uwolo": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "withdrawal_approval": {
+            "$ref": "#/components/schemas/WithdrawalApproval"
+          },
+          "owner_mandate": {
+            "$ref": "#/components/schemas/OwnerWithdrawalMandate"
+          },
+          "return_approval": {
+            "$ref": "#/components/schemas/ReturnApproval"
+          },
+          "reservation": {
+            "$ref": "#/components/schemas/WagerReservation"
+          }
+        },
+        "x-go-type": "internal/satchelservice/financial_proof.go:FinancialProofContext"
+      },
+      "FinancialProof": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "protocol",
+          "chain_id",
+          "denom",
+          "context",
+          "context_digest",
+          "tx_hash",
+          "receipt_id",
+          "transfer_index",
+          "message_index",
+          "height",
+          "block_hash",
+          "consensus_authenticated",
+          "credit_authorized",
+          "proof"
+        ],
+        "properties": {
+          "protocol": {
+            "const": 1
+          },
+          "chain_id": {
+            "const": "wolo-1"
+          },
+          "denom": {
+            "const": "uwolo"
+          },
+          "context": {
+            "$ref": "#/components/schemas/FinancialProofContext"
+          },
+          "context_digest": {
+            "$ref": "#/components/schemas/Digest"
+          },
+          "tx_hash": {
+            "$ref": "#/components/schemas/UpperHash"
+          },
+          "receipt_id": {
+            "type": "string"
+          },
+          "transfer_index": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "message_index": {
+            "const": 0
+          },
+          "height": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "block_hash": {
+            "$ref": "#/components/schemas/UpperHash"
+          },
+          "consensus_authenticated": {
+            "const": true
+          },
+          "credit_authorized": {
+            "const": false
+          },
+          "proof": {
+            "$ref": "#/components/schemas/PortableProof"
+          }
+        },
+        "x-go-type": "internal/satchelservice/financial_proof.go:FinancialProof",
+        "description": "Untrusted transcript, never credit authority. Independently run the exact-source offline verifier against independently provisioned trust and app durable expected context. Receipt ID is wolo-1:UPPERCASE_TX_HASH:transfer_index; physical global consumption must bind chain_id+tx_hash+message_index(0), not the unauthenticated event ordinal. Envelope assertions and agreement between RPC endpoints do not establish trust."
+      },
+      "ReturnApproval": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "ticket_id",
+          "market_id",
+          "leg_id",
+          "entitlement_id",
+          "allocation",
+          "operation_id",
+          "claim_id",
+          "owner_id",
+          "claim_kind",
+          "amount_uwolo",
+          "allocation_digest",
+          "issued_at",
+          "expires_at",
+          "signature"
+        ],
+        "properties": {
+          "version": {
+            "const": 2
+          },
+          "ticket_id": {
+            "type": "string"
+          },
+          "market_id": {
+            "type": "string"
+          },
+          "leg_id": {
+            "type": "string"
+          },
+          "entitlement_id": {
+            "type": "string"
+          },
+          "allocation": {
+            "$ref": "#/components/schemas/ReturnAllocation"
+          },
+          "operation_id": {
+            "$ref": "#/components/schemas/OperationID"
+          },
+          "claim_id": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]{0,11}$",
+            "not": {
+              "const": "889"
+            }
+          },
+          "owner_id": {
+            "$ref": "#/components/schemas/OwnerID"
+          },
+          "claim_kind": {
+            "enum": [
+              "bet_refund",
+              "bet_payout"
+            ]
+          },
+          "amount_uwolo": {
+            "$ref": "#/components/schemas/Amount"
+          },
+          "allocation_digest": {
+            "$ref": "#/components/schemas/Digest"
+          },
+          "issued_at": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "signature": {
+            "type": "string"
+          }
+        },
+        "x-go-type": "internal/satchelservice/returns.go:ReturnApproval",
+        "description": "Version 2 only. An exact signed immutable entitlement owns one claim. Claim 889 is forbidden. Partial matched payouts and full unmatched principal refunds obey signed allocation and shared funds-budget conservation; bearer authentication alone grants no entitlement."
+      },
+      "ReturnReceipt": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "ticket_id",
+          "market_id",
+          "leg_id",
+          "entitlement_id",
+          "allocation_id",
+          "operation_id",
+          "claim_id",
+          "owner_id",
+          "claim_kind",
+          "amount_uwolo",
+          "tx_hash",
+          "receipt_id",
+          "height",
+          "block_hash",
+          "credit_authorized"
+        ],
+        "properties": {
+          "version": {
+            "const": 2
+          },
+          "ticket_id": {
+            "type": "string"
+          },
+          "market_id": {
+            "type": "string"
+          },
+          "leg_id": {
+            "type": "string"
+          },
+          "entitlement_id": {
+            "type": "string"
+          },
+          "allocation_id": {
+            "type": "string"
+          },
+          "operation_id": {
+            "$ref": "#/components/schemas/OperationID"
+          },
+          "claim_id": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]{0,11}$",
+            "not": {
+              "const": "889"
+            }
+          },
+          "owner_id": {
+            "$ref": "#/components/schemas/OwnerID"
+          },
+          "claim_kind": {
+            "enum": [
+              "bet_refund",
+              "bet_payout"
+            ]
+          },
+          "amount_uwolo": {
+            "$ref": "#/components/schemas/Amount"
+          },
+          "tx_hash": {
+            "$ref": "#/components/schemas/UpperHash"
+          },
+          "receipt_id": {
+            "type": "string"
+          },
+          "height": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "block_hash": {
+            "$ref": "#/components/schemas/UpperHash"
+          },
+          "credit_authorized": {
+            "const": false
+          }
+        },
+        "x-go-type": "internal/satchelservice/returns.go:ReturnReceipt"
+      },
+      "ReturnPayout": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "request_id",
+          "to_address",
+          "amount_uwolo",
+          "memo"
+        ],
+        "properties": {
+          "request_id": {
+            "$ref": "#/components/schemas/OperationID"
+          },
+          "to_address": {
+            "$ref": "#/components/schemas/Address"
+          },
+          "amount_uwolo": {
+            "$ref": "#/components/schemas/Amount"
+          },
+          "memo": {
+            "$ref": "#/components/schemas/Memo"
+          }
+        },
+        "x-go-type": "internal/satchelservice/returns.go:ReturnPayout"
+      },
+      "ReturnRun": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "settlement_run_id",
+          "source_app",
+          "source_event_id",
+          "signer_role",
+          "payouts"
+        ],
+        "properties": {
+          "settlement_run_id": {
+            "type": "string"
+          },
+          "source_app": {
+            "type": "string"
+          },
+          "source_event_id": {
+            "type": "string"
+          },
+          "signer_role": {
+            "type": "string"
+          },
+          "payouts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReturnPayout"
+            }
+          }
+        },
+        "x-go-type": "internal/satchelservice/returns.go:ReturnRun"
+      },
+      "ReturnAllocation": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "allocation_id",
+          "revision",
+          "operation_id",
+          "owner_id",
+          "ticket_id",
+          "funding_tx_hash",
+          "return_cap_uwolo",
+          "funds_budget_id",
+          "funds_available_uwolo",
+          "bank_evidence_digest",
+          "bank_height",
+          "bank_block_hash",
+          "legs",
+          "issued_at",
+          "expires_at",
+          "signature"
+        ],
+        "properties": {
+          "version": {
+            "const": 2
+          },
+          "allocation_id": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "operation_id": {
+            "$ref": "#/components/schemas/OperationID"
+          },
+          "owner_id": {
+            "$ref": "#/components/schemas/OwnerID"
+          },
+          "ticket_id": {
+            "type": "string"
+          },
+          "funding_tx_hash": {
+            "$ref": "#/components/schemas/UpperHash"
+          },
+          "return_cap_uwolo": {
+            "$ref": "#/components/schemas/Amount"
+          },
+          "funds_budget_id": {
+            "type": "string"
+          },
+          "funds_available_uwolo": {
+            "$ref": "#/components/schemas/Amount"
+          },
+          "bank_evidence_digest": {
+            "$ref": "#/components/schemas/Digest"
+          },
+          "bank_height": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "bank_block_hash": {
+            "$ref": "#/components/schemas/UpperHash"
+          },
+          "legs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReturnLeg"
+            },
+            "maxItems": 16
+          },
+          "issued_at": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "signature": {
+            "type": "string"
+          }
+        },
+        "x-go-type": "internal/satchelservice/return_allocation.go:ReturnAllocation"
+      },
+      "ReturnLeg": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "leg_id",
+          "market_id",
+          "stake_uwolo",
+          "entitlements"
+        ],
+        "properties": {
+          "leg_id": {
+            "type": "string"
+          },
+          "market_id": {
+            "type": "string"
+          },
+          "stake_uwolo": {
+            "$ref": "#/components/schemas/Amount"
+          },
+          "entitlements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReturnEntitlement"
+            }
+          }
+        },
+        "x-go-type": "internal/satchelservice/return_allocation.go:ReturnLeg"
+      },
+      "ReturnEntitlement": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "entitlement_id",
+          "claim_id",
+          "claim_kind",
+          "principal_uwolo",
+          "amount_uwolo"
+        ],
+        "properties": {
+          "entitlement_id": {
+            "type": "string"
+          },
+          "claim_id": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]{0,11}$",
+            "not": {
+              "const": "889"
+            }
+          },
+          "claim_kind": {
+            "enum": [
+              "bet_refund",
+              "bet_payout"
+            ]
+          },
+          "principal_uwolo": {
+            "$ref": "#/components/schemas/Amount"
+          },
+          "amount_uwolo": {
+            "$ref": "#/components/schemas/Amount"
+          }
+        },
+        "x-go-type": "internal/satchelservice/return_allocation.go:ReturnEntitlement"
+      },
+      "ReservedWagerRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "protocol",
+          "request_id",
+          "chain_id",
+          "signer_role",
+          "from_address",
+          "to_address",
+          "amount",
+          "memo",
+          "owner_id",
+          "reservation"
+        ],
+        "properties": {
+          "protocol": {
+            "const": 2
+          },
+          "request_id": {
+            "$ref": "#/components/schemas/WagerOperationID"
+          },
+          "chain_id": {
+            "const": "wolo-1"
+          },
+          "signer_role": {
+            "const": "exclusive-war-satchel-v1"
+          },
+          "from_address": {
+            "$ref": "#/components/schemas/Address"
+          },
+          "to_address": {
+            "$ref": "#/components/schemas/Address"
+          },
+          "amount": {
+            "$ref": "#/components/schemas/WagerCoin"
+          },
+          "memo": {
+            "$ref": "#/components/schemas/WagerMemo"
+          },
+          "owner_id": {
+            "$ref": "#/components/schemas/OwnerID"
+          },
+          "reservation": {
+            "$ref": "#/components/schemas/WagerReservation"
+          }
+        },
+        "x-go-function": "internal/satchelservice/http.go:decodeReservedWagerHTTP"
+      },
+      "UUID": {
+        "type": "string",
+        "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$"
+      },
+      "WagerOperationID": {
+        "type": "string",
+        "pattern": "^satchel:ticket:[1-9][0-9]{0,11}$"
+      },
+      "WagerMemo": {
+        "type": "string",
+        "pattern": "^AoE2HDBets bet ticket v1 · ticket [1-9][0-9]{0,11}$"
+      },
+      "WagerCoin": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "denom",
+          "amount"
+        ],
+        "properties": {
+          "denom": {
+            "const": "uwolo"
+          },
+          "amount": {
+            "type": "string",
+            "pattern": "^(?:[1-9][0-9]{0,2}|1000)000000$"
+          }
+        }
+      },
+      "OperationIdentity": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "operation_id"
+        ],
+        "properties": {
+          "operation_id": {
+            "$ref": "#/components/schemas/OperationID"
+          }
+        }
+      },
+      "ReturnIdentity": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "claim_id"
+        ],
+        "properties": {
+          "claim_id": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]{0,11}$",
+            "not": {
+              "const": "889"
+            }
+          }
+        }
+      },
+      "ReturnReconcileRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "approval",
+          "tx_hash"
+        ],
+        "properties": {
+          "approval": {
+            "$ref": "#/components/schemas/ReturnApproval"
+          },
+          "tx_hash": {
+            "$ref": "#/components/schemas/Hash"
+          }
+        }
+      },
+      "ReturnPrepared": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "execution_authorized",
+          "credit_authorized",
+          "run"
+        ],
+        "properties": {
+          "kind": {
+            "const": "escrow_run_prepared"
+          },
+          "execution_authorized": {
+            "const": false
+          },
+          "credit_authorized": {
+            "const": false
+          },
+          "run": {
+            "$ref": "#/components/schemas/ReturnRun"
+          }
+        }
+      },
+      "PortableProof": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "chain_id",
+          "kind",
+          "tx_hash",
+          "responses"
+        ],
+        "properties": {
+          "version": {
+            "const": 1
+          },
+          "chain_id": {
+            "const": "wolo-1"
+          },
+          "kind": {
+            "enum": [
+              "deposit",
+              "transfer"
+            ]
+          },
+          "tx_hash": {
+            "$ref": "#/components/schemas/UpperHash"
+          },
+          "responses": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 80,
+            "items": {
+              "$ref": "#/components/schemas/ProofResponse"
+            }
+          }
+        }
+      },
+      "ProofResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "source",
+          "path",
+          "query",
+          "body"
+        ],
+        "properties": {
+          "source": {
+            "enum": [
+              "primary",
+              "rest",
+              "witness"
+            ]
+          },
+          "path": {
+            "type": "string"
+          },
+          "query": {
+            "type": "string"
+          },
+          "body": {}
+        }
+      },
+      "Health": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "ok",
+          "protocol",
+          "chainId",
+          "custodyRole",
+          "vaultAddress",
+          "keyFingerprint",
+          "exclusiveSignOnly",
+          "accepting",
+          "chain_id",
+          "signer_role",
+          "vault_address",
+          "build_sha256",
+          "durable_one_shot",
+          "replay_after_restart_forbidden",
+          "refunds_require_chain_proof"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "protocol": {
+            "const": 1
+          },
+          "chainId": {
+            "const": "wolo-1"
+          },
+          "custodyRole": {
+            "const": "exclusive-war-satchel-v1"
+          },
+          "vaultAddress": {
+            "type": "string"
+          },
+          "keyFingerprint": {
+            "type": "string"
+          },
+          "exclusiveSignOnly": {
+            "type": "boolean"
+          },
+          "accepting": {
+            "type": "boolean"
+          },
+          "chain_id": {
+            "const": "wolo-1"
+          },
+          "signer_role": {
+            "const": "exclusive-war-satchel-v1"
+          },
+          "vault_address": {
+            "type": "string"
+          },
+          "build_sha256": {
+            "type": "string"
+          },
+          "durable_one_shot": {
+            "const": true
+          },
+          "replay_after_restart_forbidden": {
+            "const": true
+          },
+          "refunds_require_chain_proof": {
+            "const": true
+          },
+          "custody_mnemonic_shared_with_other_roles": {
+            "const": false
+          }
+        },
+        "description": "Authenticated process assertion only. HTTP200/accepting:true neither proves solvency nor authorizes deposits. Optional mnemonic-isolation assertion appears only while accepting with verified configured authority; independently review actual key control."
+      },
+      "OperationResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "operation_id",
+          "request_id",
+          "chain_id",
+          "signer_role",
+          "status",
+          "durable_request_fenced",
+          "kind",
+          "reason"
+        ],
+        "properties": {
+          "operation_id": {
+            "$ref": "#/components/schemas/OperationID"
+          },
+          "request_id": {
+            "$ref": "#/components/schemas/OperationID"
+          },
+          "chain_id": {
+            "const": "wolo-1"
+          },
+          "signer_role": {
+            "const": "exclusive-war-satchel-v1"
+          },
+          "status": {
+            "enum": [
+              "ACCEPTED",
+              "UNKNOWN",
+              "FAILED",
+              "OBSERVED_NONCREDITING",
+              "CONFIRMED",
+              "REFUSED"
+            ]
+          },
+          "durable_request_fenced": {
+            "type": "boolean"
+          },
+          "kind": {
+            "enum": [
+              "unknown",
+              "refused",
+              "broadcast_confirmed"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_:-]{1,96}$"
+          },
+          "tx_hash": {
+            "$ref": "#/components/schemas/UpperHash"
+          },
+          "txHash": {
+            "$ref": "#/components/schemas/UpperHash"
+          },
+          "broadcast_status": {
+            "const": "accepted_once"
+          }
+        },
+        "description": "Historical kind:broadcast_confirmed acknowledges at most an accepted one-shot broadcast. Only status:CONFIRMED after authenticated exact-byte chain reconciliation is committed execution. ACCEPTED/UNKNOWN/transport failure never authorize retry or release of liability. A repeated same operation never broadcasts again; changed payload conflicts."
+      },
+      "ReservedOperationResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "operation_id",
+          "request_id",
+          "chain_id",
+          "signer_role",
+          "status",
+          "durable_request_fenced",
+          "kind",
+          "reason"
+        ],
+        "properties": {
+          "operation_id": {
+            "$ref": "#/components/schemas/OperationID"
+          },
+          "request_id": {
+            "$ref": "#/components/schemas/OperationID"
+          },
+          "chain_id": {
+            "const": "wolo-1"
+          },
+          "signer_role": {
+            "const": "exclusive-war-satchel-v1"
+          },
+          "status": {
+            "enum": [
+              "ACCEPTED",
+              "UNKNOWN",
+              "FAILED",
+              "OBSERVED_NONCREDITING",
+              "CONFIRMED",
+              "REFUSED"
+            ]
+          },
+          "durable_request_fenced": {
+            "type": "boolean"
+          },
+          "kind": {
+            "enum": [
+              "unknown",
+              "refused"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_:-]{1,96}$"
+          },
+          "tx_hash": {
+            "$ref": "#/components/schemas/UpperHash"
+          }
+        },
+        "description": "Protocol-2 result uses actual status. kind:unknown with status:ACCEPTED is only a one-shot acknowledgment, never committed payment. No historical broadcast_confirmed alias is emitted."
+      },
+      "Failure": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "reason"
+        ],
+        "properties": {
+          "kind": {
+            "const": "unknown"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "ProofFailure": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "status",
+          "reason",
+          "credit_authorized"
+        ],
+        "properties": {
+          "kind": {
+            "const": "unverifiable"
+          },
+          "status": {
+            "const": "UNVERIFIABLE"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "credit_authorized": {
+            "const": false
+          }
+        }
+      },
+      "BankProofRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "protocol"
+        ],
+        "properties": {
+          "protocol": {
+            "const": 1
+          }
+        }
+      },
+      "BankStateProof": {
+        "type": "object",
+        "additionalProperties": false,
+        "x-go-type": "internal/satchel/bank_proof.go:BankProof",
+        "description": "UNTRUSTED portable RPC evidence. The configured vault and server-selected head-1 state must pass independent Comet and SDK ICS23 authentication. No credit, spending or solvency authority.",
+        "required": [
+          "version",
+          "chain_id",
+          "address",
+          "denom",
+          "height",
+          "responses"
+        ],
+        "properties": {
+          "version": {
+            "const": 1
+          },
+          "chain_id": {
+            "const": "wolo-1"
+          },
+          "address": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 90
+          },
+          "denom": {
+            "const": "uwolo"
+          },
+          "height": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "responses": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 80,
+            "items": {
+              "$ref": "#/components/schemas/ProofResponse"
+            }
+          }
+        }
+      }
+    },
+    "responses": {
+      "Failure400": {
+        "description": "Malformed exact-field request; no new financial authorization",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Failure"
+            }
+          }
+        }
+      },
+      "Failure401": {
+        "description": "Private loopback bearer authentication required",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Failure"
+            }
+          }
+        }
+      },
+      "Failure404": {
+        "description": "Unknown route",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Failure"
+            }
+          }
+        }
+      },
+      "Failure405": {
+        "description": "Wrong method",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Failure"
+            }
+          }
+        }
+      },
+      "Failure408": {
+        "description": "Canceled or expired request; original operation may be uncertain",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Failure"
+            }
+          }
+        }
+      },
+      "Failure409": {
+        "description": "Refused, absent, or uncertain operation; never automatic retry",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Failure"
+            }
+          }
+        }
+      },
+      "Failure413": {
+        "description": "Body exceeds 16384 bytes",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Failure"
+            }
+          }
+        }
+      },
+      "Failure415": {
+        "description": "Requires uncompressed application/json UTF-8",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Failure"
+            }
+          }
+        }
+      },
+      "Failure503": {
+        "description": "Held, busy, or unavailable authority/evidence; never infer nonpayment",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Failure"
+            }
+          }
+        }
+      },
+      "Proof409": {
+        "description": "Refused, absent, or uncertain operation; never automatic retry",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ProofFailure"
+            }
+          }
+        }
+      }
+    }
+  },
+  "x-event-identity": {
+    "physical_bank_effect": [
+      "chain_id",
+      "tx_hash",
+      "message_index:0"
+    ],
+    "receipt_display": "wolo-1:UPPERCASE_TX_HASH:transfer_index; transfer event index is not independent consensus authority",
+    "wager": [
+      "request_id:satchel:ticket:<execution-id>",
+      "exact canonical server ticket memo",
+      "owner_id",
+      "reservation_digest"
+    ],
+    "withdrawal": [
+      "operation_id:satchel:withdrawal:<withdrawal_id>",
+      "withdrawal_id",
+      "challenge_id",
+      "reservation_digest",
+      "owner mandate digest"
+    ],
+    "return": [
+      "claim_id",
+      "owner_id",
+      "operation_id",
+      "ticket_id",
+      "market_id",
+      "leg_id",
+      "entitlement_id",
+      "allocation_digest",
+      "funding_tx_hash"
+    ]
+  },
+  "x-client-recovery": {
+    "on_timeout_or_disconnection": "Retain app reservation. Query original operation then reconcile exact original signed transaction. Never change identity or rebroadcast.",
+    "on_unknown": "Preserve durable reservation, signer sequence fence and all latest history; operator proof may reconcile outcome but cannot invent success or nonpayment.",
+    "on_proof_unavailable": "Keep NONCREDITING. Independently pin trust and reverify against own durable expected context; never use raw HTTP JSON as ledger authority.",
+    "on_historical_collision": "Refuse new financial work; preserve all original obligations and investigate privately without retries."
+  },
+  "x-approval-contracts": {
+    "wager_reservation": {
+      "function": "satchelservice.WagerReservationMessage",
+      "domain": "aoe2war/satchel/wager-reservation/v1",
+      "signature": "strict standard-base64 Ed25519",
+      "maximum_lifetime_seconds": 300,
+      "authority": "independent configured ledger reviewer; same configured review boundary as withdrawal approvals, separate from activation authority"
+    },
+    "withdrawal": {
+      "function": "satchelservice.ApprovalMessage",
+      "owner_signature_function": "satchelservice.WithdrawalOwnerSignBytes",
+      "owner_hold_function": "satchelservice.WithdrawalHoldDigest",
+      "signature": "strict standard-base64 Ed25519 plus canonical ADR-36 secp256k1 owner mandate",
+      "maximum_lifetime_seconds": 300
+    }
+  }
+}

@@ -34,9 +34,9 @@
       "owner": "wolochain-ops",
       "path": "docs/BRANCH_AUTHORITY.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-10-17",
+      "reviewed_at": "2026-10-18",
       "sensitivity": "internal",
-      "sha256": "b93f5c52967ad34732621b27f51f920e19990f43f84ac9415d4b54bf06eb01a0",
+      "sha256": "e74d04b64d9d6b1cd239beaa08e1677c39bbc857bc5dc0474159f2df77ad80dd",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "97a5c19b3449860bea2ff0996a7e851447d73f86a162e7acd2c8966c837bf788",
+      "sha256": "b660923da00d24d67258b820674d21cd21ec5d614b0caef24ead0d9dbc3faff3",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -379,9 +379,9 @@
       "owner": "wolochain-ops",
       "path": "docs/settlement-contracts/README.md",
       "review_interval_days": 30,
-      "reviewed_at": "2026-10-10",
+      "reviewed_at": "2026-10-20",
       "sensitivity": "public",
-      "sha256": "7ce1a81f1a703f58e1b77dd931e1153b62f6bc1583f6d004ccf44de823417ae9",
+      "sha256": "a30c8f323e766b4b745c078c95e61aeb273b1ef61110dcb3d36fe632bfbafa78",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -448,9 +448,9 @@
       "owner": "wolochain-ops",
       "path": "docs/war-satchel-controlled-release.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-10-17",
+      "reviewed_at": "2026-10-18",
       "sensitivity": "restricted",
-      "sha256": "77981cac1ac723859b5a5d94da8a5c66f59abafdd5edac3406356fa8b6f0e838",
+      "sha256": "1b94c4c31f8ec08a96b6c568fbb7516b2331203d495aec0f27b7afd1431de878",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -517,9 +517,9 @@
       "owner": "wolochain-ops",
       "path": "docs/war-satchel-financial-bridge.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-10-17",
+      "reviewed_at": "2026-10-20",
       "sensitivity": "restricted",
-      "sha256": "0a482e2224ec30bbe0698ba1dc86bb04d5be3fd3ef86649abc5fe49b96c1416f",
+      "sha256": "d2d5f14b23d52792cc4618e65b585a626702aea3a1e40258f9b60340591c2137",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -563,9 +563,9 @@
       "owner": "wolochain-ops",
       "path": "docs/war-satchel-mainnet-execution.md",
       "review_interval_days": 7,
-      "reviewed_at": "2026-10-17",
+      "reviewed_at": "2026-10-18",
       "sensitivity": "restricted",
-      "sha256": "4b68ce72bb92c16eba6703c7b6deb383f4295dbbe87bb08a738fc43d4f66c0fd",
+      "sha256": "1e907242e709b83ce30f4d11028afc7ed067250520d9312f861da613e44eca40",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -618,7 +618,7 @@
         "wolochain",
         "aoe2war"
       ],
-      "title": "Codex Mission: WoloChain Mainnet ↔ Osmosis IBC Prep",
+      "title": "Codex Mission: WoloChain Mainnet \u2194 Osmosis IBC Prep",
       "type": "historical"
     },
     {
@@ -779,7 +779,7 @@
         "wolochain",
         "aoe2war"
       ],
-      "title": "WoloChain Mainnet → Osmosis Liquidity Transfer",
+      "title": "WoloChain Mainnet \u2192 Osmosis Liquidity Transfer",
       "type": "historical"
     },
     {
@@ -848,7 +848,7 @@
         "wolochain",
         "aoe2war"
       ],
-      "title": "WoloChain Mainnet → Osmosis Test Transfer",
+      "title": "WoloChain Mainnet \u2192 Osmosis Test Transfer",
       "type": "historical"
     },
     {
@@ -946,8 +946,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "integration/20261018-satchel-ops-finance-held",
-    "commit": "25df6e4a3b79fcd2df7ead45b8af5e877905986a"
+    "branch": "codex/satchel-authenticated-finance",
+    "commit": "c68b82d67c2dcaf1add27d73e4c82252de6d199b"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

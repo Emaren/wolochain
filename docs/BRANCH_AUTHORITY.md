@@ -8,7 +8,7 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "git-branch-authority-contract"
-reviewed_at: "2026-10-17"
+reviewed_at: "2026-10-18"
 review_interval_days: 14
 sensitivity: "internal"
 ---
@@ -18,6 +18,51 @@ sensitivity: "internal"
 Reviewed: 2026-10-14
 
 ## Current federation source
+
+
+### October 18, 2026 — combined Satchel/operations candidate
+
+The implementation worktree is `codex/satchel-production-backend`, initially
+branched from integrated draft [PR #38](https://github.com/Emaren/wolochain/pull/38)
+HEAD `68cdc1ae2f1c877f40e7ee3f8c094729f080394f`. That source contains both
+Satchel #29 `04912e1b7e45bc3dc489070aadcb3e729178915f` and guarded operations
+#36 `7c987e5ac066968fc40a3500659188a6b9527105` as ancestors, through two-parent
+merge `952bacef86febf24d3d799aca64b097b9e4502e6`. PR #37 was closed as a
+superseded conflict probe; it was not merged. The exact current implementation
+baseline is always the [source-bound index](DOCUMENTATION_CONTROL_PLANE.md),
+not this initial branch point. App source and releases belong to their separate
+engineer; no app repository is changed by this candidate.
+
+Read-only local inventory on October 18 found seven worktrees. No worktree or
+branch was deleted, reset, cleaned or rewritten:
+
+| Worktree suffix | HEAD at inventory | Disposition |
+| --- | --- | --- |
+| primary `WoloChain-wolo-1` | `c1210dda` | Clean mainnet-prep authority; preserve. |
+| `satchel-production-backend` | `68cdc1ae` | Clean starting combined candidate; active implementation. |
+| `satchel-source-integration-proof` | `04912e1b` | Clean PR #29; integrated ancestor, preserve review/artifact lineage. |
+| `satchel-mainnet-execution` | `42ecb12c` | Clean PR #25; integrated ancestor, preserve. |
+| `legacy-settlement-hardening` | `526d5eb6` | Clean PR #26; integrated ancestor, preserve original artifact identity. |
+| `exact-settlement-artifact` | `2405e36c` | Clean PR #27 tooling; preserve pinned historical profile. |
+| `current-settlement-release` | `a332ad91` | **Dirty earlier release WIP; preserve all files pending exact diff disposition.** |
+
+The dirty worktree includes tracked runbook/rollback edits and untracked release
+policy, state evidence, watchdog/controller, helper-stage, fixtures, workflow
+and tests. Its apparent overlap with later operations work is not proof that all
+content is duplicated. Bytecode caches are disposable generated candidates;
+even these were left untouched during this inventory. No unreviewed code is
+approved for deletion. PRs #25–#36 remain useful stacked review/evidence records
+although their implementation ancestry is combined; closing them requires owner
+review. Old PR #16 watchdog work is an obsolete-policy *candidate*, requiring a
+specific diff against the current bdbce controller before cleanup. The retired
+`3ea79363` mutation scripts stay retired.
+
+Source integration does not advance live executable authority. The `bdbce253`
+legacy candidate, `526d5eb6` historical artifact and `155fcf67` composed signer
+artifact keep their original identities. An artifact built from any of those
+commits cannot be relabeled as this candidate. Current signed release receipts
+and independent financial/operator evidence remain required.
+
 
 ### October 17, 2026 — authenticated financial bridge integration
 
