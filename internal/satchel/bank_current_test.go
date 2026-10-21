@@ -19,11 +19,13 @@ func TestCurrentBankProofUsesServerSelectedLatestCommit(t *testing.T) {
 	e, p, err := f.reader(t, nil).ReadCurrentBankProof(context.Background(), f.vault)
 	require.NoError(t, err)
 	require.EqualValues(t, 100, p.Height)
+	require.True(t, e.CurrentAt(f.f.now))
 	require.Equal(t, e.CommitHeight(), e.HeadHeight())
 	require.Equal(t, e.BlockHash(), e.HeadBlockHash())
 	require.Equal(t, f.f.commits[101].Time, e.HeadTime())
 	require.True(t, e.ExpiresAt().After(f.f.now))
 	require.False(t, e.FreshAt(e.ExpiresAt().Add(time.Nanosecond)))
+	require.False(t, e.CurrentAt(e.ExpiresAt().Add(time.Nanosecond)))
 }
 
 func TestCurrentBankProofRefusesHeadAdvanceAndNilContext(t *testing.T) {
@@ -52,4 +54,44 @@ func TestCurrentBankProofRefusesHeadAdvanceAndNilContext(t *testing.T) {
 	require.False(t, e.FreshAt(f.f.now))
 	_, _, err = r.ReadCurrentBankProof(nil, f.vault)
 	require.Error(t, err)
+}
+
+func TestCurrentBankProofRefusesGenuinelyAuthenticatedAheadWitness(t *testing.T) {
+	f := newNativeBankFixture(t)
+	f.f.status.SyncInfo.LatestBlockHeight = 101
+	f.f.status.SyncInfo.LatestBlockHash = f.f.commits[101].Header.Hash()
+	f.f.status.SyncInfo.LatestBlockTime = f.f.commits[101].Header.Time
+	var primaryHost atomic.Value
+	r := f.reader(t, func(request *http.Request, body []byte) []byte {
+		if request.URL.Path != "/status" {
+			return body
+		}
+		primaryHost.CompareAndSwap(nil, request.Host)
+		if request.Host == primaryHost.Load().(string) {
+			return body
+		}
+		// Header 102 and its validator signatures are real fixture commits,
+		// not forged head JSON. The witness proves the primary's snapshot old.
+		status := f.f.status
+		status.SyncInfo.LatestBlockHeight = 102
+		status.SyncInfo.LatestBlockHash = f.f.commits[102].Header.Hash()
+		status.SyncInfo.LatestBlockTime = f.f.commits[102].Header.Time
+		encoded, err := cmtjson.Marshal(status)
+		require.NoError(t, err)
+		return append(append([]byte(`{"jsonrpc":"2.0","id":-1,"result":`), encoded...), '}')
+	})
+	// Historical asset proofs remain useful NONAUTHORIZING library evidence.
+	historical, proof, err := r.ReadBankProof(context.Background(), f.vault, 100)
+	require.NoError(t, err)
+	require.True(t, historical.FreshAt(f.f.now))
+	require.False(t, historical.CurrentAt(f.f.now))
+	v, err := NewProofVerifier(fixtureAnchor(f.f))
+	require.NoError(t, err)
+	v.now = func() time.Time { return f.f.now }
+	replayed, err := v.VerifyBankProof(context.Background(), f.vault, 100, proof)
+	require.NoError(t, err)
+	require.True(t, replayed.FreshAt(f.f.now))
+	require.False(t, replayed.CurrentAt(f.f.now))
+	_, _, err = r.ReadCurrentBankProof(context.Background(), f.vault)
+	require.Error(t, err, "known newer authenticated witness cannot certify the primary's historical assets as current")
 }

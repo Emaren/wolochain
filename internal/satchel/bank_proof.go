@@ -83,6 +83,15 @@ func (e AuthenticatedBankEvidence) FreshAt(now time.Time) bool {
 		validHead(e.head, now) && validHead(e.witness, now)
 }
 
+// A fresh historical asset proof is not necessarily a current spendability
+// observation. Both authenticated sources must identify the exact header that
+// commits this state; a known newer witness can already contain later outflows.
+func (e AuthenticatedBankEvidence) CurrentAt(now time.Time) bool {
+	return e.FreshAt(now) && e.head.Height == e.CommitHeight() && e.witness.Height == e.CommitHeight() &&
+		strings.EqualFold(e.head.BlockHash, e.blockHash) && strings.EqualFold(e.witness.BlockHash, e.blockHash) &&
+		e.head.BlockTime.Equal(e.commitTime) && e.witness.BlockTime.Equal(e.commitTime)
+}
+
 // nativeBankKey reuses the exact v0.53 SDK collections codec, including the
 // nonterminal account-address length prefix. No parallel protocol parser.
 func nativeBankKey(vault string) ([]byte, error) {
@@ -131,7 +140,7 @@ func (r *TrustedReader) ReadCurrentBankProof(ctx context.Context, vault string) 
 	if err != nil {
 		return AuthenticatedBankEvidence{}, BankProof{}, err
 	}
-	if e.HeadHeight() != e.CommitHeight() || !e.FreshAt(r.reader.now()) || ctx.Err() != nil {
+	if !e.CurrentAt(r.reader.now()) || ctx.Err() != nil {
 		return AuthenticatedBankEvidence{}, BankProof{}, fail(StaleHead, "bank", "current_changed")
 	}
 	return e, p, nil

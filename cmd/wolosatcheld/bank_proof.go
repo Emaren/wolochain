@@ -54,7 +54,7 @@ func bankProofCommand(ctx context.Context, mode string, args []string, out, erro
 		}
 		defer reader.Close()
 		evidence, proof, err := reader.ReadBankProof(ctx, authority.Vault, *height)
-		if err != nil || !evidence.FreshAt(time.Now()) || ctx.Err() != nil {
+		if err != nil || !evidence.CurrentAt(time.Now()) || ctx.Err() != nil {
 			return fail()
 		}
 		if json.NewEncoder(out).Encode(proof) != nil {
@@ -78,7 +78,7 @@ func bankProofCommand(ctx context.Context, mode string, args []string, out, erro
 		return fail()
 	}
 	evidence, err := verifier.VerifyBankProof(ctx, authority.Vault, *height, proof)
-	if err != nil || !evidence.FreshAt(time.Now()) || ctx.Err() != nil {
+	if err != nil || !evidence.CurrentAt(time.Now()) || ctx.Err() != nil {
 		return fail()
 	}
 	// All fields below derive from opaque authenticated evidence. This is an
