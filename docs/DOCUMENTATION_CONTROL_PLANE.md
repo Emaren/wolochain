@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `codex/protected-release-frontier` at `77ff5600cf9b96c31fd8401afe7194abfb8498a9`
+Implementation baseline: `fix/wolo-hd-financial-obligation-envelope-20261021` at `7f5f24cc4a354283ff9c51502e15181959081738`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
@@ -27,7 +27,7 @@ This page is generated from the validated front matter in this repository. Cross
 
 ## Documentation health
 
-- Authoritative repository documents: **41**
+- Authoritative repository documents: **42**
 - Path moves in this migration: **0**
 - Every listed document has an explicit owner, lifecycle, authority, and review interval.
 
@@ -35,13 +35,13 @@ This page is generated from the validated front matter in this repository. Cross
 
 - `historical`: 14
 - `reference`: 23
-- `runbook`: 2
+- `runbook`: 3
 - `working`: 2
 
 ### Lifecycle
 
 - `active`: 16
-- `draft`: 11
+- `draft`: 12
 - `historical`: 14
 
 ## Documents
@@ -64,6 +64,7 @@ This page is generated from the validated front matter in this repository. Cross
 | [WoloChain Mainnet Template Report](mainnet-template.md) | `historical` | `historical` | `mainnet-preparation-template-evidence` |
 | [WoloChain Mainnet Wallet And Key Plan](mainnet-wallets.md) | `reference` | `active` | `mainnet-wallet-role-and-custody-map` |
 | [Settlement Contracts](settlement-contracts/README.md) | `reference` | `active` | `machine-readable-settlement-contract-index` |
+| [HD and DE Financial Producer Owner Review](settlement-contracts/producer-owner-correlation.md) | `runbook` | `draft` | `non-authorizing-financial-producer-evidence-correlation` |
 | [WoloChain Testnet Ops](testnet-ops.md) | `runbook` | `active` | `legacy-testnet-operations` |
 | [War Satchel C3 Chain Evidence](war-satchel-chain-evidence-c3.md) | `reference` | `draft` | `source-only-war-satchel-chain-evidence` |
 | [War Satchel Controlled Release Gates](war-satchel-controlled-release.md) | `reference` | `draft` | `source-integration-proof-not-production-approval` |

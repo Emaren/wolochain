@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "43201a1f5f8b0666bdfe71491be74bb835c6c19771cd6a17218b2e949a31b5f8",
+      "sha256": "187564eac7432bfe1826da2f1c29a6f1bed7bbae0ee51f51398ab2dbe9782650",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -312,7 +312,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-18",
       "sensitivity": "restricted",
-      "sha256": "c086c14aa1f364611d9a9b0d2b02d1b9b5f36563ef7551b6289799a32c4761fa",
+      "sha256": "61564b04fc339e7bb7d327963c1833923e060ac47c489be4613ab1f71069655b",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -381,7 +381,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-18",
       "sensitivity": "public",
-      "sha256": "228bfc2a6c715198e29048fe0bd20af57e6e79d00fef1faf7608b0ff2cddb537",
+      "sha256": "a499d9c5ed12688433417894fba75756b1ed2c83745a3989cc1fa497e498549e",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -390,6 +390,30 @@
       ],
       "title": "Settlement Contracts",
       "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "non-authorizing-financial-producer-evidence-correlation",
+      "id": "aoe2war.wolochain.producer-owner-triage",
+      "owner": "wolochain-ops",
+      "path": "docs/settlement-contracts/producer-owner-correlation.md",
+      "review_interval_days": 14,
+      "reviewed_at": "2026-10-20",
+      "sensitivity": "internal",
+      "sha256": "0c64850fec32b6a983e117d4a7b6d5d1f9fef9ac91c2b27c84c0d5c186691ea0",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war",
+        "aoe2dewarwagers"
+      ],
+      "title": "HD and DE Financial Producer Owner Review",
+      "type": "runbook"
     },
     {
       "audience": [
@@ -618,7 +642,7 @@
         "wolochain",
         "aoe2war"
       ],
-      "title": "Codex Mission: WoloChain Mainnet \u2194 Osmosis IBC Prep",
+      "title": "Codex Mission: WoloChain Mainnet ↔ Osmosis IBC Prep",
       "type": "historical"
     },
     {
@@ -779,7 +803,7 @@
         "wolochain",
         "aoe2war"
       ],
-      "title": "WoloChain Mainnet \u2192 Osmosis Liquidity Transfer",
+      "title": "WoloChain Mainnet → Osmosis Liquidity Transfer",
       "type": "historical"
     },
     {
@@ -848,7 +872,7 @@
         "wolochain",
         "aoe2war"
       ],
-      "title": "WoloChain Mainnet \u2192 Osmosis Test Transfer",
+      "title": "WoloChain Mainnet → Osmosis Test Transfer",
       "type": "historical"
     },
     {
@@ -946,8 +970,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "codex/protected-release-frontier",
-    "commit": "77ff5600cf9b96c31fd8401afe7194abfb8498a9"
+    "branch": "fix/wolo-hd-financial-obligation-envelope-20261021",
+    "commit": "7f5f24cc4a354283ff9c51502e15181959081738"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
