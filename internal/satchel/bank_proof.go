@@ -53,12 +53,24 @@ type AuthenticatedBankEvidence struct {
 	head, witness                        Head
 }
 
-func (e AuthenticatedBankEvidence) VaultAddress() string   { return e.address }
-func (e AuthenticatedBankEvidence) BalanceUWolo() string   { return e.balance }
-func (e AuthenticatedBankEvidence) Height() int64          { return e.height }
-func (e AuthenticatedBankEvidence) CommitHeight() int64    { return e.height + 1 }
-func (e AuthenticatedBankEvidence) BlockHash() string      { return e.blockHash }
-func (e AuthenticatedBankEvidence) AppHash() string        { return e.appHash }
+func (e AuthenticatedBankEvidence) VaultAddress() string  { return e.address }
+func (e AuthenticatedBankEvidence) BalanceUWolo() string  { return e.balance }
+func (e AuthenticatedBankEvidence) Height() int64         { return e.height }
+func (e AuthenticatedBankEvidence) CommitHeight() int64   { return e.height + 1 }
+func (e AuthenticatedBankEvidence) BlockHash() string     { return e.blockHash }
+func (e AuthenticatedBankEvidence) AppHash() string       { return e.appHash }
+func (e AuthenticatedBankEvidence) HeadHeight() int64     { return e.head.Height }
+func (e AuthenticatedBankEvidence) HeadBlockHash() string { return e.head.BlockHash }
+func (e AuthenticatedBankEvidence) HeadTime() time.Time   { return e.head.BlockTime }
+func (e AuthenticatedBankEvidence) ExpiresAt() time.Time {
+	end := e.anchorTime.Add(time.Duration(e.anchor.PeriodSeconds) * time.Second)
+	for _, at := range []time.Time{e.commitTime, e.head.BlockTime, e.witness.BlockTime} {
+		if expiry := at.Add(maxHeadAge); expiry.Before(end) {
+			end = expiry
+		}
+	}
+	return end
+}
 func (e AuthenticatedBankEvidence) ChainID() string        { return ChainID }
 func (e AuthenticatedBankEvidence) Denom() string          { return Denom }
 func (e AuthenticatedBankEvidence) CreditAuthorized() bool { return false }
@@ -86,6 +98,43 @@ func nativeBankKey(vault string) ([]byte, error) {
 
 func bankQuery(height int64, key []byte) url.Values {
 	return url.Values{"path": {strconv.Quote("/store/bank/key")}, "data": {"0x" + strings.ToUpper(hex.EncodeToString(key))}, "height": {strconv.FormatInt(height, 10)}, "prove": {"true"}}
+}
+
+// Select the state height on the server. Historical authenticated assets can
+// overstate current funds after later outflows; accept only state committed by
+// the observed current primary head. A head advance during I/O safely refuses.
+func (r *TrustedReader) ReadCurrentBankProof(ctx context.Context, vault string) (AuthenticatedBankEvidence, BankProof, error) {
+	if r == nil || r.reader == nil || r.gate == nil || !validTrustAnchor(r.anchor) || ctx == nil || ctx.Err() != nil {
+		return AuthenticatedBankEvidence{}, BankProof{}, fail(InvalidConfiguration, "bank", "current")
+	}
+	ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
+	defer cancel()
+	// Bound the preliminary head read too. Release this slot before the
+	// complete proof reader takes it; nested acquisition would deadlock.
+	head, err := func() (Head, error) {
+		select {
+		case r.gate <- struct{}{}:
+			defer func() { <-r.gate }()
+		case <-ctx.Done():
+			return Head{}, fail(contextCode(ctx), "bank", "capacity")
+		}
+		s := &readSession{r.reader, maxEvidenceBytes}
+		return s.head(ctx, r.reader.rpc, "primary")
+	}()
+	if err != nil {
+		return AuthenticatedBankEvidence{}, BankProof{}, err
+	}
+	if head.Height <= 1 {
+		return AuthenticatedBankEvidence{}, BankProof{}, fail(StaleHead, "bank", "current")
+	}
+	e, p, err := r.ReadBankProof(ctx, vault, head.Height-1)
+	if err != nil {
+		return AuthenticatedBankEvidence{}, BankProof{}, err
+	}
+	if e.HeadHeight() != e.CommitHeight() || !e.FreshAt(r.reader.now()) || ctx.Err() != nil {
+		return AuthenticatedBankEvidence{}, BankProof{}, fail(StaleHead, "bank", "current_changed")
+	}
+	return e, p, nil
 }
 
 // DecodeBankProof is strict and bounded before nested protobuf decoding.

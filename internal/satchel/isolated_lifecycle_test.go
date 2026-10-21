@@ -303,6 +303,7 @@ func runContinuousSDKLifecycle(t *testing.T, scenario string, matched bool, reci
 		snapshot(spec.name, height, spec.expected, spec.opponent, int64(n+1))
 		commitBlock(nil)
 		commitBlock(nil)
+		commitBlock(nil)
 		steps = append(steps, lifecycleStep{Name: spec.name, Intent: TransferIntent{spec.from.address.String(), spec.to.address.String(), strconv.FormatInt(spec.amount, 10), spec.memo}, TxHash: hash, TxBytes: data, FeeUWolo: "1", Height: txHeight, HeadHeight: height, VaultBalance: strconv.FormatInt(spec.expected[1], 10)})
 		repeated := commitBlock([][]byte{data})
 		require.Len(t, repeated.TxResults, 1)
@@ -316,10 +317,11 @@ func runContinuousSDKLifecycle(t *testing.T, scenario string, matched bool, reci
 	vaultKey, err := nativeBankKey(vault.address.String())
 	require.NoError(t, err)
 	for _, step := range steps {
-		query, err := application.Query(context.Background(), &abci.RequestQuery{Path: "/store/bank/key", Data: vaultKey, Height: step.Height, Prove: true})
+		stateHeight := step.HeadHeight - 1
+		query, err := application.Query(context.Background(), &abci.RequestQuery{Path: "/store/bank/key", Data: vaultKey, Height: stateHeight, Prove: true})
 		require.NoError(t, err)
 		require.Zero(t, query.Code, query.Log)
-		bankQueries[step.Height] = query
+		bankQueries[stateHeight] = query
 	}
 	anchor := TrustAnchor{Height: 1, Hash: hex.EncodeToString(commits[1].Header.Hash()), PeriodSeconds: 3600, EvidenceReference: "isolated-continuous-sdk-lifecycle-test-only"}
 	// The two local transcript roles share one deliberately isolated validator.
@@ -396,18 +398,22 @@ func runContinuousSDKLifecycle(t *testing.T, scenario string, matched bool, reci
 		require.True(t, evidence.ConsensusAuthenticated())
 		require.False(t, evidence.CreditAuthorized())
 		require.Equal(t, step.TxBytes, evidence.Observation().TxBytes)
-		require.Equal(t, int64(3), evidence.Observation().Head.Height-evidence.Observation().Height+1)
+		require.Equal(t, int64(4), evidence.Observation().Head.Height-evidence.Observation().Height+1)
 		require.Equal(t, uint32(1), *evidence.Observation().TransferIndex, "fee precedes actual bank send")
 		verified, err := verifier.VerifyTransferProof(context.Background(), step.Intent, step.TxHash, proof)
 		require.NoError(t, err)
 		require.Equal(t, evidence.Receipt(), verified.Receipt())
 		step.Observation, step.Receipt, step.Proof = evidence.Observation(), evidence.Receipt(), proof
-		bank, bankProof, err := reader.ReadBankProof(context.Background(), vault.address.String(), step.Height)
+		// Spendability uses the most recent state already authenticated by the
+		// primary head, not an earlier asset snapshot before subsequent outflows.
+		stateHeight := step.HeadHeight - 1
+		bank, bankProof, err := reader.ReadBankProof(context.Background(), vault.address.String(), stateHeight)
 		require.NoError(t, err, step.Name)
 		require.Equal(t, step.VaultBalance, bank.BalanceUWolo())
-		require.Equal(t, step.Height+1, bank.CommitHeight())
+		require.Equal(t, stateHeight, bank.Height())
+		require.Equal(t, step.HeadHeight, bank.CommitHeight())
 		require.True(t, bank.FreshAt(now))
-		verifiedBank, err := verifier.VerifyBankProof(context.Background(), vault.address.String(), step.Height, bankProof)
+		verifiedBank, err := verifier.VerifyBankProof(context.Background(), vault.address.String(), stateHeight, bankProof)
 		require.NoError(t, err, step.Name)
 		require.Equal(t, step.VaultBalance, verifiedBank.BalanceUWolo())
 		step.VaultProof = bankProof

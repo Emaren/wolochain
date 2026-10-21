@@ -698,6 +698,62 @@
           }
         }
       }
+    },
+    "/satchel/v1/proofs/bank": {
+      "post": {
+        "operationId": "exportCurrentBankProof",
+        "summary": "Export untrusted current-head bank-state proof for independent offline authentication",
+        "x-financial-effect": "observe",
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/Failure400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Failure401"
+          },
+          "404": {
+            "$ref": "#/components/responses/Failure404"
+          },
+          "405": {
+            "$ref": "#/components/responses/Failure405"
+          },
+          "408": {
+            "$ref": "#/components/responses/Failure408"
+          },
+          "409": {
+            "$ref": "#/components/responses/Proof409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Failure413"
+          },
+          "415": {
+            "$ref": "#/components/responses/Failure415"
+          },
+          "503": {
+            "$ref": "#/components/responses/Failure503"
+          },
+          "200": {
+            "description": "Exact typed result; HTTP success alone is not financial confirmation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BankStateProof"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BankProofRequest"
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -705,7 +761,7 @@
       "PrivateBearer": {
         "type": "http",
         "scheme": "bearer",
-        "description": "Exactly one Authorization header; Bearer plus private 48\u2013512 character base64url token. Literal loopback only and no Origin header. Token is not owner consent, custody attestation or withdrawal approval."
+        "description": "Exactly one Authorization header; Bearer plus private 48–512 character base64url token. Literal loopback only and no Origin header. Token is not owner consent, custody attestation or withdrawal approval."
       }
     },
     "schemas": {
@@ -1851,7 +1907,7 @@
       },
       "WagerMemo": {
         "type": "string",
-        "pattern": "^AoE2HDBets bet ticket v1 \u00b7 ticket [1-9][0-9]{0,11}$"
+        "pattern": "^AoE2HDBets bet ticket v1 · ticket [1-9][0-9]{0,11}$"
       },
       "WagerCoin": {
         "type": "object",
@@ -2226,6 +2282,60 @@
           },
           "credit_authorized": {
             "const": false
+          }
+        }
+      },
+      "BankProofRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "protocol"
+        ],
+        "properties": {
+          "protocol": {
+            "const": 1
+          }
+        }
+      },
+      "BankStateProof": {
+        "type": "object",
+        "additionalProperties": false,
+        "x-go-type": "internal/satchel/bank_proof.go:BankProof",
+        "description": "UNTRUSTED portable RPC evidence. The configured vault and server-selected head-1 state must pass independent Comet and SDK ICS23 authentication. No credit, spending or solvency authority.",
+        "required": [
+          "version",
+          "chain_id",
+          "address",
+          "denom",
+          "height",
+          "responses"
+        ],
+        "properties": {
+          "version": {
+            "const": 1
+          },
+          "chain_id": {
+            "const": "wolo-1"
+          },
+          "address": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 90
+          },
+          "denom": {
+            "const": "uwolo"
+          },
+          "height": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "responses": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 80,
+            "items": {
+              "$ref": "#/components/schemas/ProofResponse"
+            }
           }
         }
       }

@@ -25,7 +25,8 @@ func TestFinancialVerifierLoadsDistinctWagerAuthority(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err = policy.validate(engineTestWager(t, "7"), time.Now()); err != nil {
+	request := engineTestWager(t, "7")
+	if err = policy.validate(request, time.Unix(request.Reservation.IssuedAt, 0)); err != nil {
 		t.Fatalf("genuine signed wager rejected: %v", err)
 	}
 }
@@ -46,7 +47,8 @@ func TestFinancialVerifierNeverSubstitutesWithdrawalAuthorityForWager(t *testing
 				return
 			}
 			policy, err := verifierPolicy(configured)
-			if err == nil && policy.validate(engineTestWager(t, "7"), time.Now()) == nil {
+			request := engineTestWager(t, "7")
+			if err == nil && policy.validate(request, time.Unix(request.Reservation.IssuedAt, 0)) == nil {
 				t.Fatal("wrong role authorized wager")
 			}
 		})
