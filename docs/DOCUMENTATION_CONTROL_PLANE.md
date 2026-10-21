@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/20261020-finance-atspool-layout-held` at `2d175e7ced19c843af784b3ec7d2c189d2d5a01d`
+Implementation baseline: `ops/20261021-bearer-holder-recovery-held` at `bedfae8948a95849d4ba1113cf549b755f4190d1`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
