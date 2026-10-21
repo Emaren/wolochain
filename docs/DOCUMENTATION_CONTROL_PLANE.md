@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/wolo-hd-financial-obligation-envelope-20261021` at `ad7a7b7690a5d48c6f31d8b6c67b8dcd25e63e8b`
+Implementation baseline: `fix/wolo-hd-financial-obligation-envelope-20261021` at `7f5f24cc4a354283ff9c51502e15181959081738`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
