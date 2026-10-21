@@ -1,0 +1,280 @@
+{
+  "mode": "READ_ONLY_SHARED_HD_DE_PAYOUT_INGRESS_INVENTORY",
+  "observedAtUtc": "2026-10-18T18:11:04.368831+00:00",
+  "appUnits": [
+    {
+      "unit": "aoe2-wolo-transfer-heartbeat.service",
+      "isTimer": false,
+      "active": false,
+      "loadState": "loaded",
+      "unitFileState": "static",
+      "mainPidPresent": false,
+      "processEnvironmentInspectable": false,
+      "configuredFinancialKeyNames": [],
+      "isCandidateForExplicitMaintenanceReview": false
+    },
+    {
+      "unit": "aoe2-wolo-transfer-heartbeat.timer",
+      "isTimer": true,
+      "active": true,
+      "loadState": "loaded",
+      "unitFileState": "enabled",
+      "mainPidPresent": false,
+      "processEnvironmentInspectable": false,
+      "configuredFinancialKeyNames": [],
+      "isCandidateForExplicitMaintenanceReview": true
+    },
+    {
+      "unit": "aoe2dewarwagers-api.service",
+      "isTimer": false,
+      "active": true,
+      "loadState": "loaded",
+      "unitFileState": "enabled",
+      "mainPidPresent": true,
+      "processEnvironmentInspectable": true,
+      "configuredFinancialKeyNames": [
+        "DATABASE_URL"
+      ],
+      "isCandidateForExplicitMaintenanceReview": true
+    },
+    {
+      "unit": "aoe2dewarwagers-web.service",
+      "isTimer": false,
+      "active": true,
+      "loadState": "loaded",
+      "unitFileState": "enabled",
+      "mainPidPresent": true,
+      "processEnvironmentInspectable": true,
+      "configuredFinancialKeyNames": [
+        "DATABASE_URL",
+        "WOLO_BET_PAYOUT_ADDRESS",
+        "WOLO_INTERNAL_RPC_URL"
+      ],
+      "isCandidateForExplicitMaintenanceReview": true
+    },
+    {
+      "unit": "aoe2hdbets-api.service",
+      "isTimer": false,
+      "active": true,
+      "loadState": "loaded",
+      "unitFileState": "enabled",
+      "mainPidPresent": true,
+      "processEnvironmentInspectable": true,
+      "configuredFinancialKeyNames": [
+        "DATABASE_URL"
+      ],
+      "isCandidateForExplicitMaintenanceReview": true
+    },
+    {
+      "unit": "aoe2hdbets-bet-stake-reconcile-plan.service",
+      "isTimer": false,
+      "active": false,
+      "loadState": "loaded",
+      "unitFileState": "static",
+      "mainPidPresent": false,
+      "processEnvironmentInspectable": false,
+      "configuredFinancialKeyNames": [],
+      "isCandidateForExplicitMaintenanceReview": false
+    },
+    {
+      "unit": "aoe2hdbets-bet-stake-reconcile.service",
+      "isTimer": false,
+      "active": false,
+      "loadState": "loaded",
+      "unitFileState": "static",
+      "mainPidPresent": false,
+      "processEnvironmentInspectable": false,
+      "configuredFinancialKeyNames": [],
+      "isCandidateForExplicitMaintenanceReview": false
+    },
+    {
+      "unit": "aoe2hdbets-bet-stake-reconcile.timer",
+      "isTimer": true,
+      "active": true,
+      "loadState": "loaded",
+      "unitFileState": "enabled",
+      "mainPidPresent": false,
+      "processEnvironmentInspectable": false,
+      "configuredFinancialKeyNames": [],
+      "isCandidateForExplicitMaintenanceReview": true
+    },
+    {
+      "unit": "aoe2hdbets-challenge-reconcile.service",
+      "isTimer": false,
+      "active": false,
+      "loadState": "loaded",
+      "unitFileState": "static",
+      "mainPidPresent": false,
+      "processEnvironmentInspectable": false,
+      "configuredFinancialKeyNames": [],
+      "isCandidateForExplicitMaintenanceReview": false
+    },
+    {
+      "unit": "aoe2hdbets-challenge-reconcile.timer",
+      "isTimer": true,
+      "active": true,
+      "loadState": "loaded",
+      "unitFileState": "enabled",
+      "mainPidPresent": false,
+      "processEnvironmentInspectable": false,
+      "configuredFinancialKeyNames": [],
+      "isCandidateForExplicitMaintenanceReview": true
+    },
+    {
+      "unit": "aoe2hdbets-replay-auto-recovery.service",
+      "isTimer": false,
+      "active": false,
+      "loadState": "loaded",
+      "unitFileState": "static",
+      "mainPidPresent": false,
+      "processEnvironmentInspectable": false,
+      "configuredFinancialKeyNames": [],
+      "isCandidateForExplicitMaintenanceReview": false
+    },
+    {
+      "unit": "aoe2hdbets-replay-auto-recovery.timer",
+      "isTimer": true,
+      "active": true,
+      "loadState": "loaded",
+      "unitFileState": "enabled",
+      "mainPidPresent": false,
+      "processEnvironmentInspectable": false,
+      "configuredFinancialKeyNames": [],
+      "isCandidateForExplicitMaintenanceReview": true
+    },
+    {
+      "unit": "aoe2hdbets-staking-rewards.service",
+      "isTimer": false,
+      "active": false,
+      "loadState": "loaded",
+      "unitFileState": "static",
+      "mainPidPresent": false,
+      "processEnvironmentInspectable": false,
+      "configuredFinancialKeyNames": [],
+      "isCandidateForExplicitMaintenanceReview": false
+    },
+    {
+      "unit": "aoe2hdbets-staking-rewards.timer",
+      "isTimer": true,
+      "active": true,
+      "loadState": "loaded",
+      "unitFileState": "enabled",
+      "mainPidPresent": false,
+      "processEnvironmentInspectable": false,
+      "configuredFinancialKeyNames": [],
+      "isCandidateForExplicitMaintenanceReview": true
+    },
+    {
+      "unit": "aoe2hdbets-trophy-tributes.service",
+      "isTimer": false,
+      "active": false,
+      "loadState": "loaded",
+      "unitFileState": "static",
+      "mainPidPresent": false,
+      "processEnvironmentInspectable": false,
+      "configuredFinancialKeyNames": [],
+      "isCandidateForExplicitMaintenanceReview": false
+    },
+    {
+      "unit": "aoe2hdbets-trophy-tributes.timer",
+      "isTimer": true,
+      "active": true,
+      "loadState": "loaded",
+      "unitFileState": "enabled",
+      "mainPidPresent": false,
+      "processEnvironmentInspectable": false,
+      "configuredFinancialKeyNames": [],
+      "isCandidateForExplicitMaintenanceReview": true
+    },
+    {
+      "unit": "aoe2hdbets-web.service",
+      "isTimer": false,
+      "active": true,
+      "loadState": "loaded",
+      "unitFileState": "enabled",
+      "mainPidPresent": true,
+      "processEnvironmentInspectable": true,
+      "configuredFinancialKeyNames": [
+        "DATABASE_URL",
+        "WOLO_BET_PAYOUT_ADDRESS",
+        "WOLO_FAUCET_CLI",
+        "WOLO_FAUCET_HOME",
+        "WOLO_FOUNDER_SETTLEMENT_AUTH_TOKEN",
+        "WOLO_FOUNDER_SETTLEMENT_URL",
+        "WOLO_INTERNAL_RPC_URL",
+        "WOLO_SETTLEMENT_AUTH_TOKEN",
+        "WOLO_SETTLEMENT_URL",
+        "WOLO_STAKING_CLI",
+        "WOLO_STAKING_HOME",
+        "WOLO_STAKING_KEY_NAME"
+      ],
+      "isCandidateForExplicitMaintenanceReview": true
+    },
+    {
+      "unit": "aoe2war-prewarm.service",
+      "isTimer": false,
+      "active": false,
+      "loadState": "loaded",
+      "unitFileState": "static",
+      "mainPidPresent": false,
+      "processEnvironmentInspectable": false,
+      "configuredFinancialKeyNames": [],
+      "isCandidateForExplicitMaintenanceReview": false
+    },
+    {
+      "unit": "aoe2war-prewarm.timer",
+      "isTimer": true,
+      "active": true,
+      "loadState": "loaded",
+      "unitFileState": "enabled",
+      "mainPidPresent": false,
+      "processEnvironmentInspectable": false,
+      "configuredFinancialKeyNames": [],
+      "isCandidateForExplicitMaintenanceReview": true
+    }
+  ],
+  "activeCandidateUnitsToReview": [
+    "aoe2-wolo-transfer-heartbeat.timer",
+    "aoe2dewarwagers-api.service",
+    "aoe2dewarwagers-web.service",
+    "aoe2hdbets-api.service",
+    "aoe2hdbets-bet-stake-reconcile.timer",
+    "aoe2hdbets-challenge-reconcile.timer",
+    "aoe2hdbets-replay-auto-recovery.timer",
+    "aoe2hdbets-staking-rewards.timer",
+    "aoe2hdbets-trophy-tributes.timer",
+    "aoe2hdbets-web.service",
+    "aoe2war-prewarm.timer"
+  ],
+  "expectedNamedUnitsNotFound": [
+    "aoe2hdbets.service",
+    "aoe2hdbets.timer",
+    "aoe2war.service",
+    "aoe2war.timer"
+  ],
+  "templateDefinitionsNotServiceInstances": [
+    "aoe2war-build@.service",
+    "aoe2war-deps@.service",
+    "aoe2war-speedos-cloudflare@.service"
+  ],
+  "unitsWithIncompleteInspection": [],
+  "inventoryCompleteForDiscoveredUnits": true,
+  "neverAutomaticStop": [
+    "wolochain-founder-rewards-settlement.service",
+    "wolochain-mainnet-settlement.service",
+    "wolochaind-mainnet.service"
+  ],
+  "cannotProve": [
+    "no external or independently signed payout origin",
+    "no unlisted cron, user-level systemd or container writer",
+    "no queued transaction, event worker or database-triggered payment",
+    "no active HTTP session or future wallet execution",
+    "financial drain, reserve solvency, independent chain finality"
+  ],
+  "financialProducersFenced": false,
+  "financialDrainCertified": false,
+  "liveRollbackRehearsed": false,
+  "productionCutoverAuthorized": false,
+  "secretsOrEnvironmentValuesPrinted": false,
+  "commandsMutatedServices": false
+}

@@ -1,0 +1,51 @@
+{
+  "schema": "wolo.financial.de-producer-source-handoff.v1",
+  "recorded_at_utc": "2026-10-19",
+  "purpose": "Cross-repository source audit handoff to the first HD+DE financial producer isolation control",
+  "branch": "audit/20261019-de-source-producer-fence",
+  "de_source": {
+    "repository": "Emaren/aoe2dewarwagers-web",
+    "git_main_sha": "c768957bc5c7f22c9f12db7e7a7c199dc0821468",
+    "authority": "SOURCE_ONLY_NOT_DEPLOYED_PROOF"
+  },
+  "wolo_source": {
+    "repository": "Emaren/wolochain",
+    "tracked_pr": 56,
+    "parent_hold_pr": 42,
+    "source_baseline": "c99dc0de10cfdff5958a0f058a08ddc5749defc7",
+    "status": "HELD_NONAUTHORIZING"
+  },
+  "source_audit": {
+    "script": "scripts/settlement_de_producer_source_map.py",
+    "tests": "tests/test_settlement_de_producer_source_map.py",
+    "sentinel_count": 18,
+    "focus": [
+      "GET lobby to market ensure to settlement",
+      "faucet CLI/keyring transfer",
+      "manual claims and admin settlement/treasury execution",
+      "conditional local payout mnemonic and RPC sendTokens",
+      "unstake mnemonic/keyring paths"
+    ],
+    "runtime_enabled": "UNKNOWN"
+  },
+  "existing_runtime_observations": {
+    "active_unit_candidates": 11,
+    "discovered_systemd_candidates": 19,
+    "source": "docs/settlement-contracts/financial-release-evidence-20261018/producer-refresh-handoff.json",
+    "fresh_current_runtime_proof": false
+  },
+  "mandatory_next_evidence": [
+    "Exact deployed DE service source/commit and running executable identity",
+    "Direct local mnemonic / CLI / keyring / environment provenance without exposing secret values",
+    "All HTTP/timer/admin/manual/background entry points and accepted/ambiguous requests",
+    "Named HD/DE/external financial producer owner classifications and written fence approvals",
+    "Independent runtime/chain/claim and bank-liability reconciliations"
+  ],
+  "independent_signer_exclusion_proven": false,
+  "all_financial_producers_fenced": false,
+  "global_liabilities_reconciled": false,
+  "website_release_authorized": false,
+  "financial_release_authorized": false,
+  "cutover_authorized": false,
+  "production_modified": false
+}

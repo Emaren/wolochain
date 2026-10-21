@@ -86,6 +86,12 @@ jobs:
       - name: Operator script syntax
         run: for script in scripts/*.sh; do bash -n "$script" || exit; done
 
+      - name: Financial maintenance and activation blind-spot contracts (read only)
+        run: |
+          python3 -m unittest discover -s tests -p 'test_settlement_maintenance_board.py' -v
+          python3 -m unittest discover -s tests -p 'test_settlement_producer_activation_topology.py' -v
+          python3 -m unittest discover -s tests -p 'test_settlement_auxiliary_producer_surfaces.py' -v
+
       - name: Founder request-state forensics contracts (read only)
         run: python3 -m unittest discover -s tests -p 'test_settlement_founder15_state_readonly.py' -v
 
@@ -109,11 +115,37 @@ jobs:
       - name: Shared HD and DE payout ingress inventory guard (nonmutating)
         run: python3 -m unittest discover -s tests -p 'test_settlement_shared_producer_inventory_readonly.py' -v
 
+      - name: Exact settlement-bearer holder observation contract (offline, nonauthorizing)
+        run: python3 -m unittest discover -s tests -p 'test_settlement_bearer_holders_readonly.py' -v
+
+      - name: DE independent source-signer and read-triggered payment census (nonmutating)
+        run: python3 -m unittest discover -s tests -p 'test_settlement_de_producer_source_map.py' -v
+
+      - name: HD/DE runtime producer owner review (read only, nonauthorizing)
+        run: python3 -m unittest discover -s tests -p 'test_settlement_producer_owner_triage.py' -v
+
+      - name: Settlement journal amount evidence and uncertainty (read only)
+        run: python3 -m unittest discover -s tests -p 'test_settlement_state_evidence.py' -v
+
+      - name: HD non-additive financial obligation evidence contracts (read only)
+        run: python3 -m unittest discover -s tests -p 'test_settlement_financial_obligation_envelope.py' -v
+
+      - name: Financial six-control evidence HOLD audit (offline, never approval)
+        run: |
+          python3 scripts/financial_release_checklist_audit.py
+          python3 -m unittest discover -s tests -p 'test_financial_release_checklist_audit.py' -v
+
       - name: Two-filesystem predeploy capacity gate (nonmutating)
         run: python3 -m unittest discover -s tests -p 'test_settlement_predeploy_capacity_readonly.py' -v
 
       - name: Guarded current settlement code-only cutover and fault rollback (offline)
         run: python3 -m unittest discover -s tests -p 'test_settlement_bdbce253_code_cutover.py' -v
+
+      - name: Website HOLD evidence contract (non-authorizing)
+        run: |
+          python3 -m venv "$RUNNER_TEMP/wolo-evidence-contract"
+          "$RUNNER_TEMP/wolo-evidence-contract/bin/python" -m pip install -r tests/requirements-release-evidence.txt
+          "$RUNNER_TEMP/wolo-evidence-contract/bin/python" -m unittest discover -s tests -p 'test_website_hold_evidence_contract.py' -v
 
       - name: Versioned private Satchel wire contract
         run: python3 -m unittest discover -s tests -p 'test_satchel_http_contract.py' -v

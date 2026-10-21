@@ -8,12 +8,451 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "runtime-evidence"
 authority: "mainnet-settlement-operations"
-reviewed_at: "2026-10-17"
+reviewed_at: "2026-10-18"
 review_interval_days: 14
 sensitivity: "restricted"
 ---
 
 # WoloChain Mainnet Settlement Runbook
+
+## October 18, 18:12 UTC — financial release HOLD and six-control handoff
+
+The **[financial release checklist](settlement-contracts/financial-release-checklist.json)**
+is the single current machine-readable six-control index. Its keys are the exact
+`ATTESTED` controls consumed by the existing cutover controller. Dated receipts
+remain immutable history; they are not competing readiness checklists. The index
+is observational and never a permit, continuous monitor, chain trust root or
+financial certification. Refresh it after every maintenance or financial change.
+
+The app owner independently deployed website `78d2a3329096c25b9429a3536f08c33d1d9dc96f`;
+its read-only status is CERTIFIED. Website delivery no longer depends on rushing
+this Wolo release. No app source was edited. The historical `bdbce253` settlement
+artifact remains distinct from the unactivated newer custody/escrow source.
+
+| Existing control | Status | Evidence and exact missing action |
+| --- | --- | --- |
+| HD/DE/external producers isolated | **BLOCKED** | 19 discovered app units, 11 active candidates; HD has independent staking/faucet configuration. Cron, two user managers and one container also exist. Named owners must classify every HTTP, queued, timer, cron, user and external signer path, then explicitly approve coordinated fencing. Do not blanket-stop all candidates. |
+| In-flight/accepted outcomes reconciled | **BLOCKED** | Primary still has one recorded accepted 100 WOLO request. Configured-node bytes/hash agree and report code 0 at height 1078913; this is not independently authenticated finality or authorized reconciliation. Independently bind bank effects to every obligation; never retry an unknown. |
+| Claim #889 preserved/reviewed | **BLOCKED** | A fresh READ ONLY / REPEATABLE READ query confirms the same 300 WOLO pending claim, attempted 2026-07-04T22:23:41.342Z, no stored hash. Preserve its liability and history. No exhausted historical cache search was repeated. Finance must supply independently reviewed paid/unpaid or continuing-hold disposition. |
+| Fresh quiesced verified backup | **BLOCKED** | Existing `--inspect` checks passed at 18:12:48 UTC, but created no backup and proved no quiescence. Approve the coordinated fence/drain first; then capture fresh restricted state/config/unit backups, verify checksums and exclusive state ownership. Never restore old payout histories as binary rollback. |
+| Reviewed code-only rollback rehearsed | **BLOCKED** | Existing offline controller tests cover uncertainty, permit expiry/revocation, partial rollout and bounded recovery; they are not a live rehearsal. Named operator must approve and witness the exact two-service rehearsal/recovery with producers fenced and consensus untouched. |
+| Bank solvency independently checked | **UNKNOWN** | Three distinct configured-node accounts observed; common escrow counted once. HD records 947 pending claims totaling 993,189 WOLO. Complete DE/external, escrow, unmaterialized obligations and fee liabilities remain unknown. Independently reconcile their overlap, ownership and fees before asserting solvency. |
+
+At 18:16:25 UTC, the sensor read 1,566 leaf requests and 793 runs: primary
+920 (914 recorded confirmed, 5 failed, 1 accepted) and founder 646 (609 recorded
+confirmed, 37 failed). It deduplicated 886 run references. The single run-only
+1,323,000 WOLO requested child has a recorded prebroadcast funds/reserve refusal
+(`attempted=false`, no hash), confirmed by the bounded 18:18:02 UTC follow-up.
+This is not independently proved payment absence or a certified debt. No finite
+execution-principal bound was emitted because evidence gaps remain. The primary
+count increased from the earlier 919; production was not quiesced.
+
+At 18:12 UTC, health and bank REST observations within the **same node trust
+domain** agreed on primary payout **396,507 WOLO**, founder payout
+**356,787.241424 WOLO**, and shared escrow **825,469.5 WOLO**. Configured payout
+floors are 250,000 and 1,000 WOLO respectively; escrow floor is 100 WOLO; each
+reported fee headroom is 10 WOLO. These values are configuration/local-node
+observations, not authenticated balances, fee estimates, available collateral
+or proof that any obligation is funded. The three HD pending claim groups are
+207,979 WOLO founder bonuses, 110,524 WOLO founder wins, and 674,686 WOLO winner
+bounties. Claim #889 is included in founder wins. **Do not add these claims to
+journal amounts**: their obligations may overlap. No finite global liability
+upper bound is established; missing records never mean zero.
+
+### Bounded journal accounting sensor
+
+`scripts/settlement-state-evidence.py` recovers preserved unfinished work and
+adds exact decimal integer accounting by input lane, signer role and recorded
+status. Run the reviewed source against only the two governed roots:
+
+```sh
+sudo python3 scripts/settlement-state-evidence.py \
+  --state-root /mnt/HC_Volume_105319120/wolochain-mainnet/settlement-state \
+  --state-root /mnt/HC_Volume_105319120/wolochain-mainnet/founder-rewards-settlement-state
+```
+
+Exit **3** means bounded evidence collected with the HOLD retained; **2** means
+unavailable/unsafe/inconsistent evidence. Neither exit allows release or retry.
+The sensor never accesses the network, changes financial state, deletes locks,
+prints wallet addresses, memos, request IDs or raw errors. It verifies stored
+normalized request fingerprints, bounds bytes/entries/depth, rejects symlinks
+and ambiguous records, checks receipt reuse, and separates aggregate runs from
+leaf obligations. Run children do not become extra liabilities when identical
+leaf records already account for them; missing/conflicting child evidence
+remains explicit. Every recorded payment status is an assertion requiring chain
+reconciliation. Observed principal uncertainty is bounded only for the records
+actually read; fees and global liabilities remain unknown. A stable read is
+**not an atomic or exclusive snapshot**, producer drain or proof of absence.
+When invoked through stdin without remote files, the reader's own source hash
+is unavailable; the collecting operator must retain the exact input-byte hash
+separately. Never infer provenance from a self-declared field.
+
+### Complete escrow-100 identity snapshots and read-only deltas (HELD)
+
+The existing `--focus-escrow-100` mode deliberately returns **at most sixteen
+recently filesystem-modified confirmed** 100-WOLO escrow records plus accepted
+records. That subset cannot certify which eight local confirmations appeared
+between October 18 and 20; their earlier full request identities were not
+captured. Never infer that filesystem mtime is a payment timestamp.
+
+The optional `--full-escrow-100-manifest` mode reuses the same strict, bounded,
+read-only two-root journal reader. It emits a complete sorted identity manifest
+**only for observed exact 100000000-uwolo escrow accepted/confirmed requests**,
+up to the existing 2,500-match fail-closed limit. Each row contains only lane
+index, status, SHA-256 of the private request ID and SHA-256 of original record
+bytes. It does not emit raw request IDs, addresses, signers or memos. This mode
+is opt-in because full manifests are larger than the normal sixteen-row focus.
+
+Use the *same root order* (primary then founder), separately verify source Git
+identity and capture the exact producer state conditions. No live file, service,
+wallet, payout or state mutation is required; output is saved on the operator's
+Mac, **not written on the VPS**. Example after checkout/fetching the reviewed
+held source, using a privately verified exact commit:
+
+```sh
+umask 077
+cd ~/projects/WoloChain-wolo-1
+REV='REPLACE_WITH_REVIEWED_FULL_GIT_SHA'
+set -o pipefail
+git show "${REV}:scripts/settlement-state-evidence.py" |
+  ssh root@hel1 'python3 - --full-escrow-100-manifest \
+    --state-root /mnt/HC_Volume_105319120/wolochain-mainnet/settlement-state \
+    --state-root /mnt/HC_Volume_105319120/wolochain-mainnet/founder-rewards-settlement-state' \
+  > ~/escrow100-observation-A.private.json
+echo "COLLECT_EXIT=$?"
+```
+
+A **3** is a valid but financially HELD observed snapshot; **2** is invalid.
+Retain the source Git SHA, exact source-byte SHA-256, capture time, user,
+root-order attestation and JSON-file SHA-256 separately. An stdin invocation
+cannot self-attest its reader source. Repeat for observation B in the identical
+order. The comparison is local/read-only:
+
+```sh
+python3 scripts/compare_settlement_escrow_100_manifests.py \
+  --before ~/escrow100-observation-A.private.json \
+  --after ~/escrow100-observation-B.private.json
+echo "COMPARE_EXIT=$?"
+```
+
+The comparator strictly rejects incomplete/malformed/unordered/duplicate
+manifests and differing root counts, and returns hashed added, removed and
+changed request identities. **Exit 3 means a valid financial HOLD comparison**;
+exit 2 means invalid evidence. The operator must still independently authenticate
+the original captures and the root-lane mapping; neither file has a trusted
+signature merely by containing SHA-256 values. Even a changed `accepted` to
+`confirmed` journal status remains an unauthenticated local claim, not chain
+finality or payment proof. Missing prior identities cannot be reconstructed.
+Never use these deltas to approve retry, spend, release, solvency or promotion.
+
+### All-user cron, periodic cron and at-queue financial-writer census (HELD)
+
+**Operator host preflight:** this collector must run inside the Linux VPS
+SSH session, not in the Mac terminal used to launch SSH. Check `hostname`
+and `uname -s` on the remote shell before collecting financial evidence.
+On macOS, the reviewed collector now returns exit 2 with
+`WRONG_HOST_LINUX_REQUIRED` **without executing any host inventory commands**.
+That is not evidence about the VPS. Do not upload a Mac-generated `STOP`
+report as a VPS financial inventory. The host identity itself must still be
+verified by the operator; simply seeing `Linux` does not prove connection
+to the correct VPS.
+
+
+Before *any* approved producer fence/drain, the root-side read-only
+`scripts/settlement_auxiliary_producer_surfaces.py --inspect` collector now
+enumerates accessible crontab files in both conventional spool directories,
+not only the historically named `tony` and `root` entries. It additionally
+counts `/etc/crontab`, `/etc/anacrontab`, `/etc/cron.d` entries, files in
+`/etc/cron.hourly`, `cron.daily`, `cron.weekly`, `cron.monthly`, and
+`cron.yearly`, and an `atq` pending-job count (where accessible).
+It records filenames only for the original fixed crontab sources and never
+prints cron command bodies, secret environment assignments, periodic script
+contents or `atq` job details. Any discovered cron job, even one whose command
+does not mention money, still requires operator classification.
+
+The scan is **not a complete inventory guarantee**: directory absence,
+an inaccessible `atq`, unexpected nested/spool paths, unknown runtime
+scheduler implementations, containers, user managers, HTTP-triggered writes,
+external signers, or unobserved direct bank transfers remain unresolved. Unsafe
+spool/scheduled directory symlinks and unbounded listings fail closed.
+The parent `/var/spool/cron` and child `crontabs` are separately enumerated,
+so the child folder is not counted as a job or silently ignored.
+
+**Observed Ubuntu 24.04 VPS layout (October 20, 2026):** the correct-host
+read-only `lstat` census on `ubuntu-4gb-hel1-11` showed exactly the
+`atjobs` and `atspool` directories under `/var/spool/cron`, with no
+unexpected entry types in the other seven scheduler roots. Their existence
+triggered the old `UNSAFE_SCHEDULER_ENTRY` despite being ordinary `at(1)`
+queue storage, **not additional user crontab files**. The corrected scanner
+accepts these two names **only as actual non-symlink directories in the
+conventional parent cron spool**. It still rejects files/symlinks under those
+names, unexpected nested directories and hard-linked files, and it never
+opens or prints `at` job bodies. Its source-controlled fields
+`atSpoolDirectoriesObserved`, `atSpoolDirectoriesMissingOrUnverified`,
+`atSpoolJobPayloadsInspected:false`, and
+`atSpoolFinancialWriterCapabilityExcluded:false` preserve an explicit
+unresolved queue-signer coverage boundary. `atq` is still a **separate
+read-only count**, with an unavailable queue recorded as `UNOBSERVED`.
+These facts do not certify producer isolation, source ownership, custody or
+solvency; a new PINNED **live VPS** collection is required.
+
+
+**Diagnostic STOP semantics:** the collector intentionally makes no
+financial-release claim even on a complete root-host observation. When a
+critical enumeration fails, it emits only the allowlisted
+`failureStage` (`CRON`, `USER_SYSTEMD`, `DOCKER`, or `PODMAN`) and a
+fixed `failureCode` taken from the audited collector source; it never
+prints raw OSError, command output, cron contents, secrets or exception
+parameters. Unknown/unclassified errors are redacted, not silently treated
+as empty sources. A `STOP` report remains code 2 and financially **HELD**.
+The operator should capture a redacted report, investigate the named
+failure stage read-only, and never work around the STOP by deleting files,
+stopping services, changing permissions, skipping a section or setting
+an activation flag.
+
+Run the **reviewed, exact-version source** with no sudo shell expansion,
+financial flags, cron modifications or systemctl operations. Exit code **3**
+means metadata observed and FINANCIAL HOLD; code **2** means STOP / unsafe
+observation. Do not interpret a zero job count, absent directory or missing
+`atq` binary as producer isolation. The six release controls and global
+solvency remain BLOCKED/UNKNOWN until separately witnessed, complete
+operator/finance evidence exists.
+
+### Shortest protected operator sequence
+
+1. Independently classify the remaining producer/signing paths and designate HD,
+   DE, finance and recovery owners. Obtain **explicit owner approval for a
+   bounded financial maintenance window**, including the specific fences,
+   quiesced snapshots and two-service recovery rehearsal. That approval has not
+   been granted by this engineering work. The website stays independent.
+2. Under that approval, fence every classified financial producer and direct
+   signer; verify queues, accepted/uncertain requests and exclusive state
+   ownership. Preserve #889. Collect independently authenticated exact bank
+   effects and complete liabilities/fees. An unresolved payout is held, not
+   retried. If any control remains UNKNOWN/BLOCKED, do not promote.
+3. Capture fresh private checksummed snapshots with the existing snapshot tool
+   after quiescence, witness the reviewed binary-only rollback/recovery scope,
+   and update the same checklist with independently reviewed receipts. No
+   consensus restart, database rewind or restoration of financial state.
+4. Only after all six controls have real independent evidence, obtain the
+   owner's separate **paired code-only cutover approval**. Issue the existing
+   short-lived root:root 0600 permit bound to exact `bdbce253` and binary
+   `44d8aed5550d1b33635c734c1a359d0cb69e854093ef8c9a8a3da4f99d416ede`.
+   Use the existing commands below; never derive its witnessed controls from
+   CI or this checklist alone:
+
+   ```sh
+   sudo python3 scripts/settlement-bdbce253-code-cutover.py --mode inspect
+   sudo python3 scripts/settlement-bdbce253-code-cutover.py --mode promote \
+     --permit /root/aoe2war-release/approved-two-service-permit.json
+   ```
+
+5. Keep producers fenced. Verify both actual runtime PIDs/executable/VCS/health,
+   unchanged node PID/hash and chain progress. Failure permits only bounded
+   old-binary recovery for both settlement lanes; preserve all request, run,
+   receipt and financial state. A separately requested rollback or interrupted
+   recovery needs fresh authority. Keep CRITICAL recovery failures fenced.
+6. After actual paired runtime verification, separately approve source
+   alignment using the fail-fast exact-object/ancestry procedure below. Privately
+   preserve/review the ignored build-output directory; do not erase it to pass
+   a cleanliness check. Producer resumption and Satchel custody activation are
+   separate decisions. Satchel remains **UNAVAILABLE / NONCREDITING**.
+
+### Source ancestry and release independence
+
+PR #38 (`68cdc1ae`) integrates the existing ops and Satchel ancestry; #39
+(`7611946c`) builds on #38, #40 (`6ea89143`) on #39, and #41 (`9fb53d95`)
+on #40. Each remains an unchanged CI-green draft. This evidence/accounting leaf
+stacks on #41; no existing branch or valuable dirty worktree was discarded.
+Review/merge these source dependencies in order, or review an explicitly scoped
+backport separately. Neither merging them nor installing their operator scripts
+changes the pinned historical settlement binary target. Do not substitute the
+newer Satchel backend artifact for `bdbce253`, and do not deploy the full branch
+as a shortcut. Source tests and artifact receipts do not certify live custody.
+
+## October 18, 14:24 UTC — earlier release frontier (superseded)
+
+PRs #38–40 are unchanged CI-green draft source; none is a production release.
+The new controller correction binds the original operator permit and reloads it
+immediately before each forward side effect and after final verification.
+It opens the permit without following symlinks, checks the opened root-private
+descriptor and stable path, bounds the read below 8KiB, rejects duplicate fields
+and evaluates expiry after acquisition and parsing finish.
+Expiry, revocation or changed approval before the first mutation causes zero
+changes. After an approved mutation starts, failure allows only the fixed
+old-code cleanup: two settlement stops, at most two owned override removals,
+one reload and two settlement starts. This cleanup may finish after permit
+expiry so a half-switched pair is not abandoned. It never resumes financial
+producers, restores request/run history, renews rollout authority or changes
+consensus. A separately requested rollback/recovery requires fresh authority.
+The original five-minute issuance and ten-minute maximum permit bounds remain;
+every revalidation must satisfy both. Cleanup failure is CRITICAL and requires
+human inspection under the continuing financial fence.
+
+The dated [release-frontier receipt](settlement-contracts/protected-release-frontier-20261018.json)
+separates source proof, actual observations and missing independent controls:
+
+| Requirement | Established evidence | Remaining authority/evidence |
+| --- | --- | --- |
+| Exact legacy candidate | Staged `bdbce253` binary hash `44d8aed5…`; unchanged old lanes use `040126a2…` | Fresh protected preflight and independently approved paired installation. |
+| Consensus separation/progress | PID 1009 and hash `4b77f622…` unchanged; local `wolo-1` RPC advanced 2515247 → 2515266 | This is local operational progress, not independently authenticated financial finality. Never restart the node. |
+| Accepted/uncertain obligations | Primary: 913 recorded confirmed, 5 failed, 1 accepted; founder: 609 confirmed, 37 failed | Exclusive current reconciliation against independent chain evidence and app liabilities; recorded statuses never prove payment or zero liability. No retry. |
+| Founder #889 | Existing unresolved hold retained; exhausted historical investigation not repeated | App/finance owner must provide independently reviewed claim-to-payment evidence and preserved liability disposition. No inferred paid/unpaid result. |
+| HD/DE signer/producer isolation | Eleven discovered app unit candidates in a noncertifying inventory | Independent owners must fence all HTTP, workers, cron, external signers and queued/in-flight work. A list of processes is not a fence. |
+| Backups and recovery | Existing root-private snapshot/paired code-only controls and offline fault tests | Fresh quiesced checksummed snapshots, exclusive state ownership, actual operator recovery/watchdog authority and bounded window. An October 14 snapshot is not current certification. |
+| Reserves/financial authority | No new balance, solvency or custody certification issued | Independently reconcile bank reserves, all liabilities and fee headroom; issue the existing exact root-private permit only after all six witnessed controls. |
+| Source transition | Checkout still `78c25985`, with one preserved ignored build-output directory | Privately review/preserve ignored content; real two-lane runtime cutover must precede separately approved exact source fast-forward. |
+
+The next operator action is to assemble one dated, independently witnessed
+packet for the six existing `witnessedControls`, bound to the exact candidate,
+both services, current state/snapshot identities and maintenance window. Do not
+issue a permit from these observations or CI results. Once that packet passes,
+the owner can approve the existing paired code-only cutover and its recovery
+scope; only then may the reviewed `promote --permit` procedure below execute.
+Financial producers remain fenced through runtime verification and the separate
+source transition. No automatic caller or retry may resolve an unknown payment.
+
+The earlier website-only route was implemented and independently released by
+the app owner. Current website delivery is separate from this financial HOLD;
+see the current six-control packet above. Preserve these earlier observations
+as historical evidence rather than interpreting them as current release status.
+
+## October 18 — machine-readable source/runtime authority gate
+
+The website's `vps-source-drift` hold must not be cleared by changing a Git SHA
+while 8092/8093 still execute the legacy code. Source authority and running
+executable authority are independently inspected by the existing controller:
+
+```sh
+sudo python3 scripts/settlement-bdbce253-code-cutover.py --mode source-authority
+```
+
+This mode is strictly read-only, accepts no financial permit, and returns one
+`aoe2war.wolo.settlement-source-authority.v1` JSON receipt. Exit 2 means source
+or runtime is blocked/unverifiable; exit 0 means only
+`SOURCE_RUNTIME_ALIGNED_FINANCIAL_HOLD`. All financial/custody/release authority
+flags remain false. It verifies both active legacy lanes, exact executable
+hashes and units, canonical health, unchanged consensus identity, and stable
+Git observations before/after runtime inspection, final settlement generation/health
+and stable PID checks, and a final UTC observation timestamp. The receipt names
+both settlement PIDs and the consensus PID; it proves a bounded observation,
+not continuing authority. Git repository/index/config environment overlays are
+cleared and the canonical checkout top-level is verified. Hidden tracked index flags,
+ignored/untracked source, dirty files, output/resource refusal and source drift
+cannot pass. It never prints source filenames or secret configuration.
+
+| Actual runtime | Actual checkout | Result and next protected action |
+| --- | --- | --- |
+| old `78c25985` | old `78c25985` | Both `code_cutover_required` and `source_transition_required`; separately approved guarded two-service cutover comes first. |
+| old `78c25985` | new `bdbce253` | Still blocked; a checkout-only change is not a deployment and cannot clear the website gate. |
+| both new `bdbce253` | old `78c25985` | Runtime prerequisite met; source transition remains separately protected and required. |
+| both new `bdbce253` | clean exact `bdbce253` | Source/runtime aligned; existing financial, custody, #889 and app release gates remain held. |
+
+The reviewed source is exactly
+`bdbce253c524d6faac14f61cd129ac5072287c3f` and its staged binary is exactly
+`44d8aed5550d1b33635c734c1a359d0cb69e854093ef8c9a8a3da4f99d416ede`.
+The new Satchel backend has a different source/artifact authority and must not
+replace either identity. In particular, aligned `bdbce253` is only the exact
+issue #5 legacy authority target: later integrated escrow-evidence source
+`7a830e8` and custody source `99f32de` need their own exact release review and
+artifacts. This gate does not certify their deployment or the complete hardened
+backend. All financial producers remain fenced. No live checkout or process is changed by this source
+fix. A successful web-only build or KingdomIndex merge cannot supply the
+missing live execution proof.
+
+After the **separately approved** existing paired cutover has succeeded, retain
+its exact two-lane/PID/health receipt and unchanged consensus receipt. Only then
+may the operator, under explicit source-transition authorization and the same
+fenced maintenance window, advance the clean checkout. The operator must first
+prove no service launches consensus or financial execution from that source
+working tree. Never reset, force, clean, discard work, run build/install, or
+invoke old release/rollback scripts to clear this hold. The intended source
+transition is narrowly:
+
+```sh
+(
+set -eu
+umask 077
+: "${REVIEWED_CONTROLLER:?retained exact reviewed operator-tool path}"
+unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_COMMON_DIR GIT_OBJECT_DIRECTORY \
+  GIT_ALTERNATE_OBJECT_DIRECTORIES GIT_NAMESPACE GIT_CONFIG GIT_CONFIG_COUNT \
+  GIT_CONFIG_PARAMETERS GIT_CONFIG_SYSTEM GIT_CONFIG_GLOBAL GIT_CONFIG_NOSYSTEM \
+  GIT_CEILING_DIRECTORIES GIT_DISCOVERY_ACROSS_FILESYSTEM
+export GIT_OPTIONAL_LOCKS=0 GIT_NO_REPLACE_OBJECTS=1
+wgit() {
+  command git --no-optional-locks --no-replace-objects \
+    -c core.fsmonitor=false -c core.hooksPath=/dev/null \
+    -C /var/www/WoloChain-wolo-1 "$@"
+}
+SOURCE_RECEIPT="$(mktemp)"
+trap 'rm -f -- "$SOURCE_RECEIPT"' EXIT
+require_source_transition() {
+  GATE_STATUS=0
+  sudo python3 -I "$REVIEWED_CONTROLLER" --mode source-authority > "$SOURCE_RECEIPT" || GATE_STATUS=$?
+  test "$GATE_STATUS" -eq 2
+  python3 -I - "$SOURCE_RECEIPT" <<'PY'
+import json, sys
+from datetime import datetime, timezone
+with open(sys.argv[1], "rb") as stream:
+    data = stream.read(65537)
+assert len(data) <= 65536
+r = json.loads(data)
+expected = {
+    "schema": "aoe2war.wolo.settlement-source-authority.v1",
+    "mode": "READ_ONLY", "status": "BLOCKED",
+    "expected_revision": "bdbce253c524d6faac14f61cd129ac5072287c3f",
+    "checkout_revision": "78c25985420ee41a6678c42fab8ea8d6c3b1b519",
+    "checkout_clean": True, "tracked_index_visible": True,
+    "ignored_entries": 0, "untracked_entries": 0, "tracked_change_entries": 0,
+    "live_code_state": "new",
+    "live_settlement_revision": "bdbce253c524d6faac14f61cd129ac5072287c3f",
+    "live_settlement_sha256": "44d8aed5550d1b33635c734c1a359d0cb69e854093ef8c9a8a3da4f99d416ede",
+    "code_cutover_required": False, "source_transition_required": True,
+    "source_transition_runtime_prerequisite_met": True,
+    "source_runtime_aligned": False, "consensus_unchanged": True,
+    "release_authorized": False, "financial_drain_certified": False,
+    "custody_authorized": False, "claim_889_resolved": False,
+    "production_mutated": False,
+    "blockers": ["SOURCE_TRANSITION_REQUIRED_AFTER_VERIFIED_CODE_CUTOVER"],
+}
+assert all(type(r.get(k)) is type(v) and r[k] == v for k, v in expected.items())
+pids = r["settlement_pids"]
+assert set(pids) == {"wolochain-mainnet-settlement.service", "wolochain-founder-rewards-settlement.service"}
+assert all(type(pid) is int and pid > 0 for pid in [*pids.values(), r["consensus_pid"]])
+observed = datetime.fromisoformat(r["observed_at_utc"].replace("Z", "+00:00"))
+assert observed.utcoffset().total_seconds() == 0
+assert 0 <= (datetime.now(timezone.utc) - observed).total_seconds() <= 30
+PY
+  test "$(wgit symbolic-ref --quiet --short HEAD)" = wolo-1-mainnet-prep
+  test "$(wgit rev-parse HEAD)" = 78c25985420ee41a6678c42fab8ea8d6c3b1b519
+  test -z "$(wgit status --porcelain=v1 --untracked-files=all --ignored=matching)"
+}
+# Requires explicit source-transition approval and the existing exclusive,
+# fenced maintenance window. A checkout-only operation cannot satisfy this.
+require_source_transition
+case "$(wgit remote get-url origin)" in
+  https://github.com/Emaren/wolochain.git|git@github.com:Emaren/wolochain.git) ;;
+  *) exit 2 ;;
+esac
+wgit fetch --no-tags --no-write-fetch-head origin bdbce253c524d6faac14f61cd129ac5072287c3f
+test "$(wgit rev-parse 'bdbce253c524d6faac14f61cd129ac5072287c3f^{commit}')" = bdbce253c524d6faac14f61cd129ac5072287c3f
+wgit merge-base --is-ancestor 78c25985420ee41a6678c42fab8ea8d6c3b1b519 bdbce253c524d6faac14f61cd129ac5072287c3f
+require_source_transition
+wgit merge --ff-only --no-edit bdbce253c524d6faac14f61cd129ac5072287c3f
+# The old source predates this mode; use the retained reviewed tooling path.
+sudo python3 -I "$REVIEWED_CONTROLLER" --mode source-authority
+)
+```
+
+The exact-object fetch and fast-forward above require their own authorization;
+none was executed during this engineering work. The procedure never pulls an
+unreviewed branch, detaches the protected branch or executes new source. Retain both
+old/new source identities and all current request/run histories for recovery.
+If code rollback becomes necessary, source alignment is blocked again until its
+separate controlled transition is reviewed; financial producers stay fenced.
+Only a fresh aligned receipt supports rerunning the app engineer's existing
+web-only Finish dry-run. It grants no financial activation or Finish bypass.
+
 
 ## October 17, 2026 — authenticated bridge and fresh release HOLD
 
