@@ -119,6 +119,12 @@ type SignedReserveReview struct {
 type ReserveReviewAuthority struct {
  AccountingReviewerKey ed25519.PublicKey
  CustodyReviewerKey ed25519.PublicKey
+ // Explicitly separate financial reviewers from execution, wager and owner
+ // withdrawal approval powers. These role keys are provisioned independently
+ // from protected operator config, not copied from the review statement.
+ ExecutionAuthorityKey ed25519.PublicKey
+ WagerApprovalKey ed25519.PublicKey
+ WithdrawalApprovalKey ed25519.PublicKey
  ExpectedVault string
  ExpectedBuildSHA256 string
  ExpectedConfigSHA256 string
@@ -165,16 +171,18 @@ func validReviewSignature(encoded string, pub ed25519.PublicKey, message []byte)
   base64.StdEncoding.EncodeToString(sig)==encoded && ed25519.Verify(pub,message,sig)
 }
 func validReviewAuthority(a ReserveReviewAuthority) bool {
- if len(a.AccountingReviewerKey)!=ed25519.PublicKeySize ||
-  len(a.CustodyReviewerKey)!=ed25519.PublicKeySize ||
-  bytes.Equal(a.AccountingReviewerKey,a.CustodyReviewerKey) ||
-  a.ExpectedVault=="" ||
-  !validReserveDigest(a.ExpectedBuildSHA256) ||
-  !validReserveDigest(a.ExpectedConfigSHA256) ||
-  !validReserveDigest(a.ExpectedPermitSHA256) {
-  return false
+ keys:=[]ed25519.PublicKey{
+  a.AccountingReviewerKey,a.CustodyReviewerKey,
+  a.ExecutionAuthorityKey,a.WagerApprovalKey,a.WithdrawalApprovalKey,
  }
- return true
+ for i,key:=range keys {
+  if len(key)!=ed25519.PublicKeySize {return false}
+  for j:=0;j<i;j++ {if bytes.Equal(key,keys[j]) {return false}}
+ }
+ return a.ExpectedVault!="" &&
+  validReserveDigest(a.ExpectedBuildSHA256) &&
+  validReserveDigest(a.ExpectedConfigSHA256) &&
+  validReserveDigest(a.ExpectedPermitSHA256)
 }
 
 type reviewedBankObservation struct {
