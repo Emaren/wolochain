@@ -117,7 +117,7 @@ transaction/header/bank-proof prefix is unchanged. This remains a chain
 fixture until the separate app lifecycle runner supplies its actual DB receipt.
 
 The reproducible custody artifact profile now targets exact implementation
-`0cce716d928945be47c7a02916a7574fabae3c7b`, compiled with pinned Go 1.24.6.
+`8c509e8f62ca3ec60711dc2654a03b12f22b0773`, compiled with pinned Go 1.24.6.
 The builder's later Git revision and the embedded implementation revision are
 distinct. Historical `99f32de6`/`d431` artifacts remain historical; never relabel
 them or substitute them for the new independent archive/manifest/binary receipt.
@@ -150,7 +150,9 @@ keeps the dedicated signer separate from legacy services and consensus.
 The private authenticated read-only `POST /satchel/v1/proofs/bank` accepts only
 `{"protocol":1}`. The server selects its immutable vault and state H at the
 observed primary head minus one. The complete SDK/Comet proof must authenticate
-that same head at H+1; a head advance during collection refuses. This remains a
+that same head at H+1; both authenticated primary and witness heads must equal
+that commit in height, hash and time. A newer signed witness or a head advance
+during collection refuses. Historical library bank proofs remain nonauthorizing. This remains a
 bounded observation, not an atomic chain/database snapshot or a guarantee that
 a source has disclosed a newer head within the permitted freshness window.
 The offline command adds authenticated head identity/time and the original

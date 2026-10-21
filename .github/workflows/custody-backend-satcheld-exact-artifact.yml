@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 55
     env:
-      EXPECTED_SOURCE: 0cce716d928945be47c7a02916a7574fabae3c7b
+      EXPECTED_SOURCE: 8c509e8f62ca3ec60711dc2654a03b12f22b0773
       BUILDER_COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
       GOTOOLCHAIN: local
       GOFLAGS: -tags=go1.27
