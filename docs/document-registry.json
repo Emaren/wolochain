@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "000000000000000000000000000000000e675c4ed237f51e2bffbec8cebe25ea",
+      "sha256": "fcc5cdf1e74954d512879904870e999ac5943ad054bbbba872d882afefac7667",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -381,7 +381,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-18",
       "sensitivity": "public",
-      "sha256": "00000000000000000000000000000000cdb516ffad68ec1790233a74697625f1",
+      "sha256": "a9f0cf936efa4be75bd68352cc0672a1012afa5f073aa5ab5c81ca504fb9584d",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
