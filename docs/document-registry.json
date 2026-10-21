@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "6393dea0d6b2823c18542bc3cc16cc7984acf7eb4a73dfb364fd1766f03dcc4f",
+      "sha256": "000000000000000000000000000000000e675c4ed237f51e2bffbec8cebe25ea",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -310,9 +310,9 @@
       "owner": "wolochain-ops",
       "path": "docs/mainnet-settlement-runbook.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-10-17",
+      "reviewed_at": "2026-10-18",
       "sensitivity": "restricted",
-      "sha256": "519053f275e0bf41cc3f2e914312d47fee8696552ee9f3b7151b0cb0da69eb35",
+      "sha256": "61564b04fc339e7bb7d327963c1833923e060ac47c489be4613ab1f71069655b",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -379,9 +379,9 @@
       "owner": "wolochain-ops",
       "path": "docs/settlement-contracts/README.md",
       "review_interval_days": 30,
-      "reviewed_at": "2026-10-20",
+      "reviewed_at": "2026-10-18",
       "sensitivity": "public",
-      "sha256": "a30c8f323e766b4b745c078c95e61aeb273b1ef61110dcb3d36fe632bfbafa78",
+      "sha256": "00000000000000000000000000000000cdb516ffad68ec1790233a74697625f1",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -390,6 +390,30 @@
       ],
       "title": "Settlement Contracts",
       "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "non-authorizing-financial-producer-evidence-correlation",
+      "id": "aoe2war.wolochain.producer-owner-triage",
+      "owner": "wolochain-ops",
+      "path": "docs/settlement-contracts/producer-owner-correlation.md",
+      "review_interval_days": 14,
+      "reviewed_at": "2026-10-20",
+      "sensitivity": "internal",
+      "sha256": "0c64850fec32b6a983e117d4a7b6d5d1f9fef9ac91c2b27c84c0d5c186691ea0",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war",
+        "aoe2dewarwagers"
+      ],
+      "title": "HD and DE Financial Producer Owner Review",
+      "type": "runbook"
     },
     {
       "audience": [
@@ -450,7 +474,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-18",
       "sensitivity": "restricted",
-      "sha256": "1b94c4c31f8ec08a96b6c568fbb7516b2331203d495aec0f27b7afd1431de878",
+      "sha256": "a9fa3f82b087303db9c5de9657633de19b2aee4837260245beb0e26f1a563e33",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -565,7 +589,7 @@
       "review_interval_days": 7,
       "reviewed_at": "2026-10-18",
       "sensitivity": "restricted",
-      "sha256": "1e907242e709b83ce30f4d11028afc7ed067250520d9312f861da613e44eca40",
+      "sha256": "ea71d9c540435bf082347764032fb0ba9ab81edc3ae64bffef0298f2c356047e",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -618,7 +642,7 @@
         "wolochain",
         "aoe2war"
       ],
-      "title": "Codex Mission: WoloChain Mainnet \u2194 Osmosis IBC Prep",
+      "title": "Codex Mission: WoloChain Mainnet ↔ Osmosis IBC Prep",
       "type": "historical"
     },
     {
@@ -779,7 +803,7 @@
         "wolochain",
         "aoe2war"
       ],
-      "title": "WoloChain Mainnet \u2192 Osmosis Liquidity Transfer",
+      "title": "WoloChain Mainnet → Osmosis Liquidity Transfer",
       "type": "historical"
     },
     {
@@ -848,7 +872,7 @@
         "wolochain",
         "aoe2war"
       ],
-      "title": "WoloChain Mainnet \u2192 Osmosis Test Transfer",
+      "title": "WoloChain Mainnet → Osmosis Test Transfer",
       "type": "historical"
     },
     {
@@ -946,8 +970,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "codex/satchel-service-qualification",
-    "commit": "32f0d73d4509db074b5baf095c2338cb27c35132"
+    "branch": "integration/20261021-wolo-custody-finance-reconciliation-held",
+    "commit": "700603dc5946d4e3771e31567da2522a27173b55"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
