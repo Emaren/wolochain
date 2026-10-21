@@ -24,60 +24,8 @@ const maxReserveReviewSeconds int64 = 120
 
 var (
  reserveDecimal = regexp.MustCompile(`^(0|[1-9][0-9]{0,38})$`)
- reserveDigest = regexp.MustCompile(`^[a-f0-9]{64}package satchelservice
-
-// A NON-ACTIVATING reserve-review primitive. It bridges existing native,
-// authenticated Cosmos bank evidence with *separate*, signed and bounded
-// financial-liability assertions. It cannot establish completeness of a source
-// inventory or independence of reviewers. It never changes custody capability,
-// execution permits, service health, database state, signer access or funds.
-import (
- "bytes"
- "crypto/ed25519"
- "encoding/base64"
- "encoding/json"
- "errors"
- "math/big"
- "regexp"
- "strings"
- "time"
-
- "github.com/emaren/wolochain/internal/satchel"
-)
-
-const reserveReviewScope = "aoe2war/satchel/proof-bound-reserve-review/v1"
-const maxReserveReviewSeconds int64 = 120
-
-var (
- reserveDecimal = regexp.MustCompile(`^(0|[1-9][0-9]{0,38})$`)
-)
- reserveBlockHashPattern = regexp.MustCompile(`^[A-Fa-f0-9]{64}package satchelservice
-
-// A NON-ACTIVATING reserve-review primitive. It bridges existing native,
-// authenticated Cosmos bank evidence with *separate*, signed and bounded
-// financial-liability assertions. It cannot establish completeness of a source
-// inventory or independence of reviewers. It never changes custody capability,
-// execution permits, service health, database state, signer access or funds.
-import (
- "bytes"
- "crypto/ed25519"
- "encoding/base64"
- "encoding/json"
- "errors"
- "math/big"
- "regexp"
- "strings"
- "time"
-
- "github.com/emaren/wolochain/internal/satchel"
-)
-
-const reserveReviewScope = "aoe2war/satchel/proof-bound-reserve-review/v1"
-const maxReserveReviewSeconds int64 = 120
-
-var (
- reserveDecimal = regexp.MustCompile(`^(0|[1-9][0-9]{0,38})$`)
-)
+ reserveDigest = regexp.MustCompile(`^[a-f0-9]{64}$`)
+ reserveBlockHashPattern = regexp.MustCompile(`^[A-Fa-f0-9]{64}$`)
  reserveBound = new(big.Int).Sub(new(big.Int).Lsh(big.NewInt(1),128),big.NewInt(1))
 )
 
