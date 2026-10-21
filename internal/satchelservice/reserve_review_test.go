@@ -20,6 +20,9 @@ func reserveReviewFixture(t *testing.T) (time.Time,SignedReserveReview,ReserveRe
  a:=ReserveReviewAuthority{
   AccountingReviewerKey:accounting.Public().(ed25519.PublicKey),
   CustodyReviewerKey:custody.Public().(ed25519.PublicKey),
+  ExecutionAuthorityKey:ed25519.NewKeyFromSeed(bytes.Repeat([]byte{73},32)).Public().(ed25519.PublicKey),
+  WagerApprovalKey:ed25519.NewKeyFromSeed(bytes.Repeat([]byte{74},32)).Public().(ed25519.PublicKey),
+  WithdrawalApprovalKey:ed25519.NewKeyFromSeed(bytes.Repeat([]byte{75},32)).Public().(ed25519.PublicKey),
   ExpectedVault:"wolo1synthetic_only_not_an_actual_mainnet_wallet",
   ExpectedBuildSHA256:d('a'),ExpectedConfigSHA256:d('b'),ExpectedPermitSHA256:d('c'),
  }
@@ -137,6 +140,21 @@ func TestProofBoundReserveRejectsCryptographicAuthorityConfusion(t *testing.T){
  noKey:=authority
  noKey.CustodyReviewerKey=nil
  check("missing key",review,noKey)
+ noExecutionKey:=authority
+ noExecutionKey.ExecutionAuthorityKey=nil
+ check("missing execution role",review,noExecutionKey)
+ reusedExecution:=authority
+ reusedExecution.ExecutionAuthorityKey=authority.AccountingReviewerKey
+ check("reviewer is execution permit authority",review,reusedExecution)
+ reusedWager:=authority
+ reusedWager.WagerApprovalKey=authority.CustodyReviewerKey
+ check("reviewer is wager approval authority",review,reusedWager)
+ reusedWithdrawal:=authority
+ reusedWithdrawal.WithdrawalApprovalKey=authority.AccountingReviewerKey
+ check("reviewer is withdrawal approval authority",review,reusedWithdrawal)
+ reusedSigningRoles:=authority
+ reusedSigningRoles.WagerApprovalKey=authority.WithdrawalApprovalKey
+ check("wager and withdrawal approval alias",review,reusedSigningRoles)
  noSign:=review
  noSign.AccountingReviewerSignature=""
  check("missing signature",noSign,authority)
