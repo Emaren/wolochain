@@ -89,6 +89,9 @@ jobs:
       - name: Shared HD and DE payout ingress inventory guard (nonmutating)
         run: python3 -m unittest discover -s tests -p 'test_settlement_shared_producer_inventory_readonly.py' -v
 
+      - name: Exact settlement-bearer holder observation contract (offline, nonauthorizing)
+        run: python3 -m unittest discover -s tests -p 'test_settlement_bearer_holders_readonly.py' -v
+
       - name: DE independent source-signer and read-triggered payment census (nonmutating)
         run: python3 -m unittest discover -s tests -p 'test_settlement_de_producer_source_map.py' -v
 
