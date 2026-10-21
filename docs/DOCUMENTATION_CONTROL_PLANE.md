@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `codex/satchel-authenticated-finance` at `07083be18c3e48ce337ffa2b771abd2904daeddd`
+Implementation baseline: `codex/satchel-authenticated-finance` at `c68b82d67c2dcaf1add27d73e4c82252de6d199b`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
