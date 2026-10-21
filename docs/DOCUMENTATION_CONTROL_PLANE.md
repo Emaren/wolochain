@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `integration/20261021-wolo-custody-finance-reconciliation-held` at `700603dc5946d4e3771e31567da2522a27173b55`
+Implementation baseline: `fix/historical-accepted-100wolo-proof-offline-20261021` at `30a1d69adbdf2f7c05e30d85ce8055d4b3ef8d77`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 

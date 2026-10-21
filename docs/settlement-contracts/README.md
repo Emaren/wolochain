@@ -15,6 +15,62 @@ sensitivity: "public"
 
 # Settlement Contracts
 
+## October 21, 2026 — historical accepted 100-WOLO proof, offline and non-authorizing
+
+The accepted legacy escrow send, transaction
+`D5B4CFAA5E9063F8342EA9E2B6119FCFF28DEE20B2E1DD6803944933B237D699`,
+was observed by our own chain endpoints as a successful
+`100000000 uwolo` `MsgSend` at height `1078913`. Agreement between
+`127.0.0.1` and our public RPC is **one chain-operator trust domain**, not
+independent financial finality. This specific historical event is not claim
+#889 (unproven founder 300 WOLO).
+
+The isolated `wolosatcheld verify-historical-transfer` command provides a
+non-broadcasting, no-keyring, no-DB **native CometBFT/SDK proof replay** for
+the historical transaction **only if** an appropriate portable proof and a
+genuine independently provisioned trusted checkpoint already exist:
+
+```bash
+# Run only against separately operator-provisioned read-only files.
+# Do not paste wallet secrets or private signer configurations here.
+wolosatcheld verify-historical-transfer \
+  --anchor /absolute/operator/trusted-anchor.json \
+  --expected /absolute/operator/immutable-original-100wolo-journal-intent.json \
+  --proof /absolute/operator/archived-100wolo-portable-proof.json
+```
+
+`--expected` must independently specify the original
+`legacy-settlement-accepted-escrow-100` obligation, exact uppercase
+transaction hash, `wolo-1`, height `1078913`, amount `100000000` uwolo,
+original sender, recipient, memo and a nonzero 64-hex journal-identity digest.
+**Never derive expected sender, recipient or memo from the supplied proof.**
+The `--anchor` file is an operator-provisioned `satchel.TrustAnchor` with
+height, hash, period_seconds and evidence_reference. The `--proof` file is
+the already existing strict `satchel.PortableProof` wire format (`kind=transfer`).
+
+The command replays actual signed headers and transaction/result commitments
+against the supplied root, requires the exact original transfer and successful
+inclusion, prints fixed redacted evidence and **exits 3 on verified observation**
+or **2 on refusal**. It neither authorizes ledger credit nor issues a payout,
+retry, production permit, reserve witness or claim #889 resolution. Its output
+explicitly marks independently sourced checkpoint provenance and the original
+journal identity as **not independently established by this command**.
+Credential material, account addresses and full original memo are never printed.
+
+**Historical proof limitation:** the current live reader enforces a fresh
+CometBFT trust period (maximum 24 hours), fresh head, and bounded validator
+proof travel. It is not a historical archive light client; today's ordinary
+chain status and an old untrusted July transaction cannot manufacture a
+valid archival transcript or an independently corroborated historical
+checkpoint. If the necessary authentic signed checkpoint/transcript cannot be
+recovered or verified, this command **must return refusal**, and Wolo #5 remains
+on HOLD with the accepted transaction quarantined for manual reconciliation.
+Do not turn off freshness checks or attempt to rebroadcast.
+
+A separate independent operator still must attest the original journal
+obligation and checkpoint provenance, then reconcile any bank debit/credit,
+in-flight effects, duplicated claims and solvency before financial release.
+
 ## Private War Satchel contract
 
 [War Satchel OpenAPI 1.0.0](war-satchel-http-v1.openapi.json) describes the exact
