@@ -9,7 +9,6 @@ import (
  "bytes"
  "crypto/ed25519"
  "encoding/base64"
- "encoding/hex"
  "encoding/json"
  "errors"
  "math/big"
@@ -219,10 +218,3 @@ func evaluateBoundReserveReview(
 // actual source provenance, owner consent, and the full financial release gate.
 func (r QualifiedReserveReview) CustodyCapability() string {return "UNAVAILABLE"}
 
-func (r QualifiedReserveReview) SignedFieldsSHA256() string {
- // Not a signer/release receipt: to identify use of a qualified value from
- // diagnostics without printing vault addresses or bank witness contents.
- b,_:=hex.DecodeString(r.ConservativeCommittedUWolo)
- _=b
- return ""
-}
