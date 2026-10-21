@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "fcc5cdf1e74954d512879904870e999ac5943ad054bbbba872d882afefac7667",
+      "sha256": "214081acd7218669273087353d22a04b5c33c8a0791e15e2075439562e9cd7f0",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -381,7 +381,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-20",
       "sensitivity": "public",
-      "sha256": "a9f0cf936efa4be75bd68352cc0672a1012afa5f073aa5ab5c81ca504fb9584d",
+      "sha256": "4f79acf9ab24b6fbef375747ae5eb54747b72d983e2b3bd7dfa9d356b8b44473",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -970,8 +970,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "integration/20261021-wolo-custody-finance-reconciliation-held",
-    "commit": "700603dc5946d4e3771e31567da2522a27173b55"
+    "branch": "fix/historical-accepted-100wolo-proof-offline-20261021",
+    "commit": "30a1d69adbdf2f7c05e30d85ce8055d4b3ef8d77"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
