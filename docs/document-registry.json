@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "7937927a1ba84469b1fed580f9eb2893869c563a7757323d12c4832d1e4ae6bc",
+      "sha256": "6ed7805060389f25889e3e42f06a28b156957a4ec1612d56fe480281b71b1a63",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -971,7 +971,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "fix/wolo-hd-financial-obligation-envelope-20261021",
-    "commit": "68b546408c40957072ccb4fc56eaef884ed8a1fd"
+    "commit": "ad7a7b7690a5d48c6f31d8b6c67b8dcd25e63e8b"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
