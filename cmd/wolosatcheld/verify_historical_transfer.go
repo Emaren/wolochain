@@ -43,7 +43,7 @@ type ExpectedHistoricalTransfer struct {
 }
 
 func strictHistoricalJSON(data []byte, dst any) error {
- if len(data)==0 || !chainjson.ValidFolded(data) { return errors.New("historical_json_invalid") }
+ if len(bytes.TrimSpace(data))==0 || bytes.TrimSpace(data)[0]!='{' || !chainjson.ValidFolded(data) { return errors.New("historical_json_invalid") }
  d:=json.NewDecoder(bytes.NewReader(data))
  d.DisallowUnknownFields()
  if err:=d.Decode(dst);err!=nil{return errors.New("historical_json_invalid")}
