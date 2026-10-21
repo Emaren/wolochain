@@ -63,6 +63,14 @@ func TestProofBoundReserveIndependentSignaturesAndConservativeBalance(t *testing
  if _,err:=EvaluateProofBoundReserveReview(now,satchel.AuthenticatedBankEvidence{},proposal,authority);err==nil {
   t.Fatal("unverified zero-valued bank evidence activated reserve checker")
  }
+ // Real CometBFT block hashes commonly arrive uppercase; canonical lowercase
+ // digests remain required for the separate SHA256 review artifacts.
+ uppercase:=proposal
+ uppercase.CommitBlockHash=strings.ToUpper(proposal.CommitBlockHash)
+ signReview(&uppercase,a,c)
+ if x,err:=evaluateBoundReserveReview(now,uppercase,authority,bank);err!=nil || !x.Sufficient {
+  t.Fatal("case-only CometBFT hash encoding mismatch",err)
+ }
 }
 
 func TestProofBoundReserveCannotWaiveClaimsOrFakeAssetEvidence(t *testing.T) {
