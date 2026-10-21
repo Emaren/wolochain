@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "0275b2a68898ad764444b4a3475403bfd3ce5866480f84a2d08a28e1a76eb61a",
+      "sha256": "6ecc2bb63f723dc0a33188ec10726b953edfbb07b5e96e4e8f220b0975eb855e",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -381,7 +381,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-20",
       "sensitivity": "public",
-      "sha256": "9eb834340a3ee1146cfb23e555bfd00a4d3ae771e10cda4077407277b7dfb8d3",
+      "sha256": "680be9beeb54113bf8d009949554e743a7e970283011fb1dc7ccffbf54825e78",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -971,7 +971,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "fix/satchel-proof-bound-reserve-review-20261021",
-    "commit": "df06678642548469966fd92c66d05387fc7d71e5"
+    "commit": "ae61066d6aa37ff2d60df0dd6445b7fae7fee472"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
