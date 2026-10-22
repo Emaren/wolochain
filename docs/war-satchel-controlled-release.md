@@ -175,7 +175,7 @@ financial hold remains unchanged.
 | Flow | Production status | Actual remaining prerequisite |
 | --- | --- | --- |
 | Deposit | BLOCKED | Independently reviewed current app proof/receipt integration and protected schema admission; independent vault/reserve/trust provisioning |
-| Signed auto-bet authorization | BLOCKED | deployed owner/ADR-36/revocation/Watcher proof; current 1,000 WOLO per-bet and 10,000 daily source bounds retained |
+| Signed auto-bet authorization | BLOCKED | deployed owner/ADR-36/revocation/Watcher proof; held source permits at most 10,000 WOLO per newly authorized wager and 50,000 WOLO per owner-signed daily Auto Bet cap; independently configured signer limits and every existing smaller mandate remain binding |
 | Automatic betting | BLOCKED | dedicated signer runtime plus HD reservation/concurrency/mandate integration and canary |
 | Settlement | BLOCKED | exact-source legacy cutover, authoritative match allocation review and complete liabilities/drain |
 | Refund | BLOCKED | HD signed v2 allocation + authenticated proof consumption; full unmatched principal remains mandatory |
