@@ -8,12 +8,33 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "runtime-evidence"
 authority: "mainnet-prep-chronological-handoff"
-reviewed_at: "2026-10-07"
+reviewed_at: "2026-10-22"
 review_interval_days: 14
 sensitivity: "restricted"
 ---
 
 # WoloChain wolo-1 Mainnet Prep Status
+
+## Current source and operational separation — October 22, 2026
+
+This review covers the existing `wolo-1-mainnet-prep` source contract
+at `c1210dda37b725a5b141ad63361048d4b37731c2` and its distinction
+from the separately held custody/reviewer work. It is a **source-only**
+renewal, not a fresh live server, transfer, financial-database, validator,
+consensus, rollback or reserve inspection. No underlying on-chain obligation
+is modified or discharged by renewing this document.
+
+The AoE2WAR release controller currently reports 8092 and 8093 present.
+Its counters do **not** certify live binary/source parity or validate a
+WoloChain release. WoloChain [issue #5](https://github.com/Emaren/wolochain/issues/5)
+continues to require independently evidenced shared-producer fencing, the
+accepted 100-WOLO transfer, founder claim #889 disposition, recoverable
+quiesced backup, witnessed paired rollback and complete non-overlapping
+assets/liabilities. Legacy payments, paired settlement services and validator
+must not be changed merely to resolve central Documentation OS drift.
+Previously dated snapshots and recovery candidates below retain their
+original provenance; no new operational approval is implied.
+
 
 
 ## Review Renewal — 2026-10-07 UTC
