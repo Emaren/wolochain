@@ -8,12 +8,30 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "runtime-evidence"
 authority: "mainnet-service-and-port-contract"
-reviewed_at: "2026-10-07"
+reviewed_at: "2026-10-22"
 review_interval_days: 14
 sensitivity: "internal"
 ---
 
 # WoloChain Mainnet Services And Ports
+
+## Source-only services/ports review — October 22, 2026
+
+Reviewed the documented `wolo-1` source-declared service/port separation
+and the existing release-controller protections. This is **not** a new VPS
+socket inventory, independent health test, keyring or bank audit. The
+AoE2WAR status supplied on October 22 shows its protected **8092=UP** and
+**8093=UP** observations, not certified identity or permission to restart.
+
+Preserve the legacy settlement services and validator. A dedicated Satchel
+signer/reviewer at 8094/8095 remains held, undeployed engineering work and
+cannot be inferred from a green build or these service labels. WoloChain
+[financial release issue #5](https://github.com/Emaren/wolochain/issues/5)
+remains open. Distinct source references must not be treated as proof of
+running-binary parity, signer authority, custody solvency or permitted funds
+movement. All historical port and health evidence below retains its
+original date and scope.
+
 
 
 ## Review Renewal — 2026-10-07 UTC
