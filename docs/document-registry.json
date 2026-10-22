@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "52112f4544a8fe436d350e30fbe48a02445c3c625f82fefe99b196f043da646c",
+      "sha256": "090a6fe1e3ed967713cfdaad4c4b6c6ffd4b7e959dfb2c86d22c96d5591660bc",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -518,9 +518,9 @@
       "owner": "wolochain-ops",
       "path": "docs/war-satchel-exact-source-artifact.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-10-17",
+      "reviewed_at": "2026-10-22",
       "sensitivity": "restricted",
-      "sha256": "7f5d0ad8f674fe1a044f5593fcdd7745702eb63fa54ebfd5ebabf7fd4c2670d8",
+      "sha256": "5104b0cd389184cbb0f2845011de434dae405b199fd063c1d6e687dee97c1f46",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -970,8 +970,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "codex/satchel-custody-authority",
-    "commit": "e0d77c036a48f5ca8f6689b4bbf8cb5c0983cba3"
+    "branch": "codex/satchel-custody-runtime-artifact",
+    "commit": "ac2d15d1ce534d2ff915eb11ece400182390759c"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
