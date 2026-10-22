@@ -28,6 +28,7 @@ import time
 EXPECTED_SOURCE = "526d5eb6123f6cc0394b5e78489c668e77e46106"
 COMPOSED_SOURCE = "155fcf67fb2127a2227de5ea785e51bdbb0155c0"
 BACKEND_SOURCE = "8c509e8f62ca3ec60711dc2654a03b12f22b0773"
+RUNTIME_SOURCE = "72a3bca5f66aff51e1c6577b914d64403785d635"
 BACKEND_WORKFLOW_PATH = ".github/workflows/custody-backend-satcheld-exact-artifact.yml"
 PINNED_GO_VERSION = "go1.24.6"
 EXPECTED_REPOSITORY = "Emaren/wolochain"
@@ -74,7 +75,7 @@ def _require(condition: bool, message: str) -> None:
 
 def profile_policy(profile: str = "legacy526") -> dict:
     """Only reviewed source pins; callers cannot supply an arbitrary revision."""
-    _require(type(profile) is str and profile in ("legacy526", "composed-satcheld", "custody-backend"),
+    _require(type(profile) is str and profile in ("legacy526", "composed-satcheld", "custody-backend", "custody-runtime"),
              "unknown artifact profile")
     if profile == "legacy526":
         return {
@@ -90,6 +91,15 @@ def profile_policy(profile: str = "legacy526") -> dict:
             "main_path": "github.com/emaren/wolochain/cmd/wolosatcheld",
             "package": "./cmd/wolosatcheld", "workflow": BACKEND_WORKFLOW_PATH,
             "purpose": "UNDEPLOYED_CUSTODY_BACKEND_CANDIDATE",
+        }
+    if profile == "custody-runtime":
+        _require(re.fullmatch(r"[0-9a-f]{40}", RUNTIME_SOURCE) is not None,
+                 "NONACCEPTING runtime source: reviewed implementation pin unavailable")
+        return {
+            "source": RUNTIME_SOURCE, "binary": "wolosatcheld",
+            "main_path": "github.com/emaren/wolochain/cmd/wolosatcheld",
+            "package": "./cmd/wolosatcheld", "workflow": BACKEND_WORKFLOW_PATH,
+            "purpose": "UNDEPLOYED_CUSTODY_RUNTIME_CANDIDATE",
         }
     _require(re.fullmatch(r"[0-9a-f]{40}", COMPOSED_SOURCE) is not None,
              "NONACCEPTING composed source: reviewed implementation pin unavailable")
@@ -345,7 +355,7 @@ def load_manifest(path: str | Path, expected_sha256: str | None = None) -> dict:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("command", choices=("create", "verify"))
-    parser.add_argument("--profile", choices=("legacy526", "composed-satcheld", "custody-backend"), default="legacy526")
+    parser.add_argument("--profile", choices=("legacy526", "composed-satcheld", "custody-backend", "custody-runtime"), default="legacy526")
     for argument in ("source-dir", "binary", "manifest", "builder-commit", "repository",
                      "run-id", "run-attempt", "workflow-ref", "workflow-sha"):
         parser.add_argument("--" + argument, required=True)
