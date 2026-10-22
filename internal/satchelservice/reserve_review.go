@@ -102,6 +102,10 @@ func reserveUnsignedMessage(r SignedReserveReview) []byte {
  return b
 }
 
+// ReserveReviewMessage supplies exact canonical bytes to the independently
+// controlled reviewers. It neither signs nor qualifies the supplied proposal.
+func ReserveReviewMessage(r SignedReserveReview) []byte {return reserveUnsignedMessage(r)}
+
 func validReserveDigest(v string) bool {
  return reserveDigest.MatchString(v) && strings.Trim(v,"0")!=""
 }

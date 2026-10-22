@@ -84,7 +84,7 @@ type Policy struct {
 	ProtectedAddresses    []string `json:"protected_addresses"`
 	MaxAmountUWolo        uint64   `json:"max_amount_uwolo"`
 	WithdrawalApprovalKey []byte   `json:"withdrawal_approval_key"`
-	WagerApprovalKey []byte `json:"wager_approval_key"`
+	WagerApprovalKey      []byte   `json:"wager_approval_key"`
 }
 type record struct {
 	Request      TransferRequest
@@ -94,11 +94,12 @@ type record struct {
 	Confirmation Confirmation
 }
 type Engine struct {
-	mu      sync.Mutex
-	db      *bolt.DB
-	policy  Policy
-	backend Backend
-	now     func() time.Time
+	mu               sync.Mutex
+	db               *bolt.DB
+	policy           Policy
+	backend          Backend
+	now              func() time.Time
+	custodyAuthority *CustodyAuthority
 }
 
 var operations = []byte("operations-v1")
@@ -181,7 +182,7 @@ func (p Policy) validate(r TransferRequest, now time.Time) error {
 		// Ticket memo is server issued; bind its whole exact bytes to this durable
 		// request. App admission/owner/game caps remain the HD ledger's authority.
 		n, _ := strconv.ParseUint(r.AmountUWolo, 10, 64)
-		if n > 1000000000 || n%1000000 != 0 || !wagerIDs.MatchString(r.OperationID) || r.Recipient != p.BettingEscrow || r.Approval != nil || r.OwnerMandate != nil || (r.OwnerID != "" && !ownerUIDPattern.MatchString(r.OwnerID)) || !ticketMemo.MatchString(r.Memo) {
+		if n > ProductMaxWagerUWolo || n%1000000 != 0 || !wagerIDs.MatchString(r.OperationID) || r.Recipient != p.BettingEscrow || r.Approval != nil || r.OwnerMandate != nil || (r.OwnerID != "" && !ownerUIDPattern.MatchString(r.OwnerID)) || !ticketMemo.MatchString(r.Memo) {
 			return errors.New("wager_policy_refused")
 		}
 		return p.verifyWager(r, now)
@@ -215,7 +216,7 @@ func validMemo(s string) bool {
 // prevents two signer processes sharing this history. No state auto-reset or
 // pruning API exists: restoring an old DB can resurrect spending authority.
 func Open(path string, p Policy, b Backend) (*Engine, error) {
-	if b == nil || (len(p.WithdrawalApprovalKey)==ed25519.PublicKeySize && len(p.WagerApprovalKey)==ed25519.PublicKeySize && bytes.Equal(p.WithdrawalApprovalKey,p.WagerApprovalKey)) || !validAddress(p.Vault) || satchel.IsKnownRoleAddress(p.Vault) || !validAddress(p.BettingEscrow) || p.Vault == p.BettingEscrow || p.MaxAmountUWolo == 0 || p.MaxAmountUWolo > 50000000000 {
+	if b == nil || (len(p.WithdrawalApprovalKey) == ed25519.PublicKeySize && len(p.WagerApprovalKey) == ed25519.PublicKeySize && bytes.Equal(p.WithdrawalApprovalKey, p.WagerApprovalKey)) || !validAddress(p.Vault) || satchel.IsKnownRoleAddress(p.Vault) || !validAddress(p.BettingEscrow) || p.Vault == p.BettingEscrow || p.MaxAmountUWolo == 0 || p.MaxAmountUWolo > 50000000000 {
 		return nil, errors.New("invalid_custody_policy")
 	}
 	for _, a := range p.ProtectedAddresses {
@@ -363,6 +364,30 @@ func (e *Engine) Submit(ctx context.Context, req TransferRequest) (Result, error
 		v := *req.Reservation
 		req.Reservation = &v
 	}
+	var grant *custodyExecutionGrant
+	if e.custodyAuthority != nil {
+		// Qualify only a new identity. Existing accepted/uncertain operations
+		// remain replayable as observations after revocation, never as sends.
+		var recorded bool
+		if err := e.db.View(func(tx *bolt.Tx) error {
+			recorded = tx.Bucket(operations).Get([]byte(req.OperationID)) != nil
+			return nil
+		}); err != nil {
+			return Result{}, errCustodyUnavailable
+		}
+		if !recorded {
+			var err error
+			grant, err = e.custodyAuthority.qualifyLocked(ctx)
+			if err != nil || !grant.covers(req) {
+				return Result{}, errCustodyUnavailable
+			}
+			grant.operationFingerprint = fingerprint(req)
+			ctx = context.WithValue(ctx, custodyGrantContextKey{}, grant)
+			var cancel context.CancelFunc
+			ctx, cancel = context.WithDeadline(ctx, grant.expiresAt)
+			defer cancel()
+		}
+	}
 	// Economic identity check precedes approval freshness: replay of an already
 	// fenced request still works after its original short-lived approval expires.
 	var r record
@@ -380,6 +405,9 @@ func (e *Engine) Submit(ctx context.Context, req TransferRequest) (Result, error
 			}
 			exists = true
 			return nil
+		}
+		if grant != nil && !grant.current(ctx) {
+			return errCustodyUnavailable
 		}
 		if err := e.policy.validate(req, e.now()); err != nil {
 			return err
@@ -427,7 +455,7 @@ func (e *Engine) Submit(ctx context.Context, req TransferRequest) (Result, error
 	if exists {
 		return r.Result, nil
 	}
-	if ctx.Err() != nil || e.policy.validate(req, e.now()) != nil {
+	if ctx.Err() != nil || e.policy.validate(req, e.now()) != nil || (grant != nil && !grant.current(ctx)) {
 		// No signing invocation has started, but retain the accepted economic
 		// identity and consumed authority so this operation cannot be renewed.
 		r.Result.Status = "REFUSED"
@@ -482,6 +510,9 @@ func (e *Engine) Submit(ctx context.Context, req TransferRequest) (Result, error
 		return r.Result, nil
 	}
 	signed.Hash = strings.ToUpper(signed.Hash)
+	if grant != nil {
+		grant.signedHash = signed.Hash
+	}
 	r.Signed = signed
 	r.Result.TxHash = signed.Hash
 	r = held(r, "signed_transaction_persisted")
@@ -492,7 +523,7 @@ func (e *Engine) Submit(ctx context.Context, req TransferRequest) (Result, error
 	if err = e.write(r); err != nil {
 		return Result{}, errors.New("durability_failed")
 	}
-	if ctx.Err() != nil || e.policy.validate(req, e.now()) != nil {
+	if ctx.Err() != nil || e.policy.validate(req, e.now()) != nil || (grant != nil && !grant.current(ctx)) {
 		// A signature already exists: expiry cannot release its sequence/hold,
 		// authorize a replacement or turn this into a retryable refusal.
 		reason := "wager_authority_expired_before_broadcast"

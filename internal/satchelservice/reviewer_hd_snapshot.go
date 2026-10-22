@@ -173,7 +173,7 @@ func VerifyReviewerHDOrigin(raw []byte,stored ReviewerHDOriginColumns)(ReviewerH
   operation!=stored.OperationID||reserve!=stored.ReservationID||owner!=stored.OwnerUserID||
   !ownerUIDPattern.MatchString(uid)||!validAddress(wallet)||!validAddress(vault)||
   !validAddress(escrow)||vault==escrow||
-  !reviewerUnsignedDecimal(amount,false,1000000000)||
+  !reviewerUnsignedDecimal(amount,false,ProductMaxWagerUWolo)||
   !reviewerHexDigest.MatchString(prop)||reviewerStr(m,"gameIdentityKey")==""||
   len(reviewerStr(m,"gameIdentityKey"))>255||
   reviewerStr(m,"challengeText")==""||
@@ -192,7 +192,7 @@ func VerifyReviewerHDOrigin(raw []byte,stored ReviewerHDOriginColumns)(ReviewerH
   if !ok||!reviewerRecord(v,[]string{"id","marketId","side","amountWolo","propositionHash"}){return bad()}
   id,market,stake:=reviewerInt(v,"id"),reviewerInt(v,"marketId"),reviewerInt(v,"amountWolo")
   side,hash:=reviewerStr(v,"side"),reviewerStr(v,"propositionHash")
-  if id<1||market<1||stake<1||stake>1000||seen[id]||hash!=prop||
+  if id<1||market<1||stake<1||stake>ProductMaxWagerWOLO||seen[id]||hash!=prop||
    (side!="left"&&side!="right"){return bad()}
   seen[id]=true;total+=stake
   legs=append(legs,ReviewerHDLeg{ID:id,MarketID:market,AmountWolo:stake,Side:side,PropositionHash:hash})

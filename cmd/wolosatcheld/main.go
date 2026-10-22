@@ -95,17 +95,25 @@ func run(ctx context.Context, args []string, out, errout io.Writer) int {
 		return 2
 	}
 	policy := satchelservice.Policy{Vault: cfg.Vault, BettingEscrow: cfg.BettingEscrow, ProtectedAddresses: cfg.ProtectedAddresses, MaxAmountUWolo: cfg.MaxAmountUWolo, WithdrawalApprovalKey: approvalKey, WagerApprovalKey: wagerKey}
-	backend, err := satchelservice.NewKeyringBackend(satchelservice.BackendConfig{RPC: cfg.RPC, REST: cfg.REST, WitnessRPC: cfg.WitnessRPC, Vault: cfg.Vault, PublicKeyHex: cfg.PublicKeyHex, KeyringDir: cfg.KeyringDir, KeyName: cfg.KeyName, PassphraseFile: cfg.PassphraseFile, FeesUWolo: cfg.FeesUWolo, MaxAmountUWolo: strconv.FormatUint(cfg.MaxAmountUWolo, 10), GasLimit: cfg.GasLimit, TimeoutBlocks: cfg.TimeoutBlocks, ApprovedDestinations: []string{cfg.BettingEscrow}, ProtectedAddresses: cfg.ProtectedAddresses, WithdrawalVerifier: policy.VerifyWithdrawal, WagerVerifier: policy.VerifyWager, ConfirmTransaction: func(ctx context.Context, request satchelservice.TransferRequest, signed satchelservice.SignedTransaction) (satchelservice.Confirmation, error) {
-		evidence, err := trusted.ReadTransfer(ctx, satchel.TransferIntent{Sender: request.Sender, Recipient: request.Recipient, AmountUWolo: request.AmountUWolo, Memo: request.Memo}, signed.Hash)
-		if err != nil || !evidence.ConsensusAuthenticated() || evidence.CreditAuthorized() {
-			return satchelservice.Confirmation{Status: "UNKNOWN"}, errors.New("authenticated_confirmation_unavailable")
-		}
-		observation := evidence.Observation()
-		if !bytes.Equal(observation.TxBytes, signed.Bytes) {
-			return satchelservice.Confirmation{Status: "UNKNOWN"}, errors.New("authenticated_transaction_mismatch")
-		}
-		return satchelservice.Confirmation{Status: "CONFIRMED", ReceiptID: evidence.Receipt().ID(), Height: observation.Height, BlockHash: observation.BlockHash}, nil
-	}})
+	var custodyAuthority *satchelservice.CustodyAuthority
+	backend, err := satchelservice.NewKeyringBackend(satchelservice.BackendConfig{RPC: cfg.RPC, REST: cfg.REST, WitnessRPC: cfg.WitnessRPC, Vault: cfg.Vault, PublicKeyHex: cfg.PublicKeyHex, KeyringDir: cfg.KeyringDir, KeyName: cfg.KeyName, PassphraseFile: cfg.PassphraseFile, FeesUWolo: cfg.FeesUWolo, MaxAmountUWolo: strconv.FormatUint(cfg.MaxAmountUWolo, 10), GasLimit: cfg.GasLimit, TimeoutBlocks: cfg.TimeoutBlocks, ApprovedDestinations: []string{cfg.BettingEscrow}, ProtectedAddresses: cfg.ProtectedAddresses, WithdrawalVerifier: policy.VerifyWithdrawal, WagerVerifier: policy.VerifyWager,
+		AuthorizeSign: func(ctx context.Context, r satchelservice.TransferRequest) bool {
+			return custodyAuthority != nil && custodyAuthority.AuthorizeSign(ctx, r)
+		},
+		AuthorizeBroadcast: func(ctx context.Context, s satchelservice.SignedTransaction) bool {
+			return custodyAuthority != nil && custodyAuthority.AuthorizeBroadcast(ctx, s)
+		},
+		ConfirmTransaction: func(ctx context.Context, request satchelservice.TransferRequest, signed satchelservice.SignedTransaction) (satchelservice.Confirmation, error) {
+			evidence, err := trusted.ReadTransfer(ctx, satchel.TransferIntent{Sender: request.Sender, Recipient: request.Recipient, AmountUWolo: request.AmountUWolo, Memo: request.Memo}, signed.Hash)
+			if err != nil || !evidence.ConsensusAuthenticated() || evidence.CreditAuthorized() {
+				return satchelservice.Confirmation{Status: "UNKNOWN"}, errors.New("authenticated_confirmation_unavailable")
+			}
+			observation := evidence.Observation()
+			if !bytes.Equal(observation.TxBytes, signed.Bytes) {
+				return satchelservice.Confirmation{Status: "UNKNOWN"}, errors.New("authenticated_transaction_mismatch")
+			}
+			return satchelservice.Confirmation{Status: "CONFIRMED", ReceiptID: evidence.Receipt().ID(), Height: observation.Height, BlockHash: observation.BlockHash}, nil
+		}})
 	if err != nil {
 		fmt.Fprintln(errout, "satchel: isolated signer unavailable")
 		return 2
@@ -118,9 +126,14 @@ func run(ctx context.Context, args []string, out, errout io.Writer) int {
 		return 2
 	}
 	defer engine.Close()
+	custodyAuthority, err = satchelservice.NewCustodyAuthority(engine, backend, trusted, *path, configDigest, binaryDigest)
+	if err != nil || engine.RequireCustodyAuthority(custodyAuthority) != nil {
+		fmt.Fprintln(errout, "satchel: runtime custody qualification unavailable")
+		return 2
+	}
 	public, _ := hex.DecodeString(cfg.PublicKeyHex)
 	fingerprint := sha256.Sum256(public)
-	handler, err := satchelservice.NewHTTPHandler(&serviceEngine{Engine: engine, trusted: trusted}, satchelservice.HTTPConfig{Token: strings.TrimSpace(string(token)), Accepting: true, Authorize: authorized, Health: satchelservice.HTTPHealth{Accepting: true, VaultAddress: cfg.Vault, KeyFingerprint: hex.EncodeToString(fingerprint[:]), BuildSHA256: binaryDigest, ExclusiveAuthorityVerified: true}})
+	handler, err := satchelservice.NewHTTPHandler(&serviceEngine{Engine: engine, trusted: trusted}, satchelservice.HTTPConfig{Token: strings.TrimSpace(string(token)), Accepting: true, Authorize: authorized, CustodyCapability: custodyAuthority.Capability, Health: satchelservice.HTTPHealth{Accepting: true, VaultAddress: cfg.Vault, KeyFingerprint: hex.EncodeToString(fingerprint[:]), BuildSHA256: binaryDigest, ExclusiveAuthorityVerified: true}})
 	for i := range token {
 		token[i] = 0
 	}
@@ -157,6 +170,11 @@ type permittedBackend struct {
 	inner     satchelservice.Backend
 	authorize func(context.Context) bool
 	trust     func(context.Context) error
+}
+
+func (b *permittedBackend) NativeCustodyBackend() *satchelservice.KeyringBackend {
+	native, _ := b.inner.(*satchelservice.KeyringBackend)
+	return native
 }
 
 // The return observer is fixed by server configuration; callers cannot supply

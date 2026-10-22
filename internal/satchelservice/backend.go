@@ -62,6 +62,10 @@ type BackendConfig struct {
 	WithdrawalVerifier                  func(TransferRequest) error
 	WagerVerifier                       func(TransferRequest) error
 	ConfirmTransaction                  func(context.Context, TransferRequest, SignedTransaction) (Confirmation, error)
+	// A production custody issuer rechecks its opaque operation grant after
+	// network I/O, immediately before SDK signing and the broadcast call.
+	AuthorizeSign      func(context.Context, TransferRequest) bool
+	AuthorizeBroadcast func(context.Context, SignedTransaction) bool
 }
 
 type backendSigner interface {
@@ -79,6 +83,8 @@ type KeyringBackend struct {
 	keyringLease *os.File
 	closed       atomic.Bool
 }
+
+func (b *KeyringBackend) NativeCustodyBackend() *KeyringBackend { return b }
 
 func NewKeyringBackend(cfg BackendConfig) (*KeyringBackend, error) {
 	b, err := newBackend(cfg)
@@ -272,7 +278,8 @@ func (b *KeyringBackend) Sign(ctx context.Context, r TransferRequest) (SignedTra
 	signBytes, _ := proto.Marshal(&txapi.SignDoc{BodyBytes: bodyBytes, AuthInfoBytes: authBytes, ChainId: "wolo-1", AccountNumber: number})
 	// Account/head I/O must not allow owner consent or the independent approval
 	// to expire between validation and entering the irreversible signing call.
-	if ctx.Err() != nil || b.validateRequest(r, true) != nil || !b.keyringLeaseCurrent() {
+	if ctx.Err() != nil || b.validateRequest(r, true) != nil || !b.keyringLeaseCurrent() ||
+		(b.cfg.AuthorizeSign != nil && !b.cfg.AuthorizeSign(ctx, r)) {
 		return SignedTransaction{}, ErrPreSignRefused
 	}
 	signature, public, err := b.signer.Sign(b.cfg.KeyName, signBytes, signing.SignMode_SIGN_MODE_DIRECT)
@@ -430,7 +437,8 @@ func (b *KeyringBackend) Broadcast(ctx context.Context, s SignedTransaction) (Br
 	}
 	b.mu.Lock()
 	defer b.mu.Unlock()
-	if b.closed.Load() {
+	if b.closed.Load() || !b.keyringLeaseCurrent() ||
+		(b.cfg.AuthorizeBroadcast != nil && !b.cfg.AuthorizeBroadcast(ctx, s)) || ctx.Err() != nil {
 		return unknown, ErrBackend
 	}
 	ctx, cancel := context.WithTimeout(ctx, 4*time.Second)

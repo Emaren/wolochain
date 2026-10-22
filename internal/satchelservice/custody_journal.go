@@ -109,6 +109,12 @@ func addCustodyJournalAmount(total *uint64, amount uint64) error {
 func (e *Engine) CustodyJournal() (CustodyJournal, error) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
+	return e.custodyJournalLocked()
+}
+
+// Caller owns the execution mutex. Qualification must precede the first new
+// intent write without reacquiring that mutex or weakening the snapshot checks.
+func (e *Engine) custodyJournalLocked() (CustodyJournal, error) {
 	out := CustodyJournal{Protocol: 1, ChainID: "wolo-1", Denom: "uwolo", Kind: "execution_journal_checkpoint",
 		CustodyCapability: "UNAVAILABLE", OperationStatusCounts: map[string]uint64{
 			"UNKNOWN": 0, "ACCEPTED": 0, "OBSERVED_NONCREDITING": 0, "CONFIRMED": 0, "FAILED": 0, "REFUSED": 0}}
