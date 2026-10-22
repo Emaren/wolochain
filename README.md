@@ -8,12 +8,37 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "chain-repository-entrypoint"
-reviewed_at: "2026-10-07"
+reviewed_at: "2026-10-22"
 review_interval_days: 14
 sensitivity: "public"
 ---
 
 # WoloChain
+
+## Source-only mainnet documentation review — October 22, 2026
+
+This review reconciles the `wolo-1-mainnet-prep` source boundary, mainnet
+chain ID (`wolo-1`), explicit settlement-versus-validator roles and the
+separately held War Satchel integration against current repository contracts.
+It does **not** replace the actual running node or independently establish
+current key custody, blockchain bank reserves, historic transaction finality,
+operator permissions or the identity of the VPS binaries.
+
+AoE2WAR's operator observation on October 22 reported legacy Wolo settlement
+ports **8092 and 8093 UP**, but listener presence is not signer/custody,
+funding, bank-solvency or release certification. WoloChain issue
+[**#5**](https://github.com/Emaren/wolochain/issues/5) remains the independent
+financial HARD HOLD (five BLOCKED controls and global solvency UNKNOWN).
+Neither this source review nor green CI authorizes installing a 8094/8095
+custody service, replacing the live 8092/8093 binaries, retrying an unresolved
+historical transfer, or enabling Satchel funding, wagers or withdrawals.
+
+The newer held WoloChain source branch contains separately reviewed engineering
+candidates; it must not be substituted for this operational branch or presented
+as the current VPS implementation merely to clear an app documentation check.
+Earlier dated runtime claims below retain their original provenance and do not
+become October 22 observations.
+
 
 WoloChain is the fixed-supply Cosmos chain for the AoE2HDBets ecosystem.
 
