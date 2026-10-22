@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/satchel-proof-bound-reserve-review-20261021` at `1cd0254bb32d98ebf7f1704ed411be2466ef57e7`
+Implementation baseline: `fix/20261022-satchel-signer-10k-owner-cap-held` at `9d938478b7bf4614f8777c2c39d006225327fb70`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
