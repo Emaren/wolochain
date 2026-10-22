@@ -15,19 +15,22 @@ sensitivity: "public"
 
 # WoloChain
 
-WoloChain is the fixed-supply Cosmos chain for the AoE2HDBets ecosystem.
+## Source documentation review — 2026-10-22
 
-## October 22 source review and financial authority
-
-This renewal reviewed repository source and the dated documentation below; it
-made no fresh runtime, balance or key observation. [Issue #5](https://github.com/Emaren/wolochain/issues/5)
-and its canonical six-control checklist retain the financial release HOLD.
-Historical deployment/funding and shared-binary recovery instructions below
-do not authorize present execution or a consensus restart. Use the current
+This renewal checks the repository's chain identity, role separation and
+source-only War Satchel integration references against the held GitHub release
+work. It is **not** a new live node, payout, escrow, balance, custody, validator
+or settlement-process inspection. Earlier operational claims below remain
+bound to their individually dated observations. Mainnet Satchel signing
+remains financially **HELD** under [release issue #5](https://github.com/Emaren/wolochain/issues/5);
+source review and successful CI do not authorize 8094 deployment, mainnet
+transfers or replacement of 8092/8093. Historical shared-binary recovery
+examples do not authorize a consensus restart; use the current
 [settlement runbook](docs/mainnet-settlement-runbook.md) and
-[Satchel operator gates](docs/war-satchel-mainnet-execution.md); the new runtime
-custody issuer requires actual independent provisioning and does not activate
-from source tests. Dated live identities and balances remain historical evidence.
+[Satchel operator gates](docs/war-satchel-mainnet-execution.md).
+
+
+WoloChain is the fixed-supply Cosmos chain for the AoE2HDBets ecosystem.
 
 ## Canonical Identity
 

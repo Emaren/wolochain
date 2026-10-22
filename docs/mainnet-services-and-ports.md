@@ -15,17 +15,20 @@ sensitivity: "internal"
 
 # WoloChain Mainnet Services And Ports
 
-## Source review — October 22, no new runtime certification
+## Source-only review — 2026-10-22 UTC
 
-The reviewed source preserves separate consensus, primary settlement 8092,
-founder settlement 8093 and candidate private Satchel 8094 authorities. The
-current [Satchel gates](war-satchel-mainnet-execution.md) and
-[settlement runbook](mainnet-settlement-runbook.md) govern their source contract;
-[issue #5](https://github.com/Emaren/wolochain/issues/5) retains financial release
-authority. This review read source and the historical evidence below without
-SSH, keyring access, transfers, installation or restart. The older runtime
-tables, funding balances and imperative deployment examples are dated history,
-not fresh certification, current solvency or authority to execute a cutover.
+Reviewed the source-declared `wolo-1` identity and intended production port
+separation. This is **not** a fresh service, socket, keyring, funds, health
+or deployment observation. The port/status evidence below retains its stated
+2026-10-07 and earlier timestamps. Existing 8092/8093 settlement services
+and the validator must remain undisturbed; the separate 8094 Satchel signer
+and 8095 reviewer are held engineering candidates, **not** certified live
+listeners. Financial release issue #5 continues to control all activation.
+Use the current [Satchel gates](war-satchel-mainnet-execution.md) and
+[settlement runbook](mainnet-settlement-runbook.md); older imperative examples
+do not authorize a financial cutover or consensus restart.
+
+
 
 ## Review Renewal — 2026-10-07 UTC
 

@@ -173,6 +173,11 @@ func (p Policy) verifyWithdrawal(r TransferRequest, now time.Time) error {
 	}
 	return verifyOwnerWithdrawal(r, now)
 }
+
+// Exact owner product ceiling. A lower configured backend/signer policy remains
+// binding; a higher withdrawal allowance never raises the wager maximum.
+const maxWarSatchelWagerUWolo uint64 = ProductMaxWagerUWolo
+
 func (p Policy) validate(r TransferRequest, now time.Time) error {
 	if !ids.MatchString(r.OperationID) || r.ChainID != "wolo-1" || r.Denom != "uwolo" || r.Sender != p.Vault || !validAddress(r.Recipient) || r.Recipient == p.Vault || !amount(r.AmountUWolo, p.MaxAmountUWolo) {
 		return errors.New("transfer_policy_refused")
@@ -182,7 +187,7 @@ func (p Policy) validate(r TransferRequest, now time.Time) error {
 		// Ticket memo is server issued; bind its whole exact bytes to this durable
 		// request. App admission/owner/game caps remain the HD ledger's authority.
 		n, _ := strconv.ParseUint(r.AmountUWolo, 10, 64)
-		if n > ProductMaxWagerUWolo || n%1000000 != 0 || !wagerIDs.MatchString(r.OperationID) || r.Recipient != p.BettingEscrow || r.Approval != nil || r.OwnerMandate != nil || (r.OwnerID != "" && !ownerUIDPattern.MatchString(r.OwnerID)) || !ticketMemo.MatchString(r.Memo) {
+		if n > maxWarSatchelWagerUWolo || n%1000000 != 0 || !wagerIDs.MatchString(r.OperationID) || r.Recipient != p.BettingEscrow || r.Approval != nil || r.OwnerMandate != nil || (r.OwnerID != "" && !ownerUIDPattern.MatchString(r.OwnerID)) || !ticketMemo.MatchString(r.Memo) {
 			return errors.New("wager_policy_refused")
 		}
 		return p.verifyWager(r, now)

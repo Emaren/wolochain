@@ -577,7 +577,8 @@ func TestEngineWithdrawalSupportsAppMaximumWithoutRaisingWagerCap(t *testing.T) 
 	defer engine.Close()
 	engine.now = func() time.Time { return time.Unix(1800000000, 0) }
 	wager := engineTestWager(t, "1")
-	wager.AmountUWolo = "1001000000"
+	wager.AmountUWolo = "10001000000"
+	wager.Reservation = testWagerReservation(t, wager, policy, time.Unix(1800000000, 0))
 	if _, err := engine.Submit(t.Context(), wager); err == nil {
 		t.Fatal("withdrawal maximum raised automated wager cap")
 	}
