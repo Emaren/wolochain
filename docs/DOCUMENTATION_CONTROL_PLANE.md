@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `codex/satchel-custody-authority` at `42014ae6ec18328eb36ade4825e93082e20487d8`
+Implementation baseline: `codex/satchel-custody-authority` at `e0d77c036a48f5ca8f6689b4bbf8cb5c0983cba3`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 

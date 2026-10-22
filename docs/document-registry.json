@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "4e7c1d5a0874d5f31303c4533d53147199ddfce512a1d4fd3083aa9c8d28c0ab",
+      "sha256": "52112f4544a8fe436d350e30fbe48a02445c3c625f82fefe99b196f043da646c",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -971,7 +971,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "codex/satchel-custody-authority",
-    "commit": "42014ae6ec18328eb36ade4825e93082e20487d8"
+    "commit": "e0d77c036a48f5ca8f6689b4bbf8cb5c0983cba3"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
