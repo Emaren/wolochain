@@ -8,7 +8,7 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "chain-repository-entrypoint"
-reviewed_at: "2026-10-07"
+reviewed_at: "2026-10-22"
 review_interval_days: 14
 sensitivity: "public"
 ---
@@ -16,6 +16,18 @@ sensitivity: "public"
 # WoloChain
 
 WoloChain is the fixed-supply Cosmos chain for the AoE2HDBets ecosystem.
+
+## October 22 source review and financial authority
+
+This renewal reviewed repository source and the dated documentation below; it
+made no fresh runtime, balance or key observation. [Issue #5](https://github.com/Emaren/wolochain/issues/5)
+and its canonical six-control checklist retain the financial release HOLD.
+Historical deployment/funding and shared-binary recovery instructions below
+do not authorize present execution or a consensus restart. Use the current
+[settlement runbook](docs/mainnet-settlement-runbook.md) and
+[Satchel operator gates](docs/war-satchel-mainnet-execution.md); the new runtime
+custody issuer requires actual independent provisioning and does not activate
+from source tests. Dated live identities and balances remain historical evidence.
 
 ## Canonical Identity
 

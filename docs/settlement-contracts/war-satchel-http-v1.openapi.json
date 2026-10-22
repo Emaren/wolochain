@@ -761,7 +761,7 @@
       "PrivateBearer": {
         "type": "http",
         "scheme": "bearer",
-        "description": "Exactly one Authorization header; Bearer plus private 48–512 character base64url token. Literal loopback only and no Origin header. Token is not owner consent, custody attestation or withdrawal approval."
+        "description": "Exactly one Authorization header; Bearer plus private 48\u2013512 character base64url token. Literal loopback only and no Origin header. Token is not owner consent, custody attestation or withdrawal approval."
       }
     },
     "schemas": {
@@ -1907,7 +1907,7 @@
       },
       "WagerMemo": {
         "type": "string",
-        "pattern": "^AoE2HDBets bet ticket v1 · ticket [1-9][0-9]{0,11}$"
+        "pattern": "^AoE2HDBets bet ticket v1 \u00b7 ticket [1-9][0-9]{0,11}$"
       },
       "WagerCoin": {
         "type": "object",
@@ -2074,7 +2074,10 @@
           "build_sha256",
           "durable_one_shot",
           "replay_after_restart_forbidden",
-          "refunds_require_chain_proof"
+          "refunds_require_chain_proof",
+          "execution_protocol",
+          "owner_bound_wager_reservation_required",
+          "custody_capability"
         ],
         "properties": {
           "ok": {
@@ -2124,9 +2127,56 @@
           },
           "custody_mnemonic_shared_with_other_roles": {
             "const": false
+          },
+          "execution_protocol": {
+            "const": 2
+          },
+          "owner_bound_wager_reservation_required": {
+            "const": true
+          },
+          "custody_capability": {
+            "enum": [
+              "UNAVAILABLE",
+              "AVAILABLE"
+            ]
+          },
+          "custody_capability_version": {
+            "const": "war-satchel-runtime-custody-v1"
+          },
+          "custody_capability_expires_at": {
+            "type": "string",
+            "format": "date-time"
           }
         },
-        "description": "Authenticated process assertion only. HTTP200/accepting:true neither proves solvency nor authorizes deposits. Optional mnemonic-isolation assertion appears only while accepting with verified configured authority; independently review actual key control."
+        "description": "Private runtime assertion. AVAILABLE requires opaque native bank-proof/dual-review/journal/runtime qualification and expires or revokes; it does not independently discover accounting completeness, authorize app credits, clear historical HOLD or prove production custody from source fixtures. Current source C2 capability remains UNAVAILABLE. Missing qualification stays UNAVAILABLE.",
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "custody_capability": {
+                  "const": "AVAILABLE"
+                }
+              },
+              "required": [
+                "custody_capability"
+              ]
+            },
+            "then": {
+              "required": [
+                "custody_capability_version",
+                "custody_capability_expires_at"
+              ],
+              "properties": {
+                "ok": {
+                  "const": true
+                },
+                "accepting": {
+                  "const": true
+                }
+              }
+            }
+          }
+        ]
       },
       "OperationResult": {
         "type": "object",

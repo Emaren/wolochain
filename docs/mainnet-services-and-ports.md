@@ -8,13 +8,24 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "runtime-evidence"
 authority: "mainnet-service-and-port-contract"
-reviewed_at: "2026-10-07"
+reviewed_at: "2026-10-22"
 review_interval_days: 14
 sensitivity: "internal"
 ---
 
 # WoloChain Mainnet Services And Ports
 
+## Source review — October 22, no new runtime certification
+
+The reviewed source preserves separate consensus, primary settlement 8092,
+founder settlement 8093 and candidate private Satchel 8094 authorities. The
+current [Satchel gates](war-satchel-mainnet-execution.md) and
+[settlement runbook](mainnet-settlement-runbook.md) govern their source contract;
+[issue #5](https://github.com/Emaren/wolochain/issues/5) retains financial release
+authority. This review read source and the historical evidence below without
+SSH, keyring access, transfers, installation or restart. The older runtime
+tables, funding balances and imperative deployment examples are dated history,
+not fresh certification, current solvency or authority to execute a cutover.
 
 ## Review Renewal — 2026-10-07 UTC
 
