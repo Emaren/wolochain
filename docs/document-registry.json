@@ -13,7 +13,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-22",
       "sensitivity": "public",
-      "sha256": "8755f7305c4a017d30867b6f4bb87fe273e1bf3647853c15054ea842c154bf9f",
+      "sha256": "3fce51a92af3e6b520a95aec728111653ff9c49890bf96cff68a27a58ed939d5",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "e9e54a92a944b1898fcec9357f0e7b6a4595bb60dddcd6011dc64626c864be1b",
+      "sha256": "4e7c1d5a0874d5f31303c4533d53147199ddfce512a1d4fd3083aa9c8d28c0ab",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -289,7 +289,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-22",
       "sensitivity": "internal",
-      "sha256": "d49b5957b7a944686988f90174825ec3d04dae4526e96f0590facbbf07ac521c",
+      "sha256": "c2aee09b2539adb5e2dfc22648880d366320371cccc60ba2ef97424f11e45e3a",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -474,7 +474,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-18",
       "sensitivity": "restricted",
-      "sha256": "a9fa3f82b087303db9c5de9657633de19b2aee4837260245beb0e26f1a563e33",
+      "sha256": "c8d14dee532121bc1940ce8c10eec0a326e54e400b89ce2fee4dd2b4de0620e2",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -971,7 +971,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "codex/satchel-custody-authority",
-    "commit": "f5ff4d651585847f632df85506a493ff830bd96a"
+    "commit": "42014ae6ec18328eb36ade4825e93082e20487d8"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
