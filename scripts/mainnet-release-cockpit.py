@@ -119,7 +119,10 @@ def observe_timer(unit: str) -> dict:
 
 def load_bounded_json(path: str) -> dict:
     """Read at most 512 KiB; reject symlinks/nonregular files and malformed JSON."""
-    fd = os.open(path, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0))
+    # An attacker-provided FIFO would block in open() before fstat can reject
+    # it. O_NONBLOCK makes the descriptor acquisition fail-closed for pipes,
+    # while leaving regular file reads unchanged.
+    fd = os.open(path, os.O_RDONLY | os.O_NONBLOCK | getattr(os, "O_NOFOLLOW", 0))
     try:
         info = os.fstat(fd)
         if not stat.S_ISREG(info.st_mode) or info.st_size > MAX_RECEIPT_BYTES:
@@ -130,7 +133,11 @@ def load_bounded_json(path: str) -> dict:
             raise ValueError("evidence exceeds 512 KiB")
     finally:
         os.close(fd)
-    result = json.loads(data.decode("utf-8"))
+    try:
+        result = json.loads(data.decode("utf-8"))
+    except RecursionError as exc:
+        # Deep nesting must be INVALID_INPUT, never an uncaught cockpit crash.
+        raise ValueError("evidence JSON nesting exceeds parser limits") from exc
     if not isinstance(result, dict):
         raise ValueError("evidence root is not an object")
     return result

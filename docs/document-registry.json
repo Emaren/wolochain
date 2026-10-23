@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "f0e0633e6836e7002abfa7906c3db3253da6b2806e827f555a00dfa9d2b413f7",
+      "sha256": "2a226f16745376aee217288b39cbde45030c99ce05eb05cc41105fd0917b7c25",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -808,8 +808,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "ops/20261023-independent-review-intake",
-    "commit": "531a81aa65eb108b3090b8c9e62bacadf8bdd9f2"
+    "branch": "fix/20261023-cockpit-intake-nonblocking-parse",
+    "commit": "d13752563cb39510dfdf32630dd571102851284e"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
