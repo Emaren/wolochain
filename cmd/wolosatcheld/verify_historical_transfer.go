@@ -62,6 +62,35 @@ func verifiedHistoricalIntent(c ExpectedHistoricalTransfer) bool {
  return err==nil && len(b)==sha256.Size
 }
 
+// historicalPrincipalEffectMatches applies to this ONE pinned legacy accepted
+// payout only. The signed transaction decoder, fee-collector identity, exact
+// MsgSend, response parity and CometBFT commitments have already been checked
+// by VerifyTransferProof. The original receipt contains its signed fee effect
+// at ordinal 0 and its exactly 100-WOLO principal at ordinal 1.
+// Never reuse this rule for new Satchel deposits or ledger credit admission.
+func historicalPrincipalEffectMatches(obs satchel.Observation, receipt satchel.ReceiptCandidate, expected ExpectedHistoricalTransfer) bool {
+ if !verifiedHistoricalIntent(expected) ||
+  obs.ChainID!=satchel.ChainID || obs.TxHash!=expected.TxHash ||
+  obs.Height!=acceptedEscrow100Height || obs.Code==nil || *obs.Code!=0 ||
+  receipt.ChainID!=satchel.ChainID || receipt.TxHash!=expected.TxHash ||
+  receipt.TransferIndex!=1 || obs.TransferIndex==nil || *obs.TransferIndex!=1 ||
+  len(obs.Transfers)!=2 {
+  return false
+ }
+ principal:=satchel.Transfer{
+  Sender:expected.Sender,Recipient:expected.Recipient,
+  Denom:satchel.Denom,Amount:expected.AmountUWolo,
+ }
+ // 250000 uwolo = the 0.25 WOLO SDK fee observed in the original tx.
+ // The trusted outgoing reader independently proves that this is the exact
+ // signed fee paid to the SDK fee_collector, not an unrelated send.
+ fee:=obs.Transfers[0]
+ return obs.Transfers[1]==principal &&
+  fee.Sender==expected.Sender && fee.Recipient!="" &&
+  fee.Recipient!=expected.Recipient &&
+  fee.Denom==satchel.Denom && fee.Amount=="250000"
+}
+
 // A successful verification is intentionally exit 3, not zero: an authenticated
 // transaction is not a bank-solvency proof, independently audited trust source,
 // released claim, signer permit or operator-authorized historical retry.
@@ -89,9 +118,7 @@ func verifyHistoricalTransferCommand(ctx context.Context, args []string, out, er
  if err!=nil || !evidence.ConsensusAuthenticated() || evidence.CreditAuthorized() {return fail()}
  obs:=evidence.Observation()
  receipt:=evidence.Receipt()
- if obs.Height!=acceptedEscrow100Height || obs.Code==nil || *obs.Code!=0 ||
-  receipt.ChainID!=satchel.ChainID || receipt.TxHash!=expected.TxHash ||
-  obs.TxHash!=expected.TxHash || receipt.TransferIndex!=0 {return fail()}
+ if !historicalPrincipalEffectMatches(obs,receipt,expected) {return fail()}
  expectedDigest:=sha256.Sum256(expectedBytes)
  proofDigest:=sha256.Sum256(proofBytes)
  // Explicitly distinguish the independently PROVIDED checkpoint from

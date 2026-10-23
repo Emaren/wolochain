@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `codex/financial-evidence-refresh` at `65494e1175d84dde430c0165fc51eb983f246f07`
+Implementation baseline: `fix/20261023-historical-original-principal-ordinal` at `b8e518d8f3ce9a3d224ae939b37b944e6ca541d7`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 

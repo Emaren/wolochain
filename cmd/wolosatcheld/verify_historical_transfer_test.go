@@ -107,3 +107,66 @@ func TestHistoricalProofNoSourceActivationOrTransferAuthority(t *testing.T){
  // application success paths return 3 (never 0), regardless of chain proof.
  // These are distinct from actual authoritative journal reconciliation.
 }
+
+
+func TestHistoricalOriginalPrincipalMustBeAtFeeOffsetOrdinalOne(t *testing.T) {
+ expected:=ExpectedHistoricalTransfer{
+  Version:1,Scope:"legacy-settlement-accepted-escrow-100",
+  ChainID:satchel.ChainID,TxHash:acceptedEscrow100Hash,
+  Height:acceptedEscrow100Height,Sender:"wolo1originalsender",
+  Recipient:"wolo1originalrecipient",AmountUWolo:"100000000",
+  Memo:"original-immutable-settlement-memo",
+  JournalIdentitySHA256:strings.Repeat("A",64),
+ }
+ zero,one:=uint32(0),uint32(1)
+ fee:=satchel.Transfer{Sender:expected.Sender,Recipient:"wolo1sdkfeecollector",Denom:satchel.Denom,Amount:"250000"}
+ principal:=satchel.Transfer{Sender:expected.Sender,Recipient:expected.Recipient,Denom:satchel.Denom,Amount:expected.AmountUWolo}
+ observation:=satchel.Observation{
+  ChainID:satchel.ChainID,TxHash:expected.TxHash,
+  Height:acceptedEscrow100Height,Code:&zero,
+  Transfers:[]satchel.Transfer{fee,principal},TransferIndex:&one,
+ }
+ receipt:=satchel.ReceiptCandidate{ChainID:satchel.ChainID,TxHash:expected.TxHash,TransferIndex:one}
+ if !historicalPrincipalEffectMatches(observation,receipt,expected) {
+  t.Fatal("original fee at event 0, principal at event 1 rejected")
+ }
+ if !strings.HasSuffix(receipt.ID(),":1") {
+  t.Fatal("historical receipt must preserve the principal ordinal")
+ }
+ for _,mode:=range []string{
+  "zero_receipt","zero_observation","fee_missing","fee_after",
+  "wrong_fee_amount","wrong_fee_denom","foreign_fee_sender",
+  "fee_to_principal","wrong_principal","wrong_principal_denom",
+  "extra_effect","wrong_height","failed_code","wrong_intent",
+ } {
+  t.Run(mode,func(t *testing.T){
+   observed:=observation
+   observed.Transfers=append([]satchel.Transfer(nil),observation.Transfers...)
+   ordinal:=one
+   observed.TransferIndex=&ordinal
+   executionCode:=zero
+   observed.Code=&executionCode
+   copyReceipt:=receipt
+   copyExpected:=expected
+   switch mode {
+   case "zero_receipt":copyReceipt.TransferIndex=0
+   case "zero_observation":ordinal=0
+   case "fee_missing":observed.Transfers=observed.Transfers[1:]
+   case "fee_after":observed.Transfers[0],observed.Transfers[1]=observed.Transfers[1],observed.Transfers[0]
+   case "wrong_fee_amount":observed.Transfers[0].Amount="250001"
+   case "wrong_fee_denom":observed.Transfers[0].Denom="other"
+   case "foreign_fee_sender":observed.Transfers[0].Sender="wolo1foreign"
+   case "fee_to_principal":observed.Transfers[0].Recipient=expected.Recipient
+   case "wrong_principal":observed.Transfers[1].Amount="300000000"
+   case "wrong_principal_denom":observed.Transfers[1].Denom="other"
+   case "extra_effect":observed.Transfers=append(observed.Transfers,principal)
+   case "wrong_height":observed.Height++
+   case "failed_code":executionCode=17
+   case "wrong_intent":copyExpected.Memo=""
+   }
+   if historicalPrincipalEffectMatches(observed,copyReceipt,copyExpected) {
+    t.Fatal("unsafe original-transfer substitution accepted")
+   }
+  })
+ }
+}
