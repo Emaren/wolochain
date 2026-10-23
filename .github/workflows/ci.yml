@@ -59,6 +59,9 @@ jobs:
       - name: Operator script syntax
         run: for script in scripts/*.sh; do bash -n "$script" || exit; done
 
+      - name: Mainnet release cockpit fail-closed regression contracts (offline)
+        run: python3 -m unittest discover -s scripts -p 'test_mainnet_release_cockpit.py' -v
+
       - name: Founder request-state forensics contracts (read only)
         run: python3 -m unittest discover -s tests -p 'test_settlement_founder15_state_readonly.py' -v
 
