@@ -292,8 +292,8 @@ class CockpitTests(unittest.TestCase):
 
     def test_intake_delta_flags_new_reviewer_assignment_but_not_release(self):
         with patch.object(cockpit, "command", return_value=cockpit.HISTORICAL_SOURCE), patch.object(
-            cockpit, "observe_service", return_value={"historicalComparison": "MATCH_HISTORICAL"}
-        ), patch.object(cockpit, "observe_timer", return_value={"activeState": "active"}):
+            cockpit, "observe_service", return_value={"historicalComparison": "MATCH_HISTORICAL", "executableSha256": "a" * 64, "pid": 1009, "activeState": "active"}
+        ), patch.object(cockpit, "observe_timer", return_value={"activeState": "active", "triggers": "mock.service"}):
             initial = cockpit.assess()
             later = cockpit.assess()
         later["independentReviewIntake"]["submissionProgress"]["submitted"] = 1
