@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `ops/20261023-independent-review-intake` at `c9111dd7d55bfb72df345d484de669f658a1b4a2`
+Implementation baseline: `ops/20261023-independent-review-intake` at `531a81aa65eb108b3090b8c9e62bacadf8bdd9f2`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
