@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/20261023-cockpit-intake-nonblocking-parse` at `d13752563cb39510dfdf32630dd571102851284e`
+Implementation baseline: `ops/20261023-cockpit-fast-brief` at `4ce11c4965da64e3d4dee6a8681b6198e1aba1eb`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 

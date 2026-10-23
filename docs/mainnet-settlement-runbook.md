@@ -15,6 +15,38 @@ sensitivity: "restricted"
 
 # WoloChain Mainnet Settlement Runbook
 
+## Fast read-only operator frontier — October 23, 2026
+
+The existing `scripts/mainnet-release-cockpit.py` already captures the fixed
+settlement/validator executables, six active timer families, source-reported
+six-control gate status and independent-review intake. **Use its new `--brief`
+option** to see the small actionable delta instead of sending a multi-page
+raw JSON report back through Codex each time:
+
+```bash
+python3 scripts/mainnet-release-cockpit.py --brief
+```
+
+For an actual comparison, provide a previously retained **private, exact**
+cockpit JSON snapshot with `--previous`; for an output evidence receipt,
+`--output` still writes the original structured JSON (private mode 0600)
+even when the terminal shows the short brief. The previously supported
+`--gate-index` and `--reviewer-intake` inputs remain optional and
+**source-reported / unverified**. Do not share raw private receipts or evidence
+paths in public issues. Expected command exit is **3**: read-only observation
+completed, financial release intentionally **HARD HOLD**. No command
+here restarts systemd, drains payment producers, executes payout, signs WOLO,
+approves a review, declares solvency, or activates custody.
+
+The brief prints only static gate names, status labels, anonymous intake
+counts, known-safe delta names and historical runtime comparison. It
+deliberately never prints untrusted source-reported action text, reviewer
+identifiers, hashes, raw files or credentials. A missing prior receipt,
+zero observed changes, a reported `ATTESTED` status or an apparently idle
+timer set **cannot** turn this into a release authorization. A genuinely
+completed financial cutover still requires the independent six-control
+owner/witness authority described below.
+
 ## October 16, 2026 — current exact candidate build, NOT a cutover
 
 The current governed financial Go implementation is

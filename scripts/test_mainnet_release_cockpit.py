@@ -341,6 +341,83 @@ class CockpitTests(unittest.TestCase):
         self.assertIn("INDEPENDENT_REVIEW_INTAKE_CHANGED:submissionProgress", changes)
         self.assertFalse(later["financialReleaseAuthorized"])
 
+    def test_brief_is_explicitly_non_authorizing_even_with_all_attested_source(self):
+        with patch.object(cockpit, "command", return_value=cockpit.HISTORICAL_SOURCE), patch.object(
+            cockpit, "observe_service", return_value={
+                "historicalComparison": "MATCH_HISTORICAL",
+                "executableSha256": cockpit.HISTORICAL_SETTLEMENT,
+                "pid": 1012, "activeState": "active",
+            }
+        ), patch.object(cockpit, "observe_timer", return_value={"activeState": "inactive"}):
+            result = cockpit.assess()
+        result["canonicalGateIndexSnapshot"] = {g: "ATTESTED" for g in cockpit.GATES}
+        result["independentReviewIntake"]["classification"] = "SUBMITTED_UNVERIFIED"
+        result["independentReviewIntake"]["submissionProgress"] = {"submitted": 13, "expected": 13}
+        result["changesSincePrevious"] = []
+        text = cockpit.render_brief(result)
+        self.assertIn("FINANCIAL_HARD_HOLD", text)
+        self.assertIn("NO RELEASE AUTHORITY", text)
+        self.assertIn("ATTESTED", text)
+        self.assertIn("NOT signatures", text)
+        self.assertIn("NONE OBSERVED (not evidence of financial safety)", text)
+        self.assertNotIn("AUTHORIZED=true", text)
+
+    def test_brief_redacts_source_supplied_actions_and_unexpected_deltas(self):
+        with patch.object(cockpit, "command", return_value=None), patch.object(
+            cockpit, "observe_service", return_value={
+                "historicalComparison": "UNVERIFIED", "executableSha256": None,
+                "pid": None, "activeState": "UNAVAILABLE",
+            }
+        ), patch.object(cockpit, "observe_timer", return_value={"activeState": "UNAVAILABLE"}):
+            result = cockpit.assess()
+        secret = "SECRET-DO-NOT-PRINT"
+        result["sourceReportedGateDetails"][cockpit.GATES[0]]["sourceReportedNextAction"] = secret
+        result["changesSincePrevious"] = [
+            "SOURCE_CHECKOUT_CHANGED",
+            "TIMER_AUTHORITY_CHANGED_OR_UNAVAILABLE:" + cockpit.TIMERS[0],
+            "UNEXPECTED_DELTA:" + secret,
+        ]
+        text = cockpit.render_brief(result)
+        self.assertIn("SOURCE_CHECKOUT_CHANGED", text)
+        self.assertIn("TIMER_AUTHORITY_CHANGED_OR_UNAVAILABLE:" + cockpit.TIMERS[0], text)
+        self.assertIn("UNVERIFIED_DELTA_ITEM", text)
+        self.assertNotIn(secret, text)
+        self.assertIn("UNVERIFIED", text)
+
+    def test_brief_handles_corrupt_previous_and_malformed_intake_without_grants(self):
+        with patch.object(cockpit, "command", return_value=None), patch.object(
+            cockpit, "observe_service", return_value={
+                "historicalComparison": "UNVERIFIED", "executableSha256": None,
+                "pid": None, "activeState": "UNAVAILABLE",
+            }
+        ), patch.object(cockpit, "observe_timer", return_value={"activeState": "UNAVAILABLE"}):
+            result = cockpit.assess()
+        result["changesSincePrevious"] = ["PREVIOUS_SNAPSHOT_UNAVAILABLE"]
+        result["canonicalGateIndexSnapshot"][cockpit.GATES[0]] = "DECEPTIVE_GREEN"
+        result["independentReviewIntake"]["submissionProgress"] = {"submitted": True, "expected": 13}
+        text = cockpit.render_brief(result)
+        self.assertIn("PREVIOUS_SNAPSHOT_UNAVAILABLE", text)
+        self.assertIn("UNVERIFIED " + cockpit.GATES[0], text)
+        self.assertIn("fingerprints ?/?", text)
+        self.assertIn("FINANCIAL_HARD_HOLD", text)
+
+    def test_brief_cli_preserves_held_exit_status_and_never_prints_json_secrets(self):
+        import contextlib
+        import io
+        with patch.object(cockpit, "command", return_value=None), patch.object(
+            cockpit, "observe_service", return_value={
+                "historicalComparison": "UNVERIFIED", "executableSha256": None,
+                "pid": None, "activeState": "UNAVAILABLE",
+            }
+        ), patch.object(cockpit, "observe_timer", return_value={"activeState": "UNAVAILABLE"}):
+            stream = io.StringIO()
+            with contextlib.redirect_stdout(stream):
+                rc = cockpit.main(["--brief"])
+        self.assertEqual(rc, 3)
+        self.assertIn("READ-ONLY RELEASE FRONTIER", stream.getvalue())
+        self.assertNotIn('"financialReleaseAuthorized"', stream.getvalue())
+        self.assertIn("FINANCIAL_HARD_HOLD", stream.getvalue())
+
     def test_readonly_commands_never_use_shell_or_mutations(self):
         calls = []
 
