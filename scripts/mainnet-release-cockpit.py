@@ -8,8 +8,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
+import stat
 from datetime import datetime, timezone
-from pathlib import Path
 import re
 import subprocess
 
@@ -40,6 +41,7 @@ GATES = (
 )
 SHA = re.compile(r"^[0-9a-f]{64}$")
 GIT = re.compile(r"^[0-9a-f]{40}$")
+MAX_RECEIPT_BYTES = 512 * 1024
 
 
 def command(args: list[str]) -> str | None:
@@ -103,17 +105,44 @@ def observe_timer(unit: str) -> dict:
     }
 
 
+def load_bounded_json(path: str) -> dict:
+    """Read at most 512 KiB; reject symlinks/nonregular files and malformed JSON."""
+    fd = os.open(path, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0))
+    try:
+        info = os.fstat(fd)
+        if not stat.S_ISREG(info.st_mode) or info.st_size > MAX_RECEIPT_BYTES:
+            raise ValueError("not a bounded regular evidence file")
+        with os.fdopen(fd, "rb", closefd=False) as stream:
+            data = stream.read(MAX_RECEIPT_BYTES + 1)
+        if len(data) > MAX_RECEIPT_BYTES:
+            raise ValueError("evidence exceeds 512 KiB")
+    finally:
+        os.close(fd)
+    result = json.loads(data.decode("utf-8"))
+    if not isinstance(result, dict):
+        raise ValueError("evidence root is not an object")
+    return result
+
+
+def write_new_receipt(path: str, data: str) -> None:
+    """Create one private immutable-named receipt; never truncate an existing file."""
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL |
+                 getattr(os, "O_NOFOLLOW", 0), 0o600)
+    with os.fdopen(fd, "w", encoding="utf-8") as stream:
+        stream.write(data)
+
+
 def read_gate_index(path: str | None) -> dict:
     if not path:
         return {gate: "UNVERIFIED" for gate in GATES}
     try:
-        payload = json.loads(Path(path).read_text(encoding="utf-8"))
+        payload = load_bounded_json(path)
         if payload.get("schema") != "aoe2war.wolo.financial-release-checklist.v1":
             raise ValueError("wrong schema")
         controls = payload["controls"]
         return {gate: controls[gate]["status"] if controls[gate]["status"] in
                 ("BLOCKED", "UNKNOWN", "ATTESTED") else "UNVERIFIED" for gate in GATES}
-    except (OSError, ValueError, TypeError, KeyError, AttributeError):
+    except (OSError, ValueError, UnicodeError, TypeError, KeyError, AttributeError):
         return {gate: "UNVERIFIED" for gate in GATES}
 
 
@@ -182,15 +211,18 @@ def main(argv: list[str] | None = None) -> int:
     result = assess(args.gate_index)
     if args.previous:
         try:
-            previous = json.loads(Path(args.previous).read_text(encoding="utf-8"))
+            previous = load_bounded_json(args.previous)
             if previous.get("schema") != result["schema"]:
                 raise ValueError("invalid prior schema")
             result["changesSincePrevious"] = delta(previous, result)
-        except (OSError, ValueError, TypeError, AttributeError):
+        except (OSError, ValueError, UnicodeError, TypeError, AttributeError):
             result["changesSincePrevious"] = ["PREVIOUS_SNAPSHOT_UNAVAILABLE"]
     raw = json.dumps(result, indent=2, sort_keys=True) + "\n"
     if args.output:
-        Path(args.output).write_text(raw, encoding="utf-8")
+        try:
+            write_new_receipt(args.output, raw)
+        except OSError as exc:
+            parser.error(f"private output receipt unavailable: {exc.strerror or type(exc).__name__}")
     print(raw, end="")
     return 3  # Read-only observation complete, financial release deliberately HELD.
 
