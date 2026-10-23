@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "230566f0c1a40e3ca680604706d4dc598039e8596148862ee979fc27c63c9f17",
+      "sha256": "a203b057d9cdec2bdfa694a71f8a72682537b3050d161f8d73e7c8f7f88d346c",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -970,8 +970,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/20261023-historical-original-principal-ordinal",
-    "commit": "b8e518d8f3ce9a3d224ae939b37b944e6ca541d7"
+    "branch": "review/20261023-postgres-quiescence-evidence",
+    "commit": "e75e5867f1961486d8ea22a9ce46a5580c66aa41"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/20261023-historical-original-principal-ordinal` at `b8e518d8f3ce9a3d224ae939b37b944e6ca541d7`
+Implementation baseline: `review/20261023-postgres-quiescence-evidence` at `e75e5867f1961486d8ea22a9ce46a5580c66aa41`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
