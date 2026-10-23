@@ -115,7 +115,8 @@ class TwoDatabaseRestoreRegression(unittest.TestCase):
                             "INSERT INTO settlement_journal(operation_id,amount_uwolo,status) "
                             "VALUES ('after_restore',1,'pending') RETURNING id"
                         )
-                        self.assertEqual(cur.fetchone()[0], 3)
+                        # Failed CHECK insert advances a non-transactional PostgreSQL sequence.
+                        self.assertEqual(cur.fetchone()[0], 4)
             for archive, digest in zip(archives, before_hashes):
                 self.assertEqual(self.docker("sha256sum", archive).decode().split()[0], digest)
             print("DISPOSABLE_PG16_DUAL_DATABASE_RESTORE_PASS; FINANCIAL_HARD_HOLD")
