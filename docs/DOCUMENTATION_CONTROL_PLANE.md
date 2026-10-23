@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `review/20261023-postgres-quiescence-evidence` at `f52e8ed9c8b98a9528661f6b17903c3e27911d0b`
+Implementation baseline: `review/20261023-postgres-quiescence-evidence` at `705c7b8946a7362d711104dcc1c3cf347cfb97a0`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
