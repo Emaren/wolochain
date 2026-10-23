@@ -130,7 +130,7 @@ class CockpitTests(unittest.TestCase):
                 "schema": "aoe2war.wolo.financial-release-checklist.v1",
                 "controls": {
                     gate: {"status": "BLOCKED", "observed_at_utc": "bad-time",
-                           "next_action": "run\\nunsafe", "requires_production_approval": "yes"}
+                           "next_action": "run" + chr(10) + "unsafe", "requires_production_approval": "yes"}
                     for gate in cockpit.GATES
                 },
             }))
