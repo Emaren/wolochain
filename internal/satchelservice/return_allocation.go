@@ -135,7 +135,7 @@ func (e *Engine) validateAllocation(tx *bolt.Tx, a ReturnApproval, fresh bool) (
 	if r.Result.Status != "CONFIRMED" || p.BankHeight < r.Confirmation.Height || r.Request.Kind != "wager" || r.Request.Recipient != e.policy.BettingEscrow || r.Result.TxHash != p.FundingTxHash || r.Request.Memo != "AoE2HDBets bet ticket v1 · ticket "+p.TicketID || e.backend.ValidateSigned(r.Request, r.Signed) != nil || r.Request.OwnerID != a.OwnerID {
 		return refuse()
 	}
-	funded, ok := positive(r.Request.AmountUWolo, 1000000000)
+	funded, ok := positive(r.Request.AmountUWolo, ProductMaxWagerUWolo)
 	if !ok {
 		return refuse()
 	}
@@ -148,7 +148,7 @@ func (e *Engine) validateAllocation(tx *bolt.Tx, a ReturnApproval, fresh bool) (
 func validateAllocationEconomics(a ReturnApproval, funded uint64) (ReturnEntitlement, error) {
 	refuse := func() (ReturnEntitlement, error) { return ReturnEntitlement{}, errors.New("return_allocation_invalid") }
 	p := a.Allocation
-	if !boundedAllocation(p) || funded == 0 || funded > 1000000000 || p == nil || len(p.Legs) == 0 || len(p.Legs) > 16 {
+	if !boundedAllocation(p) || funded == 0 || funded > ProductMaxWagerUWolo || p == nil || len(p.Legs) == 0 || len(p.Legs) > 16 {
 		return refuse()
 	}
 	cap, ok := positive(p.ReturnCapUWolo, 100000000000000)

@@ -125,12 +125,12 @@ func (r ReviewerPGOriginalRow)validate(now time.Time,fee string,vault string,esc
   r.TicketStatus!="awaiting_signature"||r.TicketSource!="auto"||
   !r.TicketProvider.Valid||r.TicketProvider.String!="satchel-vault"||
   r.TicketHash.Valid||r.AlreadyBroadcast||r.TicketID<1||
-  r.TicketTotalWolo<1||r.TicketTotalWolo>1000||
+  r.TicketTotalWolo<1||r.TicketTotalWolo>ProductMaxWagerWOLO||
   r.ReservationTicketID.Valid && r.ReservationTicketID.Int64!=r.TicketID||
   !r.UserWallet.Valid||r.UserWallet.String==""||
   r.ExecutionCreatedAt.After(now)||
   now.Sub(r.ExecutionCreatedAt)>4*time.Minute||
-  !reviewerUnsignedDecimal(r.ReservationAmount,false,1000000000)||
+  !reviewerUnsignedDecimal(r.ReservationAmount,false,ProductMaxWagerUWolo)||
   !reviewerUnsignedDecimal(r.BalanceReserved,true,9223372036854775807)||
   !reviewerUnsignedDecimal(fee,false,1000000) {
   return held()

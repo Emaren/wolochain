@@ -13,7 +13,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-22",
       "sensitivity": "public",
-      "sha256": "2b63b41592371a75ccd96c7cb221f8b6415e84bdb3b58d98fefcf8b363310de4",
+      "sha256": "3fce51a92af3e6b520a95aec728111653ff9c49890bf96cff68a27a58ed939d5",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "b07075ed464e72e567749d59feff09a5dbc6ede149578ec58d33dcdc4e874a6b",
+      "sha256": "52112f4544a8fe436d350e30fbe48a02445c3c625f82fefe99b196f043da646c",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -289,7 +289,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-22",
       "sensitivity": "internal",
-      "sha256": "f477f942ce0d13e3dcdf247657854a994b318dd28b389d9b36febeafb4f8fc32",
+      "sha256": "c2aee09b2539adb5e2dfc22648880d366320371cccc60ba2ef97424f11e45e3a",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -381,7 +381,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-20",
       "sensitivity": "public",
-      "sha256": "680be9beeb54113bf8d009949554e743a7e970283011fb1dc7ccffbf54825e78",
+      "sha256": "689f2b706579434959c99e3b4b1d0a0878dc6a695ee0d602c6122f69a39836eb",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -587,9 +587,9 @@
       "owner": "wolochain-ops",
       "path": "docs/war-satchel-mainnet-execution.md",
       "review_interval_days": 7,
-      "reviewed_at": "2026-10-18",
+      "reviewed_at": "2026-10-22",
       "sensitivity": "restricted",
-      "sha256": "ea71d9c540435bf082347764032fb0ba9ab81edc3ae64bffef0298f2c356047e",
+      "sha256": "ed9990c5c4e380fc25e99cd1c520e1dd60f2bcf4f8446c30699db176bb144edc",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -970,8 +970,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/20261022-satchel-signer-10k-owner-cap-held",
-    "commit": "9d938478b7bf4614f8777c2c39d006225327fb70"
+    "branch": "codex/satchel-custody-authority",
+    "commit": "e0d77c036a48f5ca8f6689b4bbf8cb5c0983cba3"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

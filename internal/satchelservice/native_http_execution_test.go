@@ -291,6 +291,10 @@ type nativeHTTPChain struct {
 }
 
 func newNativeHTTPChain(t *testing.T, signer *testBackendSigner) *nativeHTTPChain {
+	return newNativeHTTPChainWithBalance(t, signer, 10000000)
+}
+
+func newNativeHTTPChainWithBalance(t *testing.T, signer *testBackendSigner, genesisBalance int64) *nativeHTTPChain {
 	t.Helper()
 	options := viper.New()
 	options.Set(flags.FlagHome, t.TempDir())
@@ -301,7 +305,7 @@ func newNativeHTTPChain(t *testing.T, signer *testBackendSigner) *nativeHTTPChai
 	vault := sdk.AccAddress(signer.key.PubKey().Address())
 	genesis, err := simtestutil.GenesisStateWithValSet(application.AppCodec(), application.DefaultGenesis(), validators,
 		[]authtypes.GenesisAccount{authtypes.NewBaseAccount(vault, signer.key.PubKey(), 0, 0)},
-		banktypes.Balance{Address: vault.String(), Coins: sdk.NewCoins(sdk.NewCoin(satchel.Denom, sdkmath.NewInt(10000000)))})
+		banktypes.Balance{Address: vault.String(), Coins: sdk.NewCoins(sdk.NewCoin(satchel.Denom, sdkmath.NewInt(genesisBalance)))})
 	require.NoError(t, err)
 	state, err := cmtjson.Marshal(genesis)
 	require.NoError(t, err)

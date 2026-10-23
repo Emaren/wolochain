@@ -24,6 +24,9 @@ or deployment observation. The port/status evidence below retains its stated
 and the validator must remain undisturbed; the separate 8094 Satchel signer
 and 8095 reviewer are held engineering candidates, **not** certified live
 listeners. Financial release issue #5 continues to control all activation.
+Use the current [Satchel gates](war-satchel-mainnet-execution.md) and
+[settlement runbook](mainnet-settlement-runbook.md); older imperative examples
+do not authorize a financial cutover or consensus restart.
 
 
 

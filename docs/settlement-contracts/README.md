@@ -55,13 +55,14 @@ bank reconciliation, duplicate reviewer key, incomplete overlap witness,
 stale permit/config/build, mismatched header, expired attestation or insufficient
 assets fails closed. Even a positive source decision only reports the
 checked conservative balance: **`CustodyCapability()` remains
-`"UNAVAILABLE"`**. This module is intentionally **not wired to** HTTP health,
-deposit intake, execution signing, the HD financial bridge or an operator
-permit. It cannot create reserves, prove inventory completeness by itself,
+`"UNAVAILABLE"`**. The separate [runtime custody issuer](../war-satchel-mainnet-execution.md#october-22--qualified-runtime-capability-no-live-activation)
+now consumes this decision only together with actual native bank, recovered
+journal, held keyring lease and current exact-build/config/permit evidence.
+The primitive itself cannot create reserves, prove inventory completeness by itself,
 establish reviewer independence, discharge founder claim #889 or activate
 funded Auto Bets.
 
-Before a future activation issuer may use this decision, operators must
+Before that runtime issuer may genuinely qualify a deployment, operators must
 independently prove signers' authority, reviewer identity/independence,
 completeness and non-overlap of every historical/current liability and
 customer Satchel ledger, dedicated vault key isolation, authenticated bank

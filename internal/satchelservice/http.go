@@ -81,19 +81,21 @@ type HTTPConfig struct {
 	Accepting bool
 	// Authorize re-verifies the independent activation permit at each health
 	// check and submission. Read-only recovery stays available after expiry.
-	Authorize      func(context.Context) bool
-	Health         HTTPHealth
-	RequestTimeout time.Duration
-	MaxConcurrent  int
+	Authorize         func(context.Context) bool
+	CustodyCapability func(context.Context) RuntimeCustodyCapability
+	Health            HTTPHealth
+	RequestTimeout    time.Duration
+	MaxConcurrent     int
 }
 
 type privateHTTPHandler struct {
-	backend     HTTPBackend
-	identity    HTTPHealth
-	tokenDigest [32]byte
-	timeout     time.Duration
-	slots       chan struct{}
-	authorize   func(context.Context) bool
+	backend           HTTPBackend
+	identity          HTTPHealth
+	tokenDigest       [32]byte
+	timeout           time.Duration
+	slots             chan struct{}
+	authorize         func(context.Context) bool
+	custodyCapability func(context.Context) RuntimeCustodyCapability
 }
 
 // NewHTTPHandler implements the two pinned HD client wire forms. It exposes no
@@ -125,7 +127,7 @@ func NewHTTPHandler(backend HTTPBackend, cfg HTTPConfig) (http.Handler, error) {
 		return nil, errors.New("unverified_private_http_identity")
 	}
 	return &privateHTTPHandler{backend: backend, identity: cfg.Health, tokenDigest: sha256.Sum256([]byte(cfg.Token)),
-		timeout: cfg.RequestTimeout, slots: make(chan struct{}, cfg.MaxConcurrent), authorize: cfg.Authorize}, nil
+		timeout: cfg.RequestTimeout, slots: make(chan struct{}, cfg.MaxConcurrent), authorize: cfg.Authorize, custodyCapability: cfg.CustodyCapability}, nil
 }
 
 func httpVaultAddress(address string) bool {
@@ -360,12 +362,24 @@ func (h *privateHTTPHandler) authorized(r *http.Request) bool {
 }
 
 func (h *privateHTTPHandler) accepting(ctx context.Context) bool {
-	return h.identity.Accepting && h.authorize != nil && ctx.Err() == nil && h.authorize(ctx)
+	ok, _ := h.availability(ctx)
+	return ok
+}
+func (h *privateHTTPHandler) availability(ctx context.Context) (bool, RuntimeCustodyCapability) {
+	if !h.identity.Accepting || h.authorize == nil || ctx.Err() != nil || !h.authorize(ctx) {
+		return false, RuntimeCustodyCapability{}
+	}
+	if h.custodyCapability == nil {
+		return true, RuntimeCustodyCapability{}
+	}
+	c := h.custodyCapability(ctx)
+	return c.Available(ctx), c
 }
 
 func (h *privateHTTPHandler) health(ctx context.Context, w http.ResponseWriter) {
 	i := h.identity
-	i.Accepting = h.accepting(ctx)
+	var capability RuntimeCustodyCapability
+	i.Accepting, capability = h.availability(ctx)
 	response := map[string]any{
 		"ok": i.Accepting, "protocol": 1, "chainId": "wolo-1", "custodyRole": httpCustodyRole,
 		"vaultAddress": i.VaultAddress, "keyFingerprint": i.KeyFingerprint, "exclusiveSignOnly": i.Accepting,
@@ -373,6 +387,11 @@ func (h *privateHTTPHandler) health(ctx context.Context, w http.ResponseWriter) 
 		"vault_address": i.VaultAddress, "build_sha256": i.BuildSHA256,
 		"durable_one_shot": true, "replay_after_restart_forbidden": true, "refunds_require_chain_proof": true,
 		"execution_protocol": 2, "owner_bound_wager_reservation_required": true, "custody_capability": "UNAVAILABLE",
+	}
+	if i.Accepting && capability.grant != nil {
+		response["custody_capability"] = "AVAILABLE"
+		response["custody_capability_version"] = "war-satchel-runtime-custody-v1"
+		response["custody_capability_expires_at"] = capability.ExpiresAt().UTC().Format(time.RFC3339Nano)
 	}
 	if i.Accepting && i.ExclusiveAuthorityVerified {
 		response["custody_mnemonic_shared_with_other_roles"] = false

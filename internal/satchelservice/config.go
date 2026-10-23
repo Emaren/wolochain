@@ -43,6 +43,9 @@ type Config struct {
 	WagerApprovalKeyHex       string              `json:"wager_approval_key_hex"`
 	ActivationAuthorityKeyHex string              `json:"activation_authority_key_hex"`
 	PermitFile                string              `json:"permit_file"`
+	AccountingReviewerKeyHex  string              `json:"accounting_reviewer_key_hex,omitempty"`
+	CustodyReviewerKeyHex     string              `json:"custody_reviewer_key_hex,omitempty"`
+	ReserveReviewFile         string              `json:"reserve_review_file,omitempty"`
 }
 
 // ExecutionPermit is an independent operator's scoped authorization to execute
@@ -146,6 +149,23 @@ func LoadConfig(path string) (Config, string, error) {
 			return c, "", errors.New("configuration_invalid")
 		}
 	}
+	// Old configurations remain readable but cannot qualify live custody.
+	if c.AccountingReviewerKeyHex != "" || c.CustodyReviewerKeyHex != "" || c.ReserveReviewFile != "" {
+		accounting, ae := hex.DecodeString(c.AccountingReviewerKeyHex)
+		custody, ce := hex.DecodeString(c.CustodyReviewerKeyHex)
+		if ae != nil || ce != nil || len(accounting) != ed25519.PublicKeySize || len(custody) != ed25519.PublicKeySize ||
+			!filepath.IsAbs(c.ReserveReviewFile) || filepath.Clean(c.ReserveReviewFile) != c.ReserveReviewFile {
+			return c, "", errors.New("independent_reserve_review_configuration_required")
+		}
+		keys := [][]byte{accounting, custody, a, g, w}
+		for i, key := range keys {
+			for j := 0; j < i; j++ {
+				if bytes.Equal(key, keys[j]) {
+					return c, "", errors.New("independent_reserve_review_configuration_required")
+				}
+			}
+		}
+	}
 	for _, address := range c.ProtectedAddresses {
 		if !validAddress(address) || address == c.Vault {
 			return c, "", errors.New("signer_role_collision")
@@ -171,6 +191,9 @@ func verifyPermitAt(c Config, configDigest, binaryDigest string, now time.Time) 
 	if decodePrivate(data, &p) != nil {
 		return false
 	}
+	return validPermitAt(c, configDigest, binaryDigest, now, p)
+}
+func validPermitAt(c Config, configDigest, binaryDigest string, now time.Time, p ExecutionPermit) bool {
 	if p.Version != 1 || p.Scope != "satchel-execution-v1" || p.ConfigSHA256 != configDigest || p.BinarySHA256 != binaryDigest || p.Vault != c.Vault ||
 		!digestRE.MatchString(configDigest) || !digestRE.MatchString(binaryDigest) || !nonzeroDigest(p.IsolationEvidenceSHA256) || !nonzeroDigest(p.AccountingEvidenceSHA256) || !nonzeroDigest(p.RecoveryEvidenceSHA256) ||
 		strings.TrimSpace(p.Reviewer) == "" || len(p.Reviewer) > 128 || strings.TrimSpace(p.Reference) == "" || len(p.Reference) > 512 || p.IssuedAt > now.Unix() || p.ExpiresAt <= now.Unix() || p.ExpiresAt <= p.IssuedAt || uint64(p.ExpiresAt)-uint64(p.IssuedAt) > 86400 {

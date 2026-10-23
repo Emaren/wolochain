@@ -8,7 +8,7 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "restricted-satchel-execution-and-provisioning-contract"
-reviewed_at: "2026-10-18"
+reviewed_at: "2026-10-22"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -34,6 +34,81 @@ Source ABI tests fail on route or Go JSON-field drift. The
 keeps the dedicated signer separate from legacy services and consensus.
 
 ## HD interface and custody boundary
+
+### October 22 — qualified runtime capability, no live activation
+
+The production command now installs `CustodyAuthority` before opening 8094.
+Its opaque `RuntimeCustodyCapability` can report `AVAILABLE` only after all of
+these current facts agree: the actual encrypted-keyring backend still owns its
+native directory lease; the recovered, bounded journal passes every existing
+payload/effect check and has no unresolved operation; bank state at `head-1`
+authenticates against the exact configured Comet root; and two distinct reserve
+reviewer signatures bind that bank commitment, journal digest, liability and
+nonoverlap evidence, actual running binary, exact configuration and execution
+permit. All five reviewer/approval/activation keys must be distinct.
+
+Three optional private configuration fields provision this boundary:
+`accounting_reviewer_key_hex`, `custody_reviewer_key_hex` and
+`reserve_review_file`. They must be supplied together. Missing provisioning
+keeps the service `UNAVAILABLE` and refuses new execution. No reviewer key,
+permit, vault or production trust root is supplied by source. Reviewers sign
+the exact bytes from `satchelservice.ReserveReviewMessage`; this function does
+not sign or certify a proposal. A signature does not discover missing financial
+obligations or establish the signer's independence: the named operators still
+must genuinely prove those external facts.
+
+Health now includes `custody_capability` and, only for a positive runtime value,
+`custody_capability_version:"war-satchel-runtime-custody-v1"` and
+`custody_capability_expires_at`. The deadline is bounded by the authenticated
+bank/anchor freshness, both-reviewer statement and current runtime permit.
+Health requalifies from actual current handles; an environment boolean or a
+marshalable `QualifiedReserveReview` cannot supply the opaque capability.
+The dormant C2 `CurrentCapability()` and the read-only custody-journal response
+remain `UNAVAILABLE`, with credit and solvency authority false.
+
+For each new operation, qualification occurs under the existing execution
+mutex **before its first durable intent write**. A private grant binds only that
+exact request fingerprint and its exact eventual signed bytes, so the admitted
+operation may advance its own journal phases without trying to reuse the
+pre-intent snapshot. Another operation cannot share the review: any journal
+mutation invalidates health/admission until a fresh dual review binds the new
+bank and journal state. Native signing rechecks the grant after account/head
+I/O immediately before SDK signing; broadcasting rechecks it again. Current
+private configuration, permit, bearer/unlock-file identity and permissions,
+journal-file identity, native lease and grant expiry are enforced. A revoked
+or expired pre-sign grant never enters SDK signing. A signature that already
+exists remains `UNKNOWN` if authority is then lost; it is never rebroadcast on
+retry. Read-only proof retrieval, operation lookup and reconciliation continue
+after revocation. Return preparation remains conservatively gated; it cannot
+be used to relax reserve admission.
+
+**Conservative execution margin:** amount plus the exact configured fee must
+fit funds remaining **after** known liabilities, uncertain upper bounds, gas
+reserve and unencumbered minimum. This requires extra equity beyond covered
+customer principal. There is currently no independently authenticated atomic
+liability-discharge proof, so a customer withdrawal/wager cannot assume its own
+liability has been released. Zero extra margin remains unavailable even with
+two valid signatures. Tests use actual SDK assets of 110 WOLO and test inventory
+countersigned by two distinct fixture keys covering 100 WOLO of owner liability plus 1 WOLO uncertain
+exposure and 0.02 WOLO gas/floor: one 7 WOLO transfer fits the extra margin; the
+next does not. These are controlled test authorities and funds, not production
+accounting or custody certification.
+
+The latest product ceilings are 10,000 WOLO per wager and 50,000 WOLO daily
+Auto Bets. The native signer, independent HD snapshot/origin/owner reviewer and
+funded return verification share these ceilings. Existing smaller configured
+limits, signed owner budgets and reservations are unchanged and remain binding;
+old mandates are never rewritten. The frozen `8c509e8` verifier retains its old
+semantics. Source with the expanded cap/proof contract needs a separately
+reviewed reproducible artifact and actual receipt; do not relabel that binary.
+
+No runtime is activated by this source change. Production remains blocked on
+independent chain trust, dedicated vault control, genuine complete liability
+and nonoverlap reconciliation, separately provisioned reviewers, exact-build
+permits, reviewed recovery/installation and bounded transaction approvals.
+Authenticated bank observations remain bounded observations, not a promise
+that no newer network block can exist during the chain/database interval.
+Historical 8092/8093 liabilities and claim #889 remain protected by issue #5.
 
 [HD PR #638](https://github.com/Emaren/app-prodn/pull/638), inspected at
 `6afc11399c6e84c7cfcb308f4d4523ce1b8c3866`, defines

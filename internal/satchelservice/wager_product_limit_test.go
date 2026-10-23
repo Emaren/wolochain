@@ -13,7 +13,10 @@ func TestSatchelWagerSignedTenThousandWOLOProductBoundary(t *testing.T) {
 	policy := engineTestPolicy(t)
 	policy.MaxAmountUWolo = 50000 * 1000000 // withdrawal capacity is deliberately larger
 	backend := &engineTestBackend{}
-	dir := t.TempDir()
+	dir, err := filepath.EvalSymlinks(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
 	if err := os.Chmod(dir, 0700); err != nil {
 		t.Fatal(err)
 	}

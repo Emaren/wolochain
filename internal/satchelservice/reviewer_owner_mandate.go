@@ -164,11 +164,11 @@ func VerifyReviewerOwnerMandate(m ReviewerStoredOwnerMandate, x ReviewerOwnerExp
 		(m.DesyncSide != "none" && m.DesyncSide != "yes" && m.DesyncSide != "no") ||
 		(m.DesyncSide == "none" && m.DesyncStakeWolo != 0) ||
 		(m.DesyncSide != "none" && m.DesyncStakeWolo == 0) ||
-		m.WinnerStakeWolo > 1000 || m.DesyncStakeWolo > 1000 ||
+		m.WinnerStakeWolo > ProductMaxWagerWOLO || m.DesyncStakeWolo > ProductMaxWagerWOLO ||
 		m.PerGameCapWolo < m.WinnerStakeWolo+m.DesyncStakeWolo ||
-		m.PerGameCapWolo > 1000 ||
-		m.DailyCapWolo < m.PerGameCapWolo || m.DailyCapWolo > 10000 ||
-		(!m.UntilOut && *m.GamesRemaining > (10000/(m.WinnerStakeWolo+m.DesyncStakeWolo))) {
+		m.PerGameCapWolo > ProductMaxWagerWOLO ||
+		m.DailyCapWolo < m.PerGameCapWolo || m.DailyCapWolo > ProductMaxAutoDailyWOLO ||
+		(!m.UntilOut && *m.GamesRemaining > (ProductMaxAutoDailyWOLO/(m.WinnerStakeWolo+m.DesyncStakeWolo))) {
 		return ErrReviewerOwnerMandate
 	}
 	issue, e1 := reviewerISO(m.IssuedAt)

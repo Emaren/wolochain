@@ -371,7 +371,7 @@ func verifyReturnContext(c FinancialProofContext, p Policy) error {
 	if !boundedAllocation(plan) || plan.Version != 2 || !ids.MatchString(plan.AllocationID) || plan.Revision == 0 || plan.Revision > 100000 || plan.OwnerID != a.OwnerID || plan.OperationID != a.OperationID || plan.TicketID != a.TicketID || !claimIDs.MatchString(plan.TicketID) || !nonzeroDigest(plan.FundingTxHash) || plan.FundingTxHash != strings.ToUpper(plan.FundingTxHash) || !ids.MatchString(plan.FundsBudgetID) || !nonzeroDigest(plan.BankEvidenceDigest) || plan.BankHeight <= 0 || !nonzeroDigest(plan.BankBlockHash) || a.AllocationDigest != AllocationDigest(*plan, p) || !validReviewTime(plan.IssuedAt, plan.ExpiresAt, plan.IssuedAt, false) || !verifyReview(p.WithdrawalApprovalKey, AllocationMessage(*plan, p), plan.Signature) {
 		return errors.New("financial_return_allocation_refused")
 	}
-	funded, ok := positive(c.FundedAmountUWolo, 1000000000)
+	funded, ok := positive(c.FundedAmountUWolo, ProductMaxWagerUWolo)
 	if !ok {
 		return errors.New("financial_return_funding_context_refused")
 	}

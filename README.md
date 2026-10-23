@@ -24,7 +24,10 @@ or settlement-process inspection. Earlier operational claims below remain
 bound to their individually dated observations. Mainnet Satchel signing
 remains financially **HELD** under [release issue #5](https://github.com/Emaren/wolochain/issues/5);
 source review and successful CI do not authorize 8094 deployment, mainnet
-transfers or replacement of 8092/8093.
+transfers or replacement of 8092/8093. Historical shared-binary recovery
+examples do not authorize a consensus restart; use the current
+[settlement runbook](docs/mainnet-settlement-runbook.md) and
+[Satchel operator gates](docs/war-satchel-mainnet-execution.md).
 
 
 WoloChain is the fixed-supply Cosmos chain for the AoE2HDBets ecosystem.
