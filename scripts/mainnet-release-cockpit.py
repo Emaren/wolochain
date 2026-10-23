@@ -132,23 +132,74 @@ def write_new_receipt(path: str, data: str) -> None:
         stream.write(data)
 
 
-def read_gate_index(path: str | None) -> dict:
+def gate_source_details(path: str | None) -> dict:
+    """Observational evidence board; displayed source actions are NEVER executable grants."""
+    unavailable = {
+        gate: {
+            "status": "UNVERIFIED",
+            "sourceObservedAtUtc": None,
+            "sourceReportedNextAction": None,
+            "sourceReportedRequiresProductionApproval": None,
+        }
+        for gate in GATES
+    }
     if not path:
-        return {gate: "UNVERIFIED" for gate in GATES}
+        return unavailable
     try:
         payload = load_bounded_json(path)
         if payload.get("schema") != "aoe2war.wolo.financial-release-checklist.v1":
-            raise ValueError("wrong schema")
-        controls = payload["controls"]
-        return {gate: controls[gate]["status"] if controls[gate]["status"] in
-                ("BLOCKED", "UNKNOWN", "ATTESTED") else "UNVERIFIED" for gate in GATES}
-    except (OSError, ValueError, UnicodeError, TypeError, KeyError, AttributeError):
-        return {gate: "UNVERIFIED" for gate in GATES}
+            return unavailable
+        controls = payload.get("controls")
+        if not isinstance(controls, dict):
+            return unavailable
+    except (OSError, ValueError, UnicodeError, TypeError, AttributeError):
+        return unavailable
 
+    result = {}
+    for gate in GATES:
+        ctrl = controls.get(gate)
+        if not isinstance(ctrl, dict):
+            result[gate] = unavailable[gate]
+            continue
+        status = ctrl.get("status")
+        if status not in ("BLOCKED", "UNKNOWN", "ATTESTED"):
+            status = "UNVERIFIED"
+        reported = ctrl.get("observed_at_utc")
+        if not isinstance(reported, str) or len(reported) > 48:
+            reported = None
+        else:
+            try:
+                moment = datetime.fromisoformat(reported.replace("Z", "+00:00"))
+                if moment.utcoffset() is None:
+                    reported = None
+            except ValueError:
+                reported = None
+        action = ctrl.get("next_action")
+        if not isinstance(action, str) or len(action) > 750 or any(
+            ord(char) < 32 for char in action
+        ):
+            action = None
+        approval = ctrl.get("requires_production_approval")
+        result[gate] = {
+            "status": status,
+            "sourceObservedAtUtc": reported,
+            "sourceReportedNextAction": action,
+            "sourceReportedRequiresProductionApproval": approval
+            if isinstance(approval, bool) else None,
+        }
+    return result
+
+
+def read_gate_index(path: str | None) -> dict:
+    """Backwards-compatible statuses from the NONAUTHORITATIVE source ledger."""
+    return {key: value["status"] for key, value in gate_source_details(path).items()}
 
 def assess(checklist: str | None = None) -> dict:
     source = command(["git", "-C", SOURCE, "rev-parse", "HEAD"])
     source = source if source and GIT.fullmatch(source) else None
+    tracked = command(["git", "-C", SOURCE, "status", "--porcelain", "--untracked-files=no"])
+    tracked_state = "UNVERIFIED" if tracked is None else "DIRTY" if tracked else "CLEAN"
+    gate_details = gate_source_details(checklist)
     services = {name: observe_service(name, sha) for name, sha in SERVICES.items()}
     timers = {name: observe_timer(name) for name in TIMERS}
     observed = [v["historicalComparison"] for v in services.values()]
@@ -163,6 +214,7 @@ def assess(checklist: str | None = None) -> dict:
         "schema": "wolo.mainnet.release-cockpit.readonly.v1",
         "observedAtUtc": datetime.now(timezone.utc).isoformat(),
         "sourceCheckout": source,
+        "sourceTrackedWorktreeState": tracked_state,
         "historicalCheckoutComparison": "MATCH" if source == HISTORICAL_SOURCE else
             "UNVERIFIED" if source is None else "DIFFERENT",
         "runtimeContinuity": continuity,
@@ -171,8 +223,20 @@ def assess(checklist: str | None = None) -> dict:
         "activeFinancialTimers": armed,
         "unverifiedTimerUnits": unknown_timers,
         "financialProducerIsolation": "NOT_FENCED" if armed else "UNVERIFIED_NOT_CERTIFIED",
-        "canonicalGateIndexSnapshot": read_gate_index(checklist),
+        "canonicalGateIndexSnapshot": {
+            name: detail["status"] for name, detail in gate_details.items()
+        },
+        "sourceReportedGateDetails": gate_details,
+        "unresolvedSourceReportedGateActions": [
+            {"gate": name, **detail}
+            for name, detail in gate_details.items()
+            if detail["status"] != "ATTESTED"
+        ],
+        "unresolvedSourceReportedGateCount": sum(
+            detail["status"] != "ATTESTED" for detail in gate_details.values()
+        ),
         "gateIndexProvenance": checklist or "NOT_PROVIDED",
+        "gateIndexTrust": "UNAUTHENTICATED_SOURCE_REPORT_NOT_RELEASE_APPROVAL",
         "financialReleaseAuthorized": False,
         "custodyCertified": False,
         "mainnetCanaryAuthorized": False,
@@ -186,6 +250,8 @@ def delta(prior: dict, current: dict) -> list[str]:
     changes = []
     if prior.get("sourceCheckout") != current["sourceCheckout"]:
         changes.append("SOURCE_CHECKOUT_CHANGED")
+    if prior.get("sourceTrackedWorktreeState") != current["sourceTrackedWorktreeState"]:
+        changes.append("TRACKED_SOURCE_WORKTREE_CHANGED_OR_UNVERIFIED")
     for name in SERVICES:
         a, b = prior.get("services", {}).get(name, {}), current["services"][name]
         if a.get("executableSha256") != b["executableSha256"]:
@@ -199,6 +265,12 @@ def delta(prior: dict, current: dict) -> list[str]:
     for gate in GATES:
         if prior.get("canonicalGateIndexSnapshot", {}).get(gate) != current["canonicalGateIndexSnapshot"][gate]:
             changes.append("GATE_INDEX_STATUS_CHANGED_REQUIRES_WITNESS:" + gate)
+        a = prior.get("sourceReportedGateDetails", {}).get(gate, {})
+        b = current["sourceReportedGateDetails"][gate]
+        if a.get("sourceReportedNextAction") != b["sourceReportedNextAction"] or (
+            a.get("sourceObservedAtUtc") != b["sourceObservedAtUtc"]
+        ):
+            changes.append("GATE_SOURCE_EVIDENCE_OR_ACTION_CHANGED_REVIEW:" + gate)
     return changes
 
 
