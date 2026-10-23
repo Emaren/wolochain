@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "57eab91e9c52b70d8cdb4eb13c46c48c77023620e26788b49b34645d30b8683f",
+      "sha256": "7ab9a657f65829c8a61e330b0b4eaf0a9060c687bfe47538429cae44ac237208",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -808,8 +808,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "ops/20261023-mainnet-release-cockpit-readonly",
-    "commit": "d0b0e0fc38396c3c041411d05c4a5b7b89bda7f3"
+    "branch": "ops/20261023-independent-review-intake",
+    "commit": "c9111dd7d55bfb72df345d484de669f658a1b4a2"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
