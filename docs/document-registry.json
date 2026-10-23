@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "3b91f7673799c12b0042c330ac485c5f100560be1b0af3cc9494c70a166d79a5",
+      "sha256": "39ec1fd1986f4c23bf18cf7f09da993a8352d6a0cefdd410d73f39e079a49240",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -971,7 +971,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "review/20261023-postgres-quiescence-evidence",
-    "commit": "f52e8ed9c8b98a9528661f6b17903c3e27911d0b"
+    "commit": "705c7b8946a7362d711104dcc1c3cf347cfb97a0"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
