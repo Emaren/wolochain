@@ -81,6 +81,8 @@ class GenuinePostgresQuiescence(unittest.TestCase):
                     obs.observe(low, (self.db,))
         finally:
             with self.admin.cursor() as cur:
+                cur.execute(sql.SQL("REVOKE CONNECT ON DATABASE {} FROM {}").format(
+                    sql.Identifier(self.db), sql.Identifier(role)))
                 cur.execute(sql.SQL("DROP ROLE {}").format(sql.Identifier(role)))
 
     def test_invalid_database_inventory_and_non_autocommit_fail(self):
