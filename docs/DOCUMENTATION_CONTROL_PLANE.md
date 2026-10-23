@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `ops/20261023-independent-review-intake` at `531a81aa65eb108b3090b8c9e62bacadf8bdd9f2`
+Implementation baseline: `fix/20261023-cockpit-intake-nonblocking-parse` at `d13752563cb39510dfdf32630dd571102851284e`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
