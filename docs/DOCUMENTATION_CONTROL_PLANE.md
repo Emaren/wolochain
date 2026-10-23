@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `ops/20261023-mainnet-release-cockpit-readonly` at `d0b0e0fc38396c3c041411d05c4a5b7b89bda7f3`
+Implementation baseline: `ops/20261023-independent-review-intake` at `c9111dd7d55bfb72df345d484de669f658a1b4a2`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
