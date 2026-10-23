@@ -17,13 +17,14 @@ from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
 REVIEWED_BACKEND_SOURCE = "8c509e8f62ca3ec60711dc2654a03b12f22b0773"
+REVIEWED_RUNTIME_SOURCE = "72a3bca5f66aff51e1c6577b914d64403785d635"
 HISTORICAL_BACKEND_SOURCE = "99f32de617964565875ed4689bea0d688bb99147"
 
 
 class BackendArtifactSourceContractTests(unittest.TestCase):
     """A builder must name the current reviewed implementation explicitly."""
 
-    def test_backend_workflow_and_profile_share_exact_new_implementation_pin(self):
+    def test_runtime_workflow_has_new_pin_and_preserves_frozen_backend_profile(self):
         specification = importlib.util.spec_from_file_location(
             "backend_artifact_source_contract", ROOT / "scripts" / "settlement-artifact.py")
         artifact = importlib.util.module_from_spec(specification)
@@ -31,8 +32,15 @@ class BackendArtifactSourceContractTests(unittest.TestCase):
         workflow = (ROOT / artifact.BACKEND_WORKFLOW_PATH).read_text()
         self.assertEqual(artifact.profile_policy("custody-backend")["source"],
                          REVIEWED_BACKEND_SOURCE)
+        self.assertEqual(artifact.profile_policy("custody-runtime")["source"],
+                         REVIEWED_RUNTIME_SOURCE)
         self.assertEqual(re.findall(r"^\s+EXPECTED_SOURCE: ([0-9a-f]{40})$", workflow,
-                                    re.MULTILINE), [REVIEWED_BACKEND_SOURCE])
+                                    re.MULTILINE), [REVIEWED_RUNTIME_SOURCE])
+        self.assertNotEqual(REVIEWED_RUNTIME_SOURCE, REVIEWED_BACKEND_SOURCE)
+        self.assertIn("--profile custody-runtime", workflow)
+        self.assertNotIn("--profile custody-backend", workflow)
+        self.assertIn("'profile': 'custody-runtime'", workflow)
+        self.assertIn("name: custody-runtime-${{ env.EXPECTED_SOURCE }}-linux-amd64-", workflow)
         self.assertNotEqual(REVIEWED_BACKEND_SOURCE, HISTORICAL_BACKEND_SOURCE)
         self.assertEqual(artifact.profile_policy("legacy526")["source"],
                          "526d5eb6123f6cc0394b5e78489c668e77e46106")
@@ -46,6 +54,7 @@ class BackendArtifactSourceContractTests(unittest.TestCase):
         self.assertEqual({value.strip() for value in branches[0].split(",")}, {
             "integration/20261018-satchel-ops-finance-held",
             "codex/satchel-production-backend",
+            "codex/satchel-custody-authority",
         })
         self.assertIn("ref: ${{ env.EXPECTED_SOURCE }}", workflow)
         self.assertIn("ref: ${{ env.BUILDER_COMMIT }}", workflow)
@@ -130,6 +139,98 @@ class ComposedProfileTests(unittest.TestCase):
         with mock.patch.object(self.artifact, "BACKEND_SOURCE", "NONACCEPTING_PENDING_REVIEWED_SOURCE"):
             with self.assertRaisesRegex(self.artifact.ArtifactError, "NONACCEPTING backend source"):
                 self.artifact.profile_policy("custody-backend")
+
+    def runtime_identity(self):
+        return dict(self.identity, workflow_ref="Emaren/wolochain/" + self.artifact.BACKEND_WORKFLOW_PATH
+                    + "@refs/heads/codex/satchel-custody-runtime-artifact")
+
+    def test_runtime_candidate_has_distinct_profile_and_no_authority(self):
+        identity = self.runtime_identity()
+        with mock.patch.object(self.artifact, "RUNTIME_SOURCE", self.revision):
+            manifest = self.artifact.create_manifest(self.binary, self.rebuild, self.source, identity,
+                                                    profile="custody-runtime")
+            self.artifact.verify_manifest(manifest, self.binary, self.source, identity,
+                                          profile="custody-runtime")
+            self.assertEqual(manifest["schema_version"], 2)
+            self.assertEqual(manifest["profile"], "custody-runtime")
+            self.assertEqual(manifest["purpose"], "UNDEPLOYED_CUSTODY_RUNTIME_CANDIDATE")
+            self.assertTrue(all(value is False for value in manifest["authority"].values()))
+            with self.assertRaises(self.artifact.ArtifactError):
+                self.artifact.create_manifest(self.binary, self.rebuild, self.source, self.identity,
+                                              profile="custody-runtime")
+            with mock.patch.object(self.artifact, "RUNTIME_SOURCE", REVIEWED_BACKEND_SOURCE):
+                with self.assertRaises(self.artifact.ArtifactError):
+                    self.artifact.verify_manifest(manifest, self.binary, self.source, identity,
+                                                  profile="custody-runtime")
+
+    def test_same_binary_manifest_cannot_be_replayed_between_backend_and_runtime_profiles(self):
+        # Even identical source/bytes/workflow cannot turn an old profile receipt
+        # into the new candidate. The profile and purpose are part of the proof.
+        identity = self.runtime_identity()
+        with mock.patch.object(self.artifact, "RUNTIME_SOURCE", self.revision), \
+                mock.patch.object(self.artifact, "BACKEND_SOURCE", self.revision):
+            for source_profile, target_profile in (("custody-backend", "custody-runtime"),
+                                                   ("custody-runtime", "custody-backend")):
+                with self.subTest(source_profile=source_profile):
+                    manifest = self.artifact.create_manifest(self.binary, self.rebuild, self.source,
+                                                            identity, profile=source_profile)
+                    with self.assertRaises(self.artifact.ArtifactError):
+                        self.artifact.verify_manifest(manifest, self.binary, self.source, identity,
+                                                      profile=target_profile)
+
+    def test_missing_runtime_source_is_nonaccepting(self):
+        with mock.patch.object(self.artifact, "RUNTIME_SOURCE", "NONACCEPTING_PENDING_REVIEWED_SOURCE"):
+            with self.assertRaisesRegex(self.artifact.ArtifactError, "NONACCEPTING runtime source"):
+                self.artifact.profile_policy("custody-runtime")
+
+    def test_runtime_metadata_rejects_frozen_revision_dirty_vcs_and_wrong_configuration(self):
+        metadata = self.run_tool(["go", "version", "-m", str(self.binary)]).stdout
+        with mock.patch.object(self.artifact, "RUNTIME_SOURCE", self.revision):
+            self.artifact._parse_go_metadata(metadata, profile="custody-runtime")
+            for before, after in (
+                (self.revision, REVIEWED_BACKEND_SOURCE),
+                ("vcs.modified=false", "vcs.modified=true"),
+                ("go1.24.6", "go1.24.7"),
+                ("GOARCH=amd64", "GOARCH=arm64"),
+                ("CGO_ENABLED=0", "CGO_ENABLED=1"),
+                ("-trimpath=true", "-trimpath=false"),
+                ("-tags=go1.27", "-tags=unreviewed"),
+            ):
+                with self.subTest(setting=before):
+                    self.assertIn(before, metadata)
+                    with self.assertRaises(self.artifact.ArtifactError):
+                        self.artifact._parse_go_metadata(metadata.replace(before, after),
+                                                         profile="custody-runtime")
+
+    def test_frozen_embedded_revision_cannot_be_relabeled_runtime(self):
+        directory = self.root / "frozen-runtime"
+        directory.mkdir(exist_ok=True)
+        frozen = directory / "wolosatcheld"
+        data = self.binary.read_bytes()
+        self.assertGreaterEqual(data.count(self.revision.encode()), 1)
+        frozen.write_bytes(data.replace(self.revision.encode(), REVIEWED_BACKEND_SOURCE.encode()))
+        with mock.patch.object(self.artifact, "RUNTIME_SOURCE", self.revision):
+            with self.assertRaisesRegex(self.artifact.ArtifactError, "vcs.revision"):
+                self.artifact.inspect_binary(frozen, profile="custody-runtime")
+
+    def test_runtime_cli_requires_external_receipt_and_rejects_checksum_tampering(self):
+        identity = self.runtime_identity()
+        with mock.patch.object(self.artifact, "RUNTIME_SOURCE", self.revision):
+            manifest = self.artifact.create_manifest(self.binary, self.rebuild, self.source,
+                                                    identity, profile="custody-runtime")
+            path = self.root / "runtime-manifest.json"
+            path.write_text(json.dumps(manifest, sort_keys=True) + "\n")
+            digest = hashlib.sha256(path.read_bytes()).hexdigest()
+            arguments = ["verify", "--profile", "custody-runtime", "--source-dir", str(self.source),
+                         "--binary", str(self.binary), "--manifest", str(path)]
+            for key, value in identity.items():
+                arguments.extend(("--" + key.replace("_", "-"), value))
+            with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                self.assertEqual(self.artifact.main(arguments), 2)
+                self.assertEqual(self.artifact.main(arguments + ["--expected-manifest-sha256", digest]), 0)
+                changed = dict(manifest, binary=dict(manifest["binary"], sha256="f" * 64))
+                path.write_text(json.dumps(changed, sort_keys=True) + "\n")
+                self.assertEqual(self.artifact.main(arguments + ["--expected-manifest-sha256", digest]), 2)
 
     def test_backend_metadata_rejects_historical_revision_dirty_vcs_and_wrong_configuration(self):
         metadata = self.run_tool(["go", "version", "-m", str(self.binary)]).stdout

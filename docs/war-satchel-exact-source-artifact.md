@@ -8,7 +8,7 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "source-artifact-proof-not-runtime-or-financial-approval"
-reviewed_at: "2026-10-17"
+reviewed_at: "2026-10-22"
 review_interval_days: 14
 sensitivity: "restricted"
 ---
@@ -16,15 +16,27 @@ sensitivity: "restricted"
 # War Satchel Exact Source Artifact Contract
 
 The shared [builder](../scripts/build-settlement-artifact.sh) and
-[offline verifier](../scripts/settlement-artifact.py) implement two named
-profiles. `legacy526` retains the exact PR #26 source
-`526d5eb6123f6cc0394b5e78489c668e77e46106`, `wolochaind` binary and version 1
-manifest contract. `composed-satcheld` builds only `wolosatcheld` from its
-separately pinned source `155fcf67fb2127a2227de5ea785e51bdbb0155c0`, with a
-version 2 manifest identifying that profile. Each profile pins its own main package and workflow. A caller cannot
-supply another source revision through the CLI. An unset or placeholder composed source is rejected before building; the
-implementation pin above includes the authenticated bridge and owner-mandate
-source. Later tooling/documentation commits have a separate builder identity.
+[offline verifier](../scripts/settlement-artifact.py) implement four named
+profiles. Historical pins retain their original meanings:
+
+| Profile | Exact implementation | Binary / manifest |
+| --- | --- | --- |
+| `legacy526` | `526d5eb6123f6cc0394b5e78489c668e77e46106` | `wolochaind`, version 1 |
+| `composed-satcheld` | `155fcf67fb2127a2227de5ea785e51bdbb0155c0` | `wolosatcheld`, version 2 |
+| `custody-backend` | `8c509e8f62ca3ec60711dc2654a03b12f22b0773` | `wolosatcheld`, version 2 |
+| `custody-runtime` | `72a3bca5f66aff51e1c6577b914d64403785d635` | `wolosatcheld`, version 2 |
+
+The new runtime source contains the opaque, operation-bounded custody issuer
+and the 10,000 WOLO wager / 50,000 WOLO daily product ceilings. Existing smaller
+signed and configured limits remain binding. The frozen `custody-backend`
+binary does not implement those changes; its receipts and checksum cannot be
+relabeled as the runtime candidate. Named-profile and purpose equality is
+required even when package, workflow path or binary bytes happen to match.
+
+Each profile pins its main package and workflow. A caller cannot supply another
+source revision through the CLI. An unset or placeholder implementation pin is
+rejected before building. Tooling and documentation commits have a separate
+builder identity.
 
 The [composed workflow](../.github/workflows/composed-satcheld-exact-artifact.yml)
 checks out the exact implementation separately from the artifact tooling. The
@@ -35,6 +47,16 @@ GitHub execution. These identities have different meanings and must all match
 the independently inspected run. Caller-supplied identity strings alone do
 not authenticate a run.
 
+The existing [custody artifact workflow](../.github/workflows/custody-backend-satcheld-exact-artifact.yml)
+now invokes `custody-runtime` against the exact `72a3bca5` source, using the same
+recipe and Go 1.24.6 toolchain. Its historical filename is retained; authenticated
+receipts bind the actual workflow revision and builder commit. Earlier
+`custody-backend` builds remain verifiable using their original source pin and
+independently retained GitHub receipts. New uploads use `custody-runtime` names,
+profile and purpose. A workflow run or local test result alone is not an artifact
+acceptance receipt: independently download and validate the new archive before
+changing a consumer pin.
+
 ## Building and checking the candidate
 
 The workflow invokes the same builder used for the legacy profile:
@@ -43,6 +65,10 @@ The workflow invokes the same builder used for the legacy profile:
 bash scripts/build-settlement-artifact.sh --profile composed-satcheld \
   /path/to/clean-pinned-source /path/to/new-output-directory
 ```
+
+Use `--profile custody-runtime` with the clean `72a3bca5` checkout to build the
+new runtime candidate. The same profile must be supplied to verification below;
+it does not change the frozen `custody-backend` policy.
 
 The builder requires externally supplied CI identity variables and exactly
 Go 1.24.6. It compiles Linux AMD64 with `CGO_ENABLED=0`, `GOAMD64=v1`,
@@ -110,3 +136,11 @@ financial ingress drain, current liability reconciliation, exclusive state
 ownership, snapshots and separately reviewed recovery authority described in
 the [operator gates](war-satchel-mainnet-execution.md). Existing 8092/8093
 authorities, consensus executable separation and claim #889 remain intact.
+
+The runtime source still requires actual independently provisioned trust-root,
+vault-control, key-isolation, dual reserve-review, runtime-permit and journal
+evidence. Admissions require a fresh exact bank and journal review after each
+journal mutation and sufficient extra uncommitted assets beyond recorded
+liabilities, gas and floors. No authenticated atomic liability discharge is
+assumed. No independent mainnet root has been supplied for this candidate;
+source qualification and reproducibility cannot authorize funding or execution.
