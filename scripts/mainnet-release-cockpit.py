@@ -42,6 +42,18 @@ GATES = (
 SHA = re.compile(r"^[0-9a-f]{64}$")
 GIT = re.compile(r"^[0-9a-f]{40}$")
 MAX_RECEIPT_BYTES = 512 * 1024
+INTAKE_SCHEMA = "wolo.mainnet.independent-review-intake.v1"
+REVIEWER_ROLES = ("owner", "chain_reviewer", "finance_reviewer", "recovery_witness")
+REVIEW_EVIDENCE = (
+    "external_historical_header_sha256",
+    "external_validator_set_sha256",
+    "independent_tx_100_effects_sha256",
+    "independent_claim_889_disposition_sha256",
+    "complete_nonoverlapping_bank_liabilities_sha256",
+    "hd_de_external_producer_fence_scope_sha256",
+    "fresh_quiesced_backup_receipt_sha256",
+    "witnessed_paired_recovery_receipt_sha256",
+)
 
 
 def command(args: list[str]) -> str | None:
@@ -194,7 +206,112 @@ def read_gate_index(path: str | None) -> dict:
     """Backwards-compatible statuses from the NONAUTHORITATIVE source ledger."""
     return {key: value["status"] for key, value in gate_source_details(path).items()}
 
-def assess(checklist: str | None = None) -> dict:
+def reviewer_intake_template() -> dict:
+    """Only evidence fingerprints and independent reviewer IDs, never secrets."""
+    return {
+        "schema": INTAKE_SCHEMA,
+        "reviewers": {role: {"identity_sha256": None} for role in REVIEWER_ROLES},
+        "evidence": {name: None for name in REVIEW_EVIDENCE},
+        "historical_chain_id": "wolo-1",
+        "historical_tx_height": 1078913,
+        "maintenance_window_start_utc": None,
+        "maintenance_window_end_utc": None,
+    }
+
+
+def parse_utc_window(value: object) -> datetime | None:
+    """Require explicit UTC Z and second resolution, never infer local timezone."""
+    if not isinstance(value, str) or not re.fullmatch(
+        r"\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ", value
+    ):
+        return None
+    try:
+        moment = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        return moment if moment.utcoffset().total_seconds() == 0 else None
+    except (ValueError, OverflowError):
+        return None
+
+
+def review_intake(path: str | None) -> dict:
+    """Presence checks for the independent review HANDOFF ONLY, never a permit.
+
+    The submitted fingerprints can be forged and are not signature or chain
+    verification. No content, names, keys, receipts or private path is printed.
+    """
+    expected = reviewer_intake_template()
+    missing = []
+    conflicts = []
+    supplied = 0
+    total = len(REVIEWER_ROLES) + len(REVIEW_EVIDENCE) + 1
+    result = {
+        "classification": "NOT_PROVIDED",
+        "submissionProgress": {"submitted": 0, "expected": total},
+        "missing": [],
+        "conflicts": [],
+        "authority": "UNVERIFIED_INDEPENDENT_REVIEWER_INTAKE_ONLY",
+        "historicalChainVerified": False,
+        "historicalBankEffectsVerified": False,
+        "maintenanceApproved": False,
+        "financialReleaseAuthorized": False,
+    }
+    if path is None:
+        result["missing"] = [f"reviewers.{key}.identity_sha256" for key in REVIEWER_ROLES] + [
+            f"evidence.{key}" for key in REVIEW_EVIDENCE
+        ] + ["maintenance_window_start_utc+end_utc"]
+        return result
+    try:
+        packet = load_bounded_json(path)
+    except (OSError, ValueError, TypeError, UnicodeError):
+        return {**result, "classification": "INVALID_INTAKE", "conflicts": ["INTAKE_UNREADABLE_OR_INVALID"]}
+    if packet.get("schema") != INTAKE_SCHEMA:
+        return {**result, "classification": "INVALID_INTAKE", "conflicts": ["UNSUPPORTED_SCHEMA"]}
+    if packet.get("historical_chain_id") != "wolo-1" or (
+        packet.get("historical_tx_height") != 1078913
+        or isinstance(packet.get("historical_tx_height"), bool)
+    ):
+        conflicts.append("HISTORICAL_CHAIN_OR_HEIGHT_MISMATCH")
+    reviewers = packet.get("reviewers")
+    reviewers = reviewers if isinstance(reviewers, dict) else {}
+    identities = []
+    for role in REVIEWER_ROLES:
+        row = reviewers.get(role)
+        value = row.get("identity_sha256") if isinstance(row, dict) else None
+        if isinstance(value, str) and SHA.fullmatch(value):
+            supplied += 1
+            identities.append(value)
+        else:
+            missing.append(f"reviewers.{role}.identity_sha256")
+    if len(identities) != len(set(identities)):
+        conflicts.append("REVIEWER_IDENTITY_FINGERPRINT_REUSED")
+    evidence = packet.get("evidence")
+    evidence = evidence if isinstance(evidence, dict) else {}
+    for name in REVIEW_EVIDENCE:
+        value = evidence.get(name)
+        if isinstance(value, str) and SHA.fullmatch(value):
+            supplied += 1
+        else:
+            missing.append(f"evidence.{name}")
+    start = parse_utc_window(packet.get("maintenance_window_start_utc"))
+    end = parse_utc_window(packet.get("maintenance_window_end_utc"))
+    if start is not None and end is not None and (
+        0 < (end - start).total_seconds() <= 30 * 60
+    ):
+        supplied += 1
+    else:
+        missing.append("maintenance_window_start_utc+end_utc")
+        if start is not None and end is not None:
+            conflicts.append("MAINTENANCE_WINDOW_NOT_POSITIVE_OR_OVER_30_MIN")
+    result["submissionProgress"] = {"submitted": supplied, "expected": total}
+    result["missing"] = missing
+    result["conflicts"] = conflicts
+    result["classification"] = (
+        "CONFLICTING_INTAKE" if conflicts else
+        "SUBMITTED_UNVERIFIED" if not missing else "INCOMPLETE_INTAKE"
+    )
+    return result
+
+
+def assess(checklist: str | None = None, reviewer_packet: str | None = None) -> dict:
     source = command(["git", "-C", SOURCE, "rev-parse", "HEAD"])
     source = source if source and GIT.fullmatch(source) else None
     tracked = command(["git", "-C", SOURCE, "status", "--porcelain", "--untracked-files=no"])
@@ -237,6 +354,7 @@ def assess(checklist: str | None = None) -> dict:
         ),
         "gateIndexProvenance": checklist or "NOT_PROVIDED",
         "gateIndexTrust": "UNAUTHENTICATED_SOURCE_REPORT_NOT_RELEASE_APPROVAL",
+        "independentReviewIntake": review_intake(reviewer_packet),
         "financialReleaseAuthorized": False,
         "custodyCertified": False,
         "mainnetCanaryAuthorized": False,
@@ -262,6 +380,11 @@ def delta(prior: dict, current: dict) -> list[str]:
         a, b = prior.get("financialTimers", {}).get(name, {}), current["financialTimers"][name]
         if a.get("activeState") != b["activeState"] or a.get("triggers") != b["triggers"]:
             changes.append("TIMER_AUTHORITY_CHANGED_OR_UNAVAILABLE:" + name)
+    old_intake = prior.get("independentReviewIntake", {})
+    new_intake = current["independentReviewIntake"]
+    for key in ("classification", "submissionProgress", "missing", "conflicts"):
+        if old_intake.get(key) != new_intake[key]:
+            changes.append("INDEPENDENT_REVIEW_INTAKE_CHANGED:" + key)
     for gate in GATES:
         if prior.get("canonicalGateIndexSnapshot", {}).get(gate) != current["canonicalGateIndexSnapshot"][gate]:
             changes.append("GATE_INDEX_STATUS_CHANGED_REQUIRES_WITNESS:" + gate)
@@ -277,10 +400,16 @@ def delta(prior: dict, current: dict) -> list[str]:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--gate-index", help="Optional canonical financial-release-checklist.json; NEVER a permit")
+    parser.add_argument("--reviewer-intake", help="Optional private reviewer/checkpoint/maintenance fingerprint index; never an approval")
+    parser.add_argument("--print-reviewer-intake-template", action="store_true", help="Print empty private packet template; do not fill in public GitHub")
+
     parser.add_argument("--previous", help="Optional previous cockpit JSON for observed delta")
     parser.add_argument("--output", help="Optional path to save local JSON evidence; no default write")
     args = parser.parse_args(argv)
-    result = assess(args.gate_index)
+    if args.print_reviewer_intake_template:
+        print(json.dumps(reviewer_intake_template(), indent=2, sort_keys=True))
+        return 3
+    result = assess(args.gate_index, args.reviewer_intake)
     if args.previous:
         try:
             previous = load_bounded_json(args.previous)
