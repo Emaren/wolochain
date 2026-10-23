@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "090a6fe1e3ed967713cfdaad4c4b6c6ffd4b7e959dfb2c86d22c96d5591660bc",
+      "sha256": "3aa0cbc7639fe446959eb80d28e064ed931483c8ea8911c7719c55c02cf380ee",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -970,8 +970,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "codex/satchel-custody-runtime-artifact",
-    "commit": "ac2d15d1ce534d2ff915eb11ece400182390759c"
+    "branch": "codex/financial-evidence-refresh",
+    "commit": "65494e1175d84dde430c0165fc51eb983f246f07"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
