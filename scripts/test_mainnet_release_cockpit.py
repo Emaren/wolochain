@@ -290,6 +290,46 @@ class CockpitTests(unittest.TestCase):
             target.write_text("[not json]")
             self.assertEqual(cockpit.review_intake(str(target))["classification"], "INVALID_INTAKE")
 
+    def test_fifo_reviewer_intake_rejected_without_blocking_or_finance_permission(self):
+        # A FIFO with no writer would block forever if open() lacks O_NONBLOCK.
+        with tempfile.TemporaryDirectory() as folder:
+            fifo = Path(folder) / "operator-fifo"
+            os.mkfifo(fifo)
+            result = cockpit.review_intake(str(fifo))
+        self.assertEqual(result["classification"], "INVALID_INTAKE")
+        self.assertFalse(result["financialReleaseAuthorized"])
+        self.assertFalse(result["maintenanceApproved"])
+
+    def test_fifo_canonical_gate_input_cannot_trigger_implicit_attestation(self):
+        with tempfile.TemporaryDirectory() as folder:
+            fifo = Path(folder) / "untrusted-gates-fifo"
+            os.mkfifo(fifo)
+            states = cockpit.read_gate_index(str(fifo))
+        self.assertTrue(all(status == "UNVERIFIED" for status in states.values()))
+
+    def test_deep_nesting_is_invalid_for_reviewer_and_previous_receipts(self):
+        # JSON parser recursion should not bypass the normal fail-closed path.
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "deep.json"
+            path.write_text("[" * 1800 + "0" + "]" * 1800)
+            result = cockpit.review_intake(str(path))
+            self.assertEqual(result["classification"], "INVALID_INTAKE")
+            self.assertFalse(result["historicalChainVerified"])
+            self.assertFalse(result["financialReleaseAuthorized"])
+            self.assertEqual(
+                cockpit.read_gate_index(str(path)),
+                {gate: "UNVERIFIED" for gate in cockpit.GATES},
+            )
+
+    def test_nonblocking_regular_json_retains_source_only_submission_semantics(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "regular.json"
+            path.write_text(json.dumps(cockpit.reviewer_intake_template()))
+            result = cockpit.review_intake(str(path))
+        self.assertEqual(result["classification"], "INCOMPLETE_INTAKE")
+        self.assertFalse(result["maintenanceApproved"])
+        self.assertFalse(result["financialReleaseAuthorized"])
+
     def test_intake_delta_flags_new_reviewer_assignment_but_not_release(self):
         with patch.object(cockpit, "command", return_value=cockpit.HISTORICAL_SOURCE), patch.object(
             cockpit, "observe_service", return_value={"historicalComparison": "MATCH_HISTORICAL", "executableSha256": "a" * 64, "pid": 1009, "activeState": "active"}
