@@ -192,6 +192,7 @@ class CockpitTests(unittest.TestCase):
                 "sourceObservedAtUtc": "2026-10-18T18:12:00Z",
             } for x in cockpit.GATES},
             "sourceTrackedWorktreeState": "CLEAN",
+            "independentReviewIntake": cockpit.review_intake(None),
         }
         current = json.loads(json.dumps(previous))
         current["services"]["wolochain-mainnet-settlement.service"]["executableSha256"] = "b"*64
@@ -206,6 +207,7 @@ class CockpitTests(unittest.TestCase):
         first = {
             "sourceCheckout": cockpit.HISTORICAL_SOURCE,
             "sourceTrackedWorktreeState": "CLEAN",
+            "independentReviewIntake": cockpit.review_intake(None),
             "services": {x: {"executableSha256": "a"*64, "pid": 11, "activeState": "active"}
                          for x in cockpit.SERVICES},
             "financialTimers": {x: {"activeState": "active", "triggers": x.replace(".timer", ".service")}
@@ -222,6 +224,82 @@ class CockpitTests(unittest.TestCase):
         self.assertIn("TRACKED_SOURCE_WORKTREE_CHANGED_OR_UNVERIFIED", changes)
         self.assertIn("GATE_SOURCE_EVIDENCE_OR_ACTION_CHANGED_REVIEW:" + cockpit.GATES[0], changes)
         self.assertNotIn("GATE_INDEX_STATUS_CHANGED_REQUIRES_WITNESS:" + cockpit.GATES[0], changes)
+
+    def test_missing_reviewer_packet_reports_missing_roles_and_no_authority(self):
+        result = cockpit.review_intake(None)
+        self.assertEqual(result["classification"], "NOT_PROVIDED")
+        self.assertEqual(result["submissionProgress"], {"submitted": 0, "expected": 13})
+        self.assertIn("reviewers.chain_reviewer.identity_sha256", result["missing"])
+        self.assertIn("evidence.external_historical_header_sha256", result["missing"])
+        self.assertFalse(result["financialReleaseAuthorized"])
+        self.assertFalse(result["maintenanceApproved"])
+
+    def test_fully_populated_intake_never_verifies_or_authorizes(self):
+        with tempfile.TemporaryDirectory() as folder:
+            doc = cockpit.reviewer_intake_template()
+            for i, role in enumerate(cockpit.REVIEWER_ROLES):
+                doc["reviewers"][role]["identity_sha256"] = format(i + 1, "064x")
+            for i, field in enumerate(cockpit.REVIEW_EVIDENCE):
+                doc["evidence"][field] = format(i + 11, "064x")
+            doc["maintenance_window_start_utc"] = "2026-10-24T12:00:00Z"
+            doc["maintenance_window_end_utc"] = "2026-10-24T12:30:00Z"
+            packet = Path(folder) / "private-intake.json"
+            packet.write_text(json.dumps(doc))
+            result = cockpit.review_intake(str(packet))
+        self.assertEqual(result["classification"], "SUBMITTED_UNVERIFIED")
+        self.assertEqual(result["submissionProgress"], {"submitted": 13, "expected": 13})
+        self.assertFalse(result["historicalChainVerified"])
+        self.assertFalse(result["historicalBankEffectsVerified"])
+        self.assertFalse(result["maintenanceApproved"])
+        self.assertFalse(result["financialReleaseAuthorized"])
+        self.assertNotIn("2026-10-24T12:00:00Z", json.dumps(result))
+
+    def test_independent_reviewer_reuse_is_exposed_as_conflict(self):
+        with tempfile.TemporaryDirectory() as folder:
+            doc = cockpit.reviewer_intake_template()
+            for role in cockpit.REVIEWER_ROLES:
+                doc["reviewers"][role]["identity_sha256"] = "a" * 64
+            path = Path(folder) / "fake.json"
+            path.write_text(json.dumps(doc))
+            result = cockpit.review_intake(str(path))
+        self.assertEqual(result["classification"], "CONFLICTING_INTAKE")
+        self.assertIn("REVIEWER_IDENTITY_FINGERPRINT_REUSED", result["conflicts"])
+        self.assertFalse(result["financialReleaseAuthorized"])
+
+    def test_wrong_historical_chain_and_overlong_window_rejected(self):
+        with tempfile.TemporaryDirectory() as folder:
+            doc = cockpit.reviewer_intake_template()
+            doc["historical_chain_id"] = "wrong-1"
+            doc["historical_tx_height"] = True
+            doc["maintenance_window_start_utc"] = "2026-10-24T12:00:00Z"
+            doc["maintenance_window_end_utc"] = "2026-10-24T12:31:00Z"
+            path = Path(folder) / "invalid.json"
+            path.write_text(json.dumps(doc))
+            result = cockpit.review_intake(str(path))
+        self.assertIn("HISTORICAL_CHAIN_OR_HEIGHT_MISMATCH", result["conflicts"])
+        self.assertIn("MAINTENANCE_WINDOW_NOT_POSITIVE_OR_OVER_30_MIN", result["conflicts"])
+        self.assertFalse(result["financialReleaseAuthorized"])
+
+    def test_reviewer_packet_symlink_and_invalid_json_fail_closed(self):
+        with tempfile.TemporaryDirectory() as folder:
+            target = Path(folder) / "target"
+            target.write_text('{"schema":"wolo.mainnet.independent-review-intake.v1"}')
+            alias = Path(folder) / "alias"
+            alias.symlink_to(target)
+            self.assertEqual(cockpit.review_intake(str(alias))["classification"], "INVALID_INTAKE")
+            target.write_text("[not json]")
+            self.assertEqual(cockpit.review_intake(str(target))["classification"], "INVALID_INTAKE")
+
+    def test_intake_delta_flags_new_reviewer_assignment_but_not_release(self):
+        with patch.object(cockpit, "command", return_value=cockpit.HISTORICAL_SOURCE), patch.object(
+            cockpit, "observe_service", return_value={"historicalComparison": "MATCH_HISTORICAL", "executableSha256": "a" * 64, "pid": 1009, "activeState": "active"}
+        ), patch.object(cockpit, "observe_timer", return_value={"activeState": "active", "triggers": "mock.service"}):
+            initial = cockpit.assess()
+            later = cockpit.assess()
+        later["independentReviewIntake"]["submissionProgress"]["submitted"] = 1
+        changes = cockpit.delta(initial, later)
+        self.assertIn("INDEPENDENT_REVIEW_INTAKE_CHANGED:submissionProgress", changes)
+        self.assertFalse(later["financialReleaseAuthorized"])
 
     def test_readonly_commands_never_use_shell_or_mutations(self):
         calls = []
