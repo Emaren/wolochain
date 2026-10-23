@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
+import stat
 import tempfile
 import unittest
 from pathlib import Path
@@ -60,6 +62,39 @@ class CockpitTests(unittest.TestCase):
             self.assertTrue(
                 all(x == "UNVERIFIED" for x in cockpit.read_gate_index(str(path)).values())
             )
+
+    def test_receipts_private_and_existing_file_never_overwritten(self):
+        with tempfile.TemporaryDirectory() as folder:
+            target = Path(folder) / "witness.json"
+            cockpit.write_new_receipt(str(target), '{"status":"HOLD"}\n')
+            self.assertEqual(stat.S_IMODE(target.stat().st_mode), 0o600)
+            self.assertEqual(target.read_text(), '{"status":"HOLD"}\n')
+            with self.assertRaises(FileExistsError):
+                cockpit.write_new_receipt(str(target), '{"status":"UNAUTHORIZED"}\n')
+            self.assertEqual(target.read_text(), '{"status":"HOLD"}\n')
+
+    def test_symlinked_input_cannot_be_treated_as_gate_evidence(self):
+        with tempfile.TemporaryDirectory() as folder:
+            target = Path(folder) / "real.json"
+            alias = Path(folder) / "alias.json"
+            target.write_text(json.dumps({
+                "schema": "aoe2war.wolo.financial-release-checklist.v1",
+                "controls": {x: {"status": "ATTESTED"} for x in cockpit.GATES},
+            }))
+            alias.symlink_to(target)
+            self.assertEqual(
+                set(cockpit.read_gate_index(str(alias)).values()), {"UNVERIFIED"}
+            )
+            with self.assertRaises(FileExistsError):
+                cockpit.write_new_receipt(str(alias), '{"status":"BAD"}')
+            self.assertIn('"ATTESTED"', target.read_text())
+
+    def test_oversized_previous_evidence_rejected(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "oversized.json"
+            path.write_bytes(b" " * (cockpit.MAX_RECEIPT_BYTES + 1))
+            with self.assertRaises(ValueError):
+                cockpit.load_bounded_json(str(path))
 
     def test_attested_index_does_not_authorize(self):
         with tempfile.TemporaryDirectory() as folder:
