@@ -96,6 +96,60 @@ class CockpitTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 cockpit.load_bounded_json(str(path))
 
+    def test_release_blocker_board_uses_source_actions_without_authorization(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "finance-index.json"
+            controls = {key: {
+                "status": "BLOCKED", "observed_at_utc": "2026-10-18T18:12:00Z",
+                "next_action": "Obtain independent evidence and owner approval",
+                "requires_production_approval": True,
+            } for key in cockpit.GATES}
+            controls[cockpit.GATES[-1]]["status"] = "UNKNOWN"
+            path.write_text(json.dumps({
+                "schema": "aoe2war.wolo.financial-release-checklist.v1",
+                "controls": controls,
+            }))
+            with patch.object(cockpit, "command", return_value=cockpit.HISTORICAL_SOURCE), patch.object(
+                cockpit, "observe_service", return_value={"historicalComparison": "MATCH_HISTORICAL"}
+            ), patch.object(cockpit, "observe_timer", return_value={"activeState": "active"}):
+                result = cockpit.assess(str(path))
+        self.assertEqual(result["unresolvedSourceReportedGateCount"], 6)
+        self.assertEqual(result["canonicalGateIndexSnapshot"][cockpit.GATES[-1]], "UNKNOWN")
+        self.assertTrue(result["unresolvedSourceReportedGateActions"][0]["sourceReportedRequiresProductionApproval"])
+        self.assertEqual(result["unresolvedSourceReportedGateActions"][0]["sourceObservedAtUtc"],
+                         "2026-10-18T18:12:00Z")
+        self.assertEqual(result["unresolvedSourceReportedGateActions"][0]["sourceReportedNextAction"],
+                         "Obtain independent evidence and owner approval")
+        self.assertFalse(result["financialReleaseAuthorized"])
+        self.assertEqual(result["gateIndexTrust"], "UNAUTHENTICATED_SOURCE_REPORT_NOT_RELEASE_APPROVAL")
+
+    def test_invalid_source_action_and_timestamp_stay_absent(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "invalid-actions.json"
+            path.write_text(json.dumps({
+                "schema": "aoe2war.wolo.financial-release-checklist.v1",
+                "controls": {
+                    gate: {"status": "BLOCKED", "observed_at_utc": "bad-time",
+                           "next_action": "run\\nunsafe", "requires_production_approval": "yes"}
+                    for gate in cockpit.GATES
+                },
+            }))
+            result = cockpit.gate_source_details(str(path))
+        self.assertEqual(set(x["sourceObservedAtUtc"] for x in result.values()), {None})
+        self.assertEqual(set(x["sourceReportedNextAction"] for x in result.values()), {None})
+        self.assertEqual(set(x["sourceReportedRequiresProductionApproval"] for x in result.values()), {None})
+
+    def test_missing_gate_does_not_mask_remaining_blockers(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "partial.json"
+            path.write_text(json.dumps({
+                "schema": "aoe2war.wolo.financial-release-checklist.v1",
+                "controls": {cockpit.GATES[0]: {"status": "BLOCKED"}},
+            }))
+            result = cockpit.read_gate_index(str(path))
+        self.assertEqual(result[cockpit.GATES[0]], "BLOCKED")
+        self.assertTrue(all(result[x] == "UNVERIFIED" for x in cockpit.GATES[1:]))
+
     def test_attested_index_does_not_authorize(self):
         with tempfile.TemporaryDirectory() as folder:
             path = Path(folder) / "gate.json"
@@ -133,6 +187,11 @@ class CockpitTests(unittest.TestCase):
         previous = {
             "sourceCheckout": "a"*40, "services": services, "financialTimers": timers,
             "canonicalGateIndexSnapshot": {x: "BLOCKED" for x in cockpit.GATES},
+            "sourceReportedGateDetails": {x: {
+                "sourceReportedNextAction": "review",
+                "sourceObservedAtUtc": "2026-10-18T18:12:00Z",
+            } for x in cockpit.GATES},
+            "sourceTrackedWorktreeState": "CLEAN",
         }
         current = json.loads(json.dumps(previous))
         current["services"]["wolochain-mainnet-settlement.service"]["executableSha256"] = "b"*64
@@ -141,6 +200,28 @@ class CockpitTests(unittest.TestCase):
         self.assertEqual(len(changes), 2)
         self.assertTrue(any(x.startswith("EXECUTABLE_CHANGED") for x in changes))
         self.assertTrue(any(x.startswith("TIMER_AUTHORITY_CHANGED") for x in changes))
+        self.assertFalse(any(x.startswith("GATE_") for x in changes))
+
+    def test_same_status_but_updated_gate_evidence_is_visible(self):
+        first = {
+            "sourceCheckout": cockpit.HISTORICAL_SOURCE,
+            "sourceTrackedWorktreeState": "CLEAN",
+            "services": {x: {"executableSha256": "a"*64, "pid": 11, "activeState": "active"}
+                         for x in cockpit.SERVICES},
+            "financialTimers": {x: {"activeState": "active", "triggers": x.replace(".timer", ".service")}
+                                for x in cockpit.TIMERS},
+            "canonicalGateIndexSnapshot": {x: "BLOCKED" for x in cockpit.GATES},
+            "sourceReportedGateDetails": {x: {
+                "sourceReportedNextAction": "collect proof", "sourceObservedAtUtc": "2026-10-18T00:00:00Z"}
+                for x in cockpit.GATES},
+        }
+        second = json.loads(json.dumps(first))
+        second["sourceReportedGateDetails"][cockpit.GATES[0]]["sourceReportedNextAction"] = "collect new proof"
+        second["sourceTrackedWorktreeState"] = "DIRTY"
+        changes = cockpit.delta(first, second)
+        self.assertIn("TRACKED_SOURCE_WORKTREE_CHANGED_OR_UNVERIFIED", changes)
+        self.assertIn("GATE_SOURCE_EVIDENCE_OR_ACTION_CHANGED_REVIEW:" + cockpit.GATES[0], changes)
+        self.assertNotIn("GATE_INDEX_STATUS_CHANGED_REQUIRES_WITNESS:" + cockpit.GATES[0], changes)
 
     def test_readonly_commands_never_use_shell_or_mutations(self):
         calls = []
