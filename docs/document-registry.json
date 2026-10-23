@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "2a226f16745376aee217288b39cbde45030c99ce05eb05cc41105fd0917b7c25",
+      "sha256": "b0fa5cdd4e726d94744c28ef3372a0313825a81e65a1a1aed1178f943f0f7bf9",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -289,7 +289,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-16",
       "sensitivity": "restricted",
-      "sha256": "5aede3f478266915cf8555d2567eac5db8d236a52ea79b716a28c5400de8c498",
+      "sha256": "47d91eb7dbe3ea7c7aaea74294a36f44678dfc1bf783dc7f48b6706cbb284e2c",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -808,8 +808,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/20261023-cockpit-intake-nonblocking-parse",
-    "commit": "d13752563cb39510dfdf32630dd571102851284e"
+    "branch": "ops/20261023-cockpit-fast-brief",
+    "commit": "4ce11c4965da64e3d4dee6a8681b6198e1aba1eb"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
