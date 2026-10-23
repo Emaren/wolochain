@@ -404,6 +404,104 @@ def delta(prior: dict, current: dict) -> list[str]:
     return changes
 
 
+
+def render_brief(snapshot: dict) -> str:
+    """A bounded human triage view of existing READ-ONLY observations.
+
+    Deliberately excludes source-supplied next-action text, receipt paths,
+    reviewer IDs and evidence digests. It must never translate an index status,
+    absence of active timers, or intake submission into release authority.
+    """
+    gates = snapshot.get("canonicalGateIndexSnapshot", {})
+    gates = gates if isinstance(gates, dict) else {}
+    intake = snapshot.get("independentReviewIntake", {})
+    intake = intake if isinstance(intake, dict) else {}
+    progress = intake.get("submissionProgress", {})
+    progress = progress if isinstance(progress, dict) else {}
+    valid_statuses = {"BLOCKED", "UNKNOWN", "UNVERIFIED", "ATTESTED"}
+    rows = ["WOLO MAINNET — READ-ONLY RELEASE FRONTIER",
+            "FINANCIAL_HARD_HOLD | CUSTODY UNAVAILABLE | NO RELEASE AUTHORITY",
+            "Gate labels are UNAUTHENTICATED SOURCE REPORTS, not attestations.",
+            ""]
+    state = snapshot.get("sourceTrackedWorktreeState")
+    state = state if state in ("CLEAN", "DIRTY") else "UNVERIFIED"
+    revision = snapshot.get("sourceCheckout")
+    revision = revision[:12] if isinstance(revision, str) and GIT.fullmatch(revision) else "UNVERIFIED"
+    rows.append(f"Source: {revision} | tracked worktree: {state}")
+    continuity = snapshot.get("runtimeContinuity")
+    if continuity not in ("MATCH_HISTORICAL_ONLY", "DIFFERENT_FROM_HISTORICAL", "UNVERIFIED"):
+        continuity = "UNVERIFIED"
+    rows.append(f"Historical runtime comparison: {continuity} (not code certification)")
+    armed = snapshot.get("activeFinancialTimers")
+    unknown = snapshot.get("unverifiedTimerUnits")
+    armed = len(armed) if isinstance(armed, list) else "UNVERIFIED"
+    unknown = len(unknown) if isinstance(unknown, list) else "UNVERIFIED"
+    rows.append(f"Financial timers: active={armed}, unverified={unknown}; this never certifies a full producer fence")
+    rows.append("")
+    rows.append("SOURCE-REPORTED FINANCIAL GATES:")
+    for gate in GATES:
+        status = gates.get(gate, "UNVERIFIED")
+        if status not in valid_statuses:
+            status = "UNVERIFIED"
+        rows.append(f"  {status:10s} {gate}")
+    rows.append("")
+    classification = intake.get("classification")
+    if classification not in (
+        "NOT_PROVIDED", "INVALID_INTAKE", "INCOMPLETE_INTAKE",
+        "CONFLICTING_INTAKE", "SUBMITTED_UNVERIFIED"
+    ):
+        classification = "UNVERIFIED"
+    supplied = progress.get("submitted")
+    expected = progress.get("expected")
+    # Never trust bool as a numeric progress counter from an external snapshot.
+    if type(supplied) is not int or type(expected) is not int or supplied < 0 or expected < 0 or supplied > expected:
+        supplied, expected = "?", "?"
+    missing = intake.get("missing")
+    conflicts = intake.get("conflicts")
+    missing_count = len(missing) if isinstance(missing, list) else "?"
+    conflict_count = len(conflicts) if isinstance(conflicts, list) else "?"
+    rows.append(f"Independent-review intake: {classification}; fingerprints {supplied}/{expected}; missing={missing_count}; conflicts={conflict_count}")
+    rows.append("Fingerprints are NOT signatures, authenticated proofs, approvals, or custody.")
+    changes = snapshot.get("changesSincePrevious")
+    if changes is None:
+        rows.append("Changes since previous: NOT CHECKED (supply --previous)")
+    elif not isinstance(changes, list) or not all(isinstance(s, str) for s in changes):
+        rows.append("Changes since previous: UNVERIFIED")
+    elif changes == ["PREVIOUS_SNAPSHOT_UNAVAILABLE"]:
+        rows.append("Changes since previous: PREVIOUS_SNAPSHOT_UNAVAILABLE")
+    elif not changes:
+        rows.append("Changes since previous: NONE OBSERVED (not evidence of financial safety)")
+    else:
+        rows.append(f"Changes since previous: {len(changes)} review item(s)")
+        # Only emit contract-defined delta labels; never print arbitrary
+        # untrusted previous-snapshot strings or source-reported action text.
+        prefixes = (
+            "SOURCE_CHECKOUT_CHANGED",
+            "TRACKED_SOURCE_WORKTREE_CHANGED_OR_UNVERIFIED",
+            "EXECUTABLE_CHANGED_OR_UNAVAILABLE:",
+            "SERVICE_PROCESS_OR_STATE_CHANGED:",
+            "TIMER_AUTHORITY_CHANGED_OR_UNAVAILABLE:",
+            "INDEPENDENT_REVIEW_INTAKE_CHANGED:",
+            "GATE_INDEX_STATUS_CHANGED_REQUIRES_WITNESS:",
+            "GATE_SOURCE_EVIDENCE_OR_ACTION_CHANGED_REVIEW:",
+        )
+        safe_names = set(SERVICES) | set(TIMERS) | set(GATES)
+        for item in changes:
+            safe = item in prefixes[:2] or (
+                any(item == prefix + name for prefix in prefixes[2:5] for name in safe_names)
+                or any(item == prefix + name for prefix in prefixes[6:] for name in GATES)
+                or item in {
+                    "INDEPENDENT_REVIEW_INTAKE_CHANGED:classification",
+                    "INDEPENDENT_REVIEW_INTAKE_CHANGED:submissionProgress",
+                    "INDEPENDENT_REVIEW_INTAKE_CHANGED:missing",
+                    "INDEPENDENT_REVIEW_INTAKE_CHANGED:conflicts",
+                }
+            )
+            rows.append("  " + (item if safe else "UNVERIFIED_DELTA_ITEM"))
+    rows.extend(("", "Verdict: FINANCIAL_HARD_HOLD. Separate financial/chain/recovery approvals required."))
+    return "\n".join(rows) + "\n"
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--gate-index", help="Optional canonical financial-release-checklist.json; NEVER a permit")
@@ -412,6 +510,7 @@ def main(argv: list[str] | None = None) -> int:
 
     parser.add_argument("--previous", help="Optional previous cockpit JSON for observed delta")
     parser.add_argument("--output", help="Optional path to save local JSON evidence; no default write")
+    parser.add_argument("--brief", action="store_true", help="Print sanitized operator summary of existing read-only observations; still exits HOLD (3)")
     args = parser.parse_args(argv)
     if args.print_reviewer_intake_template:
         print(json.dumps(reviewer_intake_template(), indent=2, sort_keys=True))
@@ -431,7 +530,7 @@ def main(argv: list[str] | None = None) -> int:
             write_new_receipt(args.output, raw)
         except OSError as exc:
             parser.error(f"private output receipt unavailable: {exc.strerror or type(exc).__name__}")
-    print(raw, end="")
+    print(render_brief(result) if args.brief else raw, end="")
     return 3  # Read-only observation complete, financial release deliberately HELD.
 
 
