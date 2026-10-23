@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `codex/satchel-custody-runtime-artifact` at `ac2d15d1ce534d2ff915eb11ece400182390759c`
+Implementation baseline: `codex/financial-evidence-refresh` at `65494e1175d84dde430c0165fc51eb983f246f07`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
