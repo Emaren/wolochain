@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "22e963a5a8b4f6c58b3e6e277c5288866b2cde5e1f32f908309df99a75c03948",
+      "sha256": "f44e04657454375c6f5d0117a36357176fc42e1db203cd7d56502394e127038d",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -971,7 +971,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "codex/recovery-aggregate-budget",
-    "commit": "bc19b8805bb0590f928ee5629599690ddac804e0"
+    "commit": "4dfa5773adece27fb0b7a29f7e5d2fd38ea8e979"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

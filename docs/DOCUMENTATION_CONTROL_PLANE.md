@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `codex/recovery-aggregate-budget` at `bc19b8805bb0590f928ee5629599690ddac804e0`
+Implementation baseline: `codex/recovery-aggregate-budget` at `4dfa5773adece27fb0b7a29f7e5d2fd38ea8e979`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
