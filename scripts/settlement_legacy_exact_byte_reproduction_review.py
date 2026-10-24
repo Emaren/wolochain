@@ -15,18 +15,34 @@ from pathlib import Path
 
 OLD_SOURCE = "78c25985420ee41a6678c42fab8ea8d6c3b1b519"
 OLD_SETTLEMENT_SHA256 = "040126a2884946caf1651a50b7d8115c5a6fb2d5aa94fcbbe150694602d451a5"
-EXPECTED_GO = "go1.24.0"
+# Owner read production's embedded build metadata directly on 2026-10-24.
+# The historical source CI used Go 1.24.0 but DID NOT produce the on-host binary.
+EXPECTED_GO = "go1.26.0"
+EXPECTED_BUILD_SETTINGS = {
+    "-trimpath": "true",
+    "-buildmode": "exe",
+    "-compiler": "gc",
+    "CGO_ENABLED": "1",
+    "GOOS": "linux",
+    "GOARCH": "amd64",
+    "GOAMD64": "v1",
+}
 HEX40 = re.compile(r"[0-9a-f]{40}\Z")
 HEX64 = re.compile(r"[0-9a-f]{64}\Z")
 
 
 def assess(*, source, tree_clean, toolchain, vcs_revision, vcs_modified,
-           built_sha256, expected_sha256=OLD_SETTLEMENT_SHA256):
+           built_sha256, build_settings=None,
+           expected_sha256=OLD_SETTLEMENT_SHA256):
     """Deterministic verdict; only exact-byte match is recognized, never GO."""
     checks = {
         "source_commit_exact": type(source) is str and source == OLD_SOURCE,
         "git_worktree_clean": tree_clean is True,
         "toolchain_exact": toolchain == EXPECTED_GO,
+        "embedded_build_settings_match_live":
+            type(build_settings) is dict and all(
+                build_settings.get(k) == v
+                for k, v in EXPECTED_BUILD_SETTINGS.items()),
         "go_embedded_source_exact": vcs_revision == OLD_SOURCE,
         "go_embedded_modified_false": vcs_modified == "false",
         "rebuilt_sha256_well_formed": type(built_sha256) is str
@@ -92,6 +108,7 @@ def review(binary, source_dir):
                      toolchain=toolchain,
                      vcs_revision=fields.get("vcs.revision"),
                      vcs_modified=fields.get("vcs.modified"),
+                     build_settings=fields,
                      built_sha256=hasher.hexdigest())
     return verdict
 
