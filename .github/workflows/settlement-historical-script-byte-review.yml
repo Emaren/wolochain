@@ -65,8 +65,13 @@ jobs:
         run: |
           echo 'STEP 3: Isolated original-source build script; never touch a production host'
           go version
-          bash legacy/scripts/build-linux-amd64.sh "$RUNNER_TEMP/settlement-old-script-candidate"
+          cd legacy
+          cd_rc=$?
+          echo "WORKDIR_RC=$cd_rc"
+          if [ "$cd_rc" -ne 0 ]; then echo 'RC=2 BLOCKED cannot enter original Go module'; exit 2; fi
+          bash scripts/build-linux-amd64.sh "$RUNNER_TEMP/settlement-old-script-candidate"
           build_rc=$?
+          cd ..
           echo "HISTORICAL_SCRIPT_BUILD_RC=$build_rc"
           if [ "$build_rc" -ne 0 ]; then
             echo 'ERROR=Original script build failed in isolated runner'
