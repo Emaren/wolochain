@@ -1,4 +1,4 @@
-name: Legacy settlement exact-byte reproduction (NONAUTHORIZING)
+name: Legacy settlement Go 1.26 trimpath byte reproduction (NONAUTHORIZING)
 on:
   push:
     branches:
@@ -12,11 +12,13 @@ permissions:
 
 jobs:
   historic-byte-reproduction:
-    name: Oct 1 Go 1.24 legacy byte identity ONLY
+    name: Observed production Go 1.26 legacy byte identity ONLY
     runs-on: ubuntu-24.04
     timeout-minutes: 24
     env:
       GOFLAGS: -tags=go1.27
+      CGO_ENABLED: '1'
+      GOAMD64: v1
     steps:
       - name: Checkout exact review-source verifier
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
@@ -30,15 +32,15 @@ jobs:
           ref: 78c25985420ee41a6678c42fab8ea8d6c3b1b519
           path: legacy
           persist-credentials: false
-      - name: Recreate Oct 1 Go toolchain from historical CI log
+      - name: Match owner-observed production embedded Go 1.26.0
         uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff
         with:
-          go-version: 1.24.0
+          go-version: 1.26.0
           cache: false
       - name: Run strict negative-only reviewer tests
         run: |
           python3 -m unittest discover -v -s review/tests -p 'test_settlement_legacy_exact_byte_reproduction_review.py'
-      - name: Rebuild unchanged old source and compare to actual owner-observed hash
+      - name: Rebuild old source with exact observed Go flags; compare bytes (NO-GO if mismatch)
         shell: bash {0}
         run: |
           echo 'STEP 1: Verify exact source checkout'
@@ -50,10 +52,10 @@ jobs:
             echo 'RC=2 BLOCKED unexpected old source'; exit 2
           fi
           echo 'RC=0 PASS source checkout'
-          echo 'STEP 2: Rebuild with exactly historical go build command'
+          echo 'STEP 2: Rebuild with observed production Go1.26 CGO1 trimpath; historic CI was Go1.24'
           cd legacy
           go version
-          go build ./cmd/wolochaind
+          go build -trimpath ./cmd/wolochaind
           build_rc=$?
           echo "GO_BUILD_RC=$build_rc"
           cd ..
