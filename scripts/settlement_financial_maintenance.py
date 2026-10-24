@@ -688,45 +688,105 @@ def backup(receipt_path, output, *, runner=None):
     return manifest
 
 
+def _bounded_restore_mount():
+    """Verify a preprovisioned finite loop/ext4 device; NEVER create or mount it.
+
+    Root-only wrapper and full-allocation backing file stay on the OS root.
+    Disposable PostgreSQL data lives on the bounded ext4 child mount only.
+    A missing/changed loop association, mount or image refuses all admission.
+    """
+    root_dev = Path("/").stat().st_dev
+    require(os.path.ismount(VOLUME) and VOLUME.stat().st_dev != root_dev,
+            "RESTORE_VOLUME_MOUNT_UNVERIFIED")
+    require(RESTORE_SCRATCH == Path("/var/lib/wolo-financial-restore") and
+            not RESTORE_SCRATCH.is_symlink() and not os.path.ismount(RESTORE_SCRATCH),
+            "RESTORE_SCRATCH_PATH_UNSAFE")
+    wrapper = RESTORE_SCRATCH.lstat()
+    require(stat.S_ISDIR(wrapper.st_mode) and wrapper.st_uid == wrapper.st_gid == 0 and
+            stat.S_IMODE(wrapper.st_mode) == 0o700 and wrapper.st_dev == root_dev,
+            "RESTORE_SCRATCH_ROOT_NOT_QUALIFIED")
+    mount = RESTORE_SCRATCH / "bounded"
+    backing = RESTORE_SCRATCH / "bounded.ext4"
+    require({item.name for item in RESTORE_SCRATCH.iterdir()} ==
+            {"bounded", "bounded.ext4"}, "RESTORE_WRAPPER_EXTRA_MEMBERS")
+    f = backing.lstat()
+    require(stat.S_ISREG(f.st_mode) and not backing.is_symlink() and
+            f.st_uid == f.st_gid == 0 and stat.S_IMODE(f.st_mode) == 0o600 and
+            f.st_dev == root_dev and f.st_nlink == 1 and
+            (8 << 30) <= f.st_size <= (64 << 30) and
+            f.st_blocks * 512 >= f.st_size,
+            "RESTORE_BACKING_NOT_FULLY_ALLOCATED")
+    m = mount.lstat()
+    require(stat.S_ISDIR(m.st_mode) and not mount.is_symlink() and
+            m.st_uid == m.st_gid == 0 and stat.S_IMODE(m.st_mode) == 0o700 and
+            m.st_dev != root_dev and m.st_dev != VOLUME.stat().st_dev and
+            os.path.ismount(mount), "RESTORE_BOUNDED_MOUNT_UNVERIFIED")
+    # Compare the kernel's exact mount identity and loop association, not
+    # filesystem labels or human-supplied values. No shell or mount mutation.
+    matches = []
+    with open("/proc/self/mountinfo", encoding="utf-8") as source:
+        for n, line in enumerate(source):
+            require(n < 8192, "RESTORE_MOUNT_TABLE_TOO_LARGE")
+            halves = line.rstrip("\n").split(" - ", 1)
+            require(len(halves) == 2, "RESTORE_MOUNT_TABLE_UNVERIFIED")
+            left, right = halves[0].split(), halves[1].split()
+            require(len(left) >= 6 and len(right) >= 2,
+                    "RESTORE_MOUNT_TABLE_UNVERIFIED")
+            if left[4] == str(mount):
+                matches.append((left, right))
+    require(len(matches) == 1, "RESTORE_MOUNT_IDENTITY_UNVERIFIED")
+    left, right = matches[0]
+    major_minor = "%d:%d" % (os.major(m.st_dev), os.minor(m.st_dev))
+    require(left[2] == major_minor and left[3] == "/" and
+            right[0] == "ext4" and re.fullmatch(r"/dev/loop[0-9]+", right[1]) and
+            {"rw", "nodev", "nosuid", "noexec"}.issubset(set(left[5].split(","))),
+            "RESTORE_MOUNT_POLICY_UNVERIFIED")
+    device = os.stat(right[1])
+    require(stat.S_ISBLK(device.st_mode) and device.st_rdev == m.st_dev,
+            "RESTORE_LOOP_DEVICE_MISMATCH")
+    backing_file = Path("/sys/dev/block") / major_minor / "loop/backing_file"
+    observed = backing_file.read_text(encoding="utf-8").strip()
+    require(observed == str(backing) and os.path.realpath(observed) == str(backing),
+            "RESTORE_LOOP_BACKING_MISMATCH")
+    fs = os.statvfs(mount)
+    require(0 < fs.f_blocks * fs.f_frsize <= f.st_size and
+            fs.f_bavail * fs.f_frsize >= 0,
+            "RESTORE_FINITE_CAPACITY_UNVERIFIED")
+    return mount, f, fs
+
+
 def _restore_scratch_admission(budget):
-    """Permit-bound, OS-root-only scratch; refuse stale interrupted restores."""
+    """Admit only finite allocated loop storage with per-permit free capacity."""
     require(type(budget) is int and budget > 0 and budget <= 100 << 30,
             "RESTORE_CAPACITY_BUDGET_INVALID")
-    require(os.path.ismount(VOLUME) and VOLUME.stat().st_dev != Path("/").stat().st_dev,
-            "RESTORE_VOLUME_MOUNT_UNVERIFIED")
-    require(RESTORE_SCRATCH.is_absolute() and
-            str(RESTORE_SCRATCH).startswith("/var/lib/") and
-            RESTORE_SCRATCH != VOLUME and not RESTORE_SCRATCH.is_symlink(),
-            "RESTORE_SCRATCH_PATH_UNSAFE")
-    meta = RESTORE_SCRATCH.lstat()
-    require(stat.S_ISDIR(meta.st_mode) and meta.st_uid == meta.st_gid == 0 and
-            stat.S_IMODE(meta.st_mode) == 0o700 and meta.st_dev == Path("/").stat().st_dev and
-            meta.st_dev != VOLUME.stat().st_dev and not os.path.ismount(RESTORE_SCRATCH),
-            "RESTORE_SCRATCH_ROOT_NOT_QUALIFIED")
-    require(all(not item.name.startswith("restore-") for item in RESTORE_SCRATCH.iterdir()),
-            "INTERRUPTED_RESTORE_SCRATCH_REQUIRES_SEPARATE_REVIEW")
-    available = os.statvfs(RESTORE_SCRATCH)
-    free = available.f_bavail * available.f_frsize
-    require(free >= budget * RESTORE_DATA_FACTOR + RESTORE_OS_RESERVE,
+    mount, image, fs = _bounded_restore_mount()
+    free = fs.f_bavail * fs.f_frsize
+    require(free >= budget * RESTORE_DATA_FACTOR and
+            fs.f_blocks * fs.f_frsize <= image.st_size,
+            "RESTORE_BOUNDED_CAPACITY_INSUFFICIENT")
+    root_fs = os.statvfs(RESTORE_SCRATCH)
+    require(root_fs.f_bavail * root_fs.f_frsize >= RESTORE_OS_RESERVE,
             "RESTORE_OS_ROOT_CAPACITY_INSUFFICIENT")
+    require(not any(p.name.startswith("restore-") for p in mount.iterdir()),
+            "INTERRUPTED_RESTORE_SCRATCH_REQUIRES_SEPARATE_REVIEW")
     require(shutil.rmtree.avoids_symlink_attacks,
             "SYMLINK_SAFE_RESTORE_CLEANUP_UNAVAILABLE")
+    return mount
 
 
 def make_restore_scratch(budget):
-    """Create only a new private disposable PGDATA tree after permit/fence checks."""
-    _restore_scratch_admission(budget)
-    fd = os.open(RESTORE_SCRATCH, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    """Create only a new private PGDATA child on verified bounded ext4."""
+    mount = _restore_scratch_admission(budget)
+    fd = os.open(mount, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
     try:
         name = "restore-" + secrets.token_hex(16)
         os.mkdir(name, 0o700, dir_fd=fd)
-        # Parent remains root:root 0700, inaccessible to UID 999 on the host.
         os.chown(name, 999, 999, dir_fd=fd, follow_symlinks=False)
-        child = RESTORE_SCRATCH / name
+        child = mount / name
         meta = child.lstat()
         require(stat.S_ISDIR(meta.st_mode) and meta.st_uid == meta.st_gid == 999 and
                 stat.S_IMODE(meta.st_mode) == 0o700 and
-                meta.st_dev == Path("/").stat().st_dev,
+                meta.st_dev == mount.stat().st_dev,
                 "RESTORE_CHILD_IDENTITY_INVALID")
         return child
     finally:
@@ -734,11 +794,13 @@ def make_restore_scratch(budget):
 
 
 def cleanup_restore_scratch(path):
-    """Only delete our private generated child, never the parent or any other path."""
+    """Only remove a verified owned child while the same bounded mount lives."""
+    mount, _, _ = _bounded_restore_mount()
     path = Path(path)
-    require(path.parent == RESTORE_SCRATCH and
+    require(path.parent == mount and
             re.fullmatch(r"restore-[0-9a-f]{32}", path.name) is not None and
             path.is_dir() and not path.is_symlink() and
+            path.lstat().st_dev == mount.stat().st_dev and
             shutil.rmtree.avoids_symlink_attacks,
             "RESTORE_CLEANUP_IDENTITY_UNVERIFIED")
     shutil.rmtree(path)
