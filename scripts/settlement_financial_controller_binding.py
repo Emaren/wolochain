@@ -175,10 +175,11 @@ def authenticate_and_reserve(args, *, mode, source_tool_sha256, scope_sha256,
     if mode=="offline-restore":
         # Evidence must be exactly the first-phase produced original sealed
         # archives, not a checksum-shaped file or partial capture.
-        from settlement_financial_maintenance import _validate_permit_contract
-        permit_from_fence,_=private_json(args.fence_receipt)
-        require(permit_from_fence.get("schema") is not None,
-                "CAPTURE_FENCE_RECEIPT_UNVERIFIED")  # full fence verified above
+        from settlement_financial_maintenance import FENCE_SCHEMA
+        fence_receipt,_=private_json(args.fence_receipt)
+        require(fence_receipt.get("schema")==FENCE_SCHEMA and
+                fence_receipt.get("resume_authorized") is False,
+                "CAPTURE_FENCE_RECEIPT_UNVERIFIED")
     if mode=="resume":
         raise human.Refusal("INDEPENDENT_RESUME_EXECUTOR_NOT_APPROVED")
 
