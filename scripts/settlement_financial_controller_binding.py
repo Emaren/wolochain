@@ -38,7 +38,7 @@ PROCEDURE_KEYS = {
 }
 REQUIRED_PINS = {
     "registry_sha256", "host_identity_sha256", "source_commit",
-    "source_drift_disposition_sha256",
+    "source_drift_disposition_sha256", "revoked_key_ids",
 }
 
 
