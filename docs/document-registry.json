@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "f44e04657454375c6f5d0117a36357176fc42e1db203cd7d56502394e127038d",
+      "sha256": "c0ce6e2edd54a7fd614f0ea844599c8e41b477e6a97d4abc251824a35de70b5b",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -966,12 +966,36 @@
       ],
       "title": "WoloChain Mainnet Nginx Notes",
       "type": "reference"
+    },
+    {
+      "audience": [
+        "operators",
+        "developers",
+        "ai-agents"
+      ],
+      "authority": "non-authorizing-financial-human-signature-review",
+      "id": "aoe2war.wolochain.financial-five-human-maintenance-review-20261024",
+      "owner": "wolochain-ops",
+      "path": "reviews/financial-maintenance/20261024-human-authority-and-writer-closeout.md",
+      "review_interval_days": 14,
+      "reviewed_at": "2026-10-24",
+      "sensitivity": "internal",
+      "sha256": "dce539fce5972e89c9f67e272e8d43f26af641aad08405fd9571210b5fa1b7e2",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war",
+        "aoe2dewarwagers"
+      ],
+      "title": "Financial-maintenance authority and writer review \u2014 2026-10-24",
+      "type": "runbook"
     }
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "codex/recovery-aggregate-budget",
-    "commit": "4dfa5773adece27fb0b7a29f7e5d2fd38ea8e979"
+    "branch": "review/20261024-five-human-maintenance-authority",
+    "commit": "b6aa13577d7ff09a29695dca727a77ccc75c4cb9"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
