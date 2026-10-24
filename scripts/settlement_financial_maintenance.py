@@ -852,18 +852,22 @@ def restore_isolated(receipt_path, output, *, runner=None):
                    "production_state_restored": False, "off_host_copy_verified": False,
                    "independent_witness_attested": False, "owner_and_privilege_recovery_proven": False,
                    "financial_release_authorized": False}
-        write_new(output / "restore.json", canonical(receipt))
-        (output / "INCOMPLETE").unlink()
-        return receipt
     finally:
-        # The only removed object is this exact disposable container. No host
-        # source, dump, receipt, production data, or financial state is deleted.
+        # Cleanup must complete BEFORE publishing verified restore authority.
+        # If Docker removal or scratch cleanup fails, INCOMPLETE remains and
+        # no restore.json exists for a later rehearsal to admit.
         if owned:
             # Never delete a mounted PGDATA directory while its container lives.
             cleanup_runner(DOCKER + ["rm", "--force", container], timeout=15)
             cleanup_restore_scratch(scratch)
         # If container identity verification failed, preserve scratch and HOLD.
         # Its path is root-private and the next operation rejects orphan state.
+
+    # No successful receipt may outlive a failed cleanup. A failed write/unlink
+    # keeps INCOMPLETE until a separately reviewed recovery can continue.
+    write_new(output / "restore.json", canonical(receipt))
+    (output / "INCOMPLETE").unlink()
+    return receipt
 
 
 def verify_current_backup(restore_receipt_path, expected_scope_sha256,
