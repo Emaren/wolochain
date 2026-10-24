@@ -13,7 +13,7 @@ review_interval_days: 14
 sensitivity: "internal"
 ---
 
-# Production P1 source integrity, writer evidence, five-person authority and bounded recovery proposal
+# Production P1 source integrity, writer evidence, five-person authority and bounded recovery proposal — 2026-10-24
 
 **NONAUTHORIZING.** This document is a draft evidence contract, NOT a maintenance permit, attestation, five-human signature, or approved financial-source change. Original Wolo #100 source and 8092/8093/consensus are untouched. Never merge this review branch into app production. Never ask an operator to format, mount, restart, fence, replay, sign, transfer or restore in order to test this document.
 
