@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "71a3a6e45b83654fa9d6a5b09f13ef14ff3243e35fe681645f4fc045688ba91e",
+      "sha256": "796d50a56c9aa03e704253fc897fd18f534f5fb96ec0e7ecc91bba5b99cdaa7a",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1066,8 +1066,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "review/20261024-writer-evidence-real-files-held",
-    "commit": "76f4839a4dcd8b0cd804ca5aeb587855eea6ce04"
+    "branch": "review/20261024-legacy-exact-byte-rebuild-held",
+    "commit": "5e6905e3f4cf8d0c47b4dfccd31700a831c36648"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
