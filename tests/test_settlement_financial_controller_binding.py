@@ -232,6 +232,11 @@ class SignedControllerAdmissionTests(unittest.TestCase):
             procedure["output_path"]=str(target)
             procedure["legacy_permit_core_sha256"]=None
             files["procedure"]=human.canonical(procedure)
+            # Phase mismatch is independently refused; this fixture selects
+            # offline verification so it specifically reaches archive identity.
+            signed_packet=human.parse_json(files["packet"])
+            signed_packet["request"]["phase"]="offline_verify"
+            files["packet"]=human.canonical(signed_packet)
             with (patch.object(binding,"exact_private",
                                side_effect=lambda path,root:files[Path(path).name]),
                   patch.object(controller,"BACKUPS",base)):
