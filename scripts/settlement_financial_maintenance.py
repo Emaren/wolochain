@@ -748,7 +748,9 @@ def restore_isolated(receipt_path, output, *, runner=None):
     """Real pg_restore in an existing pinned, network-none disposable container.
 
     No host PG socket, environment, keyring or production volume is mounted.
-    Archives are piped through stdin. One exact private OS-root PGDATA bind mount\n    replaces memory-backed PGDATA; there are no production/volume mounts.\n    No image pull occurs. Root scratch must be preprovisioned and budgeted.
+    Archives are piped through stdin. One exact private OS-root PGDATA bind mount
+    replaces memory-backed PGDATA; there are no production/volume mounts.
+    No image pull occurs. Root scratch must be preprovisioned and budgeted.
     """
     runner = runner or run
     cleanup_runner = runner
@@ -799,7 +801,11 @@ def restore_isolated(receipt_path, output, *, runner=None):
             and detail["HostConfig"]["NetworkMode"] == "none"
             and detail["HostConfig"]["ReadonlyRootfs"] is True
             and detail["HostConfig"]["Privileged"] is False
-            and type(detail.get("Mounts")) is list and len(detail["Mounts"]) == 1\n            and detail["Mounts"][0].get("Type") == "bind"\n            and detail["Mounts"][0].get("Source") == str(scratch)\n            and detail["Mounts"][0].get("Destination") == "/var/lib/postgresql/data"\n            and detail["Mounts"][0].get("RW") is True,
+            and type(detail.get("Mounts")) is list and len(detail["Mounts"]) == 1
+            and detail["Mounts"][0].get("Type") == "bind"
+            and detail["Mounts"][0].get("Source") == str(scratch)
+            and detail["Mounts"][0].get("Destination") == "/var/lib/postgresql/data"
+            and detail["Mounts"][0].get("RW") is True,
             "DISPOSABLE_NETWORK_ISOLATION_UNVERIFIED")
         owned = True
         deadline = time.monotonic() + 30
@@ -853,7 +859,12 @@ def restore_isolated(receipt_path, output, *, runner=None):
         # The only removed object is this exact disposable container. No host
         # source, dump, receipt, production data, or financial state is deleted.
         if owned:
-            # Never delete a mounted PGDATA directory while its container lives.\n            cleanup_runner(DOCKER + ["rm", "--force", container], timeout=15)\n            cleanup_restore_scratch(scratch)\n        # If container identity verification failed, preserve scratch and HOLD.\n        # Its path is root-private and the next operation rejects orphan state.\n
+            # Never delete a mounted PGDATA directory while its container lives.
+            cleanup_runner(DOCKER + ["rm", "--force", container], timeout=15)
+            cleanup_restore_scratch(scratch)
+        # If container identity verification failed, preserve scratch and HOLD.
+        # Its path is root-private and the next operation rejects orphan state.
+
 
 def verify_current_backup(restore_receipt_path, expected_scope_sha256,
                           expected_fence_receipt_sha256):
