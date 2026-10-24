@@ -105,6 +105,16 @@ class DisposableSystemdWatchdog(unittest.TestCase):
                     except maintenance.MaintenanceError:
                         self.assertLess(time.monotonic(), deadline, "queued/unknown systemd jobs prevent safe fixture")
                         time.sleep(.1)
+                original_run = maintenance.run
+                def traced_fixture_command(argv, **kwargs):
+                    try:
+                        return original_run(argv, **kwargs)
+                    except maintenance.MaintenanceError:
+                        # Fixture-only systemd argv contains no credentials;
+                        # production runner continues to suppress argv/stderr.
+                        print("DISPOSABLE_FAILED_SYSTEMD_COMMAND=" + json.dumps(argv))
+                        raise
+                maintenance.run = traced_fixture_command
                 self.assertEqual(maintenance.main(["--mode", "fence", "--permit", str(permit_path),
                     "--fence-receipt", str(receipt_path)]), 0)
                 before = maintenance.digest(maintenance.private_read(maintenance.HOLD))

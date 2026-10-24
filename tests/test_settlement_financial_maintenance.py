@@ -110,7 +110,7 @@ class FakeSystemd:
         if argv[0] == "busctl":
             if "ListJobs" in argv:
                 return json.dumps({"type": "a(usssoo)", "data": [self.jobs]})
-            if "GetUnit" in argv:
+            if "LoadUnit" in argv:
                 return json.dumps({"type": "o", "data": ["/org/freedesktop/systemd1/unit/test"]})
             condition = (["ConditionPathExists", False, True, str(MOD.HOLD), 0]
                          if self.loaded and not self.foreign_condition else None)

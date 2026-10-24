@@ -279,9 +279,11 @@ def show(unit, runner):
 
 
 def effective_condition(unit, runner):
+    # Inactive definitions may have been garbage-collected after `show`.
+    # LoadUnit loads configuration only; it never starts an activation job.
     raw = runner(["busctl", "--system", "--json=short", "call", "org.freedesktop.systemd1",
                   "/org/freedesktop/systemd1", "org.freedesktop.systemd1.Manager",
-                  "GetUnit", "s", unit])
+                  "LoadUnit", "s", unit])
     obj = json.loads(raw)
     require(obj.get("type") == "o" and type(obj.get("data")) is list and
             len(obj["data"]) == 1 and re.fullmatch(r"/org/freedesktop/systemd1/unit/[A-Za-z0-9_]+",
