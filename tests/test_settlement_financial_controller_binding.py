@@ -232,9 +232,9 @@ class SignedControllerAdmissionTests(unittest.TestCase):
             procedure["output_path"]=str(target)
             procedure["legacy_permit_core_sha256"]=None
             files["procedure"]=human.canonical(procedure)
-            with patch.object(binding,"exact_private",
-                              side_effect=lambda path,root:files[Path(path).name]), \\
-                 patch.object(controller,"BACKUPS",base):
+            with (patch.object(binding,"exact_private",
+                               side_effect=lambda path,root:files[Path(path).name]),
+                  patch.object(controller,"BACKUPS",base)):
                 with self.assertRaisesRegex(
                     human.Refusal,"SIGNED_CAPTURE_NOT_THE_ARCHIVE_BEING_RESTORED"):
                     binding.authenticate_and_reserve(
