@@ -98,7 +98,7 @@ class DisposableSystemdWatchdog(unittest.TestCase):
                 for unit in maintenance.APPS:
                     self.command("systemctl", "start", unit)
                 deadline = time.monotonic() + 10
-                while self.command("systemctl", "list-jobs", "--no-pager", "--output=json") != "[]":
+                while json.loads(self.command("systemctl", "list-jobs", "--no-pager", "--output=json")) != []:
                     self.assertLess(time.monotonic(), deadline, "unrelated CI jobs prevent safe fixture")
                     time.sleep(.1)
                 self.assertEqual(maintenance.main(["--mode", "fence", "--permit", str(permit_path),

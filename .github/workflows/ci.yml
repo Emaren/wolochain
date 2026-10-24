@@ -11,6 +11,32 @@ permissions:
   contents: read
 
 jobs:
+  financial-maintenance:
+    name: Disposable settlement maintenance mechanics
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Guarded current settlement code-only cutover and fault rollback (offline)
+        run: |
+          python3 -m unittest discover -s tests -p 'test_settlement_bdbce253_code_cutover.py' -v
+          python3 -m unittest discover -s tests -p 'test_settlement_financial_maintenance.py' -v
+
+      - name: Disposable systemd watchdog and producer activation mechanics (not mainnet)
+        run: sudo env CI=true WOLO_DISPOSABLE_SYSTEMD_TEST=1 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_settlement_first_rehearsal_systemd.py' -v
+
+      - name: Actual isolated PostgreSQL dump and restore (synthetic HD and DE)
+        env:
+          WOLO_RESTORE_TEST_IMAGE: postgres@sha256:9e2cf6287f25c3151f4c9421ccce2b17f3e60061c111a29165e0d2cdd9ff0a97
+          RUN_WOLO_ISOLATED_RESTORE_TESTS: '1'
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: |
+          docker --host=unix:///var/run/docker.sock pull "$WOLO_RESTORE_TEST_IMAGE"
+          python3 tests/test_settlement_financial_maintenance.py ActualIsolatedRestoreTests -v
+
+
   reviewer-postgres:
     name: Independent reviewer PostgreSQL observation
     runs-on: ubuntu-latest
@@ -137,23 +163,6 @@ jobs:
 
       - name: Two-filesystem predeploy capacity gate (nonmutating)
         run: python3 -m unittest discover -s tests -p 'test_settlement_predeploy_capacity_readonly.py' -v
-
-      - name: Guarded current settlement code-only cutover and fault rollback (offline)
-        run: |
-          python3 -m unittest discover -s tests -p 'test_settlement_bdbce253_code_cutover.py' -v
-          python3 -m unittest discover -s tests -p 'test_settlement_financial_maintenance.py' -v
-
-      - name: Disposable systemd watchdog and producer activation mechanics (not mainnet)
-        run: sudo env CI=true WOLO_DISPOSABLE_SYSTEMD_TEST=1 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_settlement_first_rehearsal_systemd.py' -v
-
-      - name: Actual isolated PostgreSQL dump and restore (synthetic HD and DE)
-        env:
-          WOLO_RESTORE_TEST_IMAGE: postgres@sha256:9e2cf6287f25c3151f4c9421ccce2b17f3e60061c111a29165e0d2cdd9ff0a97
-          RUN_WOLO_ISOLATED_RESTORE_TESTS: '1'
-          PYTHONDONTWRITEBYTECODE: '1'
-        run: |
-          docker --host=unix:///var/run/docker.sock pull "$WOLO_RESTORE_TEST_IMAGE"
-          python3 tests/test_settlement_financial_maintenance.py ActualIsolatedRestoreTests -v
 
       - name: Website HOLD evidence contract (non-authorizing)
         run: |
