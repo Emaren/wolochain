@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `review/20261024-legacy-exact-byte-rebuild-held` at `c34b28ef27910420af30fffed9791cbafb239ff9`
+Implementation baseline: `review/20261024-legacy-exact-byte-rebuild-held` at `2250e89868ceec9479f9066c1c0ec0ff9e85d193`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
