@@ -43,6 +43,14 @@ def assess(*, source, tree_clean, toolchain, vcs_revision, vcs_modified,
             type(build_settings) is dict and all(
                 build_settings.get(k) == v
                 for k, v in EXPECTED_BUILD_SETTINGS.items()),
+        # Production Go BuildInfo exposes NONE of these optional overrides.
+        # The previous Go1.26 test inherited -tags=go1.27 from old CI.
+        # Even matching required fields does not make it identical input.
+        "no_recorded_custom_build_flags":
+            type(build_settings) is dict and all(
+                k not in build_settings
+                for k in ("-tags", "-ldflags", "-gcflags",
+                          "-asmflags", "GOEXPERIMENT")),
         "go_embedded_source_exact": vcs_revision == OLD_SOURCE,
         "go_embedded_modified_false": vcs_modified == "false",
         "rebuilt_sha256_well_formed": type(built_sha256) is str
