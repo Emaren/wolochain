@@ -1,0 +1,26 @@
+name: Five-human maintenance authority review (NONAUTHORIZING)
+on:
+  push:
+    branches:
+      - review/20261024-five-human-maintenance-authority
+  pull_request:
+    branches:
+      - codex/recovery-aggregate-budget
+permissions:
+  contents: read
+jobs:
+  cryptographic-contracts:
+    name: Ed25519 real signatures and negative tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Read exact review branch
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Verify engine installed
+        run: |
+          python3 --version
+          openssl version
+      - name: Verify no-production authority contracts
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: python3 -m unittest discover -s tests -p 'test_settlement_human_authority_verify.py' -v
