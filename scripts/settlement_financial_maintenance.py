@@ -16,6 +16,8 @@ import os
 from pathlib import Path
 import re
 import resource
+import secrets
+import shutil
 import selectors
 import signal
 import stat
@@ -39,6 +41,11 @@ SYSTEMD = Path("/etc/systemd/system")
 VOLUME = Path("/mnt/HC_Volume_105319120")
 BACKUPS = VOLUME / "wolochain-mainnet/financial-maintenance-backups"
 SNAPSHOT_ROOT = VOLUME / "wolochain-mainnet/settlement-backups"
+# Separately provisioned root-owned 0700 area on the OS disk, never Docker's
+# state-volume data-root. This path cannot include any production secrets.
+RESTORE_SCRATCH = Path("/var/lib/wolo-financial-restore")
+RESTORE_OS_RESERVE = 8 << 30
+RESTORE_DATA_FACTOR = 2
 LOCK = Path("/run/lock/aoe2war-wolo-two-settlement-code-only.lock")
 DOCKER = ["docker", "--host=unix:///var/run/docker.sock"]
 SCHEMA = "wolo.financial-maintenance-permit.v1"
@@ -681,11 +688,67 @@ def backup(receipt_path, output, *, runner=None):
     return manifest
 
 
+def _restore_scratch_admission(budget):
+    """Permit-bound, OS-root-only scratch; refuse stale interrupted restores."""
+    require(type(budget) is int and budget > 0 and budget <= 100 << 30,
+            "RESTORE_CAPACITY_BUDGET_INVALID")
+    require(os.path.ismount(VOLUME) and VOLUME.stat().st_dev != Path("/").stat().st_dev,
+            "RESTORE_VOLUME_MOUNT_UNVERIFIED")
+    require(RESTORE_SCRATCH.is_absolute() and
+            str(RESTORE_SCRATCH).startswith("/var/lib/") and
+            RESTORE_SCRATCH != VOLUME and not RESTORE_SCRATCH.is_symlink(),
+            "RESTORE_SCRATCH_PATH_UNSAFE")
+    meta = RESTORE_SCRATCH.lstat()
+    require(stat.S_ISDIR(meta.st_mode) and meta.st_uid == meta.st_gid == 0 and
+            stat.S_IMODE(meta.st_mode) == 0o700 and meta.st_dev == Path("/").stat().st_dev and
+            meta.st_dev != VOLUME.stat().st_dev and not os.path.ismount(RESTORE_SCRATCH),
+            "RESTORE_SCRATCH_ROOT_NOT_QUALIFIED")
+    require(all(not item.name.startswith("restore-") for item in RESTORE_SCRATCH.iterdir()),
+            "INTERRUPTED_RESTORE_SCRATCH_REQUIRES_SEPARATE_REVIEW")
+    available = os.statvfs(RESTORE_SCRATCH)
+    free = available.f_bavail * available.f_frsize
+    require(free >= budget * RESTORE_DATA_FACTOR + RESTORE_OS_RESERVE,
+            "RESTORE_OS_ROOT_CAPACITY_INSUFFICIENT")
+    require(shutil.rmtree.avoids_symlink_attacks,
+            "SYMLINK_SAFE_RESTORE_CLEANUP_UNAVAILABLE")
+
+
+def make_restore_scratch(budget):
+    """Create only a new private disposable PGDATA tree after permit/fence checks."""
+    _restore_scratch_admission(budget)
+    fd = os.open(RESTORE_SCRATCH, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    try:
+        name = "restore-" + secrets.token_hex(16)
+        os.mkdir(name, 0o700, dir_fd=fd)
+        # Parent remains root:root 0700, inaccessible to UID 999 on the host.
+        os.chown(name, 999, 999, dir_fd=fd, follow_symlinks=False)
+        child = RESTORE_SCRATCH / name
+        meta = child.lstat()
+        require(stat.S_ISDIR(meta.st_mode) and meta.st_uid == meta.st_gid == 999 and
+                stat.S_IMODE(meta.st_mode) == 0o700 and
+                meta.st_dev == Path("/").stat().st_dev,
+                "RESTORE_CHILD_IDENTITY_INVALID")
+        return child
+    finally:
+        os.close(fd)
+
+
+def cleanup_restore_scratch(path):
+    """Only delete our private generated child, never the parent or any other path."""
+    path = Path(path)
+    require(path.parent == RESTORE_SCRATCH and
+            re.fullmatch(r"restore-[0-9a-f]{32}", path.name) is not None and
+            path.is_dir() and not path.is_symlink() and
+            shutil.rmtree.avoids_symlink_attacks,
+            "RESTORE_CLEANUP_IDENTITY_UNVERIFIED")
+    shutil.rmtree(path)
+
+
 def restore_isolated(receipt_path, output, *, runner=None):
     """Real pg_restore in an existing pinned, network-none disposable container.
 
     No host PG socket, environment, keyring or production volume is mounted.
-    Archives are piped through stdin; there are no host mounts. No image pull occurs.
+    Archives are piped through stdin. One exact private OS-root PGDATA bind mount\n    replaces memory-backed PGDATA; there are no production/volume mounts.\n    No image pull occurs. Root scratch must be preprovisioned and budgeted.
     """
     runner = runner or run
     cleanup_runner = runner
@@ -702,22 +765,29 @@ def restore_isolated(receipt_path, output, *, runner=None):
     for lane in ("hd", "de"):
         require(file_sha(output / (lane + ".dump")) == manifest["databases"][lane]["sha256"],
                 "DATABASE_DUMP_CHECKSUM_MISMATCH")
-    import secrets
     name = "wolo-financial-restore-" + secrets.token_hex(12)
     require(runner(DOCKER + ["image", "inspect", "--format", "{{.Id}}", permit["restore_image"]]).strip(),
             "EXISTING_PINNED_IMAGE_UNAVAILABLE")
+    scratch = make_restore_scratch(permit["max_total_bytes"])
+    container = None
+    owned = False
+    mount = "type=bind,src=" + str(scratch) + ",dst=/var/lib/postgresql/data,bind-propagation=rprivate"
     cmd = DOCKER + ["run", "--detach", "--pull=never", "--name", name,
            "--network=none", "--read-only", "--cap-drop=ALL", "--security-opt=no-new-privileges",
            "--user=999:999", "--pids-limit=128", "--memory=2g", "--cpus=2",
-           "--tmpfs", "/var/lib/postgresql/data:rw,noexec,nosuid,size=" +
-           str(permit["max_total_bytes"] * 2) + ",mode=1777",
+           "--mount", mount,
            "--tmpfs", "/var/run/postgresql:rw,noexec,nosuid,size=16777216,mode=1777",
            "--env=PGDATA=/var/lib/postgresql/data/isolated",
            "--env=POSTGRES_HOST_AUTH_METHOD=trust",
            "--label=wolo.financial-maintenance=" + scope_digest(), permit["restore_image"]]
-    container = runner(cmd).strip()
-    require(re.fullmatch(r"[0-9a-f]{64}", container), "NEW_CONTAINER_ID_UNVERIFIED")
-    owned = False
+    # Never fall back to memory-backed PGDATA or Docker's Wolo-volume storage.
+    try:
+        container = runner(cmd).strip()
+        require(re.fullmatch(r"[0-9a-f]{64}", container), "NEW_CONTAINER_ID_UNVERIFIED")
+    except BaseException:
+        # No trusted container ID: leave private scratch for operator evidence.
+        # The next admission fails closed on this interrupted restore.
+        raise
     prefix = DOCKER + ["exec", "--interactive", "--user=999:999", container]
     try:
         details = json.loads(runner(DOCKER + ["inspect", container]))
@@ -729,7 +799,7 @@ def restore_isolated(receipt_path, output, *, runner=None):
             and detail["HostConfig"]["NetworkMode"] == "none"
             and detail["HostConfig"]["ReadonlyRootfs"] is True
             and detail["HostConfig"]["Privileged"] is False
-            and all(x.get("Type") == "tmpfs" for x in detail.get("Mounts", [])),
+            and type(detail.get("Mounts")) is list and len(detail["Mounts"]) == 1\n            and detail["Mounts"][0].get("Type") == "bind"\n            and detail["Mounts"][0].get("Source") == str(scratch)\n            and detail["Mounts"][0].get("Destination") == "/var/lib/postgresql/data"\n            and detail["Mounts"][0].get("RW") is True,
             "DISPOSABLE_NETWORK_ISOLATION_UNVERIFIED")
         owned = True
         deadline = time.monotonic() + 30
@@ -783,8 +853,7 @@ def restore_isolated(receipt_path, output, *, runner=None):
         # The only removed object is this exact disposable container. No host
         # source, dump, receipt, production data, or financial state is deleted.
         if owned:
-            cleanup_runner(DOCKER + ["rm", "--force", container], timeout=15)
-
+            # Never delete a mounted PGDATA directory while its container lives.\n            cleanup_runner(DOCKER + ["rm", "--force", container], timeout=15)\n            cleanup_restore_scratch(scratch)\n        # If container identity verification failed, preserve scratch and HOLD.\n        # Its path is root-private and the next operation rejects orphan state.\n
 
 def verify_current_backup(restore_receipt_path, expected_scope_sha256,
                           expected_fence_receipt_sha256):
