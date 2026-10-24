@@ -580,6 +580,25 @@ class RestoreTests(unittest.TestCase):
         self.assertEqual(len(restores), 2)
         self.assertTrue(all("--exit-on-error" in call and "--single-transaction" in call for call in restores))
 
+    def test_failed_scratch_cleanup_cannot_publish_verified_restore(self):
+        with patch.object(MOD, "cleanup_restore_scratch",
+                          side_effect=MOD.MaintenanceError("INJECTED_SCRATCH_CLEANUP_FAILURE")):
+            with self.assertRaisesRegex(MOD.MaintenanceError, "INJECTED_SCRATCH_CLEANUP_FAILURE"):
+                MOD.restore_isolated(self.fence, self.output, runner=self.runner)
+        self.assertTrue(any(call[:3] == ["docker", "rm", "--force"] for call, _ in self.calls))
+        self.assertTrue((self.output / "INCOMPLETE").is_file())
+        self.assertFalse((self.output / "restore.json").exists())
+
+    def test_failed_container_removal_cannot_publish_verified_restore(self):
+        def deny_removal(argv, **kwargs):
+            if docker_command(argv)[:3] == ["docker", "rm", "--force"]:
+                raise MOD.MaintenanceError("INJECTED_CONTAINER_REMOVAL_FAILURE")
+            return self.runner(argv, **kwargs)
+        with self.assertRaisesRegex(MOD.MaintenanceError, "INJECTED_CONTAINER_REMOVAL_FAILURE"):
+            MOD.restore_isolated(self.fence, self.output, runner=deny_removal)
+        self.assertTrue((self.output / "INCOMPLETE").is_file())
+        self.assertFalse((self.output / "restore.json").exists())
+
     def test_final_backup_import_requires_verified_restore_scope_and_unchanged_manifest(self):
         MOD.restore_isolated(self.fence, self.output, runner=self.runner)
         path = self.output / "restore.json"
