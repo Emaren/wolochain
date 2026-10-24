@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "d6cd8da31eb4b331c6b363420ffb2af78a4dae403a625dd1c925d3ee2023bd91",
+      "sha256": "fe1c3392a64435095f27b7ce8abd01864a213a656cbc8a853b83bf84af7f399c",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -312,7 +312,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-18",
       "sensitivity": "restricted",
-      "sha256": "5f085f77ddad5a489f1ef040df74d5848cd3631618a1526614db8817dac48ebc",
+      "sha256": "9d21f9ae70c9ab862ea20aa3e807cf39a64bc57bd53caf41dacdaadafa1afe62",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -971,7 +971,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "review/20261024-disk-backed-isolated-restore-held",
-    "commit": "83a66d779d10183ab4ba09afbd24f3cbcfec6fd6"
+    "commit": "ebc0b326d9623caf4b07cfce61d92f6b9f2dc565"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
