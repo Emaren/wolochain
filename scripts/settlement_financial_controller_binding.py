@@ -36,10 +36,11 @@ PROCEDURE_KEYS = {
     "legacy_permit_core_sha256", "source_drift_disposition_sha256",
     "writer_inventory_sha256",
 }
-REQUIRED_PINS = {
+PINNED_DIGESTS = {
     "registry_sha256", "host_identity_sha256", "source_commit",
-    "source_drift_disposition_sha256", "revoked_key_ids",
+    "source_drift_disposition_sha256",
 }
+REQUIRED_PINS = PINNED_DIGESTS | {"revoked_key_ids"}
 
 
 def require(condition, why):
@@ -80,7 +81,7 @@ def authenticate_and_reserve(args, *, mode, source_tool_sha256, scope_sha256,
     require(all(type(anchors[k]) is str and
         (human.HEX40.fullmatch(anchors[k]) if k=="source_commit" else
          human.HEX64.fullmatch(anchors[k])) and
-        anchors[k] not in ("0"*40,"0"*64) for k in REQUIRED_PINS),
+        anchors[k] not in ("0"*40,"0"*64) for k in PINNED_DIGESTS),
         "INDEPENDENT_TRUST_AND_SOURCE_ENROLLMENT_MISSING")
     require(type(anchors["revoked_key_ids"]) in (tuple,list) and
             len(anchors["revoked_key_ids"])==len(set(anchors["revoked_key_ids"])) and
