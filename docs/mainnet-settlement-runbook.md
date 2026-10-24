@@ -1580,11 +1580,34 @@ snapshots refuse admission. Separate database transactions are not an atomic
 distributed snapshot; maintained independently witnessed quiescence is required.
 
 `restore-isolated` actually runs `pg_restore` into separate disposable HD
-and DE databases in a digest-pinned container, with no network, host mounts,
-host credentials or production PostgreSQL connection. Full row hashes,
-constraints and sequences must match. A checksum alone or `pg_restore --list`
-cannot pass. `INCOMPLETE` remains until this succeeds; only final
-`restore.json`, bound to its manifest and fence, can admit a rehearsal.
+and DE databases in a digest-pinned container with no network, host credentials
+or production PostgreSQL connection. **The held disk-backed restoration
+revision requires an independently pre-provisioned root:root 0700
+`/var/lib/wolo-financial-restore` directory on the OS-root filesystem, NOT
+Docker's data-root or the protected Wolo state volume.** It creates only a
+new uniquely named, uid 999-owned child below that root. The one narrow
+read-write bind exception is this *empty disposable PGDATA child* mounted
+at `/var/lib/postgresql/data`. The container root stays read-only, network
+stays none, privilege escalation stays prohibited, and no live PostgreSQL
+socket, credentials, finance files or production state is ever mounted.
+
+The helper refuses an absent/aliased/insecure parent, a root path sharing
+the mainnet volume, stale `restore-*` children from interrupted runs, and
+OS-root available space below twice the approved archive budget plus 8 GiB.
+It verifies the exact sole bind source/destination/mode through Docker inspect.
+A verified owned container must be removed before its private child can
+be recursively removed, using symlink-safe cleanup. An interrupted or
+unverified container intentionally leaves quarantined scratch and HARD HOLD
+for an independent recovery review; it must **never** be blindly pruned.
+These admission checks do **not** constitute a kernel-enforced disk quota:
+independent disk-space containment and realistic full-size restoration
+remain required before authorizing production use. The running settlement
+services and consensus are never changed by the restore checker.
+
+Full row hashes, constraints and sequences must match. A checksum alone
+or `pg_restore --list` cannot pass. `INCOMPLETE` remains until this
+succeeds; only final `restore.json`, bound to its manifest and fence,
+can admit a rehearsal.
 These receipts explicitly do not prove off-host survival, independent witness
 approval, owner/privilege recovery, point-in-time WAL recovery or solvency.
 Those recovery requirements remain separately reviewed operator evidence.
