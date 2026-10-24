@@ -523,10 +523,10 @@ class DatabaseTests(unittest.TestCase):
                           '{"rows":"1","sha256":"' + "a"*64 + '"}',
                           '{"rows":"1","sha256":"' + "b"*64 + '"}',
                           '[]','[]',json.dumps([fake_index])])
-            with self.subTest(attribute=attr), \\
-                 patch.object(MOD,"psql",side_effect=lambda *a,**kw:next(answers)), \\
-                 self.assertRaisesRegex(MOD.MaintenanceError,
-                                        "INDEX_RECOVERY_INTEGRITY_UNPROVEN"):
+            with (self.subTest(attribute=attr),
+                  patch.object(MOD,"psql",side_effect=lambda *a,**kw:next(answers)),
+                  self.assertRaisesRegex(MOD.MaintenanceError,
+                                         "INDEX_RECOVERY_INTEGRITY_UNPROVEN")):
                 MOD.financial_census(valid_permit()["databases"]["hd"],{},None)
 
 
