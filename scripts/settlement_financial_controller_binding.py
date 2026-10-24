@@ -180,11 +180,20 @@ def authenticate_and_reserve(args, *, mode, source_tool_sha256, scope_sha256,
                 args.output.parent==BACKUPS, "OFFLINE_ARCHIVE_OUTPUT_INVALID")
         require(args.capture_manifest is not None and args.previous_review is not None,
                 "SEALED_CAPTURE_LINEAGE_REQUIRED")
-        capture=exact_private(args.capture_manifest,root) # copied sealed evidence under root
+        capture=exact_private(args.capture_manifest,root) # independently sealed root-private copy
         previous=exact_private(args.previous_review,root)
         fence=exact_private(args.fence_receipt,root)
+        # The independently signed sealed copy MUST equal the exact archived
+        # capture actually selected for restore, not a caller-chosen document.
+        from settlement_financial_maintenance import file_sha
+        require(digest(capture)==file_sha(args.output/"backup.json"),
+                "SIGNED_CAPTURE_NOT_THE_ARCHIVE_BEING_RESTORED")
         restore=(exact_private(args.restore_receipt,root) if
                  mode=="resume" and args.restore_receipt else None)
+        if mode=="resume":
+            require(restore is not None and
+                    digest(restore)==file_sha(args.output/"restore.json"),
+                    "SIGNED_RESTORE_NOT_THE_VERIFIED_RECEIPT")
         require(proc["legacy_permit_core_sha256"] is None,
                 "OFFLINE_CANNOT_REISSUE_LEGACY_PERMIT")
         # Retained HOLD and exact 18-unit scope must be independently observed.
