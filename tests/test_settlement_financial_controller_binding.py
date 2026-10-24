@@ -221,7 +221,7 @@ class SignedControllerAdmissionTests(unittest.TestCase):
     def test_missing_actual_writer_evidence_blocks_before_nonce_witness(self):
         def change(args,anchors,files,permit,pkt):
             files.pop("postgres_dba.json")
-        with self.assertRaises(KeyError):
+        with self.assertRaisesRegex(human.Refusal,"WRITER_EVIDENCE_FILE_UNAVAILABLE"):
             self.admit(change=change)
 
     def test_writer_hash_mismatch_refuses_before_nonce_witness(self):
