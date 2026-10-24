@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `codex/recovery-aggregate-budget` at `4dfa5773adece27fb0b7a29f7e5d2fd38ea8e979`
+Implementation baseline: `review/20261024-five-human-maintenance-authority` at `b6aa13577d7ff09a29695dca727a77ccc75c4cb9`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
@@ -27,7 +27,7 @@ This page is generated from the validated front matter in this repository. Cross
 
 ## Documentation health
 
-- Authoritative repository documents: **42**
+- Authoritative repository documents: **43**
 - Path moves in this migration: **0**
 - Every listed document has an explicit owner, lifecycle, authority, and review interval.
 
@@ -35,13 +35,13 @@ This page is generated from the validated front matter in this repository. Cross
 
 - `historical`: 14
 - `reference`: 23
-- `runbook`: 3
+- `runbook`: 4
 - `working`: 2
 
 ### Lifecycle
 
 - `active`: 16
-- `draft`: 12
+- `draft`: 13
 - `historical`: 14
 
 ## Documents
@@ -89,6 +89,7 @@ This page is generated from the validated front matter in this repository. Cross
 | [Mainnet Genesis Prep](../mainnet-prep/genesis/README.md) | `historical` | `historical` | `prelaunch-genesis-scaffold` |
 | [WoloChain Mainnet Validator Gentx Checklist](../mainnet-prep/genesis/VALIDATOR_GENTX_CHECKLIST.md) | `historical` | `historical` | `prelaunch-validator-gentx-evidence` |
 | [WoloChain Mainnet Nginx Notes](../mainnet-prep/nginx/README.md) | `reference` | `active` | `mainnet-nginx-routing-reference` |
+| [Financial-maintenance authority and writer review — 2026-10-24](../reviews/financial-maintenance/20261024-human-authority-and-writer-closeout.md) | `runbook` | `draft` | `non-authorizing-financial-human-signature-review` |
 
 ## Canonical commands
 
