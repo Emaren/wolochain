@@ -847,7 +847,7 @@ class ActualIsolatedRestoreTests(unittest.TestCase):
                 # mode-0700 directories. Restrict sudo cleanup to exact
                 # disposable test children under this unique /tmp root.
                 self.assertEqual(path.parent, root)
-                self.assertRegex(path.name, r"\\Afixture-pgdata-[0-9]+\\Z")
+                self.assertRegex(path.name, r"\Afixture-pgdata-[0-9]+\Z")
                 cleaned = subprocess.run(
                     ["sudo", "-n", "/usr/bin/rm", "-rf", "--", str(path)],
                     capture_output=True, timeout=15, check=False)
