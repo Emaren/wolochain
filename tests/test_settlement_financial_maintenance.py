@@ -462,6 +462,52 @@ class DatabaseTests(unittest.TestCase):
         self.assertNotIn("sum(", " ".join(calls).lower())
 
 
+class ReadOnlyStorageInspectorTests(unittest.TestCase):
+    """The operator mode must never create a lock, finance permit or backup."""
+
+    def test_exact_guard_inspection_returns_observed_hold(self):
+        with tempfile.TemporaryDirectory() as root:
+            mount = Path(root)
+            image = SimpleNamespace(st_size=40 << 30, st_blocks=(40 << 30) // 512)
+            fs = SimpleNamespace(f_blocks=40 << 30, f_bavail=38 << 30, f_frsize=1)
+            rootfs = SimpleNamespace(f_bavail=68 << 30, f_frsize=1)
+            with patch.object(MOD.os, "geteuid", return_value=0), \
+                 patch.object(MOD, "_bounded_restore_mount", return_value=(mount, image, fs)), \
+                 patch.object(MOD.os, "statvfs", return_value=rootfs), \
+                 patch("builtins.print") as printed:
+                self.assertEqual(MOD.main(["--mode", "inspect-storage"]), 3)
+                reported = json.loads(printed.call_args.args[0])
+                self.assertEqual(reported["status"], "STORAGE_OBSERVED_ONLY")
+                self.assertTrue(reported["storage_mount_identity_verified"])
+                self.assertEqual(reported["backing_allocated_bytes"], 40 << 30)
+                self.assertFalse(reported["backup_or_restore_authorized"])
+                self.assertFalse(reported["financial_release_authorized"])
+                self.assertFalse(reported["financial_writers_quiesced"])
+
+    def test_missing_mount_and_stale_or_unreserved_root_are_blocked(self):
+        with tempfile.TemporaryDirectory() as root:
+            mount = Path(root)
+            image = SimpleNamespace(st_size=40 << 30, st_blocks=(40 << 30) // 512)
+            fs = SimpleNamespace(f_blocks=40 << 30, f_bavail=38 << 30, f_frsize=1)
+            rootfs = SimpleNamespace(f_bavail=1 << 30, f_frsize=1)
+            with patch.object(MOD.os, "geteuid", return_value=0), \
+                 patch.object(MOD, "_bounded_restore_mount", return_value=(mount, image, fs)), \
+                 patch.object(MOD.os, "statvfs", return_value=rootfs), \
+                 patch("builtins.print"):
+                self.assertEqual(MOD.main(["--mode", "inspect-storage"]), 2)
+            (mount / ("restore-" + "f" * 32)).mkdir()
+            rootfs.f_bavail = 70 << 30
+            with patch.object(MOD.os, "geteuid", return_value=0), \
+                 patch.object(MOD, "_bounded_restore_mount", return_value=(mount, image, fs)), \
+                 patch.object(MOD.os, "statvfs", return_value=rootfs), \
+                 patch("builtins.print"):
+                self.assertEqual(MOD.main(["--mode", "inspect-storage"]), 2)
+            with patch.object(MOD.os, "geteuid", return_value=0), \
+                 patch.object(MOD, "_bounded_restore_mount", side_effect=MOD.MaintenanceError("RESTORE_BOUNDED_MOUNT_UNVERIFIED")), \
+                 patch("builtins.print"):
+                self.assertEqual(MOD.main(["--mode", "inspect-storage"]), 2)
+
+
 class BoundedRestoreAdmissionTests(unittest.TestCase):
     """Synthetic capacity and interruption refusal; no mounts, disks or Docker."""
 
