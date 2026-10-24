@@ -117,7 +117,10 @@ class DisposableSystemdWatchdog(unittest.TestCase):
                 original_run = maintenance.run
                 def traced_fixture_command(argv, **kwargs):
                     try:
-                        return original_run(argv, **kwargs)
+                        value = original_run(argv, **kwargs)
+                        if "ListJobs" in argv:
+                            print("DISPOSABLE_ACTUAL_JOB_OBSERVATION=" + value.strip(), flush=True)
+                        return value
                     except maintenance.MaintenanceError:
                         # Fixture-only systemd argv contains no credentials;
                         # production runner continues to suppress argv/stderr.

@@ -312,6 +312,20 @@ def no_jobs(runner):
             "PENDING_OR_UNKNOWN_SYSTEMD_JOB")
 
 
+def wait_for_no_jobs(runner, permit, *, seconds=100):
+    """Bounded drain of jobs caused by reload; final empty-job guard unchanged."""
+    deadline = time.monotonic() + seconds
+    while True:
+        validate_permit(permit)
+        try:
+            no_jobs(runner)
+            return
+        except MaintenanceError as exc:
+            if str(exc) != "PENDING_OR_UNKNOWN_SYSTEMD_JOB" or time.monotonic() >= deadline:
+                raise
+            time.sleep(min(.2, max(0, deadline - time.monotonic())))
+
+
 def inactive_observation(runner):
     no_jobs(runner)
     out = {}
@@ -434,6 +448,7 @@ def fence(permit_path, receipt_path, *, runner=None):
     for unit in TIMERS + ONESHOTS + APPS:
         validate_permit(permit)
         runner(["systemctl", "stop", "--", unit])
+    wait_for_no_jobs(runner, permit)
     inactive_observation(runner)
     validate_permit(permit)
     receipt = {"schema": FENCE_SCHEMA, "scope_sha256": scope_digest(),

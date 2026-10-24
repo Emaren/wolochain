@@ -134,6 +134,22 @@ class SystemdJobsTests(unittest.TestCase):
                 MOD.no_jobs(lambda _: value)
 
 
+class ReloadJobDrainTests(unittest.TestCase):
+    def test_reload_jobs_must_finish_and_original_authority_must_still_be_fresh(self):
+        permit = valid_permit()
+        blocked = MOD.MaintenanceError("PENDING_OR_UNKNOWN_SYSTEMD_JOB")
+        with patch.object(MOD, "validate_permit") as authority, patch.object(MOD, "no_jobs", side_effect=[blocked, None]) as jobs, patch.object(MOD.time, "sleep"):
+            MOD.wait_for_no_jobs(lambda _: "", permit)
+            self.assertEqual(jobs.call_count, 2)
+            self.assertEqual(authority.call_count, 2)
+        with patch.object(MOD, "validate_permit", side_effect=[None, MOD.MaintenanceError("APPROVED_WINDOW_EXPIRED")]), patch.object(MOD, "no_jobs", side_effect=blocked), patch.object(MOD.time, "sleep"):
+            with self.assertRaisesRegex(MOD.MaintenanceError, "APPROVED_WINDOW_EXPIRED"):
+                MOD.wait_for_no_jobs(lambda _: "", permit)
+        with patch.object(MOD, "validate_permit"), patch.object(MOD, "no_jobs", side_effect=blocked), patch.object(MOD.time, "monotonic", side_effect=[0, 2]):
+            with self.assertRaisesRegex(MOD.MaintenanceError, "PENDING_OR_UNKNOWN_SYSTEMD_JOB"):
+                MOD.wait_for_no_jobs(lambda _: "", permit, seconds=1)
+
+
 class PermitTests(unittest.TestCase):
     def test_fence_survives_reboot_and_has_no_auto_resume_action(self):
         self.assertEqual(MOD.HOLD.parent, Path("/etc/wolochain-financial-maintenance"))
