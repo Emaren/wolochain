@@ -1,5 +1,8 @@
 name: Review-only DocsV2 baseline regeneration (no repository write)
 on:
+  pull_request:
+    branches:
+      - codex/recovery-aggregate-budget
   push:
     branches:
       - review/20261024-five-human-maintenance-authority
@@ -12,6 +15,8 @@ jobs:
     steps:
       - name: Source at exact pushed commit
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - name: Generate DocsV2 baseline in disposable runner only
         run: |
           python3 scripts/docs_v2_check.py --write --refresh-baseline
