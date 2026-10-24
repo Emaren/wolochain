@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "c2337e1d3ab34f474b98754851fc1ecd4ff998e04884920fdfd7877a768dd68f",
+      "sha256": "22e963a5a8b4f6c58b3e6e277c5288866b2cde5e1f32f908309df99a75c03948",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -312,7 +312,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-18",
       "sensitivity": "restricted",
-      "sha256": "e8ffa648d50072445175decd436548e803ff10b0a4e2f2c35e71876d0110bf4d",
+      "sha256": "6a66dd0eec186d840e7fa68f4f1a8f69c6045ffdf5643a86e5a5e089a4e822e3",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -971,7 +971,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "codex/recovery-aggregate-budget",
-    "commit": "cd51064306989c1699a5b7ff13c2578043e1e2b2"
+    "commit": "bc19b8805bb0590f928ee5629599690ddac804e0"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
