@@ -9,6 +9,7 @@ on:
     branches:
       - review/20261024-maintenance-phase-integration-held
       - review/20261024-controller-verified-phase-admission-held
+      - review/20261024-restore-budget-provenance-held
 permissions:
   contents: read
 jobs:
@@ -63,7 +64,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - name: Regenerate docs in disposable runner
         run: |
-          python3 scripts/docs_v2_check.py --write --refresh-baseline --branch review/20261024-controller-verified-phase-admission-held --head "$(git rev-parse HEAD)"
+          python3 scripts/docs_v2_check.py --write --refresh-baseline --branch review/20261024-writer-evidence-real-files-held --head "$(git rev-parse HEAD)"
           python3 scripts/docs_v2_check.py
       - name: Export full generated DocsV2 entries for reviewed source-commit
         run: |
