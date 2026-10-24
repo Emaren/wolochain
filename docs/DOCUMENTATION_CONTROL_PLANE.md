@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `review/20261024-maintenance-phase-integration-held` at `9323d48dbcdfa4d9ea2c8990f02281ba6a864e1e`
+Implementation baseline: `review/20261024-controller-verified-phase-admission-held` at `2dc08492804fa3a5f31d3f5c4a320a2228a32007`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
@@ -27,7 +27,7 @@ This page is generated from the validated front matter in this repository. Cross
 
 ## Documentation health
 
-- Authoritative repository documents: **44**
+- Authoritative repository documents: **45**
 - Path moves in this migration: **0**
 - Every listed document has an explicit owner, lifecycle, authority, and review interval.
 
@@ -35,13 +35,13 @@ This page is generated from the validated front matter in this repository. Cross
 
 - `historical`: 14
 - `reference`: 23
-- `runbook`: 5
+- `runbook`: 6
 - `working`: 2
 
 ### Lifecycle
 
 - `active`: 16
-- `draft`: 14
+- `draft`: 15
 - `historical`: 14
 
 ## Documents
@@ -91,6 +91,7 @@ This page is generated from the validated front matter in this repository. Cross
 | [WoloChain Mainnet Nginx Notes](../mainnet-prep/nginx/README.md) | `reference` | `active` | `mainnet-nginx-routing-reference` |
 | [Financial-maintenance authority and writer review — 2026-10-24](../reviews/financial-maintenance/20261024-human-authority-and-writer-closeout.md) | `runbook` | `draft` | `non-authorizing-financial-human-signature-review` |
 | [Financial maintenance phase integration operator runbook — 2026-10-24](../reviews/financial-maintenance/20261024-phase-integration-operator-runbook.md) | `runbook` | `draft` | `non-authorizing-financial-human-signature-review` |
+| [Financial controller source integrity and five-human enrollment — 2026-10-24](../reviews/financial-maintenance/20261024-source-integrity-enrollment-and-restore-qualification.md) | `runbook` | `draft` | `non-authorizing-financial-human-signature-review` |
 
 ## Canonical commands
 
