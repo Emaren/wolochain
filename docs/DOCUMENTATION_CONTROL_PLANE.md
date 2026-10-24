@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `review/20261024-controller-verified-phase-admission-held` at `027409fb6bdcab91d9321bcf120da6a9c6341ee0`
+Implementation baseline: `review/20261024-controller-verified-phase-admission-held` at `c5ceefec4130860bbfabb5b2b7a72a1f3c99df9a`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
