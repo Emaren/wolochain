@@ -838,6 +838,15 @@ class ActualIsolatedRestoreTests(unittest.TestCase):
             stack.enter_context(patch.object(MOD, "private_json", side_effect=lambda path: (
                 json.loads(Path(path).read_bytes()), MOD.file_sha(path))))
             stack.enter_context(patch.object(MOD, "write_new", side_effect=synthetic_private_write))
+            # The real Docker integration fixture uses a disposable temp bind
+            # because CI runners cannot provision protected root-owned VPS
+            # scratch. Admission/ownership guards remain tested separately.
+            fixture_pgdata = root / "fixture-pgdata-bind"
+            fixture_pgdata.mkdir()
+            fixture_pgdata.chmod(0o777)
+            stack.enter_context(patch.object(MOD, "make_restore_scratch",
+                                             return_value=fixture_pgdata))
+            stack.enter_context(patch.object(MOD, "cleanup_restore_scratch"))
             # Corrupt but rehashed archive reaches actual pg_restore, which must
             # refuse; recomputing checksum must not launder invalid archive bytes.
             original = (output / "hd.dump").read_bytes()
