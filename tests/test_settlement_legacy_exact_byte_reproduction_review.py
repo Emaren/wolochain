@@ -70,6 +70,21 @@ class HistoricalByteReproductionTests(unittest.TestCase):
     def test_no_build_metadata_refuses(self):
         self.assert_hold(build_settings=None)
 
+    def test_historical_go127_tag_not_in_real_build_metadata(self):
+        flags = dict(mod.EXPECTED_BUILD_SETTINGS)
+        flags["-tags"] = "go1.27"
+        self.assert_hold(build_settings=flags)
+
+    def test_unreported_linker_flags_block(self):
+        flags = dict(mod.EXPECTED_BUILD_SETTINGS)
+        flags["-ldflags"] = "-s -w"
+        self.assert_hold(build_settings=flags)
+
+    def test_unreported_goexperiment_blocks(self):
+        flags = dict(mod.EXPECTED_BUILD_SETTINGS)
+        flags["GOEXPERIMENT"] = "something"
+        self.assert_hold(build_settings=flags)
+
     def test_wrong_embedded_source_refuses(self):
         self.assert_hold(vcs_revision="c" * 40)
 
