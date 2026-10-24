@@ -869,6 +869,7 @@ def restore_isolated(receipt_path, output, *, runner=None):
             and detail["Mounts"][0].get("Destination") == "/var/lib/postgresql/data"
             and detail["Mounts"][0].get("RW") is True,
             "DISPOSABLE_NETWORK_ISOLATION_UNVERIFIED")
+        _bounded_restore_mount()  # Guard the bind source again before any database restore.
         owned = True
         deadline = time.monotonic() + 30
         while True:
@@ -903,6 +904,7 @@ def restore_isolated(receipt_path, output, *, runner=None):
         for lane in ("hd", "de"):
             require(file_sha(output / (lane + ".dump")) == manifest["databases"][lane]["sha256"],
                     "DATABASE_DUMP_CHANGED_DURING_RESTORE")
+        _bounded_restore_mount()  # Fail closed if mount/loop identity drifted during restoration.
         settlement_states_unchanged(Path(manifest["settlement_snapshot"]), permit["max_total_bytes"])
         receipt = {"schema": "wolo.isolated-financial-restore.v1",
                    "scope_sha256": scope_digest(), "fence_receipt_sha256": file_sha(receipt_path),
@@ -924,6 +926,10 @@ def restore_isolated(receipt_path, output, *, runner=None):
             cleanup_restore_scratch(scratch)
         # If container identity verification failed, preserve scratch and HOLD.
         # Its path is root-private and the next operation rejects orphan state.
+
+    mount, _, _ = _bounded_restore_mount()
+    require(not any(p.name.startswith("restore-") for p in mount.iterdir()),
+            "RESTORE_SCRATCH_NOT_CLEAN_AFTER_RUN")
 
     # No successful receipt may outlive a failed cleanup. A failed write/unlink
     # keeps INCOMPLETE until a separately reviewed recovery can continue.
