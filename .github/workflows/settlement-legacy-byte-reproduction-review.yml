@@ -1,0 +1,77 @@
+name: Legacy settlement exact-byte reproduction (NONAUTHORIZING)
+on:
+  push:
+    branches:
+      - review/20261024-legacy-exact-byte-rebuild-held
+  pull_request:
+    branches:
+      - review/20261024-writer-evidence-real-files-held
+
+permissions:
+  contents: read
+
+jobs:
+  historic-byte-reproduction:
+    name: Oct 1 Go 1.24 legacy byte identity ONLY
+    runs-on: ubuntu-24.04
+    timeout-minutes: 24
+    env:
+      GOFLAGS: -tags=go1.27
+    steps:
+      - name: Checkout exact review-source verifier
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          path: review
+          persist-credentials: false
+      - name: Checkout exact old legacy settlement source (not candidate)
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: 78c25985420ee41a6678c42fab8ea8d6c3b1b519
+          path: legacy
+          persist-credentials: false
+      - name: Recreate Oct 1 Go toolchain from historical CI log
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff
+        with:
+          go-version: 1.24.0
+          cache: false
+      - name: Run strict negative-only reviewer tests
+        run: |
+          python3 -m unittest discover -v -s review/tests -p 'test_settlement_legacy_exact_byte_reproduction_review.py'
+      - name: Rebuild unchanged old source and compare to actual owner-observed hash
+        shell: bash {0}
+        run: |
+          echo 'STEP 1: Verify exact source checkout'
+          source_head="$(git -C legacy rev-parse HEAD 2>&1)"
+          git_rc=$?
+          echo "GIT_REV_PARSE_RC=$git_rc"
+          echo "GIT_SOURCE_HEAD=$source_head"
+          if [ "$git_rc" -ne 0 ] || [ "$source_head" != '78c25985420ee41a6678c42fab8ea8d6c3b1b519' ]; then
+            echo 'RC=2 BLOCKED unexpected old source'; exit 2
+          fi
+          echo 'RC=0 PASS source checkout'
+          echo 'STEP 2: Rebuild with exactly historical go build command'
+          cd legacy
+          go version
+          go build ./cmd/wolochaind
+          build_rc=$?
+          echo "GO_BUILD_RC=$build_rc"
+          cd ..
+          if [ "$build_rc" -ne 0 ]; then
+            echo 'RC=2 BLOCKED build error; historical reproducibility unknown'
+            exit 2
+          fi
+          echo 'STEP 3: Immutable observed-live binary checksum vs new isolated rebuild'
+          python3 review/scripts/settlement_legacy_exact_byte_reproduction_review.py --binary legacy/wolochaind --source-dir legacy
+          review_rc=$?
+          echo "BYTE_REPRODUCTION_REVIEW_RC=$review_rc"
+          if [ "$review_rc" -eq 0 ]; then
+            echo 'RC=0 PASS EXACT BYTES ONLY; ORIGINAL BUILD/DEPLOY CUSTODY UNKNOWN'
+          elif [ "$review_rc" -eq 2 ]; then
+            echo 'RC=2 BLOCKED EXACT BYTES NOT REPRODUCED; P1 OPEN'
+          else
+            echo "RC=$review_rc BLOCKED reviewer crashed"
+            exit 2
+          fi
+          echo 'FINAL=REVIEW_ONLY WEBSITE_AUTHORIZED=false FINANCIAL_AUTHORIZED=false'
+          echo 'NONAUTHORIZING: neither a byte match nor mismatch is release approval'
