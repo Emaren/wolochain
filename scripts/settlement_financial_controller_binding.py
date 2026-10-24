@@ -194,7 +194,7 @@ def authenticate_and_reserve(args, *, mode, source_tool_sha256, scope_sha256,
               "source":source_tool_sha256, "scope":scope_sha256,
               "host":anchors["host_identity_sha256"],
               "source_commit":anchors["source_commit"]}
-    result=phase.review(packet,human.parse_json(registry_raw),registry_raw,
+    result=phase.review(packet,registry,registry_raw,
         ledger,expected,evidence,procedure,
         capture=capture,fence=fence,restore=restore,previous=previous,now=now)
     require(result["status"]=="REVIEWED_NONAUTHORIZING" and
