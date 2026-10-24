@@ -57,7 +57,7 @@ class DisposableSystemdWatchdog(unittest.TestCase):
             self.assertEqual(state.stdout.strip(), "not-found", "pre-existing producer unit")
             self.assertFalse((maintenance.SYSTEMD / unit).exists())
             self.assertFalse((maintenance.SYSTEMD / (unit + ".d")).exists())
-        with tempfile.TemporaryDirectory(prefix="wolo-16-unit-fixture-", dir="/var/lib") as temp:
+        with tempfile.TemporaryDirectory(prefix="wolo-18-unit-fixture-", dir="/var/lib") as temp:
             fixture = Path(temp)
             permit_path, receipt_path = fixture / "TEST-ONLY-permit.json", fixture / "fence.json"
             now = maintenance.clock()
@@ -137,12 +137,14 @@ class DisposableSystemdWatchdog(unittest.TestCase):
                                      "inactive")
                     maintenance.effective_condition(unit, maintenance.run)
                 result = maintenance.verify_current_fence(receipt_path, maintenance.scope_digest())
-                self.assertEqual(len(result["units"]), 16)
+                self.assertEqual(len(result["units"]), 18)
+                for unit in ("aoe2-wolo-transfer-heartbeat.timer", "aoe2-wolo-transfer-heartbeat.service"):
+                    self.assertIn(unit, result["units"])
                 self.assertFalse(result["resume_authorized"])
                 self.assertEqual(maintenance.digest(maintenance.private_read(maintenance.HOLD)), before)
                 self.assertFalse(list(fixture.glob("*.ran")))
-                print(json.dumps({"scope": "DISPOSABLE_ACTUAL_16_UNIT_ACTIVATION_ONLY",
-                    "actual_custom_etc_conditions_verified": 16, "manual_reactivation_denied": 16,
+                print(json.dumps({"scope": "DISPOSABLE_ACTUAL_18_UNIT_ACTIVATION_ONLY",
+                    "actual_custom_etc_conditions_verified": 18, "manual_reactivation_denied": 18,
                     "actual_live_producer_isolation_certified": False, "production_authorized": False}))
             finally:
                 # Cleanup is ONLY the prechecked, newly created CI fixtures.
