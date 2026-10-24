@@ -1,4 +1,4 @@
-name: Legacy settlement Go 1.26 trimpath byte reproduction (NONAUTHORIZING)
+name: Legacy settlement Go 1.26 no-custom-flags byte reproduction (NONAUTHORIZING)
 on:
   push:
     branches:
@@ -12,11 +12,12 @@ permissions:
 
 jobs:
   historic-byte-reproduction:
-    name: Observed production Go 1.26 legacy byte identity ONLY
+    name: Observed Go 1.26 clean-flags byte reproduction ONLY
     runs-on: ubuntu-24.04
     timeout-minutes: 24
     env:
-      GOFLAGS: -tags=go1.27
+      # Exact production Go BuildInfo reports no -tags/-ldflags/-gcflags/-asmflags/GOEXPERIMENT.
+      GOFLAGS: ''
       CGO_ENABLED: '1'
       GOAMD64: v1
     steps:
@@ -40,7 +41,7 @@ jobs:
       - name: Run strict negative-only reviewer tests
         run: |
           python3 -m unittest discover -v -s review/tests -p 'test_settlement_legacy_exact_byte_reproduction_review.py'
-      - name: Rebuild old source with exact observed Go flags; compare bytes (NO-GO if mismatch)
+      - name: Rebuild old source with no custom tags, Go1.26 and trimpath; compare only
         shell: bash {0}
         run: |
           echo 'STEP 1: Verify exact source checkout'
@@ -52,7 +53,7 @@ jobs:
             echo 'RC=2 BLOCKED unexpected old source'; exit 2
           fi
           echo 'RC=0 PASS source checkout'
-          echo 'STEP 2: Rebuild with observed production Go1.26 CGO1 trimpath; historic CI was Go1.24'
+          echo 'STEP 2: Rebuild Go1.26 CGO1 trimpath and NO custom GOFLAGS; historical CI used go1.27 tags'
           cd legacy
           go version
           go build -trimpath ./cmd/wolochaind
