@@ -56,6 +56,7 @@ AUTHORITY_ENROLLMENT_ANCHORS = {
     "host_identity_sha256": None,
     "source_commit": None,
     "source_drift_disposition_sha256": None,
+    "revoked_key_ids": (),
 }
 AUTHORITY_ROOT = Path("/etc/wolochain-financial-maintenance/authority")
 AUTHORITY_NONCE_ROOT = Path("/var/lib/wolo-financial-authority-nonces")
