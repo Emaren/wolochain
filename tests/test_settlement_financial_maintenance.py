@@ -494,6 +494,10 @@ class RestoreTests(unittest.TestCase):
         self.stack.enter_context(patch.object(MOD, "private_json", side_effect=lambda path: (json.loads(Path(path).read_bytes()), MOD.file_sha(path))))
         self.stack.enter_context(patch.object(MOD, "private_read", side_effect=lambda path, *args: Path(path).read_bytes()))
         self.stack.enter_context(patch.object(MOD, "financial_census", return_value=self.census))
+        self.scratch = self.root / "scratch-owned"
+        self.scratch.mkdir()
+        self.stack.enter_context(patch.object(MOD, "make_restore_scratch", return_value=self.scratch))
+        self.stack.enter_context(patch.object(MOD, "cleanup_restore_scratch"))
 
     def runner(self, argv, **kwargs):
         argv = docker_command(argv)
@@ -507,7 +511,8 @@ class RestoreTests(unittest.TestCase):
                 "Config": {"Image": self.permit["restore_image"], "User": "999:999",
                            "Labels": {"wolo.financial-maintenance": MOD.scope_digest()}},
                 "HostConfig": {"NetworkMode": "none", "ReadonlyRootfs": True, "Privileged": False},
-                "Mounts": []}])
+                "Mounts": [{"Type": "bind", "Source": str(self.scratch),
+                            "Destination": "/var/lib/postgresql/data", "RW": True}]}])
         if argv[-2:] == ["cat", "/proc/1/comm"]:
             return "postgres\n"
         return ""
@@ -564,7 +569,12 @@ class RestoreTests(unittest.TestCase):
         self.assertIn("--network=none", run)
         self.assertIn("--pull=never", run)
         self.assertIn("--cap-drop=ALL", run)
-        self.assertNotIn("--mount", run)
+        self.assertIn("--mount", run)
+        mount = run[run.index("--mount") + 1]
+        self.assertEqual(mount, "type=bind,src=" + str(self.scratch) +
+                         ",dst=/var/lib/postgresql/data,bind-propagation=rprivate")
+        self.assertNotIn("/var/lib/postgresql/data:rw,noexec", " ".join(run))
+        self.assertIn("--memory=2g", run)
         self.assertFalse(any("PGPASSWORD" in str(call) or "DATABASE_URL" in str(call) for call, _ in self.calls))
         restores = [call for call, _ in self.calls if "pg_restore" in call]
         self.assertEqual(len(restores), 2)
