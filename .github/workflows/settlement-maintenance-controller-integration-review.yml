@@ -3,9 +3,11 @@ on:
   push:
     branches:
       - review/20261024-controller-verified-phase-admission-held
+      - review/20261024-restore-budget-provenance-held
   pull_request:
     branches:
       - review/20261024-maintenance-phase-integration-held
+      - review/20261024-controller-verified-phase-admission-held
 permissions:
   contents: read
 jobs:

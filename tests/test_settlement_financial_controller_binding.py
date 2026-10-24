@@ -36,7 +36,22 @@ class SignedControllerAdmissionTests(unittest.TestCase):
 
     def make(self,*,writer_incomplete=False):
         host=b"CI-only independently assigned host identity"
-        drift=b"CI-only signed source drift disposition"
+        # Synthetic, coherent source manifest proves only software-path
+        # validation. These bytes do NOT represent a real external witness.
+        drift=human.canonical({
+            "schema": binding.P1_DISPOSITION_SCHEMA,
+            "p1_resolved": True,
+            "runtime_binary_provenance_verified": True,
+            "settlement_journal_and_signer_compatibility_verified": True,
+            "vps_source_commit": "78c25985420ee41a6678c42fab8ea8d6c3b1b519",
+            "candidate_source_commit": self.expected["source_commit"],
+            "running_node_sha256": "a"*64,
+            "running_primary_settlement_sha256": "b"*64,
+            "running_founder_settlement_sha256": "c"*64,
+            "source_difference_evidence_sha256": "d"*64,
+            "independent_chain_review_sha256": "e"*64,
+            "independent_source_review_sha256": "f"*64,
+        })
         inventory={"schema":"wolo.financial-writer-independent-coverage.v1","writers":{}}
         keys={"hd_web_api","de_web_api","seven_timer_service_pairs","postgres_dba",
               "manual_sql_and_ssh","cron_and_user_systemd","ci_and_deployment",
@@ -208,6 +223,30 @@ class SignedControllerAdmissionTests(unittest.TestCase):
         def change(args,anchors,files,permit,pkt):
             anchors["source_drift_disposition_sha256"]="f"*64
         with self.assertRaisesRegex(human.Refusal,"SOURCE_HOST_TRUST"):
+            self.admit(change=change)
+
+    def test_pinned_source_drift_hold_is_not_automatically_cleared(self):
+        def change(args, anchors, files, permit, pkt):
+            disposition=human.parse_json(files["source-drift-disposition"])
+            disposition["p1_resolved"]=False
+            files["source-drift-disposition"]=human.canonical(disposition)
+            # Even deliberately repinning the exact digest of an UNRESOLVED
+            # document must never turn it into operational authorization.
+            anchors["source_drift_disposition_sha256"]=human.sha(
+                files["source-drift-disposition"])
+        with self.assertRaisesRegex(human.Refusal,"SOURCE_P1_UNRESOLVED"):
+            self.admit(change=change)
+
+    def test_pinned_p1_requires_distinct_independent_reviews(self):
+        def change(args,anchors,files,permit,pkt):
+            disposition=human.parse_json(files["source-drift-disposition"])
+            disposition["independent_source_review_sha256"]=(
+                disposition["independent_chain_review_sha256"])
+            files["source-drift-disposition"]=human.canonical(disposition)
+            anchors["source_drift_disposition_sha256"]=human.sha(
+                files["source-drift-disposition"])
+        with self.assertRaisesRegex(
+            human.Refusal,"SOURCE_P1_INDEPENDENT_EVIDENCE_UNVERIFIED"):
             self.admit(change=change)
 
     def test_default_remote_witness_refuses_without_local_nonce_burn(self):

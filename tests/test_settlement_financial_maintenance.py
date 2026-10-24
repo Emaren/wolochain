@@ -75,6 +75,37 @@ def valid_permit(*, now=NOW):
     }
 
 
+
+class SignedOfflineBudgetBoundaryTests(unittest.TestCase):
+    """The new OFFLINE_VERIFY budget cannot silently inherit old LIVE funds."""
+
+    def test_wrong_missing_or_type_coerced_budget_fails_before_docker(self):
+        now = datetime.now(timezone.utc)
+        permit = valid_permit(now=now)
+        window = {
+            "phase": "offline_verify", "live_actions_allowed": False,
+            "not_before": (now - timedelta(seconds=30)).isoformat().replace("+00:00", "Z"),
+            "expires_at": (now + timedelta(minutes=30)).isoformat().replace("+00:00", "Z"),
+        }
+        for raw in (None, 0, True, False, permit["max_total_bytes"] - 1,
+                    permit["max_total_bytes"] * 2, str(permit["max_total_bytes"])):
+            with self.subTest(budget=raw):
+                phase = dict(window)
+                if raw is not None:
+                    phase["max_total_bytes"] = raw
+                with (patch.object(MOD, "verify_retained_fence",
+                                   return_value={"permit": permit}) as fence_check,
+                      patch.object(MOD, "run",
+                                   side_effect=AssertionError("Docker or disk command attempted")) as run,
+                      self.assertRaisesRegex(MOD.MaintenanceError,
+                                             "OFFLINE_SIGNED_BUDGET_MISMATCH")):
+                    MOD.restore_isolated(Path("/unavailable/receipt"),
+                                         Path("/unavailable/backup"),
+                                         phase_window=phase)
+                fence_check.assert_called_once()
+                run.assert_not_called()
+
+
 class FakeSystemd:
     def __init__(self):
         self.active = dict.fromkeys(MOD.UNITS, True)
