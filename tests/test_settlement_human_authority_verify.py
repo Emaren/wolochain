@@ -118,11 +118,19 @@ class HumanSignatureTests(unittest.TestCase):
   self.reject(pkt)
 
  def test_changed_request_source_and_host(self):
-  for field,value in (("max_total_bytes",8<<30),("source_commit","e"*40),
+  for field,value in (("source_commit","e"*40),
                        ("host_identity_sha256","e"*64),("scope_sha256","e"*64),
                        ("evidence_sha256","e"*64),("operation","unapproved")):
    with self.subTest(field=field):
     pkt=self.packet();pkt["request"][field]=value;self.reject(self.sign(pkt))
+
+ def test_budget_tampering_or_out_of_bounds_is_refused(self):
+  pkt=self.packet()
+  pkt["request"]["max_total_bytes"]=8<<30
+  self.reject(pkt)  # signature still covers 4 GiB; cannot mutate in transit
+  pkt=self.packet()
+  pkt["request"]["max_total_bytes"]=101<<30
+  self.reject(self.sign(pkt))  # even five signatures cannot exceed policy bound
 
  def test_distinct_people_and_registry_anchor(self):
   self.reject(self.packet(),raw=b"tampered registry")
