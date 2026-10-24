@@ -247,6 +247,34 @@ class SignedControllerAdmissionTests(unittest.TestCase):
         with self.assertRaisesRegex(human.Refusal,"WRITER_EVIDENCE_SCOPE_OR_PHASE_MISMATCH"):
             self.admit(change=change)
 
+    def test_swapped_writer_evidence_category_refuses(self):
+        def change(args,anchors,files,permit,pkt):
+            d=human.parse_json(files["postgres_dba.json"])
+            d["category"]="offhost_wallet_and_chain_signers"
+            files["postgres_dba.json"]=human.canonical(d)
+            inv=human.parse_json(files["independent-writer-coverage.json"])
+            inv["writers"]["postgres_dba"]["evidence_sha256"]=human.sha(files["postgres_dba.json"])
+            files["independent-writer-coverage.json"]=human.canonical(inv)
+            p=human.parse_json(files["procedure"])
+            p["writer_inventory_sha256"]=human.sha(files["independent-writer-coverage.json"])
+            files["procedure"]=human.canonical(p)
+        with self.assertRaisesRegex(human.Refusal,"WRITER_EVIDENCE_SCOPE_OR_PHASE_MISMATCH"):
+            self.admit(change=change)
+
+    def test_writer_witness_digest_cannot_be_placeholder(self):
+        def change(args,anchors,files,permit,pkt):
+            d=human.parse_json(files["postgres_dba.json"])
+            d["independent_witness_sha256"]="0"*64
+            files["postgres_dba.json"]=human.canonical(d)
+            inv=human.parse_json(files["independent-writer-coverage.json"])
+            inv["writers"]["postgres_dba"]["evidence_sha256"]=human.sha(files["postgres_dba.json"])
+            files["independent-writer-coverage.json"]=human.canonical(inv)
+            p=human.parse_json(files["procedure"])
+            p["writer_inventory_sha256"]=human.sha(files["independent-writer-coverage.json"])
+            files["procedure"]=human.canonical(p)
+        with self.assertRaisesRegex(human.Refusal,"WRITER_WITNESS_EVIDENCE_MISSING"):
+            self.admit(change=change)
+
     def test_writer_evidence_wrong_phase_refuses(self):
         def change(args,anchors,files,permit,pkt):
             d=human.parse_json(files["postgres_dba.json"])
