@@ -933,6 +933,11 @@ class ActualIsolatedRestoreTests(unittest.TestCase):
                                              side_effect=make_ci_scratch))
             stack.enter_context(patch.object(MOD, "cleanup_restore_scratch",
                                              side_effect=remove_ci_scratch))
+            # The real Docker fixture mounts a throwaway CI bind, not a VPS
+            # kernel loop device. The strict loop identity is covered by its
+            # own refusal tests; never emulate operator evidence on CI.
+            stack.enter_context(patch.object(MOD, "_bounded_restore_mount",
+                                             return_value=(root, None, None)))
             # Corrupt but rehashed archive reaches actual pg_restore, which must
             # refuse; recomputing checksum must not launder invalid archive bytes.
             original = (output / "hd.dump").read_bytes()
