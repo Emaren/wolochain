@@ -156,7 +156,7 @@ class PermitTests(unittest.TestCase):
         self.assertEqual(MOD.HOLD.parent, Path("/etc/wolochain-financial-maintenance"))
         self.assertIn(b"ConditionPathExists=!", MOD.expected_dropin())
         self.assertEqual(len(MOD.APPS), 4)
-        self.assertEqual(len(MOD.FAMILIES), 6)
+        self.assertEqual(len(MOD.FAMILIES), 7)
         self.assertEqual(MOD.LOCK, Path("/run/lock/aoe2war-wolo-two-settlement-code-only.lock"))
         self.assertEqual(MOD.DOCKER, ["docker", "--host=unix:///var/run/docker.sock"])
 
@@ -247,6 +247,54 @@ class FenceTests(unittest.TestCase):
         self.assertTrue(all(MOD.dropin(unit).read_bytes() == MOD.expected_dropin() for unit in MOD.UNITS))
         self.assertFalse(value["resume_authorized"])
         self.assertFalse(any(call[:2] == ["systemctl", "start"] for call in self.runner.calls))
+
+    def test_heartbeat_database_writer_pair_is_gated_before_any_producer_stop(self):
+        pair = ("aoe2-wolo-transfer-heartbeat.timer", "aoe2-wolo-transfer-heartbeat.service")
+        def runner(argv, **kwargs):
+            if argv[:2] == ["systemctl", "stop"]:
+                # Exact explicit units, independent of a potentially incomplete
+                # dynamic scope. Both gates must exist before the first stop.
+                for unit in pair:
+                    path = MOD.SYSTEMD / (unit + ".d") / MOD.DROPIN
+                    self.assertTrue(path.is_file(), unit + " activation remains unfenced")
+                    self.assertEqual(path.read_bytes(), MOD.expected_dropin())
+            return self.runner(argv, **kwargs)
+        MOD.fence(self.permit, self.receipt, runner=runner)
+        stops = [call[-1] for call in self.runner.calls if call[:2] == ["systemctl", "stop"]]
+        self.assertIn(pair[0], stops)
+        self.assertIn(pair[1], stops)
+        self.assertLess(stops.index(pair[0]), stops.index(pair[1]))
+        first_stop = next(i for i, call in enumerate(self.runner.calls) if call[:2] == ["systemctl", "stop"])
+        for unit in pair:
+            self.assertTrue(any(call[0] == "busctl" and "LoadUnit" in call and call[-1] == unit
+                                for call in self.runner.calls[:first_stop]))
+
+    def test_heartbeat_timer_or_writer_reactivation_invalidates_fence(self):
+        pair = ("aoe2-wolo-transfer-heartbeat.timer", "aoe2-wolo-transfer-heartbeat.service")
+        self.runner.active.update(dict.fromkeys(pair, True))
+        self.do_fence()
+        self.runner.active.update(dict.fromkeys(pair, False))
+        for unit in pair:
+            self.runner.active[unit] = True
+            try:
+                with self.subTest(unit=unit), self.assertRaisesRegex(MOD.MaintenanceError, "PRODUCER_NOT_FENCED"):
+                    MOD.verify_current_fence(self.receipt, MOD.scope_digest(), runner=self.runner)
+            finally:
+                self.runner.active[unit] = False
+
+    def test_old_16_unit_permit_cannot_authorize_new_database_writer_scope(self):
+        legacy = [unit for unit in MOD.UNITS if not unit.startswith("aoe2-wolo-transfer-heartbeat.")]
+        self.assertEqual(len(legacy), 16)
+        permit = valid_permit()
+        permit["scope_sha256"] = MOD.digest(MOD.canonical({"units": legacy, "hold": str(MOD.HOLD),
+            "dropin": MOD.DROPIN, "resume_authorized": False}))
+        self.permit.write_bytes(MOD.canonical(permit))
+        with self.assertRaisesRegex(MOD.MaintenanceError, "SOURCE_SCOPE_DRIFT"):
+            self.do_fence()
+        self.assertFalse(self.runner.calls)
+        self.assertFalse(MOD.HOLD.exists())
+        self.assertFalse(self.receipt.exists())
+        self.assertFalse(any(MOD.SYSTEMD.iterdir()))
 
     def test_each_partial_stop_failure_retains_every_gate_and_never_resumes(self):
         for failed_unit in MOD.UNITS:

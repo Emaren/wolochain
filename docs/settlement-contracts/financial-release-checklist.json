@@ -1,6 +1,6 @@
 {
   "schema": "aoe2war.wolo.financial-release-checklist.v1",
-  "updated_at_utc": "2026-10-24T00:11:36.359067Z",
+  "updated_at_utc": "2026-10-24T10:11:00.082248Z",
   "canonical_issue": "https://github.com/Emaren/wolochain/issues/5",
   "role": "Single current observational six-control index; never a release permit or autonomous controller",
   "overall_status": "HOLD",
@@ -12,21 +12,22 @@
   "controls": {
     "hd_de_producers_isolated": {
       "status": "BLOCKED",
-      "observed_at_utc": "2026-10-18T18:12:00.829108Z",
+      "observed_at_utc": "2026-10-24T10:09:30.989114+00:00",
       "evidence": [
         "producer-refresh-handoff.json",
         "settlement-shared-producer-inventory-readonly.json",
         "settlement-parallel-de-authority-inventory.json",
         "producer-surface-metadata.json",
         "producer-containers-identities.json",
-        "operator-reported-runtime-producers-20261023.json"
+        "operator-reported-runtime-producers-20261023.json",
+        "producer-observation-20261024.json"
       ],
-      "established": "Historical October 18 collector: 19 named systemd candidates inspected;11 active. Cron, user managers, container and independent HD staking/faucet configuration observed. No fence performed. Public owner reports on October 23 add seven active services, ten waiting system timers and later six financial-timer trigger details. These are operator-reported observations, not independently proved isolation or drain.",
+      "established": "Fresh root SSH read-only collector at 2026-10-24T10:09:30.989114+00:00 inspected19 discovered units with no incomplete unit inspections;11 active candidates. Heartbeat timer active/writer inactive. No producer fence or drain performed. Independent source review identifies heartbeat as an HD indexed-transfer DB writer, so reviewed maintenance scope now includes both heartbeat units (18total). External/cron/user/container/signing authority remains unproved.",
       "unknowns": [
         "nonprefix/user/cron/container/external financial authority",
         "all signers, queues, HTTP and independently signed paths"
       ],
-      "next_action": "Named HD/DE/external owners classify exact producer and signer paths; obtain explicit approval for coordinated financial fence. Do not blanket-stop candidates.",
+      "next_action": "Named HD/DE/external owners independently complete writer and ingress classification. Review the exact18-unit scope, full-size recovery time/capacity evidence and real human approval artifacts; then explicitly approve a bounded coordinated financial fence/drain. Old16-unit permits cannot authorize this scope. Do not blanket-stop candidates.",
       "requires_production_approval": true,
       "latest_operator_reported_observation_at_utc": "2026-10-23T02:03:29Z"
     },
@@ -74,7 +75,7 @@
         "fresh exclusive/quiesced state/config/unit backup identities and checksums",
         "maintained producer fence and measured backup capacity"
       ],
-      "next_action": "After explicit independent fence/drain and UTC maintenance approval, use the reviewed shared-lock maintenance tool for both journals plus full HD/DE PostgreSQL archives and actual isolated restore. Review final restore/manifest/fence hashes and separately prove off-host and owner/privilege recovery; source CI cannot attest live backup.",
+      "next_action": "Qualify measured full HD+DE archive, restore/census/cleanup bytes and time against the unchanged30-minute permit and bounded filesystem before scheduling. After actual independent18-unit/external fence/drain and UTC approvals, capture both journals and full DB archives, actual isolated restore and off-host/privilege recovery. Source CI and storage inspection cannot attest a live backup.",
       "requires_production_approval": true
     },
     "reviewed_code_only_rollback_rehearsed": {
@@ -177,6 +178,12 @@
     "operator-reported-runtime-producers-20261023.json": {
       "path": "docs/settlement-contracts/financial-release-evidence-20261018/operator-reported-runtime-producers-20261023.json",
       "sha256": "6f81c9144e0ca70b2cb48919043ebc2129fdf338cf6d96976f8647a2b497e98f"
+    },
+    "producer-observation-20261024.json": {
+      "path": "docs/settlement-contracts/financial-release-evidence-20261018/producer-observation-20261024.json",
+      "sha256": "429e721eecec96cfae82228c5ed60896dad552c371b091dbf304a017450bc882",
+      "source_sha256": "fddd0e225ffdb943b6550295a0e6eb15e67e3e0caeb68ca4dfe2fc8207a9aca4",
+      "collection_mode": "ROOT_SSH_READ_ONLY_NONCERTIFYING"
     }
   },
   "independent_consensus_authentication_proven": false,
@@ -196,6 +203,6 @@
     "status": "CERTIFIED_INDEPENDENT_APP_RELEASE",
     "financial_release_dependency": false
   },
-  "shortest_next_operator_action": "Classify outstanding producer/signing paths with named HD/DE/external owners, then explicitly approve a bounded coordinated financial fence/drain, quiesced snapshot and two-service recovery rehearsal window. This is not cutover approval.",
+  "shortest_next_operator_action": "Appoint independent chain/finance/recovery authorities and complete writer classification; review full-size archive/time/capacity evidence and the exact18-unit maintenance scope before issuing a genuine bounded fence/drain/backup permit. This is not cutover or custody approval.",
   "later_cutover_approval": "Only after six independent controls pass, separately approve paired historical-bdbce253 code-only promotion; use exact short-lived root-private permit. Consensus, financial state, producer resumption and Satchel activation are excluded."
 }

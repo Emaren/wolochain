@@ -31,7 +31,8 @@ APPS = ("aoe2hdbets-web.service", "aoe2hdbets-api.service",
         "aoe2dewarwagers-web.service", "aoe2dewarwagers-api.service")
 FAMILIES = ("aoe2hdbets-bet-stake-reconcile", "aoe2hdbets-challenge-reconcile",
             "aoe2hdbets-replay-auto-recovery", "aoe2hdbets-staking-rewards",
-            "aoe2hdbets-trophy-tributes", "aoe2war-prewarm")
+            "aoe2hdbets-trophy-tributes", "aoe2war-prewarm",
+            "aoe2-wolo-transfer-heartbeat")
 TIMERS = tuple(x + ".timer" for x in FAMILIES)
 ONESHOTS = tuple(x + ".service" for x in FAMILIES)
 UNITS = APPS + ONESHOTS + TIMERS

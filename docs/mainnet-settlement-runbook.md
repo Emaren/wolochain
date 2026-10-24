@@ -1540,15 +1540,29 @@ the two-service controller. These modes must never run concurrently.
 The fixed activation-fence scope is four services:
 `aoe2hdbets-web.service`, `aoe2hdbets-api.service`,
 `aoe2dewarwagers-web.service`, `aoe2dewarwagers-api.service`; and both the
-`.timer` and `.service` for each of these six families:
+`.timer` and `.service` for each of these seven families:
 `aoe2hdbets-bet-stake-reconcile`, `aoe2hdbets-challenge-reconcile`,
 `aoe2hdbets-replay-auto-recovery`, `aoe2hdbets-staking-rewards`,
-`aoe2hdbets-trophy-tributes`, `aoe2war-prewarm`.
+`aoe2hdbets-trophy-tributes`, `aoe2war-prewarm`,
+`aoe2-wolo-transfer-heartbeat`.
 This is a proposed, expressly approved maintenance scope, not permission to
-stop all inventory candidates. The heartbeat observer, consensus and the two
+stop all inventory candidates. Consensus and the two
 settlement services are outside this producer-fence list. External callers,
 manual signers, cron, user managers, containers and every database writer
 still require separate positive owner classification and isolation evidence.
+
+The heartbeat runs `backfill-wolo-mainnet-transfers.mjs`: it writes HD indexed
+transfer observations, even though it is not an outgoing signer. It therefore
+belongs in the quiesced full-database writer fence. Both its timer and service
+must be gated before any stop, and either reactivating invalidates the receipt.
+This changes the maintenance scope from 16 to 18 units and invalidates the old
+scope/tool permit hashes; obtain a newly reviewed exact permit before execution.
+The historical two-settlement cutover allowlist is unchanged. The
+[independent producer review](https://github.com/Emaren/app-prodn/issues/839#issuecomment-6382780071)
+identified the gap. A fresh read-only inventory at 10:09:30 UTC on October 24
+found the heartbeat timer active and its writer inactive; see the
+[noncertifying receipt](settlement-contracts/financial-release-evidence-20261018/producer-observation-20261024.json).
+That observation is neither isolation nor drain; no unit was stopped.
 
 The fence creates a persistent root-private
 `/etc/wolochain-financial-maintenance/HOLD` and exact owned systemd
@@ -1568,6 +1582,12 @@ backup budget, two distinct HD/DE database identities and reviewed financial
 table inventories. It requires a pre-provisioned digest-pinned PostgreSQL
 image. Database credentials are read only from pinned root-private `/etc`
 files and passed in child environments, never command arguments or receipts.
+Permit validation checks the syntax and source binding of approval references;
+it does not authenticate human signatures, their independence or the truth of
+asserted attestations. A trusted owner-controlled issuance procedure and
+independent review of the referenced artifacts must establish those facts
+before an operator supplies the root-private permit. Test fixtures are never
+approval artifacts.
 
 After approved fencing and independently proved in-flight drain, `backup`
 reuses the pinned `settlement-dual-service-snapshot.sh` bytes for both
@@ -1661,6 +1681,11 @@ copies for a pre-window size/timing trial; obtaining a current quiesced copy
 from production is itself a separately approved fence/drain/backup operation.
 Off-host checksum and recovery verification, complete producer/queue drain,
 privilege recovery and human approvals remain separate prerequisites.
+The present controller requires the original fence window to remain current for
+both backup and isolated restore. `verify_retained_fence` is observational only;
+it cannot renew that authority. Separating a short live capture window from a
+longer offline verification phase would require a separately reviewed bounded
+authority contract, not reusing an expired permit.
 
 Full row hashes, constraints and sequences must match. A checksum alone
 or `pg_restore --list` cannot pass. `INCOMPLETE` remains until this
