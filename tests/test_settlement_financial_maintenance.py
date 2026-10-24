@@ -16,6 +16,7 @@ import re
 import secrets
 import subprocess
 import sys
+from types import SimpleNamespace
 import tempfile
 import time
 import unittest
@@ -461,6 +462,54 @@ class DatabaseTests(unittest.TestCase):
         self.assertNotIn("sum(", " ".join(calls).lower())
 
 
+class BoundedRestoreAdmissionTests(unittest.TestCase):
+    """Synthetic capacity and interruption refusal; no mounts, disks or Docker."""
+
+    def test_finite_free_bytes_and_root_reserve_required(self):
+        with tempfile.TemporaryDirectory() as root:
+            mount = Path(root) / "bounded"
+            mount.mkdir()
+            image = SimpleNamespace(st_size=64 << 20)
+            free = SimpleNamespace(f_blocks=64 << 20, f_bavail=8 << 20, f_frsize=1)
+            root_free = SimpleNamespace(f_bavail=20 << 30, f_frsize=1)
+            with patch.object(MOD, "_bounded_restore_mount", return_value=(mount, image, free)), \
+                 patch.object(MOD.os, "statvfs", return_value=root_free):
+                self.assertEqual(MOD._restore_scratch_admission(1 << 20), mount)
+                with self.assertRaisesRegex(MOD.MaintenanceError,
+                                            "RESTORE_BOUNDED_CAPACITY_INSUFFICIENT"):
+                    MOD._restore_scratch_admission(5 << 20)
+                image.st_size = 16 << 20
+                with self.assertRaisesRegex(MOD.MaintenanceError,
+                                            "RESTORE_BOUNDED_CAPACITY_INSUFFICIENT"):
+                    MOD._restore_scratch_admission(1 << 20)
+                image.st_size = 64 << 20
+                root_free.f_bavail = 1 << 30
+                with self.assertRaisesRegex(MOD.MaintenanceError,
+                                            "RESTORE_OS_ROOT_CAPACITY_INSUFFICIENT"):
+                    MOD._restore_scratch_admission(1 << 20)
+
+    def test_stale_restore_children_fail_closed(self):
+        with tempfile.TemporaryDirectory() as root:
+            mount = Path(root) / "bounded"
+            mount.mkdir()
+            (mount / ("restore-" + "e" * 32)).mkdir()
+            image = SimpleNamespace(st_size=64 << 20)
+            fs = SimpleNamespace(f_blocks=64 << 20, f_bavail=8 << 20, f_frsize=1)
+            root_free = SimpleNamespace(f_bavail=20 << 30, f_frsize=1)
+            with patch.object(MOD, "_bounded_restore_mount", return_value=(mount, image, fs)), \
+                 patch.object(MOD.os, "statvfs", return_value=root_free):
+                with self.assertRaisesRegex(MOD.MaintenanceError,
+                                            "INTERRUPTED_RESTORE_SCRATCH_REQUIRES_SEPARATE_REVIEW"):
+                    MOD._restore_scratch_admission(1 << 20)
+
+    def test_missing_unmounted_or_foreign_backing_must_never_admit(self):
+        # Kernel identity checks cannot be replaced by simulated free space.
+        with tempfile.TemporaryDirectory() as root:
+            with patch.object(MOD, "RESTORE_SCRATCH", Path(root)):
+                with self.assertRaises(MOD.MaintenanceError):
+                    MOD._bounded_restore_mount()
+
+
 class RestoreTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory(); self.addCleanup(self.tmp.cleanup)
@@ -498,6 +547,8 @@ class RestoreTests(unittest.TestCase):
         self.scratch.mkdir()
         self.stack.enter_context(patch.object(MOD, "make_restore_scratch", return_value=self.scratch))
         self.stack.enter_context(patch.object(MOD, "cleanup_restore_scratch"))
+        self.stack.enter_context(patch.object(MOD, "_bounded_restore_mount",
+                                              return_value=(self.scratch, None, None)))
 
     def runner(self, argv, **kwargs):
         argv = docker_command(argv)
