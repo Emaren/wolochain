@@ -58,6 +58,45 @@ def exact_private(path, root):
     return private_read(p, limit=1<<20)
 
 
+P1_DISPOSITION_SCHEMA = "wolo.financial-maintenance-source-drift-disposition.v1"
+P1_DISPOSITION_FIELDS = frozenset({
+    "schema", "p1_resolved", "runtime_binary_provenance_verified",
+    "settlement_journal_and_signer_compatibility_verified",
+    "vps_source_commit", "candidate_source_commit",
+    "running_node_sha256", "running_primary_settlement_sha256",
+    "running_founder_settlement_sha256",
+    "source_difference_evidence_sha256",
+    "independent_chain_review_sha256", "independent_source_review_sha256",
+})
+
+
+def require_resolved_p1_disposition(raw, expected_commit):
+    """A pinned digest of an unresolved HOLD document is not clearance.
+
+    This structural control does NOT authenticate human identity or certify
+    that external binary provenance exists. Those are separate hard gates.
+    """
+    d = phase.decode(raw, P1_DISPOSITION_SCHEMA, P1_DISPOSITION_FIELDS)
+    require(d["p1_resolved"] is True and
+            d["runtime_binary_provenance_verified"] is True and
+            d["settlement_journal_and_signer_compatibility_verified"] is True,
+            "SOURCE_P1_UNRESOLVED")
+    for field in ("vps_source_commit", "candidate_source_commit"):
+        require(type(d[field]) is str and human.HEX40.fullmatch(d[field]),
+                "SOURCE_COMMIT_PROVENANCE_INVALID")
+    require(d["candidate_source_commit"] == expected_commit,
+            "SOURCE_COMMIT_DISPOSITION_MISMATCH")
+    proofs = ("running_node_sha256", "running_primary_settlement_sha256",
+              "running_founder_settlement_sha256",
+              "source_difference_evidence_sha256",
+              "independent_chain_review_sha256", "independent_source_review_sha256")
+    require(all(type(d[k]) is str and human.HEX64.fullmatch(d[k]) and
+                d[k] != "0"*64 for k in proofs) and
+            d["independent_chain_review_sha256"] != d["independent_source_review_sha256"],
+            "SOURCE_P1_INDEPENDENT_EVIDENCE_UNVERIFIED")
+    return d
+
+
 def signed_core(permit):
     """Exclude ONLY cyclic metadata; all real DB/image/budget scope is signed."""
     excluded = {"packet_sha256", "procedure_sha256", "approval_refs"}
@@ -107,6 +146,7 @@ def authenticate_and_reserve(args, *, mode, source_tool_sha256, scope_sha256,
             digest(host)==anchors["host_identity_sha256"] and
             digest(source_drift)==anchors["source_drift_disposition_sha256"],
             "SOURCE_HOST_TRUST_OR_DISPOSITION_DRIFT")
+    require_resolved_p1_disposition(source_drift, anchors["source_commit"])
     registry=human.parse_json(registry_raw)
     require(all(type(p) is dict and p.get("key_id") not in anchors["revoked_key_ids"]
                 for p in registry.get("principals",[])),
