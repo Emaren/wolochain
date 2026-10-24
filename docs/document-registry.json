@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "780bb50d8222fa84df4bb2ca8a541727d53dfc9f0417035268707ed6f66255a5",
+      "sha256": "ee151027f1227fde3bdc41500032e076fa7abcf9a437915e26c367fa3e5616cb",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -971,7 +971,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "codex/recovered-settlement-rehearsal",
-    "commit": "084688ec380845590c6e890956fa7bc58f6e8742"
+    "commit": "d6b1fe86d4da1fba46c4747becd1f788d63facee"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
