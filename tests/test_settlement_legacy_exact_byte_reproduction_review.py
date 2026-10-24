@@ -12,8 +12,9 @@ spec.loader.exec_module(mod)
 class HistoricalByteReproductionTests(unittest.TestCase):
     def good(self, **changes):
         kwargs = dict(source=mod.OLD_SOURCE, tree_clean=True,
-                      toolchain="go1.24.0", vcs_revision=mod.OLD_SOURCE,
+                      toolchain="go1.26.0", vcs_revision=mod.OLD_SOURCE,
                       vcs_modified="false",
+                      build_settings=dict(mod.EXPECTED_BUILD_SETTINGS),
                       built_sha256=mod.OLD_SETTLEMENT_SHA256)
         kwargs.update(changes)
         return mod.assess(**kwargs)
@@ -49,7 +50,25 @@ class HistoricalByteReproductionTests(unittest.TestCase):
         self.assert_hold(tree_clean=False)
 
     def test_other_toolchain_refuses(self):
-        self.assert_hold(toolchain="go1.24.1")
+        self.assert_hold(toolchain="go1.24.0")
+
+    def test_without_trimpath_refuses(self):
+        flags = dict(mod.EXPECTED_BUILD_SETTINGS)
+        flags["-trimpath"] = "false"
+        self.assert_hold(build_settings=flags)
+
+    def test_without_cgo_refuses(self):
+        flags = dict(mod.EXPECTED_BUILD_SETTINGS)
+        flags["CGO_ENABLED"] = "0"
+        self.assert_hold(build_settings=flags)
+
+    def test_wrong_cpu_version_refuses(self):
+        flags = dict(mod.EXPECTED_BUILD_SETTINGS)
+        flags["GOAMD64"] = "v3"
+        self.assert_hold(build_settings=flags)
+
+    def test_no_build_metadata_refuses(self):
+        self.assert_hold(build_settings=None)
 
     def test_wrong_embedded_source_refuses(self):
         self.assert_hold(vcs_revision="c" * 40)
