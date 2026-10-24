@@ -1592,6 +1592,17 @@ independently reviewed operator procedure; this script NEVER invokes
 `losetup`, `truncate`, `mkfs`, `mount`, or `umount`. Do not infer
 that availability of those tools or an idle `/dev/loopN` provisions storage.
 
+A read-only operator preflight is available:
+`scripts/settlement_financial_maintenance.py --mode inspect-storage`
+(requires root; returns exit 3 with JSON schema
+`wolo.bounded-restore-storage-inspection.v1` when its precise
+kernel/backing admission succeeds). It reads filesystem metadata without
+opening HD or DE, creating a maintenance lock, fencing a service, creating a
+backup, initiating a restore or changing any live process. Its report includes
+logical and allocated backing bytes, bounded total/free bytes, OS-root free
+bytes, and explicit false financial/quiescence/backup authorizations. Exit 2
+means HOLD/incomplete; neither exit code authorizes fund movement.
+
 The script checks one exact kernel mountinfo entry, `ext4`, required
 `rw,nodev,nosuid,noexec` flags, exact block-device identity and sysfs loop
 backing-file identity, full physical backing-file allocation, finite
