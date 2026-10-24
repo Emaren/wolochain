@@ -16,6 +16,7 @@ import re
 import secrets
 import subprocess
 import sys
+from types import SimpleNamespace
 import tempfile
 import time
 import unittest
@@ -461,6 +462,100 @@ class DatabaseTests(unittest.TestCase):
         self.assertNotIn("sum(", " ".join(calls).lower())
 
 
+class ReadOnlyStorageInspectorTests(unittest.TestCase):
+    """The operator mode must never create a lock, finance permit or backup."""
+
+    def test_exact_guard_inspection_returns_observed_hold(self):
+        with tempfile.TemporaryDirectory() as root:
+            mount = Path(root)
+            image = SimpleNamespace(st_size=40 << 30, st_blocks=(40 << 30) // 512)
+            fs = SimpleNamespace(f_blocks=40 << 30, f_bavail=38 << 30, f_frsize=1)
+            rootfs = SimpleNamespace(f_bavail=68 << 30, f_frsize=1)
+            with patch.object(MOD.os, "geteuid", return_value=0), \
+                 patch.object(MOD, "_bounded_restore_mount", return_value=(mount, image, fs)), \
+                 patch.object(MOD.os, "statvfs", return_value=rootfs), \
+                 patch("builtins.print") as printed:
+                self.assertEqual(MOD.main(["--mode", "inspect-storage"]), 3)
+                reported = json.loads(printed.call_args.args[0])
+                self.assertEqual(reported["status"], "STORAGE_OBSERVED_ONLY")
+                self.assertTrue(reported["storage_mount_identity_verified"])
+                self.assertEqual(reported["backing_allocated_bytes"], 40 << 30)
+                self.assertFalse(reported["backup_or_restore_authorized"])
+                self.assertFalse(reported["financial_release_authorized"])
+                self.assertFalse(reported["financial_writers_quiesced"])
+
+    def test_missing_mount_and_stale_or_unreserved_root_are_blocked(self):
+        with tempfile.TemporaryDirectory() as root:
+            mount = Path(root)
+            image = SimpleNamespace(st_size=40 << 30, st_blocks=(40 << 30) // 512)
+            fs = SimpleNamespace(f_blocks=40 << 30, f_bavail=38 << 30, f_frsize=1)
+            rootfs = SimpleNamespace(f_bavail=1 << 30, f_frsize=1)
+            with patch.object(MOD.os, "geteuid", return_value=0), \
+                 patch.object(MOD, "_bounded_restore_mount", return_value=(mount, image, fs)), \
+                 patch.object(MOD.os, "statvfs", return_value=rootfs), \
+                 patch("builtins.print"):
+                self.assertEqual(MOD.main(["--mode", "inspect-storage"]), 2)
+            (mount / ("restore-" + "f" * 32)).mkdir()
+            rootfs.f_bavail = 70 << 30
+            with patch.object(MOD.os, "geteuid", return_value=0), \
+                 patch.object(MOD, "_bounded_restore_mount", return_value=(mount, image, fs)), \
+                 patch.object(MOD.os, "statvfs", return_value=rootfs), \
+                 patch("builtins.print"):
+                self.assertEqual(MOD.main(["--mode", "inspect-storage"]), 2)
+            with patch.object(MOD.os, "geteuid", return_value=0), \
+                 patch.object(MOD, "_bounded_restore_mount", side_effect=MOD.MaintenanceError("RESTORE_BOUNDED_MOUNT_UNVERIFIED")), \
+                 patch("builtins.print"):
+                self.assertEqual(MOD.main(["--mode", "inspect-storage"]), 2)
+
+
+class BoundedRestoreAdmissionTests(unittest.TestCase):
+    """Synthetic capacity and interruption refusal; no mounts, disks or Docker."""
+
+    def test_finite_free_bytes_and_root_reserve_required(self):
+        with tempfile.TemporaryDirectory() as root:
+            mount = Path(root) / "bounded"
+            mount.mkdir()
+            image = SimpleNamespace(st_size=64 << 20)
+            free = SimpleNamespace(f_blocks=64 << 20, f_bavail=8 << 20, f_frsize=1)
+            root_free = SimpleNamespace(f_bavail=20 << 30, f_frsize=1)
+            with patch.object(MOD, "_bounded_restore_mount", return_value=(mount, image, free)), \
+                 patch.object(MOD.os, "statvfs", return_value=root_free):
+                self.assertEqual(MOD._restore_scratch_admission(1 << 20), mount)
+                with self.assertRaisesRegex(MOD.MaintenanceError,
+                                            "RESTORE_BOUNDED_CAPACITY_INSUFFICIENT"):
+                    MOD._restore_scratch_admission(5 << 20)
+                image.st_size = 16 << 20
+                with self.assertRaisesRegex(MOD.MaintenanceError,
+                                            "RESTORE_BOUNDED_CAPACITY_INSUFFICIENT"):
+                    MOD._restore_scratch_admission(1 << 20)
+                image.st_size = 64 << 20
+                root_free.f_bavail = 1 << 30
+                with self.assertRaisesRegex(MOD.MaintenanceError,
+                                            "RESTORE_OS_ROOT_CAPACITY_INSUFFICIENT"):
+                    MOD._restore_scratch_admission(1 << 20)
+
+    def test_stale_restore_children_fail_closed(self):
+        with tempfile.TemporaryDirectory() as root:
+            mount = Path(root) / "bounded"
+            mount.mkdir()
+            (mount / ("restore-" + "e" * 32)).mkdir()
+            image = SimpleNamespace(st_size=64 << 20)
+            fs = SimpleNamespace(f_blocks=64 << 20, f_bavail=8 << 20, f_frsize=1)
+            root_free = SimpleNamespace(f_bavail=20 << 30, f_frsize=1)
+            with patch.object(MOD, "_bounded_restore_mount", return_value=(mount, image, fs)), \
+                 patch.object(MOD.os, "statvfs", return_value=root_free):
+                with self.assertRaisesRegex(MOD.MaintenanceError,
+                                            "INTERRUPTED_RESTORE_SCRATCH_REQUIRES_SEPARATE_REVIEW"):
+                    MOD._restore_scratch_admission(1 << 20)
+
+    def test_missing_unmounted_or_foreign_backing_must_never_admit(self):
+        # Kernel identity checks cannot be replaced by simulated free space.
+        with tempfile.TemporaryDirectory() as root:
+            with patch.object(MOD, "RESTORE_SCRATCH", Path(root)):
+                with self.assertRaises(MOD.MaintenanceError):
+                    MOD._bounded_restore_mount()
+
+
 class RestoreTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory(); self.addCleanup(self.tmp.cleanup)
@@ -494,6 +589,12 @@ class RestoreTests(unittest.TestCase):
         self.stack.enter_context(patch.object(MOD, "private_json", side_effect=lambda path: (json.loads(Path(path).read_bytes()), MOD.file_sha(path))))
         self.stack.enter_context(patch.object(MOD, "private_read", side_effect=lambda path, *args: Path(path).read_bytes()))
         self.stack.enter_context(patch.object(MOD, "financial_census", return_value=self.census))
+        self.scratch = self.root / "scratch-owned"
+        self.scratch.mkdir()
+        self.stack.enter_context(patch.object(MOD, "make_restore_scratch", return_value=self.scratch))
+        self.stack.enter_context(patch.object(MOD, "cleanup_restore_scratch"))
+        self.stack.enter_context(patch.object(MOD, "_bounded_restore_mount",
+                                              return_value=(self.scratch, None, None)))
 
     def runner(self, argv, **kwargs):
         argv = docker_command(argv)
@@ -507,7 +608,8 @@ class RestoreTests(unittest.TestCase):
                 "Config": {"Image": self.permit["restore_image"], "User": "999:999",
                            "Labels": {"wolo.financial-maintenance": MOD.scope_digest()}},
                 "HostConfig": {"NetworkMode": "none", "ReadonlyRootfs": True, "Privileged": False},
-                "Mounts": []}])
+                "Mounts": [{"Type": "bind", "Source": str(self.scratch),
+                            "Destination": "/var/lib/postgresql/data", "RW": True}]}])
         if argv[-2:] == ["cat", "/proc/1/comm"]:
             return "postgres\n"
         return ""
@@ -564,11 +666,35 @@ class RestoreTests(unittest.TestCase):
         self.assertIn("--network=none", run)
         self.assertIn("--pull=never", run)
         self.assertIn("--cap-drop=ALL", run)
-        self.assertNotIn("--mount", run)
+        self.assertIn("--mount", run)
+        mount = run[run.index("--mount") + 1]
+        self.assertEqual(mount, "type=bind,src=" + str(self.scratch) +
+                         ",dst=/var/lib/postgresql/data,bind-propagation=rprivate")
+        self.assertNotIn("/var/lib/postgresql/data:rw,noexec", " ".join(run))
+        self.assertIn("--memory=2g", run)
         self.assertFalse(any("PGPASSWORD" in str(call) or "DATABASE_URL" in str(call) for call, _ in self.calls))
         restores = [call for call, _ in self.calls if "pg_restore" in call]
         self.assertEqual(len(restores), 2)
         self.assertTrue(all("--exit-on-error" in call and "--single-transaction" in call for call in restores))
+
+    def test_failed_scratch_cleanup_cannot_publish_verified_restore(self):
+        with patch.object(MOD, "cleanup_restore_scratch",
+                          side_effect=MOD.MaintenanceError("INJECTED_SCRATCH_CLEANUP_FAILURE")):
+            with self.assertRaisesRegex(MOD.MaintenanceError, "INJECTED_SCRATCH_CLEANUP_FAILURE"):
+                MOD.restore_isolated(self.fence, self.output, runner=self.runner)
+        self.assertTrue(any(call[:3] == ["docker", "rm", "--force"] for call, _ in self.calls))
+        self.assertTrue((self.output / "INCOMPLETE").is_file())
+        self.assertFalse((self.output / "restore.json").exists())
+
+    def test_failed_container_removal_cannot_publish_verified_restore(self):
+        def deny_removal(argv, **kwargs):
+            if docker_command(argv)[:3] == ["docker", "rm", "--force"]:
+                raise MOD.MaintenanceError("INJECTED_CONTAINER_REMOVAL_FAILURE")
+            return self.runner(argv, **kwargs)
+        with self.assertRaisesRegex(MOD.MaintenanceError, "INJECTED_CONTAINER_REMOVAL_FAILURE"):
+            MOD.restore_isolated(self.fence, self.output, runner=deny_removal)
+        self.assertTrue((self.output / "INCOMPLETE").is_file())
+        self.assertFalse((self.output / "restore.json").exists())
 
     def test_final_backup_import_requires_verified_restore_scope_and_unchanged_manifest(self):
         MOD.restore_isolated(self.fence, self.output, runner=self.runner)
@@ -828,6 +954,36 @@ class ActualIsolatedRestoreTests(unittest.TestCase):
             stack.enter_context(patch.object(MOD, "private_json", side_effect=lambda path: (
                 json.loads(Path(path).read_bytes()), MOD.file_sha(path))))
             stack.enter_context(patch.object(MOD, "write_new", side_effect=synthetic_private_write))
+            # The real Docker integration fixture uses a disposable temp bind
+            # because CI runners cannot provision protected root-owned VPS
+            # scratch. Admission/ownership guards remain tested separately.
+            generated_pgdata = []
+            def remove_ci_scratch(path):
+                # CI runner cannot traverse PostgreSQL-created UID 999,
+                # mode-0700 directories. Restrict sudo cleanup to exact
+                # disposable test children under this unique /tmp root.
+                self.assertEqual(path.parent, root)
+                self.assertRegex(path.name, r"\Afixture-pgdata-[0-9]+\Z")
+                cleaned = subprocess.run(
+                    ["sudo", "-n", "/usr/bin/rm", "-rf", "--", str(path)],
+                    capture_output=True, timeout=15, check=False)
+                self.assertEqual(cleaned.returncode, 0, "CI fixture cleanup failed")
+            def make_ci_scratch(_budget):
+                path = root / ("fixture-pgdata-" + str(len(generated_pgdata)))
+                path.mkdir()
+                path.chmod(0o777)
+                generated_pgdata.append(path)
+                stack.callback(remove_ci_scratch, path)
+                return path
+            stack.enter_context(patch.object(MOD, "make_restore_scratch",
+                                             side_effect=make_ci_scratch))
+            stack.enter_context(patch.object(MOD, "cleanup_restore_scratch",
+                                             side_effect=remove_ci_scratch))
+            # The real Docker fixture mounts a throwaway CI bind, not a VPS
+            # kernel loop device. The strict loop identity is covered by its
+            # own refusal tests; never emulate operator evidence on CI.
+            stack.enter_context(patch.object(MOD, "_bounded_restore_mount",
+                                             return_value=(root, None, None)))
             # Corrupt but rehashed archive reaches actual pg_restore, which must
             # refuse; recomputing checksum must not launder invalid archive bytes.
             original = (output / "hd.dump").read_bytes()

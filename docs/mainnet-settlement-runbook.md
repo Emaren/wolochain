@@ -1580,11 +1580,63 @@ snapshots refuse admission. Separate database transactions are not an atomic
 distributed snapshot; maintained independently witnessed quiescence is required.
 
 `restore-isolated` actually runs `pg_restore` into separate disposable HD
-and DE databases in a digest-pinned container, with no network, host mounts,
-host credentials or production PostgreSQL connection. Full row hashes,
-constraints and sequences must match. A checksum alone or `pg_restore --list`
-cannot pass. `INCOMPLETE` remains until this succeeds; only final
-`restore.json`, bound to its manifest and fence, can admit a rehearsal.
+and DE databases in a digest-pinned container with no network, host credentials
+or production PostgreSQL connection. **The held loop-backed restoration revision requires** a pre-provisioned
+root:root 0700 `/var/lib/wolo-financial-restore` *wrapper directory*
+on the OS-root ext4 device, which must not itself be a mount point. Its only
+members must be `bounded.ext4` (a root:root 0600, singly linked, fully
+allocated 8–64 GiB regular backing file on OS root) and `bounded/` (a
+root:root 0700, separately mounted ext4 filesystem on a Linux loop device).
+The backing file and bounded mount are prepared **out of band** by an
+independently reviewed operator procedure; this script NEVER invokes
+`losetup`, `truncate`, `mkfs`, `mount`, or `umount`. Do not infer
+that availability of those tools or an idle `/dev/loopN` provisions storage.
+
+A read-only operator preflight is available:
+`scripts/settlement_financial_maintenance.py --mode inspect-storage`
+(requires root; returns exit 3 with JSON schema
+`wolo.bounded-restore-storage-inspection.v1` when its precise
+kernel/backing admission succeeds). It reads filesystem metadata without
+opening HD or DE, creating a maintenance lock, fencing a service, creating a
+backup, initiating a restore or changing any live process. Its report includes
+logical and allocated backing bytes, bounded total/free bytes, OS-root free
+bytes, and explicit false financial/quiescence/backup authorizations. Exit 2
+means HOLD/incomplete; neither exit code authorizes fund movement.
+
+The script checks one exact kernel mountinfo entry, `ext4`, required
+`rw,nodev,nosuid,noexec` flags, exact block-device identity and sysfs loop
+backing-file identity, full physical backing-file allocation, finite
+filesystem size no greater than that file, and >= twice the authorized
+backup budget in *available bounded filesystem capacity*. It also requires
+at least 8 GiB free on OS root after preallocation. An absent, sparse,
+symlinked, wrong-device, unexpected, extra-member, too-large, undersized or
+unmounted backing filesystem refuses restore admission.
+
+Only a uniquely named uid 999-owned `bounded/restore-<random>` directory
+may be bound read/write into the network-disabled PostgreSQL container at
+`/var/lib/postgresql/data`; the private root-only wrapper never enters the
+container. The container root remains read-only, and no production socket,
+keys, wallet, state volume or credentials are mounted. Mount association
+is rechecked after Docker identity validation and after restoration, and a
+verified owned container must be removed before symlink-safe scratch cleanup.
+Cleanup separately revalidates the bounded mount before deleting only its
+own child; any unknown container, changed mount or stale `restore-*` path
+preserves `INCOMPLETE` and fails closed. No verified restore receipt may
+be published until cleanup and bounded mount recheck have succeeded.
+
+The finite loop image is an enforced maximum for PGDATA writes, **not**
+proof of full-size restoration, source/mount integrity across a hostile root
+operator, durable off-host backup, quota for Docker daemon logs, financial
+quiescence, or custody release. The real ~9.95 GiB HD plus DE restoration
+and census/sequence checks still require independently witnessed proof,
+along with authorized HD/DE writer fencing and finance review. No loop
+image is yet provisioned, no production backup/restore or cutover has been
+approved, and original consensus/settlement services must remain untouched.
+
+Full row hashes, constraints and sequences must match. A checksum alone
+or `pg_restore --list` cannot pass. `INCOMPLETE` remains until this
+succeeds; only final `restore.json`, bound to its manifest and fence,
+can admit a rehearsal.
 These receipts explicitly do not prove off-host survival, independent witness
 approval, owner/privilege recovery, point-in-time WAL recovery or solvency.
 Those recovery requirements remain separately reviewed operator evidence.

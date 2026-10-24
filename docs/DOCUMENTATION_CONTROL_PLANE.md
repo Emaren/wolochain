@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `codex/recovered-settlement-rehearsal` at `eb67627859bbc91bd171eabec19d929454accb66`
+Implementation baseline: `review/20261024-disk-backed-isolated-restore-held` at `ebc0b326d9623caf4b07cfce61d92f6b9f2dc565`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 

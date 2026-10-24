@@ -16,6 +16,8 @@ import os
 from pathlib import Path
 import re
 import resource
+import secrets
+import shutil
 import selectors
 import signal
 import stat
@@ -39,6 +41,11 @@ SYSTEMD = Path("/etc/systemd/system")
 VOLUME = Path("/mnt/HC_Volume_105319120")
 BACKUPS = VOLUME / "wolochain-mainnet/financial-maintenance-backups"
 SNAPSHOT_ROOT = VOLUME / "wolochain-mainnet/settlement-backups"
+# Separately provisioned root-owned 0700 area on the OS disk, never Docker's
+# state-volume data-root. This path cannot include any production secrets.
+RESTORE_SCRATCH = Path("/var/lib/wolo-financial-restore")
+RESTORE_OS_RESERVE = 8 << 30
+RESTORE_DATA_FACTOR = 2
 LOCK = Path("/run/lock/aoe2war-wolo-two-settlement-code-only.lock")
 DOCKER = ["docker", "--host=unix:///var/run/docker.sock"]
 SCHEMA = "wolo.financial-maintenance-permit.v1"
@@ -681,11 +688,131 @@ def backup(receipt_path, output, *, runner=None):
     return manifest
 
 
+def _bounded_restore_mount():
+    """Verify a preprovisioned finite loop/ext4 device; NEVER create or mount it.
+
+    Root-only wrapper and full-allocation backing file stay on the OS root.
+    Disposable PostgreSQL data lives on the bounded ext4 child mount only.
+    A missing/changed loop association, mount or image refuses all admission.
+    """
+    root_dev = Path("/").stat().st_dev
+    require(os.path.ismount(VOLUME) and VOLUME.stat().st_dev != root_dev,
+            "RESTORE_VOLUME_MOUNT_UNVERIFIED")
+    require(RESTORE_SCRATCH == Path("/var/lib/wolo-financial-restore") and
+            not RESTORE_SCRATCH.is_symlink() and not os.path.ismount(RESTORE_SCRATCH),
+            "RESTORE_SCRATCH_PATH_UNSAFE")
+    wrapper = RESTORE_SCRATCH.lstat()
+    require(stat.S_ISDIR(wrapper.st_mode) and wrapper.st_uid == wrapper.st_gid == 0 and
+            stat.S_IMODE(wrapper.st_mode) == 0o700 and wrapper.st_dev == root_dev,
+            "RESTORE_SCRATCH_ROOT_NOT_QUALIFIED")
+    mount = RESTORE_SCRATCH / "bounded"
+    backing = RESTORE_SCRATCH / "bounded.ext4"
+    require({item.name for item in RESTORE_SCRATCH.iterdir()} ==
+            {"bounded", "bounded.ext4"}, "RESTORE_WRAPPER_EXTRA_MEMBERS")
+    f = backing.lstat()
+    require(stat.S_ISREG(f.st_mode) and not backing.is_symlink() and
+            f.st_uid == f.st_gid == 0 and stat.S_IMODE(f.st_mode) == 0o600 and
+            f.st_dev == root_dev and f.st_nlink == 1 and
+            (8 << 30) <= f.st_size <= (64 << 30) and
+            f.st_blocks * 512 >= f.st_size,
+            "RESTORE_BACKING_NOT_FULLY_ALLOCATED")
+    m = mount.lstat()
+    require(stat.S_ISDIR(m.st_mode) and not mount.is_symlink() and
+            m.st_uid == m.st_gid == 0 and stat.S_IMODE(m.st_mode) == 0o700 and
+            m.st_dev != root_dev and m.st_dev != VOLUME.stat().st_dev and
+            os.path.ismount(mount), "RESTORE_BOUNDED_MOUNT_UNVERIFIED")
+    # Compare the kernel's exact mount identity and loop association, not
+    # filesystem labels or human-supplied values. No shell or mount mutation.
+    matches = []
+    with open("/proc/self/mountinfo", encoding="utf-8") as source:
+        for n, line in enumerate(source):
+            require(n < 8192, "RESTORE_MOUNT_TABLE_TOO_LARGE")
+            halves = line.rstrip("\n").split(" - ", 1)
+            require(len(halves) == 2, "RESTORE_MOUNT_TABLE_UNVERIFIED")
+            left, right = halves[0].split(), halves[1].split()
+            require(len(left) >= 6 and len(right) >= 2,
+                    "RESTORE_MOUNT_TABLE_UNVERIFIED")
+            if left[4] == str(mount):
+                matches.append((left, right))
+    require(len(matches) == 1, "RESTORE_MOUNT_IDENTITY_UNVERIFIED")
+    left, right = matches[0]
+    major_minor = "%d:%d" % (os.major(m.st_dev), os.minor(m.st_dev))
+    require(left[2] == major_minor and left[3] == "/" and
+            right[0] == "ext4" and re.fullmatch(r"/dev/loop[0-9]+", right[1]) and
+            {"rw", "nodev", "nosuid", "noexec"}.issubset(set(left[5].split(","))),
+            "RESTORE_MOUNT_POLICY_UNVERIFIED")
+    device = os.stat(right[1])
+    require(stat.S_ISBLK(device.st_mode) and device.st_rdev == m.st_dev,
+            "RESTORE_LOOP_DEVICE_MISMATCH")
+    backing_file = Path("/sys/dev/block") / major_minor / "loop/backing_file"
+    observed = backing_file.read_text(encoding="utf-8").strip()
+    require(observed == str(backing) and os.path.realpath(observed) == str(backing),
+            "RESTORE_LOOP_BACKING_MISMATCH")
+    fs = os.statvfs(mount)
+    require(0 < fs.f_blocks * fs.f_frsize <= f.st_size and
+            fs.f_bavail * fs.f_frsize >= 0,
+            "RESTORE_FINITE_CAPACITY_UNVERIFIED")
+    return mount, f, fs
+
+
+def _restore_scratch_admission(budget):
+    """Admit only finite allocated loop storage with per-permit free capacity."""
+    require(type(budget) is int and budget > 0 and budget <= 100 << 30,
+            "RESTORE_CAPACITY_BUDGET_INVALID")
+    mount, image, fs = _bounded_restore_mount()
+    free = fs.f_bavail * fs.f_frsize
+    require(free >= budget * RESTORE_DATA_FACTOR and
+            fs.f_blocks * fs.f_frsize <= image.st_size,
+            "RESTORE_BOUNDED_CAPACITY_INSUFFICIENT")
+    root_fs = os.statvfs(RESTORE_SCRATCH)
+    require(root_fs.f_bavail * root_fs.f_frsize >= RESTORE_OS_RESERVE,
+            "RESTORE_OS_ROOT_CAPACITY_INSUFFICIENT")
+    require(not any(p.name.startswith("restore-") for p in mount.iterdir()),
+            "INTERRUPTED_RESTORE_SCRATCH_REQUIRES_SEPARATE_REVIEW")
+    require(shutil.rmtree.avoids_symlink_attacks,
+            "SYMLINK_SAFE_RESTORE_CLEANUP_UNAVAILABLE")
+    return mount
+
+
+def make_restore_scratch(budget):
+    """Create only a new private PGDATA child on verified bounded ext4."""
+    mount = _restore_scratch_admission(budget)
+    fd = os.open(mount, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    try:
+        name = "restore-" + secrets.token_hex(16)
+        os.mkdir(name, 0o700, dir_fd=fd)
+        os.chown(name, 999, 999, dir_fd=fd, follow_symlinks=False)
+        child = mount / name
+        meta = child.lstat()
+        require(stat.S_ISDIR(meta.st_mode) and meta.st_uid == meta.st_gid == 999 and
+                stat.S_IMODE(meta.st_mode) == 0o700 and
+                meta.st_dev == mount.stat().st_dev,
+                "RESTORE_CHILD_IDENTITY_INVALID")
+        return child
+    finally:
+        os.close(fd)
+
+
+def cleanup_restore_scratch(path):
+    """Only remove a verified owned child while the same bounded mount lives."""
+    mount, _, _ = _bounded_restore_mount()
+    path = Path(path)
+    require(path.parent == mount and
+            re.fullmatch(r"restore-[0-9a-f]{32}", path.name) is not None and
+            path.is_dir() and not path.is_symlink() and
+            path.lstat().st_dev == mount.stat().st_dev and
+            shutil.rmtree.avoids_symlink_attacks,
+            "RESTORE_CLEANUP_IDENTITY_UNVERIFIED")
+    shutil.rmtree(path)
+
+
 def restore_isolated(receipt_path, output, *, runner=None):
     """Real pg_restore in an existing pinned, network-none disposable container.
 
     No host PG socket, environment, keyring or production volume is mounted.
-    Archives are piped through stdin; there are no host mounts. No image pull occurs.
+    Archives are piped through stdin. One exact private OS-root PGDATA bind mount
+    replaces memory-backed PGDATA; there are no production/volume mounts.
+    No image pull occurs. Root scratch must be preprovisioned and budgeted.
     """
     runner = runner or run
     cleanup_runner = runner
@@ -702,22 +829,29 @@ def restore_isolated(receipt_path, output, *, runner=None):
     for lane in ("hd", "de"):
         require(file_sha(output / (lane + ".dump")) == manifest["databases"][lane]["sha256"],
                 "DATABASE_DUMP_CHECKSUM_MISMATCH")
-    import secrets
     name = "wolo-financial-restore-" + secrets.token_hex(12)
     require(runner(DOCKER + ["image", "inspect", "--format", "{{.Id}}", permit["restore_image"]]).strip(),
             "EXISTING_PINNED_IMAGE_UNAVAILABLE")
+    scratch = make_restore_scratch(permit["max_total_bytes"])
+    container = None
+    owned = False
+    mount = "type=bind,src=" + str(scratch) + ",dst=/var/lib/postgresql/data,bind-propagation=rprivate"
     cmd = DOCKER + ["run", "--detach", "--pull=never", "--name", name,
            "--network=none", "--read-only", "--cap-drop=ALL", "--security-opt=no-new-privileges",
            "--user=999:999", "--pids-limit=128", "--memory=2g", "--cpus=2",
-           "--tmpfs", "/var/lib/postgresql/data:rw,noexec,nosuid,size=" +
-           str(permit["max_total_bytes"] * 2) + ",mode=1777",
+           "--mount", mount,
            "--tmpfs", "/var/run/postgresql:rw,noexec,nosuid,size=16777216,mode=1777",
            "--env=PGDATA=/var/lib/postgresql/data/isolated",
            "--env=POSTGRES_HOST_AUTH_METHOD=trust",
            "--label=wolo.financial-maintenance=" + scope_digest(), permit["restore_image"]]
-    container = runner(cmd).strip()
-    require(re.fullmatch(r"[0-9a-f]{64}", container), "NEW_CONTAINER_ID_UNVERIFIED")
-    owned = False
+    # Never fall back to memory-backed PGDATA or Docker's Wolo-volume storage.
+    try:
+        container = runner(cmd).strip()
+        require(re.fullmatch(r"[0-9a-f]{64}", container), "NEW_CONTAINER_ID_UNVERIFIED")
+    except BaseException:
+        # No trusted container ID: leave private scratch for operator evidence.
+        # The next admission fails closed on this interrupted restore.
+        raise
     prefix = DOCKER + ["exec", "--interactive", "--user=999:999", container]
     try:
         details = json.loads(runner(DOCKER + ["inspect", container]))
@@ -729,8 +863,13 @@ def restore_isolated(receipt_path, output, *, runner=None):
             and detail["HostConfig"]["NetworkMode"] == "none"
             and detail["HostConfig"]["ReadonlyRootfs"] is True
             and detail["HostConfig"]["Privileged"] is False
-            and all(x.get("Type") == "tmpfs" for x in detail.get("Mounts", [])),
+            and type(detail.get("Mounts")) is list and len(detail["Mounts"]) == 1
+            and detail["Mounts"][0].get("Type") == "bind"
+            and detail["Mounts"][0].get("Source") == str(scratch)
+            and detail["Mounts"][0].get("Destination") == "/var/lib/postgresql/data"
+            and detail["Mounts"][0].get("RW") is True,
             "DISPOSABLE_NETWORK_ISOLATION_UNVERIFIED")
+        _bounded_restore_mount()  # Guard the bind source again before any database restore.
         owned = True
         deadline = time.monotonic() + 30
         while True:
@@ -765,6 +904,7 @@ def restore_isolated(receipt_path, output, *, runner=None):
         for lane in ("hd", "de"):
             require(file_sha(output / (lane + ".dump")) == manifest["databases"][lane]["sha256"],
                     "DATABASE_DUMP_CHANGED_DURING_RESTORE")
+        _bounded_restore_mount()  # Fail closed if mount/loop identity drifted during restoration.
         settlement_states_unchanged(Path(manifest["settlement_snapshot"]), permit["max_total_bytes"])
         receipt = {"schema": "wolo.isolated-financial-restore.v1",
                    "scope_sha256": scope_digest(), "fence_receipt_sha256": file_sha(receipt_path),
@@ -776,14 +916,26 @@ def restore_isolated(receipt_path, output, *, runner=None):
                    "production_state_restored": False, "off_host_copy_verified": False,
                    "independent_witness_attested": False, "owner_and_privilege_recovery_proven": False,
                    "financial_release_authorized": False}
-        write_new(output / "restore.json", canonical(receipt))
-        (output / "INCOMPLETE").unlink()
-        return receipt
     finally:
-        # The only removed object is this exact disposable container. No host
-        # source, dump, receipt, production data, or financial state is deleted.
+        # Cleanup must complete BEFORE publishing verified restore authority.
+        # If Docker removal or scratch cleanup fails, INCOMPLETE remains and
+        # no restore.json exists for a later rehearsal to admit.
         if owned:
+            # Never delete a mounted PGDATA directory while its container lives.
             cleanup_runner(DOCKER + ["rm", "--force", container], timeout=15)
+            cleanup_restore_scratch(scratch)
+        # If container identity verification failed, preserve scratch and HOLD.
+        # Its path is root-private and the next operation rejects orphan state.
+
+    mount, _, _ = _bounded_restore_mount()
+    require(not any(p.name.startswith("restore-") for p in mount.iterdir()),
+            "RESTORE_SCRATCH_NOT_CLEAN_AFTER_RUN")
+
+    # No successful receipt may outlive a failed cleanup. A failed write/unlink
+    # keeps INCOMPLETE until a separately reviewed recovery can continue.
+    write_new(output / "restore.json", canonical(receipt))
+    (output / "INCOMPLETE").unlink()
+    return receipt
 
 
 def verify_current_backup(restore_receipt_path, expected_scope_sha256,
@@ -823,7 +975,7 @@ def verify_current_backup(restore_receipt_path, expected_scope_sha256,
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--mode", choices=("scope", "verify-fence", "fence", "backup", "restore-isolated"),
+    parser.add_argument("--mode", choices=("scope", "inspect-storage", "verify-fence", "fence", "backup", "restore-isolated"),
                         default="scope")
     parser.add_argument("--permit", type=Path)
     parser.add_argument("--fence-receipt", type=Path)
@@ -835,6 +987,30 @@ def main(argv=None):
                               "activation_or_resume_authorized": False}, sort_keys=True))
             return 3
         require(os.geteuid() == 0, "ROOT_REQUIRED")
+        if args.mode == "inspect-storage":
+            # Read only: invoke the EXACT production mount/backing identity
+            # guard without a finance permit, lock, backup or service change.
+            mount, backing, fs = _bounded_restore_mount()
+            require(not any(p.name.startswith("restore-") for p in mount.iterdir()),
+                    "INTERRUPTED_RESTORE_SCRATCH_REQUIRES_SEPARATE_REVIEW")
+            rootfs = os.statvfs(RESTORE_SCRATCH)
+            root_free = rootfs.f_bavail * rootfs.f_frsize
+            require(root_free >= RESTORE_OS_RESERVE,
+                    "RESTORE_OS_ROOT_CAPACITY_INSUFFICIENT")
+            print(json.dumps({
+                "schema": "wolo.bounded-restore-storage-inspection.v1",
+                "status": "STORAGE_OBSERVED_ONLY",
+                "backing_logical_bytes": backing.st_size,
+                "backing_allocated_bytes": backing.st_blocks * 512,
+                "bounded_total_bytes": fs.f_blocks * fs.f_frsize,
+                "bounded_available_bytes": fs.f_bavail * fs.f_frsize,
+                "root_available_bytes": root_free,
+                "storage_mount_identity_verified": True,
+                "financial_writers_quiesced": False,
+                "backup_or_restore_authorized": False,
+                "financial_release_authorized": False
+            }, sort_keys=True))
+            return 3
         require(args.fence_receipt is not None, "FENCE_RECEIPT_REQUIRED")
         if args.mode == "verify-fence":
             verify_current_fence(args.fence_receipt, scope_digest())
