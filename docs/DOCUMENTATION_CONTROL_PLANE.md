@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `review/20261024-disk-backed-isolated-restore-held` at `e1084fb21dbbe4ee87f294190ea2d1326e32d5ad`
+Implementation baseline: `review/20261024-disk-backed-isolated-restore-held` at `ade807caaec9c3ae2ba7b65ed63e26bfe56b314a`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
