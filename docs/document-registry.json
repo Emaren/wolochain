@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "fe1c3392a64435095f27b7ce8abd01864a213a656cbc8a853b83bf84af7f399c",
+      "sha256": "f44e04657454375c6f5d0117a36357176fc42e1db203cd7d56502394e127038d",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -312,7 +312,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-18",
       "sensitivity": "restricted",
-      "sha256": "9d21f9ae70c9ab862ea20aa3e807cf39a64bc57bd53caf41dacdaadafa1afe62",
+      "sha256": "6a66dd0eec186d840e7fa68f4f1a8f69c6045ffdf5643a86e5a5e089a4e822e3",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -642,7 +642,7 @@
         "wolochain",
         "aoe2war"
       ],
-      "title": "Codex Mission: WoloChain Mainnet ↔ Osmosis IBC Prep",
+      "title": "Codex Mission: WoloChain Mainnet \u2194 Osmosis IBC Prep",
       "type": "historical"
     },
     {
@@ -803,7 +803,7 @@
         "wolochain",
         "aoe2war"
       ],
-      "title": "WoloChain Mainnet → Osmosis Liquidity Transfer",
+      "title": "WoloChain Mainnet \u2192 Osmosis Liquidity Transfer",
       "type": "historical"
     },
     {
@@ -872,7 +872,7 @@
         "wolochain",
         "aoe2war"
       ],
-      "title": "WoloChain Mainnet → Osmosis Test Transfer",
+      "title": "WoloChain Mainnet \u2192 Osmosis Test Transfer",
       "type": "historical"
     },
     {
@@ -970,8 +970,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "review/20261024-disk-backed-isolated-restore-held",
-    "commit": "ebc0b326d9623caf4b07cfce61d92f6b9f2dc565"
+    "branch": "codex/recovery-aggregate-budget",
+    "commit": "4dfa5773adece27fb0b7a29f7e5d2fd38ea8e979"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

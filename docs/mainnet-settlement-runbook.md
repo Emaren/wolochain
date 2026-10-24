@@ -1540,15 +1540,29 @@ the two-service controller. These modes must never run concurrently.
 The fixed activation-fence scope is four services:
 `aoe2hdbets-web.service`, `aoe2hdbets-api.service`,
 `aoe2dewarwagers-web.service`, `aoe2dewarwagers-api.service`; and both the
-`.timer` and `.service` for each of these six families:
+`.timer` and `.service` for each of these seven families:
 `aoe2hdbets-bet-stake-reconcile`, `aoe2hdbets-challenge-reconcile`,
 `aoe2hdbets-replay-auto-recovery`, `aoe2hdbets-staking-rewards`,
-`aoe2hdbets-trophy-tributes`, `aoe2war-prewarm`.
+`aoe2hdbets-trophy-tributes`, `aoe2war-prewarm`,
+`aoe2-wolo-transfer-heartbeat`.
 This is a proposed, expressly approved maintenance scope, not permission to
-stop all inventory candidates. The heartbeat observer, consensus and the two
+stop all inventory candidates. Consensus and the two
 settlement services are outside this producer-fence list. External callers,
 manual signers, cron, user managers, containers and every database writer
 still require separate positive owner classification and isolation evidence.
+
+The heartbeat runs `backfill-wolo-mainnet-transfers.mjs`: it writes HD indexed
+transfer observations, even though it is not an outgoing signer. It therefore
+belongs in the quiesced full-database writer fence. Both its timer and service
+must be gated before any stop, and either reactivating invalidates the receipt.
+This changes the maintenance scope from 16 to 18 units and invalidates the old
+scope/tool permit hashes; obtain a newly reviewed exact permit before execution.
+The historical two-settlement cutover allowlist is unchanged. The
+[independent producer review](https://github.com/Emaren/app-prodn/issues/839#issuecomment-6382780071)
+identified the gap. A fresh read-only inventory at 10:09:30 UTC on October 24
+found the heartbeat timer active and its writer inactive; see the
+[noncertifying receipt](settlement-contracts/financial-release-evidence-20261018/producer-observation-20261024.json).
+That observation is neither isolation nor drain; no unit was stopped.
 
 The fence creates a persistent root-private
 `/etc/wolochain-financial-maintenance/HOLD` and exact owned systemd
@@ -1568,6 +1582,12 @@ backup budget, two distinct HD/DE database identities and reviewed financial
 table inventories. It requires a pre-provisioned digest-pinned PostgreSQL
 image. Database credentials are read only from pinned root-private `/etc`
 files and passed in child environments, never command arguments or receipts.
+Permit validation checks the syntax and source binding of approval references;
+it does not authenticate human signatures, their independence or the truth of
+asserted attestations. A trusted owner-controlled issuance procedure and
+independent review of the referenced artifacts must establish those facts
+before an operator supplies the root-private permit. Test fixtures are never
+approval artifacts.
 
 After approved fencing and independently proved in-flight drain, `backup`
 reuses the pinned `settlement-dual-service-snapshot.sh` bytes for both
@@ -1578,6 +1598,14 @@ fence and both journal trees. Hidden or idle sessions, prepared transactions,
 changing databases, insufficient space, stale authority and incomplete
 snapshots refuse admission. Separate database transactions are not an atomic
 distributed snapshot; maintained independently witnessed quiescence is required.
+
+The archive limit is **one aggregate budget**, including the settlement
+snapshot: HD may use more than half if DE and the snapshot still fit. Each
+`pg_dump` receives the remaining aggregate bytes as its kernel file-size limit;
+an exhausted budget refuses the next dump. Actual sizes and the combined
+footprint are checked again. This removes an artificial equal-size allocation,
+not the approved total or any capacity guard. Archive sizes must be measured;
+the ~9.95 GiB live HD database size is not its custom-archive size.
 
 `restore-isolated` actually runs `pg_restore` into separate disposable HD
 and DE databases in a digest-pinned container with no network, host credentials
@@ -1622,16 +1650,42 @@ verified owned container must be removed before symlink-safe scratch cleanup.
 Cleanup separately revalidates the bounded mount before deleting only its
 own child; any unknown container, changed mount or stale `restore-*` path
 preserves `INCOMPLETE` and fails closed. No verified restore receipt may
-be published until cleanup and bounded mount recheck have succeeded.
+be published until cleanup, bounded mount recheck and a fresh current producer
+fence/window check have succeeded. Backup publication also rechecks the current
+fence after all final census and receipt-hash I/O. Window expiry at either
+boundary preserves `INCOMPLETE`; it cannot publish a success receipt or resume
+producers. Cleanup of the verified disposable container still runs on expiry.
 
 The finite loop image is an enforced maximum for PGDATA writes, **not**
 proof of full-size restoration, source/mount integrity across a hostile root
 operator, durable off-host backup, quota for Docker daemon logs, financial
 quiescence, or custody release. The real ~9.95 GiB HD plus DE restoration
 and census/sequence checks still require independently witnessed proof,
-along with authorized HD/DE writer fencing and finance review. No loop
-image is yet provisioned, no production backup/restore or cutover has been
-approved, and original consensus/settlement services must remain untouched.
+along with authorized HD/DE writer fencing and finance review. Central Command
+[reported the 40 GiB fully allocated mount and exact-source storage inspection](https://github.com/Emaren/app-prodn/issues/839#issuecomment-6382701190)
+on October 24, 2026; that storage-only receipt does not certify a production-size
+restore. No production backup/restore or cutover has been approved, and original
+consensus/settlement services must remain untouched.
+
+Before scheduling the approved window, the operator and recovery witness must
+qualify full HD **and** DE archives on the exact pinned source/image and bounded
+filesystem. Record archive bytes, peak PGDATA usage, each dump/restore duration,
+financial row/constraint/sequence census time, cleanup time and time remaining
+for paired binary recovery and safe abort. The unchanged limits are 300 seconds
+per dump/restore, 2 GiB memory, two CPUs, and at most 30 minutes of permit
+authority across the procedure. Small CI fixtures do not prove those limits fit
+production. If they do not fit, retain HOLD and obtain independent review of
+measured resource/window changes and a fresh permit; never extend a live permit
+or drop census comparisons to finish. Use independently approved recovery
+copies for a pre-window size/timing trial; obtaining a current quiesced copy
+from production is itself a separately approved fence/drain/backup operation.
+Off-host checksum and recovery verification, complete producer/queue drain,
+privilege recovery and human approvals remain separate prerequisites.
+The present controller requires the original fence window to remain current for
+both backup and isolated restore. `verify_retained_fence` is observational only;
+it cannot renew that authority. Separating a short live capture window from a
+longer offline verification phase would require a separately reviewed bounded
+authority contract, not reusing an expired permit.
 
 Full row hashes, constraints and sequences must match. A checksum alone
 or `pg_restore --list` cannot pass. `INCOMPLETE` remains until this
