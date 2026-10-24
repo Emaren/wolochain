@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "c0ce6e2edd54a7fd614f0ea844599c8e41b477e6a97d4abc251824a35de70b5b",
+      "sha256": "c3516afe7b19b82bcdda4bf666e3c2783c74e91f8ff508a8b457576d9d3d4eb7",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -990,12 +990,36 @@
       ],
       "title": "Financial-maintenance authority and writer review \u2014 2026-10-24",
       "type": "runbook"
+    },
+    {
+      "audience": [
+        "operators",
+        "developers",
+        "ai-agents"
+      ],
+      "authority": "non-authorizing-financial-human-signature-review",
+      "id": "aoe2war.wolochain.financial-maintenance-phase-integration-20261024",
+      "owner": "wolochain-ops",
+      "path": "reviews/financial-maintenance/20261024-phase-integration-operator-runbook.md",
+      "review_interval_days": 14,
+      "reviewed_at": "2026-10-24",
+      "sensitivity": "internal",
+      "sha256": "8d95d5cbdb47e1c6e5140433ee7f8556e9239bef5de0c9f5754e1477d201ba3f",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war",
+        "aoe2dewarwagers"
+      ],
+      "title": "Financial maintenance phase integration operator runbook \u2014 2026-10-24",
+      "type": "runbook"
     }
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "review/20261024-five-human-maintenance-authority",
-    "commit": "b6aa13577d7ff09a29695dca727a77ccc75c4cb9"
+    "branch": "review/20261024-maintenance-phase-integration-held",
+    "commit": "9323d48dbcdfa4d9ea2c8990f02281ba6a864e1e"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

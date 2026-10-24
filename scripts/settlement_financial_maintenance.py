@@ -1027,6 +1027,14 @@ def main(argv=None):
             print(json.dumps({"status": "CURRENT_FENCE_OBSERVED", "resume_authorized": False,
                               "financial_release_authorized": False}))
             return 3
+        # Financially held until an independently enrolled, atomic-nonce,
+        # phase-separated five-human controller is reviewed and installed.
+        # The legacy v1 approval_refs contain only hash-shaped strings and
+        # cannot authenticate a real human. Never treat PR97 offline
+        # cryptographic review (exit 3) as an operational permit.
+        # Keep direct synthetic fence/backup/restore functions testable while
+        # the PRODUCTION CLI remains fail-closed for every write-bearing mode.
+        require(False, "FIVE_HUMAN_CONTROLLER_NOT_INTEGRATED")
         fd = os.open(LOCK, os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW, 0o600)
         with os.fdopen(fd, "a") as lock:
             meta = os.fstat(fd)

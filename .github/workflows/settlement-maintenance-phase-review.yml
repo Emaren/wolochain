@@ -1,0 +1,78 @@
+name: Three-phase maintenance authority engineering (NONAUTHORIZING)
+on:
+  push:
+    branches:
+      - review/20261024-maintenance-phase-integration-held
+  pull_request:
+    branches:
+      - review/20261024-five-human-maintenance-authority
+permissions:
+  contents: read
+jobs:
+  phase-transition-regression:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - name: Exact source checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Runtime versions
+        run: |
+          python3 --version
+          openssl version
+      - name: Real five-signature positive and negative tests
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: python3 -m unittest discover -s tests -p 'test_settlement_human_authority_verify.py' -v
+      - name: Signed three-phase lineage and old controller refusal tests
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: python3 -m unittest discover -s tests -p 'test_settlement_maintenance_phase_review.py' -v
+      - name: Atomic nonce reservation and rollback limitation tests
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: python3 -m unittest discover -s tests -p 'test_settlement_maintenance_nonce_store.py' -v
+      - name: Existing finance controller recovery and bounded backup regressions
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: python3 -m unittest discover -s tests -p 'test_settlement_financial_maintenance.py' -v
+      - name: Source safeguard assertions
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          source=Path('scripts/settlement_financial_maintenance.py').read_text()
+          guard='require(False, "FIVE_HUMAN_CONTROLLER_NOT_INTEGRATED")'
+          lock='fd = os.open(LOCK, os.O_RDWR'
+          assert source.count(guard)==1, 'mandatory legacy-cli hard hold missing'
+          assert source.index(guard)<source.index(lock), 'lock/operation precedes hard hold'
+          gate=Path('scripts/settlement_maintenance_phase_review.py').read_text()
+          assert 'return 3  # A passing review MUST NOT' in gate
+          assert 'production_action_authorized": False' in gate
+          PY
+  docs-review:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Recalculate docs registry in runner only
+        run: |
+          python3 scripts/docs_v2_check.py --write --refresh-baseline --branch review/20261024-maintenance-phase-integration-held --head "$(git rev-parse HEAD)"
+          python3 scripts/docs_v2_check.py
+      - name: Emit generated DocsV2 baseline for independently controlled review commit
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          for key, name in (
+              ("INDEX", "docs/DOCUMENTATION_CONTROL_PLANE.md"),
+              ("REGISTRY", "docs/document-registry.json"),
+          ):
+              value = Path(name).read_text()
+              print("AOE2_GENERATED_%s_BYTES="%key+str(len(value)))
+              for index in range(0,len(value),1000):
+                  print("AOE2_GENERATED_%s_%04d="% (key,index//1000) +
+                        json.dumps(value[index:index+1000]))
+          PY
