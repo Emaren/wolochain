@@ -32,7 +32,7 @@ class PhaseReviewTests(unittest.TestCase):
     def packet(self, phase):
         return fixture.HumanSignatureTests.packet(self, phase)
 
-    def evidence(self, phase, *, capture=None, fence=None, restore=None,
+    def phase_evidence(self, phase, *, capture=None, fence=None, restore=None,
                  previous=None, approval_flags=False):
         value = {
             "schema": gate.EVIDENCE_SCHEMA,
@@ -55,7 +55,7 @@ class PhaseReviewTests(unittest.TestCase):
     def do_review(self, phase, *, capture=None, fence=None, restore=None,
                   previous=None, approval_flags=False, packet=None, evidence=None,
                   ledger=None, expected=None, now=None):
-        evidence = evidence if evidence is not None else self.evidence(
+        evidence = evidence if evidence is not None else self.phase_evidence(
             phase, capture=capture, fence=fence, restore=restore,
             previous=previous, approval_flags=approval_flags)
         packet = deepcopy(packet) if packet is not None else self.packet(phase)
@@ -132,7 +132,7 @@ class PhaseReviewTests(unittest.TestCase):
 
     def test_evidence_cannot_claim_automatic_resume_or_financial_release(self):
         for key in ("automatic_resume_authorized", "financial_release_authorized"):
-            value = json.loads(self.evidence("live_capture"))
+            value = json.loads(self.phase_evidence("live_capture"))
             value[key] = True
             with self.subTest(key=key), self.assertRaisesRegex(
                     a.Refusal, "FORBIDDEN_IMPLICIT_AUTHORITY"):
@@ -148,7 +148,7 @@ class PhaseReviewTests(unittest.TestCase):
             self.do_review("live_capture", now=fixture.NOW+timedelta(hours=1))
 
     def test_bad_human_signatures_never_reach_state_transition(self):
-        ev=self.evidence("live_capture")
+        ev=self.phase_evidence("live_capture")
         pkt=self.packet("live_capture")
         pkt["request"]["evidence_sha256"]=a.sha(ev)
         pkt=self.sign(pkt)
