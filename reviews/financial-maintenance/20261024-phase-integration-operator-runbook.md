@@ -13,7 +13,7 @@ review_interval_days: 14
 sensitivity: "internal"
 ---
 
-# WoloChain financial maintenance v2 — phase operator and reviewer runbook
+# Financial maintenance phase integration operator runbook — 2026-10-24
 **Status: FINANCIAL HARD HOLD / review-only code. Source branch:** `review/20261024-maintenance-phase-integration-held` stacked on held Wolo PR #97. **Never a live playbook until independently authorized.**
 
 ## Boundary and source
