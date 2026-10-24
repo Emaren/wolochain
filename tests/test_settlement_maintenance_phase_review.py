@@ -170,5 +170,27 @@ class PhaseReviewTests(unittest.TestCase):
             self.assertEqual(gate.main(args),2)
 
 
+class ProductionCLIFailClosedTests(unittest.TestCase):
+    def test_legacy_hash_only_cli_is_refused_before_lock_or_mutation(self):
+        import test_settlement_financial_maintenance as existing
+        controller = existing.MOD
+        with patch.object(controller.os, "geteuid", return_value=0), \
+             patch.object(controller, "fence", side_effect=AssertionError("fence called")) as f, \
+             patch.object(controller, "backup", side_effect=AssertionError("backup called")) as b, \
+             patch.object(controller, "restore_isolated", side_effect=AssertionError("restore called")) as rr, \
+             patch.object(controller.os, "open", side_effect=AssertionError("lock opened")) as opened, \
+             patch("builtins.print") as printed:
+            for mode in ("fence", "backup", "restore-isolated"):
+                code = controller.main(["--mode", mode,
+                    "--permit", "/root/forged-hash-ref-v1.json",
+                    "--fence-receipt", "/root/forged-fence.json",
+                    "--output", "/root/not-a-real-backup"])
+                self.assertEqual(code, 2, mode)
+                self.assertEqual(json.loads(printed.call_args.args[0])["reason"],
+                                 "FIVE_HUMAN_CONTROLLER_NOT_INTEGRATED")
+            for call in (f,b,rr,opened):
+                call.assert_not_called()
+
+
 if __name__ == "__main__":
     unittest.main()
