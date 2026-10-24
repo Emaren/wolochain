@@ -29,6 +29,10 @@ jobs:
         env:
           PYTHONDONTWRITEBYTECODE: "1"
         run: python3 -m unittest discover -s tests -p 'test_settlement_maintenance_phase_review.py' -v
+      - name: Atomic nonce reservation and rollback limitation tests
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: python3 -m unittest discover -s tests -p 'test_settlement_maintenance_nonce_store.py' -v
       - name: Existing finance controller recovery and bounded backup regressions
         env:
           PYTHONDONTWRITEBYTECODE: "1"
