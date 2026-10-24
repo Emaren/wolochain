@@ -841,12 +841,28 @@ class ActualIsolatedRestoreTests(unittest.TestCase):
             # The real Docker integration fixture uses a disposable temp bind
             # because CI runners cannot provision protected root-owned VPS
             # scratch. Admission/ownership guards remain tested separately.
-            fixture_pgdata = root / "fixture-pgdata-bind"
-            fixture_pgdata.mkdir()
-            fixture_pgdata.chmod(0o777)
+            generated_pgdata = []
+            def remove_ci_scratch(path):
+                # CI runner cannot traverse PostgreSQL-created UID 999,
+                # mode-0700 directories. Restrict sudo cleanup to exact
+                # disposable test children under this unique /tmp root.
+                self.assertEqual(path.parent, root)
+                self.assertRegex(path.name, r"\\Afixture-pgdata-[0-9]+\\Z")
+                cleaned = subprocess.run(
+                    ["sudo", "-n", "/usr/bin/rm", "-rf", "--", str(path)],
+                    capture_output=True, timeout=15, check=False)
+                self.assertEqual(cleaned.returncode, 0, "CI fixture cleanup failed")
+            def make_ci_scratch(_budget):
+                path = root / ("fixture-pgdata-" + str(len(generated_pgdata)))
+                path.mkdir()
+                path.chmod(0o777)
+                generated_pgdata.append(path)
+                stack.callback(remove_ci_scratch, path)
+                return path
             stack.enter_context(patch.object(MOD, "make_restore_scratch",
-                                             return_value=fixture_pgdata))
-            stack.enter_context(patch.object(MOD, "cleanup_restore_scratch"))
+                                             side_effect=make_ci_scratch))
+            stack.enter_context(patch.object(MOD, "cleanup_restore_scratch",
+                                             side_effect=remove_ci_scratch))
             # Corrupt but rehashed archive reaches actual pg_restore, which must
             # refuse; recomputing checksum must not launder invalid archive bytes.
             original = (output / "hd.dump").read_bytes()
