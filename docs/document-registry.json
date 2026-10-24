@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "64869d8d12b377e861a86c3668d9c94627ebee6f2743e768cd224041fcf49e63",
+      "sha256": "6ecfd82047f0d380e6b8918633ee2a8384ee41b6d26fc8dda857a8aeb8024fdc",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1066,8 +1066,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "review/20261024-legacy-exact-byte-rebuild-held",
-    "commit": "c0f2941d7f2b542185db2abe60c5002506cb5bd4"
+    "branch": "review/20261024-historical-build-script-evidence-held",
+    "commit": "e47894e86b9726c895f0538737abcbf1888bcab8"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
