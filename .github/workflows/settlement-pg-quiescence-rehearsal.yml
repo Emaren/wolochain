@@ -23,7 +23,7 @@ jobs:
           python-version: '3.12'
       - name: Start isolated PostgreSQL (prepared transactions enabled)
         run: |
-          docker run --rm -d --name wolo-qualify-postgres -e POSTGRES_PASSWORD=isolated-ci-only -e POSTGRES_DB=wolo_qualify -p 127.0.0.1:55432:5432 postgres:16 -c max_prepared_transactions=16
+          docker run --rm -d --name wolo-qualify-postgres -e POSTGRES_PASSWORD=isolated-ci-only -e POSTGRES_DB=wolo_qualify -p 127.0.0.1:55432:5432 postgres@sha256:9e2cf6287f25c3151f4c9421ccce2b17f3e60061c111a29165e0d2cdd9ff0a97 -c max_prepared_transactions=16
           for i in $(seq 1 40); do
             if docker exec wolo-qualify-postgres pg_isready -U postgres -d wolo_qualify; then break; fi
             sleep 1

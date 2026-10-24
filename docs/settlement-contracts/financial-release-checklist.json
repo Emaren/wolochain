@@ -1,6 +1,6 @@
 {
   "schema": "aoe2war.wolo.financial-release-checklist.v1",
-  "updated_at_utc": "2026-10-23T02:34:56.844157Z",
+  "updated_at_utc": "2026-10-24T00:11:36.359067Z",
   "canonical_issue": "https://github.com/Emaren/wolochain/issues/5",
   "role": "Single current observational six-control index; never a release permit or autonomous controller",
   "overall_status": "HOLD",
@@ -74,7 +74,7 @@
         "fresh exclusive/quiesced state/config/unit backup identities and checksums",
         "maintained producer fence and measured backup capacity"
       ],
-      "next_action": "After explicit maintenance/fence approval, capture restricted fresh snapshot, checksum and independently verify both state roots/config/units and exclusive ownership; never restore old financial state as binary rollback.",
+      "next_action": "After explicit independent fence/drain and UTC maintenance approval, use the reviewed shared-lock maintenance tool for both journals plus full HD/DE PostgreSQL archives and actual isolated restore. Review final restore/manifest/fence hashes and separately prove off-host and owner/privilege recovery; source CI cannot attest live backup.",
       "requires_production_approval": true
     },
     "reviewed_code_only_rollback_rehearsed": {
@@ -91,7 +91,7 @@
         "real paired service and partial rollout recovery under maintained fence",
         "historical source-to-running-binary build provenance independent of matching fingerprints"
       ],
-      "next_action": "Retain reported digest continuity without claiming source parity; independently establish historical build provenance. Explicitly approve and witness reviewed two-settlement-only rehearsal/recovery. Keep consensus PID/hash and financial state unchanged; retain fence on every failure.",
+      "next_action": "Obtain the other five genuine controls and distinct first-rehearsal human authority for the pinned old-to-bdbce253-to-old pair under the verified producer fence, restore receipt and independent systemd watchdog. Witness actual runtime/state/consensus continuity; later recovery needs fresh post-loss authority. Only a subsequent all-six permit can authorize final promotion.",
       "requires_production_approval": true,
       "latest_operator_report_published_at_utc": "2026-10-23T01:57:20Z"
     },

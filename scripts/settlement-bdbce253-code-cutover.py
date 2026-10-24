@@ -6,10 +6,12 @@ Default --inspect is nonmutating. NEVER touches Wolo consensus or resumes HD/DE
 signers. A permit is a human-approved release artifact, NOT proof that its claims
 are true. It must only be issued after separately witnessed financial controls.
 
-The only mutable live paths are two dedicated systemd override files. The
+The only mutable financial-service paths are two dedicated systemd override files. The
 original executable is never overwritten; original request/run state is never
 copied, truncated, changed or rewound. A partial application is fail-closed and
 offers code-only recovery after the same verified maintenance authority.
+First rehearsal additionally retains a private, nonfinancial control journal
+and an independent systemd watchdog; neither grants production or resume authority.
 """
 from __future__ import annotations
 
@@ -17,6 +19,7 @@ import argparse
 from datetime import datetime, timedelta, timezone
 import hashlib
 import fcntl
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -61,6 +64,19 @@ ATTESTED = {
     "reviewed_code_only_rollback_rehearsed",
     "bank_solvent_and_independently_checked",
 }
+REHEARSAL_CONTROLS = ATTESTED - {"reviewed_code_only_rollback_rehearsed"}
+REHEARSAL_SCHEMA = "aoe2war.wolochain.first-settlement-rehearsal.v1"
+RECOVERY_SCHEMA = "aoe2war.wolochain.fresh-rehearsal-recovery.v1"
+REHEARSAL_APPROVAL = (
+    "I approve a witnessed first two-settlement old-to-candidate-to-old rehearsal; payouts remain fenced"
+)
+RECOVERY_APPROVAL = (
+    "I approve fresh recovery of both settlement lanes to original code; payouts remain fenced"
+)
+REHEARSAL_ROOT = Path("/var/lib/aoe2war-wolo-first-rehearsal")
+FENCE_TOOL = Path(__file__).resolve().with_name("settlement_financial_maintenance.py")
+HEX64 = re.compile(r"[a-f0-9]{64}")
+EXECUTION_ID = re.compile(r"[a-f0-9]{32}")
 
 
 class Blocked(RuntimeError):
@@ -186,6 +202,236 @@ class ReleaseAuthority:
         current = load_release_permit(self.path)
         require(self._binding(current) == self.original,
                 "release permit changed since original approval")
+
+
+def utc(value) -> datetime:
+    require(isinstance(value, str) and re.fullmatch(
+        r"\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d{1,6})?Z", value
+    ) is not None, "explicit UTC timestamp required")
+    try:
+        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise Blocked("invalid UTC timestamp") from exc
+
+
+def validate_rehearsal_permit(doc: dict, *, recovery=False, now=None) -> dict:
+    """Human evidence references, NOT verification or an all-six release permit."""
+    fields = {"schema", "executionId", "candidateRevision", "candidateSha256",
+              "originalSha256", "consensusSha256", "owner", "operator", "recoveryWitness",
+              "approvalRefs", "packetSha256", "procedureSha256", "backupReceiptSha256", "backupReceiptPath",
+              "fenceScopeSha256", "fenceReceiptSha256", "fenceReceiptPath",
+              "toolSha256", "fenceToolSha256", "windowStartUtc", "windowEndUtc",
+              "issuedAtUtc", "expiresAtUtc", "approval", "witnessedControls"}
+    if recovery:
+        fields.add("sessionSha256")
+    require(isinstance(doc, dict) and set(doc) == fields,
+            "rehearsal authority fields missing or unexpected")
+    require(doc["schema"] == (RECOVERY_SCHEMA if recovery else REHEARSAL_SCHEMA),
+            "distinct rehearsal/recovery authority required")
+    require(doc["approval"] == (RECOVERY_APPROVAL if recovery else REHEARSAL_APPROVAL),
+            "explicit rehearsal/recovery approval absent")
+    require(doc["candidateRevision"] == REV and doc["candidateSha256"] == NEW_SHA and
+            doc["originalSha256"] == OLD_SHA and doc["consensusSha256"] == NODE_SHA,
+            "rehearsal binary/source pins differ")
+    require(isinstance(doc["executionId"], str) and EXECUTION_ID.fullmatch(doc["executionId"]),
+            "invalid rehearsal execution identity")
+    for key in ("owner", "operator", "recoveryWitness"):
+        require(isinstance(doc[key], str) and re.fullmatch(r"[A-Za-z0-9_.@-]{3,80}", doc[key]),
+                "named owner/operator/witness authority required")
+    require(doc["recoveryWitness"] not in (doc["owner"], doc["operator"]),
+            "separate recovery witness required")
+    refs = doc["approvalRefs"]
+    require(isinstance(refs, dict) and set(refs) == {
+        "owner", "operator", "chainReviewer", "financeReviewer", "recoveryWitness"
+    } and all(isinstance(value, str) and HEX64.fullmatch(value) and value != "0" * 64
+              for value in refs.values()),
+            "scoped human approval references required")
+    for key in ("packetSha256", "procedureSha256", "backupReceiptSha256", "fenceScopeSha256",
+                "fenceReceiptSha256", "toolSha256", "fenceToolSha256") + (
+                    ("sessionSha256",) if recovery else ()
+                ):
+        require(isinstance(doc[key], str) and HEX64.fullmatch(doc[key]) and doc[key] != "0" * 64,
+                "exact rehearsal evidence/source fingerprint required")
+    require(all(isinstance(doc[key], str) and Path(doc[key]).is_absolute()
+                for key in ("fenceReceiptPath", "backupReceiptPath")),
+            "absolute protected fence/isolated-restore receipts required")
+    controls = doc["witnessedControls"]
+    require(isinstance(controls, list) and len(controls) == len(REHEARSAL_CONTROLS) and
+            all(isinstance(value, str) for value in controls) and set(controls) == REHEARSAL_CONTROLS,
+            "other five independently witnessed controls required; no invented prior rehearsal")
+    start, end = utc(doc["windowStartUtc"]), utc(doc["windowEndUtc"])
+    created, expiry = utc(doc["issuedAtUtc"]), utc(doc["expiresAtUtc"])
+    now = now or datetime.now(timezone.utc)
+    require(timedelta(0) < end - start <= timedelta(minutes=30) and start <= now < end,
+            "rehearsal outside exact bounded maintenance window")
+    require(start <= created <= now and now - timedelta(minutes=5) <= created and
+            now < expiry <= min(end, created + timedelta(minutes=10)),
+            "expired, future or overlong rehearsal authority")
+    return doc
+
+
+def load_rehearsal_permit(path: Path, *, recovery=False, now=None) -> dict:
+    try:
+        doc = json.loads(_read_release_permit(path), object_pairs_hook=_unique_permit_object)
+    except (ValueError, OSError, RecursionError, UnicodeError) as exc:
+        raise Blocked("invalid rehearsal authority JSON") from exc
+    return validate_rehearsal_permit(doc, recovery=recovery, now=now)
+
+
+def protected_bytes(path: Path, *, maximum=65536, private=True) -> bytes:
+    """Stable root-owned source/receipt read; reject writable/symlink ancestors."""
+    require(path.is_absolute() and hasattr(os, "O_NOFOLLOW"), "protected absolute path required")
+    for parent in (path.parent, *path.parent.parents):
+        info = parent.lstat()
+        require(stat.S_ISDIR(info.st_mode) and info.st_uid == 0 and not info.st_mode & 0o022,
+                "protected parent ownership/type/permissions differ")
+    fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    try:
+        before = os.fstat(fd)
+        require(stat.S_ISREG(before.st_mode) and before.st_uid == 0 and before.st_gid == 0 and
+                before.st_nlink == 1 and 0 <= before.st_size <= maximum and
+                (stat.S_IMODE(before.st_mode) == 0o600 if private else not before.st_mode & 0o022),
+                "protected file ownership/type/permissions/size differ")
+        data = os.read(fd, maximum + 1)
+        after = os.fstat(fd)
+        fields = ("st_dev", "st_ino", "st_mode", "st_uid", "st_gid", "st_size",
+                  "st_mtime_ns", "st_ctime_ns", "st_nlink")
+        current = path.lstat()
+        require(len(data) == before.st_size and len(data) <= maximum and
+                all(getattr(before, key) == getattr(after, key) == getattr(current, key) for key in fields),
+                "protected file changed during read")
+        return data
+    finally:
+        os.close(fd)
+
+
+def private_json(path: Path) -> dict:
+    try:
+        doc = json.loads(protected_bytes(path), object_pairs_hook=_unique_permit_object)
+    except (ValueError, OSError, RecursionError, UnicodeError) as exc:
+        raise Blocked("invalid private rehearsal record") from exc
+    require(isinstance(doc, dict), "private rehearsal record must be object")
+    return doc
+
+
+def record_once(path: Path, doc: dict) -> None:
+    """Immutable new operational record, NEVER a financial journal/checklist."""
+    protected_bytes(Path(__file__).resolve(), maximum=1 << 20, private=False)
+    require(path.parent.is_dir() and not path.parent.is_symlink(), "private record parent absent")
+    parent = path.parent.stat()
+    require(parent.st_uid == 0 and parent.st_gid == 0 and stat.S_IMODE(parent.st_mode) == 0o700,
+            "private rehearsal directory must be root:root 0700")
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+    with os.fdopen(fd, "wb") as output:
+        output.write((json.dumps(doc, sort_keys=True, separators=(",", ":")) + "\n").encode())
+        output.flush()
+        os.fsync(output.fileno())
+    directory = os.open(path.parent, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    try:
+        os.fsync(directory)
+    finally:
+        os.close(directory)
+
+
+def sync_directory(path: Path) -> None:
+    """Persist new control-journal directory entries before service mutations."""
+    fd = os.open(path, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    try:
+        info = os.fstat(fd)
+        require(stat.S_ISDIR(info.st_mode) and info.st_uid == 0 and info.st_gid == 0 and
+                not info.st_mode & 0o022, "unsafe control-journal ancestor")
+        os.fsync(fd)
+    finally:
+        os.close(fd)
+
+
+def check_rehearsal_sources(doc: dict) -> None:
+    require(hashlib.sha256(protected_bytes(Path(__file__).resolve(), maximum=1 << 20,
+                                         private=False)).hexdigest() == doc["toolSha256"],
+            "rehearsal controller source drift")
+    require(hashlib.sha256(protected_bytes(FENCE_TOOL, maximum=1 << 20,
+                                         private=False)).hexdigest() == doc["fenceToolSha256"],
+            "producer fence verifier source drift")
+
+
+def fence_check(doc: dict) -> None:
+    """The existing maintenance module owns actual persistent producer gates."""
+    check_rehearsal_sources(doc)
+    raw = protected_bytes(Path(doc["fenceReceiptPath"]))
+    require(hashlib.sha256(raw).hexdigest() == doc["fenceReceiptSha256"], "fence receipt drift")
+    spec = importlib.util.spec_from_file_location("settlement_financial_maintenance", FENCE_TOOL)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    recovery = doc["schema"] == RECOVERY_SCHEMA
+    try:
+        verifier = module.verify_retained_fence if recovery else module.verify_current_fence
+        evidence = verifier(Path(doc["fenceReceiptPath"]), doc["fenceScopeSha256"])
+        backup = protected_bytes(Path(doc["backupReceiptPath"]))
+        require(hashlib.sha256(backup).hexdigest() == doc["backupReceiptSha256"],
+                "isolated restore receipt drift")
+        module.verify_current_backup(Path(doc["backupReceiptPath"]),
+                                     doc["fenceScopeSha256"], doc["fenceReceiptSha256"])
+    except module.MaintenanceError as exc:
+        raise Blocked("current producer fence not verified") from exc
+    # A scope hash alone is not approval of a different packet/procedure.
+    require(isinstance(evidence, dict) and evidence.get("resume_authorized") is False,
+            "producer fence returned no nonresuming evidence")
+    permit = evidence.get("permit", {})
+    require(permit.get("packet_sha256") == doc["packetSha256"] and
+            permit.get("procedure_sha256") == doc["procedureSha256"],
+            "fence belongs to different evidence/procedure")
+    roles = {"owner": "owner", "operator": "operator", "chainReviewer": "chain_reviewer",
+             "financeReviewer": "finance_reviewer", "recoveryWitness": "recovery_witness"}
+    refs = permit.get("approval_refs", {})
+    if recovery:
+        # Expired OLD fence authority is NOT renewed. Its persistent gates are
+        # observed only; the fresh recovery document separately authorizes the
+        # new bounded recovery window and newly referenced human approvals.
+        require(evidence.get("admission_authorized") is False and
+                refs.get("owner", {}).get("identity") == doc["owner"],
+                "retained fence ownership/observation differs")
+        return
+    require(utc(permit.get("not_before")) <= utc(doc["windowStartUtc"]) and
+            utc(doc["windowEndUtc"]) <= utc(permit.get("expires_at")),
+            "first rehearsal exceeds original approved fence window")
+    require(all(isinstance(refs.get(role), dict) and
+                refs[role].get("approval_sha256") == doc["approvalRefs"][key]
+                for key, role in roles.items()) and
+            all(refs[roles[key]].get("identity") == doc[key]
+                for key in ("owner", "operator", "recoveryWitness")),
+            "fence human approvals differ from rehearsal authority")
+
+
+class RehearsalAuthority:
+    def __init__(self, path: Path, *, recovery=False, session=None, lost_after=None):
+        self.path, self.recovery, self.session, self.lost_after = path, recovery, session, lost_after
+        require(not recovery or (session is not None and lost_after is not None),
+                "recovery requires an independently observed controller-loss bound")
+        self.doc = load_rehearsal_permit(path, recovery=recovery)
+        self.binding = ReleaseAuthority._binding(self.doc)
+
+    def refresh(self) -> dict:
+        doc = load_rehearsal_permit(self.path, recovery=self.recovery)
+        require(ReleaseAuthority._binding(doc) == self.binding, "rehearsal authority changed")
+        return doc
+
+    def check(self) -> None:
+        doc = self.refresh()
+        if self.session is not None:
+            old = self.session["permit"]
+            require(doc["sessionSha256"] == self.session["_sha256"] and
+                    doc["executionId"] == old["executionId"] and
+                    all(doc[key] == old[key] for key in ("packetSha256", "procedureSha256",
+                        "fenceScopeSha256", "toolSha256", "fenceToolSha256")),
+                    "recovery belongs to a different approved rehearsal")
+            require(utc(doc["issuedAtUtc"]) > utc(self.session["createdAtUtc"]),
+                    "later recovery requires newly issued authority")
+            require(self.lost_after is not None and
+                    utc(doc["issuedAtUtc"]) >= utc(self.lost_after),
+                    "recovery authority predates detected controller loss")
+        fence_check(doc)
+        self.refresh()  # slow fence/source I/O must not consume expired authority
 
 
 class Live:
@@ -594,6 +840,266 @@ class Cutover:
             raise
 
 
+def process_identity(pid: int) -> dict | None:
+    """Linux boot + PID/start ticks: never mistake a reused PID for our process."""
+    require(type(pid) is int and pid > 0, "invalid controller process identity")
+    try:
+        fd = os.open(f"/proc/{pid}/stat", os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+        try:
+            raw = os.read(fd, 8193).decode("ascii")
+        finally:
+            os.close(fd)
+        require(len(raw) <= 8192 and raw.startswith(f"{pid} ("), "invalid process identity data")
+        fields = raw.rsplit(")", 1)[1].split()
+        require(len(fields) >= 20 and fields[19].isdecimal(), "missing process start ticks")
+        if fields[0] in ("Z", "X"):
+            return None
+        boot = Path("/proc/sys/kernel/random/boot_id").read_text().strip()
+        require(re.fullmatch(r"[a-f0-9-]{36}", boot), "invalid kernel boot identity")
+        return {"pid": pid, "startTicks": fields[19], "bootId": boot}
+    except (FileNotFoundError, ProcessLookupError):
+        return None
+
+
+def unit_status(live, unit: str) -> dict:
+    require(re.fullmatch(r"aoe2war-wolo-first-rehearsal-[a-f0-9]{32}\.service", unit),
+            "unreviewed rehearsal supervisor unit")
+    fields = ("ActiveState", "MainPID", "InvocationID", "Restart", "Type", "Transient", "KillMode")
+    raw = live.command("systemctl", "show", unit, "--no-pager",
+                       *("--property=" + field for field in fields))
+    return dict(line.split("=", 1) for line in raw.splitlines() if "=" in line)
+
+
+def supervisor_identity(live, unit: str) -> dict:
+    status = unit_status(live, unit)
+    require(status.get("ActiveState") == "active" and status.get("Restart") == "on-failure" and
+            status.get("Type") == "exec" and status.get("Transient") == "yes" and
+            status.get("KillMode") == "control-group" and
+            re.fullmatch(r"[a-f0-9]{32}", status.get("InvocationID", "")) and
+            status.get("MainPID", "").isdecimal(), "independent systemd supervision not verified")
+    identity = process_identity(int(status["MainPID"]))
+    require(identity is not None, "supervisor process absent")
+    return {**identity, "invocationId": status["InvocationID"]}
+
+
+def load_session(path: Path) -> dict:
+    raw = protected_bytes(path)
+    try:
+        doc = json.loads(raw, object_pairs_hook=_unique_permit_object)
+    except (ValueError, RecursionError, UnicodeError) as exc:
+        raise Blocked("invalid rehearsal session") from exc
+    require(isinstance(doc, dict) and set(doc) == {"schema", "permit", "permitPath",
+            "controllerIdentity", "consensusPid", "createdAtUtc", "watchdogUnit"} and
+            doc["schema"] == "aoe2war.wolochain.rehearsal-session.v1",
+            "rehearsal session shape differs")
+    validate_rehearsal_permit(doc["permit"], now=utc(doc["createdAtUtc"]))
+    execution = doc["permit"]["executionId"]
+    require(path == REHEARSAL_ROOT / execution / "session.json" and
+            doc["watchdogUnit"] == f"aoe2war-wolo-first-rehearsal-{execution}.service" and
+            type(doc["consensusPid"]) is int and doc["consensusPid"] > 0 and
+            isinstance(doc["controllerIdentity"], dict) and
+            set(doc["controllerIdentity"]) == {"pid", "startTicks", "bootId"},
+            "rehearsal session identity/path differs")
+    identity = doc["controllerIdentity"]
+    require(type(identity["pid"]) is int and identity["pid"] > 0 and
+            isinstance(identity["startTicks"], str) and identity["startTicks"].isdecimal() and
+            isinstance(identity["bootId"], str) and re.fullmatch(r"[a-f0-9-]{36}", identity["bootId"]),
+            "rehearsal session process binding invalid")
+    doc["_sha256"] = hashlib.sha256(raw).hexdigest()
+    return doc
+
+
+def check_watchdog(live, path: Path, session: dict) -> None:
+    ready = private_json(path.parent / "watchdog-ready.json")
+    require(set(ready) == {"sessionSha256", "identity"} and
+            ready["sessionSha256"] == session["_sha256"] and
+            ready["identity"] == supervisor_identity(live, session["watchdogUnit"]),
+            "watchdog absent, restarted or identity changed")
+
+
+def start_watchdog(live, path: Path, session: dict) -> None:
+    # systemd is the parent/supervisor, not the invoking SSH/controller session.
+    live.command("systemd-run", "--unit=" + session["watchdogUnit"],
+                 "--property=Type=exec", "--property=Restart=on-failure", "--property=RestartSec=1s",
+                 "--property=KillMode=control-group", "--property=User=root", "--property=UMask=0077",
+                 "/usr/bin/python3", str(Path(__file__).resolve()),
+                 "--mode", "rehearsal-watchdog", "--session", str(path))
+    deadline = time.monotonic() + 10
+    while time.monotonic() < deadline:
+        try:
+            check_watchdog(live, path, session)
+            return
+        except (Blocked, OSError):
+            time.sleep(.1)
+    raise Blocked("independent watchdog readiness deadline exceeded; zero rehearsal mutations allowed")
+
+
+def completion(path: Path, session: dict, *, round_trip=False, recovered=False) -> dict:
+    result = {"schema": "aoe2war.wolochain.rehearsal-result.v1",
+              "sessionSha256": session["_sha256"], "originalCodeRestored": True,
+              "codeRoundTripObserved": round_trip, "freshRecoveryObserved": recovered,
+              "production_authorized": False, "financial_resume_authorized": False,
+              "canonical_control_updated": False, "independent_witness_attested": False}
+    record_once(path.parent / "completed.json", result)
+    return result
+
+
+def first_rehearsal(authority: RehearsalAuthority, live) -> dict:
+    authority.check()
+    ctl = Cutover(live)
+    pinned = ctl.pin_node()
+    require(ctl.inspect() == "old", "first rehearsal requires both original lanes")
+    identity = process_identity(os.getpid())
+    require(identity is not None, "controller identity unavailable")
+    REHEARSAL_ROOT.mkdir(mode=0o700, exist_ok=True)
+    info = REHEARSAL_ROOT.lstat()
+    require(stat.S_ISDIR(info.st_mode) and info.st_uid == 0 and info.st_gid == 0 and
+            stat.S_IMODE(info.st_mode) == 0o700, "unsafe rehearsal record root")
+    sync_directory(REHEARSAL_ROOT.parent)  # make a newly created journal root durable
+    directory = REHEARSAL_ROOT / authority.doc["executionId"]
+    directory.mkdir(mode=0o700)  # no duplicate/replayed execution identity
+    sync_directory(REHEARSAL_ROOT)  # persist execution directory before its session
+    path = directory / "session.json"
+    record_once(path, {"schema": "aoe2war.wolochain.rehearsal-session.v1",
+        "permit": authority.doc, "permitPath": str(authority.path),
+        "controllerIdentity": identity, "consensusPid": pinned,
+        "createdAtUtc": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "watchdogUnit": f"aoe2war-wolo-first-rehearsal-{authority.doc['executionId']}.service"})
+    session = load_session(path)
+    start_watchdog(live, path, session)
+    def guarded():
+        authority.check()
+        check_watchdog(live, path, session)
+        authority.refresh()
+    ctl.authorize = guarded
+    # promote owns its own bounded OLD cleanup if forward rollout fails.
+    try:
+        ctl.promote()
+    except BaseException:
+        # Record only independently re-observed OLD code after caught abort;
+        # no rehearsal/finance attestation follows from an aborted rollout.
+        try:
+            require(ctl.pin_node() == pinned and ctl.inspect() == "old", "abort not recovered")
+            completion(path, session)
+        except BaseException:
+            pass  # the independently supervised loss/recovery path stays armed
+        raise
+    # Mandatory return is part of the SAME started round-trip authority. Even
+    # expiry/revocation cannot authorize leaving candidate code installed.
+    # Exactly one bounded OLD cleanup; failure is CRITICAL, never auto-retried.
+    try:
+        require(ctl.pin_node() == pinned, "consensus changed before mandatory return")
+        ctl._complete_code_recovery(pinned)
+    except BaseException as exc:
+        raise Blocked("CRITICAL: first rehearsal return failed; fence retained, fresh recovery required") from exc
+    try:
+        guarded()
+    except BaseException:
+        completion(path, session)  # OLD returned, but rehearsal not certified
+        raise
+    return completion(path, session, round_trip=True)
+
+
+def controller_loss(path: Path, session: dict) -> dict:
+    """Immutable actual loss observation shared by manual and watchdog recovery."""
+    require(process_identity(session["controllerIdentity"]["pid"]) != session["controllerIdentity"],
+            "original controller still alive; recovery denied")
+    loss_path = path.parent / "controller-lost.json"
+    if not loss_path.exists():
+        try:
+            record_once(loss_path, {"sessionSha256": session["_sha256"],
+                "observedAtUtc": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+                "status": "CONTROLLER_LOST_FRESH_RECOVERY_REQUIRED"})
+        except FileExistsError:
+            pass  # the other observer won; validate the immutable record below
+    loss = private_json(loss_path)
+    require(set(loss) == {"sessionSha256", "observedAtUtc", "status"} and
+            loss["sessionSha256"] == session["_sha256"] and
+            loss["status"] == "CONTROLLER_LOST_FRESH_RECOVERY_REQUIRED" and
+            utc(session["createdAtUtc"]) <= utc(loss["observedAtUtc"]) <= datetime.now(timezone.utc),
+            "controller loss identity/time binding differs")
+    return loss
+
+
+def recover_rehearsal(path: Path, permit: Path, live) -> dict:
+    session = load_session(path)
+    own = process_identity(os.getpid())
+    require(own is not None and own["bootId"] == session["controllerIdentity"]["bootId"],
+            "host boot identity changed; fresh incident procedure required")
+    loss = controller_loss(path, session)
+    authority = RehearsalAuthority(permit, recovery=True, session=session,
+                                  lost_after=loss["observedAtUtc"])
+    authority.check()
+    attempt = hashlib.sha256(authority.binding.encode()).hexdigest()
+    record_once(path.parent / f"recovery-attempt-{attempt}.json", {
+        "sessionSha256": session["_sha256"], "authoritySha256": attempt,
+        "status": "ATTEMPT_CONSUMED_FRESH_AUTHORITY_REQUIRED_FOR_ANY_RETRY"})
+    ctl = Cutover(live, authorize=authority.check)
+    require(ctl.pin_node() == session["consensusPid"], "consensus changed since rehearsal")
+    # Inspect owned partial overrides/inactive lanes. Never overwrite foreign code.
+    generation = ctl.state(allow_partial=True)
+    inactive = any(live.show(unit, "ActiveState") != "active" for unit in SERVICES)
+    if generation != "old" or inactive:
+        ctl.code_only_recover(session["consensusPid"])
+    require(ctl.inspect() == "old", "fresh recovery did not restore both original lanes")
+    authority.refresh()
+    return completion(path, session, recovered=True)
+
+
+def watchdog_step(path: Path, session: dict, live) -> str:
+    """Never mutate on controller loss alone. Recovery is separately authorized."""
+    done = path.parent / "completed.json"
+    if done.exists():
+        result = private_json(done)
+        require(result.get("sessionSha256") == session["_sha256"] and
+                result.get("originalCodeRestored") is True and
+                result.get("production_authorized") is False,
+                "completion marker does not bind this nonauthorizing rehearsal")
+        ctl = Cutover(live)
+        require(ctl.pin_node() == session["consensusPid"] and ctl.inspect() == "old",
+                "completion marker differs from actual paired OLD runtime")
+        return "COMPLETE_OLD_CODE_NO_RESUME_AUTHORITY"
+    if process_identity(session["controllerIdentity"]["pid"]) == session["controllerIdentity"]:
+        try:
+            fence_check(session["permit"])
+            return "MONITORING_BOUND_CONTROLLER"
+        except (Blocked, OSError, ValueError):
+            return "HOLD_PRODUCER_FENCE_UNVERIFIED_NO_RESUME"
+    controller_loss(path, session)
+    permit = path.parent / "recovery-permit.json"
+    if not permit.exists():
+        return "HOLD_AWAITING_FRESH_HUMAN_RECOVERY_AUTHORITY"
+    try:
+        with acquire_mutation_lock():
+            recover_rehearsal(path, permit, live)
+        return "COMPLETE_OLD_CODE_NO_RESUME_AUTHORITY"
+    except (Blocked, OSError, ValueError, subprocess.SubprocessError):
+        # No old permit adoption, repeated financial broadcast or producer resume.
+        return "HOLD_RECOVERY_REFUSED_OR_FAILED_HUMAN_INSPECTION_REQUIRED"
+
+
+def run_watchdog(path: Path, live) -> None:
+    session = load_session(path)
+    own = supervisor_identity(live, session["watchdogUnit"])
+    require(own["pid"] == os.getpid() and
+            own["bootId"] == session["controllerIdentity"]["bootId"],
+            "watchdog must run as its exact independent systemd MainPID")
+    check_rehearsal_sources(session["permit"])
+    ready = path.parent / "watchdog-ready.json"
+    if not ready.exists():
+        record_once(ready, {"sessionSha256": session["_sha256"],
+                           "identity": supervisor_identity(live, session["watchdogUnit"])})
+    previous = None
+    while True:
+        state = watchdog_step(path, session, live)
+        if state != previous:
+            print(state, flush=True)  # fixed statuses, no private records or identities
+            previous = state
+        if state == "COMPLETE_OLD_CODE_NO_RESUME_AUTHORITY":
+            return
+        time.sleep(1)
+
+
 def acquire_mutation_lock():
     """Serialize exact financial code switches, never create file for inspect."""
     import contextlib
@@ -654,11 +1160,28 @@ def run_mode(args, controller: Cutover) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--mode", default="inspect",
-                        choices=["inspect", "source-authority", "promote", "rollback", "recover-interrupted"])
+                        choices=["inspect", "source-authority", "promote", "rollback", "recover-interrupted",
+                                 "first-rehearsal", "rehearsal-recover", "rehearsal-watchdog"])
     parser.add_argument("--permit", help="absolute root-owned finance approval JSON")
+    parser.add_argument("--session", help="exact root-private first-rehearsal session record")
     args = parser.parse_args()
     try:
         require(os.geteuid() == 0, "root needed to inspect/operate exact systemd units")
+        if args.mode in {"first-rehearsal", "rehearsal-recover", "rehearsal-watchdog"}:
+            if args.mode == "rehearsal-watchdog":
+                require(args.session and not args.permit, "supervisor requires only a bound session")
+                run_watchdog(Path(args.session), Live())
+            elif args.mode == "first-rehearsal":
+                require(args.permit and not args.session, "first rehearsal requires its distinct permit")
+                authority = RehearsalAuthority(Path(args.permit))
+                with acquire_mutation_lock():
+                    print(json.dumps(first_rehearsal(authority, Live()), sort_keys=True))
+            else:
+                require(args.permit and args.session, "later recovery requires fresh permit and session")
+                with acquire_mutation_lock():
+                    print(json.dumps(recover_rehearsal(Path(args.session), Path(args.permit), Live()), sort_keys=True))
+            return 0
+        require(not args.session, "production/read-only modes cannot adopt rehearsal sessions")
         authority = None
         if args.mode not in READ_ONLY_MODES:
             require(bool(args.permit), "mutations require explicit finance permit")

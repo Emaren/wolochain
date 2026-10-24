@@ -1513,3 +1513,117 @@ approved maintenance rehearsal with recorded results. Do not run a
 mutating mode until that certification and a named go/no-go are documented.
 The protected HD `finish`, eighth schema migration, and dedicated Satchel
 8094 activation require separate explicit approval and receipts.
+
+## October 23: distinct first-rehearsal authority and verified backup path
+
+The recovered controller work adds a **separate first-rehearsal permit**. The
+existing production permit, its six controls, and its `promote`, `rollback`
+and `recover-interrupted` modes retain their existing requirements. A first
+rehearsal requires the other five independently evidenced controls; it does
+not require an attestation of its own future completion. Neither a permit
+parser nor synthetic CI supplies those independent attestations.
+
+The exact historical transition remains `78c25985` / executable SHA-256
+`040126a2884946caf1651a50b7d8115c5a6fb2d5aa94fcbbe150694602d451a5`
+to the preserved `bdbce253` candidate / SHA-256
+`44d8aed5550d1b33635c734c1a359d0cb69e854093ef8c9a8a3da4f99d416ede`,
+then back to the original code. Newer held custody source and the separate
+federated source baseline are not substitutes for either pinned executable.
+The consensus executable/PID remain independently pinned and untouched.
+
+`scripts/settlement_financial_maintenance.py` defaults to nonmutating `scope`
+and exits 3. The explicit `fence`, `backup`, and `restore-isolated` modes
+require fresh root-private human authority. The shared nonblocking operator
+mutex is `/run/lock/aoe2war-wolo-two-settlement-code-only.lock`, also used by
+the two-service controller. These modes must never run concurrently.
+
+The fixed activation-fence scope is four services:
+`aoe2hdbets-web.service`, `aoe2hdbets-api.service`,
+`aoe2dewarwagers-web.service`, `aoe2dewarwagers-api.service`; and both the
+`.timer` and `.service` for each of these six families:
+`aoe2hdbets-bet-stake-reconcile`, `aoe2hdbets-challenge-reconcile`,
+`aoe2hdbets-replay-auto-recovery`, `aoe2hdbets-staking-rewards`,
+`aoe2hdbets-trophy-tributes`, `aoe2war-prewarm`.
+This is a proposed, expressly approved maintenance scope, not permission to
+stop all inventory candidates. The heartbeat observer, consensus and the two
+settlement services are outside this producer-fence list. External callers,
+manual signers, cron, user managers, containers and every database writer
+still require separate positive owner classification and isolation evidence.
+
+The fence creates a persistent root-private
+`/etc/wolochain-financial-maintenance/HOLD` and exact owned systemd
+`90-wolo-financial-maintenance.conf` drop-ins. It verifies the effective
+D-Bus conditions before stopping timers, their services, then the four apps.
+It verifies every scoped unit is inactive with no PID/cgroup or queued job.
+HOLD and gates remain after errors, expiry, controller death or reboot.
+There is deliberately no automatic unfence or producer-resume command.
+The complete operator procedure must separately approve exact gate removal,
+the captured prestate restoration order, unresolved-queue disposition and
+post-resume checks before a live maintenance window is execution-ready.
+
+The `wolo.financial-maintenance-permit.v1` contract binds exact tool/scope,
+review packet and procedure hashes, five human approval references,
+external-writer attestations, a maximum 30-minute UTC window, a measured
+backup budget, two distinct HD/DE database identities and reviewed financial
+table inventories. It requires a pre-provisioned digest-pinned PostgreSQL
+image. Database credentials are read only from pinned root-private `/etc`
+files and passed in child environments, never command arguments or receipts.
+
+After approved fencing and independently proved in-flight drain, `backup`
+reuses the pinned `settlement-dual-service-snapshot.sh` bytes for both
+settlement state/config/binary receipts. It creates full HD and DE custom
+PostgreSQL archives, compares canonical financial rows, constraints and
+sequence state before/after and across both dumps, and rechecks the producer
+fence and both journal trees. Hidden or idle sessions, prepared transactions,
+changing databases, insufficient space, stale authority and incomplete
+snapshots refuse admission. Separate database transactions are not an atomic
+distributed snapshot; maintained independently witnessed quiescence is required.
+
+`restore-isolated` actually runs `pg_restore` into separate disposable HD
+and DE databases in a digest-pinned container, with no network, host mounts,
+host credentials or production PostgreSQL connection. Full row hashes,
+constraints and sequences must match. A checksum alone or `pg_restore --list`
+cannot pass. `INCOMPLETE` remains until this succeeds; only final
+`restore.json`, bound to its manifest and fence, can admit a rehearsal.
+These receipts explicitly do not prove off-host survival, independent witness
+approval, owner/privilege recovery, point-in-time WAL recovery or solvency.
+Those recovery requirements remain separately reviewed operator evidence.
+
+`scripts/settlement-bdbce253-code-cutover.py --mode first-rehearsal
+--permit ABSOLUTE_PROTECTED_FILE` accepts only
+`aoe2war.wolochain.first-settlement-rehearsal.v1`. It binds exact binaries,
+source/evidence/approval hashes, the verified fence and isolated-restore
+receipts, a unique execution ID and a bounded UTC operator/witness window.
+Individual authority is at most ten minutes and must be newly issued.
+The only allowed successful sequence is paired old → candidate → old.
+Caught failures receive bounded original-code cleanup and retain all fences.
+No financial journal is restored or rewound, and no payment is retried.
+
+The root-private journal under `/var/lib/aoe2war-wolo-first-rehearsal` is
+fsynced before service changes. A transient independent systemd watchdog is
+bound to the controller's boot ID/PID/start time and its own InvocationID.
+It survives SSH/controller death and records immutable detected-loss time.
+Controller loss alone never authorizes recovery. Later manual or watchdog
+recovery requires `aoe2war.wolochain.fresh-rehearsal-recovery.v1`, issued
+after that loss, bound to the exact session and fresh human approvals. Each
+attempt is consumed durably; retries need new authority. A changed host boot
+identity requires a separate incident procedure. Expired original fence
+authority is observable as retained gates, never renewed into new permission.
+
+Completion receipts keep `production_authorized=false`,
+`financial_resume_authorized=false` and `independent_witness_attested=false`.
+They never update the canonical six-control checklist automatically. A real
+independent witness must review actual live paired runtime, unchanged
+consensus, state and drain evidence before the sixth production control can
+be attested under a separate final promotion authorization.
+
+CI exercises fault-injected controller/backup contracts, actual disposable
+Linux systemd activation denial and watchdog SIGKILL survival, and real
+isolated PostgreSQL archive restoration and corruption refusal. These tests
+qualify source mechanics, not a live financial rehearsal or backup. The
+canonical `docs/settlement-contracts/financial-release-checklist.json` remains
+the only six-control index: five controls BLOCKED, independent global solvency
+UNKNOWN. Preserve the accepted 100-WOLO UNKNOWN outcome, claim #889 and
+nonadditive historical obligations. Satchel custody stays UNAVAILABLE; the
+financial bridge, signer activation, migrations and funded canary remain on
+their separate protected approval rails.
