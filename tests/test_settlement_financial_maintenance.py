@@ -514,6 +514,22 @@ class DatabaseTests(unittest.TestCase):
         self.assertNotIn("sum(", " ".join(calls).lower())
 
 
+    def test_restore_census_rejects_invalid_or_unready_indexes(self):
+        for attr in ("indisvalid","indisready"):
+            fake_index={"table_name":"claims","index_name":"claims_pkey",
+                        "indisvalid":True,"indisready":True}
+            fake_index[attr]=False
+            answers=iter([json.dumps(self.catalog()),
+                          '{"rows":"1","sha256":"' + "a"*64 + '"}',
+                          '{"rows":"1","sha256":"' + "b"*64 + '"}',
+                          '[]','[]',json.dumps([fake_index])])
+            with self.subTest(attribute=attr), \\
+                 patch.object(MOD,"psql",side_effect=lambda *a,**kw:next(answers)), \\
+                 self.assertRaisesRegex(MOD.MaintenanceError,
+                                        "INDEX_RECOVERY_INTEGRITY_UNPROVEN"):
+                MOD.financial_census(valid_permit()["databases"]["hd"],{},None)
+
+
 class ReadOnlyStorageInspectorTests(unittest.TestCase):
     """The operator mode must never create a lock, finance permit or backup."""
 
