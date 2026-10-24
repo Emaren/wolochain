@@ -82,6 +82,11 @@ def authenticate_and_reserve(args, *, mode, source_tool_sha256, scope_sha256,
          human.HEX64.fullmatch(anchors[k])) and
         anchors[k] not in ("0"*40,"0"*64) for k in REQUIRED_PINS),
         "INDEPENDENT_TRUST_AND_SOURCE_ENROLLMENT_MISSING")
+    require(type(anchors["revoked_key_ids"]) in (tuple,list) and
+            len(anchors["revoked_key_ids"])==len(set(anchors["revoked_key_ids"])) and
+            all(type(x) is str and human.ID.fullmatch(x)
+                for x in anchors["revoked_key_ids"]),
+            "REVOCATION_ANCHOR_INVALID")
     root=Path(root)
     require(root.is_absolute(), "PRIVATE_AUTHORITY_ROOT_REQUIRED")
 
