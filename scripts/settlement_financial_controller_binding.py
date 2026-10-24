@@ -106,6 +106,10 @@ def authenticate_and_reserve(args, *, mode, source_tool_sha256, scope_sha256,
             digest(host)==anchors["host_identity_sha256"] and
             digest(source_drift)==anchors["source_drift_disposition_sha256"],
             "SOURCE_HOST_TRUST_OR_DISPOSITION_DRIFT")
+    registry=human.parse_json(registry_raw)
+    require(all(type(p) is dict and p.get("key_id") not in anchors["revoked_key_ids"]
+                for p in registry.get("principals",[])),
+            "REVOKED_HUMAN_APPROVER")
     packet=human.parse_json(packet_raw)
     ledger=human.parse_json(ledger_raw)
     request=packet.get("request")
