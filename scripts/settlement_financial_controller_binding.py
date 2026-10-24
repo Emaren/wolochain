@@ -198,7 +198,10 @@ def authenticate_and_reserve(args, *, mode, source_tool_sha256, scope_sha256,
             type(item["evidence_sha256"]) is str and
             human.HEX64.fullmatch(item["evidence_sha256"]),
             "FINANCIAL_WRITER_OWNER_UNATTESTED")
-        raw=exact_private(root/"writer-coverage"/(category+".json"),root)
+        try:
+            raw=exact_private(root/"writer-coverage"/(category+".json"),root)
+        except (OSError, KeyError):
+            raise human.Refusal("WRITER_EVIDENCE_FILE_UNAVAILABLE") from None
         require(digest(raw)==item["evidence_sha256"],
                 "WRITER_EVIDENCE_FILE_HASH_MISMATCH")
         doc=phase.decode(raw,"wolo.financial-writer-coverage-evidence.v1",
