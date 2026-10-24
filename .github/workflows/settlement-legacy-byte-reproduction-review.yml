@@ -69,6 +69,8 @@ jobs:
             echo 'RC=0 PASS EXACT BYTES ONLY; ORIGINAL BUILD/DEPLOY CUSTODY UNKNOWN'
           elif [ "$review_rc" -eq 2 ]; then
             echo 'RC=2 BLOCKED EXACT BYTES NOT REPRODUCED; P1 OPEN'
+            echo 'FAIL_CLOSED=TRUE: this workflow intentionally FAILS on a real SHA mismatch'
+            exit 2
           else
             echo "RC=$review_rc BLOCKED reviewer crashed"
             exit 2
