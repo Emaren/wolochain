@@ -1,0 +1,76 @@
+name: Signed maintenance controller admission (NONAUTHORIZING)
+on:
+  push:
+    branches:
+      - review/20261024-controller-verified-phase-admission-held
+  pull_request:
+    branches:
+      - review/20261024-maintenance-phase-integration-held
+permissions:
+  contents: read
+jobs:
+  signed-controller-negative-tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - name: Checkout exact source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Runtime prerequisites
+        run: |
+          python3 --version
+          openssl version
+          python3 -m py_compile scripts/settlement_financial_maintenance.py scripts/settlement_financial_controller_binding.py
+      - name: Real five-Ed25519 synthetic-key controller admission tests
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: python3 -m unittest discover -s tests -p 'test_settlement_financial_controller_binding.py' -v
+      - name: Preserve original signed-phase crypto and nonce suites
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: |
+          python3 -m unittest discover -s tests -p 'test_settlement_human_authority_verify.py' -v
+          python3 -m unittest discover -s tests -p 'test_settlement_maintenance_phase_review.py' -v
+          python3 -m unittest discover -s tests -p 'test_settlement_maintenance_nonce_store.py' -v
+      - name: Restore fence/backup legacy regression suite
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: python3 -m unittest discover -s tests -p 'test_settlement_financial_maintenance.py' -v
+      - name: Unenrolled controller and resume stay blocked in source
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path('scripts/settlement_financial_maintenance.py').read_text()
+          b=Path('scripts/settlement_financial_controller_binding.py').read_text()
+          assert 'AUTHORITY_ENROLLMENT_ANCHORS' in s
+          assert '"registry_sha256": None' in s
+          assert 'independently_consume_remote_nonce' in b
+          assert 'INDEPENDENT_MONOTONIC_NONCE_WITNESS_UNAVAILABLE' in b
+          assert 'INDEPENDENT_RESUME_EXECUTOR_NOT_APPROVED' in b
+          assert 'restore_isolated(args.fence_receipt, args.output, phase_window=req)' in s
+          PY
+  docs-v2:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - name: Checkout exact review source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Regenerate docs in disposable runner
+        run: |
+          python3 scripts/docs_v2_check.py --write --refresh-baseline --branch review/20261024-controller-verified-phase-admission-held --head "$(git rev-parse HEAD)"
+          python3 scripts/docs_v2_check.py
+      - name: Export full generated DocsV2 entries for reviewed source-commit
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          for key,path in (("INDEX","docs/DOCUMENTATION_CONTROL_PLANE.md"),
+                           ("REGISTRY","docs/document-registry.json")):
+              value=Path(path).read_text()
+              print("AOE2_BOUND_%s_BYTES="%key+str(len(value)))
+              for i in range(0,len(value),1000):
+                  print("AOE2_BOUND_%s_%04d="% (key,i//1000)+json.dumps(value[i:i+1000]))
+          PY

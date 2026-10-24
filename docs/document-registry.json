@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "c3516afe7b19b82bcdda4bf666e3c2783c74e91f8ff508a8b457576d9d3d4eb7",
+      "sha256": "d864aee6d93a40fe49e40c67d71de399043129bbe99e6264f2ad11b77f9155ec",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1014,12 +1014,36 @@
       ],
       "title": "Financial maintenance phase integration operator runbook \u2014 2026-10-24",
       "type": "runbook"
+    },
+    {
+      "audience": [
+        "operators",
+        "developers",
+        "ai-agents"
+      ],
+      "authority": "non-authorizing-financial-human-signature-review",
+      "id": "aoe2war.wolochain.financial-controller-source-integrity-and-enrollment-20261024",
+      "owner": "wolochain-ops",
+      "path": "reviews/financial-maintenance/20261024-source-integrity-enrollment-and-restore-qualification.md",
+      "review_interval_days": 14,
+      "reviewed_at": "2026-10-24",
+      "sensitivity": "internal",
+      "sha256": "d619b0dc33c2c4bd99be536988ea9df308940a213668fa65bcde6a7c1efe072f",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war",
+        "aoe2dewarwagers"
+      ],
+      "title": "Financial controller source integrity and five-human enrollment \u2014 2026-10-24",
+      "type": "runbook"
     }
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "review/20261024-maintenance-phase-integration-held",
-    "commit": "9323d48dbcdfa4d9ea2c8990f02281ba6a864e1e"
+    "branch": "review/20261024-controller-verified-phase-admission-held",
+    "commit": "35582a3ce3a3a065bd3e1279daa39c8d2bdaf9cb"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

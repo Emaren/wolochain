@@ -494,20 +494,40 @@ class DatabaseTests(unittest.TestCase):
                         '{"rows":"947","sha256":"' + "a" * 64 + '"}',
                         '{"rows":"1","sha256":"' + "b" * 64 + '"}',
                         '[{"conname":"claims_owner_fk","convalidated":true}]',
-                        '[{"sequencename":"claims_id_seq","last_value":947}]'])
+                        '[{"sequencename":"claims_id_seq","last_value":947}]',
+                        '[{"table_name":"claims","index_name":"claims_pkey",'
+                        '"indisvalid":true,"indisready":true}]'])
         calls = []
         def fake(sql, env, runner):
             calls.append(sql); return next(answers)
         with patch.object(MOD, "psql", side_effect=fake):
             value = MOD.financial_census(valid_permit()["databases"]["hd"], {}, None)
         self.assertEqual(value["tables"]["claims"]["rows"], "947")
-        self.assertIn("pg_get_constraintdef", calls[-2])
-        self.assertIn("pg_sequences", calls[-1])
+        self.assertIn("pg_get_constraintdef", calls[-3])
+        self.assertIn("pg_sequences", calls[-2])
+        self.assertIn("pg_get_indexdef", calls[-1])
         self.assertIn("pg_has_role", calls[0])
         self.assertIn("pg_catalog.pg_prepared_xacts", calls[0])
         self.assertNotIn("autovacuum worker", calls[0])
         self.assertTrue(MOD.SHA.fullmatch(value["constraints_sha256"]))
+        self.assertTrue(MOD.SHA.fullmatch(value["indexes_sha256"]))
         self.assertNotIn("sum(", " ".join(calls).lower())
+
+
+    def test_restore_census_rejects_invalid_or_unready_indexes(self):
+        for attr in ("indisvalid","indisready"):
+            fake_index={"table_name":"claims","index_name":"claims_pkey",
+                        "indisvalid":True,"indisready":True}
+            fake_index[attr]=False
+            answers=iter([json.dumps(self.catalog()),
+                          '{"rows":"1","sha256":"' + "a"*64 + '"}',
+                          '{"rows":"1","sha256":"' + "b"*64 + '"}',
+                          '[]','[]',json.dumps([fake_index])])
+            with (self.subTest(attribute=attr),
+                  patch.object(MOD,"psql",side_effect=lambda *a,**kw:next(answers)),
+                  self.assertRaisesRegex(MOD.MaintenanceError,
+                                         "INDEX_RECOVERY_INTEGRITY_UNPROVEN")):
+                MOD.financial_census(valid_permit()["databases"]["hd"],{},None)
 
 
 class ReadOnlyStorageInspectorTests(unittest.TestCase):
