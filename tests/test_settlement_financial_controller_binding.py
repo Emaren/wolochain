@@ -214,6 +214,36 @@ class SignedControllerAdmissionTests(unittest.TestCase):
         with self.assertRaisesRegex(human.Refusal,"INDEPENDENT_MONOTONIC_NONCE"):
             self.admit(witness=binding.independently_consume_remote_nonce)
 
+    def test_offline_refuses_sealed_copy_that_differs_from_selected_archive(self):
+        args,anchors,files,permit,pkt=self.make()
+        with tempfile.TemporaryDirectory() as folder:
+            base=Path(folder)
+            target=base/"archives"
+            target.mkdir()
+            (target/"backup.json").write_bytes(b"actual selected archive manifest")
+            args.output=target
+            args.capture_manifest=Path("/root/authority/capture-manifest")
+            args.previous_review=Path("/root/authority/previous-review")
+            files["capture-manifest"]=b"different sealed manifest"
+            files["previous-review"]=b"previous review"
+            files["fence.json"]=b"retained original fence"
+            procedure=json.loads(files["procedure"])
+            procedure["mode"]="offline-restore"
+            procedure["output_path"]=str(target)
+            procedure["legacy_permit_core_sha256"]=None
+            files["procedure"]=human.canonical(procedure)
+            with patch.object(binding,"exact_private",
+                              side_effect=lambda path,root:files[Path(path).name]), \\
+                 patch.object(controller,"BACKUPS",base):
+                with self.assertRaisesRegex(
+                    human.Refusal,"SIGNED_CAPTURE_NOT_THE_ARCHIVE_BEING_RESTORED"):
+                    binding.authenticate_and_reserve(
+                        args,mode="offline-restore",
+                        source_tool_sha256=self.expected["source"],
+                        scope_sha256=self.expected["scope"],anchors=anchors,
+                        root=Path("/root/authority"),nonce_root=base/"absent",
+                        now=fixture.NOW)
+
     def test_old_v1_modes_and_unauthorized_resume_stay_blocked(self):
         with tempfile.TemporaryDirectory() as temp, \
              patch.object(controller,"LOCK",Path(temp)/"lock"), \
