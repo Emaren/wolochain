@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `review/20261024-controller-verified-phase-admission-held` at `c5ceefec4130860bbfabb5b2b7a72a1f3c99df9a`
+Implementation baseline: `review/20261024-writer-evidence-real-files-held` at `76f4839a4dcd8b0cd804ca5aeb587855eea6ce04`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
@@ -27,7 +27,7 @@ This page is generated from the validated front matter in this repository. Cross
 
 ## Documentation health
 
-- Authoritative repository documents: **45**
+- Authoritative repository documents: **46**
 - Path moves in this migration: **0**
 - Every listed document has an explicit owner, lifecycle, authority, and review interval.
 
@@ -35,13 +35,13 @@ This page is generated from the validated front matter in this repository. Cross
 
 - `historical`: 14
 - `reference`: 23
-- `runbook`: 6
+- `runbook`: 7
 - `working`: 2
 
 ### Lifecycle
 
 - `active`: 16
-- `draft`: 15
+- `draft`: 16
 - `historical`: 14
 
 ## Documents
@@ -90,6 +90,7 @@ This page is generated from the validated front matter in this repository. Cross
 | [WoloChain Mainnet Validator Gentx Checklist](../mainnet-prep/genesis/VALIDATOR_GENTX_CHECKLIST.md) | `historical` | `historical` | `prelaunch-validator-gentx-evidence` |
 | [WoloChain Mainnet Nginx Notes](../mainnet-prep/nginx/README.md) | `reference` | `active` | `mainnet-nginx-routing-reference` |
 | [Financial-maintenance authority and writer review — 2026-10-24](../reviews/financial-maintenance/20261024-human-authority-and-writer-closeout.md) | `runbook` | `draft` | `non-authorizing-financial-human-signature-review` |
+| [Production P1 source integrity, writer evidence, five-person authority and bounded recovery proposal — 2026-10-24](../reviews/financial-maintenance/20261024-p1-writer-evidence-and-budget-proposal.md) | `runbook` | `draft` | `non-authorizing-financial-human-signature-review` |
 | [Financial maintenance phase integration operator runbook — 2026-10-24](../reviews/financial-maintenance/20261024-phase-integration-operator-runbook.md) | `runbook` | `draft` | `non-authorizing-financial-human-signature-review` |
 | [Financial controller source integrity and five-human enrollment — 2026-10-24](../reviews/financial-maintenance/20261024-source-integrity-enrollment-and-restore-qualification.md) | `runbook` | `draft` | `non-authorizing-financial-human-signature-review` |
 
