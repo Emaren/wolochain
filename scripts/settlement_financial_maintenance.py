@@ -297,8 +297,17 @@ def effective_condition(unit, runner):
 
 def no_jobs(runner):
     # Fail on ALL pending jobs, including both protected settlement services.
-    jobs = json.loads(runner(["systemctl", "--no-pager", "list-jobs", "--output=json"]))
-    require(jobs == [], "PENDING_OR_UNKNOWN_SYSTEMD_JOB")
+    # systemctl --output formats journal entries, not the ListJobs table.
+    # Use the actual typed manager API; never infer zero from human text.
+    try:
+        jobs = json.loads(runner(["busctl", "--system", "--json=short", "call",
+            "org.freedesktop.systemd1", "/org/freedesktop/systemd1",
+            "org.freedesktop.systemd1.Manager", "ListJobs"]))
+    except (ValueError, TypeError):
+        raise MaintenanceError("PENDING_OR_UNKNOWN_SYSTEMD_JOB") from None
+    require(type(jobs) is dict and set(jobs) == {"type", "data"} and
+            jobs["type"] == "a(usssoo)" and jobs["data"] == [[]],
+            "PENDING_OR_UNKNOWN_SYSTEMD_JOB")
 
 
 def inactive_observation(runner):

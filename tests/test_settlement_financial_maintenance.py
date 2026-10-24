@@ -86,8 +86,6 @@ class FakeSystemd:
 
     def __call__(self, argv, **kwargs):
         self.calls.append(list(argv))
-        if argv[:3] == ["systemctl", "--no-pager", "list-jobs"]:
-            return json.dumps(self.jobs)
         if argv[:3] == ["systemctl", "--no-pager", "show"]:
             unit = argv[-1]
             active = self.active[unit]
@@ -110,12 +108,30 @@ class FakeSystemd:
             self.active[unit] = False
             return ""
         if argv[0] == "busctl":
+            if "ListJobs" in argv:
+                return json.dumps({"type": "a(usssoo)", "data": [self.jobs]})
             if "GetUnit" in argv:
                 return json.dumps({"type": "o", "data": ["/org/freedesktop/systemd1/unit/test"]})
             condition = (["ConditionPathExists", False, True, str(MOD.HOLD), 0]
                          if self.loaded and not self.foreign_condition else None)
             return json.dumps({"type": "a(sbbsi)", "data": [condition] if condition else []})
         raise AssertionError("Unreviewed subprocess: " + str(argv))
+
+
+class SystemdJobsTests(unittest.TestCase):
+    def test_real_typed_empty_response_only_is_zero_jobs(self):
+        expected = ["busctl", "--system", "--json=short", "call",
+            "org.freedesktop.systemd1", "/org/freedesktop/systemd1",
+            "org.freedesktop.systemd1.Manager", "ListJobs"]
+        def actual_api(argv):
+            self.assertEqual(argv, expected)
+            return '{"type":"a(usssoo)","data":[[]]}'
+        MOD.no_jobs(actual_api)
+        for value in ('No jobs running.', '[]', '{}', '{"type":"a(usssoo)","data":[]}',
+                      '{"type":"wrong","data":[[]]}',
+                      '{"type":"a(usssoo)","data":[[[1,"unrelated.service","start","waiting","/job/1","/unit/1"]]]}'):
+            with self.subTest(value=value), self.assertRaisesRegex(MOD.MaintenanceError, "PENDING_OR_UNKNOWN_SYSTEMD_JOB"):
+                MOD.no_jobs(lambda _: value)
 
 
 class PermitTests(unittest.TestCase):

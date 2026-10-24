@@ -98,9 +98,13 @@ class DisposableSystemdWatchdog(unittest.TestCase):
                 for unit in maintenance.APPS:
                     self.command("systemctl", "start", unit)
                 deadline = time.monotonic() + 10
-                while json.loads(self.command("systemctl", "list-jobs", "--no-pager", "--output=json")) != []:
-                    self.assertLess(time.monotonic(), deadline, "unrelated CI jobs prevent safe fixture")
-                    time.sleep(.1)
+                while True:
+                    try:
+                        maintenance.no_jobs(maintenance.run)
+                        break
+                    except maintenance.MaintenanceError:
+                        self.assertLess(time.monotonic(), deadline, "queued/unknown systemd jobs prevent safe fixture")
+                        time.sleep(.1)
                 self.assertEqual(maintenance.main(["--mode", "fence", "--permit", str(permit_path),
                     "--fence-receipt", str(receipt_path)]), 0)
                 before = maintenance.digest(maintenance.private_read(maintenance.HOLD))
