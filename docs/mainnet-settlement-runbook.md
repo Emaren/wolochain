@@ -1579,6 +1579,14 @@ changing databases, insufficient space, stale authority and incomplete
 snapshots refuse admission. Separate database transactions are not an atomic
 distributed snapshot; maintained independently witnessed quiescence is required.
 
+The archive limit is **one aggregate budget**, including the settlement
+snapshot: HD may use more than half if DE and the snapshot still fit. Each
+`pg_dump` receives the remaining aggregate bytes as its kernel file-size limit;
+an exhausted budget refuses the next dump. Actual sizes and the combined
+footprint are checked again. This removes an artificial equal-size allocation,
+not the approved total or any capacity guard. Archive sizes must be measured;
+the ~9.95 GiB live HD database size is not its custom-archive size.
+
 `restore-isolated` actually runs `pg_restore` into separate disposable HD
 and DE databases in a digest-pinned container with no network, host credentials
 or production PostgreSQL connection. **The held loop-backed restoration revision requires** a pre-provisioned
@@ -1622,16 +1630,37 @@ verified owned container must be removed before symlink-safe scratch cleanup.
 Cleanup separately revalidates the bounded mount before deleting only its
 own child; any unknown container, changed mount or stale `restore-*` path
 preserves `INCOMPLETE` and fails closed. No verified restore receipt may
-be published until cleanup and bounded mount recheck have succeeded.
+be published until cleanup, bounded mount recheck and a fresh current producer
+fence/window check have succeeded. Backup publication also rechecks the current
+fence after all final census and receipt-hash I/O. Window expiry at either
+boundary preserves `INCOMPLETE`; it cannot publish a success receipt or resume
+producers. Cleanup of the verified disposable container still runs on expiry.
 
 The finite loop image is an enforced maximum for PGDATA writes, **not**
 proof of full-size restoration, source/mount integrity across a hostile root
 operator, durable off-host backup, quota for Docker daemon logs, financial
 quiescence, or custody release. The real ~9.95 GiB HD plus DE restoration
 and census/sequence checks still require independently witnessed proof,
-along with authorized HD/DE writer fencing and finance review. No loop
-image is yet provisioned, no production backup/restore or cutover has been
-approved, and original consensus/settlement services must remain untouched.
+along with authorized HD/DE writer fencing and finance review. Central Command
+[reported the 40 GiB fully allocated mount and exact-source storage inspection](https://github.com/Emaren/app-prodn/issues/839#issuecomment-6382701190)
+on October 24, 2026; that storage-only receipt does not certify a production-size
+restore. No production backup/restore or cutover has been approved, and original
+consensus/settlement services must remain untouched.
+
+Before scheduling the approved window, the operator and recovery witness must
+qualify full HD **and** DE archives on the exact pinned source/image and bounded
+filesystem. Record archive bytes, peak PGDATA usage, each dump/restore duration,
+financial row/constraint/sequence census time, cleanup time and time remaining
+for paired binary recovery and safe abort. The unchanged limits are 300 seconds
+per dump/restore, 2 GiB memory, two CPUs, and at most 30 minutes of permit
+authority across the procedure. Small CI fixtures do not prove those limits fit
+production. If they do not fit, retain HOLD and obtain independent review of
+measured resource/window changes and a fresh permit; never extend a live permit
+or drop census comparisons to finish. Use independently approved recovery
+copies for a pre-window size/timing trial; obtaining a current quiesced copy
+from production is itself a separately approved fence/drain/backup operation.
+Off-host checksum and recovery verification, complete producer/queue drain,
+privilege recovery and human approvals remain separate prerequisites.
 
 Full row hashes, constraints and sequences must match. A checksum alone
 or `pg_restore --list` cannot pass. `INCOMPLETE` remains until this

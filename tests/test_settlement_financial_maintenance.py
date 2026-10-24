@@ -686,6 +686,24 @@ class RestoreTests(unittest.TestCase):
         self.assertTrue((self.output / "INCOMPLETE").is_file())
         self.assertFalse((self.output / "restore.json").exists())
 
+    def test_fence_expiring_during_last_cleanup_cannot_publish_verified_restore(self):
+        expired = False
+        def current(*args, **kwargs):
+            if expired:
+                raise MOD.MaintenanceError("APPROVED_WINDOW_EXPIRED")
+            return {"permit": self.permit}
+        def cleanup(*args):
+            nonlocal expired
+            expired = True  # Valid at last census; expired during final disk I/O.
+        with patch.object(MOD, "verify_current_fence", side_effect=current), \
+             patch.object(MOD, "cleanup_restore_scratch", side_effect=cleanup), \
+             self.assertRaisesRegex(MOD.MaintenanceError, "APPROVED_WINDOW_EXPIRED"):
+            MOD.restore_isolated(self.fence, self.output, runner=self.runner)
+        self.assertTrue(expired)
+        self.assertTrue(any(call[:3] == ["docker", "rm", "--force"] for call, _ in self.calls))
+        self.assertTrue((self.output / "INCOMPLETE").is_file())
+        self.assertFalse((self.output / "restore.json").exists())
+
     def test_failed_container_removal_cannot_publish_verified_restore(self):
         def deny_removal(argv, **kwargs):
             if docker_command(argv)[:3] == ["docker", "rm", "--force"]:
@@ -763,6 +781,87 @@ class BackupTests(unittest.TestCase):
         dumps = [(call, kwargs) for call, kwargs in self.calls if call[0] == "pg_dump"]
         self.assertEqual(len(dumps), 2)
         self.assertTrue(all("--format=custom" in call and kwargs["file_limit"] > 0 for call, kwargs in dumps))
+
+    def bounded_archive_runner(self, sizes):
+        """Real child-file RLIMIT_FSIZE; only pg_dump bytes are synthetic.
+
+        This neither invokes PostgreSQL nor treats synthetic archive bytes as
+        restore proof. The source-passed limit is enforced by its actual runner.
+        """
+        def runner(argv, **kwargs):
+            if argv[0] != "pg_dump":
+                return self.runner(argv, **kwargs)
+            self.calls.append((list(argv), kwargs))
+            path = Path(argv[argv.index("--file") + 1])
+            return MOD.run([sys.executable, "-c",
+                "import sys; open(sys.argv[1], 'wb').write(b'x' * int(sys.argv[2]))",
+                str(path), str(sizes[path.stem])], timeout=5,
+                file_limit=kwargs["file_limit"])
+        return runner
+
+    def test_hd_heavy_archive_uses_aggregate_budget_with_real_child_file_limit(self):
+        budget = self.permit["max_total_bytes"]
+        sizes = {"hd": budget * 3 // 4, "de": budget // 8}
+        snapshot = MOD.snapshot_footprint(self.snapshot, budget)
+        self.assertLess(snapshot + sum(sizes.values()), budget)
+        value = MOD.backup(self.fence, self.output, runner=self.bounded_archive_runner(sizes))
+        self.assertEqual({lane: row["bytes"] for lane, row in value["databases"].items()}, sizes)
+        dumps = [(call, kwargs) for call, kwargs in self.calls if call[0] == "pg_dump"]
+        self.assertEqual(len(dumps), 2)
+        self.assertGreaterEqual(dumps[0][1]["file_limit"], sizes["hd"])
+        self.assertLessEqual(dumps[0][1]["file_limit"], budget - snapshot)
+        self.assertLessEqual(dumps[1][1]["file_limit"], budget - snapshot - sizes["hd"])
+        self.assertTrue((self.output / "INCOMPLETE").is_file())
+        self.assertFalse(value["isolated_restore_verified"])
+
+    def test_real_child_cannot_exceed_aggregate_budget_or_start_de_after_failure(self):
+        budget = self.permit["max_total_bytes"]
+        with self.assertRaises(MOD.MaintenanceError):
+            MOD.backup(self.fence, self.output,
+                       runner=self.bounded_archive_runner({"hd": budget + 1, "de": 1}))
+        dumps = [call for call, _ in self.calls if call[0] == "pg_dump"]
+        self.assertEqual(len(dumps), 1)
+        self.assertTrue((self.output / "INCOMPLETE").is_file())
+        self.assertFalse((self.output / "backup.json").exists())
+
+    def test_zero_aggregate_budget_after_hd_never_starts_de(self):
+        budget = self.permit["max_total_bytes"]
+        available = budget - MOD.snapshot_footprint(self.snapshot, budget)
+        def full(argv, **kwargs):
+            if argv[0] != "pg_dump":
+                return self.runner(argv, **kwargs)
+            self.calls.append((list(argv), kwargs))
+            path = Path(argv[argv.index("--file") + 1])
+            # Faulted subprocess boundary: source must account actual bytes,
+            # even if a child disregards the requested limit.
+            path.write_bytes(b"x" * (available if path.stem == "hd" else 1))
+            return ""
+        with self.assertRaises(MOD.MaintenanceError):
+            MOD.backup(self.fence, self.output, runner=full)
+        self.assertEqual(len([call for call, _ in self.calls if call[0] == "pg_dump"]), 1)
+        self.assertTrue((self.output / "INCOMPLETE").is_file())
+        self.assertFalse((self.output / "backup.json").exists())
+
+    def test_fence_expiring_during_final_hash_cannot_publish_backup_manifest(self):
+        expired = False
+        original = MOD.file_sha
+        def hash_file(path):
+            nonlocal expired
+            value = original(path)
+            if Path(path) == self.snapshot / "proof/RECEIPT.txt":
+                expired = True  # Last proof I/O completes after authority expires.
+            return value
+        def current(*args, **kwargs):
+            if expired:
+                raise MOD.MaintenanceError("APPROVED_WINDOW_EXPIRED")
+            return {"permit": self.permit}
+        with patch.object(MOD, "file_sha", side_effect=hash_file), \
+             patch.object(MOD, "verify_current_fence", side_effect=current), \
+             self.assertRaisesRegex(MOD.MaintenanceError, "APPROVED_WINDOW_EXPIRED"):
+            MOD.backup(self.fence, self.output, runner=self.runner)
+        self.assertTrue(expired)
+        self.assertTrue((self.output / "INCOMPLETE").is_file())
+        self.assertFalse((self.output / "backup.json").exists())
 
     def test_cross_database_change_rejects_even_when_each_individual_dump_was_stable(self):
         calls = 0

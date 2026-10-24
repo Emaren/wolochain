@@ -655,14 +655,19 @@ def backup(receipt_path, output, *, runner=None):
     censuses, dumps = {}, {}
     for lane in ("hd", "de"):
         verify_current_fence(receipt_path, scope_digest(), runner=runner)
+        # HD and DE need not be similarly sized. Bound each child by the
+        # aggregate bytes still available, rather than reserving half for each.
+        remaining = permit["max_total_bytes"] - snapshot_bytes - sum(x["bytes"] for x in dumps.values())
+        require(remaining > 0, "NO_DATABASE_DUMP_BUDGET")
         contract = permit["databases"][lane]
         env = pg_environment(contract)
         before = financial_census(contract, env, runner)
         dump = output / (lane + ".dump")
         runner(["pg_dump", "--no-password", "--format=custom", "--serializable-deferrable",
                 "--file", str(dump)], env=env, timeout=300,
-               file_limit=(permit["max_total_bytes"] - snapshot_bytes) // 2)
+               file_limit=remaining)
         require(dump.stat().st_size > 0 and not dump.is_symlink(), "DATABASE_DUMP_EMPTY")
+        require(dump.stat().st_size <= remaining, "BACKUP_FOOTPRINT_EXCEEDED")
         os.chmod(dump, 0o600)
         after = financial_census(contract, env, runner)
         require(before == after, "FINANCIAL_DATABASE_CHANGED_DURING_DUMP")
@@ -683,6 +688,9 @@ def backup(receipt_path, output, *, runner=None):
                 "settlement_snapshot": str(snapshots), "settlement_snapshot_receipt_sha256":
                 file_sha(snapshots / "proof/RECEIPT.txt"), "isolated_restore_verified": False,
                 "off_host_copy_verified": False, "financial_release_authorized": False}
+    # Hashes/censuses are potentially slow I/O. Do not publish success using
+    # fence authority checked before those reads completed.
+    verify_current_fence(receipt_path, scope_digest(), runner=runner)
     write_new(output / "backup.json", canonical(manifest))
     # INCOMPLETE remains until an actual isolated restore and equality check.
     return manifest
@@ -930,6 +938,7 @@ def restore_isolated(receipt_path, output, *, runner=None):
     mount, _, _ = _bounded_restore_mount()
     require(not any(p.name.startswith("restore-") for p in mount.iterdir()),
             "RESTORE_SCRATCH_NOT_CLEAN_AFTER_RUN")
+    verify_current_fence(receipt_path, scope_digest(), runner=runner)
 
     # No successful receipt may outlive a failed cleanup. A failed write/unlink
     # keeps INCOMPLETE until a separately reviewed recovery can continue.
