@@ -1,3 +1,18 @@
+---
+id: "aoe2war.wolochain.financial-maintenance-phase-integration-20261024"
+title: "Financial maintenance phase integration operator runbook — 2026-10-24"
+type: "runbook"
+status: "draft"
+owner: "wolochain-ops"
+systems: ["wolochain","aoe2war","aoe2dewarwagers"]
+audience: ["operators","developers","ai-agents"]
+source_of_truth: "git"
+authority: "non-authorizing-financial-human-signature-review"
+reviewed_at: "2026-10-24"
+review_interval_days: 14
+sensitivity: "internal"
+---
+
 # WoloChain financial maintenance v2 — phase operator and reviewer runbook
 **Status: FINANCIAL HARD HOLD / review-only code. Source branch:** `review/20261024-maintenance-phase-integration-held` stacked on held Wolo PR #97. **Never a live playbook until independently authorized.**
 
