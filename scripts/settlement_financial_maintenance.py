@@ -587,8 +587,24 @@ def financial_census(contract, env, runner):
     sequences = psql("SELECT COALESCE(json_agg(x ORDER BY x::text), '[]'::json) FROM "
         "(SELECT schemaname,sequencename,start_value,min_value,max_value,increment_by,cycle,"
         "last_value FROM pg_sequences WHERE schemaname='public') x;", env, runner)
+    # Index definitions, uniqueness and validity are part of the complete
+    # recovery fingerprint; matching rows alone cannot certify a restored DB.
+    indexes = psql("SELECT COALESCE(json_agg(to_jsonb(x) ORDER BY x.table_name, x.index_name),"
+        " '[]'::json) FROM (SELECT t.relname AS table_name, idx.relname AS index_name,"
+        " i.indisunique, i.indisprimary, i.indisvalid, i.indisready,"
+        " pg_get_indexdef(i.indexrelid) AS definition FROM pg_index i"
+        " JOIN pg_class t ON t.oid=i.indrelid"
+        " JOIN pg_namespace n ON n.oid=t.relnamespace"
+        " JOIN pg_class idx ON idx.oid=i.indexrelid"
+        " WHERE n.nspname='public' AND t.relname IN (" + names + ")) x;", env, runner)
+    indexed = json.loads(indexes)
+    require(type(indexed) is list and
+            all(type(x) is dict and x.get("indisvalid") is True and
+                x.get("indisready") is True for x in indexed),
+            "INDEX_RECOVERY_INTEGRITY_UNPROVEN")
     return {"tables": out, "constraints_sha256": digest(canonical(json.loads(constraints))),
             "sequences_sha256": digest(canonical(json.loads(sequences))),
+            "indexes_sha256": digest(canonical(indexed)),
             "postgres_major": meta["major"]}
 
 
