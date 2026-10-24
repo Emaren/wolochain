@@ -28,13 +28,48 @@ class Observation:
     prepared_transactions: int
 
 
-def observe(connection, databases: tuple[str, ...]) -> Observation:
-    """One instant's catalog evidence, not proof writers cannot reconnect."""
-    if not databases or len(set(databases)) != len(databases) or any(
+def validate_database_inventory(databases: tuple[str, ...]) -> None:
+    if not isinstance(databases, tuple) or not databases or any(
         not isinstance(name, str) or DB_NAME.fullmatch(name) is None
         for name in databases
-    ):
+    ) or len(set(databases)) != len(databases):
         raise Hold("invalid or duplicate explicit PostgreSQL database inventory")
+
+
+def validate_visibility(privilege) -> None:
+    if (not isinstance(privilege, (tuple, list)) or len(privilege) != 2 or
+            any(type(value) is not bool for value in privilege) or not any(privilege)):
+        raise Hold("monitor lacks full pg_stat_activity visibility")
+
+
+def validate_catalog_observation(databases, privilege, existing, sessions, prepared) -> Observation:
+    """Shared driver-independent contract for one complete catalog observation.
+
+    The privileged DB-API observer and protected psql backup path use this same
+    refusal policy. Zero counts cannot replace full role and session visibility.
+    No observation prevents connections reopening after the query.
+    """
+    validate_database_inventory(databases)
+    validate_visibility(privilege)
+    if (not isinstance(existing, (tuple, list)) or
+            any(not isinstance(name, str) for name in existing) or
+            len(existing) != len(set(existing)) or set(existing) != set(databases)):
+        raise Hold("requested database inventory absent or not connectable")
+    if not isinstance(sessions, (tuple, list)):
+        raise Hold("incomplete PostgreSQL session visibility")
+    for row in sessions:
+        if (not isinstance(row, (tuple, list)) or len(row) != 5 or
+                type(row[0]) is not int or row[0] <= 0 or row[1] not in databases or
+                any(not isinstance(value, str) or not value for value in row[1:])):
+            raise Hold("incomplete PostgreSQL session visibility")
+    if type(prepared) is not int or prepared < 0:
+        raise Hold("invalid PostgreSQL prepared transaction count")
+    return Observation(databases, len(sessions), prepared)
+
+
+def observe(connection, databases: tuple[str, ...]) -> Observation:
+    """One instant's catalog evidence, not proof writers cannot reconnect."""
+    validate_database_inventory(databases)
     if not connection.autocommit:
         raise Hold("monitor requires autocommit to avoid stale statistics snapshots")
     with connection.cursor() as cursor:
@@ -43,16 +78,13 @@ def observe(connection, databases: tuple[str, ...]) -> Observation:
             "pg_has_role(current_user,'pg_read_all_stats','USAGE')"
         )
         privilege = cursor.fetchone()
-        if privilege is None or len(privilege) != 2 or not any(value is True for value in privilege):
-            raise Hold("monitor lacks full pg_stat_activity visibility")
+        validate_visibility(privilege)
         cursor.execute(
             "SELECT datname FROM pg_catalog.pg_database "
             "WHERE datname = ANY(%s) AND datallowconn",
             (list(databases),),
         )
-        existing = {row[0] for row in cursor.fetchall()}
-        if existing != set(databases):
-            raise Hold("requested database inventory absent or not connectable")
+        existing = [row[0] for row in cursor.fetchall()]
         # Never equate invisible NULL state with idle. Idle sessions also block.
         cursor.execute(
             "SELECT pid, datname, state, usename, backend_type "
@@ -61,9 +93,6 @@ def observe(connection, databases: tuple[str, ...]) -> Observation:
             (list(databases),),
         )
         rows = cursor.fetchall()
-        for row in rows:
-            if len(row) != 5 or any(value is None for value in row):
-                raise Hold("incomplete PostgreSQL session visibility")
         cursor.execute(
             "SELECT count(*) FROM pg_catalog.pg_prepared_xacts "
             "WHERE database=ANY(%s)", (list(databases),)
@@ -71,10 +100,7 @@ def observe(connection, databases: tuple[str, ...]) -> Observation:
         prepared_row = cursor.fetchone()
         if prepared_row is None or len(prepared_row) != 1 or prepared_row[0] is None:
             raise Hold("PostgreSQL prepared transaction status unavailable")
-        prepared = int(prepared_row[0])
-        if prepared < 0:
-            raise Hold("invalid PostgreSQL prepared transaction count")
-        return Observation(databases, len(rows), prepared)
+        return validate_catalog_observation(databases, privilege, existing, rows, prepared_row[0])
 
 
 def main(argv=None) -> int:

@@ -10,6 +10,7 @@ import importlib.util
 import contextlib
 import io
 import json
+import os
 import re
 from pathlib import Path
 import subprocess
@@ -278,7 +279,8 @@ class GuardedTwoServiceCutover(unittest.TestCase):
         self.assertFalse(fake.commands)
 
     def test_mutation_from_cli_needs_operator_permit(self):
-        for mode in ("promote", "rollback", "recover-interrupted"):
+        for mode in ("promote", "rollback", "recover-interrupted", "first-rehearsal",
+                     "rehearsal-recover", "rehearsal-watchdog"):
             with self.subTest(mode=mode):
                 # Run no root as well: either root or absent permit denies.
                 proc = subprocess.run(
@@ -927,6 +929,336 @@ class SettlementSourceAuthority(unittest.TestCase):
         proc = subprocess.run(args, capture_output=True, text=True, timeout=5)
         self.assertEqual(proc.returncode, 2)
         self.assertIn("BLOCKED:", proc.stderr)
+
+
+class FirstRehearsalContracts(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.s = load()
+
+    def document(self, *, recovery=False):
+        s = self.s
+        now = s.datetime.now(s.timezone.utc)
+        def stamp(t):
+            return t.isoformat().replace("+00:00", "Z")
+        doc = {"schema": s.RECOVERY_SCHEMA if recovery else s.REHEARSAL_SCHEMA,
+            "executionId": "a" * 32, "candidateRevision": s.REV, "candidateSha256": s.NEW_SHA,
+            "originalSha256": s.OLD_SHA, "consensusSha256": s.NODE_SHA,
+            "owner": "fixture-owner", "operator": "fixture-operator", "recoveryWitness": "fixture-witness",
+            "approvalRefs": {role: format(i + 1, "064x") for i, role in enumerate(
+                ("owner", "operator", "chainReviewer", "financeReviewer", "recoveryWitness"))},
+            "fenceReceiptPath": "/fixture/fence.json",
+            "backupReceiptPath": "/fixture/restore.json",
+            "windowStartUtc": stamp(now - s.timedelta(minutes=1)),
+            "windowEndUtc": stamp(now + s.timedelta(minutes=20)),
+            "issuedAtUtc": stamp(now - s.timedelta(seconds=1)),
+            "expiresAtUtc": stamp(now + s.timedelta(minutes=2)),
+            "approval": s.RECOVERY_APPROVAL if recovery else s.REHEARSAL_APPROVAL,
+            "witnessedControls": sorted(s.REHEARSAL_CONTROLS)}
+        for key in ("packetSha256", "procedureSha256", "backupReceiptSha256", "fenceScopeSha256",
+                    "fenceReceiptSha256", "toolSha256", "fenceToolSha256"):
+            doc[key] = "b" * 64
+        if recovery:
+            doc["sessionSha256"] = "c" * 64
+        return doc
+
+    def test_rehearsal_never_adopts_six_control_production_or_recovery_authority(self):
+        s = self.s
+        helper = ReleasePermitAcquisition()
+        helper.s = s
+        for doc in (helper.document(), self.document(recovery=True)):
+            with self.subTest(schema=doc["schema"]), self.assertRaises(s.Blocked):
+                s.validate_rehearsal_permit(doc)
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "permit.json"
+            path.write_text(json.dumps(self.document()))
+            helper = ReleasePermitAcquisition()
+            helper.s = s
+            with helper.protected(path), self.assertRaises(s.Blocked):
+                s.load_release_permit(path)
+        self.assertNotIn("reviewed_code_only_rollback_rehearsed", s.REHEARSAL_CONTROLS)
+        self.assertEqual(len(s.ATTESTED), 6)
+
+    def test_first_authority_requires_other_five_and_does_not_claim_prior_rehearsal(self):
+        s = self.s
+        self.assertEqual(s.validate_rehearsal_permit(self.document())["witnessedControls"],
+                         sorted(s.REHEARSAL_CONTROLS))
+        for controls in (sorted(s.ATTESTED), [], sorted(s.REHEARSAL_CONTROLS)[:-1]):
+            doc = self.document()
+            doc["witnessedControls"] = controls
+            with self.subTest(controls=controls), self.assertRaises(s.Blocked):
+                s.validate_rehearsal_permit(doc)
+
+    def test_fresh_recovery_rejects_zero_approval_and_evidence_placeholders(self):
+        s = self.s
+        for key in ("packetSha256", "procedureSha256", "backupReceiptSha256", "fenceScopeSha256",
+                    "fenceReceiptSha256", "toolSha256", "fenceToolSha256", "sessionSha256"):
+            doc = self.document(recovery=True)
+            doc[key] = "0" * 64
+            with self.subTest(field=key), self.assertRaises(s.Blocked):
+                s.validate_rehearsal_permit(doc, recovery=True)
+        for role in self.document()["approvalRefs"]:
+            doc = self.document(recovery=True)
+            doc["approvalRefs"][role] = "0" * 64
+            with self.subTest(role=role), self.assertRaises(s.Blocked):
+                s.validate_rehearsal_permit(doc, recovery=True)
+
+    def test_bound_window_pins_roles_and_evidence_fail_closed(self):
+        s = self.s
+        alterations = {"candidateSha256": "0" * 64, "originalSha256": "0" * 64,
+            "consensusSha256": "0" * 64, "executionId": "../escape",
+            "recoveryWitness": "fixture-owner", "packetSha256": "missing",
+            "fenceReceiptPath": "relative.json", "approvalRefs": {},
+            "windowEndUtc": "2099-10-24T12:00:00Z", "expiresAtUtc": "2000-10-24T12:00:00Z"}
+        for key, value in alterations.items():
+            doc = self.document()
+            doc[key] = value
+            with self.subTest(key=key), self.assertRaises(s.Blocked):
+                s.validate_rehearsal_permit(doc)
+
+    def test_rehearsal_authority_rechecks_expiry_after_fence_io(self):
+        s = self.s
+        state = {"expired": False}
+        doc = self.document()
+        def read(*_args, **_kwargs):
+            if state["expired"]:
+                raise s.Blocked("expired fixture authority")
+            return dict(doc)
+        def fence(_doc):
+            state["expired"] = True
+        with patch.object(s, "load_rehearsal_permit", side_effect=read), \
+             patch.object(s, "fence_check", side_effect=fence):
+            authority = s.RehearsalAuthority(Path("/fixture/permit"))
+            with self.assertRaisesRegex(s.Blocked, "expired"):
+                authority.check()
+
+    @contextlib.contextmanager
+    def sandbox_records(self, directory):
+        """Only private test records; no real protected source or root ownership."""
+        s = self.s
+        def write(path, doc):
+            with path.open("x") as output:
+                json.dump(doc, output)
+        def session(path):
+            doc = json.loads(path.read_text())
+            doc["_sha256"] = "c" * 64
+            return doc
+        def metadata(path, *args, **kwargs):
+            import types
+            st = original_lstat(path, *args, **kwargs)
+            if path == directory:
+                return types.SimpleNamespace(st_mode=0o40700, st_uid=0, st_gid=0)
+            return st
+        original_lstat = Path.lstat
+        with patch.object(s, "record_once", side_effect=write), \
+             patch.object(s, "private_json", side_effect=lambda p: json.loads(p.read_text())), \
+             patch.object(s, "load_session", side_effect=session), \
+             patch.object(s, "sync_directory"), \
+             patch.object(Path, "lstat", new=metadata):
+            yield
+
+    def test_witnessed_rehearsal_always_returns_both_lanes_old_without_attestation(self):
+        s = self.s
+        fake = FakeLive(s)
+        class Authority:
+            doc = self.document()
+            path = Path("/fixture/permit")
+            def check(self):
+                pass
+            refresh = check
+        with tempfile.TemporaryDirectory() as td:
+            directory = Path(td) / "control"
+            with self.sandbox_records(directory), patch.object(s, "REHEARSAL_ROOT", directory), \
+                 patch.object(s, "process_identity", return_value={"pid": os.getpid(), "startTicks": "1", "bootId": "b"}), \
+                 patch.object(s, "start_watchdog") as start, patch.object(s, "check_watchdog"):
+                result = s.first_rehearsal(Authority(), fake)
+            self.assertEqual(start.call_count, 1)
+        self.assertEqual(s.Cutover(fake).inspect(), "old")
+        self.assertTrue(result["codeRoundTripObserved"])
+        self.assertFalse(result["production_authorized"])
+        self.assertFalse(result["canonical_control_updated"])
+        self.assertFalse(result["independent_witness_attested"])
+        fake.assert_no_node_or_ledger_change()
+
+    def test_supervisor_failure_before_first_side_effect_leaves_original_pair(self):
+        s = self.s
+        fake = FakeLive(s)
+        class Authority:
+            doc = self.document()
+            path = Path("/fixture/permit")
+            def check(self):
+                pass
+            refresh = check
+        with tempfile.TemporaryDirectory() as td:
+            directory = Path(td) / "control"
+            with self.sandbox_records(directory), patch.object(s, "REHEARSAL_ROOT", directory), \
+                 patch.object(s, "process_identity", return_value={"pid": os.getpid(), "startTicks": "1", "bootId": "b"}), \
+                 patch.object(s, "start_watchdog", side_effect=s.Blocked("watchdog unavailable")):
+                with self.assertRaisesRegex(s.Blocked, "watchdog unavailable"):
+                    s.first_rehearsal(Authority(), fake)
+        self.assertEqual(fake.commands, [])
+
+    def test_control_journal_directory_sync_failure_precedes_service_mutations(self):
+        s = self.s
+        fake = FakeLive(s)
+        class Authority:
+            doc = self.document()
+            path = Path("/fixture/permit")
+            def check(self):
+                pass
+        with tempfile.TemporaryDirectory() as td:
+            directory = Path(td) / "control"
+            with self.sandbox_records(directory), patch.object(s, "REHEARSAL_ROOT", directory), \
+                 patch.object(s, "process_identity", return_value={"pid": os.getpid(), "startTicks": "1", "bootId": "b"}), \
+                 patch.object(s, "sync_directory", side_effect=OSError("fixture directory fsync failed")), \
+                 patch.object(s, "start_watchdog") as start:
+                with self.assertRaisesRegex(OSError, "fsync failed"):
+                    s.first_rehearsal(Authority(), fake)
+                start.assert_not_called()
+        self.assertEqual(fake.commands, [])
+
+    def test_expiry_after_candidate_verification_cannot_leave_candidate_installed(self):
+        s = self.s
+        fake = FakeLive(s)
+        observed = {"candidate": False}
+        health = fake.health
+        def saw_candidate(port):
+            health(port)
+            if fake.units[s.PRIMARY].exe == s.NEW:
+                observed["candidate"] = True
+        fake.health = saw_candidate
+        class Authority:
+            doc = self.document()
+            path = Path("/fixture/permit")
+            def check(self):
+                if observed["candidate"] and fake.units[s.PRIMARY].exe == s.OLD:
+                    raise s.Blocked("expired after mandatory return")
+            refresh = check
+        with tempfile.TemporaryDirectory() as td:
+            directory = Path(td) / "control"
+            with self.sandbox_records(directory), patch.object(s, "REHEARSAL_ROOT", directory), \
+                 patch.object(s, "process_identity", return_value={"pid": os.getpid(), "startTicks": "1", "bootId": "b"}), \
+                 patch.object(s, "start_watchdog"), patch.object(s, "check_watchdog"):
+                # The approval may fail only after OLD was obligatorily returned.
+                with self.assertRaisesRegex(s.Blocked, "expired"):
+                    s.first_rehearsal(Authority(), fake)
+        self.assertEqual(s.Cutover(fake).inspect(), "old")
+        self.assertTrue(observed["candidate"])
+        fake.assert_no_node_or_ledger_change()
+
+    def test_pid_reuse_and_absent_recovery_permit_never_trigger_service_operations(self):
+        s = self.s
+        fake = FakeLive(s)
+        session = {"controllerIdentity": {"pid": 12345, "startTicks": "1", "bootId": "b"},
+                   "_sha256": "c" * 64, "permit": self.document(), "consensusPid": 1009,
+                   "createdAtUtc": "2000-01-01T00:00:00Z"}
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "session.json"
+            with self.sandbox_records(Path(td)), \
+                 patch.object(s, "process_identity", return_value={"pid": 12345, "startTicks": "2", "bootId": "b"}), \
+                 patch.object(s, "recover_rehearsal") as recover:
+                result = s.watchdog_step(path, session, fake)
+            self.assertEqual(result, "HOLD_AWAITING_FRESH_HUMAN_RECOVERY_AUTHORITY")
+            self.assertTrue((path.parent / "controller-lost.json").exists())
+            recover.assert_not_called()
+        self.assertEqual(fake.commands, [])
+
+    def test_recovery_approval_must_postdate_loss_and_bind_exact_session(self):
+        s = self.s
+        doc = self.document(recovery=True)
+        session = {"permit": {**doc}, "_sha256": "c" * 64,
+                   "createdAtUtc": "2000-01-01T00:00:00Z"}
+        with patch.object(s, "load_rehearsal_permit", return_value=doc), patch.object(s, "fence_check"):
+            authority = s.RehearsalAuthority(Path("/fixture/recovery"), recovery=True,
+                session=session, lost_after="2099-01-01T00:00:00Z")
+            with self.assertRaisesRegex(s.Blocked, "predates"):
+                authority.check()
+            authority.lost_after = None
+            session["_sha256"] = "d" * 64
+            with self.assertRaisesRegex(s.Blocked, "different approved rehearsal"):
+                authority.check()
+
+    def test_failed_recovery_consumes_authority_and_cannot_automatically_repeat(self):
+        s = self.s
+        fake = FakeLive(s)
+        for unit in s.SERVICES:
+            fake.dropins[unit] = fake.loaded[unit] = "new"
+            fake.units[unit].exe = s.NEW
+        fake.fail_once = "start:" + s.PRIMARY
+        authority = type("FixtureAuthority", (), {"doc": self.document(recovery=True),
+            "binding": "fixture-distinct-recovery-authority", "check": lambda _: None,
+            "refresh": lambda _: None})()
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "session.json"
+            path.write_text(json.dumps({"controllerIdentity": {"pid": 12345, "startTicks": "1", "bootId": "b"},
+                "permit": self.document(), "consensusPid": 1009,
+                "createdAtUtc": "2000-01-01T00:00:00Z"}))
+            def process(pid):
+                return {"pid": pid, "startTicks": "2", "bootId": "b"} if pid == os.getpid() else None
+            with self.sandbox_records(Path(td)), patch.object(s, "process_identity", side_effect=process), \
+                 patch.object(s, "RehearsalAuthority", return_value=authority):
+                with self.assertRaisesRegex(RuntimeError, "injected"):
+                    s.recover_rehearsal(path, Path("/fixture/new-permit"), fake)
+                first_commands = list(fake.commands)
+                with self.assertRaises(FileExistsError):
+                    s.recover_rehearsal(path, Path("/fixture/new-permit"), fake)
+                self.assertEqual(fake.commands, first_commands)
+            self.assertEqual(len(list(path.parent.glob("recovery-attempt-*.json"))), 1)
+        fake.assert_no_node_or_ledger_change()
+
+    def test_manual_recovery_rejects_approval_issued_before_actual_controller_loss(self):
+        s = self.s
+        fake = FakeLive(s)
+        for unit in s.SERVICES:
+            fake.dropins[unit] = fake.loaded[unit] = "new"
+            fake.units[unit].exe = s.NEW
+        doc = self.document(recovery=True)
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "session.json"
+            path.write_text(json.dumps({"controllerIdentity": {"pid": 12345, "startTicks": "1", "bootId": "b"},
+                "permit": self.document(), "consensusPid": 1009,
+                "createdAtUtc": "2000-01-01T00:00:00Z"}))
+            (path.parent / "controller-lost.json").write_text(json.dumps({"sessionSha256": "c" * 64,
+                "observedAtUtc": s.datetime.now(s.timezone.utc).isoformat().replace("+00:00", "Z"),
+                "status": "CONTROLLER_LOST_FRESH_RECOVERY_REQUIRED"}))
+            def process(pid):
+                return {"pid": pid, "startTicks": "2", "bootId": "b"} if pid == os.getpid() else None
+            with self.sandbox_records(Path(td)), patch.object(s, "process_identity", side_effect=process), \
+                 patch.object(s, "load_rehearsal_permit", return_value=doc), patch.object(s, "fence_check"):
+                with self.assertRaisesRegex(s.Blocked, "predates detected controller loss"):
+                    # The direct/manual route supplies NO optional loss bound.
+                    s.recover_rehearsal(path, Path("/fixture/preissued-recovery"), fake)
+            self.assertFalse(list(path.parent.glob("recovery-attempt-*.json")))
+        self.assertEqual(fake.commands, [])
+
+    def test_independent_launcher_uses_systemd_not_controller_process_tree(self):
+        s = self.s
+        live = type("Launcher", (), {"command": unittest.mock.Mock(return_value="")})()
+        session = {"watchdogUnit": "aoe2war-wolo-first-rehearsal-" + "a" * 32 + ".service"}
+        with patch.object(s, "check_watchdog"):
+            s.start_watchdog(live, Path("/fixture/session.json"), session)
+        args = live.command.call_args.args
+        self.assertEqual(args[0], "systemd-run")
+        self.assertIn("--property=Restart=on-failure", args)
+        self.assertIn("--property=Type=exec", args)
+        self.assertNotIn("--scope", args)
+        self.assertNotIn("--wait", args)
+        self.assertIn("rehearsal-watchdog", args)
+
+    @unittest.skipUnless(sys.platform.startswith("linux"), "Linux /proc process identity contract")
+    def test_real_sigkill_is_detected_as_controller_loss(self):
+        s = self.s
+        child = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(30)"])
+        try:
+            identity = s.process_identity(child.pid)
+            self.assertIsNotNone(identity)
+            child.kill()
+            child.wait(timeout=3)
+            self.assertNotEqual(s.process_identity(child.pid), identity)
+        finally:
+            if child.poll() is None:
+                child.kill()
+                child.wait(timeout=3)
 
 
 if __name__ == "__main__":
