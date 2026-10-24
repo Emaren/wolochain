@@ -48,6 +48,18 @@ RESTORE_SCRATCH = Path("/var/lib/wolo-financial-restore")
 RESTORE_OS_RESERVE = 8 << 30
 RESTORE_DATA_FACTOR = 2
 LOCK = Path("/run/lock/aoe2war-wolo-two-settlement-code-only.lock")
+# Out-of-band, independently reviewed enrollment and source-integrity anchors.
+# Defaults are intentionally UNENROLLED. No operator-supplied CLI hash may
+# substitute for a source-pinned trust anchor or an external nonce witness.
+AUTHORITY_ENROLLMENT_ANCHORS = {
+    "registry_sha256": None,
+    "host_identity_sha256": None,
+    "source_commit": None,
+    "source_drift_disposition_sha256": None,
+}
+AUTHORITY_ROOT = Path("/etc/wolochain-financial-maintenance/authority")
+AUTHORITY_NONCE_ROOT = Path("/var/lib/wolo-financial-restore/authority-nonces")
+
 DOCKER = ["docker", "--host=unix:///var/run/docker.sock"]
 SCHEMA = "wolo.financial-maintenance-permit.v1"
 FENCE_SCHEMA = "wolo.financial-maintenance-fence.v1"
@@ -815,7 +827,7 @@ def cleanup_restore_scratch(path):
     shutil.rmtree(path)
 
 
-def restore_isolated(receipt_path, output, *, runner=None):
+def restore_isolated(receipt_path, output, *, runner=None, phase_window=None):
     """Real pg_restore in an existing pinned, network-none disposable container.
 
     No host PG socket, environment, keyring or production volume is mounted.
@@ -825,9 +837,18 @@ def restore_isolated(receipt_path, output, *, runner=None):
     """
     runner = runner or run
     cleanup_runner = runner
-    observed = verify_current_fence(receipt_path, scope_digest(), runner=runner)
+    # Only an independently authenticated OFFLINE_VERIFY request can supply
+    # a fresh phase_window. Never renew the old LIVE_CAPTURE permit itself.
+    observe_fence = verify_retained_fence if phase_window is not None else verify_current_fence
+    observed = observe_fence(receipt_path, scope_digest(), runner=runner)
     permit = observed["permit"]
-    runner = bounded_runner(runner, permit)
+    if phase_window is not None:
+        require(phase_window.get("phase") == "offline_verify" and
+                phase_window.get("live_actions_allowed") is False,
+                "OFFLINE_PHASE_ONLY")
+        require(utc(phase_window["not_before"]) <= clock() < utc(phase_window["expires_at"]),
+                "OFFLINE_WINDOW_EXPIRED")
+    runner = bounded_runner(runner, phase_window if phase_window is not None else permit)
     output = Path(output)
     require(output.parent == BACKUPS and output.is_dir() and not output.is_symlink(), "BACKUP_PATH_INVALID")
     manifest, _ = private_json(output / "backup.json")
@@ -891,7 +912,7 @@ def restore_isolated(receipt_path, output, *, runner=None):
                 require(time.monotonic() < deadline, "ISOLATED_POSTGRES_START_TIMEOUT")
                 time.sleep(0.25)
         for lane in ("hd", "de"):
-            verify_current_fence(receipt_path, scope_digest(), runner=runner)
+            observe_fence(receipt_path, scope_digest(), runner=runner)
             db = "wolo_restore_" + lane
             runner(prefix + ["createdb", "--host=/var/run/postgresql", "--username=postgres", db])
             runner(prefix + ["pg_restore", "--host=/var/run/postgresql", "--username=postgres",
@@ -909,7 +930,7 @@ def restore_isolated(receipt_path, output, *, runner=None):
                     kwargs["input"], timeout=70).strip()
             require(financial_census(contract, env, isolated_run) == manifest["financial_censuses"][lane],
                     "RESTORED_FINANCIAL_INTEGRITY_MISMATCH")
-        verify_current_fence(receipt_path, scope_digest(), runner=runner)
+        observe_fence(receipt_path, scope_digest(), runner=runner)
         for lane in ("hd", "de"):
             require(file_sha(output / (lane + ".dump")) == manifest["databases"][lane]["sha256"],
                     "DATABASE_DUMP_CHANGED_DURING_RESTORE")
@@ -939,8 +960,11 @@ def restore_isolated(receipt_path, output, *, runner=None):
     mount, _, _ = _bounded_restore_mount()
     require(not any(p.name.startswith("restore-") for p in mount.iterdir()),
             "RESTORE_SCRATCH_NOT_CLEAN_AFTER_RUN")
-    verify_current_fence(receipt_path, scope_digest(), runner=runner)
+    observe_fence(receipt_path, scope_digest(), runner=runner)
 
+    if phase_window is not None:
+        require(utc(phase_window["not_before"]) <= clock() < utc(phase_window["expires_at"]),
+                "OFFLINE_WINDOW_EXPIRED")
     # No successful receipt may outlive a failed cleanup. A failed write/unlink
     # keeps INCOMPLETE until a separately reviewed recovery can continue.
     write_new(output / "restore.json", canonical(receipt))
@@ -985,11 +1009,17 @@ def verify_current_backup(restore_receipt_path, expected_scope_sha256,
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--mode", choices=("scope", "inspect-storage", "verify-fence", "fence", "backup", "restore-isolated"),
+    parser.add_argument("--mode", choices=("scope", "inspect-storage", "verify-fence", "fence", "backup", "restore-isolated", "capture", "offline-restore", "resume"),
                         default="scope")
     parser.add_argument("--permit", type=Path)
     parser.add_argument("--fence-receipt", type=Path)
     parser.add_argument("--output", type=Path)
+    # Authority files are root-private and independently enrolled; these CLI
+    # paths never become caller-supplied trust anchors.
+    for name in ("packet", "registry", "evidence", "procedure", "nonce-ledger",
+                 "host-identity", "source-drift-disposition", "capture-manifest",
+                 "previous-review", "restore-receipt"):
+        parser.add_argument("--" + name, type=Path)
     args = parser.parse_args(argv)
     try:
         if args.mode == "scope":
@@ -1027,26 +1057,37 @@ def main(argv=None):
             print(json.dumps({"status": "CURRENT_FENCE_OBSERVED", "resume_authorized": False,
                               "financial_release_authorized": False}))
             return 3
-        # Financially held until an independently enrolled, atomic-nonce,
-        # phase-separated five-human controller is reviewed and installed.
-        # The legacy v1 approval_refs contain only hash-shaped strings and
-        # cannot authenticate a real human. Never treat PR97 offline
-        # cryptographic review (exit 3) as an operational permit.
-        # Keep direct synthetic fence/backup/restore functions testable while
-        # the PRODUCTION CLI remains fail-closed for every write-bearing mode.
-        require(False, "FIVE_HUMAN_CONTROLLER_NOT_INTEGRATED")
+        # Deliberately preserve old v1 modes as an explicit hard refusal.
+        # The signed v2 capture/restore modes are separate and MUST prove
+        # enrolled authority before any mutation, including nonce consumption.
+        require(args.mode in ("capture", "offline-restore", "resume"),
+                "FIVE_HUMAN_CONTROLLER_NOT_INTEGRATED")
         fd = os.open(LOCK, os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW, 0o600)
         with os.fdopen(fd, "a") as lock:
             meta = os.fstat(fd)
             require(stat.S_ISREG(meta.st_mode) and meta.st_uid == 0 and meta.st_nlink == 1 and
                     stat.S_IMODE(meta.st_mode) == 0o600, "UNSAFE_MAINTENANCE_LOCK")
             fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            if args.mode == "fence":
-                require(args.permit is not None, "EXACT_PERMIT_REQUIRED")
+            from settlement_financial_controller_binding import authenticate_and_reserve
+            # Real person enrollment, source integrity, off-host replay witness,
+            # producer coverage and immutable evidence must be established
+            # first. The unconfigured source anchors fail closed.
+            req = authenticate_and_reserve(
+                args, mode=args.mode, source_tool_sha256=digest(Path(__file__).read_bytes()),
+                scope_sha256=scope_digest(), anchors=AUTHORITY_ENROLLMENT_ANCHORS,
+                root=AUTHORITY_ROOT, nonce_root=AUTHORITY_NONCE_ROOT)
+            if args.mode == "capture":
+                require(args.permit is not None and args.output is not None,
+                        "EXACT_CAPTURE_INPUTS_REQUIRED")
                 fence(args.permit, args.fence_receipt)
+                backup(args.fence_receipt, args.output)
+            elif args.mode == "offline-restore":
+                require(args.output is not None, "EXACT_RESTORE_INPUT_REQUIRED")
+                restore_isolated(args.fence_receipt, args.output, phase_window=req)
             else:
-                require(args.output is not None, "BACKUP_OUTPUT_REQUIRED")
-                (backup if args.mode == "backup" else restore_isolated)(args.fence_receipt, args.output)
+                # Independent RESUME signatures are necessary, not sufficient.
+                # No resume implementation may be inferred from a backup.
+                raise MaintenanceError("INDEPENDENT_RESUME_EXECUTOR_NOT_APPROVED")
         print(json.dumps({"status": "SCOPED_OPERATION_COMPLETE", "resume_authorized": False,
                           "financial_release_authorized": False}))
         return 0
