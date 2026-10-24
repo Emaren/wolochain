@@ -28,6 +28,7 @@ jobs:
         run: sudo env CI=true WOLO_DISPOSABLE_SYSTEMD_TEST=1 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_settlement_first_rehearsal_systemd.py' -v
 
       - name: Actual isolated PostgreSQL dump and restore (synthetic HD and DE)
+        if: ${{ always() && !cancelled() }}
         env:
           WOLO_RESTORE_TEST_IMAGE: postgres@sha256:9e2cf6287f25c3151f4c9421ccce2b17f3e60061c111a29165e0d2cdd9ff0a97
           RUN_WOLO_ISOLATED_RESTORE_TESTS: '1'

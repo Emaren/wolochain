@@ -85,7 +85,7 @@ class DisposableSystemdWatchdog(unittest.TestCase):
                         raw = ("[Unit]\nDescription=TEST ONLY disposable financial gate timer\n"
                                "[Timer]\nOnActiveSec=24h\nUnit=" + unit.replace(".timer", ".service") + "\n")
                     else:
-                        command = ("/usr/bin/sleep 90" if unit in maintenance.APPS else
+                        command = ("/usr/bin/sleep 600" if unit in maintenance.APPS else
                                    "/usr/bin/touch " + str(fixture / (unit + ".ran")))
                         raw = ("[Unit]\nDescription=TEST ONLY disposable financial gate service\n"
                                "[Service]\nType=" + ("simple" if unit in maintenance.APPS else "oneshot") +
@@ -97,14 +97,23 @@ class DisposableSystemdWatchdog(unittest.TestCase):
                 self.command("systemctl", "daemon-reload")
                 for unit in maintenance.APPS:
                     self.command("systemctl", "start", unit)
-                deadline = time.monotonic() + 10
+                # A fresh hosted VM can still have unrelated boot jobs. Wait
+                # for the SAME strict all-jobs-empty policy; never suppress it.
+                deadline = time.monotonic() + 120
+                previous_jobs = None
                 while True:
                     try:
                         maintenance.no_jobs(maintenance.run)
                         break
                     except maintenance.MaintenanceError:
-                        self.assertLess(time.monotonic(), deadline, "queued/unknown systemd jobs prevent safe fixture")
-                        time.sleep(.1)
+                        jobs = self.command("busctl", "--system", "--json=short", "call",
+                            "org.freedesktop.systemd1", "/org/freedesktop/systemd1",
+                            "org.freedesktop.systemd1.Manager", "ListJobs")
+                        if jobs != previous_jobs:
+                            print("DISPOSABLE_SYSTEMD_PENDING_JOBS=" + jobs, flush=True)
+                            previous_jobs = jobs
+                        self.assertLess(time.monotonic(), deadline, "queued/unknown systemd jobs prevent safe fixture: " + jobs)
+                        time.sleep(.2)
                 original_run = maintenance.run
                 def traced_fixture_command(argv, **kwargs):
                     try:
