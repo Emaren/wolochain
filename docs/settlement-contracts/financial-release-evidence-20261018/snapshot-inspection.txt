@@ -1,0 +1,19 @@
+=== WOLO MAINNET: TWO-SERVICE SNAPSHOT PRECHECK (--inspect) ===
+UTC 2026-10-18T18:12:48Z
+PASS original shared settlement binary SHA256 matches pinned baseline
+PASS preserved consensus binary SHA256 matches pinned baseline
+PASS staged verifier candidate SHA256 matches pinned baseline
+FINANCIAL_DRAIN_CERTIFIED=false
+REPLAY_SAFETY_CERTIFIED=false
+PASS wolochain-mainnet-settlement.env root:root mode 600 (contents not displayed)
+PASS wolochain-founder-rewards-settlement.env root:root mode 600 (contents not displayed)
+PASS wolochain-mainnet-settlement.service         PID=1012 binary=040126a2884946caf1651a50b7d8115c5a6fb2d5aa94fcbbe150694602d451a5
+PASS wolochain-founder-rewards-settlement.service PID=1010 binary=040126a2884946caf1651a50b7d8115c5a6fb2d5aa94fcbbe150694602d451a5
+PASS wolochaind-mainnet.service                   PID=1009 binary=4b77f622191db7550cb87cafb8f1886a0aadebee3eb6565f9f90036f809e61d3
+7.2M	/mnt/HC_Volume_105319120/wolochain-mainnet/settlement-state
+2.7M	/mnt/HC_Volume_105319120/wolochain-mainnet/founder-rewards-settlement-state
+=== VOLUME CAPACITY ===
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sdb        296G  237G   47G  84% /mnt/HC_Volume_105319120
+PASS minimum volume headroom
+INSPECTION ONLY: no files written, no services or secrets altered

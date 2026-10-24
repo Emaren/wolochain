@@ -1,0 +1,22 @@
+{
+  "approval_public_key_hex": "8e486e8fb79499dba2a789c6b1639d409495233c79e0eaf52e2ea1fc9dbbb73f",
+  "fixture_only": true,
+  "mainnet_authority": false,
+  "reservation": {
+    "version": 1,
+    "operation_id": "satchel:ticket:1",
+    "owner_id": "owner-1",
+    "vault": "wolo1dehxumnwdehxumnwdehxumnwdehxumnwep0k7e",
+    "recipient": "wolo1dahk7mm0dahk7mm0dahk7mm0dahk7mm0c3wh5c",
+    "amount_uwolo": "1000000",
+    "memo": "AoE2HDBets bet ticket v1 · ticket 1",
+    "reservation_digest": "48630f339617bfc7b2aef016fa87d8786ed6b4af44f4095efff2c22f5aa68953",
+    "ledger_revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "consent_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "fee_uwolo": "5000",
+    "issued_at": 1799999999,
+    "expires_at": 1800000120,
+    "signature": "nMgL6jBYJSTwtNpoRcAAkoDpLUjw3YH+/f8z/ngAG8bomoX4QfaTQPjfLp10NgbV36JShrLPFFGJSRNvGaSPDA=="
+  },
+  "reservation_sign_bytes": "[\"aoe2war/satchel/wager-reservation/v1\",1,\"wolo-1\",\"uwolo\",\"satchel:ticket:1\",\"owner-1\",\"wolo1dehxumnwdehxumnwdehxumnwdehxumnwep0k7e\",\"wolo1dahk7mm0dahk7mm0dahk7mm0dahk7mm0c3wh5c\",\"1000000\",\"AoE2HDBets bet ticket v1 · ticket 1\",\"48630f339617bfc7b2aef016fa87d8786ed6b4af44f4095efff2c22f5aa68953\",\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"5000\",1799999999,1800000120]"
+}

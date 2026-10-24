@@ -7,7 +7,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import importlib.util
+import contextlib
+import io
 import json
+import os
+import re
 from pathlib import Path
 import subprocess
 import sys
@@ -156,7 +160,7 @@ class GuardedTwoServiceCutover(unittest.TestCase):
     def test_normal_code_switch_and_approved_code_only_rollback(self):
         s = self.s
         fake = FakeLive(s)
-        ctl = s.Cutover(fake)
+        ctl = s.Cutover(fake, authorize=lambda: None)
         self.assertEqual(ctl.inspect(), "old")
         self.assertEqual(ctl.promote(), "new")
         self.assertEqual(ctl.inspect(), "new")
@@ -180,8 +184,8 @@ class GuardedTwoServiceCutover(unittest.TestCase):
                 fake = FakeLive(s)
                 fake.fail_once = point
                 with self.assertRaisesRegex(RuntimeError, "injected"):
-                    s.Cutover(fake).promote()
-                self.assertEqual(s.Cutover(fake).inspect(), "old")
+                    s.Cutover(fake, authorize=lambda: None).promote()
+                self.assertEqual(s.Cutover(fake, authorize=lambda: None).inspect(), "old")
                 fake.assert_no_node_or_ledger_change()
 
     def test_first_transient_connection_refusal_waits_then_succeeds(self):
@@ -199,7 +203,7 @@ class GuardedTwoServiceCutover(unittest.TestCase):
 
         fake.health = delayed
         with patch.object(s, "STARTUP_HEALTH_POLL_SECONDS", 0):
-            self.assertEqual(s.Cutover(fake).promote(), "new")
+            self.assertEqual(s.Cutover(fake, authorize=lambda: None).promote(), "new")
         self.assertEqual(seen["refusals"], 1)
         self.assertTrue(all(fake.dropins[u] == "new" for u in s.SERVICES))
         fake.assert_no_node_or_ledger_change()
@@ -217,8 +221,8 @@ class GuardedTwoServiceCutover(unittest.TestCase):
         fake.health = unavailable
         with patch.object(s, "STARTUP_HEALTH_GRACE_SECONDS", 0):
             with self.assertRaisesRegex(s.Blocked, "bounded health deadline"):
-                s.Cutover(fake).promote()
-        self.assertEqual(s.Cutover(fake).inspect(), "old")
+                s.Cutover(fake, authorize=lambda: None).promote()
+        self.assertEqual(s.Cutover(fake, authorize=lambda: None).inspect(), "old")
         fake.assert_no_node_or_ledger_change()
 
     def test_semantic_health_failure_fails_immediately_not_retried(self):
@@ -235,9 +239,9 @@ class GuardedTwoServiceCutover(unittest.TestCase):
 
         fake.health = wrong_chain
         with self.assertRaisesRegex(s.Blocked, "chain/health mismatch"):
-            s.Cutover(fake).promote()
+            s.Cutover(fake, authorize=lambda: None).promote()
         self.assertEqual(errors, [8092])
-        self.assertEqual(s.Cutover(fake).inspect(), "old")
+        self.assertEqual(s.Cutover(fake, authorize=lambda: None).inspect(), "old")
         fake.assert_no_node_or_ledger_change()
 
     def test_crash_after_stop_without_written_override_can_recover(self):
@@ -245,9 +249,9 @@ class GuardedTwoServiceCutover(unittest.TestCase):
         fake = FakeLive(s)
         for unit in s.SERVICES:
             fake.systemctl("stop", unit)
-        self.assertEqual(s.Cutover(fake).state(allow_partial=True), "old")
-        s.Cutover(fake).code_only_recover(1009)
-        self.assertEqual(s.Cutover(fake).inspect(), "old")
+        self.assertEqual(s.Cutover(fake, authorize=lambda: None).state(allow_partial=True), "old")
+        s.Cutover(fake, authorize=lambda: None).code_only_recover(1009)
+        self.assertEqual(s.Cutover(fake, authorize=lambda: None).inspect(), "old")
         fake.assert_no_node_or_ledger_change()
 
     def test_crash_after_first_written_override_before_reload_recovers(self):
@@ -256,9 +260,9 @@ class GuardedTwoServiceCutover(unittest.TestCase):
         for unit in s.SERVICES:
             fake.systemctl("stop", unit)
         fake.add_dropin(s.PRIMARY)
-        self.assertEqual(s.Cutover(fake).state(allow_partial=True), "partial")
-        s.Cutover(fake).code_only_recover(1009)
-        self.assertEqual(s.Cutover(fake).inspect(), "old")
+        self.assertEqual(s.Cutover(fake, authorize=lambda: None).state(allow_partial=True), "partial")
+        s.Cutover(fake, authorize=lambda: None).code_only_recover(1009)
+        self.assertEqual(s.Cutover(fake, authorize=lambda: None).inspect(), "old")
         fake.assert_no_node_or_ledger_change()
 
     def test_foreign_override_and_node_drift_block(self):
@@ -266,16 +270,17 @@ class GuardedTwoServiceCutover(unittest.TestCase):
         fake = FakeLive(s)
         fake.loaded[s.PRIMARY] = "new"
         with self.assertRaisesRegex(s.Blocked, "unsynchronized"):
-            s.Cutover(fake).inspect()
+            s.Cutover(fake, authorize=lambda: None).inspect()
         fake.loaded[s.PRIMARY] = "old"
         fake.units[s.CONSENSUS].exe = "evil"
         with self.assertRaises(s.Blocked):
-            s.Cutover(fake).promote()
+            s.Cutover(fake, authorize=lambda: None).promote()
         fake.assert_no_node_or_ledger_change = lambda: None
         self.assertFalse(fake.commands)
 
     def test_mutation_from_cli_needs_operator_permit(self):
-        for mode in ("promote", "rollback", "recover-interrupted"):
+        for mode in ("promote", "rollback", "recover-interrupted", "first-rehearsal",
+                     "rehearsal-recover", "rehearsal-watchdog"):
             with self.subTest(mode=mode):
                 # Run no root as well: either root or absent permit denies.
                 proc = subprocess.run(
@@ -292,18 +297,11 @@ class GuardedTwoServiceCutover(unittest.TestCase):
             p.write_text(json.dumps({"approved": True}))
             with self.assertRaisesRegex(s.Blocked, "root:root"):
                 s.load_release_permit(p)
-            p.chmod(0o600)
-            # CI user is not root; fake protected stat without mutating host.
-            st = p.stat()
-            class FakeStat:
-                st_uid = 0
-                st_gid = 0
-                st_mode = 0o100600
-                st_size = st.st_size
-            original = Path.stat
-            def fake_stat(obj, *a, **kw):
-                return FakeStat() if obj == p else original(obj, *a, **kw)
-            with patch.object(Path, "stat", new=fake_stat):
+            # Protected ownership is simulated on the exact fixture FD; the
+            # source validator never trusts a separate path stat for reading.
+            helper = ReleasePermitAcquisition()
+            helper.s = s
+            with helper.protected(p):
                 with self.assertRaisesRegex(s.Blocked, "fields missing"):
                     s.load_release_permit(p)
 
@@ -314,6 +312,953 @@ class GuardedTwoServiceCutover(unittest.TestCase):
         self.assertNotIn("shutil.copytree", src)
         self.assertIn("PAYOUT_PRODUCERS_STILL_FENCED_REQUIRED=true", src)
         self.assertIn("NO_PAYOUT_PRODUCER_RESUME=true", src)
+
+
+class ReleasePermitAcquisition(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.s = load()
+
+    def document(self, now=None):
+        s = self.s
+        now = now or s.datetime.now(s.timezone.utc)
+        return {"schema": "aoe2war.wolochain.two-settlement-code-only.v1",
+                "candidateRevision": s.REV, "candidateSha256": s.NEW_SHA,
+                "operator": "reviewed-operator", "approval": s.EXACT_APPROVAL,
+                "witnessedControls": sorted(s.ATTESTED),
+                "issuedAtUtc": (now - s.timedelta(minutes=1)).isoformat(),
+                "expiresAtUtc": (now + s.timedelta(seconds=1)).isoformat()}
+
+    @contextlib.contextmanager
+    def protected(self, path):
+        # Simulate protected root ownership on the exact opened fixture inode;
+        # no chown, host privilege, production file or real permit is needed.
+        import types
+        s = self.s
+        path.chmod(0o600)
+        original_path_stat, original_fstat = Path.stat, s.os.fstat
+        initial = original_path_stat(path)
+        def root_metadata(st):
+            fields = ("st_dev", "st_ino", "st_mode", "st_size", "st_mtime_ns", "st_ctime_ns", "st_nlink")
+            return types.SimpleNamespace(**{key:getattr(st, key) for key in fields}, st_uid=0, st_gid=0)
+        def path_stat(obj, *args, **kwargs):
+            st = original_path_stat(obj, *args, **kwargs)
+            return root_metadata(st) if obj == path else st
+        def fd_stat(fd):
+            st = original_fstat(fd)
+            return root_metadata(st) if (st.st_dev, st.st_ino) == (initial.st_dev, initial.st_ino) else st
+        with patch.object(Path, "stat", new=path_stat), patch.object(s.os, "fstat", side_effect=fd_stat):
+            yield
+
+    def test_default_clock_is_sampled_after_actual_permit_io(self):
+        s = self.s
+        real_datetime = s.datetime
+        clock = {"now": real_datetime.now(s.timezone.utc)}
+        class Clock:
+            fromisoformat = staticmethod(real_datetime.fromisoformat)
+            @staticmethod
+            def now(_tz):
+                return clock["now"]
+        with tempfile.TemporaryDirectory() as td:
+            p = Path(td) / "permit.json"
+            p.write_text(json.dumps(self.document(clock["now"])))
+            after = clock["now"] + s.timedelta(seconds=2)
+            path_read, fd_read = Path.read_bytes, s.os.read
+            def delayed_path(obj):
+                data = path_read(obj)
+                clock["now"] = after
+                return data
+            def delayed_fd(fd, limit):
+                data = fd_read(fd, limit)
+                clock["now"] = after
+                return data
+            with self.protected(p), patch.object(s, "datetime", Clock), \
+                 patch.object(Path, "read_bytes", new=delayed_path), patch.object(s.os, "read", side_effect=delayed_fd):
+                with self.assertRaisesRegex(s.Blocked, "expired"):
+                    s.load_release_permit(p)
+
+    def test_duplicate_json_fields_cannot_become_operator_approval(self):
+        s = self.s
+        with tempfile.TemporaryDirectory() as td:
+            p = Path(td) / "permit.json"
+            raw = json.dumps(self.document())
+            p.write_text(raw.replace('"operator": "reviewed-operator"', '"operator": "different-operator", "operator": "reviewed-operator"'))
+            with self.protected(p), self.assertRaisesRegex(s.Blocked, "duplicate"):
+                s.load_release_permit(p)
+
+    def test_unsafe_opened_descriptor_metadata_is_refused(self):
+        import types
+        s = self.s
+        for change in ({"st_uid": 1}, {"st_gid": 1}, {"st_mode": 0o100640},
+                       {"st_mode": 0o010600}, {"st_size": 8192}):
+            with self.subTest(change=change), tempfile.TemporaryDirectory() as td:
+                p = Path(td) / "permit.json"
+                p.write_text(json.dumps(self.document()))
+                with self.protected(p):
+                    prior = s.os.fstat
+                    def unsafe(fd):
+                        st = prior(fd)
+                        return types.SimpleNamespace(**{**vars(st), **change})
+                    with patch.object(s.os, "fstat", side_effect=unsafe), self.assertRaises(s.Blocked):
+                        s.load_release_permit(p)
+
+    def test_path_swap_cannot_read_a_replacement_symlink_target(self):
+        s = self.s
+        with tempfile.TemporaryDirectory() as td:
+            p, other = Path(td) / "permit.json", Path(td) / "unapproved.json"
+            p.write_text(json.dumps(self.document()))
+            other.write_text(json.dumps({**self.document(), "operator": "unapproved-operator"}))
+            open_fd, path_read = s.os.open, Path.read_bytes
+            swapped = False
+            def swap():
+                nonlocal swapped
+                if not swapped:
+                    p.rename(Path(td) / "original.json")
+                    p.symlink_to(other)
+                    swapped = True
+            def replaced_read(obj):
+                swap()
+                return path_read(obj)
+            def replaced_open(path, *args, **kwargs):
+                fd = open_fd(path, *args, **kwargs)
+                if str(path) == str(p):
+                    swap()
+                return fd
+            with self.protected(p), patch.object(Path, "read_bytes", new=replaced_read), \
+                 patch.object(s.os, "open", side_effect=replaced_open), self.assertRaises(s.Blocked):
+                s.load_release_permit(p)
+
+    def test_growth_after_metadata_check_is_bounded_and_refused(self):
+        s = self.s
+        with tempfile.TemporaryDirectory() as td:
+            p = Path(td) / "permit.json"
+            p.write_text(json.dumps(self.document()))
+            path_read, fd_read = Path.read_bytes, s.os.read
+            grew, limits = False, []
+            def grow():
+                nonlocal grew
+                if not grew:
+                    with p.open("ab") as stream:
+                        stream.write(b" " * 9000)
+                    grew = True
+            def growing_path(obj):
+                grow()
+                return path_read(obj)
+            def growing_fd(fd, limit):
+                limits.append(limit)
+                grow()
+                return fd_read(fd, limit)
+            with self.protected(p), patch.object(Path, "read_bytes", new=growing_path), \
+                 patch.object(s.os, "read", side_effect=growing_fd), self.assertRaises(s.Blocked):
+                s.load_release_permit(p)
+            self.assertTrue(limits)
+            self.assertLessEqual(sum(limits), 8192)
+
+    def test_permit_descriptor_closes_on_read_metadata_and_parse_errors(self):
+        import types
+        s = self.s
+        for failure in ("read", "metadata", "parse"):
+            with self.subTest(failure=failure), tempfile.TemporaryDirectory() as td:
+                p = Path(td) / "permit.json"
+                raw = json.dumps(self.document())
+                if failure == "parse":
+                    raw = raw.replace('"operator": "reviewed-operator"', '"operator": "first", "operator": "reviewed-operator"')
+                p.write_text(raw)
+                opened, closed = [], []
+                original_open, original_close, original_fstat = s.os.open, s.os.close, s.os.fstat
+                def opening(*args, **kwargs):
+                    fd = original_open(*args, **kwargs)
+                    opened.append(fd)
+                    return fd
+                def closing(fd):
+                    closed.append(fd)
+                    original_close(fd)
+                with self.protected(p), patch.object(s.os, "open", side_effect=opening), \
+                     patch.object(s.os, "close", side_effect=closing), contextlib.ExitStack() as stack:
+                    if failure == "read":
+                        stack.enter_context(patch.object(s.os, "read", side_effect=OSError("fixture read error")))
+                    if failure == "metadata":
+                        protected_stat = s.os.fstat
+                        def unsafe(fd):
+                            return types.SimpleNamespace(**{**vars(protected_stat(fd)), "st_uid": 1})
+                        stack.enter_context(patch.object(s.os, "fstat", side_effect=unsafe))
+                    with self.assertRaises(s.Blocked):
+                        s.load_release_permit(p)
+                self.assertEqual(opened, closed)
+                self.assertEqual(len(opened), 1)
+                with self.assertRaises(OSError):
+                    original_fstat(opened[0])
+
+    def test_deeply_nested_malformed_json_returns_typed_refusal(self):
+        s = self.s
+        with tempfile.TemporaryDirectory() as td:
+            p = Path(td) / "permit.json"
+            p.write_text('{"nested":' + '[' * 1500 + '0' + ']' * 1500 + '}')
+            with self.protected(p), self.assertRaises(s.Blocked):
+                s.load_release_permit(p)
+            # Python JSON implementations have different native nesting
+            # limits. Exercise the recursion-refusal path deterministically.
+            with self.protected(p), patch.object(s.json, "loads", side_effect=RecursionError("fixture nesting limit")), \
+                 self.assertRaisesRegex(s.Blocked, "invalid release permit JSON"):
+                s.load_release_permit(p)
+
+    def test_explicit_now_fixture_still_validates_the_same_public_shape(self):
+        s = self.s
+        now = s.datetime(2026, 10, 18, tzinfo=s.timezone.utc)
+        doc = self.document(now)
+        with tempfile.TemporaryDirectory() as td:
+            p = Path(td) / "permit.json"
+            p.write_text(json.dumps(doc))
+            with self.protected(p):
+                self.assertEqual(s.load_release_permit(p, now=now), doc)
+
+
+class ReleasePermitFreshness(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.s = load()
+
+    def run_promote(self, fake, state, *, mode="promote"):
+        s = self.s
+        original = {"operator": "reviewed-operator", "expiresAtUtc": "original-expiry"}
+        def read(_path):
+            state["checks"] += 1
+            if state.get("expired"):
+                raise s.Blocked("expired release permit")
+            if state.get("revoked"):
+                raise FileNotFoundError("revoked fixture permit")
+            if state.get("changed"):
+                return {**original, "operator": "different-operator"}
+            return dict(original)
+        @contextlib.contextmanager
+        def locked():
+            if state.get("expire_at_lock"):
+                state["expired"] = True
+            yield
+        stderr = io.StringIO()
+        with patch.object(s.os, "geteuid", return_value=0), \
+             patch.object(s, "Live", return_value=fake), \
+             patch.object(s, "load_release_permit", side_effect=read), \
+             patch.object(s, "acquire_mutation_lock", side_effect=locked), \
+             patch.object(sys, "argv", [str(SCRIPT), "--mode", mode, "--permit", "/fixture/permit"]), \
+             contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(stderr):
+            result = s.main()
+        return result, stderr.getvalue()
+
+    def test_expiry_during_slow_preflight_means_zero_mutations(self):
+        s = self.s
+        fake = FakeLive(s)
+        state = {"checks": 0}
+        health = fake.health
+        def preflight(port):
+            health(port)
+            state["expired"] = True
+        fake.health = preflight
+        result, _ = self.run_promote(fake, state)
+        self.assertEqual(result, 2)
+        self.assertEqual(fake.commands, [])
+        fake.assert_no_node_or_ledger_change()
+
+    def test_expiry_between_forward_steps_only_completes_old_code_recovery(self):
+        s = self.s
+        for point in ("stop:" + s.PRIMARY, "stop:" + s.FOUNDER,
+                      "add:" + s.PRIMARY, "add:" + s.FOUNDER,
+                      "daemon-reload:all", "start:" + s.PRIMARY):
+            with self.subTest(point=point):
+                fake = FakeLive(s)
+                state = {"checks": 0}
+                systemctl, add = fake.systemctl, fake.add_dropin
+                new_starts_after_expiry = []
+                def control(action, unit=None):
+                    if state.get("expired") and action == "start" and fake.loaded[unit] == "new":
+                        new_starts_after_expiry.append(unit)
+                    systemctl(action, unit)
+                    if action + ":" + (unit or "all") == point:
+                        state["expired"] = True
+                def override(unit):
+                    add(unit)
+                    if "add:" + unit == point:
+                        state["expired"] = True
+                fake.systemctl, fake.add_dropin = control, override
+                result, _ = self.run_promote(fake, state)
+                self.assertEqual(result, 2)
+                self.assertEqual(new_starts_after_expiry, [])
+                self.assertTrue(all(fake.dropins[unit] == "old" and fake.loaded[unit] == "old" for unit in s.SERVICES))
+                self.assertTrue(all(fake.units[unit].running and fake.units[unit].exe == s.OLD for unit in s.SERVICES))
+                fake.assert_no_node_or_ledger_change()
+
+    def test_changed_or_revoked_permit_after_first_mutation_cannot_continue_rollout(self):
+        s = self.s
+        for failure in ("changed", "revoked"):
+            with self.subTest(failure=failure):
+                fake = FakeLive(s)
+                state = {"checks": 0}
+                control = fake.systemctl
+                def first_stop(action, unit=None):
+                    control(action, unit)
+                    if action == "stop" and unit == s.PRIMARY:
+                        state[failure] = True
+                fake.systemctl = first_stop
+                result, _ = self.run_promote(fake, state)
+                self.assertEqual(result, 2)
+                self.assertFalse(any(command.startswith("add:") for command in fake.commands))
+                self.assertTrue(all(fake.units[unit].exe == s.OLD and fake.units[unit].running for unit in s.SERVICES))
+                fake.assert_no_node_or_ledger_change()
+
+    def test_expiry_during_new_runtime_verification_rolls_back_instead_of_reporting_success(self):
+        s = self.s
+        fake = FakeLive(s)
+        state = {"checks": 0}
+        health = fake.health
+        def verification(port):
+            health(port)
+            if fake.loaded[s.PRIMARY] == "new":
+                state["expired"] = True
+        fake.health = verification
+        result, _ = self.run_promote(fake, state)
+        self.assertEqual(result, 2)
+        self.assertTrue(all(fake.units[unit].running and fake.units[unit].exe == s.OLD for unit in s.SERVICES))
+        fake.assert_no_node_or_ledger_change()
+
+    def test_changed_or_revoked_authority_during_preflight_has_zero_mutations(self):
+        s = self.s
+        for failure in ("changed", "revoked"):
+            with self.subTest(failure=failure):
+                fake = FakeLive(s)
+                state = {"checks": 0}
+                health = fake.health
+                def preflight(port):
+                    health(port)
+                    state[failure] = True
+                fake.health = preflight
+                result, _ = self.run_promote(fake, state)
+                self.assertEqual(result, 2)
+                self.assertEqual(fake.commands, [])
+
+    def test_original_permit_snapshot_does_not_adopt_renewed_or_mutated_authority(self):
+        s = self.s
+        original = {"operator": "reviewer", "expiresAtUtc": "original"}
+        with patch.object(s, "load_release_permit", return_value=original):
+            authority = s.ReleaseAuthority(Path("/fixture/permit"))
+            original["expiresAtUtc"] = "renewed"
+            with self.assertRaisesRegex(s.Blocked, "changed since original"):
+                authority.check()
+
+    def test_unbound_mutation_api_refuses_before_any_side_effect(self):
+        s = self.s
+        fake = FakeLive(s)
+        with self.assertRaisesRegex(s.Blocked, "fresh bound release authority"):
+            s.Cutover(fake).promote()
+        with self.assertRaisesRegex(s.Blocked, "fresh bound release authority"):
+            s.Cutover(fake).code_only_recover(1009)
+        self.assertEqual(fake.commands, [])
+
+    def test_started_rollback_can_finish_only_old_code_cleanup_after_expiry(self):
+        s = self.s
+        fake = FakeLive(s)
+        for unit in s.SERVICES:
+            fake.dropins[unit] = fake.loaded[unit] = "new"
+            fake.units[unit].exe = s.NEW
+        state = {"checks": 0}
+        control = fake.systemctl
+        def expire_after_stop(action, unit=None):
+            control(action, unit)
+            if action == "stop" and unit == s.PRIMARY:
+                state["expired"] = True
+        fake.systemctl = expire_after_stop
+        result, _ = self.run_promote(fake, state, mode="rollback")
+        self.assertEqual(result, 0)
+        self.assertEqual(state["checks"], 2)
+        self.assertEqual(len(fake.commands), 7)
+        self.assertFalse(any(command.startswith("add:") for command in fake.commands))
+        self.assertTrue(all(fake.units[unit].running and fake.units[unit].exe == s.OLD for unit in s.SERVICES))
+        fake.assert_no_node_or_ledger_change()
+
+    def test_rollback_or_recovery_with_expiry_after_initial_validation_has_zero_mutations(self):
+        s = self.s
+        for mode in ("rollback", "recover-interrupted"):
+            with self.subTest(mode=mode):
+                fake = FakeLive(s)
+                for unit in s.SERVICES:
+                    fake.dropins[unit] = fake.loaded[unit] = "new"
+                    fake.units[unit].exe = s.NEW
+                if mode == "recover-interrupted":
+                    fake.units[s.PRIMARY].running = False
+                state = {"checks": 0, "expire_at_lock": True}
+                result, _ = self.run_promote(fake, state, mode=mode)
+                self.assertEqual(result, 2)
+                self.assertEqual(fake.commands, [])
+
+
+
+class SettlementSourceAuthority(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.s = load()
+
+    def state(self, *, runtime="old", revision=None, clean=True, visible=True):
+        s = self.s
+        fake = FakeLive(s)
+        for unit in s.SERVICES:
+            fake.dropins[unit] = fake.loaded[unit] = runtime
+            fake.units[unit].exe = s.NEW if runtime == "new" else s.OLD
+        source = {"revision": revision or s.OLD_REV, "clean": clean,
+                  "tracked_index_visible": visible}
+        fake.source_checkout = lambda: dict(source)
+        return fake, s.Cutover(fake, authorize=lambda: None)
+
+    def assert_observation_only(self, receipt, fake):
+        for field in ("release_authorized", "financial_drain_certified",
+                      "custody_authorized", "claim_889_resolved", "production_mutated"):
+            self.assertIs(receipt[field], False)
+        self.assertEqual(fake.commands, [])
+        fake.assert_no_node_or_ledger_change()
+
+    def test_old_runtime_and_old_checkout_require_both_real_transitions(self):
+        fake, ctl = self.state()
+        receipt = ctl.source_authority()
+        self.assertEqual(receipt["status"], "BLOCKED")
+        self.assertTrue(receipt["code_cutover_required"])
+        self.assertTrue(receipt["source_transition_required"])
+        self.assertFalse(receipt["source_transition_runtime_prerequisite_met"])
+        self.assertEqual(receipt["expected_revision"], self.s.REV)
+        self.assert_observation_only(receipt, fake)
+
+    def test_checkout_only_advance_never_clears_old_runtime(self):
+        fake, ctl = self.state(revision=self.s.REV)
+        receipt = ctl.source_authority()
+        self.assertFalse(receipt["source_runtime_aligned"])
+        self.assertTrue(receipt["code_cutover_required"])
+        self.assertFalse(receipt["source_transition_required"])
+        self.assertIn("PROTECTED_TWO_SERVICE_CODE_CUTOVER_REQUIRED", receipt["blockers"])
+        self.assert_observation_only(receipt, fake)
+
+    def test_real_new_runtime_precedes_source_checkout_transition(self):
+        fake, ctl = self.state(runtime="new")
+        receipt = ctl.source_authority()
+        self.assertFalse(receipt["source_runtime_aligned"])
+        self.assertFalse(receipt["code_cutover_required"])
+        self.assertTrue(receipt["source_transition_required"])
+        self.assertTrue(receipt["source_transition_runtime_prerequisite_met"])
+        self.assert_observation_only(receipt, fake)
+
+    def test_both_new_align_only_source_authority_with_all_financial_holds(self):
+        fake, ctl = self.state(runtime="new", revision=self.s.REV)
+        receipt = ctl.source_authority()
+        self.assertTrue(receipt["source_runtime_aligned"])
+        self.assertEqual(receipt["status"], "SOURCE_RUNTIME_ALIGNED_FINANCIAL_HOLD")
+        self.assertEqual(receipt["blockers"], [])
+        self.assertEqual(receipt["live_settlement_sha256"], self.s.NEW_SHA)
+        self.assertEqual(receipt["settlement_pids"], {unit: fake.units[unit].pid for unit in self.s.SERVICES})
+        self.assertEqual(receipt["consensus_pid"], 1009)
+        self.assertTrue(receipt["observed_at_utc"].endswith("Z"))
+        self.s.datetime.fromisoformat(receipt["observed_at_utc"].replace("Z", "+00:00"))
+        self.assert_observation_only(receipt, fake)
+
+    def test_dirty_hidden_or_unreviewed_checkout_never_aligns(self):
+        for args in ({"clean": False}, {"clean": False, "visible": False}, {"clean": True, "visible": False},
+                     {"revision": "a" * 40}):
+            with self.subTest(args=args):
+                case = {"runtime": "new", "revision": self.s.REV, **args}
+                fake, ctl = self.state(**case)
+                receipt = ctl.source_authority()
+                self.assertFalse(receipt["source_runtime_aligned"])
+                self.assert_observation_only(receipt, fake)
+
+    def test_source_changing_during_read_never_returns_alignment(self):
+        fake, ctl = self.state(runtime="new", revision=self.s.REV)
+        observations = iter([{"revision": self.s.REV,"clean":True,"tracked_index_visible":True},
+                             {"revision": self.s.OLD_REV,"clean":True,"tracked_index_visible":True}])
+        fake.source_checkout = lambda: next(observations)
+        with self.assertRaisesRegex(self.s.Blocked, "source changed"):
+            ctl.source_authority()
+        self.assertEqual(fake.commands, [])
+
+    def test_settlement_rollback_exit_or_pid_change_during_second_git_refuses_alignment(self):
+        s = self.s
+        for change in ("rollback", "exit", "pid"):
+            with self.subTest(change=change):
+                fake, ctl = self.state(runtime="new", revision=s.REV)
+                original = fake.source_checkout
+                calls = 0
+                def checkout():
+                    nonlocal calls
+                    calls += 1
+                    if calls == 2:
+                        if change == "rollback":
+                            for unit in s.SERVICES:
+                                fake.dropins[unit] = fake.loaded[unit] = "old"
+                                fake.units[unit].exe = s.OLD
+                        elif change == "exit":
+                            fake.units[s.PRIMARY].running = False
+                        else:
+                            fake.units[s.PRIMARY].pid += 1
+                    return original()
+                fake.source_checkout = checkout
+                with self.assertRaises(s.Blocked):
+                    ctl.source_authority()
+                self.assertEqual(fake.commands, [])
+
+    def test_settlement_pid_change_during_last_health_refuses_alignment(self):
+        s = self.s
+        fake, ctl = self.state(runtime="new", revision=s.REV)
+        after_source = False
+        original_source, original_health = fake.source_checkout, fake.health
+        calls = 0
+        def checkout():
+            nonlocal calls, after_source
+            calls += 1
+            after_source = calls == 2
+            return original_source()
+        def health(port):
+            original_health(port)
+            if after_source and port == 8093:
+                fake.units[s.FOUNDER].pid += 1
+        fake.source_checkout, fake.health = checkout, health
+        with self.assertRaises(s.Blocked):
+            ctl.source_authority()
+        self.assertEqual(fake.commands, [])
+
+    def test_mixed_runtime_and_consensus_drift_refuse_source_gate(self):
+        fake, ctl = self.state(runtime="new", revision=self.s.REV)
+        fake.dropins[self.s.FOUNDER] = fake.loaded[self.s.FOUNDER] = "old"
+        with self.assertRaisesRegex(self.s.Blocked, "mixed service"):
+            ctl.source_authority()
+        fake, ctl = self.state(runtime="new", revision=self.s.REV)
+        fake.units[self.s.CONSENSUS].exe = "unreviewed"
+        with self.assertRaisesRegex(self.s.Blocked, "consensus running identity"):
+            ctl.source_authority()
+        self.assertEqual(fake.commands, [])
+
+    def test_bounded_inspection_refuses_excess_stdout_or_stderr(self):
+        for stream in ("stdout", "stderr"):
+            with self.subTest(stream=stream):
+                with self.assertRaisesRegex(self.s.Blocked, "output exceeds limit"):
+                    self.s.Live().command(sys.executable, "-c", "import sys;sys."+stream+".write('x'*1048577)")
+
+    def test_real_git_read_only_hidden_index_and_ignored_source_guards(self):
+        s = self.s
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            def git(*args):
+                return subprocess.run(["git", "-C", td, *args], check=True,
+                                      capture_output=True, text=True).stdout.strip()
+            git("init", "--quiet")
+            (root / "source.go").write_text("package source\n")
+            (root / ".gitignore").write_text("cache\n")
+            git("add", ".")
+            git("-c", "user.name=Offline Fixture", "-c", "user.email=fixture@example.invalid",
+                "commit", "--quiet", "-m", "source fixture")
+            before = (root / ".git/index").read_bytes()
+            with patch.object(s, "CHECKOUT", td):
+                self.assertTrue(s.Live().source_checkout()["clean"])
+                self.assertEqual((root / ".git/index").read_bytes(), before)
+                git("update-index", "--assume-unchanged", "source.go")
+                self.assertFalse(s.Live().source_checkout()["tracked_index_visible"])
+                git("update-index", "--no-assume-unchanged", "source.go")
+                git("update-index", "--skip-worktree", "source.go")
+                self.assertFalse(s.Live().source_checkout()["clean"])
+                git("update-index", "--no-skip-worktree", "source.go")
+                (root / "cache").write_text("ignored source contamination")
+                self.assertFalse(s.Live().source_checkout()["clean"])
+                (root / "cache").unlink()
+                (root / "untracked").write_text("preserve me")
+                self.assertFalse(s.Live().source_checkout()["clean"])
+                self.assertTrue((root / "untracked").exists())
+
+    def test_inherited_git_repository_overlay_cannot_redirect_source_authority(self):
+        s = self.s
+        with tempfile.TemporaryDirectory() as td:
+            roots = [Path(td) / name for name in ("actual", "overlay")]
+            for root in roots:
+                root.mkdir()
+                def git(*args):
+                    return subprocess.run(["git", "-C", str(root), *args], check=True,
+                                          capture_output=True, text=True).stdout.strip()
+                git("init", "--quiet")
+                (root / "source.go").write_text("package " + root.name + "\n")
+                git("add", ".")
+                git("-c", "user.name=Offline Fixture", "-c", "user.email=fixture@example.invalid",
+                    "commit", "--quiet", "-m", root.name)
+            actual, overlay = roots
+            expected = subprocess.check_output(["git", "-C", str(actual), "rev-parse", "HEAD"], text=True).strip()
+            with patch.object(s, "CHECKOUT", str(actual)), patch.dict(s.os.environ, {
+                "GIT_DIR": str(overlay / ".git"), "GIT_WORK_TREE": str(overlay),
+                "GIT_INDEX_FILE": str(overlay / ".git/index"),
+                "GIT_CONFIG_COUNT": "1", "GIT_CONFIG_KEY_0": "core.worktree", "GIT_CONFIG_VALUE_0": str(overlay),
+            }):
+                result = s.Live().source_checkout()
+            self.assertEqual(result["revision"], expected)
+            self.assertTrue(result["clean"])
+
+    def test_read_only_main_never_loads_permit_or_takes_mutation_lock(self):
+        s = self.s
+        fake, _ = self.state()
+        output = io.StringIO()
+        with patch.object(s.os, "geteuid", return_value=0), \
+             patch.object(s, "Live", return_value=fake), \
+             patch.object(s, "load_release_permit", side_effect=AssertionError("permit read")), \
+             patch.object(s, "acquire_mutation_lock", side_effect=AssertionError("mutation lock")), \
+             patch.object(sys, "argv", [str(SCRIPT), "--mode", "source-authority"]), \
+             contextlib.redirect_stdout(output), contextlib.redirect_stderr(io.StringIO()):
+            self.assertEqual(s.main(), 2)
+        receipt = json.loads(output.getvalue())
+        self.assertTrue(receipt["code_cutover_required"])
+        self.assertFalse(receipt["production_mutated"])
+        self.assertEqual(fake.commands, [])
+
+    def test_operator_source_transition_is_self_contained_and_gated_before_mutations(self):
+        text = (ROOT / "docs/mainnet-settlement-runbook.md").read_text()
+        block = re.search(r"```sh\n(\(\nset -eu.*?\n\))\n```", text, re.S)[1]
+        with tempfile.NamedTemporaryFile("w", suffix=".sh") as stream:
+            stream.write(block)
+            stream.flush()
+            subprocess.run(["bash", "-n", stream.name], check=True, capture_output=True)
+        self.assertEqual(block.count("\nrequire_source_transition\n"), 2)
+        self.assertLess(block.index("\nrequire_source_transition\n"), block.index("wgit fetch "))
+        self.assertLess(block.rindex("\nrequire_source_transition\n"), block.index("wgit merge --ff-only"))
+        self.assertIn('"code_cutover_required": False', block)
+        self.assertIn('"checkout_revision": "' + self.s.OLD_REV + '"', block)
+        self.assertIn('"release_authorized": False', block)
+        self.assertIn('"source_runtime_aligned": False', block)
+        self.assertIn('type(r.get(k)) is type(v)', block)
+        self.assertIn('core.hooksPath=/dev/null', block)
+
+    def test_read_only_mode_never_accepts_a_finance_permit(self):
+        args = [sys.executable, str(SCRIPT), "--mode", "source-authority", "--permit", "/never/read/permit"]
+        proc = subprocess.run(args, capture_output=True, text=True, timeout=5)
+        self.assertEqual(proc.returncode, 2)
+        self.assertIn("BLOCKED:", proc.stderr)
+
+
+class FirstRehearsalContracts(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.s = load()
+
+    def document(self, *, recovery=False):
+        s = self.s
+        now = s.datetime.now(s.timezone.utc)
+        def stamp(t):
+            return t.isoformat().replace("+00:00", "Z")
+        doc = {"schema": s.RECOVERY_SCHEMA if recovery else s.REHEARSAL_SCHEMA,
+            "executionId": "a" * 32, "candidateRevision": s.REV, "candidateSha256": s.NEW_SHA,
+            "originalSha256": s.OLD_SHA, "consensusSha256": s.NODE_SHA,
+            "owner": "fixture-owner", "operator": "fixture-operator", "recoveryWitness": "fixture-witness",
+            "approvalRefs": {role: format(i + 1, "064x") for i, role in enumerate(
+                ("owner", "operator", "chainReviewer", "financeReviewer", "recoveryWitness"))},
+            "fenceReceiptPath": "/fixture/fence.json",
+            "backupReceiptPath": "/fixture/restore.json",
+            "windowStartUtc": stamp(now - s.timedelta(minutes=1)),
+            "windowEndUtc": stamp(now + s.timedelta(minutes=20)),
+            "issuedAtUtc": stamp(now - s.timedelta(seconds=1)),
+            "expiresAtUtc": stamp(now + s.timedelta(minutes=2)),
+            "approval": s.RECOVERY_APPROVAL if recovery else s.REHEARSAL_APPROVAL,
+            "witnessedControls": sorted(s.REHEARSAL_CONTROLS)}
+        for key in ("packetSha256", "procedureSha256", "backupReceiptSha256", "fenceScopeSha256",
+                    "fenceReceiptSha256", "toolSha256", "fenceToolSha256"):
+            doc[key] = "b" * 64
+        if recovery:
+            doc["sessionSha256"] = "c" * 64
+        return doc
+
+    def test_rehearsal_never_adopts_six_control_production_or_recovery_authority(self):
+        s = self.s
+        helper = ReleasePermitAcquisition()
+        helper.s = s
+        for doc in (helper.document(), self.document(recovery=True)):
+            with self.subTest(schema=doc["schema"]), self.assertRaises(s.Blocked):
+                s.validate_rehearsal_permit(doc)
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "permit.json"
+            path.write_text(json.dumps(self.document()))
+            helper = ReleasePermitAcquisition()
+            helper.s = s
+            with helper.protected(path), self.assertRaises(s.Blocked):
+                s.load_release_permit(path)
+        self.assertNotIn("reviewed_code_only_rollback_rehearsed", s.REHEARSAL_CONTROLS)
+        self.assertEqual(len(s.ATTESTED), 6)
+
+    def test_first_authority_requires_other_five_and_does_not_claim_prior_rehearsal(self):
+        s = self.s
+        self.assertEqual(s.validate_rehearsal_permit(self.document())["witnessedControls"],
+                         sorted(s.REHEARSAL_CONTROLS))
+        for controls in (sorted(s.ATTESTED), [], sorted(s.REHEARSAL_CONTROLS)[:-1]):
+            doc = self.document()
+            doc["witnessedControls"] = controls
+            with self.subTest(controls=controls), self.assertRaises(s.Blocked):
+                s.validate_rehearsal_permit(doc)
+
+    def test_fresh_recovery_rejects_zero_approval_and_evidence_placeholders(self):
+        s = self.s
+        for key in ("packetSha256", "procedureSha256", "backupReceiptSha256", "fenceScopeSha256",
+                    "fenceReceiptSha256", "toolSha256", "fenceToolSha256", "sessionSha256"):
+            doc = self.document(recovery=True)
+            doc[key] = "0" * 64
+            with self.subTest(field=key), self.assertRaises(s.Blocked):
+                s.validate_rehearsal_permit(doc, recovery=True)
+        for role in self.document()["approvalRefs"]:
+            doc = self.document(recovery=True)
+            doc["approvalRefs"][role] = "0" * 64
+            with self.subTest(role=role), self.assertRaises(s.Blocked):
+                s.validate_rehearsal_permit(doc, recovery=True)
+
+    def test_bound_window_pins_roles_and_evidence_fail_closed(self):
+        s = self.s
+        alterations = {"candidateSha256": "0" * 64, "originalSha256": "0" * 64,
+            "consensusSha256": "0" * 64, "executionId": "../escape",
+            "recoveryWitness": "fixture-owner", "packetSha256": "missing",
+            "fenceReceiptPath": "relative.json", "approvalRefs": {},
+            "windowEndUtc": "2099-10-24T12:00:00Z", "expiresAtUtc": "2000-10-24T12:00:00Z"}
+        for key, value in alterations.items():
+            doc = self.document()
+            doc[key] = value
+            with self.subTest(key=key), self.assertRaises(s.Blocked):
+                s.validate_rehearsal_permit(doc)
+
+    def test_rehearsal_authority_rechecks_expiry_after_fence_io(self):
+        s = self.s
+        state = {"expired": False}
+        doc = self.document()
+        def read(*_args, **_kwargs):
+            if state["expired"]:
+                raise s.Blocked("expired fixture authority")
+            return dict(doc)
+        def fence(_doc):
+            state["expired"] = True
+        with patch.object(s, "load_rehearsal_permit", side_effect=read), \
+             patch.object(s, "fence_check", side_effect=fence):
+            authority = s.RehearsalAuthority(Path("/fixture/permit"))
+            with self.assertRaisesRegex(s.Blocked, "expired"):
+                authority.check()
+
+    @contextlib.contextmanager
+    def sandbox_records(self, directory):
+        """Only private test records; no real protected source or root ownership."""
+        s = self.s
+        def write(path, doc):
+            with path.open("x") as output:
+                json.dump(doc, output)
+        def session(path):
+            doc = json.loads(path.read_text())
+            doc["_sha256"] = "c" * 64
+            return doc
+        def metadata(path, *args, **kwargs):
+            import types
+            st = original_lstat(path, *args, **kwargs)
+            if path == directory:
+                return types.SimpleNamespace(st_mode=0o40700, st_uid=0, st_gid=0)
+            return st
+        original_lstat = Path.lstat
+        with patch.object(s, "record_once", side_effect=write), \
+             patch.object(s, "private_json", side_effect=lambda p: json.loads(p.read_text())), \
+             patch.object(s, "load_session", side_effect=session), \
+             patch.object(s, "sync_directory"), \
+             patch.object(Path, "lstat", new=metadata):
+            yield
+
+    def test_witnessed_rehearsal_always_returns_both_lanes_old_without_attestation(self):
+        s = self.s
+        fake = FakeLive(s)
+        class Authority:
+            doc = self.document()
+            path = Path("/fixture/permit")
+            def check(self):
+                pass
+            refresh = check
+        with tempfile.TemporaryDirectory() as td:
+            directory = Path(td) / "control"
+            with self.sandbox_records(directory), patch.object(s, "REHEARSAL_ROOT", directory), \
+                 patch.object(s, "process_identity", return_value={"pid": os.getpid(), "startTicks": "1", "bootId": "b"}), \
+                 patch.object(s, "start_watchdog") as start, patch.object(s, "check_watchdog"):
+                result = s.first_rehearsal(Authority(), fake)
+            self.assertEqual(start.call_count, 1)
+        self.assertEqual(s.Cutover(fake).inspect(), "old")
+        self.assertTrue(result["codeRoundTripObserved"])
+        self.assertFalse(result["production_authorized"])
+        self.assertFalse(result["canonical_control_updated"])
+        self.assertFalse(result["independent_witness_attested"])
+        fake.assert_no_node_or_ledger_change()
+
+    def test_supervisor_failure_before_first_side_effect_leaves_original_pair(self):
+        s = self.s
+        fake = FakeLive(s)
+        class Authority:
+            doc = self.document()
+            path = Path("/fixture/permit")
+            def check(self):
+                pass
+            refresh = check
+        with tempfile.TemporaryDirectory() as td:
+            directory = Path(td) / "control"
+            with self.sandbox_records(directory), patch.object(s, "REHEARSAL_ROOT", directory), \
+                 patch.object(s, "process_identity", return_value={"pid": os.getpid(), "startTicks": "1", "bootId": "b"}), \
+                 patch.object(s, "start_watchdog", side_effect=s.Blocked("watchdog unavailable")):
+                with self.assertRaisesRegex(s.Blocked, "watchdog unavailable"):
+                    s.first_rehearsal(Authority(), fake)
+        self.assertEqual(fake.commands, [])
+
+    def test_control_journal_directory_sync_failure_precedes_service_mutations(self):
+        s = self.s
+        fake = FakeLive(s)
+        class Authority:
+            doc = self.document()
+            path = Path("/fixture/permit")
+            def check(self):
+                pass
+        with tempfile.TemporaryDirectory() as td:
+            directory = Path(td) / "control"
+            with self.sandbox_records(directory), patch.object(s, "REHEARSAL_ROOT", directory), \
+                 patch.object(s, "process_identity", return_value={"pid": os.getpid(), "startTicks": "1", "bootId": "b"}), \
+                 patch.object(s, "sync_directory", side_effect=OSError("fixture directory fsync failed")), \
+                 patch.object(s, "start_watchdog") as start:
+                with self.assertRaisesRegex(OSError, "fsync failed"):
+                    s.first_rehearsal(Authority(), fake)
+                start.assert_not_called()
+        self.assertEqual(fake.commands, [])
+
+    def test_expiry_after_candidate_verification_cannot_leave_candidate_installed(self):
+        s = self.s
+        fake = FakeLive(s)
+        observed = {"candidate": False}
+        health = fake.health
+        def saw_candidate(port):
+            health(port)
+            if fake.units[s.PRIMARY].exe == s.NEW:
+                observed["candidate"] = True
+        fake.health = saw_candidate
+        class Authority:
+            doc = self.document()
+            path = Path("/fixture/permit")
+            def check(self):
+                if observed["candidate"] and fake.units[s.PRIMARY].exe == s.OLD:
+                    raise s.Blocked("expired after mandatory return")
+            refresh = check
+        with tempfile.TemporaryDirectory() as td:
+            directory = Path(td) / "control"
+            with self.sandbox_records(directory), patch.object(s, "REHEARSAL_ROOT", directory), \
+                 patch.object(s, "process_identity", return_value={"pid": os.getpid(), "startTicks": "1", "bootId": "b"}), \
+                 patch.object(s, "start_watchdog"), patch.object(s, "check_watchdog"):
+                # The approval may fail only after OLD was obligatorily returned.
+                with self.assertRaisesRegex(s.Blocked, "expired"):
+                    s.first_rehearsal(Authority(), fake)
+        self.assertEqual(s.Cutover(fake).inspect(), "old")
+        self.assertTrue(observed["candidate"])
+        fake.assert_no_node_or_ledger_change()
+
+    def test_pid_reuse_and_absent_recovery_permit_never_trigger_service_operations(self):
+        s = self.s
+        fake = FakeLive(s)
+        session = {"controllerIdentity": {"pid": 12345, "startTicks": "1", "bootId": "b"},
+                   "_sha256": "c" * 64, "permit": self.document(), "consensusPid": 1009,
+                   "createdAtUtc": "2000-01-01T00:00:00Z"}
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "session.json"
+            with self.sandbox_records(Path(td)), \
+                 patch.object(s, "process_identity", return_value={"pid": 12345, "startTicks": "2", "bootId": "b"}), \
+                 patch.object(s, "recover_rehearsal") as recover:
+                result = s.watchdog_step(path, session, fake)
+            self.assertEqual(result, "HOLD_AWAITING_FRESH_HUMAN_RECOVERY_AUTHORITY")
+            self.assertTrue((path.parent / "controller-lost.json").exists())
+            recover.assert_not_called()
+        self.assertEqual(fake.commands, [])
+
+    def test_recovery_approval_must_postdate_loss_and_bind_exact_session(self):
+        s = self.s
+        doc = self.document(recovery=True)
+        session = {"permit": {**doc}, "_sha256": "c" * 64,
+                   "createdAtUtc": "2000-01-01T00:00:00Z"}
+        with patch.object(s, "load_rehearsal_permit", return_value=doc), patch.object(s, "fence_check"):
+            authority = s.RehearsalAuthority(Path("/fixture/recovery"), recovery=True,
+                session=session, lost_after="2099-01-01T00:00:00Z")
+            with self.assertRaisesRegex(s.Blocked, "predates"):
+                authority.check()
+            authority.lost_after = None
+            session["_sha256"] = "d" * 64
+            with self.assertRaisesRegex(s.Blocked, "different approved rehearsal"):
+                authority.check()
+
+    def test_failed_recovery_consumes_authority_and_cannot_automatically_repeat(self):
+        s = self.s
+        fake = FakeLive(s)
+        for unit in s.SERVICES:
+            fake.dropins[unit] = fake.loaded[unit] = "new"
+            fake.units[unit].exe = s.NEW
+        fake.fail_once = "start:" + s.PRIMARY
+        authority = type("FixtureAuthority", (), {"doc": self.document(recovery=True),
+            "binding": "fixture-distinct-recovery-authority", "check": lambda _: None,
+            "refresh": lambda _: None})()
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "session.json"
+            path.write_text(json.dumps({"controllerIdentity": {"pid": 12345, "startTicks": "1", "bootId": "b"},
+                "permit": self.document(), "consensusPid": 1009,
+                "createdAtUtc": "2000-01-01T00:00:00Z"}))
+            def process(pid):
+                return {"pid": pid, "startTicks": "2", "bootId": "b"} if pid == os.getpid() else None
+            with self.sandbox_records(Path(td)), patch.object(s, "process_identity", side_effect=process), \
+                 patch.object(s, "RehearsalAuthority", return_value=authority):
+                with self.assertRaisesRegex(RuntimeError, "injected"):
+                    s.recover_rehearsal(path, Path("/fixture/new-permit"), fake)
+                first_commands = list(fake.commands)
+                with self.assertRaises(FileExistsError):
+                    s.recover_rehearsal(path, Path("/fixture/new-permit"), fake)
+                self.assertEqual(fake.commands, first_commands)
+            self.assertEqual(len(list(path.parent.glob("recovery-attempt-*.json"))), 1)
+        fake.assert_no_node_or_ledger_change()
+
+    def test_manual_recovery_rejects_approval_issued_before_actual_controller_loss(self):
+        s = self.s
+        fake = FakeLive(s)
+        for unit in s.SERVICES:
+            fake.dropins[unit] = fake.loaded[unit] = "new"
+            fake.units[unit].exe = s.NEW
+        doc = self.document(recovery=True)
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "session.json"
+            path.write_text(json.dumps({"controllerIdentity": {"pid": 12345, "startTicks": "1", "bootId": "b"},
+                "permit": self.document(), "consensusPid": 1009,
+                "createdAtUtc": "2000-01-01T00:00:00Z"}))
+            (path.parent / "controller-lost.json").write_text(json.dumps({"sessionSha256": "c" * 64,
+                "observedAtUtc": s.datetime.now(s.timezone.utc).isoformat().replace("+00:00", "Z"),
+                "status": "CONTROLLER_LOST_FRESH_RECOVERY_REQUIRED"}))
+            def process(pid):
+                return {"pid": pid, "startTicks": "2", "bootId": "b"} if pid == os.getpid() else None
+            with self.sandbox_records(Path(td)), patch.object(s, "process_identity", side_effect=process), \
+                 patch.object(s, "load_rehearsal_permit", return_value=doc), patch.object(s, "fence_check"):
+                with self.assertRaisesRegex(s.Blocked, "predates detected controller loss"):
+                    # The direct/manual route supplies NO optional loss bound.
+                    s.recover_rehearsal(path, Path("/fixture/preissued-recovery"), fake)
+            self.assertFalse(list(path.parent.glob("recovery-attempt-*.json")))
+        self.assertEqual(fake.commands, [])
+
+    def test_independent_launcher_uses_systemd_not_controller_process_tree(self):
+        s = self.s
+        live = type("Launcher", (), {"command": unittest.mock.Mock(return_value="")})()
+        session = {"watchdogUnit": "aoe2war-wolo-first-rehearsal-" + "a" * 32 + ".service"}
+        with patch.object(s, "check_watchdog"):
+            s.start_watchdog(live, Path("/fixture/session.json"), session)
+        args = live.command.call_args.args
+        self.assertEqual(args[0], "systemd-run")
+        self.assertIn("--property=Restart=on-failure", args)
+        self.assertIn("--property=Type=exec", args)
+        self.assertNotIn("--scope", args)
+        self.assertNotIn("--wait", args)
+        self.assertIn("rehearsal-watchdog", args)
+
+    @unittest.skipUnless(sys.platform.startswith("linux"), "Linux /proc process identity contract")
+    def test_real_sigkill_is_detected_as_controller_loss(self):
+        s = self.s
+        child = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(30)"])
+        try:
+            identity = s.process_identity(child.pid)
+            self.assertIsNotNone(identity)
+            child.kill()
+            child.wait(timeout=3)
+            self.assertNotEqual(s.process_identity(child.pid), identity)
+        finally:
+            if child.poll() is None:
+                child.kill()
+                child.wait(timeout=3)
 
 
 if __name__ == "__main__":

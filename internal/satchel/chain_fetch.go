@@ -16,8 +16,11 @@ import (
 	cmtjson "github.com/cometbft/cometbft/libs/json"
 	core "github.com/cometbft/cometbft/rpc/core/types"
 	cmt "github.com/cometbft/cometbft/types"
+	"github.com/cosmos/btcutil/bech32"
+	sdkaddress "github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/emaren/wolochain/internal/chainevents"
 	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 )
 
 // rpc uses the pinned CometBFT decoder and types, rather than a second chain
@@ -147,7 +150,7 @@ func normalizedEffects(events []abci.Event) ([]chainevents.Transfer, error) {
 	return chainevents.Extract(nil, converted), nil
 }
 
-func (s *readSession) restTx(ctx context.Context, hash string, i Intent, rpcTx *core.ResultTx, header *cmt.Header, effects []chainevents.Transfer) error {
+func (s *readSession) restTx(ctx context.Context, hash string, i Intent, rpcTx *core.ResultTx, header *cmt.Header, effects []chainevents.Transfer, deposit bool, canonical *[]chainevents.Transfer) error {
 	data, err := s.get(ctx, s.reader.rest, "rest", "tx", "/cosmos/tx/v1beta1/txs/"+hash, nil)
 	if err != nil {
 		return err
@@ -197,9 +200,29 @@ func (s *readSession) restTx(ctx context.Context, hash string, i Intent, rpcTx *
 	// Compare both representations. Legacy log-first extraction is retained;
 	// no extra top-level fee transfer is hidden or assigned a fresh ordinal.
 	chosen := chainevents.Extract(payload.Response.Logs, payload.Response.Events)
-	if !reflect.DeepEqual(chosen, effects) || !reflect.DeepEqual(chainevents.Extract(nil, payload.Response.Events), effects) {
+	if !reflect.DeepEqual(chainevents.Extract(nil, payload.Response.Events), effects) {
 		return fail(InconsistentObservations, "rest", "events")
 	}
+	if !reflect.DeepEqual(chosen, effects) {
+		pos := 0
+		for _, effect := range chosen {
+			for pos < len(effects) && effects[pos] != effect {
+				pos++
+			}
+			if pos == len(effects) {
+				return fail(InconsistentObservations, "rest", "event_order")
+			}
+			pos++
+		}
+		effectIndex := outgoingEffectIndex
+		if deposit {
+			effectIndex = networkEffectIndex
+		}
+		if _, err := effectIndex(rpcTx.Tx, i, chosen); err != nil {
+			return err
+		}
+	}
+	*canonical = chosen
 	return nil
 }
 
@@ -208,6 +231,23 @@ func (s *readSession) restTx(ctx context.Context, hash string, i Intent, rpcTx *
 // NONCREDITING: no independently authenticated consensus trust root is available.
 // It performs at most 12 bounded GETs, never a write or automatic retry.
 func (r *ChainReader) ReadDeposit(ctx context.Context, i Intent, txHash string) (ChainEvidence, error) {
+	return r.readTransfer(ctx, i, txHash, true)
+}
+
+// TransferIntent is a server-owned immutable outgoing payment or return
+// contract. Unlike a deposit intent it can name an existing escrow role and
+// reconcile older transactions. It grants neither credit nor signing authority.
+type TransferIntent struct{ Sender, Recipient, AmountUWolo, Memo string }
+
+func (r *ChainReader) ReadTransfer(ctx context.Context, i TransferIntent, hash string) (ChainEvidence, error) {
+	return r.readTransfer(ctx, Intent{Sender: i.Sender, Vault: i.Recipient, AmountUWolo: i.AmountUWolo, Memo: i.Memo}, hash, false)
+}
+
+func validTransferIntent(i Intent) bool {
+	return address(i.Sender) && address(i.Vault) && i.Sender != i.Vault && amount(i.AmountUWolo) && len(i.Memo) > 0 && len(i.Memo) <= 256
+}
+
+func (r *ChainReader) readTransfer(ctx context.Context, i Intent, txHash string, deposit bool) (ChainEvidence, error) {
 	if r == nil || r.client == nil || r.slots == nil {
 		return ChainEvidence{}, fail(InvalidConfiguration, "config", "reader")
 	}
@@ -216,7 +256,7 @@ func (r *ChainReader) ReadDeposit(ctx context.Context, i Intent, txHash string) 
 	if ctx.Err() != nil {
 		return ChainEvidence{}, fail(contextCode(ctx), "reader", "read")
 	}
-	if !validIntent(i, r.now()) || !digest(txHash) {
+	if (deposit && !validIntent(i, r.now())) || (!deposit && !validTransferIntent(i)) || !digest(txHash) {
 		return ChainEvidence{}, fail(InvalidIntent, "intent", "read")
 	}
 	select {
@@ -297,14 +337,27 @@ func (r *ChainReader) ReadDeposit(ctx context.Context, i Intent, txHash string) 
 	if !reflect.DeepEqual(effects, boundEffects) {
 		return ChainEvidence{}, fail(InconsistentObservations, "primary", "result_events")
 	}
-	if len(effects) != 1 {
-		return ChainEvidence{}, fail(AmbiguousTransfers, "primary", "events")
+	var canonical []chainevents.Transfer
+	effectIndex := outgoingEffectIndex
+	if deposit {
+		effectIndex = networkEffectIndex
 	}
-	if err = s.restTx(ctx, hash, i, &transaction, included.Header, effects); err != nil {
+	if _, err = effectIndex(transaction.Tx, i, effects); err != nil {
+		return ChainEvidence{}, err
+	}
+	if err = s.restTx(ctx, hash, i, &transaction, included.Header, effects, deposit, &canonical); err != nil {
 		return ChainEvidence{}, err
 	}
 	zero, ordinal := uint32(0), uint32(0)
-	observation := Observation{ChainID: ChainID, TxHash: hash, TxBytes: []byte(transaction.Tx), Code: &zero, Height: transaction.Height, BlockHash: strings.ToUpper(hex.EncodeToString(included.Header.Hash())), BlockTime: included.Time, Head: head, Transfers: []Transfer{{effects[0].Sender, effects[0].Recipient, effects[0].Denom, effects[0].Amount}}, TransferIndex: &ordinal}
+	ordinal, err = effectIndex(transaction.Tx, i, canonical)
+	if err != nil {
+		return ChainEvidence{}, err
+	}
+	transfers := make([]Transfer, len(canonical))
+	for idx, v := range canonical {
+		transfers[idx] = Transfer{v.Sender, v.Recipient, v.Denom, v.Amount}
+	}
+	observation := Observation{ChainID: ChainID, TxHash: hash, TxBytes: []byte(transaction.Tx), Code: &zero, Height: transaction.Height, BlockHash: strings.ToUpper(hex.EncodeToString(included.Header.Hash())), BlockTime: included.Time, Head: head, Transfers: transfers, TransferIndex: &ordinal}
 	var actualWitness Head
 	if r.witness != nil {
 		whead, err := s.head(ctx, r.witness, "witness")
@@ -347,15 +400,94 @@ func (r *ChainReader) ReadDeposit(ctx context.Context, i Intent, txHash string) 
 	if r.witness != nil && (!validHead(actualWitness, r.now()) || !validHead(observation.IndependentHead, r.now())) {
 		return ChainEvidence{}, fail(StaleHead, "witness", "read_complete")
 	}
-	if !validIntent(i, r.now()) {
+	if deposit && !validIntent(i, r.now()) {
 		return ChainEvidence{}, fail(InvalidIntent, "intent", "read_complete")
 	}
 	if ctx.Err() != nil {
 		return ChainEvidence{}, fail(contextCode(ctx), "reader", "read_complete")
 	}
-	receipt, err := inspectDeposit(i, observation, r.now(), r.witness != nil)
+	var receipt ReceiptCandidate
+	if deposit {
+		receipt, err = inspectNetworkDeposit(i, observation, r.now(), r.witness != nil)
+	} else if !exactSend(observation.TxBytes, i.Sender, i.Vault, i.AmountUWolo, i.Memo) ||
+		observation.Transfers[ordinal] != (Transfer{i.Sender, i.Vault, Denom, i.AmountUWolo}) {
+		err = fail(TransactionMismatch, "intent", "candidate")
+	} else {
+		receipt = ReceiptCandidate{ChainID, hash, ordinal}
+	}
 	if err != nil {
 		return ChainEvidence{}, fail(TransactionMismatch, "intent", "candidate")
 	}
-	return ChainEvidence{Observation: observation, Receipt: receipt, WitnessCompared: r.witness != nil, WitnessHead: actualWitness}, nil
+	return ChainEvidence{Observation: observation, Receipt: receipt, WitnessCompared: r.witness != nil, WitnessHead: actualWitness, resultCommitHash: hex.EncodeToString(next.Header.Hash())}, nil
+}
+
+// A successful one-MsgSend transaction may also contain its exact signed ante
+// fee effect. Preserve the public C2 pure one-effect contract, but let the
+// network reader handle real SDK fee-paying transactions. No arbitrary extra
+// transfer, split coin, fee payer/granter or duplicate effect is accepted.
+func networkEffectIndex(rawBytes []byte, i Intent, effects []chainevents.Transfer) (uint32, error) {
+	if len(effects) == 1 && effects[0] == (chainevents.Transfer{Sender: i.Sender, Recipient: i.Vault, Amount: i.AmountUWolo, Denom: Denom}) {
+		return 0, nil
+	}
+	return outgoingEffectIndex(rawBytes, i, effects)
+}
+
+func inspectNetworkDeposit(i Intent, observation Observation, now time.Time, requireWitness bool) (ReceiptCandidate, error) {
+	effects := make([]chainevents.Transfer, len(observation.Transfers))
+	for n, effect := range observation.Transfers {
+		effects[n] = chainevents.Transfer{Sender: effect.Sender, Recipient: effect.Recipient, Denom: effect.Denom, Amount: effect.Amount}
+	}
+	index, err := networkEffectIndex(observation.TxBytes, i, effects)
+	if err != nil || observation.TransferIndex == nil || *observation.TransferIndex != index {
+		return ReceiptCandidate{}, fail(AmbiguousTransfers, "deposit", "effects")
+	}
+	// The canonical authenticated identity is the one decoded MsgSend (message
+	// index zero). Events are excluded from Comet's deterministic result root,
+	// and therefore event position must not mint another consumable receipt.
+	zero := uint32(0)
+	observation.Transfers = []Transfer{{i.Sender, i.Vault, Denom, i.AmountUWolo}}
+	observation.TransferIndex = &zero
+	return inspectDeposit(i, observation, now, requireWitness)
+}
+
+// Outgoing transfers retain the shared parser's ordinal. The only permitted
+// extra effect is the exact ante fee encoded in the same signed transaction,
+// paid by its sender to the canonical SDK fee_collector module. Never renumber
+// or accept arbitrary extra sends. Deposit C2 remains unchanged and strict.
+func outgoingEffectIndex(rawBytes []byte, i Intent, effects []chainevents.Transfer) (uint32, error) {
+	refuse := func() (uint32, error) { return 0, fail(AmbiguousTransfers, "primary", "outgoing_effects") }
+	var raw tx.TxRaw
+	var auth tx.AuthInfo
+	if len(effects) == 0 || len(effects) > 2 || proto.Unmarshal(rawBytes, &raw) != nil || proto.Unmarshal(raw.AuthInfoBytes, &auth) != nil || len(auth.ProtoReflect().GetUnknown()) != 0 || auth.Fee == nil || auth.Tip != nil || len(auth.Fee.ProtoReflect().GetUnknown()) != 0 || auth.Fee.Payer != "" || auth.Fee.Granter != "" || len(auth.Fee.Amount) != 1 || auth.Fee.Amount[0] == nil || auth.Fee.Amount[0].Denom != Denom || !amount(auth.Fee.Amount[0].Amount) {
+		return refuse()
+	}
+	words, err := bech32.ConvertBits(sdkaddress.Module("fee_collector"), 8, 5, true)
+	if err != nil {
+		return refuse()
+	}
+	collector, err := bech32.Encode("wolo", words)
+	if err != nil {
+		return refuse()
+	}
+	send := chainevents.Transfer{Sender: i.Sender, Recipient: i.Vault, Amount: i.AmountUWolo, Denom: Denom}
+	fee := chainevents.Transfer{Sender: i.Sender, Recipient: collector, Amount: auth.Fee.Amount[0].Amount, Denom: Denom}
+	var index int = -1
+	fees := 0
+	for idx, effect := range effects {
+		switch effect {
+		case send:
+			if index >= 0 {
+				return refuse()
+			}
+			index = idx
+		case fee:
+			fees++
+		default:
+			return refuse()
+		}
+	}
+	if index < 0 || fees > 1 || len(effects) != 1+fees {
+		return refuse()
+	}
+	return uint32(index), nil
 }

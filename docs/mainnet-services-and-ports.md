@@ -8,12 +8,26 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "runtime-evidence"
 authority: "mainnet-service-and-port-contract"
-reviewed_at: "2026-10-07"
+reviewed_at: "2026-10-22"
 review_interval_days: 14
 sensitivity: "internal"
 ---
 
 # WoloChain Mainnet Services And Ports
+
+## Source-only review — 2026-10-22 UTC
+
+Reviewed the source-declared `wolo-1` identity and intended production port
+separation. This is **not** a fresh service, socket, keyring, funds, health
+or deployment observation. The port/status evidence below retains its stated
+2026-10-07 and earlier timestamps. Existing 8092/8093 settlement services
+and the validator must remain undisturbed; the separate 8094 Satchel signer
+and 8095 reviewer are held engineering candidates, **not** certified live
+listeners. Financial release issue #5 continues to control all activation.
+Use the current [Satchel gates](war-satchel-mainnet-execution.md) and
+[settlement runbook](mainnet-settlement-runbook.md); older imperative examples
+do not authorize a financial cutover or consensus restart.
+
 
 
 ## Review Renewal — 2026-10-07 UTC

@@ -1,0 +1,15 @@
+{
+  "started_at_utc": "2026-10-18T18:16:20.093365+00:00",
+  "finished_at_utc": "2026-10-18T18:16:25.644586+00:00",
+  "source_input_sha256": "8bc5f0c525626ee332d705055aa977cb23bcf29a7802a8023385388a55c78121",
+  "response_sha256": "51d136a5ddb081e8b4ec0d42dfca336cf48bea7e8c90a51ed442955a9dc85905",
+  "ssh_exit_code": 3,
+  "collection": "SSH authenticated operator channel; python stdin; no remote source file installed",
+  "input_lanes": [
+    "primary",
+    "founder"
+  ],
+  "exclusive_snapshot": false,
+  "financial_authority": false,
+  "reader_source_commit": "079919d4157c8762752e302e69dd704e2c2e297a"
+}

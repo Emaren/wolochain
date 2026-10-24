@@ -1,0 +1,201 @@
+{
+  "schema_version": 1,
+  "authority": "bounded-read-only-observation-not-release-approval",
+  "production_authorized": false,
+  "custody_capability": "UNAVAILABLE",
+  "runtime": [
+    {
+      "observed_at": "2026-10-17T20:57:36.073646+00:00",
+      "read_only": true
+    },
+    {
+      "unit": "wolochain-mainnet-settlement.service",
+      "pid": "1012",
+      "exe": "/usr/local/bin/wolochaind-mainnet",
+      "sha256": "040126a2884946caf1651a50b7d8115c5a6fb2d5aa94fcbbe150694602d451a5",
+      "vcs": [
+        "build\tvcs.revision=78c25985420ee41a6678c42fab8ea8d6c3b1b519",
+        "build\tvcs.time=2026-10-01T21:45:26Z",
+        "build\tvcs.modified=false"
+      ]
+    },
+    {
+      "unit": "wolochain-founder-rewards-settlement.service",
+      "pid": "1010",
+      "exe": "/usr/local/bin/wolochaind-mainnet",
+      "sha256": "040126a2884946caf1651a50b7d8115c5a6fb2d5aa94fcbbe150694602d451a5",
+      "vcs": [
+        "build\tvcs.revision=78c25985420ee41a6678c42fab8ea8d6c3b1b519",
+        "build\tvcs.time=2026-10-01T21:45:26Z",
+        "build\tvcs.modified=false"
+      ]
+    },
+    {
+      "unit": "wolochaind-mainnet.service",
+      "pid": "1009",
+      "exe": "/usr/local/bin/wolochaind-mainnet-node-prewartrophy",
+      "sha256": "4b77f622191db7550cb87cafb8f1886a0aadebee3eb6565f9f90036f809e61d3",
+      "vcs": [
+        "build\tvcs.revision=d3bd62414a047a492a3814b7d3baa2717d64db2e",
+        "build\tvcs.time=2026-06-05T02:33:47Z",
+        "build\tvcs.modified=true"
+      ]
+    },
+    {
+      "port": 8092,
+      "ok": true,
+      "chain_id": "wolo-1",
+      "runtime_chain_id": "wolo-1",
+      "loopback_only": true,
+      "response_keys": [
+        "auth_token_set",
+        "chain_id",
+        "escrow_address",
+        "escrow_balance_uwolo",
+        "escrow_balance_wolo",
+        "escrow_fee_headroom_uwolo",
+        "escrow_fee_headroom_wolo",
+        "escrow_key_name",
+        "escrow_signer_address",
+        "fee_headroom_uwolo",
+        "fee_headroom_wolo",
+        "home_dir",
+        "keyring_backend",
+        "keyring_dir",
+        "loopback_only",
+        "min_escrow_balance_uwolo",
+        "min_escrow_balance_wolo",
+        "min_payout_balance_uwolo",
+        "min_payout_balance_wolo",
+        "ok",
+        "payout_address",
+        "payout_balance_uwolo",
+        "payout_balance_wolo",
+        "payout_key_name",
+        "public_rest_url",
+        "rest_url",
+        "rpc_url",
+        "runtime_chain_id",
+        "state_dir"
+      ],
+      "payout_address_fingerprint": "d22311cf4725e370",
+      "payout_address_bank_unavailable": "URLError",
+      "escrow_address_fingerprint": "5712f9536e3e5c94",
+      "escrow_address_bank_unavailable": "URLError"
+    },
+    {
+      "port": 8093,
+      "ok": true,
+      "chain_id": "wolo-1",
+      "runtime_chain_id": "wolo-1",
+      "loopback_only": true,
+      "response_keys": [
+        "auth_token_set",
+        "chain_id",
+        "escrow_address",
+        "escrow_balance_uwolo",
+        "escrow_balance_wolo",
+        "escrow_fee_headroom_uwolo",
+        "escrow_fee_headroom_wolo",
+        "escrow_key_name",
+        "escrow_signer_address",
+        "fee_headroom_uwolo",
+        "fee_headroom_wolo",
+        "home_dir",
+        "keyring_backend",
+        "keyring_dir",
+        "loopback_only",
+        "min_escrow_balance_uwolo",
+        "min_escrow_balance_wolo",
+        "min_payout_balance_uwolo",
+        "min_payout_balance_wolo",
+        "ok",
+        "payout_address",
+        "payout_balance_uwolo",
+        "payout_balance_wolo",
+        "payout_key_name",
+        "public_rest_url",
+        "rest_url",
+        "rpc_url",
+        "runtime_chain_id",
+        "state_dir"
+      ],
+      "payout_address_fingerprint": "84f8e23234b72262",
+      "payout_address_bank_unavailable": "URLError",
+      "escrow_address_fingerprint": "5712f9536e3e5c94",
+      "escrow_address_bank_unavailable": "URLError"
+    },
+    {
+      "port": 8094,
+      "unavailable": "URLError"
+    }
+  ],
+  "state_observations": [
+    {
+      "observed_at": "2026-10-17T20:59:30.663401+00:00",
+      "read_only": true,
+      "exclusive_snapshot": false,
+      "claim889_reinvestigated": false
+    },
+    {
+      "port": 8092,
+      "complete_liabilities_proven": false,
+      "requests": {
+        "files": 910,
+        "response_statuses": {
+          "confirmed": 904,
+          "failed": 5,
+          "accepted": 1
+        },
+        "failure_codes": {
+          "SEQUENCE_MISMATCH": 2,
+          "REST_DRIFT": 1,
+          "PAYOUT_RESERVE_FLOOR_HIT": 1,
+          "INSUFFICIENT_FUNDS": 1
+        },
+        "not_classified_terminal": 1,
+        "those_request_amount_uwolo": "100000000",
+        "those_amount_unavailable": 0
+      },
+      "runs": {
+        "files": 784,
+        "response_statuses": {
+          "confirmed": 780,
+          "accepted": 1,
+          "failed": 3
+        },
+        "failure_codes": {
+          "REST_DRIFT": 1,
+          "SEQUENCE_MISMATCH": 1,
+          "PAYOUT_BALANCE_TOO_LOW": 1
+        },
+        "not_classified_terminal": 1,
+        "those_request_amount_uwolo": "0",
+        "those_amount_unavailable": 1
+      }
+    },
+    {
+      "port": 8093,
+      "complete_liabilities_proven": false,
+      "requests": {
+        "files": 646,
+        "response_statuses": {
+          "failed": 37,
+          "confirmed": 609
+        },
+        "failure_codes": {
+          "SEQUENCE_MISMATCH": 27,
+          "TX_REJECTED": 6,
+          "PAYOUT_BALANCE_LOOKUP_FAILED": 2,
+          "PAYOUT_SIGNER_UNAVAILABLE": 2
+        },
+        "not_classified_terminal": 0,
+        "those_request_amount_uwolo": "0",
+        "those_amount_unavailable": 0
+      },
+      "runs": {
+        "directory": "absent"
+      }
+    }
+  ]
+}

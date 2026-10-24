@@ -15,6 +15,17 @@ sensitivity: "restricted"
 
 # War Satchel C3 Chain Evidence
 
+The later [authenticated financial bridge](war-satchel-financial-bridge.md)
+exports bounded portable transcripts and reuses this reader plus CometBFT
+verification offline. Its external checkpoint remains operator-provisioned.
+The network deposit path now accepts only the exact signed ante fee alongside
+the single MsgSend, as exercised by real isolated SDK execution. Public C2
+shape inspection keeps its historical one-effect guard. Transaction identity
+for global consumption is `(wolo-1, uppercase tx hash)`; Comet result roots
+exclude events, so a bank-event ordinal alone cannot establish unique credit.
+C2 remains UNAVAILABLE and every exported proof remains NONCREDITING.
+
+
 **Every adapter result is NONCREDITING. C2 custody remains UNAVAILABLE.**
 This source milestone starts from merged [C2 PR #17](https://github.com/Emaren/wolochain/pull/17),
 `7e68f43ac6eba7fdb8036edf1f68ead3838d124f`. It adds bounded network evidence
@@ -173,3 +184,14 @@ withdrawal broadcast, token transfer, or app/API repository edit is part of C3.
   Copying the primary head would hide conflicting or stale witness observations.
 - These fixes do not authenticate validator signatures, establish a trust root,
   authenticate bank events, or relax any custody/credit gate.
+
+### October 17 recovery regression
+
+The SDK's legitimate RFC3339 whole-second REST timestamp and the actual witness
+status/commit binding already had adversarial coverage in the recovered source;
+these checks remain in place. The optional `TrustedReader` now rechecks both the
+retained actual witness head and its compared head after validator/light-client
+I/O. A signed synthetic regression reproduces witness observation expiry while
+the primary remains fresh under a bounded clock correction; it fails before the
+completion guard and returns `stale_head:witness:complete` afterward. No
+CometBFT authentication or default NONCREDITING/C2 gate is relaxed.

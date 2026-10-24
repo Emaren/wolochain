@@ -71,6 +71,7 @@ type ChainReader struct {
 	client             *http.Client
 	slots              chan struct{}
 	now                func() time.Time
+	proof              *proofRecorder // private per-read capture; never installed on the live reader
 }
 
 func NewChainReader(cfg SourceConfig) (*ChainReader, error) {
@@ -104,8 +105,8 @@ func NewChainReader(cfg SourceConfig) (*ChainReader, error) {
 	transport := &http.Transport{Proxy: nil, DialContext: (&net.Dialer{Timeout: 2 * time.Second}).DialContext,
 		TLSHandshakeTimeout: 2 * time.Second, ResponseHeaderTimeout: 2 * time.Second, DisableCompression: true,
 		MaxConnsPerHost: 4, MaxIdleConnsPerHost: 4, MaxIdleConns: 12, IdleConnTimeout: 30 * time.Second, MaxResponseHeaderBytes: 16384}
-	return &ChainReader{rpc, rest, witness, &http.Client{Transport: transport, Timeout: 3 * time.Second,
-		CheckRedirect: func(*http.Request, []*http.Request) error { return errors.New("redirect refused") }}, make(chan struct{}, 4), time.Now}, nil
+	return &ChainReader{rpc: rpc, rest: rest, witness: witness, client: &http.Client{Transport: transport, Timeout: 3 * time.Second,
+		CheckRedirect: func(*http.Request, []*http.Request) error { return errors.New("redirect refused") }}, slots: make(chan struct{}, 4), now: time.Now}, nil
 }
 
 func (r *ChainReader) Close() {
@@ -118,10 +119,11 @@ func (r *ChainReader) Close() {
 // hash/inclusion/result consistency checks relative to unauthenticated headers.
 // It cannot establish finality, independently operated sources or vault control.
 type ChainEvidence struct {
-	Observation     Observation
-	Receipt         ReceiptCandidate
-	WitnessCompared bool
-	WitnessHead     Head // actual witness status, which may be ahead of the compared head
+	Observation      Observation
+	Receipt          ReceiptCandidate
+	WitnessCompared  bool
+	WitnessHead      Head   // actual witness status, which may be ahead of the compared head
+	resultCommitHash string // H+1 identity used for the execution-root check
 }
 
 func (ChainEvidence) Status() string               { return "NONCREDITING" }
@@ -199,6 +201,11 @@ func (s *readSession) get(ctx context.Context, base *url.URL, source, operation,
 	s.remaining -= int64(len(data))
 	if !strictJSON(data) {
 		return nil, fail(InvalidResponse, source, operation)
+	}
+	if s.reader.proof != nil {
+		if err := s.reader.proof.add(source, path, u.RawQuery, data); err != nil {
+			return nil, err
+		}
 	}
 	return data, nil
 }

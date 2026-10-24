@@ -1,0 +1,100 @@
+{
+  "schema": "aoe2war.wolo.financial-observation.v1",
+  "observed_at_utc": "2026-10-18T18:12:06.594447+00:00",
+  "chain_id": "wolo-1",
+  "sources": "canonical loopback 27657 RPC / 1318 REST / 8092 and 8093 health; same node/trust domain",
+  "head_before": {
+    "height": "2517941",
+    "block_time": "2026-10-18T18:11:46.924249454Z",
+    "block_hash": "02ABEB9AA233EA3AB184C96453E4FD717F867D1C02EE09A7377A762CC4E072F5",
+    "catching_up": false
+  },
+  "head_after": {
+    "height": "2517943",
+    "block_time": "2026-10-18T18:11:56.956655639Z",
+    "block_hash": "B3CD293667CD753DFCF714D7AD034407CFE19474D34E24BB49FF56FF7A052F28",
+    "catching_up": false
+  },
+  "height_advanced": true,
+  "bank_role_observations": [
+    {
+      "lane": "primary",
+      "healthy": true,
+      "chain_id": "wolo-1",
+      "roles": [
+        {
+          "role": "payout",
+          "account_fingerprint_sha256": "d22311cf4725e37079b5113dcc62d96817696d31e952c8459e334911f2c62912",
+          "health_reported_uwolo": "396507000000",
+          "configured_node_bank_uwolo": "396507000000",
+          "sources_agree": true,
+          "min_payout_balance_uwolo": "250000000000",
+          "fee_headroom_uwolo": "10000000"
+        },
+        {
+          "role": "escrow",
+          "account_fingerprint_sha256": "5712f9536e3e5c945600b9434fe107ad0f2636cc8545f2b13475dab71c16b538",
+          "health_reported_uwolo": "825469500000",
+          "configured_node_bank_uwolo": "825469500000",
+          "sources_agree": true,
+          "min_escrow_balance_uwolo": "100000000",
+          "escrow_fee_headroom_uwolo": "10000000"
+        }
+      ]
+    },
+    {
+      "lane": "founder",
+      "healthy": true,
+      "chain_id": "wolo-1",
+      "roles": [
+        {
+          "role": "payout",
+          "account_fingerprint_sha256": "84f8e23234b72262ddbb9ffc2c879af8871c7b1f1e24f8e2e2bfdd17b8eb2e03",
+          "health_reported_uwolo": "356787241424",
+          "configured_node_bank_uwolo": "356787241424",
+          "sources_agree": true,
+          "min_payout_balance_uwolo": "1000000000",
+          "fee_headroom_uwolo": "10000000"
+        },
+        {
+          "role": "escrow",
+          "account_fingerprint_sha256": "5712f9536e3e5c945600b9434fe107ad0f2636cc8545f2b13475dab71c16b538",
+          "health_reported_uwolo": "825469500000",
+          "configured_node_bank_uwolo": "825469500000",
+          "sources_agree": true,
+          "min_escrow_balance_uwolo": "100000000",
+          "escrow_fee_headroom_uwolo": "10000000"
+        }
+      ]
+    }
+  ],
+  "unique_observed_bank_accounts": 3,
+  "accounts_consistent_across_observations": true,
+  "accepted_observations": [
+    {
+      "lane": "primary",
+      "recorded_status": "accepted",
+      "recorded_requested_uwolo": "100000000",
+      "tx_hash_present": true,
+      "recorded_status_is_chain_proof": false,
+      "reconciled": false,
+      "retry_authorized": false,
+      "tx_hash_sha256": "20409e0d55bea3f9c2f18a7f3bebd928fb8c6f20274368413ed2bea5d7737ca7",
+      "returned_hash_matches": true,
+      "actual_bytes_hash_matches": true,
+      "configured_node_execution_code": 0,
+      "inclusion_height": "1078913",
+      "inclusion_proof_present": true,
+      "proof_authenticated_against_independent_checkpoint": false
+    }
+  ],
+  "all_signer_roles_discovered": false,
+  "complete_liabilities_known": false,
+  "global_liability_upper_bound_uwolo": null,
+  "consensus_authenticated": false,
+  "reserve_solvency_certified": false,
+  "financial_drain_certified": false,
+  "claim_889_reconciled": false,
+  "retry_authorized": false,
+  "production_mutated": false
+}

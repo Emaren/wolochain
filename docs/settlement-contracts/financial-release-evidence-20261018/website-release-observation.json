@@ -1,0 +1,9 @@
+{
+  "observed_at_utc": "2026-10-18T18:06:23.046652+00:00",
+  "source": "existing app ./bin/aoe2war status --json (read only)",
+  "raw_status_sha256": "12f920716d70263d38afaff2f118b982550f7a7fa6d1422b0b0111af1abc219c",
+  "production_sha": "78d2a3329096c25b9429a3536f08c33d1d9dc96f",
+  "website_certification_status": "CERTIFIED",
+  "version_parity": true,
+  "wolo_financial_authority": false
+}

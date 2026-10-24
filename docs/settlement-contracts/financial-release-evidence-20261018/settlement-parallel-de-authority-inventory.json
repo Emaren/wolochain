@@ -1,0 +1,80 @@
+{
+  "observedAtUtc": "2026-10-18T18:11:04.206345+00:00",
+  "mode": "READ_ONLY_PARALLEL_DE_PAYMENT_AUTHORITY_INVENTORY",
+  "units": [
+    {
+      "unit": "aoe2dewarwagers-web.service",
+      "active": true,
+      "mainPidPresent": true,
+      "processEnvInspectable": true,
+      "appLocalEnvFilesFound": 0,
+      "appLocalEnvFilesUnreadable": 0,
+      "appLocalEnvFilesTruncated": false,
+      "configurationKeysPresentInProcess": {
+        "signing_secrets": [],
+        "signing_controls": [],
+        "external_keyring_signers": [],
+        "signer_network_configuration": [
+          "WOLO_INTERNAL_RPC_URL"
+        ],
+        "remote_settlement_authority": [],
+        "payout_account_configuration": [
+          "WOLO_BET_PAYOUT_ADDRESS"
+        ],
+        "database_authority": [
+          "DATABASE_URL"
+        ]
+      },
+      "configurationKeysPresentInAppEnv": {
+        "signing_secrets": [],
+        "signing_controls": [],
+        "external_keyring_signers": [],
+        "signer_network_configuration": [],
+        "remote_settlement_authority": [],
+        "payout_account_configuration": [],
+        "database_authority": []
+      },
+      "limits": "Startup environment and local dotenv metadata are incomplete evidence; external/keyring signing may still be possible."
+    },
+    {
+      "unit": "aoe2dewarwagers-api.service",
+      "active": true,
+      "mainPidPresent": true,
+      "processEnvInspectable": true,
+      "appLocalEnvFilesFound": 0,
+      "appLocalEnvFilesUnreadable": 0,
+      "appLocalEnvFilesTruncated": false,
+      "configurationKeysPresentInProcess": {
+        "signing_secrets": [],
+        "signing_controls": [],
+        "external_keyring_signers": [],
+        "signer_network_configuration": [],
+        "remote_settlement_authority": [],
+        "payout_account_configuration": [],
+        "database_authority": [
+          "DATABASE_URL"
+        ]
+      },
+      "configurationKeysPresentInAppEnv": {
+        "signing_secrets": [],
+        "signing_controls": [],
+        "external_keyring_signers": [],
+        "signer_network_configuration": [],
+        "remote_settlement_authority": [],
+        "payout_account_configuration": [],
+        "database_authority": []
+      },
+      "limits": "Startup environment and local dotenv metadata are incomplete evidence; external/keyring signing may still be possible."
+    }
+  ],
+  "deServiceAndTimerNames": [
+    "aoe2dewarwagers-api.service",
+    "aoe2dewarwagers-web.service"
+  ],
+  "conclusion": "NOT_CERTIFIED_FOR_SHARED_WOLO_SETTLEMENT_DOWNTIME",
+  "reason": "Configuration presence/absence cannot attest signer isolation, all app-loaded dotenvs, active HTTP ingress, queued payouts, keyring access or transaction-free maintenance.",
+  "writesPerformed": false,
+  "servicesChanged": false,
+  "tokensMoved": false,
+  "promotionAuthorized": false
+}

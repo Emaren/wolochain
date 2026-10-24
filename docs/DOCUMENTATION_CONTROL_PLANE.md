@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `feat/20261018-guarded-two-service-code-cutover` at `86f14703f9f1e3e679dcd7da6ba849d727357955`
+Implementation baseline: `codex/recovered-settlement-rehearsal` at `eb67627859bbc91bd171eabec19d929454accb66`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
@@ -27,21 +27,21 @@ This page is generated from the validated front matter in this repository. Cross
 
 ## Documentation health
 
-- Authoritative repository documents: **35**
+- Authoritative repository documents: **42**
 - Path moves in this migration: **0**
 - Every listed document has an explicit owner, lifecycle, authority, and review interval.
 
 ### Types
 
 - `historical`: 14
-- `reference`: 17
-- `runbook`: 2
+- `reference`: 23
+- `runbook`: 3
 - `working`: 2
 
 ### Lifecycle
 
 - `active`: 16
-- `draft`: 5
+- `draft`: 12
 - `historical`: 14
 
 ## Documents
@@ -51,6 +51,7 @@ This page is generated from the validated front matter in this repository. Cross
 | [WoloChain](../README.md) | `reference` | `active` | `chain-repository-entrypoint` |
 | [WoloChain Branch Authority](BRANCH_AUTHORITY.md) | `reference` | `active` | `git-branch-authority-contract` |
 | [Exact Settlement Confirmation C4](exact-settlement-confirmation-c4.md) | `reference` | `draft` | `source-only-exact-settlement-confirmation` |
+| [Legacy Settlement Hardening and Protected Release Handoff](legacy-settlement-hardening.md) | `reference` | `draft` | `source-only-legacy-settlement-hardening` |
 | [WoloChain Mainnet Cutover Checklist](mainnet-cutover-checklist.md) | `historical` | `historical` | `mainnet-launch-cutover-evidence` |
 | [WoloChain Mainnet Tony Decision Checklist](mainnet-decision-checklist.md) | `historical` | `historical` | `mainnet-launch-decision-evidence` |
 | [WoloChain Mainnet DNS, Nginx, And TLS](mainnet-dns-nginx-tls.md) | `reference` | `active` | `mainnet-public-endpoint-routing` |
@@ -63,9 +64,15 @@ This page is generated from the validated front matter in this repository. Cross
 | [WoloChain Mainnet Template Report](mainnet-template.md) | `historical` | `historical` | `mainnet-preparation-template-evidence` |
 | [WoloChain Mainnet Wallet And Key Plan](mainnet-wallets.md) | `reference` | `active` | `mainnet-wallet-role-and-custody-map` |
 | [Settlement Contracts](settlement-contracts/README.md) | `reference` | `active` | `machine-readable-settlement-contract-index` |
+| [HD and DE Financial Producer Owner Review](settlement-contracts/producer-owner-correlation.md) | `runbook` | `draft` | `non-authorizing-financial-producer-evidence-correlation` |
 | [WoloChain Testnet Ops](testnet-ops.md) | `runbook` | `active` | `legacy-testnet-operations` |
 | [War Satchel C3 Chain Evidence](war-satchel-chain-evidence-c3.md) | `reference` | `draft` | `source-only-war-satchel-chain-evidence` |
+| [War Satchel Controlled Release Gates](war-satchel-controlled-release.md) | `reference` | `draft` | `source-integration-proof-not-production-approval` |
 | [War Satchel C2 Custody Capability](war-satchel-custody-c2.md) | `reference` | `draft` | `source-only-war-satchel-custody-capability` |
+| [War Satchel Exact Source Artifact Contract](war-satchel-exact-source-artifact.md) | `reference` | `draft` | `source-artifact-proof-not-runtime-or-financial-approval` |
+| [Authenticated War Satchel Financial Bridge](war-satchel-financial-bridge.md) | `reference` | `draft` | `source-integration-proof-not-production-approval` |
+| [War Satchel Integration Evidence and Operator Handoff](war-satchel-integration-readiness.md) | `reference` | `draft` | `source-integration-proof-not-production-approval` |
+| [War Satchel Mainnet Execution and Operator Gates](war-satchel-mainnet-execution.md) | `reference` | `draft` | `restricted-satchel-execution-and-provisioning-contract` |
 | [AoE2WAR Warbound Trophies](warbound-trophies.md) | `working` | `draft` | `undeployed-warbound-module-design` |
 | [Codex Mission: WoloChain Mainnet ↔ Osmosis IBC Prep](../mainnet-prep/CODEX_OSMOSIS_IBC_MISSION.md) | `historical` | `historical` | `ibc-mission-prompt-evidence` |
 | [WoloChain Mainnet Osmosis Hermes Relayer Staging](../mainnet-prep/HERMES_OSMOSIS_RELAYER_STAGING.md) | `reference` | `active` | `ibc-relayer-operating-reference` |

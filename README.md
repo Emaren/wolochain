@@ -8,12 +8,27 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "chain-repository-entrypoint"
-reviewed_at: "2026-10-07"
+reviewed_at: "2026-10-22"
 review_interval_days: 14
 sensitivity: "public"
 ---
 
 # WoloChain
+
+## Source documentation review — 2026-10-22
+
+This renewal checks the repository's chain identity, role separation and
+source-only War Satchel integration references against the held GitHub release
+work. It is **not** a new live node, payout, escrow, balance, custody, validator
+or settlement-process inspection. Earlier operational claims below remain
+bound to their individually dated observations. Mainnet Satchel signing
+remains financially **HELD** under [release issue #5](https://github.com/Emaren/wolochain/issues/5);
+source review and successful CI do not authorize 8094 deployment, mainnet
+transfers or replacement of 8092/8093. Historical shared-binary recovery
+examples do not authorize a consensus restart; use the current
+[settlement runbook](docs/mainnet-settlement-runbook.md) and
+[Satchel operator gates](docs/war-satchel-mainnet-execution.md).
+
 
 WoloChain is the fixed-supply Cosmos chain for the AoE2HDBets ecosystem.
 
