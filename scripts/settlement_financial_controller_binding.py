@@ -126,6 +126,28 @@ def authenticate_and_reserve(args, *, mode, source_tool_sha256, scope_sha256,
     inventory=exact_private(inventory_path,root)
     require(proc["writer_inventory_sha256"]==digest(inventory),
             "INDEPENDENT_WRITER_COVERAGE_DIGEST_MISMATCH")
+    covered=human.parse_json(inventory)
+    required_owners={"hd_web_api","de_web_api","seven_timer_service_pairs",
+        "postgres_dba","manual_sql_and_ssh","cron_and_user_systemd",
+        "ci_and_deployment","settlement_8092_8093_bearers",
+        "offhost_wallet_and_chain_signers","auxiliary_settlement_and_indexers",
+        "hasura_secondary_targets","legacy_and_de_manual_executors"}
+    require(set(covered)=={"schema","writers"} and
+            covered["schema"]=="wolo.financial-writer-independent-coverage.v1" and
+            type(covered["writers"]) is dict and
+            set(covered["writers"])==required_owners,
+            "FINANCIAL_WRITER_COVERAGE_INCOMPLETE")
+    for item in covered["writers"].values():
+        require(type(item) is dict and
+            set(item)=={"owner_id","independent_reviewer_id",
+                        "excluded_during_window","evidence_sha256"} and
+            type(item["owner_id"]) is str and 3<=len(item["owner_id"])<=120 and
+            type(item["independent_reviewer_id"]) is str and
+            item["independent_reviewer_id"] != item["owner_id"] and
+            item["excluded_during_window"] is True and
+            type(item["evidence_sha256"]) is str and
+            human.HEX64.fullmatch(item["evidence_sha256"]),
+            "FINANCIAL_WRITER_OWNER_UNATTESTED")
 
     if mode=="capture":
         require(args.permit is not None and args.output is not None and
