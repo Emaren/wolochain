@@ -127,8 +127,13 @@ class DisposableSystemdWatchdog(unittest.TestCase):
                         print("DISPOSABLE_FAILED_SYSTEMD_COMMAND=" + json.dumps(argv))
                         raise
                 maintenance.run = traced_fixture_command
-                self.assertEqual(maintenance.main(["--mode", "fence", "--permit", str(permit_path),
-                    "--fence-receipt", str(receipt_path)]), 0)
+                # On this *prechecked empty disposable CI host only*, test the
+                # existing fence function directly. Production CLI remains
+                # intentionally fail-closed without enrolled signed authority.
+                # No synthetic hash-only permit may enter main() to fence.
+                self.assertIsInstance(
+                    maintenance.fence(permit_path, receipt_path, runner=maintenance.run), dict
+                )
                 before = maintenance.digest(maintenance.private_read(maintenance.HOLD))
                 for unit in maintenance.UNITS:
                     # Real manual starts against custom /etc unit fragments.
