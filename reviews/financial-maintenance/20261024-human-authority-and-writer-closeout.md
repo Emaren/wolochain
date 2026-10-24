@@ -1,3 +1,18 @@
+---
+id: "aoe2war.wolochain.financial-five-human-maintenance-review-20261024"
+title: "Financial-maintenance authority and writer review — 2026-10-24"
+type: "runbook"
+status: "draft"
+owner: "wolochain-ops"
+systems: ["wolochain","aoe2war","aoe2dewarwagers"]
+audience: ["operators","developers","ai-agents"]
+source_of_truth: "git"
+authority: "non-authorizing-financial-human-signature-review"
+reviewed_at: "2026-10-24"
+review_interval_days: 14
+sensitivity: "internal"
+---
+
 # Financial-maintenance authority and writer review — 2026-10-24
 
 **Nonauthorizing review stacked on Wolo PR #96**, exact baseline `aa932a64ffcfc35e07f46516d38d2b923802c9b3`. PR96's 18-unit correction is closed; storage preparation is already complete. This branch only introduces an *offline cryptographic evidence verifier*, unit tests and this design. It does **not** alter `settlement_financial_maintenance.py`, its v1 permits, the existing 30-minute window or any production services. Existing financial checklist: five BLOCKED and solvency UNKNOWN. No human signatures, permits, payments, DB writes, service stops or real backup/restore occurred.
