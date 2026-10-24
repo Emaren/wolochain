@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "549c2b68690b3ae42e14037f1268bae3b16f858922ed68e71ba7c7b75aad1f20",
+      "sha256": "71a3a6e45b83654fa9d6a5b09f13ef14ff3243e35fe681645f4fc045688ba91e",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -998,6 +998,30 @@
         "ai-agents"
       ],
       "authority": "non-authorizing-financial-human-signature-review",
+      "id": "aoe2war.wolochain.production-p1-and-authority-gates-20261024",
+      "owner": "wolochain-ops",
+      "path": "reviews/financial-maintenance/20261024-p1-writer-evidence-and-budget-proposal.md",
+      "review_interval_days": 14,
+      "reviewed_at": "2026-10-24",
+      "sensitivity": "internal",
+      "sha256": "8b5fe4dd65b13c381591c3219df7c2741a831791df8424d7cd22420cadc5421e",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war",
+        "aoe2dewarwagers"
+      ],
+      "title": "Production P1 source integrity, writer evidence, five-person authority and bounded recovery proposal \u2014 2026-10-24",
+      "type": "runbook"
+    },
+    {
+      "audience": [
+        "operators",
+        "developers",
+        "ai-agents"
+      ],
+      "authority": "non-authorizing-financial-human-signature-review",
       "id": "aoe2war.wolochain.financial-maintenance-phase-integration-20261024",
       "owner": "wolochain-ops",
       "path": "reviews/financial-maintenance/20261024-phase-integration-operator-runbook.md",
@@ -1042,8 +1066,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "review/20261024-controller-verified-phase-admission-held",
-    "commit": "c5ceefec4130860bbfabb5b2b7a72a1f3c99df9a"
+    "branch": "review/20261024-writer-evidence-real-files-held",
+    "commit": "76f4839a4dcd8b0cd804ca5aeb587855eea6ce04"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

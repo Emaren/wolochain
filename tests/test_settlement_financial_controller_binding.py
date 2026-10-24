@@ -52,6 +52,9 @@ class SignedControllerAdmissionTests(unittest.TestCase):
             "independent_chain_review_sha256": "e"*64,
             "independent_source_review_sha256": "f"*64,
         })
+        pkt=fixture.HumanSignatureTests.packet(self)
+        req=pkt["request"]
+        writer_files={}
         inventory={"schema":"wolo.financial-writer-independent-coverage.v1","writers":{}}
         keys={"hd_web_api","de_web_api","seven_timer_service_pairs","postgres_dba",
               "manual_sql_and_ssh","cron_and_user_systemd","ci_and_deployment",
@@ -59,10 +62,23 @@ class SignedControllerAdmissionTests(unittest.TestCase):
               "auxiliary_settlement_and_indexers","hasura_secondary_targets",
               "legacy_and_de_manual_executors"}
         for k in keys:
-            inventory["writers"][k]={"owner_id":"independent_owner_"+k,
-                "independent_reviewer_id":"separate_reviewer_"+k,
-                "excluded_during_window":not(writer_incomplete and k=="postgres_dba"),
-                "evidence_sha256":"9"*64}
+            owner="independent_owner_"+k
+            reviewer="separate_reviewer_"+k
+            doc={"schema":"wolo.financial-writer-coverage-evidence.v1",
+                 "category":k, "owner_id":owner,
+                 "independent_reviewer_id":reviewer,
+                 "excluded_during_window":not(writer_incomplete and k=="postgres_dba"),
+                 "scope_sha256":self.expected["scope"],
+                 "source_commit":self.expected["source_commit"],
+                 "not_before":req["not_before"],"expires_at":req["expires_at"],
+                 "observation_sha256":"a"*64,
+                 "independent_witness_sha256":"b"*64}
+            raw=human.canonical(doc)
+            writer_files[k+".json"]=raw
+            inventory["writers"][k]={"owner_id":owner,
+                "independent_reviewer_id":reviewer,
+                "excluded_during_window":doc["excluded_during_window"],
+                "evidence_sha256":human.sha(raw)}
         inventory_raw=human.canonical(inventory)
         output=controller.BACKUPS/"synthetic-CI-only"
         fence=Path("/etc/wolochain-financial-maintenance/authority/fence.json")
@@ -73,8 +89,6 @@ class SignedControllerAdmissionTests(unittest.TestCase):
             "source_drift_disposition_sha256":human.sha(drift),
             "writer_inventory_sha256":human.sha(inventory_raw),
         }
-        pkt=fixture.HumanSignatureTests.packet(self)
-        req=pkt["request"]
         req["tool_sha256"]=self.expected["source"]
         req["scope_sha256"]=self.expected["scope"]
         req["host_identity_sha256"]=human.sha(host)
@@ -135,6 +149,7 @@ class SignedControllerAdmissionTests(unittest.TestCase):
             "procedure":procedure_raw,"host-identity":host,
             "source-drift-disposition":drift,
             "independent-writer-coverage.json":inventory_raw,
+            **writer_files,
         }
         args=SimpleNamespace(
             registry=Path("/root/authority/registry"),
@@ -201,6 +216,77 @@ class SignedControllerAdmissionTests(unittest.TestCase):
         def change(args,anchors,files,permit,pkt):
             anchors["revoked_key_ids"]=(self.registry["principals"][0]["key_id"],)
         with self.assertRaisesRegex(human.Refusal,"REVOKED_HUMAN_APPROVER"):
+            self.admit(change=change)
+
+    def test_missing_actual_writer_evidence_blocks_before_nonce_witness(self):
+        def change(args,anchors,files,permit,pkt):
+            files.pop("postgres_dba.json")
+        with self.assertRaisesRegex(human.Refusal,"WRITER_EVIDENCE_FILE_UNAVAILABLE"):
+            self.admit(change=change)
+
+    def test_writer_hash_mismatch_refuses_before_nonce_witness(self):
+        def change(args,anchors,files,permit,pkt):
+            files["postgres_dba.json"]=b'{"schema":"tampered"}'
+        with self.assertRaisesRegex(human.Refusal,"WRITER_EVIDENCE_FILE_HASH_MISMATCH"):
+            self.admit(change=change)
+
+    def test_writer_evidence_wrong_source_rejects_even_if_hash_rebound(self):
+        def change(args,anchors,files,permit,pkt):
+            d=human.parse_json(files["postgres_dba.json"])
+            d["source_commit"]="1"*40
+            raw=human.canonical(d)
+            files["postgres_dba.json"]=raw
+            inv=human.parse_json(files["independent-writer-coverage.json"])
+            inv["writers"]["postgres_dba"]["evidence_sha256"]=human.sha(raw)
+            files["independent-writer-coverage.json"]=human.canonical(inv)
+            # A replaced procedure hash alone cannot establish independence:
+            # this test checks the category/source contract before signatures.
+            p=human.parse_json(files["procedure"])
+            p["writer_inventory_sha256"]=human.sha(files["independent-writer-coverage.json"])
+            files["procedure"]=human.canonical(p)
+        with self.assertRaisesRegex(human.Refusal,"WRITER_EVIDENCE_SCOPE_OR_PHASE_MISMATCH"):
+            self.admit(change=change)
+
+    def test_swapped_writer_evidence_category_refuses(self):
+        def change(args,anchors,files,permit,pkt):
+            d=human.parse_json(files["postgres_dba.json"])
+            d["category"]="offhost_wallet_and_chain_signers"
+            files["postgres_dba.json"]=human.canonical(d)
+            inv=human.parse_json(files["independent-writer-coverage.json"])
+            inv["writers"]["postgres_dba"]["evidence_sha256"]=human.sha(files["postgres_dba.json"])
+            files["independent-writer-coverage.json"]=human.canonical(inv)
+            p=human.parse_json(files["procedure"])
+            p["writer_inventory_sha256"]=human.sha(files["independent-writer-coverage.json"])
+            files["procedure"]=human.canonical(p)
+        with self.assertRaisesRegex(human.Refusal,"WRITER_EVIDENCE_SCOPE_OR_PHASE_MISMATCH"):
+            self.admit(change=change)
+
+    def test_writer_witness_digest_cannot_be_placeholder(self):
+        def change(args,anchors,files,permit,pkt):
+            d=human.parse_json(files["postgres_dba.json"])
+            d["independent_witness_sha256"]="0"*64
+            files["postgres_dba.json"]=human.canonical(d)
+            inv=human.parse_json(files["independent-writer-coverage.json"])
+            inv["writers"]["postgres_dba"]["evidence_sha256"]=human.sha(files["postgres_dba.json"])
+            files["independent-writer-coverage.json"]=human.canonical(inv)
+            p=human.parse_json(files["procedure"])
+            p["writer_inventory_sha256"]=human.sha(files["independent-writer-coverage.json"])
+            files["procedure"]=human.canonical(p)
+        with self.assertRaisesRegex(human.Refusal,"WRITER_WITNESS_EVIDENCE_MISSING"):
+            self.admit(change=change)
+
+    def test_writer_evidence_wrong_phase_refuses(self):
+        def change(args,anchors,files,permit,pkt):
+            d=human.parse_json(files["postgres_dba.json"])
+            d["expires_at"]="2099-01-01T00:00:00Z"
+            files["postgres_dba.json"]=human.canonical(d)
+            inv=human.parse_json(files["independent-writer-coverage.json"])
+            inv["writers"]["postgres_dba"]["evidence_sha256"]=human.sha(files["postgres_dba.json"])
+            files["independent-writer-coverage.json"]=human.canonical(inv)
+            p=human.parse_json(files["procedure"])
+            p["writer_inventory_sha256"]=human.sha(files["independent-writer-coverage.json"])
+            files["procedure"]=human.canonical(p)
+        with self.assertRaisesRegex(human.Refusal,"WRITER_EVIDENCE_SCOPE_OR_PHASE_MISMATCH"):
             self.admit(change=change)
 
     def test_incomplete_dba_coverage_blocks_before_remote_witness(self):
