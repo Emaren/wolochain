@@ -61,3 +61,18 @@ jobs:
         run: |
           python3 scripts/docs_v2_check.py --write --refresh-baseline --branch review/20261024-maintenance-phase-integration-held --head "$(git rev-parse HEAD)"
           python3 scripts/docs_v2_check.py
+      - name: Emit generated DocsV2 baseline for independently controlled review commit
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          for key, name in (
+              ("INDEX", "docs/DOCUMENTATION_CONTROL_PLANE.md"),
+              ("REGISTRY", "docs/document-registry.json"),
+          ):
+              value = Path(name).read_text()
+              print("AOE2_GENERATED_%s_BYTES="%key+str(len(value)))
+              for index in range(0,len(value),1000):
+                  print("AOE2_GENERATED_%s_%04d="% (key,index//1000) +
+                        json.dumps(value[index:index+1000]))
+          PY
