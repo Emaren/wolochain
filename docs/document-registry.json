@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "d864aee6d93a40fe49e40c67d71de399043129bbe99e6264f2ad11b77f9155ec",
+      "sha256": "dc201675211964a29373f9a4567fb3296d95b8c94d1c4010b2d747f8383084e5",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1043,7 +1043,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "review/20261024-controller-verified-phase-admission-held",
-    "commit": "35582a3ce3a3a065bd3e1279daa39c8d2bdaf9cb"
+    "commit": "027409fb6bdcab91d9321bcf120da6a9c6341ee0"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
