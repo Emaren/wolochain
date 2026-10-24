@@ -4,6 +4,7 @@ on:
     branches:
       - review/20261024-controller-verified-phase-admission-held
       - review/20261024-restore-budget-provenance-held
+      - review/20261024-writer-evidence-real-files-held
   pull_request:
     branches:
       - review/20261024-maintenance-phase-integration-held
