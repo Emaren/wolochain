@@ -863,6 +863,13 @@ def restore_isolated(receipt_path, output, *, runner=None, phase_window=None):
         require(phase_window.get("phase") == "offline_verify" and
                 phase_window.get("live_actions_allowed") is False,
                 "OFFLINE_PHASE_ONLY")
+        # The old capture permit provides the image/DB contract. The new
+        # independently signed offline request must explicitly approve the
+        # same finite restore byte budget before ANY Docker or disk action.
+        # Never silently inherit a larger budget from the expired live permit.
+        require(type(phase_window.get("max_total_bytes")) is int and
+                phase_window["max_total_bytes"] == permit["max_total_bytes"],
+                "OFFLINE_SIGNED_BUDGET_MISMATCH")
         require(utc(phase_window["not_before"]) <= clock() < utc(phase_window["expires_at"]),
                 "OFFLINE_WINDOW_EXPIRED")
     runner = bounded_runner(runner, phase_window if phase_window is not None else permit)
