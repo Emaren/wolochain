@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `review/20261023-postgres-quiescence-evidence` at `e75e5867f1961486d8ea22a9ce46a5580c66aa41`
+Implementation baseline: `codex/recovered-settlement-rehearsal` at `bb93732b0b48aa475693136e42eb108d48ec5558`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
