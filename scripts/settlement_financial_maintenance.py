@@ -58,7 +58,7 @@ AUTHORITY_ENROLLMENT_ANCHORS = {
     "source_drift_disposition_sha256": None,
 }
 AUTHORITY_ROOT = Path("/etc/wolochain-financial-maintenance/authority")
-AUTHORITY_NONCE_ROOT = Path("/var/lib/wolo-financial-restore/authority-nonces")
+AUTHORITY_NONCE_ROOT = Path("/var/lib/wolo-financial-authority-nonces")
 
 DOCKER = ["docker", "--host=unix:///var/run/docker.sock"]
 SCHEMA = "wolo.financial-maintenance-permit.v1"
