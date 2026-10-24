@@ -178,7 +178,16 @@ def authenticate_and_reserve(args, *, mode, source_tool_sha256, scope_sha256,
             type(covered["writers"]) is dict and
             set(covered["writers"])==required_owners,
             "FINANCIAL_WRITER_COVERAGE_INCOMPLETE")
-    for item in covered["writers"].values():
+    # Every inventory SHA MUST resolve to actual, canonical, private evidence
+    # for the exact signed source, scope, writer category and phase window.
+    # A well-formed hash string alone is NOT a witness observation.
+    writer_evidence_fields=frozenset({
+        "schema","category","owner_id","independent_reviewer_id",
+        "excluded_during_window","scope_sha256","source_commit",
+        "not_before","expires_at","observation_sha256",
+        "independent_witness_sha256",
+    })
+    for category,item in covered["writers"].items():
         require(type(item) is dict and
             set(item)=={"owner_id","independent_reviewer_id",
                         "excluded_during_window","evidence_sha256"} and
@@ -189,6 +198,25 @@ def authenticate_and_reserve(args, *, mode, source_tool_sha256, scope_sha256,
             type(item["evidence_sha256"]) is str and
             human.HEX64.fullmatch(item["evidence_sha256"]),
             "FINANCIAL_WRITER_OWNER_UNATTESTED")
+        raw=exact_private(root/"writer-coverage"/(category+".json"),root)
+        require(digest(raw)==item["evidence_sha256"],
+                "WRITER_EVIDENCE_FILE_HASH_MISMATCH")
+        doc=phase.decode(raw,"wolo.financial-writer-coverage-evidence.v1",
+                         writer_evidence_fields)
+        require(doc["category"]==category and
+                doc["owner_id"]==item["owner_id"] and
+                doc["independent_reviewer_id"]==item["independent_reviewer_id"] and
+                doc["excluded_during_window"] is True and
+                doc["scope_sha256"]==scope_sha256 and
+                doc["source_commit"]==anchors["source_commit"] and
+                doc["not_before"]==request["not_before"] and
+                doc["expires_at"]==request["expires_at"],
+                "WRITER_EVIDENCE_SCOPE_OR_PHASE_MISMATCH")
+        require(all(type(doc[k]) is str and human.HEX64.fullmatch(doc[k]) and
+                    doc[k]!="0"*64 for k in (
+                    "observation_sha256","independent_witness_sha256")) and
+                doc["observation_sha256"]!=doc["independent_witness_sha256"],
+                "WRITER_WITNESS_EVIDENCE_MISSING")
 
     if mode=="capture":
         require(args.permit is not None and args.output is not None and
