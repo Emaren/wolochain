@@ -975,7 +975,7 @@ def verify_current_backup(restore_receipt_path, expected_scope_sha256,
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--mode", choices=("scope", "verify-fence", "fence", "backup", "restore-isolated"),
+    parser.add_argument("--mode", choices=("scope", "inspect-storage", "verify-fence", "fence", "backup", "restore-isolated"),
                         default="scope")
     parser.add_argument("--permit", type=Path)
     parser.add_argument("--fence-receipt", type=Path)
@@ -987,6 +987,30 @@ def main(argv=None):
                               "activation_or_resume_authorized": False}, sort_keys=True))
             return 3
         require(os.geteuid() == 0, "ROOT_REQUIRED")
+        if args.mode == "inspect-storage":
+            # Read only: invoke the EXACT production mount/backing identity
+            # guard without a finance permit, lock, backup or service change.
+            mount, backing, fs = _bounded_restore_mount()
+            require(not any(p.name.startswith("restore-") for p in mount.iterdir()),
+                    "INTERRUPTED_RESTORE_SCRATCH_REQUIRES_SEPARATE_REVIEW")
+            rootfs = os.statvfs(RESTORE_SCRATCH)
+            root_free = rootfs.f_bavail * rootfs.f_frsize
+            require(root_free >= RESTORE_OS_RESERVE,
+                    "RESTORE_OS_ROOT_CAPACITY_INSUFFICIENT")
+            print(json.dumps({
+                "schema": "wolo.bounded-restore-storage-inspection.v1",
+                "status": "STORAGE_OBSERVED_ONLY",
+                "backing_logical_bytes": backing.st_size,
+                "backing_allocated_bytes": backing.st_blocks * 512,
+                "bounded_total_bytes": fs.f_blocks * fs.f_frsize,
+                "bounded_available_bytes": fs.f_bavail * fs.f_frsize,
+                "root_available_bytes": root_free,
+                "storage_mount_identity_verified": True,
+                "financial_writers_quiesced": False,
+                "backup_or_restore_authorized": False,
+                "financial_release_authorized": False
+            }, sort_keys=True))
+            return 3
         require(args.fence_receipt is not None, "FENCE_RECEIPT_REQUIRED")
         if args.mode == "verify-fence":
             verify_current_fence(args.fence_receipt, scope_digest())
