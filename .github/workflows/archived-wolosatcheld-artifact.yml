@@ -46,7 +46,7 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: archived-historical-${{ env.EXPECTED_SOURCE }}-linux-amd64-${{ github.run_id }}-${{ github.run_attempt }}-UNDEPLOYED
-          path: ${{ runner.temp }}/archived-historical-artifact/
+          path: ${{ runner.temp }}/legacy-replay-artifact/
           if-no-files-found: error
           compression-level: 0
           retention-days: 30
