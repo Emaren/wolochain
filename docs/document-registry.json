@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "a93b372962d5722ae88c5a56ddafe536ed1614df3d7029a227c7dda5aa570175",
+      "sha256": "cdf15183fd1bf00c777ed685ea3d9077e2ac8d3d0513d203260cb4adadf0da02",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1067,7 +1067,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "review/20261025-legacy-ambiguous-replay-guard-red",
-    "commit": "f24f93ecee8755bba66e6585b25f16619cb134a9"
+    "commit": "e84d74e78044a63174dd43d4be39d5f0af7c6426"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
