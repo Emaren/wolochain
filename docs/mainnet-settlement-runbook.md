@@ -1791,3 +1791,38 @@ UNKNOWN. Preserve the accepted 100-WOLO UNKNOWN outcome, claim #889 and
 nonadditive historical obligations. Satchel custody stays UNAVAILABLE; the
 financial bridge, signer activation, migrations and funded canary remain on
 their separate protected approval rails.
+
+## 2026-10-25 — historical-100-WOLO archive-only time verification
+
+The original `verify-historical-transfer` command passed a months-old portable
+Comet transcript through the LIVE `VerifyTransferProof` wall clock, which
+rejects authentic old signed heads and anchor periods as stale. This is not a
+false chain-signature finding: the command used today's expiry conditions for
+an explicitly historical transaction.
+
+This held source candidate adds a **separate type**
+`satchel.ArchivedTransferEvidence` and a single
+`satchel.VerifyArchivedTransferProof` path, exclusively used by the
+offline accepted-100 historical command. The operator-provisioned
+`ExpectedHistoricalTransfer.historical_as_of_utc` value is a strict UTC
+seconds timestamp, not a new trust anchor or external attestation. It must
+fall within the original signed Comet time/anchor/witness validity verified
+cryptographically by the *same* bounded light client, H and H+1 proof,
+signed exact transfer and original receipt ordinal checks. The historical
+as-of comes from separate independently reviewed historical records and
+must **not** be guessed from a convenient untrusted head. Caller clock
+substitution is explicit in this *single offline* proof verifier only.
+
+The result's type cannot be passed to the normal live credit/settlement
+admission APIs; `CreditAuthorized=false`, and even successful historical
+verification returns exit **3**, flags independent anchor/journal proof,
+solvency, custody, retry and release permission **false**. It does not
+create a durable receipt, unlock any payout, mutate Wolo, or mark original
+accepted 100 WOLO as paid. Mainnet settlement still holds until independently
+grounded original obligation identity, root provenance and global accounting.
+The original LIVE `VerifyTransferProof`, all bank/deposit freshness and
+production settlement guard paths are unchanged.
+
+Exact-head CI and offline adversarial fixture tests are required before even
+source-only qualification. No production binary deployment or historical
+payment retry is authorized by this source review.
