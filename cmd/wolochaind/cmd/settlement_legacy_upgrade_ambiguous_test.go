@@ -74,7 +74,7 @@ func TestUpgradeRefusesLegacyPostBroadcastUnknownWithoutSignerRetry(t *testing.T
             // An ambiguous prior bank send is not a valid retryable preflight
             // refusal. It must be quarantined before any signer command.
             if got.OK || got.Retryable || got.TxHash != "" ||
-                got.Status != "unverifiable" {
+                got.Status != "unverifiable" || !got.IdempotentReplay {
                 t.Fatalf("legacy no-hash RPC failure may have broadcast; must hold for manual reconciliation, got %+v", got)
             }
         })
