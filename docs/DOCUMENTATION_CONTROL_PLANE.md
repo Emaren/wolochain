@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `codex/closure-wolo-legacy-replay` at `eec3d58dae3842a1c2031edbd25f06475ff05d2c`
+Implementation baseline: `review/20261025-archive-only-historical-transfer-time` at `952ed63fda0b35b0385c86c0ed14647ba71d15ca`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
