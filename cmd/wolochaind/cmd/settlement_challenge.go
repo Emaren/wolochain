@@ -2546,11 +2546,6 @@ func (cfg settlementConfig) withChallengeLock(settlementID string, fn func() (se
 	lockFile, err := os.OpenFile(lockPath, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0o600)
 	if err != nil {
 		if errors.Is(err, os.ErrExist) {
-			info, statErr := os.Stat(lockPath)
-			if statErr == nil && time.Since(info.ModTime()) > cfg.RequestLockTTL {
-				_ = os.Remove(lockPath)
-				return cfg.withChallengeLock(settlementID, fn)
-			}
 			return settlementChallengeResponse{
 				OK:              false,
 				DryRun:          false,
@@ -2558,7 +2553,7 @@ func (cfg settlementConfig) withChallengeLock(settlementID string, fn func() (se
 				FailureCode:     "CHALLENGE_IN_PROGRESS",
 				Retryable:       true,
 				SettlementRunID: settlementID,
-				Detail:          "another challenge settlement attempt with this settlement_run_id is already running",
+				Detail:          "challenge lock exists; its owner may be running or interrupted; independent reconciliation is required before any lock recovery",
 			}, nil
 		}
 		return settlementChallengeResponse{}, err
