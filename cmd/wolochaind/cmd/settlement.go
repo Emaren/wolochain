@@ -1899,6 +1899,9 @@ func (cfg settlementConfig) executeSettlement(ctx context.Context, request settl
 				}, nil
 			}
 
+			if held := cfg.guardSettlementStoredReplay(ctx, stored); held != nil {
+				return *held, nil
+			}
 			if stored.Response.OK || stored.Response.TxHash != "" || !stored.Response.Retryable {
 				replayed := stored.Response
 				replayed.IdempotentReplay = true
@@ -3363,11 +3366,9 @@ func (cfg settlementConfig) withRequestLock(requestID, signerRole string, fn fun
 	lockFile, err := os.OpenFile(lockPath, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0o600)
 	if err != nil {
 		if errors.Is(err, os.ErrExist) {
-			info, statErr := os.Stat(lockPath)
-			if statErr == nil && time.Since(info.ModTime()) > cfg.RequestLockTTL {
-				_ = os.Remove(lockPath)
-				return cfg.withRequestLock(requestID, signerRole, fn)
-			}
+			// Age is not proof the owning process stopped. In particular it
+			// may still be in preflight before its durable broadcast marker.
+			// Never steal this lock or erase interruption evidence on restart.
 			return settlementExecuteResponse{
 				OK:          false,
 				Status:      "failed",
@@ -3376,7 +3377,7 @@ func (cfg settlementConfig) withRequestLock(requestID, signerRole string, fn fun
 				RequestID:   requestID,
 				ChainID:     cfg.ChainID,
 				SignerRole:  signerRole,
-				Detail:      "another settlement attempt with this request id is already running",
+				Detail:      "request lock exists; its owner may be running or interrupted; independent reconciliation is required before any lock recovery",
 			}, nil
 		}
 		return settlementExecuteResponse{}, err
@@ -3400,11 +3401,6 @@ func (cfg settlementConfig) withRunLock(runID, signerRole string, fn func() (set
 	lockFile, err := os.OpenFile(lockPath, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0o600)
 	if err != nil {
 		if errors.Is(err, os.ErrExist) {
-			info, statErr := os.Stat(lockPath)
-			if statErr == nil && time.Since(info.ModTime()) > cfg.RequestLockTTL {
-				_ = os.Remove(lockPath)
-				return cfg.withRunLock(runID, signerRole, fn)
-			}
 			return settlementRunResponse{
 				OK:              false,
 				DryRun:          false,
@@ -3413,7 +3409,7 @@ func (cfg settlementConfig) withRunLock(runID, signerRole string, fn func() (set
 				Retryable:       true,
 				SettlementRunID: runID,
 				SignerRole:      signerRole,
-				Detail:          "another settlement run attempt with this settlement_run_id is already running",
+				Detail:          "run lock exists; its owner may be running or interrupted; independent reconciliation is required before any lock recovery",
 			}, nil
 		}
 		return settlementRunResponse{}, err
@@ -4422,9 +4418,12 @@ func matchSettlementTransfer(transfers []settlementTransfer, expectations settle
 }
 
 func readSettlementStoredResult(path string) (settlementStoredResult, error) {
-	data, err := os.ReadFile(path)
+	data, err := readSettlementReceiptState(path)
 	if err != nil {
 		return settlementStoredResult{}, err
+	}
+	if !chainjson.ValidFolded(data) {
+		return settlementStoredResult{}, errSettlementReceiptState
 	}
 
 	result := settlementStoredResult{}

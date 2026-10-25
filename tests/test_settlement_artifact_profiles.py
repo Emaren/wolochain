@@ -24,6 +24,22 @@ HISTORICAL_BACKEND_SOURCE = "99f32de617964565875ed4689bea0d688bb99147"
 class BackendArtifactSourceContractTests(unittest.TestCase):
     """A builder must name the current reviewed implementation explicitly."""
 
+    def test_replay_workflow_uses_existing_builder_with_separate_immutable_pin(self):
+        specification = importlib.util.spec_from_file_location(
+            "replay_artifact_source_contract", ROOT / "scripts" / "settlement-artifact.py")
+        artifact = importlib.util.module_from_spec(specification)
+        specification.loader.exec_module(artifact)
+        policy = artifact.profile_policy("legacy-replay")
+        workflow = (ROOT / policy["workflow"]).read_text()
+        self.assertEqual(re.findall(r"^\s+EXPECTED_SOURCE: ([0-9a-f]{40})$", workflow,
+                                    re.MULTILINE), [policy["source"]])
+        self.assertIn("--profile legacy-replay", workflow)
+        self.assertIn("go-version: '1.24.6'", workflow)
+        self.assertIn("ref: ${{ env.EXPECTED_SOURCE }}", workflow)
+        self.assertIn("contents: read", workflow)
+        self.assertNotIn("contents: write", workflow)
+        self.assertIn("UNDEPLOYED", workflow)
+
     def test_runtime_workflow_has_new_pin_and_preserves_frozen_backend_profile(self):
         specification = importlib.util.spec_from_file_location(
             "backend_artifact_source_contract", ROOT / "scripts" / "settlement-artifact.py")
