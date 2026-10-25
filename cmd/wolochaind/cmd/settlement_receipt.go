@@ -37,6 +37,64 @@ type settlementConfirmationReceipt struct {
 	Fingerprint   string `json:"fingerprint"`
 }
 
+// Replaying a newer confirmed result requires its existing durable effect
+// owner. Do not create a receipt here: that would retroactively certify a
+// historical success that predates exact transaction/effect verification.
+func (cfg settlementConfig) verifySettlementConfirmationReplay(ctx context.Context, request normalizedSettlementRequest, signer, txHash string) error {
+	txHash = normalizeTxHash(txHash)
+	if err := cfg.checkSettlementReceiptHistory(ctx, request, signer, txHash); err != nil {
+		return err
+	}
+	dir, err := os.Open(filepath.Join(cfg.StateDir, "confirmation-receipts"))
+	if err != nil {
+		return errSettlementReceiptState
+	}
+	defer dir.Close()
+	found, count, size := false, 0, 0
+	for {
+		if ctx.Err() != nil {
+			return ctx.Err()
+		}
+		entries, readErr := dir.ReadDir(128)
+		if readErr != nil && !errors.Is(readErr, io.EOF) {
+			return errSettlementReceiptState
+		}
+		for _, entry := range entries {
+			count++
+			if count > settlementReceiptMaxRecords {
+				return errSettlementReceiptState
+			}
+			if !strings.HasPrefix(entry.Name(), txHash+"-") {
+				continue
+			}
+			if !strings.HasSuffix(entry.Name(), ".json") || !entry.Type().IsRegular() {
+				return errSettlementReceiptState
+			}
+			data, err := readSettlementReceiptState(filepath.Join(cfg.StateDir, "confirmation-receipts", entry.Name()))
+			size += len(data)
+			var receipt settlementConfirmationReceipt
+			if err != nil || size > settlementReceiptMaxStateBytes || !chainjson.ValidFolded(data) || json.Unmarshal(data, &receipt) != nil {
+				return errSettlementReceiptState
+			}
+			if receipt.Version != settlementReceiptVersion || receipt.ChainID != cfg.ChainID || receipt.TxHash != txHash || receipt.TransferIndex < 0 || entry.Name() != txHash+"-"+strconv.Itoa(receipt.TransferIndex)+".json" {
+				return errSettlementReceiptState
+			}
+			if receipt.RequestID == request.RequestID {
+				if receipt.SignerAddress != signer || receipt.Fingerprint != hashSettlementRequest(request, signer) {
+					return errSettlementReceiptConflict
+				}
+				found = true
+			}
+		}
+		if errors.Is(readErr, io.EOF) {
+			if !found {
+				return errSettlementReceiptState
+			}
+			return nil
+		}
+	}
+}
+
 // claimSettlementConfirmation reserves one observed bank effect for one durable
 // request. Call only AFTER exact transaction/transfer confirmation; this function
 // is a local single-use guard, not chain evidence or permission to broadcast.

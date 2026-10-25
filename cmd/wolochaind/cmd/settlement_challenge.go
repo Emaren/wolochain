@@ -2025,6 +2025,9 @@ func (cfg settlementConfig) executeEscrowTransfer(ctx context.Context, request s
 				}, nil
 			}
 
+			if held := cfg.guardSettlementStoredReplay(ctx, stored); held != nil {
+				return *held, nil
+			}
 			if stored.Response.OK || stored.Response.TxHash != "" || !stored.Response.Retryable {
 				replayed := stored.Response
 				replayed.IdempotentReplay = true

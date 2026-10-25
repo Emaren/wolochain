@@ -1899,6 +1899,9 @@ func (cfg settlementConfig) executeSettlement(ctx context.Context, request settl
 				}, nil
 			}
 
+			if held := cfg.guardSettlementStoredReplay(ctx, stored); held != nil {
+				return *held, nil
+			}
 			if stored.Response.OK || stored.Response.TxHash != "" || !stored.Response.Retryable {
 				replayed := stored.Response
 				replayed.IdempotentReplay = true
@@ -4415,9 +4418,12 @@ func matchSettlementTransfer(transfers []settlementTransfer, expectations settle
 }
 
 func readSettlementStoredResult(path string) (settlementStoredResult, error) {
-	data, err := os.ReadFile(path)
+	data, err := readSettlementReceiptState(path)
 	if err != nil {
 		return settlementStoredResult{}, err
+	}
+	if !chainjson.ValidFolded(data) {
+		return settlementStoredResult{}, errSettlementReceiptState
 	}
 
 	result := settlementStoredResult{}
