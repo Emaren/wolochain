@@ -1826,3 +1826,26 @@ production settlement guard paths are unchanged.
 Exact-head CI and offline adversarial fixture tests are required before even
 source-only qualification. No production binary deployment or historical
 payment retry is authorized by this source review.
+
+### Exact-source Linux artifact for the historical-only verifier
+
+The archived proof candidate has a **separate** reproducible Linux AMD64
+`wolosatcheld` artifact, built twice with disjoint fresh Go build caches by
+`.github/workflows/archived-wolosatcheld-artifact.yml` under Go 1.24.6,
+`CGO_ENABLED=0`, `-trimpath`, VCS provenance and strict manifest comparison.
+The implementation pinned is
+`c575b175e6dc74c720479a04e41490a842032203`. That commit includes
+the explicitly separate `ArchivedTransferEvidence` path and offline
+historical accepted-100 verifier; it predates only source-artifact
+administration and subsequent documentation. The builder pin is not a
+running mainnet binary, settlement service upgrade approval, trust anchor,
+solvency witness, custody authorization, or owner financial signature.
+
+Use the artifact solely for offline evidence review after authentic
+operator-provisioned historical checkpoint/as-of and exact signed
+original journal intent have been established; **do not install**
+`wolosatcheld` on the HD production server, enable its custody
+routes, replace Wolo settlement services, or rebroadcast historic 100-WOLO
+or claim payouts from this build. The CI artifact must be independently
+retrieved and SHA-256 checked against the authenticated GitHub workflow
+identity before a separate operator inspection.
