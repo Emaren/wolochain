@@ -40,6 +40,8 @@ type ExpectedHistoricalTransfer struct {
  AmountUWolo string `json:"amount_uwolo"`
  Memo string `json:"memo"`
  JournalIdentitySHA256 string `json:"journal_identity_sha256"`
+ // Untrusted review time, operator provisioned separately from the proof; NOT current spendability.
+ HistoricalAsOfUTC string `json:"historical_as_of_utc"`
 }
 
 func strictHistoricalJSON(data []byte, dst any) error {
@@ -57,9 +59,12 @@ func verifiedHistoricalIntent(c ExpectedHistoricalTransfer) bool {
   c.Height!=acceptedEscrow100Height || c.AmountUWolo!="100000000" ||
   c.Sender=="" || c.Recipient=="" || c.Sender==c.Recipient ||
   c.Memo=="" || len(c.Memo)>256 ||
-  len(c.JournalIdentitySHA256)!=64 || strings.Trim(c.JournalIdentitySHA256,"0")=="" { return false }
+  len(c.JournalIdentitySHA256)!=64 || strings.Trim(c.JournalIdentitySHA256,"0")=="" ||
+  len(c.HistoricalAsOfUTC)!=20 || !strings.HasSuffix(c.HistoricalAsOfUTC,"Z") { return false }
  b,err:=hex.DecodeString(c.JournalIdentitySHA256)
- return err==nil && len(b)==sha256.Size
+ asOf,timeErr:=time.Parse("2006-01-02T15:04:05Z",c.HistoricalAsOfUTC)
+ return err==nil && len(b)==sha256.Size && timeErr==nil &&
+  asOf.Year()>=2000 && !asOf.After(time.Now().Add(5*time.Second))
 }
 
 // historicalPrincipalEffectMatches applies to this ONE pinned legacy accepted
@@ -109,13 +114,13 @@ func verifyHistoricalTransferCommand(ctx context.Context, args []string, out, er
   !verifiedHistoricalIntent(expected) { return fail() }
  proof,err:=satchel.DecodePortableProof(proofBytes);if err!=nil{return fail()}
  if proof.Kind!="transfer" || proof.ChainID!=satchel.ChainID || proof.TxHash!=expected.TxHash {return fail()}
- verifier,err:=satchel.NewProofVerifier(anchor);if err!=nil{return fail()}
+ asOf,err:=time.Parse("2006-01-02T15:04:05Z",expected.HistoricalAsOfUTC);if err!=nil{return fail()}
  checkCtx,cancel:=context.WithTimeout(ctx,20*time.Second);defer cancel()
- evidence,err:=verifier.VerifyTransferProof(checkCtx,satchel.TransferIntent{
+ evidence,err:=satchel.VerifyArchivedTransferProof(checkCtx,anchor,asOf,satchel.TransferIntent{
   Sender:expected.Sender,Recipient:expected.Recipient,
   AmountUWolo:expected.AmountUWolo,Memo:expected.Memo,
  },expected.TxHash,proof)
- if err!=nil || !evidence.ConsensusAuthenticated() || evidence.CreditAuthorized() {return fail()}
+ if err!=nil || !evidence.ConsensusAuthenticatedAgainstProvidedAnchor() || evidence.CreditAuthorized() {return fail()}
  obs:=evidence.Observation()
  receipt:=evidence.Receipt()
  if !historicalPrincipalEffectMatches(obs,receipt,expected) {return fail()}

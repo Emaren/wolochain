@@ -40,6 +40,29 @@ class BackendArtifactSourceContractTests(unittest.TestCase):
         self.assertNotIn("contents: write", workflow)
         self.assertIn("UNDEPLOYED", workflow)
 
+    def test_archived_historical_binary_has_distinct_pinned_linux_artifact(self):
+        specification = importlib.util.spec_from_file_location(
+            "archive_artifact_source_contract", ROOT / "scripts" / "settlement-artifact.py")
+        artifact = importlib.util.module_from_spec(specification)
+        specification.loader.exec_module(artifact)
+        policy = artifact.profile_policy("archived-historical")
+        self.assertEqual(policy["source"], "c575b175e6dc74c720479a04e41490a842032203")
+        self.assertEqual(policy["binary"], "wolosatcheld")
+        self.assertEqual(policy["package"], "./cmd/wolosatcheld")
+        self.assertFalse(policy["purpose"].startswith("PRODUCTION"))
+        workflow = (ROOT / policy["workflow"]).read_text()
+        self.assertIn("branches: [codex/closure-wolo-legacy-replay]", workflow)
+        self.assertIn("--profile archived-historical", workflow)
+        self.assertIn("go-version: '1.24.6'", workflow)
+        self.assertIn("ref: ${{ env.EXPECTED_SOURCE }}", workflow)
+        self.assertIn("contents: read", workflow)
+        self.assertNotIn("contents: write", workflow)
+        self.assertIn("UNDEPLOYED", workflow)
+        self.assertEqual(re.findall(r"^\s+EXPECTED_SOURCE: ([0-9a-f]{40})$", workflow,
+                                    re.MULTILINE), [policy["source"]])
+        self.assertEqual(artifact.profile_policy("legacy-replay")["source"],
+                         "cb24cb2546392c981da8dcac18a04d1df4241330")
+
     def test_runtime_workflow_has_new_pin_and_preserves_frozen_backend_profile(self):
         specification = importlib.util.spec_from_file_location(
             "backend_artifact_source_contract", ROOT / "scripts" / "settlement-artifact.py")

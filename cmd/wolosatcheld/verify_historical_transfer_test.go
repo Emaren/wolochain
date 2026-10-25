@@ -18,7 +18,7 @@ func TestHistoricalAcceptedTransferIntentIsExactAndNonSubstitutable(t *testing.T
   ChainID:"wolo-1",TxHash:acceptedEscrow100Hash,
   Height:acceptedEscrow100Height,Sender:"original_sender",
   Recipient:"original_recipient",AmountUWolo:"100000000",
-  Memo:"immutable-original-journal-memo",JournalIdentitySHA256:strings.Repeat("a",64),
+  Memo:"immutable-original-journal-memo",HistoricalAsOfUTC:"2026-07-01T00:00:00Z",JournalIdentitySHA256:strings.Repeat("a",64),
  }
  if !verifiedHistoricalIntent(baseline) {t.Fatal("expected structural baseline rejected")}
  variations:=[]func(*ExpectedHistoricalTransfer){
@@ -35,6 +35,9 @@ func TestHistoricalAcceptedTransferIntentIsExactAndNonSubstitutable(t *testing.T
   func(x *ExpectedHistoricalTransfer){x.Recipient=x.Sender},
   func(x *ExpectedHistoricalTransfer){x.Memo=""},
   func(x *ExpectedHistoricalTransfer){x.JournalIdentitySHA256=strings.Repeat("0",64)},
+  func(x *ExpectedHistoricalTransfer){x.HistoricalAsOfUTC=""},
+  func(x *ExpectedHistoricalTransfer){x.HistoricalAsOfUTC="2026-07-01T00:00:00+00:00"},
+  func(x *ExpectedHistoricalTransfer){x.HistoricalAsOfUTC="2035-07-01T00:00:00Z"},
   func(x *ExpectedHistoricalTransfer){x.JournalIdentitySHA256="NOT_A_DIGEST"},
  }
  for i,change:=range variations {v:=baseline;change(&v);if verifiedHistoricalIntent(v){t.Errorf("substitution %d accepted",i)}}
@@ -71,7 +74,7 @@ func TestHistoricalAcceptedTransferCommandCannotStartServiceOrLeakSensitivePaths
   Version:1,Scope:"legacy-settlement-accepted-escrow-100",ChainID:"wolo-1",
   TxHash:acceptedEscrow100Hash,Height:acceptedEscrow100Height,
   Sender:"original_sender",Recipient:"original_recipient",AmountUWolo:"100000000",
-  Memo:"durable-request",JournalIdentitySHA256:strings.Repeat("1",64),
+  Memo:"durable-request",HistoricalAsOfUTC:"2026-07-01T00:00:00Z",JournalIdentitySHA256:strings.Repeat("1",64),
  })
  anchorPath:=file("operator-anchor.json",string(anchor))
  expectedPath:=file("journal-context.json",string(goodExpected))
@@ -116,7 +119,7 @@ func TestHistoricalOriginalPrincipalMustBeAtFeeOffsetOrdinalOne(t *testing.T) {
   Height:acceptedEscrow100Height,Sender:"wolo1originalsender",
   Recipient:"wolo1originalrecipient",AmountUWolo:"100000000",
   Memo:"original-immutable-settlement-memo",
-  JournalIdentitySHA256:strings.Repeat("A",64),
+  HistoricalAsOfUTC:"2026-07-01T00:00:00Z",JournalIdentitySHA256:strings.Repeat("A",64),
  }
  zero,one:=uint32(0),uint32(1)
  fee:=satchel.Transfer{Sender:expected.Sender,Recipient:"wolo1sdkfeecollector",Denom:satchel.Denom,Amount:"250000"}

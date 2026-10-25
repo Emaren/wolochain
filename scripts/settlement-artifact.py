@@ -31,6 +31,9 @@ BACKEND_SOURCE = "8c509e8f62ca3ec60711dc2654a03b12f22b0773"
 RUNTIME_SOURCE = "72a3bca5f66aff51e1c6577b914d64403785d635"
 LEGACY_REPLAY_SOURCE = "cb24cb2546392c981da8dcac18a04d1df4241330"
 LEGACY_REPLAY_WORKFLOW_PATH = ".github/workflows/settlement-legacy-replay-artifact.yml"
+# Exact immutable archive-capable Go implementation source, not future branch HEAD.
+ARCHIVED_HISTORICAL_SOURCE = "c575b175e6dc74c720479a04e41490a842032203"
+ARCHIVED_HISTORICAL_WORKFLOW_PATH = ".github/workflows/archived-wolosatcheld-artifact.yml"
 BACKEND_WORKFLOW_PATH = ".github/workflows/custody-backend-satcheld-exact-artifact.yml"
 PINNED_GO_VERSION = "go1.24.6"
 EXPECTED_REPOSITORY = "Emaren/wolochain"
@@ -77,8 +80,18 @@ def _require(condition: bool, message: str) -> None:
 
 def profile_policy(profile: str = "legacy526") -> dict:
     """Only reviewed source pins; callers cannot supply an arbitrary revision."""
-    _require(type(profile) is str and profile in ("legacy526", "composed-satcheld", "custody-backend", "custody-runtime", "legacy-replay"),
+    _require(type(profile) is str and profile in ("legacy526", "composed-satcheld", "custody-backend", "custody-runtime", "legacy-replay", "archived-historical"),
              "unknown artifact profile")
+    if profile == "archived-historical":
+        _require(re.fullmatch(r"[0-9a-f]{40}", ARCHIVED_HISTORICAL_SOURCE) is not None,
+                 "NONACCEPTING archived verifier source pin missing")
+        return {
+            "source": ARCHIVED_HISTORICAL_SOURCE, "binary": "wolosatcheld",
+            "main_path": "github.com/emaren/wolochain/cmd/wolosatcheld",
+            "package": "./cmd/wolosatcheld",
+            "workflow": ARCHIVED_HISTORICAL_WORKFLOW_PATH,
+            "purpose": "UNDEPLOYED_HISTORICAL_NONAUTHORIZING_VERIFIER_ONLY",
+        }
     if profile == "legacy-replay":
         _require(re.fullmatch(r"[0-9a-f]{40}", LEGACY_REPLAY_SOURCE) is not None,
                  "NONACCEPTING legacy replay source: reviewed implementation pin unavailable")
@@ -366,7 +379,7 @@ def load_manifest(path: str | Path, expected_sha256: str | None = None) -> dict:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("command", choices=("create", "verify"))
-    parser.add_argument("--profile", choices=("legacy526", "composed-satcheld", "custody-backend", "custody-runtime", "legacy-replay"), default="legacy526")
+    parser.add_argument("--profile", choices=("legacy526", "composed-satcheld", "custody-backend", "custody-runtime", "legacy-replay", "archived-historical"), default="legacy526")
     for argument in ("source-dir", "binary", "manifest", "builder-commit", "repository",
                      "run-id", "run-attempt", "workflow-ref", "workflow-sha"):
         parser.add_argument("--" + argument, required=True)
