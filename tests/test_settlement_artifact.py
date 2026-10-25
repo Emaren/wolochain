@@ -143,6 +143,33 @@ class ArtifactFixture(unittest.TestCase):
     def test_real_clean_candidate_verifies(self):
         self.verify(self.candidate())
 
+    def test_legacy_replay_profile_is_pinned_and_cannot_relabel_historical_source(self):
+        profile = "legacy-replay"
+        policy = self.artifact.profile_policy(profile)
+        self.assertEqual(policy["source"], "cb24cb2546392c981da8dcac18a04d1df4241330")
+        self.assertNotEqual(policy["source"], self.production_source)
+        identity = dict(self.identity, workflow_ref="Emaren/wolochain/"
+                        + self.artifact.LEGACY_REPLAY_WORKFLOW_PATH
+                        + "@refs/heads/codex/closure-wolo-legacy-replay")
+        # The tiny fixture exercises the same strict binary/source verifier;
+        # it is never presented as a Wolo binary or financial authority.
+        with mock.patch.object(self.artifact, "LEGACY_REPLAY_SOURCE", self.revision):
+            manifest = self.artifact.create_manifest(self.binary, self.rebuild,
+                                                     self.source, identity, profile=profile)
+            self.artifact.verify_manifest(manifest, self.binary, self.source,
+                                          identity, profile=profile)
+            self.assertTrue(all(value is False for value in manifest["authority"].values()))
+            with self.assertRaises(self.artifact.ArtifactError):
+                self.artifact.verify_manifest(manifest, self.binary, self.source,
+                                              self.identity, profile="legacy526")
+            with mock.patch.object(self.artifact, "LEGACY_REPLAY_SOURCE", "f" * 40):
+                with self.assertRaises(self.artifact.ArtifactError):
+                    self.artifact.verify_manifest(manifest, self.binary, self.source,
+                                                  identity, profile=profile)
+        with mock.patch.object(self.artifact, "LEGACY_REPLAY_SOURCE", "UNAVAILABLE"):
+            with self.assertRaisesRegex(self.artifact.ArtifactError, "NONACCEPTING"):
+                self.artifact.profile_policy(profile)
+
     def test_binary_checksum_mismatch_is_rejected(self):
         manifest = self.candidate()
         changed = self.changed_binary("changed-binary", self.binary.read_bytes() + b"unexpected trailer")
