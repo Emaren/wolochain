@@ -1904,6 +1904,12 @@ func (cfg settlementConfig) executeSettlement(ctx context.Context, request settl
 				replayed.IdempotentReplay = true
 				return replayed, nil
 			}
+			// The historical writer could persist a retryable RPC timeout AFTER
+			// invoking bank-send, with no returned tx hash. Only a narrowly
+			// proved pre-signing refusal may be retried after this upgrade.
+			if !legacySettlementPreflightRetryProven(stored.Response, normalized.SignerRole) {
+				return quarantineAmbiguousLegacySettlementResponse(stored.Response), nil
+			}
 		} else if !errors.Is(readErr, os.ErrNotExist) {
 			return settlementExecuteResponse{
 				OK:          false,
