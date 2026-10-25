@@ -58,7 +58,7 @@ class BackendArtifactSourceContractTests(unittest.TestCase):
         self.assertIn("contents: read", workflow)
         self.assertNotIn("contents: write", workflow)
         self.assertIn("UNDEPLOYED", workflow)
-        self.assertEqual(re.findall(r"^\\s+EXPECTED_SOURCE: ([0-9a-f]{40})$", workflow,
+        self.assertEqual(re.findall(r"^\s+EXPECTED_SOURCE: ([0-9a-f]{40})$", workflow,
                                     re.MULTILINE), [policy["source"]])
         self.assertEqual(artifact.profile_policy("legacy-replay")["source"],
                          "cb24cb2546392c981da8dcac18a04d1df4241330")
