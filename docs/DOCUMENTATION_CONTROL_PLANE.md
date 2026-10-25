@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `review/20261025-legacy-ambiguous-replay-guard-red` at `e84d74e78044a63174dd43d4be39d5f0af7c6426`
+Implementation baseline: `review/20261025-legacy-ambiguous-replay-guard-red` at `64ee0b1599caad6d5f36a3722a3960fbb75d50e8`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
