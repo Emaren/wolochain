@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "520b8bd761e42dba18039e3b60978383a5f3564af3171343986e678bb58e98ca",
+      "sha256": "a56d56b5b36989097709cd58e4877f50903066865ceebd21c74051a7f2dd66f0",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1067,7 +1067,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "review/20261025-archive-only-historical-transfer-time",
-    "commit": "ee7bfc29ae893271a7496ce6ed925395f6f4d86b"
+    "commit": "eef1d38be264d11b6b27a12f015b63fb70c024a6"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
