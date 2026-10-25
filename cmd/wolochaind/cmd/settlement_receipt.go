@@ -90,6 +90,9 @@ func (cfg settlementConfig) verifySettlementConfirmationReplay(ctx context.Conte
 			if !found {
 				return errSettlementReceiptState
 			}
+			if ctx.Err() != nil {
+				return ctx.Err()
+			}
 			return nil
 		}
 	}

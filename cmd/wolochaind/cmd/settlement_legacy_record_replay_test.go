@@ -11,7 +11,7 @@ import (
 func TestLegacyReplayCannotPromoteUnverifiedStoredSuccess(t *testing.T) {
 	t.Parallel()
 	for _, role := range []string{settlementSignerRole, settlementEscrowSignerRole} {
-		for _, kind := range []string{"old-confirmed", "missing-hash", "wrong-chain", "wrong-owner", "wrong-amount", "bad-fingerprint", "failed-code", "missing-receipt", "duplicate-response"} {
+		for _, kind := range []string{"old-confirmed", "missing-hash", "wrong-chain", "wrong-owner", "wrong-amount", "bad-fingerprint", "failed-code", "missing-receipt", "duplicate-response", "failed-confirmed", "accepted-confirmed"} {
 			t.Run(role+"/"+kind, func(t *testing.T) {
 				cfg := settlementConfig{StateDir: t.TempDir(), ChainID: settlementCanonicalChainID}
 				request := settlementExecuteRequest{RequestID: "legacy-" + role + "-" + kind, ToAddress: c4Recipient, AmountUWolo: "700", Memo: c4Memo}
@@ -37,6 +37,10 @@ func TestLegacyReplayCannotPromoteUnverifiedStoredSuccess(t *testing.T) {
 					record.Fingerprint = strings.Repeat("0", 64)
 				case "failed-code":
 					record.Response.Code = 9
+				case "failed-confirmed":
+					record.Response.OK = false
+				case "accepted-confirmed":
+					record.Response.Status = "accepted"
 				}
 				path := cfg.requestRecordPath(request.RequestID)
 				if err := writeSettlementStoredResult(path, record); err != nil {

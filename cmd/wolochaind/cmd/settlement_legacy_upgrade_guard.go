@@ -15,8 +15,12 @@ func (cfg settlementConfig) guardSettlementStoredReplay(ctx context.Context, rec
 		response.SignerRole != role || response.ToAddress != request.ToAddress ||
 		response.AmountUWolo != request.AmountUWolo {
 		code = "STATE_FILE_INVALID"
+	} else if (response.Status == "confirmed" && !response.OK) ||
+		(response.ConfirmationStatus == "confirmed" && (!response.OK || response.Status != "confirmed")) {
+		code = "STATE_FILE_INVALID"
 	} else if response.OK {
 		if len(response.TxHash) != 64 || !isHexHash(response.TxHash) || response.Code != 0 || response.Retryable ||
+			!isWoloAddress(response.SignerAddress, settlementCanonicalPrefix) ||
 			(response.Status != "accepted" && response.Status != "confirmed") {
 			code = "STATE_FILE_INVALID"
 		} else if response.Status == "confirmed" {
