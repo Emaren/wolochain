@@ -15,6 +15,64 @@ sensitivity: "restricted"
 
 # WoloChain Mainnet Settlement Runbook
 
+## October 25, 2026 — held legacy replay qualification, no live upgrade
+
+The held descendant of [PR #104](https://github.com/Emaren/wolochain/pull/104)
+adds source-only corrections at `c2fd512`, `8be2d93` and
+`cb24cb2546392c981da8dcac18a04d1df4241330`. No production process, financial
+record, signer, keyring or consensus executable was accessed or changed by this
+qualification. Issue #5 remains HOLD; source tests do not reconcile a payment.
+
+**Proven defects and repair:** a request lock previously expired by timestamp.
+With one caller paused in preflight, a second caller could delete its old lock
+before either caller persisted a prebroadcast marker. Deterministic payout and
+escrow tests observed two synthetic CLI sends for one request. Request, grouped
+run and challenge locks now remain exclusively owned regardless of age. An
+abandoned lock is interruption evidence, not authority to retry. The service
+continues to report the existing `*_IN_PROGRESS` refusal while that lock exists;
+its `retryable` field permits another status attempt, never lock stealing.
+
+Stored success also bypassed the current confirmation contract. Replay now
+checks the journal fingerprint and exact chain/request/role/recipient/amount,
+rejects contradictory execution/confirmation states, and requires a canonical
+hash and zero execution code for success. Historical `confirmed` records with
+no exact-confirmation marker become `LEGACY_CONFIRMATION_UNVERIFIED`, with no
+signing or file rewrite. A newer confirmed replay also needs its existing
+durable receipt owner and conflict-free request history; a missing/conflicting
+receipt produces `TX_RECEIPT_UNAVAILABLE`. Replay never creates a receipt to
+retroactively bless old history. Invalid journal structure is `STATE_FILE_INVALID`.
+The reader bounds request records to 64 KiB, requires a regular file and rejects
+duplicate JSON members, including decoder case aliases. Every held original
+record remains byte-for-byte unchanged. Valid accepted broadcasts stay distinct
+from confirmed payments and are never rebroadcast.
+
+The #104 role-specific, proven pre-signing failure allowlist is retained.
+Regression tests show one successful synthetic execution from a genuine old
+balance refusal and no second signing call after restart/replay. Ambiguous old
+RPC errors, lost signer replies and prebroadcast holds remain nonretryable.
+The retained confirmation registry owns one physical message/coin effect per
+request only within its configured state tree; it does not establish global
+financial solvency, independently authenticated consensus or original history.
+
+**Artifact boundary:** the named `legacy-replay` profile reuses
+`build-settlement-artifact.sh` and `settlement-artifact.py`, pinned to immutable
+implementation `cb24cb2546392c981da8dcac18a04d1df4241330`, Go 1.24.6,
+Linux/amd64, CGO off and the existing exact build recipe. Its separate no-deploy
+workflow verifies two fresh-cache builds, clean embedded VCS metadata and a
+machine-readable manifest. All financial/production authority fields remain
+false. Historical `bdbce253`, old live bytes and their release controllers are
+unchanged; this candidate cannot be substituted into a historical permit.
+
+**Recovery boundary:** never remove a stale lock, discard a request/receipt or
+restore an old state tree to make a retry possible. Prove the original writer
+has stopped, independently reconcile the original chain effect and obtain
+separate owner authorization for any recovery. A code-only rollback to legacy
+semantics requires continued producer fencing; legacy code cannot enforce these
+newer receipt/uncertainty guards. The two settlement services keep independent
+roles/state, and consensus remains separately executable. No new source result
+resolves the accepted 100 WOLO, claim #889, refund #8477, shared claim ordinals,
+external liabilities, bank solvency, historical finality or recovery evidence.
+
 ## October 18, 18:12 UTC — financial release HOLD and six-control handoff
 
 The **[financial release checklist](settlement-contracts/financial-release-checklist.json)**
