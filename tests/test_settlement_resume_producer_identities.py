@@ -34,6 +34,11 @@ class ProducerIdentityTests(unittest.TestCase):
         self.reads = 0
         self.drift_at = None
         self.invalid_env = False
+        self.omit_service_mainpid = False
+        self.omit_service_execstart = False
+        self.omit_timer_fragment = False
+        self.timer_service_field = False
+        self.extra_service_optional_field = False
         self.files = {u: Path(self.tmp.name) / (u + ".gate") for u in self.units}
         for name, value in (
             ("UNITS", self.units), ("APPS", (self.app,)),
@@ -56,30 +61,46 @@ class ProducerIdentityTests(unittest.TestCase):
             self.addCleanup(p.stop)
 
     def properties(self, unit):
-        p = {name: "" for name in identity.CONFIG_PROPERTIES}
-        p.update({"Id": unit, "FragmentPath": "/etc/systemd/system/" + unit,
-                  "ActiveState": self.active[unit],
-                  "MainPID": "100" if self.active[unit] == "active" and unit == self.app else "0",
-                  "DropInPaths": str(self.files[unit]) if self.gated else "",
-                  "EnvironmentFiles": ("/etc/demo.env (ignore_errors=no)"
-                                       if unit == self.app else ""),
-                  "Environment": "API_TOKEN=DO_NOT_LEAK_THIS_SECRET",
-                  "ExecStart": "{ path=/opt/demo; argv[]=/opt/demo ; }",
-                  "Restart": ""})
-        if self.invalid_env and unit == self.app:
-            p["EnvironmentFiles"] = '"/etc/file name" (ignore_errors=yes)'
+        # Exactly mirror observed hel1 omissions: timers expose only common
+        # unit properties; optional service commands are absent when unset.
+        p = {"Id": unit, "FragmentPath": "/etc/systemd/system/" + unit,
+             "ActiveState": self.active[unit],
+             "DropInPaths": str(self.files[unit]) if self.gated else ""}
+        if unit != self.timer:
+            p.update({
+                "MainPID": "100" if self.active[unit] == "active" and
+                                     unit == self.app else "0",
+                "ExecStart": "{ path=/opt/demo; argv[]=/opt/demo ; }",
+                "Environment": "API_TOKEN=DO_NOT_LEAK_THIS_SECRET",
+                "User": "root",
+            })
+            if unit == self.app:
+                p["EnvironmentFiles"] = "/etc/demo.env (ignore_errors=no)"
+                if self.invalid_env:
+                    p["EnvironmentFiles"] = '"/etc/file name" (ignore_errors=yes)'
+            if self.extra_service_optional_field:
+                p["ExecStartPre"] = "{ path=/opt/preflight; argv[]=/opt/preflight ; }"
+            if self.omit_service_mainpid:
+                p.pop("MainPID")
+            if self.omit_service_execstart:
+                p.pop("ExecStart")
+        elif self.timer_service_field:
+            p["ExecStart"] = "{ path=/opt/unexpected ; }"
+        if unit == self.timer and self.omit_timer_fragment:
+            p.pop("FragmentPath")
         return p
 
     def show(self, unit, runner):
         p = self.properties(unit)
         return {key: p[key] for key in ("Id", "FragmentPath", "DropInPaths",
-                                       "ActiveState", "MainPID")}
+                                       "ActiveState", "MainPID") if key in p}
 
     def runner(self, args):
         self.assertEqual(args[:3], ["systemctl", "--no-pager", "show"])
         self.assertEqual(args[4], "--")
         p = self.properties(args[5])
-        return "\n".join(key + "=" + p[key] for key in identity.CONFIG_PROPERTIES)
+        return "\n".join(key + "=" + p[key] for key in identity.CONFIG_PROPERTIES
+                         if key in p)
 
     def private_read(self, path, source=False):
         self.assertTrue(source)
@@ -105,6 +126,41 @@ class ProducerIdentityTests(unittest.TestCase):
         self.assertEqual(report["originally_active_apps"], [self.app])
         self.assertEqual(report["originally_active_timers"], [self.timer])
         self.assertFalse(report["resume_authorized"])
+
+    def test_real_hel1_timer_and_unset_service_fields(self):
+        self.assertNotIn("MainPID", self.properties(self.timer))
+        self.assertNotIn("ExecStart", self.properties(self.timer))
+        self.assertNotIn("EnvironmentFiles", self.properties(self.once))
+        self.assertNotIn("ExecStartPost", self.properties(self.app))
+        capture = self.capture()
+        self.assertEqual(set(capture["units"]), set(self.units))
+        self.assertFalse(capture["financial_release_authorized"])
+
+    def test_missing_required_service_mainpid_refused(self):
+        self.omit_service_mainpid = True
+        with self.assertRaisesRegex(m.MaintenanceError, "PRODUCER_PROPERTIES_INCOMPLETE"):
+            self.capture()
+
+    def test_missing_required_service_execstart_refused(self):
+        self.omit_service_execstart = True
+        with self.assertRaisesRegex(m.MaintenanceError, "PRODUCER_PROPERTIES_INCOMPLETE"):
+            self.capture()
+
+    def test_missing_required_timer_fragment_refused(self):
+        self.omit_timer_fragment = True
+        with self.assertRaisesRegex(m.MaintenanceError, "PRODUCER_PROPERTIES_INCOMPLETE"):
+            self.capture()
+
+    def test_unexpected_timer_execution_property_refused(self):
+        self.timer_service_field = True
+        with self.assertRaisesRegex(m.MaintenanceError, "UNEXPECTED_TIMER_EXECUTION_PROPERTY"):
+            self.capture()
+
+    def test_optional_service_property_added_after_capture_is_drift(self):
+        packet = self.capture()
+        self.extra_service_optional_field = True
+        with self.assertRaisesRegex(m.MaintenanceError, "PRODUCER_CONFIGURATION_DRIFT"):
+            identity.verify_producer_identities(packet, runner=self.runner)
 
     def test_stale_capture_receipt_fails_closed(self):
         packet = self.capture()
