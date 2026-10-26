@@ -35,7 +35,6 @@ class ProducerIdentityTests(unittest.TestCase):
         self.drift_at = None
         self.invalid_env = False
         self.files = {u: Path(self.tmp.name) / (u + ".gate") for u in self.units}
-        self.original_gate_bytes = m.expected_dropin()
         for name, value in (
             ("UNITS", self.units), ("APPS", (self.app,)),
             ("ONESHOTS", (self.once,)), ("TIMERS", (self.timer,)),
@@ -44,6 +43,7 @@ class ProducerIdentityTests(unittest.TestCase):
             p = patch.object(m, name, value)
             p.start()
             self.addCleanup(p.stop)
+        self.original_gate_bytes = m.expected_dropin()
         for name, value in (
             ("no_jobs", lambda runner: None),
             ("scope_digest", lambda: "a" * 64),
