@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import base64
+import binascii
 import hashlib
 import json
 import os
@@ -174,7 +175,8 @@ def review(enrollment_raw, packet_raw, *, pinned_enrollment_sha256,
             "OWNER_PACKET_SCHEMA_OR_KEY_MISMATCH")
     q = packet["request"]
     require(type(q) is dict and set(q) == REQUEST_KEYS and q["schema"] == SCHEMA
-            and q["chain_id"] == "wolo-1" and q["phase"] in OPS
+            and q["chain_id"] == "wolo-1" and type(q["phase"]) is str
+            and q["phase"] in OPS
             and q["operation"] == OPS[q["phase"]], "SIGNED_OPERATION_UNAPPROVED")
     require(type(q["source_commit"]) is str and HEX40.fullmatch(q["source_commit"])
             and all(hex64(q[k]) for k in (
@@ -193,7 +195,7 @@ def review(enrollment_raw, packet_raw, *, pinned_enrollment_sha256,
             <= timedelta(seconds=WINDOW), "OWNER_PHASE_WINDOW_INVALID")
     try:
         sig = base64.b64decode(packet["signature_b64"], validate=True)
-    except (ValueError, TypeError) as exc:
+    except (ValueError, TypeError, binascii.Error) as exc:
         raise AuthorityHold("SIGNATURE_ENCODING_INVALID") from exc
     require(len(sig) == 64, "ED25519_SIGNATURE_LENGTH_INVALID")
     message = DOMAIN + canonical({"owner_key_id": e["owner_key_id"], "request": q})
