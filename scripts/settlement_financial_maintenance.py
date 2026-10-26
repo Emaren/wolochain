@@ -122,6 +122,11 @@ def bounded_runner(runner, permit):
     return call
 
 
+def source_mode_allowed(mode, *, source=False):
+    """Allow root:root code at 0600/0640/0644, but secrets only at 0600."""
+    return mode in (0o600, 0o640, 0o644) if source else mode == 0o600
+
+
 def private_read(path, limit=65536, source=False):
     """Stable root-owned no-follow file; secrets 0600, pinned sources 0600/0640/0644."""
     path = Path(path)
@@ -136,7 +141,7 @@ def private_read(path, limit=65536, source=False):
         require(stat.S_ISREG(a.st_mode) and a.st_uid == a.st_gid == 0 and
                 # 0640 is strictly more private than the existing permitted
                 # root:root 0644 source mode; it cannot expand read rights.
-                stat.S_IMODE(a.st_mode) in ((0o600, 0o640, 0o644) if source else (0o600,)) and a.st_nlink == 1 and
+                source_mode_allowed(stat.S_IMODE(a.st_mode), source=source) and a.st_nlink == 1 and
                 0 <= a.st_size <= limit, "ROOT_PRIVATE_REGULAR_FILE_REQUIRED")
         raw = os.read(fd, limit + 1)
         b = os.fstat(fd)
