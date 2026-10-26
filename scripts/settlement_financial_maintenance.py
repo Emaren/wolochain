@@ -1171,9 +1171,13 @@ def main(argv=None):
                           "financial_release_authorized": False}))
         return 0
     except (MaintenanceError, OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as exc:
-        from settlement_solo_owner_intent_review import AuthorityHold
-        from settlement_maintenance_nonce_store import ReservationRefused
-        reason = str(exc) if isinstance(exc, (MaintenanceError, AuthorityHold, ReservationRefused)) else "SAFE_OPERATION_UNAVAILABLE"
+        # This module is also loaded by absolute path for read-only inspections.
+        # Error reporting must not depend on optional authority imports resolving.
+        scoped_authority_error = (type(exc).__module__, type(exc).__name__) in {
+            ("settlement_solo_owner_intent_review", "AuthorityHold"),
+            ("settlement_maintenance_nonce_store", "ReservationRefused"),
+        }
+        reason = str(exc) if isinstance(exc, MaintenanceError) or scoped_authority_error else "SAFE_OPERATION_UNAVAILABLE"
         print(json.dumps({"status": "BLOCKED", "reason": reason, "hold_must_remain": True,
                           "financial_release_authorized": False}), file=sys.stderr)
         return 2
