@@ -79,6 +79,7 @@ class ReleaseFrontierTests(unittest.TestCase):
             self.assertEqual(report[label]["head"], HEAD)
             self.assertEqual(report[label]["source_ci"], "PASS")
             self.assertEqual(report[label]["required_check_completeness"], "NOT_EVALUATED")
+            self.assertEqual(report[label]["scope"], "REQUESTED_PR_CHECKS_NOT_PRODUCTION_HEALTH_OR_RELEASE_BLOCKER")
             self.assertEqual(report[label]["provenance"], "TOOL_OBSERVED")
         with patch.object(F, "github_sources", return_value=report): result = F.frontier(ROOT, refresh_github=True, now=NOW)
         self.assertEqual(result["global_solvency"], "UNKNOWN")

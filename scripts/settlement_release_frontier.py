@@ -197,6 +197,7 @@ def github_sources(now, api=gh_api):
             after = api(endpoint, projection, deadline)
             require(after == pr, "GITHUB_SOURCE_CHANGED_DURING_REFRESH")
             result[label] = {**pr, "provenance": "TOOL_OBSERVED", "observed_at_utc": now.isoformat(),
+                             "scope": "REQUESTED_PR_CHECKS_NOT_PRODUCTION_HEALTH_OR_RELEASE_BLOCKER",
                              "check_counts": counts, "required_check_completeness": "NOT_EVALUATED", "source_ci": "FAIL" if counts["failed"] else
                              "PENDING" if counts["pending"] else "PASS" if counts["success"] else "UNKNOWN"}
         except (AuditFailure, FrontierFailure, OSError, ValueError, subprocess.SubprocessError):

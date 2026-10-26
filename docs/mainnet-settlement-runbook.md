@@ -2026,7 +2026,11 @@ timeout or oversized response yields UNKNOWN. There is one 25-second total
 budget, an eight-second per-process ceiling and a 256-KiB response ceiling;
 timeouts kill and reap the request process group. No retries or SSH occur.
 Observed successful checks do not establish that every required check exists;
-`required_check_completeness=NOT_EVALUATED` makes that limit explicit.
+`required_check_completeness=NOT_EVALUATED` makes that limit explicit. These
+are the requested PR heads, not current production health or an inferred release
+blocker list. A stale PR can have red checks even when its changes are already
+in the certified baseline; its source disposition must be checked separately.
+The canonical financial controls are never derived from PR check counts.
 
 ```sh
 PYTHONDONTWRITEBYTECODE=1 python3 scripts/settlement_maintenance_board.py \
