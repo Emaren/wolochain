@@ -167,6 +167,8 @@ jobs:
         env:
           PYTHONDONTWRITEBYTECODE: '1'
         run: python3 -m unittest discover -s tests -p 'test_settlement_solo_runtime.py' -v
+      - name: Cross-repo HD-only Wolo 8094 wire surface adversarial admission (NONAUTHORIZING)
+        run: python3 -m unittest discover -s tests -p 'test_settlement_hd_satchel_wire_review.py' -v
 
       - name: Financial six-control evidence HOLD audit (offline, never approval)
         run: |
