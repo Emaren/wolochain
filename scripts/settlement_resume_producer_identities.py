@@ -21,6 +21,13 @@ CONFIG_PROPERTIES = (
     "WorkingDirectory", "RootDirectory", "RootImage", "User", "Group",
     "LoadCredential", "SetCredential", "BindPaths", "BindReadOnlyPaths",
 )
+# systemctl show intentionally omits unsupported properties (especially
+# service execution properties on .timer units) and optional unset values.
+# Production hel1 demonstrated these omissions on all 18 protected units.
+# Require the unit-type-specific identity core, and SHA-bind the *exact*
+# present-property map; never fabricate omitted values as empty strings.
+COMMON_REQUIRED = frozenset(("Id", "FragmentPath", "DropInPaths", "ActiveState"))
+SERVICE_REQUIRED = COMMON_REQUIRED | frozenset(("MainPID", "ExecStart"))
 STABLE_PROPERTIES = tuple(p for p in CONFIG_PROPERTIES
                           if p not in ("ActiveState", "MainPID", "Id"))
 ENVFILE = re.compile(r"(/[^\s]+) \(ignore_errors=(?:yes|no)\)")
@@ -47,8 +54,20 @@ def read_properties(unit, runner):
         require(key in CONFIG_PROPERTIES and key not in fields,
                 "PRODUCER_PROPERTIES_INVALID")
         fields[key] = value
-    require(set(fields) == set(CONFIG_PROPERTIES) and fields["Id"] == unit,
+    expected = SERVICE_REQUIRED if unit in maintenance.APPS + maintenance.ONESHOTS else COMMON_REQUIRED
+    require(unit in maintenance.UNITS and expected.issubset(fields) and
+            fields.get("Id") == unit and
+            fields.get("FragmentPath") and
+            fields.get("ActiveState") in ("active", "inactive") and
+            (unit in maintenance.TIMERS or
+             (fields.get("ExecStart") and fields.get("MainPID", "").isdigit())),
             "PRODUCER_PROPERTIES_INCOMPLETE")
+    # Timer units must not acquire service-only execution properties: accept
+    # only known systemd timer/common fields, never an unchecked property
+    # expansion that could silently broaden the signed resume scope.
+    if unit in maintenance.TIMERS:
+        require(set(fields).issubset(COMMON_REQUIRED),
+                "UNEXPECTED_TIMER_EXECUTION_PROPERTY")
     return fields
 
 
@@ -64,8 +83,11 @@ def env_file_paths(value):
 
 def _configuration(unit, fields, runner, *, allow_owned_gate):
     basic = maintenance.show(unit, runner)
-    for key in ("Id", "FragmentPath", "DropInPaths", "ActiveState", "MainPID"):
+    for key in ("Id", "FragmentPath", "DropInPaths", "ActiveState"):
         require(fields[key] == basic.get(key), "PRODUCER_CHANGED_DURING_SAMPLE")
+    if unit not in maintenance.TIMERS:
+        require(fields["MainPID"] == basic.get("MainPID"),
+                "PRODUCER_CHANGED_DURING_SAMPLE")
     require(basic["ActiveState"] in ("active", "inactive") and
             (unit not in maintenance.ONESHOTS or
              (basic["ActiveState"] == "inactive" and basic["MainPID"] == "0")),
@@ -89,7 +111,7 @@ def _configuration(unit, fields, runner, *, allow_owned_gate):
                 not maintenance.dropin(unit).is_symlink(),
                 "EXISTING_GATE_CANNOT_BE_PRESTATE")
 
-    envs = env_file_paths(fields["EnvironmentFiles"])
+    envs = env_file_paths(fields.get("EnvironmentFiles", ""))
     paths = [("fragment", fragment)] + [("dropin", p) for p in dropins] + [
         ("envfile", p) for p in envs]
     require(len(paths) <= 50 and len({p for _, p in paths}) == len(paths),
@@ -104,7 +126,10 @@ def _configuration(unit, fields, runner, *, allow_owned_gate):
         raw = maintenance.private_read(source, source=True)
         files.append((kind, sha(str(source).encode()), sha(raw)))
     stable = {key: fields[key] for key in STABLE_PROPERTIES
-              if key != "DropInPaths"}
+              if key != "DropInPaths" and key in fields}
+    # Preserve absence/presence explicitly. Never collapse "not a timer
+    # property" and "present but empty" to the same signed identity.
+    stable["present_properties"] = sorted(fields)
     stable["effective_non_owned_dropins"] = [sha(p.encode()) for p in dropins]
     stable["source_file_digests"] = files
     return {"configuration_sha256": sha(maintenance.canonical(stable)),
