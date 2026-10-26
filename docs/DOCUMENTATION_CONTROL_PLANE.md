@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `codex/central-financial-frontier` at `fee576e3f887670641ac34262cf64c88c60d774d`
+Implementation baseline: `codex/central-financial-frontier` at `72af4e164a4aef836edb5bd948a6682f89cdc047`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 

@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "10fcb21fdde310a0d3cde65b460a0438e7647c9a500ae340d222e5b6558bb08b",
+      "sha256": "16140ceda0f593fcbf2341c826e4b30653b111def965ea1fe4088e58003b4183",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1067,7 +1067,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "codex/central-financial-frontier",
-    "commit": "fee576e3f887670641ac34262cf64c88c60d774d"
+    "commit": "72af4e164a4aef836edb5bd948a6682f89cdc047"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
