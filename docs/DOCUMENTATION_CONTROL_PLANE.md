@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `review/solo-resume-producer-identity-20261026` at `81fe3a35c20c651a6e16c404eac2a6b811ec3e7e`
+Implementation baseline: `review/solo-resume-producer-identity-20261026` at `4d2189e9db417ab609e8770f5d0e07defa35f5fc`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
