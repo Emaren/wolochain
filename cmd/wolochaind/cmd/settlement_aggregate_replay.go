@@ -52,7 +52,8 @@ func (cfg settlementConfig) settlementRunReplayEvidenceValid(ctx context.Context
 		}
 		leaf, err := readSettlementStoredResult(cfg.requestRecordPath(payout.RequestID))
 		expected := normalizedSettlementRequest{RequestID: payout.RequestID, ToAddress: payout.ToAddress, AmountUWolo: payout.AmountUWolo, Memo: payout.Memo, SignerRole: request.SignerRole}
-		if err != nil || leaf.Request != expected || cfg.guardSettlementStoredReplay(ctx, leaf) != nil {
+		if err != nil || leaf.Request != expected || cfg.guardSettlementStoredReplay(ctx, leaf) != nil ||
+			(leaf.Response.Retryable && !legacySettlementPreflightRetryProven(leaf.Response, request.SignerRole)) {
 			return false
 		}
 		leafResponse := leaf.Response

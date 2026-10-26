@@ -827,6 +827,42 @@ func TestExecuteSettlementChallengeOneNoShowIdempotent(t *testing.T) {
 		t.Fatalf("expected idempotent replay, got %+v", replayed)
 	}
 
+	validStored, stateErr := readSettlementChallengeStoredResult(cfg.challengeRecordPath(request.SettlementRunID))
+	if stateErr != nil {
+		t.Fatal(stateErr)
+	}
+	freshPlan, planErr := cfg.buildSettlementChallengePlan(t.Context(), request)
+	if planErr != nil {
+		t.Fatal(planErr)
+	}
+	if held := cfg.guardSettlementChallengeStoredReplay(t.Context(), validStored, freshPlan.Response); held != nil {
+		t.Fatalf("valid challenge replay rejected: %+v", held)
+	}
+	for _, kind := range []string{"fresh-invalid-allocation", "cached-funding-total", "cached-funding-identity", "cached-participant-count"} {
+		t.Run(kind, func(t *testing.T) {
+			// An otherwise valid, owned payment run cannot authenticate a forged
+			// funding cache or override freshly failed participant allocation.
+			cached := validStored
+			cached.Response.Funding = append([]settlementChallengeFundingResult(nil), validStored.Response.Funding...)
+			current := freshPlan.Response
+			switch kind {
+			case "fresh-invalid-allocation":
+				current.FailureCode = "INVALID_CHALLENGE"
+				current.OK = false
+			case "cached-funding-total":
+				cached.Response.FundingTotalUWolo = "999999"
+			case "cached-funding-identity":
+				cached.Response.Funding[0].FundingTxHash = strings.Repeat("C", 64)
+			case "cached-participant-count":
+				cached.Response.ParticipantCount++
+			}
+			held := cfg.guardSettlementChallengeStoredReplay(t.Context(), cached, current)
+			if held == nil || held.OK || held.Retryable || held.Status != "unverifiable" || held.FundingVerifiedCount != 0 {
+				t.Fatalf("challenge cache escaped fresh funding admission: %+v", held)
+			}
+		})
+	}
+
 	// Losing a durable physical-effect owner cannot be hidden by the final
 	// challenge/run caches. Reconciliation must never call the signer again.
 	receiptPath := filepath.Join(cfg.StateDir, "confirmation-receipts", leftGuaranteeTx+"-0.json")

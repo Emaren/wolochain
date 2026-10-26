@@ -226,3 +226,36 @@ func TestAggregateConfirmedReplayRefusesFoldedForeignOwnershipHistory(t *testing
 		t.Fatal("ambiguous foreign history allowed receipt acquisition")
 	}
 }
+
+func TestAggregateLegacyUnknownLeafCannotReachEscrowTopUp(t *testing.T) {
+	cfg, record := aggregateReceiptFixture(t)
+	cfg.EscrowAutoTopUp = true
+	p := record.Request.Payouts[0]
+	leaf, err := readSettlementStoredResult(cfg.requestRecordPath(p.RequestID))
+	if err != nil {
+		t.Fatal(err)
+	}
+	leaf.Response.OK = false
+	leaf.Response.Status = "failed"
+	leaf.Response.ConfirmationStatus = ""
+	leaf.Response.FailureCode = "RPC_UNREACHABLE"
+	leaf.Response.Retryable = true
+	leaf.Response.TxHash = ""
+	if err := writeSettlementStoredResult(cfg.requestRecordPath(p.RequestID), leaf); err != nil {
+		t.Fatal(err)
+	}
+	record.Response = resetSettlementRunAccounting(record.Response)
+	record.Response.Payouts = []settlementRunPayoutResult{settlementRunPayoutResultFromExecuteResponse(p, leaf.Response)}
+	record.Response.Status = ""
+	record.Response.OK = false
+	record.Response.Retryable = false
+	record.Response.FailureCode = ""
+	record.Response = finalizeSettlementRunResponse(record.Response)
+	if settlementRunResponseIsFinal(record.Response) {
+		t.Fatal("fixture must exercise retry path before top-up")
+	}
+	held := cfg.guardSettlementRunStoredReplay(t.Context(), record)
+	if held == nil || held.OK || held.Retryable || held.Status != "unverifiable" {
+		t.Fatalf("ambiguous attempted leaf can reach auto-top-up: %+v", held)
+	}
+}
