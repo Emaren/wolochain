@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "e6c090514b33fc74b69f60a0ba56e188288bc6461e0d40fc04e27793e3cb517e",
+      "sha256": "19e7a0815f6e8b0cbf5223dfabd64ae500cd235fd56b65965c0cb419adabec38",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1067,7 +1067,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "codex/wolo-p1-evidence-closure",
-    "commit": "6889dd34b28f89a4a1be9cb3622d88609fe56e50"
+    "commit": "84f59c813865a0a83f7a8aeaae7f8c59671eca5b"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
