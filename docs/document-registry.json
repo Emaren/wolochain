@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "d9e474fe995d09c3749703f303cfff50aeae3d952ff290fc985ecd72beeabae2",
+      "sha256": "ab6e4d8e3bd2dd3e72c97545d444b6336975e15caadaca393165b310dffd3583",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1066,8 +1066,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "codex/wolo-p1-evidence-closure",
-    "commit": "6ea9a8278c34136ac1715b6eb9d3536d46430f85"
+    "branch": "codex/one-height-solvency-offline-closure-20261026",
+    "commit": "7f3364bba0032cd59097258748eb209b17e15ad1"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
