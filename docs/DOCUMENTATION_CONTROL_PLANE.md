@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `codex/wolo-p1-evidence-closure` at `84f59c813865a0a83f7a8aeaae7f8c59671eca5b`
+Implementation baseline: `codex/wolo-p1-evidence-closure` at `b635a63d05b6b8a6f020501cb3d7d1f49a6e98dd`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 

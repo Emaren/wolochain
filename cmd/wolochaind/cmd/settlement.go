@@ -2021,6 +2021,9 @@ func (cfg settlementConfig) executeSettlementRun(ctx context.Context, request se
 			}
 
 			if settlementRunResponseIsFinal(stored.Response) {
+				if held := cfg.guardSettlementRunStoredReplay(ctx, stored); held != nil {
+					return *held, nil
+				}
 				replayed := stored.Response
 				replayed.DryRun = false
 				replayed.IdempotentReplay = true
@@ -4434,11 +4437,14 @@ func readSettlementStoredResult(path string) (settlementStoredResult, error) {
 }
 
 func readSettlementRunStoredResult(path string) (settlementRunStoredResult, error) {
-	data, err := os.ReadFile(path)
+	data, err := readSettlementStateBounded(path, settlementReceiptMaxStateBytes)
 	if err != nil {
 		return settlementRunStoredResult{}, err
 	}
 
+	if !chainjson.ValidFolded(data) {
+		return settlementRunStoredResult{}, errSettlementReceiptState
+	}
 	result := settlementRunStoredResult{}
 	if err := json.Unmarshal(data, &result); err != nil {
 		return settlementRunStoredResult{}, err

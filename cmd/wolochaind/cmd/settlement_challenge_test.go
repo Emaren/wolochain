@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"testing"
@@ -823,6 +825,30 @@ func TestExecuteSettlementChallengeOneNoShowIdempotent(t *testing.T) {
 	}
 	if !replayed.OK || !replayed.IdempotentReplay || replayed.Status != "confirmed" {
 		t.Fatalf("expected idempotent replay, got %+v", replayed)
+	}
+
+	// Losing a durable physical-effect owner cannot be hidden by the final
+	// challenge/run caches. Reconciliation must never call the signer again.
+	receiptPath := filepath.Join(cfg.StateDir, "confirmation-receipts", leftGuaranteeTx+"-0.json")
+	originalReceipt, readErr := os.ReadFile(receiptPath)
+	if readErr != nil {
+		t.Fatal(readErr)
+	}
+	if err := os.Remove(receiptPath); err != nil {
+		t.Fatal(err)
+	}
+	held, heldErr := cfg.executeSettlementChallenge(t.Context(), request)
+	if heldErr != nil || held.OK || held.Retryable || held.Status != "unverifiable" || held.ConfirmedTransferCount != 0 ||
+		(held.Run != nil && (held.Run.OK || held.Run.ConfirmedPayoutCount != 0)) {
+		t.Fatalf("challenge hid missing effect owner: %+v %v", held, heldErr)
+	}
+	for _, transfer := range held.Transfers {
+		if transfer.OK || transfer.Status == "confirmed" {
+			t.Fatalf("nested payment survived: %+v", transfer)
+		}
+	}
+	if err := os.WriteFile(receiptPath, originalReceipt, 0600); err != nil {
+		t.Fatal(err)
 	}
 
 	audit, err := cfg.auditSettlementChallenge(t.Context(), "challenge-noshow-run")

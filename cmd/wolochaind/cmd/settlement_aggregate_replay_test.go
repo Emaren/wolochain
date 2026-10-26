@@ -106,3 +106,75 @@ func TestAggregateJournalsRejectAliasSymlinkAndOversizeButPreserveLargeRecords(t
 		})
 	}
 }
+
+func aggregateReceiptFixture(t *testing.T) (settlementConfig, settlementRunStoredResult) {
+	t.Helper()
+	cfg := settlementConfig{StateDir: t.TempDir(), ChainID: settlementCanonicalChainID}
+	request := settlementRunRequest{SettlementRunID: "current-aggregate", Memo: c4Memo, Payouts: []settlementRunPayoutInput{{RequestID: "current-leaf", ToAddress: c4Recipient, AmountUWolo: "700"}}}
+	normalized, _ := prepareSettlementRunRequest(request)
+	p := normalized.Payouts[0]
+	leaf := normalizedSettlementRequest{RequestID: p.RequestID, ToAddress: p.ToAddress, AmountUWolo: p.AmountUWolo, Memo: p.Memo, SignerRole: normalized.SignerRole}
+	if err := cfg.claimSettlementConfirmation(t.Context(), leaf, c4Signer, c4TxHash, 0); err != nil {
+		t.Fatal(err)
+	}
+	response := settlementExecuteResponse{OK: true, Status: "confirmed", ConfirmationStatus: "confirmed", RequestID: leaf.RequestID, ChainID: cfg.ChainID, SignerRole: leaf.SignerRole, SignerAddress: c4Signer, ToAddress: leaf.ToAddress, AmountUWolo: leaf.AmountUWolo, AmountWolo: formatDisplayAmount(leaf.AmountUWolo), TxHash: c4TxHash}
+	if err := cfg.writeSettlementRecord(cfg.requestRecordPath(leaf.RequestID), leaf, c4Signer, response); err != nil {
+		t.Fatal(err)
+	}
+	run := finalizeSettlementRunResponse(settlementRunResponse{SettlementRunID: normalized.SettlementRunID, Memo: normalized.Memo, SignerRole: normalized.SignerRole, SignerAddress: c4Signer, Payouts: []settlementRunPayoutResult{settlementRunPayoutResultFromExecuteResponse(p, response)}})
+	return cfg, settlementRunStoredResult{Request: normalized, Fingerprint: hashSettlementRunRequest(normalized), Response: run}
+}
+
+func TestAggregateConfirmedReplayRequiresConservedOwnedLeafProofs(t *testing.T) {
+	for _, kind := range []string{"current-valid", "missing-receipt", "missing-leaf", "wrong-hash", "wrong-recipient", "wrong-role", "wrong-memo", "wrong-total", "wrong-count", "wrong-fingerprint", "duplicate-leaf", "partial-laundering"} {
+		t.Run(kind, func(t *testing.T) {
+			cfg, record := aggregateReceiptFixture(t)
+			switch kind {
+			case "missing-receipt":
+				if err := os.Remove(filepath.Join(cfg.StateDir, "confirmation-receipts", c4TxHash+"-0.json")); err != nil {
+					t.Fatal(err)
+				}
+			case "missing-leaf":
+				if err := os.Remove(cfg.requestRecordPath(record.Request.Payouts[0].RequestID)); err != nil {
+					t.Fatal(err)
+				}
+			case "wrong-hash":
+				record.Response.Payouts[0].TxHash = strings.Repeat("A", 64)
+			case "wrong-recipient":
+				record.Response.Payouts[0].ToAddress = c4Signer
+			case "wrong-role":
+				record.Response.Payouts[0].SignerRole = settlementEscrowSignerRole
+			case "wrong-memo":
+				record.Response.Payouts[0].Memo = "foreign"
+			case "wrong-total":
+				record.Response.ConfirmedTotalUWolo = "701"
+			case "wrong-count":
+				record.Response.ConfirmedPayoutCount = 2
+			case "wrong-fingerprint":
+				record.Fingerprint = strings.Repeat("0", 64)
+			case "duplicate-leaf":
+				record.Response.Payouts = append(record.Response.Payouts, record.Response.Payouts[0])
+			case "partial-laundering":
+				record.Response.OK = false
+				record.Response.Status = "partial"
+				record.Response.Payouts[0].TxHash = strings.Repeat("B", 64)
+			}
+			// No RPC endpoint or signer is configured: this path must be read-only.
+			held := cfg.guardSettlementRunStoredReplay(t.Context(), record)
+			if kind == "current-valid" {
+				if held != nil {
+					t.Fatalf("valid owned aggregate failed replay: %+v", held)
+				}
+				return
+			}
+			if held == nil || held.OK || held.Retryable || held.Status != "unverifiable" || held.ConfirmedPayoutCount != 0 || held.ConfirmedTotalUWolo != "" {
+				t.Fatalf("unverified aggregate retained financial success: %+v", held)
+			}
+			for _, p := range held.Payouts {
+				if p.OK || p.Status == "confirmed" || p.ConfirmationStatus == "confirmed" || p.Retryable {
+					t.Fatalf("nested success survived: %+v", p)
+				}
+			}
+		})
+	}
+}
