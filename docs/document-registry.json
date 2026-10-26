@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "63fdb0bb5240e13591cd607d0d6f1cfab45c33f1cc35f7044d50e912c7a3bfa4",
+      "sha256": "9d4ca69acd059d6badddc3d58bf4e5945b74790d3bb10639ed60d827b4cbe96f",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1067,7 +1067,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "codex/hd-wolo-production-closure",
-    "commit": "8a96afe1d462add87db9b34cb3c4c8701701c856"
+    "commit": "fbb05f3ea9888fcf1e6fa3f75b1f5f18807c4783"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

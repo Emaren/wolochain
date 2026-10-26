@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `codex/hd-wolo-production-closure` at `8a96afe1d462add87db9b34cb3c4c8701701c856`
+Implementation baseline: `codex/hd-wolo-production-closure` at `fbb05f3ea9888fcf1e6fa3f75b1f5f18807c4783`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
