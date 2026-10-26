@@ -113,6 +113,7 @@ def private_operator_packet(filename):
     if "custody" in packet:
         row = packet["custody"]
         require(type(row) is dict and set(row) == {"service_state", "private_8094_listener"} and
+                type(row["service_state"]) is str and
                 row["service_state"] in {"NOT_FOUND", "INACTIVE", "ACTIVE", "UNKNOWN"} and
                 (row["private_8094_listener"] is None or type(row["private_8094_listener"]) is bool),
                 "OPERATOR_CUSTODY_INVALID")
@@ -179,7 +180,7 @@ def github_sources(now, api=gh_api):
             pr = api(endpoint, projection, deadline)
             require(set(pr) == {"head", "base", "url", "state"} and valid_sha(pr["head"]) and
                     valid_sha(pr["base"]) and pr["url"] == f"https://github.com/{repo}/pull/{number}"
-                    and pr["state"] in {"open", "closed"}, "GITHUB_PR_IDENTITY_INVALID")
+                    and type(pr["state"]) is str and pr["state"] in {"open", "closed"}, "GITHUB_PR_IDENTITY_INVALID")
             checks = api(f"repos/{repo}/commits/{pr['head']}/check-runs?per_page=100&filter=latest",
                          "{total_count,checks:[.check_runs[]|{head_sha,status,conclusion}]}", deadline)
             rows = checks.get("checks")
@@ -188,7 +189,8 @@ def github_sources(now, api=gh_api):
             counts = {"success": 0, "failed": 0, "pending": 0, "neutral_or_skipped": 0}
             for row in rows:
                 require(type(row) is dict and set(row) == {"head_sha", "status", "conclusion"} and
-                        row["head_sha"] == pr["head"] and row["status"] in
+                        row["head_sha"] == pr["head"] and type(row["status"]) is str and
+                        (row["conclusion"] is None or type(row["conclusion"]) is str) and row["status"] in
                         {"queued", "in_progress", "completed"}, "GITHUB_CHECK_HEAD_MISMATCH")
                 if row["status"] != "completed": counts["pending"] += 1
                 elif row["conclusion"] == "success": counts["success"] += 1
@@ -244,6 +246,7 @@ def frontier(root, *, refresh_github=False, operator_observation=None, now=None)
             require(type(build) is str and LABEL.fullmatch(build), "RECORDED_BUILD_ID_INVALID")
             item["hd_build_id"] = build
         processes = value.get("processes", {})
+        require(type(processes) is dict, "RECORDED_PROCESSES_INVALID")
         services = {}
         for name in ("wolochain-mainnet-settlement.service", "wolochain-founder-rewards-settlement.service",
                      "wolochaind-mainnet.service"):
@@ -251,7 +254,8 @@ def frontier(root, *, refresh_github=False, operator_observation=None, now=None)
                 continue
             row = processes[name]
             require(type(row) is dict and valid_sha(row.get("executable_sha256"), DIGEST)
-                    and row.get("active") in {"active", "inactive", "failed", "unknown"},
+                    and type(row.get("active")) is str
+                    and row["active"] in {"active", "inactive", "failed", "unknown"},
                     "RECORDED_EXECUTABLE_IDENTITY_INVALID")
             services[name] = {"state": row["active"], "executable_sha256": row["executable_sha256"]}
         if services:

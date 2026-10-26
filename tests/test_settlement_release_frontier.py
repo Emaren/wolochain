@@ -35,6 +35,7 @@ def api_fixture(change=None):
             if change == "pending": checks["checks"][0]["status"] = "in_progress"
             if change == "failed": checks["checks"][0]["conclusion"] = "failure"
             if change == "missing": checks = {}
+            if change == "malformed": checks["checks"][0]["conclusion"] = []
             return checks
         reads[endpoint] = reads.get(endpoint, 0) + 1
         repo_number = endpoint.removeprefix("repos/")
@@ -87,7 +88,7 @@ class ReleaseFrontierTests(unittest.TestCase):
         self.assertFalse(result["financial_release_authorized"])
 
     def test_wrong_head_forged_rotating_missing_and_incomplete_checks_are_unknown(self):
-        for change in ("wrong_head", "truncated", "missing", "rotated", "forged_url"):
+        for change in ("wrong_head", "truncated", "missing", "rotated", "forged_url", "malformed"):
             with self.subTest(change=change):
                 result = F.github_sources(NOW, api_fixture(change))
                 self.assertTrue(all(result[label]["status"] == "UNKNOWN" for label, _, _ in F.TARGETS))
@@ -122,6 +123,7 @@ class ReleaseFrontierTests(unittest.TestCase):
     def test_operator_forgery_sensitive_fields_wrong_modes_links_and_unbounded_json_denied(self):
         for field, value in (("provenance", "TOOL_OBSERVED"), ("financial_release_authorized", True),
                              ("bank_assets", 999), ("secret", "PRIVATE"),
+                             ("custody", {"service_state": [], "private_8094_listener": True}),
                              ("producer_counts", {"scoped_units": 22, "active_apps": 4, "armed_timers": 7, "inactive_oneshots": 7}),
                              ("website", {"source_sha": HEAD, "build_id": "\nSECRET", "compiled_version": "v1"})):
             with tempfile.TemporaryDirectory() as temp:
