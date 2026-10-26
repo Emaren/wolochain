@@ -88,6 +88,17 @@ class RuntimeTests(unittest.TestCase):
         with self.assertRaisesRegex(n.ReservationRefused, "NONCE_ALREADY_RESERVED"):
             self.consume(packet)
 
+    def test_storage_refusal_cannot_turn_into_nonce_admission_or_retry(self):
+        original = n.os.open
+        def unavailable(path, *args, **kwargs):
+            if path == ".nonce.lock":
+                raise FileNotFoundError("synthetic concurrent filesystem refusal")
+            return original(path, *args, **kwargs)
+        with patch.object(n.os, "open", side_effect=unavailable):
+            with self.assertRaisesRegex(n.ReservationRefused, "NONCE_LOCK_STORAGE_UNAVAILABLE"):
+                self.consume()
+        self.assertEqual(list(self.nonces.iterdir()), [])
+
     def test_vps_rollback_does_not_remove_offhost_consumption(self):
         packet = self.signed()
         self.consume(packet)
