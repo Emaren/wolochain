@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "e3d55e82b3708bce3bc3e5cac6ebf1d43e8024fadbae63ff54ba577892d28fda",
+      "sha256": "a72828118862df08092fdd106361cbc61e6d19edec6a197518a9dac4ef4d6ef1",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -310,9 +310,9 @@
       "owner": "wolochain-ops",
       "path": "docs/mainnet-settlement-runbook.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-10-18",
+      "reviewed_at": "2026-10-26",
       "sensitivity": "restricted",
-      "sha256": "16c27475c7fe6691476895b9339afc613e87f69c5679a0ff28a3d18a0e998714",
+      "sha256": "e1ee6875f4f92ff6b0fb4511b9f064de5fdbe4a3405a67b7d6d53380bb6c56d2",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -381,7 +381,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-20",
       "sensitivity": "public",
-      "sha256": "689f2b706579434959c99e3b4b1d0a0878dc6a695ee0d602c6122f69a39836eb",
+      "sha256": "3b3530d155dd210eb005cb87d3f08efaa44ab3599b5ef21c8a1d7cf8e4ce1b0b",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1067,7 +1067,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "codex/wolo-p1-evidence-closure",
-    "commit": "38c069872adf08f9f008bc5f9d8f04ccea3d9f98"
+    "commit": "738106c642e7e2df8873b8d164bf9d91d9012f57"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

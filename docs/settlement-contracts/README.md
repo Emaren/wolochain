@@ -99,6 +99,12 @@ wolosatcheld verify-historical-transfer \
 transaction hash, `wolo-1`, height `1078913`, amount `100000000` uwolo,
 original sender, recipient, memo and a nonzero 64-hex journal-identity digest.
 **Never derive expected sender, recipient or memo from the supplied proof.**
+The NONAUTHORIZING report now includes `anchor_sha256`, `expected_sha256`,
+`proof_sha256` and `historical_as_of_utc`: all three exact inputs are bound for
+review/reproduction. These hashes do not attest checkpoint origin, the declared
+time, solvency, claim disposition or owner permission. No current funding
+interface accepts archived evidence as a live balance/deposit proof.
+
 The `--anchor` file is an operator-provisioned `satchel.TrustAnchor` with
 height, hash, period_seconds and evidence_reference. The `--proof` file is
 the already existing strict `satchel.PortableProof` wire format (`kind=transfer`).
