@@ -8,6 +8,7 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import shutil
 import sys
 import tempfile
 import unittest
@@ -49,6 +50,9 @@ class RuntimeTests(unittest.TestCase):
                   "owner_der_sha256": intent_fixtures.SoloOwnerIntentionTests.der_hash, "source_commit": "a" * 40,
                   "host_identity_sha256": "b" * 64,
                   "controller_files": dict.fromkeys(r.SOURCES, "1" * 64),
+                  "crypto": dict.fromkeys(("runtime", "witness"), {
+                      "path": str(Path(shutil.which("openssl")).resolve()),
+                      "sha256": r.sha(Path(shutil.which("openssl")).read_bytes())}),
                   "witness": {"host": "owner-witness.example", "user": "wolo_witness", "port": 22,
                     "identity_path": "/root/protected/ssh", "known_hosts_path": "/root/protected/known_hosts",
                     "known_hosts_sha256": r.sha(b"known hosts"), "host_identity_sha256": "c" * 64}}
@@ -124,6 +128,47 @@ class RuntimeTests(unittest.TestCase):
         with self.assertRaisesRegex(o.AuthorityHold, "OWNER_PUBLIC_ENROLLMENT_INVALID"):
             self.consume()
         self.assertEqual(list(self.nonces.iterdir()), [])
+
+    def test_pinned_absolute_openssl_ignores_untrusted_path_and_detects_drift(self):
+        packet = self.signed()
+        with patch.dict(os.environ, {"PATH": "/not-the-login-shell"}):
+            self.assertTrue(self.consume(packet)["fresh_consumption_confirmed"])
+        self.q["nonce"] = "1" * 32
+        self.c["crypto"]["witness"] = dict(self.c["crypto"]["witness"], sha256="0" * 64)
+        with self.assertRaisesRegex(o.AuthorityHold, "PINNED_OPENSSL_DRIFT"):
+            self.consume()
+        self.assertEqual(len(list(self.nonces.glob("nonce-*"))), 1)
+
+    def test_owner_mac_witness_paths_preserve_canonical_no_symlink_policy(self):
+        config, ledger = r.witness_paths("darwin")
+        self.assertEqual(str(config), "/private/etc/wolochain-financial-maintenance/authority/solo-witness.json")
+        self.assertTrue(str(ledger).startswith("/private/var/"))
+        self.assertEqual(str(r.witness_paths("linux")[0]), "/etc/wolochain-financial-maintenance/authority/solo-witness.json")
+
+    def test_rotated_fence_is_rejected_on_the_stable_parsed_read(self):
+        with patch.object(m, "private_json", return_value=({}, "b" * 64)), \
+             patch.object(m, "inactive_observation") as observed:
+            with self.assertRaisesRegex(m.MaintenanceError, "SIGNED_FENCE_CHANGED_AT_USE"):
+                m.verify_retained_fence(Path("/root/fence"), m.scope_digest(),
+                                        expected_receipt_sha256="a" * 64)
+            observed.assert_not_called()
+
+    def test_manifest_rotation_after_initial_hash_is_rejected_at_parse(self):
+        phase = {"phase": "offline_verify", "live_actions_allowed": False,
+                 "max_total_bytes": 1 << 20, "not_before": ISO(NOW - timedelta(seconds=1)),
+                 "expires_at": ISO(NOW + timedelta(minutes=1)),
+                 "artifacts": {"fence_receipt_sha256": "a" * 64,
+                               "backup_manifest_sha256": "a" * 64}}
+        output = self.folder / "backup"
+        output.mkdir()
+        permit = valid_permit(now=NOW)
+        with patch.object(m, "BACKUPS", self.folder), patch.object(m, "clock", return_value=NOW), \
+             patch.object(m, "file_sha", return_value="a" * 64), \
+             patch.object(m, "verify_retained_fence", return_value={"permit": permit}), \
+             patch.object(m, "private_json", return_value=({}, "b" * 64)), patch.object(m, "run") as run:
+            with self.assertRaisesRegex(m.MaintenanceError, "SIGNED_MANIFEST_CHANGED_AT_USE"):
+                m.restore_isolated(Path("/root/fence"), output, phase_window=phase)
+            run.assert_not_called()
 
     def test_same_host_witness_and_expired_window_are_refused(self):
         self.c["witness"]["host_identity_sha256"] = self.c["host_identity_sha256"]

@@ -1960,7 +1960,11 @@ python3 /protected/reviewed/scripts/settlement_solo_runtime.py --witness-stdin
 
 Use an existing dedicated operator transport credential with a restricted SSH
 forced command, no PTY, forwarding or agent access. Never reuse a WOLO signer
-key. The witness verifies the original owner signature and time/phase before
+key. On macOS, enroll canonical `/private/etc` and `/private/var` witness paths.
+Both hosts pin their own absolute OpenSSL 3 executable and binary digest in the
+protected enrollment; a restricted SSH PATH must not select macOS LibreSSL,
+which lacks the required Ed25519 `pkeyutl -rawin` operation.
+The witness verifies the original owner signature and time/phase before
 atomic, fsynced O_EXCL consumption in its separately provisioned 0700 nonce
 ledger. The ledger must never be restored from a VPS snapshot, automatically
 pruned, or recreated after loss. Any corrupt/partial record blocks subsequent
@@ -1990,7 +1994,11 @@ sudo python3 scripts/settlement_financial_maintenance.py --mode solo-capture \
   --completion-receipt /root/reviewed/capture-completed.json
 ```
 
-**This is not an instruction to run capture now.** No actual enrollment, witness,
+**Live capture status: HOLD_ENGINEERING. Do not issue a live owner challenge yet.**
+The current fence does not retain all producer unit/env/build fingerprints, and
+a qualified resume path and production-size outage bound remain engineering
+requirements. The 12 category observation files alone do not prove global writer
+exclusion. No actual enrollment, witness,
 owner approval or global fence has been installed by source development. Resume
 and financial activation remain refused; their real recovery and financial
 predicates must be qualified before a maintenance window is approved. In

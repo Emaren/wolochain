@@ -134,9 +134,9 @@ def utc(s):
         raise AuthorityHold("UTC_INVALID") from exc
 
 
-def openssl(*args, input_data=None):
+def openssl(*args, input_data=None, executable="openssl"):
     try:
-        result = subprocess.run(["openssl", *args], input=input_data,
+        result = subprocess.run([executable, *args], input=input_data,
                                 capture_output=True, timeout=8, check=False)
     except (OSError, subprocess.TimeoutExpired) as exc:
         raise AuthorityHold("OPENSSL_UNAVAILABLE") from exc
@@ -145,7 +145,8 @@ def openssl(*args, input_data=None):
 
 
 def authenticate_owner(enrollment_raw, packet_raw, *, pinned_enrollment_sha256,
-           pinned_owner_der_sha256, packet_schema, domain, validate_request, now=None):
+           pinned_owner_der_sha256, packet_schema, domain, validate_request, now=None,
+                       openssl_path="openssl"):
     require(hex64(pinned_enrollment_sha256) and hex64(pinned_owner_der_sha256)
             and hashlib.sha256(enrollment_raw).hexdigest() == pinned_enrollment_sha256,
             "EXTERNAL_ENROLLMENT_PIN_MISMATCH")
@@ -160,7 +161,7 @@ def authenticate_owner(enrollment_raw, packet_raw, *, pinned_enrollment_sha256,
             and e["public_key_pem"].endswith("-----END PUBLIC KEY-----\n"),
             "OWNER_PUBLIC_ENROLLMENT_INVALID")
     der = openssl("pkey", "-pubin", "-inform", "PEM", "-outform", "DER",
-                  input_data=e["public_key_pem"].encode("ascii"))
+                  input_data=e["public_key_pem"].encode("ascii"), executable=openssl_path)
     require(hashlib.sha256(der).hexdigest() == pinned_owner_der_sha256,
             "PINNED_OWNER_PUBLIC_KEY_MISMATCH")
     n = datetime.now(timezone.utc) if now is None else now
@@ -192,7 +193,7 @@ def authenticate_owner(enrollment_raw, packet_raw, *, pinned_enrollment_sha256,
             file.write_bytes(data)
             file.chmod(0o600)
         openssl("pkeyutl", "-verify", "-pubin", "-rawin", "-inkey",
-                str(key), "-in", str(payload), "-sigfile", str(signature))
+                str(key), "-in", str(payload), "-sigfile", str(signature), executable=openssl_path)
     return e, q, n
 
 

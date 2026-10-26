@@ -373,9 +373,12 @@ def inactive_observation(runner):
     return out
 
 
-def _verify_fence(receipt_path, expected_scope_sha256, *, now=None, runner=None, retained=False):
+def _verify_fence(receipt_path, expected_scope_sha256, *, now=None, runner=None, retained=False,
+                  expected_receipt_sha256=None):
     runner = runner or run
-    receipt, _ = private_json(receipt_path)
+    receipt, receipt_sha = private_json(receipt_path)
+    require(expected_receipt_sha256 is None or receipt_sha == expected_receipt_sha256,
+            "SIGNED_FENCE_CHANGED_AT_USE")
     require(set(receipt) == {"schema", "scope_sha256", "permit_path", "permit_sha256",
                             "hold_sha256", "prestate", "created_at", "resume_authorized"} and
             receipt["schema"] == FENCE_SCHEMA and receipt["resume_authorized"] is False and
@@ -403,18 +406,22 @@ def _verify_fence(receipt_path, expected_scope_sha256, *, now=None, runner=None,
             "original_window_current": utc(permit["not_before"]) <= at < utc(permit["expires_at"])}
 
 
-def verify_current_fence(receipt_path, expected_scope_sha256, *, now=None, runner=None):
+def verify_current_fence(receipt_path, expected_scope_sha256, *, now=None, runner=None,
+                         expected_receipt_sha256=None):
     """Read-only import boundary; current original window is mandatory."""
-    return _verify_fence(receipt_path, expected_scope_sha256, now=now, runner=runner)
+    return _verify_fence(receipt_path, expected_scope_sha256, now=now, runner=runner,
+                         expected_receipt_sha256=expected_receipt_sha256)
 
 
-def verify_retained_fence(receipt_path, expected_scope_sha256, *, runner=None):
+def verify_retained_fence(receipt_path, expected_scope_sha256, *, runner=None,
+                          expected_receipt_sha256=None):
     """NONAUTHORIZING retained-gate observation, including after old expiry.
 
     A separate fresh recovery authority must authenticate its own new window and
     scoped humans. This never renews the original permit, fences or resumes.
     """
-    return _verify_fence(receipt_path, expected_scope_sha256, runner=runner, retained=True)
+    return _verify_fence(receipt_path, expected_scope_sha256, runner=runner, retained=True,
+                         expected_receipt_sha256=expected_receipt_sha256)
 
 
 def write_new(path, raw):
@@ -660,9 +667,8 @@ def snapshot_footprint(path, budget):
 
 def backup(receipt_path, output, *, runner=None, expected_fence_sha256=None):
     runner = runner or run
-    require(expected_fence_sha256 is None or file_sha(receipt_path) == expected_fence_sha256,
-            "SIGNED_FENCE_CHANGED_BEFORE_BACKUP")
-    observed = verify_current_fence(receipt_path, scope_digest(), runner=runner)
+    observed = verify_current_fence(receipt_path, scope_digest(), runner=runner,
+                                    expected_receipt_sha256=expected_fence_sha256)
     permit = observed["permit"]
     runner = bounded_runner(runner, permit)
     output = Path(output)
@@ -870,7 +876,9 @@ def restore_isolated(receipt_path, output, *, runner=None, phase_window=None):
     # Only an independently authenticated OFFLINE_VERIFY request can supply
     # a fresh phase_window. Never renew the old LIVE_CAPTURE permit itself.
     observe_fence = verify_retained_fence if phase_window is not None else verify_current_fence
-    observed = observe_fence(receipt_path, scope_digest(), runner=runner)
+    sealed = phase_window.get("artifacts", {}) if phase_window is not None else {}
+    observed = observe_fence(receipt_path, scope_digest(), runner=runner,
+                             **({"expected_receipt_sha256": sealed["fence_receipt_sha256"]} if sealed else {}))
     permit = observed["permit"]
     if phase_window is not None:
         require(phase_window.get("phase") == "offline_verify" and
@@ -888,7 +896,9 @@ def restore_isolated(receipt_path, output, *, runner=None, phase_window=None):
     runner = bounded_runner(runner, phase_window if phase_window is not None else permit)
     output = Path(output)
     require(output.parent == BACKUPS and output.is_dir() and not output.is_symlink(), "BACKUP_PATH_INVALID")
-    manifest, _ = private_json(output / "backup.json")
+    manifest, manifest_sha = private_json(output / "backup.json")
+    require(not sealed or manifest_sha == sealed["backup_manifest_sha256"],
+            "SIGNED_MANIFEST_CHANGED_AT_USE")
     require(manifest.get("scope_sha256") == scope_digest() and
             manifest.get("fence_receipt_sha256") == file_sha(receipt_path) and
             manifest.get("isolated_restore_verified") is False and
@@ -1161,7 +1171,9 @@ def main(argv=None):
                           "financial_release_authorized": False}))
         return 0
     except (MaintenanceError, OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as exc:
-        reason = str(exc) if isinstance(exc, MaintenanceError) else "SAFE_OPERATION_UNAVAILABLE"
+        from settlement_solo_owner_intent_review import AuthorityHold
+        from settlement_maintenance_nonce_store import ReservationRefused
+        reason = str(exc) if isinstance(exc, (MaintenanceError, AuthorityHold, ReservationRefused)) else "SAFE_OPERATION_UNAVAILABLE"
         print(json.dumps({"status": "BLOCKED", "reason": reason, "hold_must_remain": True,
                           "financial_release_authorized": False}), file=sys.stderr)
         return 2

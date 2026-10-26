@@ -30,9 +30,16 @@ ACK_SCHEMA = "wolo.solo-maintenance-offhost-consumption.v1"
 CONFIG = Path("/etc/wolochain-financial-maintenance/authority/solo-runtime.json")
 ENROLLMENT = CONFIG.with_name("solo-owner.json")
 NONCE_ROOT = Path("/var/lib/wolo-financial-authority-nonces/solo-runtime-v1")
-WITNESS_CONFIG = Path("/etc/wolochain-financial-maintenance/authority/solo-witness.json")
+def witness_paths(platform):
+    # macOS /etc and /var are symlinks. Keep the strict canonical-file reader;
+    # enroll canonical paths rather than weakening it for the owner's Mac.
+    prefix = Path("/private") if platform == "darwin" else Path("/")
+    return (prefix / "etc/wolochain-financial-maintenance/authority/solo-witness.json",
+            prefix / "var/lib/wolo-financial-authority-nonces/solo-witness-v1")
+
+
+WITNESS_CONFIG, WITNESS_NONCES = witness_paths(sys.platform)
 WITNESS_ENROLLMENT = WITNESS_CONFIG.with_name("solo-owner.json")
-WITNESS_NONCES = Path("/var/lib/wolo-financial-authority-nonces/solo-witness-v1")
 REMOTE_COMMAND = "wolo-maintenance-witness-v1"
 MODES = {"solo-capture": "live_capture", "solo-offline-restore": "offline_verify"}
 OPS = {"live_capture": "fence-drain-capture-hd-de",
@@ -51,7 +58,7 @@ REQUEST_KEYS = {"schema", "chain_id", "phase", "operation", "source_commit",
                 "host_identity_sha256", "scope_sha256", "procedure_sha256", "nonce",
                 "not_before", "expires_at", "previous_phase_receipt_sha256"}
 CONFIG_KEYS = {"schema", "owner_enrollment_sha256", "owner_der_sha256", "source_commit",
-               "host_identity_sha256", "controller_files", "witness"}
+               "host_identity_sha256", "controller_files", "witness", "crypto"}
 PROCEDURE_KEYS = {"schema", "mode", "permit_core_sha256", "fence_receipt_path", "output_path",
                   "previous_phase_receipt_path", "runtime_binaries", "writer_inventory_sha256"}
 
@@ -121,14 +128,40 @@ def load_config(raw):
             and owner.hex64(w["known_hosts_sha256"]) and owner.hex64(w["host_identity_sha256"])
             and w["host_identity_sha256"] != c["host_identity_sha256"],
             "SEPARATELY_ENROLLED_WITNESS_REQUIRED")
+    require(type(c["crypto"]) is dict and set(c["crypto"]) == {"runtime", "witness"},
+            "SOLO_RUNTIME_CRYPTO_ENROLLMENT_MISSING")
+    for spec in c["crypto"].values():
+        require(type(spec) is dict and set(spec) == {"path", "sha256"} and
+                type(spec["path"]) is str and Path(spec["path"]).is_absolute() and
+                owner.hex64(spec["sha256"]), "SOLO_RUNTIME_CRYPTO_ENROLLMENT_MISSING")
     return c
 
 
-def authenticate(config, enrollment, packet, *, now=None):
+def crypto_path(config, *, witness=False):
+    spec = config["crypto"]["witness" if witness else "runtime"]
+    p = Path(spec["path"])
+    require(p.is_absolute() and p == p.resolve(strict=True), "PINNED_OPENSSL_PATH_INVALID")
+    fd = os.open(p, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    with os.fdopen(fd, "rb") as stream:
+        st = os.fstat(stream.fileno())
+        require(stat.S_ISREG(st.st_mode) and st.st_uid in {0, os.geteuid()} and
+                not st.st_mode & 0o022 and st.st_mode & 0o111 and 0 < st.st_size <= 64 << 20,
+                "PINNED_OPENSSL_UNSAFE")
+        require(hashlib.file_digest(stream, "sha256").hexdigest() == spec["sha256"],
+                "PINNED_OPENSSL_DRIFT")
+        after = os.fstat(stream.fileno())
+        require((st.st_ino, st.st_dev, st.st_size, st.st_mtime_ns, st.st_ctime_ns) ==
+                (after.st_ino, after.st_dev, after.st_size, after.st_mtime_ns, after.st_ctime_ns),
+                "PINNED_OPENSSL_CHANGED")
+    return str(p)
+
+
+def authenticate(config, enrollment, packet, *, now=None, witness=False):
     enrolled, q, _ = owner.authenticate_owner(enrollment, packet,
         pinned_enrollment_sha256=config["owner_enrollment_sha256"],
         pinned_owner_der_sha256=config["owner_der_sha256"],
-        packet_schema=PACKET_SCHEMA, domain=DOMAIN, validate_request=validate_request, now=now)
+        packet_schema=PACKET_SCHEMA, domain=DOMAIN, validate_request=validate_request, now=now,
+        openssl_path=crypto_path(config, witness=witness))
     require(q["source_commit"] == config["source_commit"] and
             q["host_identity_sha256"] == config["host_identity_sha256"],
             "SOLO_RUNTIME_ENROLLED_SOURCE_HOST_MISMATCH")
@@ -141,7 +174,7 @@ def authenticate(config, enrollment, packet, *, now=None):
 def consume_witness(config, enrollment_raw, packet_raw, *, nonce_root=WITNESS_NONCES,
                     now=None):
     """Actual forced-command operation. A timeout/partial response consumes forever."""
-    q = authenticate(config, enrollment_raw, packet_raw, now=now)
+    q = authenticate(config, enrollment_raw, packet_raw, now=now, witness=True)
     identity = host_identity()
     require(identity == config["witness"]["host_identity_sha256"] and
             identity != q["host_identity_sha256"], "WITNESS_NOT_SEPARATE_HOST")
