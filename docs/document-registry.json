@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "a56d56b5b36989097709cd58e4877f50903066865ceebd21c74051a7f2dd66f0",
+      "sha256": "e6c090514b33fc74b69f60a0ba56e188288bc6461e0d40fc04e27793e3cb517e",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -642,7 +642,7 @@
         "wolochain",
         "aoe2war"
       ],
-      "title": "Codex Mission: WoloChain Mainnet ↔ Osmosis IBC Prep",
+      "title": "Codex Mission: WoloChain Mainnet \u2194 Osmosis IBC Prep",
       "type": "historical"
     },
     {
@@ -803,7 +803,7 @@
         "wolochain",
         "aoe2war"
       ],
-      "title": "WoloChain Mainnet → Osmosis Liquidity Transfer",
+      "title": "WoloChain Mainnet \u2192 Osmosis Liquidity Transfer",
       "type": "historical"
     },
     {
@@ -872,7 +872,7 @@
         "wolochain",
         "aoe2war"
       ],
-      "title": "WoloChain Mainnet → Osmosis Test Transfer",
+      "title": "WoloChain Mainnet \u2192 Osmosis Test Transfer",
       "type": "historical"
     },
     {
@@ -988,7 +988,7 @@
         "aoe2war",
         "aoe2dewarwagers"
       ],
-      "title": "Financial-maintenance authority and writer review — 2026-10-24",
+      "title": "Financial-maintenance authority and writer review \u2014 2026-10-24",
       "type": "runbook"
     },
     {
@@ -1012,7 +1012,7 @@
         "aoe2war",
         "aoe2dewarwagers"
       ],
-      "title": "Production P1 source integrity, writer evidence, five-person authority and bounded recovery proposal — 2026-10-24",
+      "title": "Production P1 source integrity, writer evidence, five-person authority and bounded recovery proposal \u2014 2026-10-24",
       "type": "runbook"
     },
     {
@@ -1036,7 +1036,7 @@
         "aoe2war",
         "aoe2dewarwagers"
       ],
-      "title": "Financial maintenance phase integration operator runbook — 2026-10-24",
+      "title": "Financial maintenance phase integration operator runbook \u2014 2026-10-24",
       "type": "runbook"
     },
     {
@@ -1060,14 +1060,14 @@
         "aoe2war",
         "aoe2dewarwagers"
       ],
-      "title": "Financial controller source integrity and five-human enrollment — 2026-10-24",
+      "title": "Financial controller source integrity and five-human enrollment \u2014 2026-10-24",
       "type": "runbook"
     }
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "review/20261025-archive-only-historical-transfer-time",
-    "commit": "eef1d38be264d11b6b27a12f015b63fb70c024a6"
+    "branch": "codex/wolo-p1-evidence-closure",
+    "commit": "6889dd34b28f89a4a1be9cb3622d88609fe56e50"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
