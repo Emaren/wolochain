@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
+import sys
 from pathlib import Path
 import re
 
@@ -193,3 +195,57 @@ def verify_producer_identities(expected, *, runner, allow_owned_gate=False):
             "originally_active_timers": [u for u in maintenance.TIMERS
                                          if expected["units"][u]["originally_active"]],
             "resume_authorized": False, "financial_release_authorized": False}
+
+
+def inspect_readonly(*, runner):
+    """Root-only, no-write live prestate inspection; never a signed capture.
+
+    The returned digest is an observation handle, NOT a nonce, permit, or
+    durable packet. It cannot replace actual LIVE_CAPTURE or human authority.
+    """
+    require(os.geteuid() == 0, "ROOT_REQUIRED_FOR_PRIVATE_SOURCE_OBSERVATION")
+    packet = collect_producer_identities(runner=runner, allow_owned_gate=False)
+    require(packet["schema"] == SCHEMA and packet["scope_sha256"] == maintenance.scope_digest() and
+            packet["resume_authorized"] is False and
+            packet["financial_release_authorized"] is False and
+            set(packet["units"]) == set(maintenance.UNITS),
+            "INCOMPLETE_NONAUTHORIZING_PRESTATE")
+    units = packet["units"]
+    apps = sum(units[u]["originally_active"] for u in maintenance.APPS)
+    timers = sum(units[u]["originally_active"] for u in maintenance.TIMERS)
+    oneshots = sum(not units[u]["originally_active"] for u in maintenance.ONESHOTS)
+    require(len(maintenance.UNITS) == 18 and len(maintenance.APPS) == 4 and
+            len(maintenance.TIMERS) == len(maintenance.ONESHOTS) == 7 and
+            oneshots == 7 and apps == 4 and timers == 7,
+            "PRODUCER_PRESTATE_CHANGED_NOT_SAFE_TO_ASSUME")
+    return {
+        "schema": "wolo.financial-maintenance-producer-observation.v1",
+        "status": "IDENTITIES_OBSERVED_ONLY",
+        "scope_sha256": packet["scope_sha256"],
+        "identity_observation_sha256": sha(maintenance.canonical(packet)),
+        "units": 18, "active_apps": apps, "active_timers": timers,
+        "inactive_oneshots": oneshots,
+        "signed_capture": False, "global_writers_fenced": False,
+        "resume_authorized": False, "financial_release_authorized": False,
+    }
+
+
+def _main():
+    if len(sys.argv) != 1:
+        print(json.dumps({"status": "HOLD", "reason": "NO_USER_INPUTS_ACCEPTED",
+                          "financial_release_authorized": False}))
+        return 2
+    try:
+        result = inspect_readonly(runner=maintenance.run)
+    except Exception as exc:
+        # Never echo raw systemctl stderr, credentials, command lines, or paths.
+        print(json.dumps({"status": "HOLD",
+                          "reason": ("INSPECT_REFUSED_" + type(exc).__name__),
+                          "financial_release_authorized": False}))
+        return 3
+    print(json.dumps(result, sort_keys=True))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(_main())

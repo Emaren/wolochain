@@ -3,6 +3,9 @@
 All systemd calls and file reads are mocked; no production units or secrets used.
 """
 import importlib.util
+import io
+import json
+from contextlib import ExitStack, redirect_stdout
 from pathlib import Path
 import sys
 import tempfile
@@ -161,6 +164,69 @@ class ProducerIdentityTests(unittest.TestCase):
         self.extra_service_optional_field = True
         with self.assertRaisesRegex(m.MaintenanceError, "PRODUCER_CONFIGURATION_DRIFT"):
             identity.verify_producer_identities(packet, runner=self.runner)
+
+    def test_root_only_inspection_of_complete_scope_no_financial_authority(self):
+        apps = tuple(f"demo-app-{i}.service" for i in range(4))
+        once = tuple(f"demo-task-{i}.service" for i in range(7))
+        timers = tuple(f"demo-task-{i}.timer" for i in range(7))
+        units = apps + once + timers
+        packet = {
+            "schema": identity.SCHEMA,
+            "scope_sha256": m.scope_digest(),
+            "units": {u: {"configuration_sha256": "a" * 64,
+                          "originally_active": u in apps + timers}
+                      for u in units},
+            "resume_authorized": False,
+            "financial_release_authorized": False,
+        }
+        with ExitStack() as stack:
+            for name, value in (("UNITS", units), ("APPS", apps),
+                                ("ONESHOTS", once), ("TIMERS", timers)):
+                stack.enter_context(patch.object(m, name, value))
+            stack.enter_context(patch.object(identity.os, "geteuid", return_value=0))
+            stack.enter_context(patch.object(identity, "collect_producer_identities",
+                                             return_value=packet))
+            result = identity.inspect_readonly(runner=self.runner)
+            self.assertEqual(result["status"], "IDENTITIES_OBSERVED_ONLY")
+            self.assertEqual(result["units"], 18)
+            self.assertEqual((result["active_apps"], result["active_timers"],
+                              result["inactive_oneshots"]), (4, 7, 7))
+            self.assertFalse(result["signed_capture"])
+            self.assertFalse(result["global_writers_fenced"])
+            self.assertFalse(result["resume_authorized"])
+            self.assertFalse(result["financial_release_authorized"])
+            self.assertEqual(result["identity_observation_sha256"],
+                             identity.sha(m.canonical(packet)))
+            packet["units"][timers[0]]["originally_active"] = False
+            with self.assertRaisesRegex(m.MaintenanceError,
+                                        "PRODUCER_PRESTATE_CHANGED_NOT_SAFE_TO_ASSUME"):
+                identity.inspect_readonly(runner=self.runner)
+
+    def test_nonroot_inspect_refuses_before_reading_sensitive_sources(self):
+        with (patch.object(identity.os, "geteuid", return_value=1000),
+              patch.object(identity, "collect_producer_identities") as collect):
+            with self.assertRaisesRegex(m.MaintenanceError,
+                                        "ROOT_REQUIRED_FOR_PRIVATE_SOURCE_OBSERVATION"):
+                identity.inspect_readonly(runner=self.runner)
+            collect.assert_not_called()
+
+    def test_cli_refuses_inputs_and_redacts_underlying_errors(self):
+        for args, error, expected in (
+            (["identity.py", "--enroll"], None, "NO_USER_INPUTS_ACCEPTED"),
+            (["identity.py"], RuntimeError("LEAK_MY_PRIVATE_ENV_PATH_AND_KEY"),
+             "INSPECT_REFUSED_RuntimeError"),
+        ):
+            with self.subTest(args=args), patch.object(identity.sys, "argv", args):
+                buf = io.StringIO()
+                with redirect_stdout(buf):
+                    with patch.object(identity, "inspect_readonly",
+                                      side_effect=error) as inspector:
+                        status = identity._main()
+                result = json.loads(buf.getvalue())
+                self.assertIn(result["reason"], (expected,))
+                self.assertFalse(result["financial_release_authorized"])
+                self.assertNotIn("LEAK_MY_PRIVATE_ENV_PATH_AND_KEY", buf.getvalue())
+                self.assertNotEqual(status, 0)
 
     def test_stale_capture_receipt_fails_closed(self):
         packet = self.capture()
