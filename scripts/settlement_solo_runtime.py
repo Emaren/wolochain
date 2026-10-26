@@ -125,13 +125,16 @@ def load_config(raw):
 
 
 def authenticate(config, enrollment, packet, *, now=None):
-    _, q, _ = owner.authenticate_owner(enrollment, packet,
+    enrolled, q, _ = owner.authenticate_owner(enrollment, packet,
         pinned_enrollment_sha256=config["owner_enrollment_sha256"],
         pinned_owner_der_sha256=config["owner_der_sha256"],
         packet_schema=PACKET_SCHEMA, domain=DOMAIN, validate_request=validate_request, now=now)
     require(q["source_commit"] == config["source_commit"] and
             q["host_identity_sha256"] == config["host_identity_sha256"],
             "SOLO_RUNTIME_ENROLLED_SOURCE_HOST_MISMATCH")
+    require(owner.utc(enrolled["valid_from"]) <= owner.utc(q["not_before"]) and
+            owner.utc(q["expires_at"]) <= owner.utc(enrolled["valid_until"]),
+            "OWNER_ENROLLMENT_MUST_COVER_ENTIRE_PHASE")
     return q
 
 
@@ -233,7 +236,8 @@ def authenticate_and_reserve(args):
                 and sha(m.private_read(item["observation_path"])) == item["observation_sha256"],
                 "SOLO_RUNTIME_WRITER_OBSERVATION_UNAVAILABLE")
     if args.mode == "solo-capture":
-        permit, _ = m.private_json(args.permit)
+        permit, permit_sha = m.private_json(args.permit)
+        artifacts = {"permit_sha256": permit_sha}
         m.validate_permit(permit)
         core = {k: v for k, v in permit.items()
                 if k not in {"packet_sha256", "procedure_sha256", "approval_refs"}}
@@ -264,6 +268,8 @@ def authenticate_and_reserve(args):
                 previous.get("fence_receipt_sha256") == m.file_sha(args.fence_receipt) and
                 previous.get("backup_manifest_sha256") == m.file_sha(args.output / "backup.json"),
                 "SOLO_RUNTIME_CAPTURE_NOT_SEALED")
+        artifacts = {"fence_receipt_sha256": previous["fence_receipt_sha256"],
+                     "backup_manifest_sha256": previous["backup_manifest_sha256"]}
     # Remote FIRST. A crash before local reservation cannot replay on the VPS.
     # A lost response is never automatically retried or treated as permission.
     ack = consume_remote(config, packet)
@@ -275,7 +281,8 @@ def authenticate_and_reserve(args):
             "SOLO_RUNTIME_ENROLLMENT_CHANGED")
     validate_request(q, owner.datetime.now(owner.timezone.utc))
     return dict(q, live_actions_allowed=args.mode == "solo-capture",
-                max_total_bytes=permit["max_total_bytes"], witness_receipt=ack)
+                max_total_bytes=permit["max_total_bytes"], witness_receipt=ack,
+                artifacts=artifacts)
 
 
 def verify_runtime(expected):

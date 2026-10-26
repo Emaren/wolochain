@@ -145,6 +145,31 @@ class RuntimeTests(unittest.TestCase):
         with self.assertRaisesRegex(n.ReservationRefused, "NONCE_RECORD_CORRUPT"):
             self.consume(packet)
 
+    def test_enrollment_expiring_inside_phase_is_refused_before_witness_write(self):
+        self.e["valid_until"] = ISO(NOW + timedelta(minutes=1))
+        self.c["owner_enrollment_sha256"] = r.sha(o.canonical(self.e))
+        with self.assertRaisesRegex(o.AuthorityHold, "OWNER_ENROLLMENT_MUST_COVER_ENTIRE_PHASE"):
+            self.consume()
+        self.assertEqual(list(self.nonces.iterdir()), [])
+
+    def test_rotated_permit_is_refused_before_any_fence_mutation(self):
+        permit = valid_permit(now=NOW)
+        # Structurally valid replacement still cannot use the original signature.
+        with patch.object(m, "private_json", return_value=(permit, "b" * 64)), \
+             patch.object(m, "write_new") as write, patch.object(m, "run") as run:
+            with self.assertRaisesRegex(m.MaintenanceError, "SIGNED_PERMIT_CHANGED_BEFORE_FENCE"):
+                m.fence(Path("/root/permit"), Path("/root/fence"), expected_permit_sha256="a" * 64)
+            write.assert_not_called()
+            run.assert_not_called()
+
+    def test_rotated_sealed_archives_refused_before_restore_io(self):
+        phase = {"artifacts": {"fence_receipt_sha256": "a" * 64,
+                               "backup_manifest_sha256": "b" * 64}}
+        with patch.object(m, "file_sha", return_value="c" * 64), patch.object(m, "run") as run:
+            with self.assertRaisesRegex(m.MaintenanceError, "SIGNED_ARCHIVES_CHANGED_BEFORE_RESTORE"):
+                m.restore_isolated(Path("/root/fence"), Path("/root/backup"), phase_window=phase)
+            run.assert_not_called()
+
     def test_offline_restore_has_separate_long_window_and_prior_receipt(self):
         self.q.update(phase="offline_verify", operation=r.OPS["offline_verify"],
                       expires_at=ISO(NOW + timedelta(hours=3)), previous_phase_receipt_sha256="1" * 64)
@@ -325,17 +350,19 @@ class RuntimeTests(unittest.TestCase):
             st = actual_fstat(fd)
             return SimpleNamespace(st_mode=st.st_mode, st_uid=0, st_nlink=st.st_nlink)
         req = dict(self.q, live_actions_allowed=True, max_total_bytes=1 << 20,
-                   witness_receipt={"synthetic": True})
+                   witness_receipt={"synthetic": True}, artifacts={"permit_sha256": "2" * 64})
         with patch.object(m, "LOCK", lock), patch.object(m.os, "geteuid", return_value=0), \
              patch.object(m.os, "fstat", side_effect=root_fstat), patch.object(m, "clock", return_value=NOW), \
              patch.object(r, "authenticate_and_reserve", return_value=req) as admit, \
-             patch.object(m, "fence") as fence, patch.object(m, "backup") as backup, \
+             patch.object(m, "fence", return_value={"synthetic": True}) as fence, patch.object(m, "backup") as backup, \
              patch.object(m, "file_sha", return_value="1" * 64), patch.object(m, "write_new") as write, \
              contextlib.redirect_stdout(io.StringIO()):
             self.assertEqual(m.main(raw), 0)
             admit.assert_called_once()
-            fence.assert_called_once_with(Path("/root/permit"), Path("/root/fence"))
-            backup.assert_called_once_with(Path("/root/fence"), Path("/root/backup"))
+            fence.assert_called_once_with(Path("/root/permit"), Path("/root/fence"),
+                                          expected_permit_sha256="2" * 64)
+            backup.assert_called_once_with(Path("/root/fence"), Path("/root/backup"),
+                                           expected_fence_sha256=m.digest(m.canonical({"synthetic": True})))
             receipt = json.loads(write.call_args.args[1])
             self.assertFalse(receipt["financial_release_authorized"])
             self.assertFalse(receipt["global_writers_fenced"])

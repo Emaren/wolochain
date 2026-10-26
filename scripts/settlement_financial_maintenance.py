@@ -441,9 +441,11 @@ def write_new(path, raw):
         raise
 
 
-def fence(permit_path, receipt_path, *, runner=None):
+def fence(permit_path, receipt_path, *, runner=None, expected_permit_sha256=None):
     runner = runner or run
     permit, permit_sha = private_json(permit_path)
+    require(expected_permit_sha256 is None or permit_sha == expected_permit_sha256,
+            "SIGNED_PERMIT_CHANGED_BEFORE_FENCE")
     validate_permit(permit)
     runner = bounded_runner(runner, permit)
     require(os.geteuid() == 0, "ROOT_REQUIRED")
@@ -656,8 +658,10 @@ def snapshot_footprint(path, budget):
     return total
 
 
-def backup(receipt_path, output, *, runner=None):
+def backup(receipt_path, output, *, runner=None, expected_fence_sha256=None):
     runner = runner or run
+    require(expected_fence_sha256 is None or file_sha(receipt_path) == expected_fence_sha256,
+            "SIGNED_FENCE_CHANGED_BEFORE_BACKUP")
     observed = verify_current_fence(receipt_path, scope_digest(), runner=runner)
     permit = observed["permit"]
     runner = bounded_runner(runner, permit)
@@ -858,6 +862,11 @@ def restore_isolated(receipt_path, output, *, runner=None, phase_window=None):
     """
     runner = runner or run
     cleanup_runner = runner
+    if phase_window is not None and "artifacts" in phase_window:
+        sealed = phase_window["artifacts"]
+        require(file_sha(receipt_path) == sealed["fence_receipt_sha256"] and
+                file_sha(Path(output) / "backup.json") == sealed["backup_manifest_sha256"],
+                "SIGNED_ARCHIVES_CHANGED_BEFORE_RESTORE")
     # Only an independently authenticated OFFLINE_VERIFY request can supply
     # a fresh phase_window. Never renew the old LIVE_CAPTURE permit itself.
     observe_fence = verify_retained_fence if phase_window is not None else verify_current_fence
@@ -1117,8 +1126,14 @@ def main(argv=None):
             if args.mode in ("capture", "solo-capture"):
                 require(args.permit is not None and args.output is not None,
                         "EXACT_CAPTURE_INPUTS_REQUIRED")
-                fence(args.permit, args.fence_receipt)
-                backup(args.fence_receipt, args.output)
+                if args.mode == "solo-capture":
+                    fenced = fence(args.permit, args.fence_receipt,
+                                   expected_permit_sha256=req["artifacts"]["permit_sha256"])
+                    backup(args.fence_receipt, args.output,
+                           expected_fence_sha256=digest(canonical(fenced)))
+                else:
+                    fence(args.permit, args.fence_receipt)
+                    backup(args.fence_receipt, args.output)
             elif args.mode in ("offline-restore", "solo-offline-restore"):
                 require(args.output is not None, "EXACT_RESTORE_INPUT_REQUIRED")
                 restore_isolated(args.fence_receipt, args.output, phase_window=req)
@@ -1127,9 +1142,8 @@ def main(argv=None):
                 # No resume implementation may be inferred from a backup.
                 raise MaintenanceError("INDEPENDENT_RESUME_EXECUTOR_NOT_APPROVED")
             if args.mode.startswith("solo-"):
-                from settlement_solo_runtime import validate_request
-                validate_request({k: v for k, v in req.items() if k not in
-                    {"live_actions_allowed", "max_total_bytes", "witness_receipt"}}, clock())
+                from settlement_solo_runtime import validate_request, REQUEST_KEYS
+                validate_request({k: req[k] for k in REQUEST_KEYS}, clock())
                 completed = {
                     "schema": "wolo.solo-maintenance-completion.v1", "phase": req["phase"],
                     "completed": True, "source_commit": req["source_commit"],
