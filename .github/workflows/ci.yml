@@ -163,6 +163,9 @@ jobs:
       - name: Real single-owner phase signature review, NONAUTHORIZING (synthetic keys)
         run: python3 -m unittest discover -s tests -p 'test_settlement_solo_owner_intent_review.py' -v
 
+      - name: Cross-repo HD-only Wolo 8094 wire surface adversarial admission (NONAUTHORIZING)
+        run: python3 -m unittest discover -s tests -p 'test_settlement_hd_satchel_wire_review.py' -v
+
       - name: Financial six-control evidence HOLD audit (offline, never approval)
         run: |
           python3 scripts/financial_release_checklist_audit.py
