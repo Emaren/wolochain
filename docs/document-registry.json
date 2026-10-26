@@ -13,7 +13,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-22",
       "sensitivity": "public",
-      "sha256": "3fce51a92af3e6b520a95aec728111653ff9c49890bf96cff68a27a58ed939d5",
+      "sha256": "6e1d4b1c4350b837cda23f73414f517b1c6d213ea6755aa5c003eed277d235df",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "865b3846562e44316411dd406cba587f2c63dd876f5ec4b491534ca80167abba",
+      "sha256": "2e94b39635da553135ba516c01e944b4cfe002f781b1c1aaa6971a721b6361b7",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -312,7 +312,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-26",
       "sensitivity": "restricted",
-      "sha256": "145b5f2d55105c3318270813d9bcd82f07039756abfe23c279f51c8326e2df1d",
+      "sha256": "f4e0eef2da56a67e50d42935e989ad3ad6920bc1cab2eda11a18dead3f83c213",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -335,7 +335,7 @@
       "review_interval_days": 0,
       "reviewed_at": "2026-08-10",
       "sensitivity": "internal",
-      "sha256": "21a2ce4a82178d5622411108beebabc761fa2daa3feee2c6bc6b485ae61fc8cd",
+      "sha256": "104cc8fce8ab5998065fef5a6e1a0a338c899db551927823517e0e7a60880f00",
       "source_of_truth": "historical-evidence",
       "status": "historical",
       "systems": [
@@ -381,7 +381,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-20",
       "sensitivity": "public",
-      "sha256": "3b3530d155dd210eb005cb87d3f08efaa44ab3599b5ef21c8a1d7cf8e4ce1b0b",
+      "sha256": "6d089735649761ba86236a2866211e0d7e1b0c264b9ef06f2f934afa2b9c0853",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -428,7 +428,7 @@
       "review_interval_days": 60,
       "reviewed_at": "2026-10-10",
       "sensitivity": "restricted",
-      "sha256": "f32e06332dec62b89a11639a396dd0924b74d350ef0faa2b061d6d3ec9734249",
+      "sha256": "826660e5d5c75a823dc4cc59cdf41c4467afd08892971dca824277b0713c8acb",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -1067,7 +1067,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "codex/hd-wolo-production-closure",
-    "commit": "da402eedddc840fcc299e8224e661ac950735137"
+    "commit": "35dbdee4858607991f88cdefd38ac0a298624105"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
