@@ -35,6 +35,7 @@ class ProducerIdentityTests(unittest.TestCase):
         self.drift_at = None
         self.invalid_env = False
         self.files = {u: Path(self.tmp.name) / (u + ".gate") for u in self.units}
+        self.original_gate_bytes = m.expected_dropin()
         for name, value in (
             ("UNITS", self.units), ("APPS", (self.app,)),
             ("ONESHOTS", (self.once,)), ("TIMERS", (self.timer,)),
@@ -86,7 +87,7 @@ class ProducerIdentityTests(unittest.TestCase):
         if self.drift_at is not None and self.reads > self.drift_at:
             self.secret_revision = 1
         if path in self.files.values():
-            return m.expected_dropin()
+            return self.original_gate_bytes
         return ("secret byte revision " + str(self.secret_revision)).encode()
 
     def capture(self):
