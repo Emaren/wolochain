@@ -139,6 +139,24 @@ class ProducerIdentityTests(unittest.TestCase):
         self.assertEqual(set(capture["units"]), set(self.units))
         self.assertFalse(capture["financial_release_authorized"])
 
+    def test_native_repeated_execution_and_envfile_properties_preserve_order(self):
+        props = self.properties(self.app)
+        first = "EnvironmentFiles=/etc/first.env (ignore_errors=no)"
+        second = "EnvironmentFiles=/etc/second.env (ignore_errors=no)"
+        cmd1 = "ExecStartPre={ path=/opt/check-one; argv[]=/opt/check-one ; }"
+        cmd2 = "ExecStartPre={ path=/opt/check-two; argv[]=/opt/check-two ; }"
+        raw = "\n".join(k+"="+v for k,v in props.items() if k!="EnvironmentFiles")
+        raw += "\n"+first+"\n"+second+"\n"+cmd1+"\n"+cmd2
+        fields = identity.read_properties(self.app, lambda _: raw)
+        self.assertEqual(fields["EnvironmentFiles"], [first.partition("=")[2], second.partition("=")[2]])
+        self.assertEqual(fields["ExecStartPre"], [cmd1.partition("=")[2], cmd2.partition("=")[2]])
+        self.assertEqual(identity.env_file_paths(fields["EnvironmentFiles"]), ["/etc/first.env", "/etc/second.env"])
+
+    def test_duplicate_singular_properties_are_still_invalid(self):
+        raw = "\n".join(k+"="+v for k,v in self.properties(self.app).items())
+        with self.assertRaisesRegex(m.MaintenanceError, "PRODUCER_PROPERTIES_INVALID"):
+            identity.read_properties(self.app, lambda _: raw+"\nActiveState=inactive")
+
     def test_missing_required_service_mainpid_refused(self):
         self.omit_service_mainpid = True
         with self.assertRaisesRegex(m.MaintenanceError, "PRODUCER_PROPERTIES_INCOMPLETE"):
