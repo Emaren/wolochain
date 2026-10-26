@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "5cd32a377ae199c0f2eac94cf06835c211d651f18803b73541fe683692e0abb7",
+      "sha256": "b8f64f9f833d65eff27015c3c319b969a694c04132daf5db609b9bbe648dd40b",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1066,8 +1066,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "review/solo-resume-producer-identity-20261026",
-    "commit": "93fd76e708b7fcfe66fdd4aaae0f18cdb7817aac"
+    "branch": "review/solo-resume-live-identity-inspect-20261026",
+    "commit": "3ed031e301d0f318e1915c9bd9c11d564c72bfef"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
