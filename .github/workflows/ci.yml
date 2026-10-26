@@ -157,6 +157,9 @@ jobs:
       - name: HD non-additive financial obligation evidence contracts (read only)
         run: python3 -m unittest discover -s tests -p 'test_settlement_financial_obligation_envelope.py' -v
 
+      - name: Same-height financial arithmetic and missing-evidence negatives (HOLD only)
+        run: python3 -m unittest discover -s tests -p 'test_settlement_financial_one_height_arithmetic.py' -v
+
       - name: Financial six-control evidence HOLD audit (offline, never approval)
         run: |
           python3 scripts/financial_release_checklist_audit.py
