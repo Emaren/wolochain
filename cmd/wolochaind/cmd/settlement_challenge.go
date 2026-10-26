@@ -689,10 +689,10 @@ func (cfg settlementConfig) executeSettlementChallenge(ctx context.Context, requ
 				}, nil
 			}
 
+			if held := cfg.guardSettlementChallengeStoredReplay(ctx, stored, plan.Response); held != nil {
+				return *held, nil
+			}
 			if settlementChallengeResponseIsFinal(stored.Response) {
-				if held := cfg.guardSettlementChallengeStoredReplay(ctx, stored); held != nil {
-					return *held, nil
-				}
 				replayed := stored.Response
 				replayed.DryRun = false
 				replayed.IdempotentReplay = true

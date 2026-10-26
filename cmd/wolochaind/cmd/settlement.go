@@ -2020,10 +2020,10 @@ func (cfg settlementConfig) executeSettlementRun(ctx context.Context, request se
 				}, nil
 			}
 
+			if held := cfg.guardSettlementRunStoredReplay(ctx, stored); held != nil {
+				return *held, nil
+			}
 			if settlementRunResponseIsFinal(stored.Response) {
-				if held := cfg.guardSettlementRunStoredReplay(ctx, stored); held != nil {
-					return *held, nil
-				}
 				replayed := stored.Response
 				replayed.DryRun = false
 				replayed.IdempotentReplay = true

@@ -126,7 +126,7 @@ func aggregateReceiptFixture(t *testing.T) (settlementConfig, settlementRunStore
 }
 
 func TestAggregateConfirmedReplayRequiresConservedOwnedLeafProofs(t *testing.T) {
-	for _, kind := range []string{"current-valid", "missing-receipt", "missing-leaf", "wrong-hash", "wrong-recipient", "wrong-role", "wrong-memo", "wrong-total", "wrong-count", "wrong-fingerprint", "duplicate-leaf", "partial-laundering"} {
+	for _, kind := range []string{"current-valid", "missing-receipt", "missing-leaf", "wrong-hash", "wrong-recipient", "wrong-role", "wrong-memo", "wrong-total", "wrong-display-total", "wrong-display-leaf", "wrong-count", "wrong-fingerprint", "duplicate-leaf", "partial-laundering"} {
 		t.Run(kind, func(t *testing.T) {
 			cfg, record := aggregateReceiptFixture(t)
 			switch kind {
@@ -139,7 +139,7 @@ func TestAggregateConfirmedReplayRequiresConservedOwnedLeafProofs(t *testing.T) 
 					t.Fatal(err)
 				}
 			case "wrong-hash":
-				record.Response.Payouts[0].TxHash = strings.Repeat("A", 64)
+				record.Response.Payouts[0].TxHash = strings.Repeat("C", 64)
 			case "wrong-recipient":
 				record.Response.Payouts[0].ToAddress = c4Signer
 			case "wrong-role":
@@ -148,6 +148,10 @@ func TestAggregateConfirmedReplayRequiresConservedOwnedLeafProofs(t *testing.T) 
 				record.Response.Payouts[0].Memo = "foreign"
 			case "wrong-total":
 				record.Response.ConfirmedTotalUWolo = "701"
+			case "wrong-display-total":
+				record.Response.ConfirmedTotalWolo = "999999"
+			case "wrong-display-leaf":
+				record.Response.Payouts[0].AmountWolo = "999999"
 			case "wrong-count":
 				record.Response.ConfirmedPayoutCount = 2
 			case "wrong-fingerprint":
@@ -176,5 +180,49 @@ func TestAggregateConfirmedReplayRequiresConservedOwnedLeafProofs(t *testing.T) 
 				}
 			}
 		})
+	}
+}
+
+func TestAggregateReplayCannotRetryMissingLeafUnderRetryableCache(t *testing.T) {
+	cfg, record := aggregateReceiptFixture(t)
+	request := settlementRunRequest{SettlementRunID: record.Request.SettlementRunID, Memo: c4Memo, Payouts: []settlementRunPayoutInput{{RequestID: record.Request.Payouts[0].RequestID, ToAddress: c4Recipient, AmountUWolo: "700"}}}
+	record.Response.Payouts[0].Retryable = true
+	record.Response.Retryable = true
+	if err := os.Remove(cfg.requestRecordPath(record.Request.Payouts[0].RequestID)); err != nil {
+		t.Fatal(err)
+	}
+	path := cfg.runRecordPath(request.SettlementRunID)
+	if err := writeSettlementRunStoredResult(path, record); err != nil {
+		t.Fatal(err)
+	}
+	before, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, err := cfg.executeSettlementRun(t.Context(), request)
+	if err != nil || got.OK || got.Status != "unverifiable" || got.Retryable || !got.IdempotentReplay {
+		t.Fatalf("retryable cache bypassed evidence: %+v %v", got, err)
+	}
+	after, err := os.ReadFile(path)
+	if err != nil || !bytes.Equal(before, after) {
+		t.Fatal("ambiguous cache was rewritten")
+	}
+	if _, err := os.Stat(cfg.requestRecordPath(record.Request.Payouts[0].RequestID)); !os.IsNotExist(err) {
+		t.Fatal("missing leaf was executed again")
+	}
+}
+
+func TestAggregateConfirmedReplayRefusesFoldedForeignOwnershipHistory(t *testing.T) {
+	cfg, record := aggregateReceiptFixture(t)
+	raw := `{"request":{"request_id":"foreign"},"response":{"tx_hash":"` + c4TxHash + `"},"Response":{"tx_hash":"` + strings.Repeat("B", 64) + `"}}`
+	if err := os.WriteFile(cfg.requestRecordPath("foreign"), []byte(raw), 0600); err != nil {
+		t.Fatal(err)
+	}
+	if held := cfg.guardSettlementRunStoredReplay(t.Context(), record); held == nil || held.OK {
+		t.Fatal("foreign effect owner was hidden by a JSON alias")
+	}
+	req := normalizedSettlementRequest{RequestID: "new-owner", ToAddress: c4Recipient, AmountUWolo: "700", Memo: c4Memo, SignerRole: settlementSignerRole}
+	if err := cfg.claimSettlementConfirmation(t.Context(), req, c4Signer, c4TxHash, 0); err == nil {
+		t.Fatal("ambiguous foreign history allowed receipt acquisition")
 	}
 }

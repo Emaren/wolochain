@@ -7,11 +7,17 @@ import (
 	"context"
 	"reflect"
 	"strings"
+	"time"
 )
 
 const aggregateReplayUnverified = "AGGREGATE_REPLAY_UNVERIFIABLE"
 
 func (cfg settlementConfig) guardSettlementRunStoredReplay(ctx context.Context, record settlementRunStoredResult) *settlementRunResponse {
+	if ctx != nil {
+		bounded, cancel := context.WithTimeout(ctx, 30*time.Second)
+		defer cancel()
+		ctx = bounded
+	}
 	if cfg.settlementRunReplayEvidenceValid(ctx, record) {
 		return nil
 	}
@@ -39,6 +45,9 @@ func (cfg settlementConfig) settlementRunReplayEvidenceValid(ctx context.Context
 		// A wholly refused preflight need not have created a leaf record. Every
 		// attempted/positive/hash-bearing effect must retain its original leaf.
 		if !item.Attempted && !item.OK && item.TxHash == "" && item.Status != "confirmed" && item.Status != "accepted" && item.ConfirmationStatus != "confirmed" {
+			if item.Retryable && !legacySettlementPreflightRetryProven(settlementExecuteResponse{Status: item.Status, FailureCode: item.FailureCode, Retryable: true, SignerRole: item.SignerRole}, request.SignerRole) {
+				return false
+			}
 			continue
 		}
 		leaf, err := readSettlementStoredResult(cfg.requestRecordPath(payout.RequestID))
@@ -72,7 +81,7 @@ func sameSettlementPayoutEvidence(a, b settlementRunPayoutResult) bool {
 	return a.Index == b.Index && a.RequestID == b.RequestID && a.Attempted == b.Attempted && a.Outcome == b.Outcome && a.OK == b.OK && a.Status == b.Status &&
 		a.ConfirmationStatus == b.ConfirmationStatus && a.FailureCode == b.FailureCode && a.Retryable == b.Retryable &&
 		a.SignerRole == b.SignerRole && a.SignerAddress == b.SignerAddress && a.ToAddress == b.ToAddress &&
-		a.AmountUWolo == b.AmountUWolo && a.Memo == b.Memo && a.TxHash == b.TxHash
+		a.AmountUWolo == b.AmountUWolo && a.AmountWolo == b.AmountWolo && a.AmountWolo == formatDisplayAmount(a.AmountUWolo) && a.Memo == b.Memo && a.TxHash == b.TxHash
 }
 
 func resetSettlementRunAccounting(r settlementRunResponse) settlementRunResponse {
@@ -98,8 +107,8 @@ func resetSettlementRunAccounting(r settlementRunResponse) settlementRunResponse
 func sameSettlementRunAccounting(a, b settlementRunResponse) bool {
 	return reflect.DeepEqual([]int{a.RequestedPayoutCount, a.ExecutedPayoutCount, a.ConfirmedPayoutCount, a.AcceptedPayoutCount, a.RefusedPayoutCount, a.RejectedPayoutCount, a.ReplayPayoutCount},
 		[]int{b.RequestedPayoutCount, b.ExecutedPayoutCount, b.ConfirmedPayoutCount, b.AcceptedPayoutCount, b.RefusedPayoutCount, b.RejectedPayoutCount, b.ReplayPayoutCount}) &&
-		reflect.DeepEqual([]string{a.RequestedTotalUWolo, a.ExecutedTotalUWolo, a.ConfirmedTotalUWolo, a.AcceptedTotalUWolo, a.RefusedTotalUWolo, a.RejectedTotalUWolo},
-			[]string{b.RequestedTotalUWolo, b.ExecutedTotalUWolo, b.ConfirmedTotalUWolo, b.AcceptedTotalUWolo, b.RefusedTotalUWolo, b.RejectedTotalUWolo})
+		reflect.DeepEqual([]string{a.RequestedTotalUWolo, a.ExecutedTotalUWolo, a.ConfirmedTotalUWolo, a.AcceptedTotalUWolo, a.RefusedTotalUWolo, a.RejectedTotalUWolo, a.RequestedTotalWolo, a.ExecutedTotalWolo, a.ConfirmedTotalWolo, a.AcceptedTotalWolo, a.RefusedTotalWolo, a.RejectedTotalWolo},
+			[]string{b.RequestedTotalUWolo, b.ExecutedTotalUWolo, b.ConfirmedTotalUWolo, b.AcceptedTotalUWolo, b.RefusedTotalUWolo, b.RejectedTotalUWolo, b.RequestedTotalWolo, b.ExecutedTotalWolo, b.ConfirmedTotalWolo, b.AcceptedTotalWolo, b.RefusedTotalWolo, b.RejectedTotalWolo})
 }
 
 func quarantineSettlementRunReplay(r settlementRunResponse) settlementRunResponse {
@@ -124,8 +133,17 @@ func quarantineSettlementRunReplay(r settlementRunResponse) settlementRunRespons
 	return r
 }
 
-func (cfg settlementConfig) guardSettlementChallengeStoredReplay(ctx context.Context, record settlementChallengeStoredResult) *settlementChallengeResponse {
-	if cfg.settlementChallengeReplayEvidenceValid(ctx, record) {
+func (cfg settlementConfig) guardSettlementChallengeStoredReplay(ctx context.Context, record settlementChallengeStoredResult, current settlementChallengeResponse) *settlementChallengeResponse {
+	if ctx != nil {
+		bounded, cancel := context.WithTimeout(ctx, 30*time.Second)
+		defer cancel()
+		ctx = bounded
+	}
+	if current.FailureCode != "INVALID_CHALLENGE" && current.FailureCode != "INVALID_TRANSFER" &&
+		record.Response.FundingCount == current.FundingCount && record.Response.FundingVerifiedCount == current.FundingVerifiedCount &&
+		record.Response.ParticipantCount == current.ParticipantCount && record.Response.FundingTotalUWolo == current.FundingTotalUWolo &&
+		record.Response.FundingTotalWolo == current.FundingTotalWolo && reflect.DeepEqual(record.Response.Funding, current.Funding) &&
+		cfg.settlementChallengeReplayEvidenceValid(ctx, record) {
 		return nil
 	}
 	r := record.Response
@@ -235,7 +253,7 @@ func (cfg settlementConfig) settlementChallengeReplayEvidenceValid(ctx context.C
 				return false
 			}
 		} else {
-			if top.Response == nil || top.RequestID != deriveSettlementChallengeTopUpRequestID(q.SettlementRunID) || top.ToAddress != run.Response.SignerAddress {
+			if top.Response == nil || top.AmountWolo != formatDisplayAmount(top.AmountUWolo) || top.Response.AmountWolo != formatDisplayAmount(top.Response.AmountUWolo) || top.RequestID != deriveSettlementChallengeTopUpRequestID(q.SettlementRunID) || top.ToAddress != run.Response.SignerAddress {
 				return false
 			}
 			memo := "challenge top-up " + q.SettlementRunID
@@ -271,7 +289,7 @@ func (cfg settlementConfig) settlementChallengeReplayEvidenceValid(ctx context.C
 		reflect.DeepEqual(r.BucketTotals, calculated.BucketTotals) &&
 		reflect.DeepEqual([]int{r.RequestedTransferCount, r.ExecutedTransferCount, r.ConfirmedTransferCount, r.AcceptedTransferCount, r.RefusedTransferCount, r.RejectedTransferCount, r.ReplayTransferCount},
 			[]int{calculated.RequestedTransferCount, calculated.ExecutedTransferCount, calculated.ConfirmedTransferCount, calculated.AcceptedTransferCount, calculated.RefusedTransferCount, calculated.RejectedTransferCount, calculated.ReplayTransferCount}) &&
-		reflect.DeepEqual([]string{r.RequestedTotalUWolo, r.ExecutedTotalUWolo, r.ConfirmedTotalUWolo, r.AcceptedTotalUWolo, r.RefusedTotalUWolo, r.RejectedTotalUWolo},
-			[]string{calculated.RequestedTotalUWolo, calculated.ExecutedTotalUWolo, calculated.ConfirmedTotalUWolo, calculated.AcceptedTotalUWolo, calculated.RefusedTotalUWolo, calculated.RejectedTotalUWolo}) &&
+		reflect.DeepEqual([]string{r.RequestedTotalUWolo, r.ExecutedTotalUWolo, r.ConfirmedTotalUWolo, r.AcceptedTotalUWolo, r.RefusedTotalUWolo, r.RejectedTotalUWolo, r.RequestedTotalWolo, r.ExecutedTotalWolo, r.ConfirmedTotalWolo, r.AcceptedTotalWolo, r.RefusedTotalWolo, r.RejectedTotalWolo},
+			[]string{calculated.RequestedTotalUWolo, calculated.ExecutedTotalUWolo, calculated.ConfirmedTotalUWolo, calculated.AcceptedTotalUWolo, calculated.RefusedTotalUWolo, calculated.RejectedTotalUWolo, calculated.RequestedTotalWolo, calculated.ExecutedTotalWolo, calculated.ConfirmedTotalWolo, calculated.AcceptedTotalWolo, calculated.RefusedTotalWolo, calculated.RejectedTotalWolo}) &&
 		!strings.EqualFold(r.Status, "validated")
 }

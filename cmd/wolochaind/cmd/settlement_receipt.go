@@ -262,7 +262,7 @@ func readSettlementStateBounded(path string, limit int64) ([]byte, error) {
 		return nil, errSettlementReceiptState
 	}
 	data, err := io.ReadAll(io.LimitReader(f, limit+1))
-	if err != nil || int64(len(data)) > limit || len(bytes.TrimSpace(data)) == 0 || !chainjson.Valid(data) {
+	if err != nil || int64(len(data)) > limit || len(bytes.TrimSpace(data)) == 0 || !chainjson.ValidFolded(data) {
 		return nil, errSettlementReceiptState
 	}
 	current, statErr := f.Stat()
