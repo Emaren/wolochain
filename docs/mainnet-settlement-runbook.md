@@ -2007,3 +2007,82 @@ particular a four-hour isolated verification is incompatible with promising a
 Historical 100-WOLO uncertainty, claim #889, refund #8477, shared DE liabilities,
 original source provenance and the independent historical checkpoint remain
 unchanged. The website stays at its existing certified release.
+
+## Read-only financial release frontier (October 26)
+
+The existing maintenance board also projects one machine-readable release
+frontier. It reads the checksummed six-control checklist above; it does not
+create a second readiness registry, consume a nonce, inspect a wallet or grant
+permission. This invocation is offline and exits **3/HOLD** on success:
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 python3 scripts/settlement_maintenance_board.py --frontier
+```
+
+An explicit public GitHub refresh reads main identities, the four scoped PR
+heads and their exact-head check-run summaries. Each PR is sampled again after
+its checks; a changed head, missing page, unavailable source, invalid identity,
+timeout or oversized response yields UNKNOWN. There is one 25-second total
+budget, an eight-second per-process ceiling and a 256-KiB response ceiling;
+timeouts kill and reap the request process group. No retries or SSH occur.
+Observed successful checks do not establish that every required check exists;
+`required_check_completeness=NOT_EVALUATED` makes that limit explicit. These
+are the requested PR heads, not current production health or an inferred release
+blocker list. A stale PR can have red checks even when its changes are already
+in the certified baseline; its source disposition must be checked separately.
+The canonical financial controls are never derived from PR check counts.
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 python3 scripts/settlement_maintenance_board.py \
+  --frontier --refresh-github
+```
+
+Redirect the JSON to an owner-local `release-frontier.json` when needed. Preserve
+its generation time and canonical checklist SHA; do not commit private inputs
+or replace the canonical checklist with the generated projection. Provenance
+has four explicit meanings:
+
+| Label | Meaning |
+| --- | --- |
+| TOOL_OBSERVED | This invocation retrieved the public GitHub source/check identity. It says nothing about deployed source, custody or bank finality. |
+| HISTORICAL | Checksummed, dated repository evidence. The original observation time and source/build/binary identities remain visible; a report refresh never freshens them. |
+| OPERATOR_REPORTED | Sanitized local metadata supplied by an operator; reading a file cannot authenticate a host observation. |
+| INFERRED | Source-derived missing-evidence requirement, with a named role; it is neither a signature nor a live finding. |
+
+The optional `--operator-observation /absolute/canonical/operator.json` accepts
+only `aoe2war.release-frontier.operator-observation.v1`, a UTC
+`observed_at_utc`, and whitelisted website source/build/version, custody service
+state/private-listener presence, bounded storage byte counts and aggregate
+18-unit producer counts. The regular file must be canonical, non-symlinked,
+owned by the invoking user, mode 0600, single-link and at most 256 KiB; duplicate
+JSON keys, unknown fields and changes during reading fail closed. The packet
+cannot supply provenance, financial values, authorization or environment-file
+fingerprints. Even a reported ACTIVE 8094 remains OPERATOR_REPORTED with
+`current_runtime_verified=false`. Age over 15 minutes is STALE; future clock skew
+is CLOCK_INVALID. Recent recorded metadata is never promoted to current host
+verification.
+
+### Bank, custody and historical-proof gap matrix
+
+The command deliberately returns null bank/liability/reserve totals and global
+solvency UNKNOWN until authenticated, nonoverlapping observations exist. Reuse
+[the dedicated custody/role contract](war-satchel-custody-c2.md),
+[authenticated financial bridge](war-satchel-financial-bridge.md) and
+[controlled release](war-satchel-controlled-release.md); no second backend or
+installation controller is introduced here.
+
+| Required evidence | Issuer / next admissible action |
+| --- | --- |
+| Historical height 1078913 continuity | A chain-evidence custodian outside the existing Wolo operator trust domain must supply an authenticated archival checkpoint/header, validator/commit chain, acquisition/as-of provenance and root accepted by the enrolled verification policy. An expired IBC client or two same-operator endpoints cannot supply independence. Verify the original accepted intent/effect without replay. |
+| Current same-height assets and liabilities | Owner finance plus independently authenticated chain evidence must bind native SDK spendable bank proofs at H to the H+1 commit, fresh head/trust provenance, custody rights, all HD/shared-DE obligations, uncertain effects, external exposure and gas reserve. Missing scope remains unknown. Existing proof/solvency code is not a live observation. |
+| Dedicated custody commissioning | After separate owner authorization: provision a non-root `wolo-satchel` identity, root-controlled `/etc/wolo-satchel`, distinct vault/keyring and durable journal, pinned executable and private 127.0.0.1:8094. Establish real ownership, wager-review/withdrawal/execution isolation and a signed revocable permit. Never copy validator or legacy settlement custody as a shortcut. This command does not provision any of these. |
+| Writer exclusion and recoverable maintenance | Owner/operator must qualify the signed 18-unit identity capture together with external writers, drain, complete protected HD+DE backups, isolated restore and bounded resume. Armed timers are not quiescence; never directly replay seven financial one-shots. Source tests do not attest the live window. |
+| New bounded canary | Only after the actual controls pass: a fresh transaction-specific owner signature naming exact source, chain/denom, recipient, amount/gas/exposure ceiling, one-use nonce and expiry. The disputed historical 100-WOLO transfer is never the canary. |
+
+Original accepted 100-WOLO history, founder #889, refund #8477, reused payout-hash
+references and ambiguous founder pairs remain quarantined. The frontier neither
+infers their outcome nor changes bank/ledger state. Its exit 2/STOP means evidence
+or input validation failed; exit 3/HOLD means a valid nonauthorizing projection.
+It can never return financial GO. Human roles in the matrix identify genuine
+missing evidence or authority; they do not invent people, enroll keys, require
+an artificial council or constitute approval.
