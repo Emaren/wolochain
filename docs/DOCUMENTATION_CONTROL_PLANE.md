@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `review/solo-resume-live-identity-inspect-20261026` at `3ed031e301d0f318e1915c9bd9c11d564c72bfef`
+Implementation baseline: `codex/central-financial-frontier` at `5671c1fe0d42c912ddcbbd80a34ac9556108645e`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
