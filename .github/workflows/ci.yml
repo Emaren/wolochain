@@ -116,6 +116,7 @@ jobs:
       - name: Financial maintenance and activation blind-spot contracts (read only)
         run: |
           python3 -m unittest discover -s tests -p 'test_settlement_maintenance_board.py' -v
+          python3 -m unittest discover -s tests -p 'test_settlement_release_frontier.py' -v
           python3 -m unittest discover -s tests -p 'test_settlement_producer_activation_topology.py' -v
           python3 -m unittest discover -s tests -p 'test_settlement_auxiliary_producer_surfaces.py' -v
 

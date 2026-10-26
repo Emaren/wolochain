@@ -3,7 +3,9 @@
 
 Consumes WoloChain's checksummed historical six-control evidence index and
 optionally the sanitized HD/DE/VPS producer-owner triage packet. Performs no
-network, SSH, root inspection, writes, key access, chain queries or broadcasts.
+network, SSH, root inspection, writes, key access, chain queries or broadcasts
+by default. --frontier --refresh-github explicitly refreshes only public source/CI
+identities, with a bounded read-only GitHub request budget.
 Every successful report exits 3: it cannot be mistaken for release approval.
 """
 from __future__ import annotations
@@ -161,8 +163,21 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[1])
     parser.add_argument("--triage", type=Path,
                         help="Optional SANITIZED local JSON from settlement_producer_owner_triage.py")
+    parser.add_argument("--frontier", action="store_true", help="Read-only release-frontier projection of the same six-control authority")
+    parser.add_argument("--refresh-github", action="store_true", help="Explicit bounded read-only GitHub identity/CI refresh; never SSH or wallet access")
+    parser.add_argument("--operator-observation", type=Path, help="Optional private sanitized operator packet, always OPERATOR_REPORTED")
     args = parser.parse_args(argv)
+    if (args.refresh_github or args.operator_observation) and not args.frontier:
+        parser.error("--refresh-github/--operator-observation require --frontier")
     try:
+        if args.frontier:
+            if args.triage is not None:
+                parser.error("--triage belongs to the original maintenance board")
+            from settlement_release_frontier import frontier
+            result = frontier(args.root, refresh_github=args.refresh_github,
+                              operator_observation=args.operator_observation)
+            print(json.dumps(result, indent=2, sort_keys=True))
+            return 3
         # Existing strict receipt checker authenticates all checked-in hashes,
         # enforces the original HOLD, six exact controls and historical source.
         audit_historical_evidence(args.root)
