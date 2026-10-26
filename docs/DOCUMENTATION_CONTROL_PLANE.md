@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `codex/one-height-solvency-offline-closure-20261026` at `7f3364bba0032cd59097258748eb209b17e15ad1`
+Implementation baseline: `codex/solo-owner-offline-intent-20261026` at `96a7c0a48e48f61fafa41a904f58cc7ef8c6cd8c`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
