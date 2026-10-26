@@ -63,6 +63,8 @@ AUTHORITY_NONCE_ROOT = Path("/var/lib/wolo-financial-authority-nonces")
 
 DOCKER = ["docker", "--host=unix:///var/run/docker.sock"]
 SCHEMA = "wolo.financial-maintenance-permit.v1"
+# Separate schema: a v1 five-role permit cannot become a solo-owner approval.
+SOLO_SCHEMA = "wolo.solo-owner-maintenance-permit.v1"
 FENCE_SCHEMA = "wolo.financial-maintenance-fence.v1"
 SHA = re.compile(r"[0-9a-f]{64}\Z")
 IDENT = re.compile(r"[a-z][a-z0-9_]{0,62}\Z")
@@ -169,7 +171,7 @@ def _validate_permit_contract(value):
     expected = {"schema", "action", "scope_sha256", "tool_sha256", "packet_sha256",
                 "procedure_sha256", "not_before", "expires_at", "approval_refs",
                 "attestations", "max_total_bytes", "databases", "restore_image"}
-    require(set(value) == expected and value["schema"] == SCHEMA and
+    require(set(value) == expected and value["schema"] in (SCHEMA, SOLO_SCHEMA) and
             value["action"] == "fence-backup-isolated-restore", "PERMIT_SCOPE_INVALID")
     require(value["scope_sha256"] == scope_digest() and
             value["tool_sha256"] == digest(Path(__file__).read_bytes()), "SOURCE_SCOPE_DRIFT")
@@ -179,7 +181,9 @@ def _validate_permit_contract(value):
     start, end = utc(value["not_before"]), utc(value["expires_at"])
     require(0 < (end - start).total_seconds() <= 1800, "APPROVED_WINDOW_UNAVAILABLE")
     approvals = value["approval_refs"]
-    require(type(approvals) is dict and set(approvals) == ROLE_NAMES,
+    require(type(approvals) is dict and set(approvals) ==
+            ({"owner"} if value["schema"] == SOLO_SCHEMA else ROLE_NAMES),
+            "SCOPED_HUMAN_APPROVALS_REQUIRED" if value["schema"] == SOLO_SCHEMA else
             "FIVE_SCOPED_HUMAN_APPROVALS_REQUIRED")
     for role, a in approvals.items():
         require(type(a) is dict and set(a) == {"identity", "approval_sha256"} and
@@ -1033,7 +1037,7 @@ def verify_current_backup(restore_receipt_path, expected_scope_sha256,
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--mode", choices=("scope", "inspect-storage", "verify-fence", "fence", "backup", "restore-isolated", "capture", "offline-restore", "resume"),
+    parser.add_argument("--mode", choices=("scope", "inspect-storage", "verify-fence", "fence", "backup", "restore-isolated", "capture", "offline-restore", "resume", "solo-capture", "solo-offline-restore"),
                         default="scope")
     parser.add_argument("--permit", type=Path)
     parser.add_argument("--fence-receipt", type=Path)
@@ -1042,7 +1046,7 @@ def main(argv=None):
     # paths never become caller-supplied trust anchors.
     for name in ("packet", "registry", "evidence", "procedure", "nonce-ledger",
                  "host-identity", "source-drift-disposition", "capture-manifest",
-                 "previous-review", "restore-receipt"):
+                 "previous-review", "restore-receipt", "writer-inventory", "completion-receipt"):
         parser.add_argument("--" + name, type=Path)
     args = parser.parse_args(argv)
     try:
@@ -1084,7 +1088,7 @@ def main(argv=None):
         # Deliberately preserve old v1 modes as an explicit hard refusal.
         # The signed v2 capture/restore modes are separate and MUST prove
         # enrolled authority before any mutation, including nonce consumption.
-        require(args.mode in ("capture", "offline-restore", "resume"),
+        require(args.mode in ("capture", "offline-restore", "resume", "solo-capture", "solo-offline-restore"),
                 "FIVE_HUMAN_CONTROLLER_NOT_INTEGRATED")
         fd = os.open(LOCK, os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW, 0o600)
         with os.fdopen(fd, "a") as lock:
@@ -1092,26 +1096,53 @@ def main(argv=None):
             require(stat.S_ISREG(meta.st_mode) and meta.st_uid == 0 and meta.st_nlink == 1 and
                     stat.S_IMODE(meta.st_mode) == 0o600, "UNSAFE_MAINTENANCE_LOCK")
             fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            from settlement_financial_controller_binding import authenticate_and_reserve
-            # Real person enrollment, source integrity, off-host replay witness,
-            # producer coverage and immutable evidence must be established
-            # first. The unconfigured source anchors fail closed.
-            req = authenticate_and_reserve(
-                args, mode=args.mode, source_tool_sha256=digest(Path(__file__).read_bytes()),
-                scope_sha256=scope_digest(), anchors=AUTHORITY_ENROLLMENT_ANCHORS,
-                root=AUTHORITY_ROOT, nonce_root=AUTHORITY_NONCE_ROOT)
-            if args.mode == "capture":
+            if args.mode.startswith("solo-"):
+                require(all(getattr(args, key) is not None for key in
+                            ("packet", "procedure", "writer_inventory", "output", "completion_receipt")),
+                        "SOLO_RUNTIME_COMPLETE_INPUTS_REQUIRED")
+                require(args.completion_receipt.is_absolute() and
+                        not args.completion_receipt.exists() and not args.completion_receipt.is_symlink(),
+                        "NEW_COMPLETION_RECEIPT_REQUIRED")
+                from settlement_solo_runtime import authenticate_and_reserve as solo_admit
+                req = solo_admit(args)
+            else:
+                from settlement_financial_controller_binding import authenticate_and_reserve
+                # Real person enrollment, source integrity, off-host replay witness,
+                # producer coverage and immutable evidence must be established
+                # first. The unconfigured source anchors fail closed.
+                req = authenticate_and_reserve(
+                    args, mode=args.mode, source_tool_sha256=digest(Path(__file__).read_bytes()),
+                    scope_sha256=scope_digest(), anchors=AUTHORITY_ENROLLMENT_ANCHORS,
+                    root=AUTHORITY_ROOT, nonce_root=AUTHORITY_NONCE_ROOT)
+            if args.mode in ("capture", "solo-capture"):
                 require(args.permit is not None and args.output is not None,
                         "EXACT_CAPTURE_INPUTS_REQUIRED")
                 fence(args.permit, args.fence_receipt)
                 backup(args.fence_receipt, args.output)
-            elif args.mode == "offline-restore":
+            elif args.mode in ("offline-restore", "solo-offline-restore"):
                 require(args.output is not None, "EXACT_RESTORE_INPUT_REQUIRED")
                 restore_isolated(args.fence_receipt, args.output, phase_window=req)
             else:
                 # Independent RESUME signatures are necessary, not sufficient.
                 # No resume implementation may be inferred from a backup.
                 raise MaintenanceError("INDEPENDENT_RESUME_EXECUTOR_NOT_APPROVED")
+            if args.mode.startswith("solo-"):
+                from settlement_solo_runtime import validate_request
+                validate_request({k: v for k, v in req.items() if k not in
+                    {"live_actions_allowed", "max_total_bytes", "witness_receipt"}}, clock())
+                completed = {
+                    "schema": "wolo.solo-maintenance-completion.v1", "phase": req["phase"],
+                    "completed": True, "source_commit": req["source_commit"],
+                    "scope_sha256": scope_digest(), "completed_at": clock().isoformat(),
+                    "fence_receipt_sha256": file_sha(args.fence_receipt),
+                    "backup_manifest_sha256": file_sha(args.output / "backup.json"),
+                    "offhost_consumption": req["witness_receipt"],
+                    "financial_release_authorized": False, "global_writers_fenced": False,
+                    "custody_or_solvency_certified": False,
+                }
+                if args.mode == "solo-offline-restore":
+                    completed["restore_receipt_sha256"] = file_sha(args.output / "restore.json")
+                write_new(args.completion_receipt, canonical(completed))
         print(json.dumps({"status": "SCOPED_OPERATION_COMPLETE", "resume_authorized": False,
                           "financial_release_authorized": False}))
         return 0
