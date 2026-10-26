@@ -101,6 +101,53 @@ def env_file_paths(value):
     return result
 
 
+EXECUTION_PROPERTIES = frozenset(("ExecStart", "ExecStartPre", "ExecStartPost",
+                                  "ExecStop", "ExecReload", "ExecCondition"))
+
+
+def native_execution_configuration(unit, fields, runner):
+    """Use native ordered argv tuples; PID/timing/exit values are runtime state.
+
+    Unit/drop-in bytes remain independently hashed. Do not parse argv out of
+    systemctl's lossy human rendering, or hash volatile last-run timestamps as
+    if stopping a unit changed its source configuration.
+    """
+    names = sorted(EXECUTION_PROPERTIES.intersection(fields))
+    if not names:
+        return {}
+    loaded = json.loads(runner(["busctl", "--system", "--json=short", "call",
+        "org.freedesktop.systemd1", "/org/freedesktop/systemd1",
+        "org.freedesktop.systemd1.Manager", "LoadUnit", "s", unit]))
+    require(loaded.get("type") == "o" and type(loaded.get("data")) is list and
+            len(loaded["data"]) == 1 and type(loaded["data"][0]) is str and
+            re.fullmatch(r"/org/freedesktop/systemd1/unit/[A-Za-z0-9_]+", loaded["data"][0]),
+            "PRODUCER_NATIVE_UNIT_INVALID")
+    result = {}
+    for name in names:
+        raw = runner(["busctl", "--system", "--json=short", "get-property",
+            "org.freedesktop.systemd1", loaded["data"][0],
+            "org.freedesktop.systemd1.Service", name])
+        require(type(raw) is str and len(raw) <= 262144, "PRODUCER_NATIVE_EXECUTION_LIMIT")
+        value = json.loads(raw)
+        require(type(value) is dict and set(value) == {"type", "data"} and
+                value["type"] == "a(sasbttttuii)" and type(value["data"]) is list and
+                len(value["data"]) <= 32, "PRODUCER_NATIVE_EXECUTION_INVALID")
+        text_rows = fields[name]
+        expected = 0 if text_rows == [""] else len(text_rows)
+        require(len(value["data"]) == expected, "PRODUCER_EXECUTION_CHANGED_DURING_SAMPLE")
+        rows = []
+        for row in value["data"]:
+            require(type(row) is list and len(row) == 10 and type(row[0]) is str and
+                    0 < len(row[0]) <= 4096 and row[0].startswith("/") and
+                    type(row[1]) is list and 0 < len(row[1]) <= 256 and
+                    all(type(a) is str and len(a) <= 16384 for a in row[1]) and
+                    type(row[2]) is bool and all(type(n) is int for n in row[3:]),
+                    "PRODUCER_NATIVE_EXECUTION_INVALID")
+            rows.append(row[:3])
+        result[name] = rows
+    return result
+
+
 def _configuration(unit, fields, runner, *, allow_owned_gate):
     basic = maintenance.show(unit, runner)
     for key in ("Id", "FragmentPath", "DropInPaths", "ActiveState"):
@@ -146,7 +193,8 @@ def _configuration(unit, fields, runner, *, allow_owned_gate):
         raw = maintenance.private_read(source, source=True)
         files.append((kind, sha(str(source).encode()), sha(raw)))
     stable = {key: fields[key] for key in STABLE_PROPERTIES
-              if key != "DropInPaths" and key in fields}
+              if key != "DropInPaths" and key not in EXECUTION_PROPERTIES and key in fields}
+    stable["native_execution"] = native_execution_configuration(unit, fields, runner)
     # Preserve absence/presence explicitly. Never collapse "not a timer
     # property" and "present but empty" to the same signed identity.
     stable["present_properties"] = sorted(fields)

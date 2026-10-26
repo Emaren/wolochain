@@ -35,6 +35,8 @@ class ProducerIdentityTests(unittest.TestCase):
         self.gated = False
         self.secret_revision = 0
         self.reads = 0
+        self.runtime_revision = 0
+        self.command_revision = 0
         self.drift_at = None
         self.invalid_env = False
         self.omit_service_mainpid = False
@@ -99,6 +101,13 @@ class ProducerIdentityTests(unittest.TestCase):
                                        "ActiveState", "MainPID") if key in p}
 
     def runner(self, args):
+        if args[0] == "busctl":
+            if "LoadUnit" in args:
+                return json.dumps({"type":"o","data":["/org/freedesktop/systemd1/unit/fixture"]})
+            field = args[-1]
+            argv = ["/opt/demo", str(self.command_revision)]
+            return json.dumps({"type":"a(sasbttttuii)","data":[
+                ["/opt/demo",argv,False,self.runtime_revision,0,0,0,100,0,0]]})
         self.assertEqual(args[:3], ["systemctl", "--no-pager", "show"])
         self.assertEqual(args[4], "--")
         p = self.properties(args[5])
@@ -138,6 +147,14 @@ class ProducerIdentityTests(unittest.TestCase):
         capture = self.capture()
         self.assertEqual(set(capture["units"]), set(self.units))
         self.assertFalse(capture["financial_release_authorized"])
+
+    def test_native_execution_runtime_counters_do_not_become_configuration(self):
+        packet = self.capture()
+        self.runtime_revision = 123456
+        identity.verify_producer_identities(packet, runner=self.runner)
+        self.command_revision = 1
+        with self.assertRaisesRegex(m.MaintenanceError, "PRODUCER_CONFIGURATION_DRIFT"):
+            identity.verify_producer_identities(packet, runner=self.runner)
 
     def test_native_repeated_execution_and_envfile_properties_preserve_order(self):
         props = self.properties(self.app)
