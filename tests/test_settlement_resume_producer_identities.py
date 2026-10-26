@@ -203,8 +203,8 @@ class ProducerIdentityTests(unittest.TestCase):
                 identity.inspect_readonly(runner=self.runner)
 
     def test_nonroot_inspect_refuses_before_reading_sensitive_sources(self):
-        with patch.object(identity.os, "geteuid", return_value=1000), \\
-             patch.object(identity, "collect_producer_identities") as collect:
+        with (patch.object(identity.os, "geteuid", return_value=1000),
+              patch.object(identity, "collect_producer_identities") as collect):
             with self.assertRaisesRegex(m.MaintenanceError,
                                         "ROOT_REQUIRED_FOR_PRIVATE_SOURCE_OBSERVATION"):
                 identity.inspect_readonly(runner=self.runner)
