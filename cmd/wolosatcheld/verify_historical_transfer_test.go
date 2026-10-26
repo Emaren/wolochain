@@ -173,3 +173,52 @@ func TestHistoricalOriginalPrincipalMustBeAtFeeOffsetOrdinalOne(t *testing.T) {
   })
  }
 }
+
+
+func TestHistoricalProofReceiptBindsAllExactInputsWithoutGrantingAuthority(t *testing.T) {
+	baseline := bindHistoricalProofInputs([]byte("anchor"), []byte("expected"), []byte("proof"), "2026-07-01T00:00:00Z")
+	for _, key := range []string{"anchor", "expected", "proof"} {
+		inputs := [][]byte{[]byte("anchor"), []byte("expected"), []byte("proof")}
+		index := map[string]int{"anchor": 0, "expected": 1, "proof": 2}[key]
+		inputs[index] = append(inputs[index], byte(' '))
+		changed := bindHistoricalProofInputs(inputs[0], inputs[1], inputs[2], baseline.HistoricalAsOfUTC)
+		before := []string{baseline.AnchorSHA256, baseline.ExpectedSHA256, baseline.ProofSHA256}
+		after := []string{changed.AnchorSHA256, changed.ExpectedSHA256, changed.ProofSHA256}
+		for i := range before {
+			if (before[i] != after[i]) != (i == index) {
+				t.Fatalf("%s input was not independently bound", key)
+			}
+		}
+	}
+	// Confirm the promoted JSON keys actually survive embedding in the report.
+	raw, err := json.Marshal(struct{ historicalProofInputBindings }{baseline})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var fields map[string]string
+	if err := json.Unmarshal(raw, &fields); err != nil {
+		t.Fatal(err)
+	}
+	if len(fields) != 4 || fields["anchor_sha256"] != baseline.AnchorSHA256 || fields["expected_sha256"] != baseline.ExpectedSHA256 || fields["proof_sha256"] != baseline.ProofSHA256 || fields["historical_as_of_utc"] != baseline.HistoricalAsOfUTC {
+		t.Fatal("historical report omitted an input binding")
+	}
+}
+
+func TestHistoricalProofNilOrCanceledContextFailsBeforeVerification(t *testing.T) {
+ dir,err:=filepath.EvalSymlinks(t.TempDir());if err!=nil{t.Fatal(err)}
+ file:=func(name string,value any)string{
+  raw,err:=json.Marshal(value);if err!=nil{t.Fatal(err)}
+  p:=filepath.Join(dir,name);if err:=os.WriteFile(p,raw,0600);err!=nil{t.Fatal(err)};return p
+ }
+ anchor:=file("anchor.json",satchel.TrustAnchor{Height:99,Hash:strings.Repeat("A",64),PeriodSeconds:3600,EvidenceReference:"TEST only, not authentic"})
+ expected:=file("expected.json",ExpectedHistoricalTransfer{Version:1,Scope:"legacy-settlement-accepted-escrow-100",ChainID:"wolo-1",TxHash:acceptedEscrow100Hash,Height:acceptedEscrow100Height,Sender:"original_sender",Recipient:"original_recipient",AmountUWolo:"100000000",Memo:"durable-request",HistoricalAsOfUTC:"2026-07-01T00:00:00Z",JournalIdentitySHA256:strings.Repeat("1",64)})
+ proofBytes:=[]byte(`{"version":1,"chain_id":"wolo-1","kind":"transfer","tx_hash":"`+acceptedEscrow100Hash+`","responses":[{"source":"primary","path":"/status","query":"","body":{}}]}`)
+ if _,err:=satchel.DecodePortableProof(proofBytes);err!=nil{t.Fatalf("fixture must reach context admission: %v",err)}
+ proof:=filepath.Join(dir,"proof.json");if err:=os.WriteFile(proof,proofBytes,0600);err!=nil{t.Fatal(err)}
+ canceled,cancel:=context.WithCancel(context.Background());cancel()
+ for _,ctx:=range []context.Context{nil,canceled} {
+  var out,errout bytes.Buffer
+  rc:=verifyHistoricalTransferCommand(ctx,[]string{"--anchor",anchor,"--expected",expected,"--proof",proof},&out,&errout)
+  if rc!=2||out.Len()!=0||!strings.Contains(errout.String(),"UNVERIFIABLE")||strings.Contains(errout.String(),dir){t.Fatalf("invalid context admission: rc=%d %s %s",rc,out.String(),errout.String())}
+ }
+}

@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "a56d56b5b36989097709cd58e4877f50903066865ceebd21c74051a7f2dd66f0",
+      "sha256": "d9e474fe995d09c3749703f303cfff50aeae3d952ff290fc985ecd72beeabae2",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -310,9 +310,9 @@
       "owner": "wolochain-ops",
       "path": "docs/mainnet-settlement-runbook.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-10-18",
+      "reviewed_at": "2026-10-26",
       "sensitivity": "restricted",
-      "sha256": "16c27475c7fe6691476895b9339afc613e87f69c5679a0ff28a3d18a0e998714",
+      "sha256": "e1ee6875f4f92ff6b0fb4511b9f064de5fdbe4a3405a67b7d6d53380bb6c56d2",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -381,7 +381,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-20",
       "sensitivity": "public",
-      "sha256": "689f2b706579434959c99e3b4b1d0a0878dc6a695ee0d602c6122f69a39836eb",
+      "sha256": "3b3530d155dd210eb005cb87d3f08efaa44ab3599b5ef21c8a1d7cf8e4ce1b0b",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -642,7 +642,7 @@
         "wolochain",
         "aoe2war"
       ],
-      "title": "Codex Mission: WoloChain Mainnet ↔ Osmosis IBC Prep",
+      "title": "Codex Mission: WoloChain Mainnet \u2194 Osmosis IBC Prep",
       "type": "historical"
     },
     {
@@ -803,7 +803,7 @@
         "wolochain",
         "aoe2war"
       ],
-      "title": "WoloChain Mainnet → Osmosis Liquidity Transfer",
+      "title": "WoloChain Mainnet \u2192 Osmosis Liquidity Transfer",
       "type": "historical"
     },
     {
@@ -872,7 +872,7 @@
         "wolochain",
         "aoe2war"
       ],
-      "title": "WoloChain Mainnet → Osmosis Test Transfer",
+      "title": "WoloChain Mainnet \u2192 Osmosis Test Transfer",
       "type": "historical"
     },
     {
@@ -988,7 +988,7 @@
         "aoe2war",
         "aoe2dewarwagers"
       ],
-      "title": "Financial-maintenance authority and writer review — 2026-10-24",
+      "title": "Financial-maintenance authority and writer review \u2014 2026-10-24",
       "type": "runbook"
     },
     {
@@ -1012,7 +1012,7 @@
         "aoe2war",
         "aoe2dewarwagers"
       ],
-      "title": "Production P1 source integrity, writer evidence, five-person authority and bounded recovery proposal — 2026-10-24",
+      "title": "Production P1 source integrity, writer evidence, five-person authority and bounded recovery proposal \u2014 2026-10-24",
       "type": "runbook"
     },
     {
@@ -1036,7 +1036,7 @@
         "aoe2war",
         "aoe2dewarwagers"
       ],
-      "title": "Financial maintenance phase integration operator runbook — 2026-10-24",
+      "title": "Financial maintenance phase integration operator runbook \u2014 2026-10-24",
       "type": "runbook"
     },
     {
@@ -1060,14 +1060,14 @@
         "aoe2war",
         "aoe2dewarwagers"
       ],
-      "title": "Financial controller source integrity and five-human enrollment — 2026-10-24",
+      "title": "Financial controller source integrity and five-human enrollment \u2014 2026-10-24",
       "type": "runbook"
     }
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "review/20261025-archive-only-historical-transfer-time",
-    "commit": "eef1d38be264d11b6b27a12f015b63fb70c024a6"
+    "branch": "codex/wolo-p1-evidence-closure",
+    "commit": "6ea9a8278c34136ac1715b6eb9d3536d46430f85"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

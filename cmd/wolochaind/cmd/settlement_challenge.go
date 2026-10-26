@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/emaren/wolochain/internal/chainjson"
 	"net/url"
 	"os"
 	"os/exec"
@@ -688,6 +689,9 @@ func (cfg settlementConfig) executeSettlementChallenge(ctx context.Context, requ
 				}, nil
 			}
 
+			if held := cfg.guardSettlementChallengeStoredReplay(ctx, stored, plan.Response); held != nil {
+				return *held, nil
+			}
 			if settlementChallengeResponseIsFinal(stored.Response) {
 				replayed := stored.Response
 				replayed.DryRun = false
@@ -2523,7 +2527,7 @@ func settlementChallengeResponseIsFinal(response settlementChallengeResponse) bo
 	if response.Retryable {
 		return false
 	}
-	return response.OK || strings.EqualFold(strings.TrimSpace(response.Status), "failed") || strings.EqualFold(strings.TrimSpace(response.Status), "partial")
+	return response.OK || strings.EqualFold(strings.TrimSpace(response.Status), "failed") || strings.EqualFold(strings.TrimSpace(response.Status), "partial") || strings.EqualFold(strings.TrimSpace(response.Status), "unverifiable")
 }
 
 func hashSettlementChallengeRequest(request normalizedSettlementChallengeRequest) string {
@@ -2570,9 +2574,12 @@ func (cfg settlementConfig) withChallengeLock(settlementID string, fn func() (se
 }
 
 func readSettlementChallengeStoredResult(path string) (settlementChallengeStoredResult, error) {
-	data, err := os.ReadFile(path)
+	data, err := readSettlementStateBounded(path, settlementReceiptMaxStateBytes)
 	if err != nil {
 		return settlementChallengeStoredResult{}, err
+	}
+	if !chainjson.ValidFolded(data) {
+		return settlementChallengeStoredResult{}, errSettlementReceiptState
 	}
 	result := settlementChallengeStoredResult{}
 	if err := json.Unmarshal(data, &result); err != nil {

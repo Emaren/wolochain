@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"syscall"
 
 	"github.com/emaren/wolochain/internal/chainjson"
 )
@@ -240,20 +241,32 @@ func (cfg settlementConfig) checkSettlementReceiptHistory(ctx context.Context, r
 }
 
 func readSettlementReceiptState(path string) ([]byte, error) {
+	return readSettlementStateBounded(path, settlementReceiptMaxRecordSize)
+}
+
+func readSettlementStateBounded(path string, limit int64) ([]byte, error) {
 	info, err := os.Lstat(path)
 	if err != nil {
 		return nil, err
 	}
-	if !info.Mode().IsRegular() || info.Size() > settlementReceiptMaxRecordSize {
+	if !info.Mode().IsRegular() || info.Size() > limit {
 		return nil, errSettlementReceiptState
 	}
-	f, err := os.Open(path)
+	f, err := os.OpenFile(path, os.O_RDONLY|syscall.O_NOFOLLOW|syscall.O_NONBLOCK, 0)
 	if err != nil {
 		return nil, err
 	}
 	defer f.Close()
-	data, err := io.ReadAll(io.LimitReader(f, settlementReceiptMaxRecordSize+1))
-	if err != nil || len(data) > settlementReceiptMaxRecordSize || len(bytes.TrimSpace(data)) == 0 || !chainjson.Valid(data) {
+	opened, err := f.Stat()
+	if err != nil || !opened.Mode().IsRegular() || !os.SameFile(info, opened) || opened.Size() > limit {
+		return nil, errSettlementReceiptState
+	}
+	data, err := io.ReadAll(io.LimitReader(f, limit+1))
+	if err != nil || int64(len(data)) > limit || len(bytes.TrimSpace(data)) == 0 || !chainjson.ValidFolded(data) {
+		return nil, errSettlementReceiptState
+	}
+	current, statErr := f.Stat()
+	if statErr != nil || current.Size() != opened.Size() || !current.ModTime().Equal(opened.ModTime()) {
 		return nil, errSettlementReceiptState
 	}
 	return data, nil

@@ -8,12 +8,72 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "runtime-evidence"
 authority: "mainnet-settlement-operations"
-reviewed_at: "2026-10-18"
+reviewed_at: "2026-10-26"
 review_interval_days: 14
 sensitivity: "restricted"
 ---
 
 # WoloChain Mainnet Settlement Runbook
+
+## October 26, 2026 — aggregate replay evidence and actual P1 frontier
+
+[Held PR107](https://github.com/Emaren/wolochain/pull/107) extends qualified
+PR106 without merging or replacing any existing branch. Failing-before CI
+[40295076807](https://github.com/Emaren/wolochain/actions/runs/40295076807)
+proved two false confirmations: a fingerprint-matching grouped cache could
+report confirmed without leaf records, and a challenge cache could override an
+invalid funding plan. Aggregate readers also accepted case aliases and linked
+files. These are source defects, separate from unavailable chain evidence.
+
+The repair validates **every** existing aggregate before final replay or
+retry, using read-only original leaf requests, existing physical-effect owners,
+exact role/recipient/memo/uwolo identity and conserved micro/display totals.
+It binds cached challenge funding/participants to the already-collected plan
+and validates nested run, transfer and top-up evidence. Missing ownership,
+contradiction or uncertain prior execution returns
+`AGGREGATE_REPLAY_UNVERIFIABLE`, with nested confirmation claims removed and
+`retryable=false`. No guard calls an executor, queries a chain or changes
+historical journal bytes. It does not prove payment absence. Existing proven
+pre-signing refusal rules remain distinct from ambiguous broadcast history.
+
+Journal reads share folded-JSON rejection, regular-file/inode checks,
+nonblocking/no-follow acquisition and read bounds:64KiB leaves,16MiB aggregates
+(the valid250-payout contract can exceed64KiB). Aggregate validation has a
+30-second cancellation budget. Historical offline proof reports additionally
+bind exact anchor, expected-intent and portable-proof bytes plus declared
+historical time. The as-of field is not authenticated provenance. Nil/canceled
+contexts refuse verification; successful historical verification still exits3,
+NONAUTHORIZING, with all financial/retry/custody authorization false.
+
+**Fresh nonmutating runtime:** the linked single
+[canonical checklist](settlement-contracts/financial-release-checklist.json)
+retains five BLOCKED controls and solvency UNKNOWN. Root SSH on October26
+observed checkout78c25985 clean, settlement1012/1010 with original040126a2
+hash and unmodified78c VCS; consensus1009 with4b77f622 hash, intentionally
+modifiedd3bd6241 VCS, and local wolo-1 height2649282→2649283. Six financial
+timer families remain active. This is continuity, not independent finality or
+producer isolation. Old source→settlement byte parity is already reproduced;
+do not repeat it or use it as a permit. Original install custody, consensus
+provenance and compatibility of actual historical obligations remain distinct.
+
+There is one human owner. No source result appoints a nonexistent reviewer
+council or manufactures signatures. Existing old multi-role controllers/permits
+are not silently converted to single-owner authority. Before any operation,
+qualify a genuine single-owner policy preserving chain proofs, one-use leases,
+fences, state ownership, full-size backup/recovery and separate final approval.
+No key creation or policy activation is part of PR107.
+
+**Shortest safe operator action:** obtain/provision the missing authentically
+sourced checkpoint and validator/header archive outside the existing RPC trust
+domain, the immutable accepted100WOLO intent and authentic historical as-of.
+Then run the already existing offline command documented in
+[the proof contract](settlement-contracts/README.md#october-21-2026--historical-accepted-100-wolo-proof-offline-and-non-authorizing).
+Never guess those files/time to make verification pass. Later current-bank
+proofs must bind all distinct accounts to one committed SDK height and complete
+nonoverlapping liabilities. Preserve300WOLO #889, #8477, #947 and shared
+#2712/#2760 ordinal uncertainty; never retry the historical100WOLO transfer.
+No maintenance, binary switch, chain restart, state restore or funded canary
+is authorized by this source work.
 
 ## October 25, 2026 — held legacy replay qualification, no live upgrade
 

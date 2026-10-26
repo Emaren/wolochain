@@ -1,6 +1,6 @@
 {
   "schema": "aoe2war.wolo.financial-release-checklist.v1",
-  "updated_at_utc": "2026-10-24T10:11:00.082248Z",
+  "updated_at_utc": "2026-10-26T09:21:09.845635+00:00",
   "canonical_issue": "https://github.com/Emaren/wolochain/issues/5",
   "role": "Single current observational six-control index; never a release permit or autonomous controller",
   "overall_status": "HOLD",
@@ -12,7 +12,7 @@
   "controls": {
     "hd_de_producers_isolated": {
       "status": "BLOCKED",
-      "observed_at_utc": "2026-10-24T10:09:30.989114+00:00",
+      "observed_at_utc": "2026-10-26T09:21:09.845635+00:00",
       "evidence": [
         "producer-refresh-handoff.json",
         "settlement-shared-producer-inventory-readonly.json",
@@ -20,14 +20,15 @@
         "producer-surface-metadata.json",
         "producer-containers-identities.json",
         "operator-reported-runtime-producers-20261023.json",
-        "producer-observation-20261024.json"
+        "producer-observation-20261024.json",
+        "runtime-observation-20261026-summary.json"
       ],
-      "established": "Fresh root SSH read-only collector at 2026-10-24T10:09:30.989114+00:00 inspected19 discovered units with no incomplete unit inspections;11 active candidates. Heartbeat timer active/writer inactive. No producer fence or drain performed. Independent source review identifies heartbeat as an HD indexed-transfer DB writer, so reviewed maintenance scope now includes both heartbeat units (18total). External/cron/user/container/signing authority remains unproved.",
+      "established": "October26 root SSH read-only observation: six financial timer families remain active; no producer fencing or drain occurred. Existing19-unit inventory/18-unit candidate maintenance scope remains historical source evidence; external and independent writer coverage is not certified.",
       "unknowns": [
         "nonprefix/user/cron/container/external financial authority",
         "all signers, queues, HTTP and independently signed paths"
       ],
-      "next_action": "Named HD/DE/external owners independently complete writer and ingress classification. Review the exact18-unit scope, full-size recovery time/capacity evidence and real human approval artifacts; then explicitly approve a bounded coordinated financial fence/drain. Old16-unit permits cannot authorize this scope. Do not blanket-stop candidates.",
+      "next_action": "The single owner/operator must approve a concrete, source-qualified maintenance policy and exact UTC scope after complete HD/DE/external signer and queue evidence. Do not manufacture distinct humans or reuse old multi-role signatures; do not execute fencing from this observational checklist.",
       "requires_production_approval": true,
       "latest_operator_reported_observation_at_utc": "2026-10-23T02:03:29Z"
     },
@@ -60,7 +61,7 @@
         "paid/unpaid proof across all historical paths",
         "independently approved continuing-hold or corrective disposition"
       ],
-      "next_action": "Finance/claim owner reviews exact entitlement and prior attempt, preserves300WOLO potential obligation and obtains independent disposition without reset, rescind or retry.",
+      "next_action": "Single owner obtains authenticated original-chain disposition or explicitly continues the unresolved300WOLO hold. Do not reset, rescind, mark paid/unpaid or retry. An AI report or absence of a hash cannot discharge this obligation.",
       "requires_production_approval": false
     },
     "fresh_quiesced_backup_hash_verified": {
@@ -75,24 +76,26 @@
         "fresh exclusive/quiesced state/config/unit backup identities and checksums",
         "maintained producer fence and measured backup capacity"
       ],
-      "next_action": "Qualify measured full HD+DE archive, restore/census/cleanup bytes and time against the unchanged30-minute permit and bounded filesystem before scheduling. After actual independent18-unit/external fence/drain and UTC approvals, capture both journals and full DB archives, actual isolated restore and off-host/privilege recovery. Source CI and storage inspection cannot attest a live backup.",
+      "next_action": "Qualify full HD/DE/Wolo capture, off-host integrity and state-preserving isolated restore within the actual authorization budget. Only after complete writer fence/drain evidence and a separately owner-approved UTC window may the existing protected tools capture or rehearse; no fictitious human council is required.",
       "requires_production_approval": true
     },
     "reviewed_code_only_rollback_rehearsed": {
       "status": "BLOCKED",
-      "observed_at_utc": "2026-10-18T18:12:48Z",
+      "observed_at_utc": "2026-10-26T09:21:09.845635+00:00",
       "evidence": [
         "snapshot-inspection.txt",
         "source-authority-initial.json",
-        "operator-reported-runtime-producers-20261023.json"
+        "operator-reported-runtime-producers-20261023.json",
+        "runtime-observation-20261026-summary.json"
       ],
-      "established": "Historical October 18 collector: Original/candidate/consensus hashes match pinned identities. Existing45 offline controller contracts are source tests, not a live rehearsal. Owner-reported privileged executable fingerprints on October 23 match the historical settlement/consensus fingerprints with stable PIDs and expected loopback listeners. Exact inspection time and raw receipt digest are unavailable; source-to-binary provenance and live recovery remain unproved.",
+      "established": "October26 root SSH: both settlement PIDs1012/1010 retain original040126a2 executable and78c25985 unmodified VCS; consensusPID1009 retains4b77f622 executable/d3bd6241 modified VCS and advances2649282 to2649283. Source-to-original-settlement byte reproduction was already qualified under PR102; no rebuild repeated. Original deployment custody, consensus build provenance and actual paired recovery remain unproved.",
       "unknowns": [
-        "named live rollback/recovery authority and bounded downtime proof",
-        "real paired service and partial rollout recovery under maintained fence",
-        "historical source-to-running-binary build provenance independent of matching fingerprints"
+        "original installer/custodian evidence or truthful owner disposition of missing records",
+        "separately modified consensus source/build provenance",
+        "actual full-size quiesced backup and paired code-only recovery under maintained producer fences",
+        "reviewed single-owner financial authority compatible with existing safety controls"
       ],
-      "next_action": "Obtain the other five genuine controls and distinct first-rehearsal human authority for the pinned old-to-bdbce253-to-old pair under the verified producer fence, restore receipt and independent systemd watchdog. Witness actual runtime/state/consensus continuity; later recovery needs fresh post-loss authority. Only a subsequent all-six permit can authorize final promotion.",
+      "next_action": "Preserve byte-reproduction evidence; obtain authentic custody/checkpoint evidence and source-qualified single-owner authority, then separately authorize and witness the existing bounded maintenance/recovery procedure. No live rehearsal or final promotion is authorized by source CI.",
       "requires_production_approval": true,
       "latest_operator_report_published_at_utc": "2026-10-23T01:57:20Z"
     },
@@ -110,7 +113,7 @@
         "DE/external, escrow and unmaterialized obligations, all fee liabilities",
         "global complete liability amount, account attribution and overlaps"
       ],
-      "next_action": "Finance and independent chain reviewer reconcile exact accounts, all liabilities and fees at coordinated height; do not treat escrow as Satchel collateral or add overlapping journal/claim sums.",
+      "next_action": "Obtain externally sourced trusted wolo-1 checkpoint/witness provenance; verify committed bank values for every distinct custody/payout/escrow/treasury/staking account at one height and reconcile all nonoverlapping owner, HD/DE, fee and external liabilities. Owner acceptance cannot substitute for missing cryptographic bank evidence.",
       "requires_production_approval": false
     }
   },
@@ -184,6 +187,10 @@
       "sha256": "429e721eecec96cfae82228c5ed60896dad552c371b091dbf304a017450bc882",
       "source_sha256": "fddd0e225ffdb943b6550295a0e6eb15e67e3e0caeb68ca4dfe2fc8207a9aca4",
       "collection_mode": "ROOT_SSH_READ_ONLY_NONCERTIFYING"
+    },
+    "runtime-observation-20261026-summary.json": {
+      "path": "docs/settlement-contracts/financial-release-evidence-20261018/runtime-observation-20261026-summary.json",
+      "sha256": "e14a9b4306cf91ac8b23081c3a7b65844e35a14bfa7e7c5609bf6962e887cbc4"
     }
   },
   "independent_consensus_authentication_proven": false,
@@ -203,6 +210,6 @@
     "status": "CERTIFIED_INDEPENDENT_APP_RELEASE",
     "financial_release_dependency": false
   },
-  "shortest_next_operator_action": "Appoint independent chain/finance/recovery authorities and complete writer classification; review full-size archive/time/capacity evidence and the exact18-unit maintenance scope before issuing a genuine bounded fence/drain/backup permit. This is not cutover or custody approval.",
-  "later_cutover_approval": "Only after six independent controls pass, separately approve paired historical-bdbce253 code-only promotion; use exact short-lived root-private permit. Consensus, financial state, producer resumption and Satchel activation are excluded."
+  "shortest_next_operator_action": "Owner supplies or arranges an authentically sourced checkpoint/header+validator packet and actual original accepted100WOLO journal/as-of binding for offline verify-historical-transfer. Keep six controls HOLD and do not issue maintenance or funded permits. Do not recruit fictitious approvers or infer trust from two same-operator endpoints.",
+  "later_cutover_approval": "After genuine six-control evidence and a reviewed single-owner financial authorization contract, separately authorize exact immutable artifacts and bounded paired settlement-only cutover/recovery. Existing multi-role permits remain unchanged and cannot be relabeled. Consensus, financial state, producer resume and custody activation stay separate."
 }

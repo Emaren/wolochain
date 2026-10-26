@@ -25,6 +25,21 @@ import (
 const acceptedEscrow100Hash = "D5B4CFAA5E9063F8342EA9E2B6119FCFF28DEE20B2E1DD6803944933B237D699"
 const acceptedEscrow100Height int64 = 1078913
 
+// All three exact input byte strings are needed to reproduce an offline
+// historical review. Their digests assert no independent checkpoint provenance.
+type historicalProofInputBindings struct {
+	AnchorSHA256      string `json:"anchor_sha256"`
+	ExpectedSHA256    string `json:"expected_sha256"`
+	ProofSHA256       string `json:"proof_sha256"`
+	HistoricalAsOfUTC string `json:"historical_as_of_utc"`
+}
+
+func bindHistoricalProofInputs(anchor, expected, proof []byte, asOf string) historicalProofInputBindings {
+	a, e, p := sha256.Sum256(anchor), sha256.Sum256(expected), sha256.Sum256(proof)
+	return historicalProofInputBindings{hex.EncodeToString(a[:]), hex.EncodeToString(e[:]), hex.EncodeToString(p[:]), asOf}
+}
+
+
 // ExpectedHistoricalTransfer is provisioned independently of the untrusted
 // chain response and portable transcript. The originating settlement request
 // must be authenticated separately: simply writing a matching JSON file does
@@ -104,7 +119,7 @@ func verifyHistoricalTransferCommand(ctx context.Context, args []string, out, er
   fmt.Fprintln(errout,"satchel: historical accepted transfer UNVERIFIABLE; no financial authority")
   return 2
  }
- if len(args)!=6 || args[0]!="--anchor" || args[2]!="--expected" || args[4]!="--proof" { return fail() }
+ if ctx==nil || ctx.Err()!=nil || len(args)!=6 || args[0]!="--anchor" || args[2]!="--expected" || args[4]!="--proof" { return fail() }
  anchorBytes,err:=readProofFile(args[1],64<<10);if err!=nil{return fail()}
  expectedBytes,err:=readProofFile(args[3],64<<10);if err!=nil{return fail()}
  proofBytes,err:=readProofFile(args[5],satchel.MaxPortableProofBytes);if err!=nil{return fail()}
@@ -124,8 +139,7 @@ func verifyHistoricalTransferCommand(ctx context.Context, args []string, out, er
  obs:=evidence.Observation()
  receipt:=evidence.Receipt()
  if !historicalPrincipalEffectMatches(obs,receipt,expected) {return fail()}
- expectedDigest:=sha256.Sum256(expectedBytes)
- proofDigest:=sha256.Sum256(proofBytes)
+ bindings:=bindHistoricalProofInputs(anchorBytes,expectedBytes,proofBytes,expected.HistoricalAsOfUTC)
  // Explicitly distinguish the independently PROVIDED checkpoint from
  // independently VERIFIED checkpoint *provenance*: this tool cannot attest
  // who supplied the anchor or global accounting/obligation identity.
@@ -145,12 +159,11 @@ func verifyHistoricalTransferCommand(ctx context.Context, args []string, out, er
   RetryAuthorized bool `json:"retry_authorized"`
   ReleaseAuthorized bool `json:"release_authorized"`
   FundsMoved bool `json:"funds_moved"`
-  ExpectedSHA256 string `json:"expected_sha256"`
-  ProofSHA256 string `json:"proof_sha256"`
+  historicalProofInputBindings
  }{"wolo.historical.accepted-escrow-100.v1","AUTHENTICATED_NONAUTHORIZING",
   satchel.ChainID,expected.TxHash,obs.Height,expected.AmountUWolo,receipt.ID(),
   true,false,false,false,false,false,false,false,
-  hex.EncodeToString(expectedDigest[:]),hex.EncodeToString(proofDigest[:])}
+  bindings}
  if json.NewEncoder(out).Encode(result)!=nil{return fail()}
  return 3
 }
