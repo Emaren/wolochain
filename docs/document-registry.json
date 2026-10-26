@@ -13,7 +13,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-22",
       "sensitivity": "public",
-      "sha256": "3fce51a92af3e6b520a95aec728111653ff9c49890bf96cff68a27a58ed939d5",
+      "sha256": "6e1d4b1c4350b837cda23f73414f517b1c6d213ea6755aa5c003eed277d235df",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "eda0582cf114c29a18062596f2ec354743a00c2d46cb73d34fa2dda5d1dc7956",
+      "sha256": "b8f64f9f833d65eff27015c3c319b969a694c04132daf5db609b9bbe648dd40b",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -312,7 +312,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-26",
       "sensitivity": "restricted",
-      "sha256": "e1ee6875f4f92ff6b0fb4511b9f064de5fdbe4a3405a67b7d6d53380bb6c56d2",
+      "sha256": "5bc7a04030f24c9d1c85d150b2fbf3413a20228923caec7ddf73d908ec73bfce",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -335,7 +335,7 @@
       "review_interval_days": 0,
       "reviewed_at": "2026-08-10",
       "sensitivity": "internal",
-      "sha256": "21a2ce4a82178d5622411108beebabc761fa2daa3feee2c6bc6b485ae61fc8cd",
+      "sha256": "104cc8fce8ab5998065fef5a6e1a0a338c899db551927823517e0e7a60880f00",
       "source_of_truth": "historical-evidence",
       "status": "historical",
       "systems": [
@@ -381,7 +381,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-20",
       "sensitivity": "public",
-      "sha256": "3b3530d155dd210eb005cb87d3f08efaa44ab3599b5ef21c8a1d7cf8e4ce1b0b",
+      "sha256": "6d089735649761ba86236a2866211e0d7e1b0c264b9ef06f2f934afa2b9c0853",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -428,7 +428,7 @@
       "review_interval_days": 60,
       "reviewed_at": "2026-10-10",
       "sensitivity": "restricted",
-      "sha256": "f32e06332dec62b89a11639a396dd0924b74d350ef0faa2b061d6d3ec9734249",
+      "sha256": "826660e5d5c75a823dc4cc59cdf41c4467afd08892971dca824277b0713c8acb",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -642,7 +642,7 @@
         "wolochain",
         "aoe2war"
       ],
-      "title": "Codex Mission: WoloChain Mainnet \u2194 Osmosis IBC Prep",
+      "title": "Codex Mission: WoloChain Mainnet ↔ Osmosis IBC Prep",
       "type": "historical"
     },
     {
@@ -803,7 +803,7 @@
         "wolochain",
         "aoe2war"
       ],
-      "title": "WoloChain Mainnet \u2192 Osmosis Liquidity Transfer",
+      "title": "WoloChain Mainnet → Osmosis Liquidity Transfer",
       "type": "historical"
     },
     {
@@ -872,7 +872,7 @@
         "wolochain",
         "aoe2war"
       ],
-      "title": "WoloChain Mainnet \u2192 Osmosis Test Transfer",
+      "title": "WoloChain Mainnet → Osmosis Test Transfer",
       "type": "historical"
     },
     {
@@ -988,7 +988,7 @@
         "aoe2war",
         "aoe2dewarwagers"
       ],
-      "title": "Financial-maintenance authority and writer review \u2014 2026-10-24",
+      "title": "Financial-maintenance authority and writer review — 2026-10-24",
       "type": "runbook"
     },
     {
@@ -1012,7 +1012,7 @@
         "aoe2war",
         "aoe2dewarwagers"
       ],
-      "title": "Production P1 source integrity, writer evidence, five-person authority and bounded recovery proposal \u2014 2026-10-24",
+      "title": "Production P1 source integrity, writer evidence, five-person authority and bounded recovery proposal — 2026-10-24",
       "type": "runbook"
     },
     {
@@ -1036,7 +1036,7 @@
         "aoe2war",
         "aoe2dewarwagers"
       ],
-      "title": "Financial maintenance phase integration operator runbook \u2014 2026-10-24",
+      "title": "Financial maintenance phase integration operator runbook — 2026-10-24",
       "type": "runbook"
     },
     {
@@ -1060,14 +1060,14 @@
         "aoe2war",
         "aoe2dewarwagers"
       ],
-      "title": "Financial controller source integrity and five-human enrollment \u2014 2026-10-24",
+      "title": "Financial controller source integrity and five-human enrollment — 2026-10-24",
       "type": "runbook"
     }
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "codex/solo-owner-offline-intent-20261026",
-    "commit": "96a7c0a48e48f61fafa41a904f58cc7ef8c6cd8c"
+    "branch": "review/solo-resume-live-identity-inspect-20261026",
+    "commit": "3ed031e301d0f318e1915c9bd9c11d564c72bfef"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

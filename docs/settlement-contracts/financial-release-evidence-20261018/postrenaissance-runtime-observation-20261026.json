@@ -1,0 +1,51 @@
+{
+  "bank_values_refreshed": false,
+  "candidate_maintenance_units": 18,
+  "chain_untrusted_observation": {
+    "catching_up": false,
+    "chain_id": "wolo-1",
+    "height": "2653853",
+    "independent_finality_authenticated": false
+  },
+  "collection": "ROOT_SSH_READ_ONLY_SAME_OPERATOR_NOT_INDEPENDENT_FINALITY",
+  "financial_authority": false,
+  "financial_release_authorized": false,
+  "global_writer_fencing_verified": false,
+  "hd_build_id": "s5lkg31SfI18yR-eQN8iT",
+  "hd_source_commit": "6d2a78224e5a5c647345d6b5ffc91bf94dc84b59",
+  "hd_tracked_dirty": false,
+  "liabilities_refreshed": false,
+  "maintenance_hold_present": false,
+  "observed_utc": "2026-10-26T15:43:29.584018+00:00",
+  "processes": {
+    "aoe2hdbets-web.service": {
+      "active": "active",
+      "executable_sha256": "fde6a4bf8d0562f7751d1a2d6cb9b417c4cfe107bbcb0aa3e9a24e125e348f48",
+      "pid": 1490840,
+      "stable_pid": true
+    },
+    "wolochain-founder-rewards-settlement.service": {
+      "active": "active",
+      "executable_sha256": "040126a2884946caf1651a50b7d8115c5a6fb2d5aa94fcbbe150694602d451a5",
+      "pid": 1010,
+      "stable_pid": true
+    },
+    "wolochain-mainnet-settlement.service": {
+      "active": "active",
+      "executable_sha256": "040126a2884946caf1651a50b7d8115c5a6fb2d5aa94fcbbe150694602d451a5",
+      "pid": 1012,
+      "stable_pid": true
+    },
+    "wolochaind-mainnet.service": {
+      "active": "active",
+      "executable_sha256": "4b77f622191db7550cb87cafb8f1886a0aadebee3eb6565f9f90036f809e61d3",
+      "pid": 1009,
+      "stable_pid": true
+    }
+  },
+  "production_mutated": false,
+  "raw_private_receipt_sha256": "09c7e40bf0be1ceebffc7dd2f977a7e4dcb66aa164ba5cd9c5298aecdc0e431b",
+  "schema": "wolo.release.runtime-refresh.nonauthorizing.v1",
+  "wolo_source_commit": "78c25985420ee41a6678c42fab8ea8d6c3b1b519",
+  "wolo_tracked_dirty": false
+}

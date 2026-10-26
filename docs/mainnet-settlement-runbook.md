@@ -1909,3 +1909,101 @@ routes, replace Wolo settlement services, or rebroadcast historic 100-WOLO
 or claim payouts from this build. The CI artifact must be independently
 retrieved and SHA-256 checked against the authenticated GitHub workflow
 identity before a separate operator inspection.
+
+
+## Single-owner maintenance runtime candidate — October 26
+
+The source-only #109 intent verifier remains NONAUTHORIZING. The separately
+versioned `scripts/settlement_solo_runtime.py` uses the signature domain
+`AOE2WAR-WOLO-SOLO-MAINTENANCE-RUNTIME-V1\0` and packet schema
+`wolo.solo-maintenance-runtime-packet.v1`. Old offline signatures and five-role
+permits cannot be relabelled into this domain. One enrolled Ed25519 owner signs
+each capture and isolated verification phase. No private owner key is loaded by
+the controller. Revoked/expired enrollments fail before nonce consumption.
+
+The existing `settlement_financial_maintenance.py` lease now dispatches
+`solo-capture` and `solo-offline-restore`. The new permit schema
+`wolo.solo-owner-maintenance-permit.v1` accepts exactly one owner approval;
+all original scope, source, database, attestation, image, byte-budget and window
+guards remain. The old v1 schema still requires its original five role refs.
+Capture fences the existing **18 units** (4 apps, 7 oneshots and 7 timers), drains them and calls the original
+bounded snapshot/dump implementation. Restore uses a separate signature, retained
+fence, exact completed capture lineage and the existing bounded ext4 isolated
+PostgreSQL mechanics. A restore window may be up to four hours; this never
+extends the original maximum 30-minute capture authorization. No automatic
+unfence or resume occurs at either expiry. An outage extending beyond capture
+must be explicitly accepted in the owner's complete procedure before capture.
+
+Admission requires root-private enrollment at
+`/etc/wolochain-financial-maintenance/authority/solo-runtime.json` and
+`solo-owner.json`; no environment variable or caller-supplied hash substitutes
+for those operator-provisioned files. The runtime enrollment binds the exact
+four controller module hashes, source commit, actual host identity and owner
+public-key/enrollment digests. Actual running consensus and both settlement
+executable hashes are checked before and after authority consumption; none of
+those processes is stopped or changed. All 12 writer categories must resolve to
+retained observation bytes whose hashes are bound by the signed procedure.
+These observations and the owner's external-fence attestations are **not** a
+machine certification that every external writer is excluded. Successful
+receipts explicitly retain `global_writers_fenced=false`,
+`custody_or_solvency_certified=false` and `financial_release_authorized=false`.
+
+The off-host nonce witness is executable code, rather than an always-refuse
+stub. Install the same reviewed protocol on a separately controlled host outside
+VPS rollback scope. Pin the target VPS identity and owner/source enrollment there;
+pin the witness host identity and SSH host key on the VPS. On the witness, the
+fixed `wolo-maintenance-witness-v1` SSH forced command invokes:
+
+```sh
+python3 /protected/reviewed/scripts/settlement_solo_runtime.py --witness-stdin
+```
+
+Use an existing dedicated operator transport credential with a restricted SSH
+forced command, no PTY, forwarding or agent access. Never reuse a WOLO signer
+key. On macOS, enroll canonical `/private/etc` and `/private/var` witness paths.
+Both hosts pin their own absolute OpenSSL 3 executable and binary digest in the
+protected enrollment; a restricted SSH PATH must not select macOS LibreSSL,
+which lacks the required Ed25519 `pkeyutl -rawin` operation.
+The witness verifies the original owner signature and time/phase before
+atomic, fsynced O_EXCL consumption in its separately provisioned 0700 nonce
+ledger. The ledger must never be restored from a VPS snapshot, automatically
+pruned, or recreated after loss. Any corrupt/partial record blocks subsequent
+admission. An SSH timeout or lost acknowledgement means **nonce may already be
+consumed**: inspect both retained ledgers; never redispatch the same authority.
+The witness authenticates consumption, not chain finality, human review or funds.
+
+After legitimate enrollment and procedure review, the read-only preparation CLI
+emits the exact unsigned request and base64 signing message (exit 3):
+
+```sh
+sudo python3 scripts/settlement_solo_runtime.py --prepare \
+  --mode solo-capture --procedure /root/reviewed/capture-procedure.json
+```
+
+The real owner inspects the complete procedure and signs that message locally
+using the existing protected key. Supply the resulting packet and exact permit:
+
+```sh
+sudo python3 scripts/settlement_financial_maintenance.py --mode solo-capture \
+  --packet /root/reviewed/owner-capture-packet.json \
+  --procedure /root/reviewed/capture-procedure.json \
+  --writer-inventory /root/reviewed/writer-observations.json \
+  --permit /root/reviewed/solo-capture-permit.json \
+  --fence-receipt /root/reviewed/fence.json \
+  --output /mnt/HC_Volume_105319120/wolochain-mainnet/financial-maintenance-backups/OWNER_SELECTED_NEW_CAPTURE \
+  --completion-receipt /root/reviewed/capture-completed.json
+```
+
+**Live capture status: HOLD_ENGINEERING. Do not issue a live owner challenge yet.**
+The current fence does not retain all producer unit/env/build fingerprints, and
+a qualified resume path and production-size outage bound remain engineering
+requirements. The 12 category observation files alone do not prove global writer
+exclusion. No actual enrollment, witness,
+owner approval or global fence has been installed by source development. Resume
+and financial activation remain refused; their real recovery and financial
+predicates must be qualified before a maintenance window is approved. In
+particular a four-hour isolated verification is incompatible with promising a
+30-minute full outage unless production-size evidence proves the total fits.
+Historical 100-WOLO uncertainty, claim #889, refund #8477, shared DE liabilities,
+original source provenance and the independent historical checkpoint remain
+unchanged. The website stays at its existing certified release.
