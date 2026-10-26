@@ -160,6 +160,9 @@ jobs:
       - name: Same-height financial arithmetic and missing-evidence negatives (HOLD only)
         run: python3 -m unittest discover -s tests -p 'test_settlement_financial_one_height_arithmetic.py' -v
 
+      - name: Real single-owner phase signature review, NONAUTHORIZING (synthetic keys)
+        run: python3 -m unittest discover -s tests -p 'test_settlement_solo_owner_intent_review.py' -v
+
       - name: Financial six-control evidence HOLD audit (offline, never approval)
         run: |
           python3 scripts/financial_release_checklist_audit.py
