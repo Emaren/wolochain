@@ -18,6 +18,7 @@ from unittest import mock
 ROOT = Path(__file__).resolve().parents[1]
 REVIEWED_BACKEND_SOURCE = "8c509e8f62ca3ec60711dc2654a03b12f22b0773"
 REVIEWED_RUNTIME_SOURCE = "72a3bca5f66aff51e1c6577b914d64403785d635"
+REVIEWED_INTEGRATED_SOURCE = "88c63356b81e19dbda0dbcf7c2135ac607878ca4"
 HISTORICAL_BACKEND_SOURCE = "99f32de617964565875ed4689bea0d688bb99147"
 
 
@@ -74,12 +75,14 @@ class BackendArtifactSourceContractTests(unittest.TestCase):
         self.assertEqual(artifact.profile_policy("custody-runtime")["source"],
                          REVIEWED_RUNTIME_SOURCE)
         self.assertEqual(re.findall(r"^\s+EXPECTED_SOURCE: ([0-9a-f]{40})$", workflow,
-                                    re.MULTILINE), [REVIEWED_RUNTIME_SOURCE])
+                                    re.MULTILINE), [REVIEWED_INTEGRATED_SOURCE])
         self.assertNotEqual(REVIEWED_RUNTIME_SOURCE, REVIEWED_BACKEND_SOURCE)
-        self.assertIn("--profile custody-runtime", workflow)
+        self.assertIn("--profile integrated-custody-runtime", workflow)
         self.assertNotIn("--profile custody-backend", workflow)
-        self.assertIn("'profile': 'custody-runtime'", workflow)
-        self.assertIn("name: custody-runtime-${{ env.EXPECTED_SOURCE }}-linux-amd64-", workflow)
+        self.assertIn("'profile': 'integrated-custody-runtime'", workflow)
+        self.assertIn("name: integrated-custody-runtime-${{ env.EXPECTED_SOURCE }}-linux-amd64-", workflow)
+        self.assertEqual(artifact.profile_policy("integrated-custody-runtime")["source"], REVIEWED_INTEGRATED_SOURCE)
+        self.assertNotEqual(REVIEWED_INTEGRATED_SOURCE, REVIEWED_RUNTIME_SOURCE)
         self.assertNotEqual(REVIEWED_BACKEND_SOURCE, HISTORICAL_BACKEND_SOURCE)
         self.assertEqual(artifact.profile_policy("legacy526")["source"],
                          "526d5eb6123f6cc0394b5e78489c668e77e46106")
@@ -94,6 +97,7 @@ class BackendArtifactSourceContractTests(unittest.TestCase):
             "integration/20261018-satchel-ops-finance-held",
             "codex/satchel-production-backend",
             "codex/satchel-custody-authority",
+            "codex/solo-owner-offline-intent-20261026",
         })
         self.assertIn("ref: ${{ env.EXPECTED_SOURCE }}", workflow)
         self.assertIn("ref: ${{ env.BUILDER_COMMIT }}", workflow)
@@ -160,7 +164,8 @@ class ComposedProfileTests(unittest.TestCase):
     def test_backend_candidate_is_separately_source_and_workflow_bound(self):
         identity = dict(self.identity, workflow_ref="Emaren/wolochain/" + self.artifact.BACKEND_WORKFLOW_PATH
                         + "@refs/heads/codex/satchel-production-backend")
-        with mock.patch.object(self.artifact, "BACKEND_SOURCE", self.revision):
+        with mock.patch.object(self.artifact, "BACKEND_SOURCE", self.revision), \
+                mock.patch.object(self.artifact, "INTEGRATED_RUNTIME_SOURCE", self.revision):
             manifest = self.artifact.create_manifest(self.binary, self.rebuild, self.source, identity,
                                                     profile="custody-backend")
             self.artifact.verify_manifest(manifest, self.binary, self.source, identity, profile="custody-backend")
@@ -207,9 +212,12 @@ class ComposedProfileTests(unittest.TestCase):
         # into the new candidate. The profile and purpose are part of the proof.
         identity = self.runtime_identity()
         with mock.patch.object(self.artifact, "RUNTIME_SOURCE", self.revision), \
-                mock.patch.object(self.artifact, "BACKEND_SOURCE", self.revision):
+                mock.patch.object(self.artifact, "BACKEND_SOURCE", self.revision), \
+                mock.patch.object(self.artifact, "INTEGRATED_RUNTIME_SOURCE", self.revision):
             for source_profile, target_profile in (("custody-backend", "custody-runtime"),
-                                                   ("custody-runtime", "custody-backend")):
+                                                   ("custody-runtime", "custody-backend"),
+                                                   ("custody-runtime", "integrated-custody-runtime"),
+                                                   ("integrated-custody-runtime", "custody-runtime")):
                 with self.subTest(source_profile=source_profile):
                     manifest = self.artifact.create_manifest(self.binary, self.rebuild, self.source,
                                                             identity, profile=source_profile)
@@ -273,7 +281,8 @@ class ComposedProfileTests(unittest.TestCase):
 
     def test_backend_metadata_rejects_historical_revision_dirty_vcs_and_wrong_configuration(self):
         metadata = self.run_tool(["go", "version", "-m", str(self.binary)]).stdout
-        with mock.patch.object(self.artifact, "BACKEND_SOURCE", self.revision):
+        with mock.patch.object(self.artifact, "BACKEND_SOURCE", self.revision), \
+                mock.patch.object(self.artifact, "INTEGRATED_RUNTIME_SOURCE", self.revision):
             self.artifact._parse_go_metadata(metadata, profile="custody-backend")
             for before, after in (
                 (self.revision, HISTORICAL_BACKEND_SOURCE),

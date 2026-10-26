@@ -29,6 +29,7 @@ EXPECTED_SOURCE = "526d5eb6123f6cc0394b5e78489c668e77e46106"
 COMPOSED_SOURCE = "155fcf67fb2127a2227de5ea785e51bdbb0155c0"
 BACKEND_SOURCE = "8c509e8f62ca3ec60711dc2654a03b12f22b0773"
 RUNTIME_SOURCE = "72a3bca5f66aff51e1c6577b914d64403785d635"
+INTEGRATED_RUNTIME_SOURCE = "88c63356b81e19dbda0dbcf7c2135ac607878ca4"
 LEGACY_REPLAY_SOURCE = "cb24cb2546392c981da8dcac18a04d1df4241330"
 LEGACY_REPLAY_WORKFLOW_PATH = ".github/workflows/settlement-legacy-replay-artifact.yml"
 # Exact immutable archive-capable Go implementation source, not future branch HEAD.
@@ -80,7 +81,7 @@ def _require(condition: bool, message: str) -> None:
 
 def profile_policy(profile: str = "legacy526") -> dict:
     """Only reviewed source pins; callers cannot supply an arbitrary revision."""
-    _require(type(profile) is str and profile in ("legacy526", "composed-satcheld", "custody-backend", "custody-runtime", "legacy-replay", "archived-historical"),
+    _require(type(profile) is str and profile in ("legacy526", "composed-satcheld", "custody-backend", "custody-runtime", "integrated-custody-runtime", "legacy-replay", "archived-historical"),
              "unknown artifact profile")
     if profile == "archived-historical":
         _require(re.fullmatch(r"[0-9a-f]{40}", ARCHIVED_HISTORICAL_SOURCE) is not None,
@@ -115,6 +116,15 @@ def profile_policy(profile: str = "legacy526") -> dict:
             "main_path": "github.com/emaren/wolochain/cmd/wolosatcheld",
             "package": "./cmd/wolosatcheld", "workflow": BACKEND_WORKFLOW_PATH,
             "purpose": "UNDEPLOYED_CUSTODY_BACKEND_CANDIDATE",
+        }
+    if profile == "integrated-custody-runtime":
+        _require(re.fullmatch(r"[0-9a-f]{40}", INTEGRATED_RUNTIME_SOURCE) is not None,
+                 "NONACCEPTING integrated runtime source pin unavailable")
+        return {
+            "source": INTEGRATED_RUNTIME_SOURCE, "binary": "wolosatcheld",
+            "main_path": "github.com/emaren/wolochain/cmd/wolosatcheld",
+            "package": "./cmd/wolosatcheld", "workflow": BACKEND_WORKFLOW_PATH,
+            "purpose": "UNDEPLOYED_INTEGRATED_HD_CUSTODY_RUNTIME_CANDIDATE",
         }
     if profile == "custody-runtime":
         _require(re.fullmatch(r"[0-9a-f]{40}", RUNTIME_SOURCE) is not None,
@@ -379,7 +389,7 @@ def load_manifest(path: str | Path, expected_sha256: str | None = None) -> dict:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("command", choices=("create", "verify"))
-    parser.add_argument("--profile", choices=("legacy526", "composed-satcheld", "custody-backend", "custody-runtime", "legacy-replay", "archived-historical"), default="legacy526")
+    parser.add_argument("--profile", choices=("legacy526", "composed-satcheld", "custody-backend", "custody-runtime", "integrated-custody-runtime", "legacy-replay", "archived-historical"), default="legacy526")
     for argument in ("source-dir", "binary", "manifest", "builder-commit", "repository",
                      "run-id", "run-attempt", "workflow-ref", "workflow-sha"):
         parser.add_argument("--" + argument, required=True)
