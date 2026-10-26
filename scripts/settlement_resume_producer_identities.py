@@ -32,6 +32,11 @@ COMMON_REQUIRED = frozenset(("Id", "FragmentPath", "DropInPaths", "ActiveState")
 SERVICE_REQUIRED = COMMON_REQUIRED | frozenset(("MainPID", "ExecStart"))
 STABLE_PROPERTIES = tuple(p for p in CONFIG_PROPERTIES
                           if p not in ("ActiveState", "MainPID", "Id"))
+# Native systemctl emits one property line per ordered command/env-file.
+# Repeated singular identity/state properties still fail closed.
+REPEATED_PROPERTIES = frozenset(("EnvironmentFiles", "ExecStart", "ExecStartPre",
+    "ExecStartPost", "ExecStop", "ExecReload", "ExecCondition", "LoadCredential",
+    "SetCredential", "BindPaths", "BindReadOnlyPaths"))
 ENVFILE = re.compile(r"(/[^\s]+) \(ignore_errors=(?:yes|no)\)")
 HEX64 = re.compile(r"[0-9a-f]{64}\Z")
 
@@ -53,16 +58,21 @@ def read_properties(unit, runner):
     for line in raw.splitlines():
         require("=" in line, "PRODUCER_PROPERTIES_INVALID")
         key, value = line.split("=", 1)
-        require(key in CONFIG_PROPERTIES and key not in fields,
+        require(key in CONFIG_PROPERTIES and
+                (key not in fields or key in REPEATED_PROPERTIES),
                 "PRODUCER_PROPERTIES_INVALID")
-        fields[key] = value
+        if key in REPEATED_PROPERTIES:
+            fields.setdefault(key, []).append(value)
+            require(len(fields[key]) <= 32, "PRODUCER_PROPERTY_ITEMS_EXCEEDED")
+        else:
+            fields[key] = value
     expected = SERVICE_REQUIRED if unit in maintenance.APPS + maintenance.ONESHOTS else COMMON_REQUIRED
     require(unit in maintenance.UNITS and expected.issubset(fields) and
             fields.get("Id") == unit and
             fields.get("FragmentPath") and
             fields.get("ActiveState") in ("active", "inactive") and
             (unit in maintenance.TIMERS or
-             (fields.get("ExecStart") and fields.get("MainPID", "").isdigit())),
+             (fields.get("ExecStart") and all(fields["ExecStart"]) and fields.get("MainPID", "").isdigit())),
             "PRODUCER_PROPERTIES_INCOMPLETE")
     # Timer units must not acquire service-only execution properties: accept
     # only known systemd timer/common fields, never an unchecked property
@@ -76,11 +86,19 @@ def read_properties(unit, runner):
 def env_file_paths(value):
     if not value:
         return []
-    matches = list(ENVFILE.finditer(value))
-    require(len(matches) <= 16 and
-            " ".join(item.group(0) for item in matches) == value,
+    values = [value] if isinstance(value, str) else value
+    require(type(values) is list and len(values) <= 16 and
+            all(type(item) is str for item in values),
             "UNPARSEABLE_PRODUCER_ENVIRONMENT_FILES")
-    return [item.group(1) for item in matches]
+    result = []
+    for text in values:
+        matches = list(ENVFILE.finditer(text))
+        require(len(matches) <= 16 and
+                " ".join(item.group(0) for item in matches) == text,
+                "UNPARSEABLE_PRODUCER_ENVIRONMENT_FILES")
+        result.extend(item.group(1) for item in matches)
+    require(len(result) <= 16, "UNPARSEABLE_PRODUCER_ENVIRONMENT_FILES")
+    return result
 
 
 def _configuration(unit, fields, runner, *, allow_owned_gate):
