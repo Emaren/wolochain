@@ -21,6 +21,7 @@ jobs:
       - name: Checkout exact Wolo source
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
 
       - name: Checkout pinned held HD funded source (no keys, no build)
@@ -40,12 +41,13 @@ jobs:
         shell: bash
         env:
           PYTHONDONTWRITEBYTECODE: '1'
+          EXPECT_WOLO_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           set +e
           python3 scripts/settlement_hd_satchel_wire_review.py \
             --wolo-root "$GITHUB_WORKSPACE" \
             --hd-root "$GITHUB_WORKSPACE/hd-funded-source" \
-            --expect-wolo-sha "$GITHUB_SHA" \
+            --expect-wolo-sha "$EXPECT_WOLO_SHA" \
             --expect-hd-sha a37c9790dbf0e7038cded62802954da788b3ad5f \
             > "$RUNNER_TEMP/hd-wolo-static-wire.json"
           status=$?
@@ -59,7 +61,7 @@ jobs:
           assert x["static_wire_surface_matches"] is True, x["source_shape_gaps"]
           assert x["source_shape_gaps"] == []
           assert x["hd_source_sha"]=="a37c9790dbf0e7038cded62802954da788b3ad5f"
-          assert x["wolo_source_sha"]==__import__("os").environ["GITHUB_SHA"]
+          assert x["wolo_source_sha"]==__import__("os").environ["EXPECT_WOLO_SHA"]
           assert len(x["source_file_sha256"])==5
           assert x["dedicated_8094_runtime_custody_proven"] is False
           assert x["historical_consensus_trust_authenticated"] is False
