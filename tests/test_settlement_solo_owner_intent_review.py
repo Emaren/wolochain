@@ -199,6 +199,11 @@ class SoloOwnerIntentionTests(unittest.TestCase):
                 solo.read_private(p)
 
     def test_cli_requires_actual_signature_and_exits_hold_three(self):
+        # CLI uses a real clock; avoid mocking datetime.strptime and accidentally
+        # replacing time validation with a MagicMock.
+        current = datetime.now(timezone.utc)
+        self.req["not_before"] = ISO(current - timedelta(minutes=1))
+        self.req["expires_at"] = ISO(current + timedelta(minutes=10))
         with tempfile.TemporaryDirectory() as d:
             e = Path(d) / "owner.json"
             p = Path(d) / "intent.json"
@@ -207,10 +212,7 @@ class SoloOwnerIntentionTests(unittest.TestCase):
             p.write_bytes(solo.canonical(self.signed()))
             e.chmod(0o600)
             p.chmod(0o600)
-            with patch.object(solo, "print", create=True) as printer, patch.object(
-                solo, "datetime"
-            ) as mocked_time:
-                mocked_time.now.return_value = NOW
+            with patch.object(solo, "print", create=True) as printer:
                 code = solo.main([
                     "--enrollment", str(e), "--packet", str(p),
                     "--pinned-enrollment-sha256", hashlib.sha256(raw).hexdigest(),
