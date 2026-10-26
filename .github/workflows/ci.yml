@@ -11,6 +11,63 @@ permissions:
   contents: read
 
 jobs:
+  hd-wolo-exact-wire:
+    name: Exact HD ↔ Wolo 8094 source pair (NONAUTHORIZING)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout exact Wolo source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Checkout pinned held HD funded source (no keys, no build)
+        uses: actions/checkout@v4
+        with:
+          repository: Emaren/app-prodn
+          ref: a37c9790dbf0e7038cded62802954da788b3ad5f
+          path: hd-funded-source
+          persist-credentials: false
+          sparse-checkout: |
+            lib/warSatchelDedicatedSignerClient.ts
+            lib/warSatchelFinancialBridgeHold.ts
+            lib/warSatchelFundedAdmission.ts
+          sparse-checkout-cone-mode: false
+
+      - name: Real pinned pair must match static wire and still HOLD funded money
+        shell: bash
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: |
+          set +e
+          python3 scripts/settlement_hd_satchel_wire_review.py \
+            --wolo-root "$GITHUB_WORKSPACE" \
+            --hd-root "$GITHUB_WORKSPACE/hd-funded-source" \
+            --expect-wolo-sha "$GITHUB_SHA" \
+            --expect-hd-sha a37c9790dbf0e7038cded62802954da788b3ad5f \
+            > "$RUNNER_TEMP/hd-wolo-static-wire.json"
+          status=$?
+          set -e
+          test "$status" -eq 3 || { echo 'Wire CLI did not return documented NONAUTHORIZING HOLD'; exit 1; }
+          python3 - "$RUNNER_TEMP/hd-wolo-static-wire.json" <<'PY'
+          import json, sys
+          from pathlib import Path
+          x=json.loads(Path(sys.argv[1]).read_text())
+          assert x["status"]=="HOLD"
+          assert x["static_wire_surface_matches"] is True, x["source_shape_gaps"]
+          assert x["source_shape_gaps"] == []
+          assert x["hd_source_sha"]=="a37c9790dbf0e7038cded62802954da788b3ad5f"
+          assert x["wolo_source_sha"]==__import__("os").environ["GITHUB_SHA"]
+          assert len(x["source_file_sha256"])==5
+          assert x["dedicated_8094_runtime_custody_proven"] is False
+          assert x["historical_consensus_trust_authenticated"] is False
+          assert x["same_height_solvency_certified"] is False
+          assert x["financial_release_authorized"] is False
+          print("EXACT_HD_WOLO_SOURCE_WIRE_MATCH=PASS; FUNDED_RELEASE=HOLD")
+          PY
+
   financial-maintenance:
     name: Disposable settlement maintenance mechanics
     runs-on: ubuntu-latest
