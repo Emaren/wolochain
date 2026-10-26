@@ -1926,7 +1926,7 @@ The existing `settlement_financial_maintenance.py` lease now dispatches
 `wolo.solo-owner-maintenance-permit.v1` accepts exactly one owner approval;
 all original scope, source, database, attestation, image, byte-budget and window
 guards remain. The old v1 schema still requires its original five role refs.
-Capture fences the existing **22 units**, drains them and calls the original
+Capture fences the existing **18 units** (4 apps, 7 oneshots and 7 timers), drains them and calls the original
 bounded snapshot/dump implementation. Restore uses a separate signature, retained
 fence, exact completed capture lineage and the existing bounded ext4 isolated
 PostgreSQL mechanics. A restore window may be up to four hours; this never
