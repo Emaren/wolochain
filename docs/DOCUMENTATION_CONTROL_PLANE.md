@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `review/solo-resume-live-identity-inspect-20261026` at `3ed031e301d0f318e1915c9bd9c11d564c72bfef`
+Implementation baseline: `codex/independent-epoch-escrow-v3` at `be8e3f88a44b35c86fa82294ca54a08c538291a5`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
@@ -27,21 +27,21 @@ This page is generated from the validated front matter in this repository. Cross
 
 ## Documentation health
 
-- Authoritative repository documents: **46**
+- Authoritative repository documents: **47**
 - Path moves in this migration: **0**
 - Every listed document has an explicit owner, lifecycle, authority, and review interval.
 
 ### Types
 
 - `historical`: 14
-- `reference`: 23
+- `reference`: 24
 - `runbook`: 7
 - `working`: 2
 
 ### Lifecycle
 
 - `active`: 16
-- `draft`: 16
+- `draft`: 17
 - `historical`: 14
 
 ## Documents
@@ -63,6 +63,7 @@ This page is generated from the validated front matter in this repository. Cross
 | [WoloChain Mainnet Settlement Runbook](mainnet-settlement-runbook.md) | `runbook` | `active` | `mainnet-settlement-operations` |
 | [WoloChain Mainnet Template Report](mainnet-template.md) | `historical` | `historical` | `mainnet-preparation-template-evidence` |
 | [WoloChain Mainnet Wallet And Key Plan](mainnet-wallets.md) | `reference` | `active` | `mainnet-wallet-role-and-custody-map` |
+| [Held native new-epoch escrow v3 decision boundary](new-epoch-escrow-v3-held.md) | `reference` | `draft` | `source-review-only-nonactivating-escrow-candidate` |
 | [Settlement Contracts](settlement-contracts/README.md) | `reference` | `active` | `machine-readable-settlement-contract-index` |
 | [HD and DE Financial Producer Owner Review](settlement-contracts/producer-owner-correlation.md) | `runbook` | `draft` | `non-authorizing-financial-producer-evidence-correlation` |
 | [WoloChain Testnet Ops](testnet-ops.md) | `runbook` | `active` | `legacy-testnet-operations` |
