@@ -2036,6 +2036,11 @@ Timer `Triggers` must be exactly its qualified paired one-shot. Chroots, bind
 mounts, credential injection, preload/search-path environment variables, relative
 interpreter scripts and inline shell/eval commands refuse instead of hashing
 the wrong execution inputs. No raw environment or command values are printed.
+`systemctl` renders even empty credential arrays as `[unprintable]`; that text
+cannot establish whether credentials exist. The collector reads native D-Bus
+`LoadCredential:a(ss)` and `SetCredential:a(say)`, permits only genuinely empty
+arrays, and still refuses nonempty/unsealed credentials. This serialization
+edge was independently reproduced on HEL1 without reading or printing values.
 
 Each producer source manifest is root-private with schema
 `wolo.maintenance-producer-source.v1`, exact unit, source commit, uid `0`, and

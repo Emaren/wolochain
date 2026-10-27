@@ -37,6 +37,7 @@ class ProducerIdentityTests(unittest.TestCase):
         self.reads = 0
         self.runtime_revision = 0
         self.command_revision = 0
+        self.native_credentials = []
         self.drift_at = None
         self.invalid_env = False
         self.omit_service_mainpid = False
@@ -108,6 +109,9 @@ class ProducerIdentityTests(unittest.TestCase):
             if "LoadUnit" in args:
                 return json.dumps({"type":"o","data":["/org/freedesktop/systemd1/unit/fixture"]})
             field = args[-1]
+            if field in ('LoadCredential','SetCredential'):
+                return json.dumps({'type':'a(ss)' if field=='LoadCredential' else 'a(say)',
+                                   'data':self.native_credentials})
             argv = ["/opt/demo", str(self.command_revision)]
             return json.dumps({"type":"a(sasbttttuii)","data":[
                 ["/opt/demo",argv,False,self.runtime_revision,0,0,0,100,0,0]]})
@@ -175,9 +179,23 @@ class ProducerIdentityTests(unittest.TestCase):
             p=original(unit)
             if unit==self.app:p['LoadCredential']='secret:/mutable/key'
             return p
+        self.native_credentials=[['secret','/mutable/key']]
         with patch.object(self,'properties',side_effect=extra), \
              self.assertRaisesRegex(m.MaintenanceError,'PRODUCER_UNSEALED_EXECUTION_SOURCE'):
             self.capture()
+
+    def test_native_empty_credentials_are_valid_despite_unprintable_human_rendering(self):
+        original=self.properties
+        def extra(unit):
+            p=original(unit)
+            if unit!=self.timer:p.update(LoadCredential='[unprintable]',SetCredential='[unprintable]')
+            return p
+        with patch.object(self,'properties',side_effect=extra):
+            packet=self.capture()
+            identity.verify_producer_identities(packet,runner=self.runner)
+            self.native_credentials=[['secret',[1,2,3]]]
+            with self.assertRaisesRegex(m.MaintenanceError,'PRODUCER_UNSEALED_EXECUTION_SOURCE'):
+                identity.verify_producer_identities(packet,runner=self.runner)
 
     def test_preload_from_environment_or_root_private_env_file_is_not_sealed_code(self):
         original=self.properties

@@ -108,6 +108,36 @@ EXECUTION_PROPERTIES = frozenset(("ExecStart", "ExecStartPre", "ExecStartPost",
                                   "ExecStop", "ExecReload", "ExecCondition"))
 
 
+def native_empty_credentials(unit, fields, runner):
+    """Even empty credential arrays render '[unprintable]' in systemctl.
+
+    Validate native empty arrays. Nonempty inputs still need separate content
+    sealing and remain unavailable; no credential value enters any receipt.
+    """
+    expected = {"LoadCredential": "a(ss)", "SetCredential": "a(say)"}
+    present = set(fields).intersection(expected)
+    if not present:
+        return
+    raw = runner(["busctl", "--system", "--json=short", "call", "org.freedesktop.systemd1",
+        "/org/freedesktop/systemd1", "org.freedesktop.systemd1.Manager", "LoadUnit", "s", unit])
+    require(type(raw) is str and len(raw) <= 65536, "PRODUCER_NATIVE_UNIT_INVALID")
+    loaded = json.loads(raw)
+    require(type(loaded) is dict and loaded.get("type") == "o" and
+            type(loaded.get("data")) is list and len(loaded["data"]) == 1 and
+            type(loaded["data"][0]) is str and
+            re.fullmatch(r"/org/freedesktop/systemd1/unit/[A-Za-z0-9_]+", loaded["data"][0]),
+            "PRODUCER_NATIVE_UNIT_INVALID")
+    for name in sorted(present):
+        raw = runner(["busctl", "--system", "--json=short", "get-property",
+            "org.freedesktop.systemd1", loaded["data"][0], "org.freedesktop.systemd1.Service", name])
+        require(type(raw) is str and len(raw) <= 262144, "PRODUCER_NATIVE_CREDENTIAL_LIMIT")
+        value = json.loads(raw)
+        require(type(value) is dict and set(value) == {"type", "data"} and
+                value["type"] == expected[name] and type(value["data"]) is list,
+                "PRODUCER_NATIVE_CREDENTIAL_INVALID")
+        require(not value["data"], "PRODUCER_UNSEALED_EXECUTION_SOURCE")
+
+
 def native_execution_configuration(unit, fields, runner):
     """Use native ordered argv tuples; PID/timing/exit values are runtime state.
 
@@ -195,8 +225,8 @@ def _configuration(unit, fields, runner, *, allow_owned_gate):
             "PRODUCER_UNSEALED_ENVIRONMENT_CODE")
     # These properties introduce extra filesystem/credential inputs. A path
     # property hash cannot seal the underlying content or a mounted image.
-    for key in ("LoadCredential", "SetCredential", "BindPaths", "BindReadOnlyPaths",
-                "RootDirectory", "RootImage"):
+    native_empty_credentials(unit, fields, runner)
+    for key in ("BindPaths", "BindReadOnlyPaths", "RootDirectory", "RootImage"):
         value = fields.get(key, "")
         require(not value or value == [""], "PRODUCER_UNSEALED_EXECUTION_SOURCE")
     paths = [("fragment", fragment)] + [("dropin", p) for p in dropins] + [
