@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "b8f64f9f833d65eff27015c3c319b969a694c04132daf5db609b9bbe648dd40b",
+      "sha256": "7f71fc2fca21de3a6f18357a43542d5e6847d8068e4a5234be3f781c2287a1b0",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -312,7 +312,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-26",
       "sensitivity": "restricted",
-      "sha256": "5bc7a04030f24c9d1c85d150b2fbf3413a20228923caec7ddf73d908ec73bfce",
+      "sha256": "94e41fe6035192b070893ab320614814df88141cd82f07a5d1b4736961b7605e",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -642,7 +642,7 @@
         "wolochain",
         "aoe2war"
       ],
-      "title": "Codex Mission: WoloChain Mainnet ↔ Osmosis IBC Prep",
+      "title": "Codex Mission: WoloChain Mainnet \u2194 Osmosis IBC Prep",
       "type": "historical"
     },
     {
@@ -803,7 +803,7 @@
         "wolochain",
         "aoe2war"
       ],
-      "title": "WoloChain Mainnet → Osmosis Liquidity Transfer",
+      "title": "WoloChain Mainnet \u2192 Osmosis Liquidity Transfer",
       "type": "historical"
     },
     {
@@ -872,7 +872,7 @@
         "wolochain",
         "aoe2war"
       ],
-      "title": "WoloChain Mainnet → Osmosis Test Transfer",
+      "title": "WoloChain Mainnet \u2192 Osmosis Test Transfer",
       "type": "historical"
     },
     {
@@ -988,7 +988,7 @@
         "aoe2war",
         "aoe2dewarwagers"
       ],
-      "title": "Financial-maintenance authority and writer review — 2026-10-24",
+      "title": "Financial-maintenance authority and writer review \u2014 2026-10-24",
       "type": "runbook"
     },
     {
@@ -1012,7 +1012,7 @@
         "aoe2war",
         "aoe2dewarwagers"
       ],
-      "title": "Production P1 source integrity, writer evidence, five-person authority and bounded recovery proposal — 2026-10-24",
+      "title": "Production P1 source integrity, writer evidence, five-person authority and bounded recovery proposal \u2014 2026-10-24",
       "type": "runbook"
     },
     {
@@ -1036,7 +1036,7 @@
         "aoe2war",
         "aoe2dewarwagers"
       ],
-      "title": "Financial maintenance phase integration operator runbook — 2026-10-24",
+      "title": "Financial maintenance phase integration operator runbook \u2014 2026-10-24",
       "type": "runbook"
     },
     {
@@ -1060,14 +1060,14 @@
         "aoe2war",
         "aoe2dewarwagers"
       ],
-      "title": "Financial controller source integrity and five-human enrollment — 2026-10-24",
+      "title": "Financial controller source integrity and five-human enrollment \u2014 2026-10-24",
       "type": "runbook"
     }
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "review/solo-resume-live-identity-inspect-20261026",
-    "commit": "3ed031e301d0f318e1915c9bd9c11d564c72bfef"
+    "branch": "codex/central-financial-resume",
+    "commit": "3daf81d6daaa0b627333177fb1589da0c9beb031"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
