@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "6b86153c93e80b7d41f7c6eaa59161711ad5c9b4c43f7f3eaa038aad8d828ad3",
+      "sha256": "588ab86ba340118d32a086d8fbdc8f0cd553619c9a4bf2c255fcf09847967e6a",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1067,7 +1067,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "codex/central-financial-resume",
-    "commit": "1191b3add702ebb00800d21eeee8423dfb072446"
+    "commit": "0b472daa7405a56df9297818a5ec218b7d1cae0a"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
