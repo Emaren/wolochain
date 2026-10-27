@@ -398,7 +398,7 @@ class ContainmentExecutionTests(unittest.TestCase):
         self.assertEqual(len([e for e in self.events if isinstance(e,tuple)]),len(m.UNITS))
 
     def test_gate_drift_prevents_completion_but_never_skips_exact_scope_stops(self):
-        with patch.object(m,'effective_condition',side_effect=m.MaintenanceError('OWNED_DROPIN_DRIFT')), \
+        with patch.object(m,'effective_condition',side_effect=ValueError('malformed native D-Bus JSON')), \
              self.assertRaisesRegex(m.MaintenanceError,'PARTIAL_RESUME_CONTAINMENT_UNCERTAIN'):
             self.contain()
         self.assertEqual(len([e for e in self.events if isinstance(e,tuple)]),len(m.UNITS))

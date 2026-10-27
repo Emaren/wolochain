@@ -307,18 +307,18 @@ def execute(fence_path, backup_dir, *, phase_window, runner=None):
                                                "permit_sha256": observed["fence"]["permit_sha256"]}))
             m.require(m.digest(m.private_read(m.HOLD)) == observed["fence"]["hold_sha256"],
                       "PARTIAL_RESUME_HOLD_REASSERTION_UNCERTAIN")
-        except (OSError, RuntimeError):
+        except Exception:  # Parser/IO errors must not skip remaining containment stops.
             failures.append("hold")
         # Containment has its own bounded budget after the authority expires;
         # it can only STOP the exact original scope, never admit new work.
         for unit in m.TIMERS + m.ONESHOTS + m.APPS:
             try:
                 containment_runner(["systemctl", "stop", "--", unit], timeout=5)
-            except (OSError, RuntimeError):
+            except Exception:  # Parser/IO errors must not skip remaining containment stops.
                 failures.append(unit)
         try:
             m.inactive_observation(containment_runner)
-        except (OSError, RuntimeError):
+        except Exception:  # Parser/IO errors must not skip remaining containment stops.
             failures.append("inactive_scope")
         m.require(not failures, "PARTIAL_RESUME_CONTAINMENT_UNCERTAIN")
         raise m.MaintenanceError("PARTIAL_RESUME_FENCED_FRESH_RECOVERY_AUTHORITY_REQUIRED") from None
@@ -363,7 +363,7 @@ def contain_partial(fence_path, backup_dir, *, phase_window, runner=None):
         try:
             m.require(m.private_read(m.dropin(unit)) == m.expected_dropin(), "OWNED_DROPIN_DRIFT")
             m.effective_condition(unit, runner)
-        except (OSError, RuntimeError):
+        except Exception:  # Parser/IO errors must not skip remaining containment stops.
             failures.append("gate")
     phase_current(phase_window, contain=True)
     record = {"schema": CONTAIN_SCHEMA, "state": "CONTAINMENT_COMMITTED",
@@ -375,12 +375,12 @@ def contain_partial(fence_path, backup_dir, *, phase_window, runner=None):
     try:
         if not m.HOLD.exists() and not m.HOLD.is_symlink():m.write_new(m.HOLD, expected)
         m.require(m.private_read(m.HOLD) == expected, "CONTAINMENT_FOREIGN_HOLD")
-    except (OSError, RuntimeError):failures.append("hold")
+    except Exception:  # Parser/IO errors must not skip remaining containment stops.failures.append("hold")
     for unit in m.TIMERS + m.ONESHOTS + m.APPS:
         try:runner(["systemctl", "stop", "--", unit], timeout=5)
-        except (OSError, RuntimeError):failures.append(unit)
+        except Exception:  # Parser/IO errors must not skip remaining containment stops.failures.append(unit)
     try:m.inactive_observation(runner)
-    except (OSError, RuntimeError):failures.append("inactive_scope")
+    except Exception:  # Parser/IO errors must not skip remaining containment stops.failures.append("inactive_scope")
     m.require(not failures, "PARTIAL_RESUME_CONTAINMENT_UNCERTAIN")
     phase_current(phase_window, contain=True)
     result=dict(record,state="CONTAINMENT_COMPLETED")
