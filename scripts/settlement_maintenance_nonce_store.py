@@ -17,7 +17,7 @@ import stat
 
 NONCE = re.compile(r"[0-9a-f]{32}\Z")
 SHA256 = re.compile(r"[0-9a-f]{64}\Z")
-PHASES = {"live_capture", "offline_verify", "resume"}
+PHASES = {"live_capture", "offline_verify", "resume", "resume_existing"}
 SCHEMA = "wolo.financial-maintenance-nonce-record.v1"
 RECORD_KEYS = {"schema", "nonce", "signed_packet_sha256", "phase"}
 RECORD_NAME = re.compile(r"nonce-[0-9a-f]{64}\.json\Z")

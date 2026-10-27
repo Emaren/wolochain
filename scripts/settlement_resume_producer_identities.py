@@ -39,6 +39,9 @@ REPEATED_PROPERTIES = frozenset(("EnvironmentFiles", "ExecStart", "ExecStartPre"
     "SetCredential", "BindPaths", "BindReadOnlyPaths"))
 ENVFILE = re.compile(r"(/[^\s]+) \(ignore_errors=(?:yes|no)\)")
 HEX64 = re.compile(r"[0-9a-f]{64}\Z")
+CODE_LOADING_ENV = re.compile(rb"(?:^|[^A-Za-z0-9_])(?:LD_[A-Z0-9_]+|DYLD_[A-Z0-9_]+|"
+    rb"NODE_OPTIONS|NODE_PATH|PYTHONPATH|PYTHONHOME|PYTHONSTARTUP|BASH_ENV|ENV|"
+    rb"RUBYOPT|RUBYLIB|PERL5OPT|PERL5LIB|PHP_INI_SCAN_DIR|GCONV_PATH)\s*=")
 
 
 def require(value, reason):
@@ -155,10 +158,17 @@ def _configuration(unit, fields, runner, *, allow_owned_gate):
     if unit not in maintenance.TIMERS:
         require(fields["MainPID"] == basic.get("MainPID"),
                 "PRODUCER_CHANGED_DURING_SAMPLE")
+    if unit in maintenance.APPS:
+        require((basic["ActiveState"] == "active" and int(basic["MainPID"]) > 0) or
+                (basic["ActiveState"] == "inactive" and basic["MainPID"] == "0"),
+                "PRODUCER_APP_PROCESS_IDENTITY_UNAVAILABLE")
     require(basic["ActiveState"] in ("active", "inactive") and
             (unit not in maintenance.ONESHOTS or
              (basic["ActiveState"] == "inactive" and basic["MainPID"] == "0")),
             "ACTIVE_OR_UNSTABLE_ONESHOT_REFUSED")
+    if unit in maintenance.TIMERS:
+        require(basic.get("Triggers", "").split() == [unit[:-6] + ".service"],
+                "PRODUCER_TIMER_TARGET_OUTSIDE_QUALIFIED_PAIR")
 
     fragment = fields["FragmentPath"]
     dropins = fields["DropInPaths"].split()
@@ -179,6 +189,16 @@ def _configuration(unit, fields, runner, *, allow_owned_gate):
                 "EXISTING_GATE_CANNOT_BE_PRESTATE")
 
     envs = env_file_paths(fields.get("EnvironmentFiles", ""))
+    # These knobs can execute code outside the sealed argv/build tree. Do not
+    # parse or log their secret values, or guess that a preload is harmless.
+    require(not CODE_LOADING_ENV.search(fields.get("Environment", "").encode()),
+            "PRODUCER_UNSEALED_ENVIRONMENT_CODE")
+    # These properties introduce extra filesystem/credential inputs. A path
+    # property hash cannot seal the underlying content or a mounted image.
+    for key in ("LoadCredential", "SetCredential", "BindPaths", "BindReadOnlyPaths",
+                "RootDirectory", "RootImage"):
+        value = fields.get(key, "")
+        require(not value or value == [""], "PRODUCER_UNSEALED_EXECUTION_SOURCE")
     paths = [("fragment", fragment)] + [("dropin", p) for p in dropins] + [
         ("envfile", p) for p in envs]
     require(len(paths) <= 50 and len({p for _, p in paths}) == len(paths),
@@ -191,10 +211,14 @@ def _configuration(unit, fields, runner, *, allow_owned_gate):
         # Descriptor/stable inode read, root-owned source. The raw values never
         # enter the receipt; even Environment= and credential paths are hashed.
         raw = maintenance.private_read(source, source=True)
+        if kind == "envfile":
+            require(not CODE_LOADING_ENV.search(raw), "PRODUCER_UNSEALED_ENVIRONMENT_CODE")
         files.append((kind, sha(str(source).encode()), sha(raw)))
     stable = {key: fields[key] for key in STABLE_PROPERTIES
               if key != "DropInPaths" and key not in EXECUTION_PROPERTIES and key in fields}
     stable["native_execution"] = native_execution_configuration(unit, fields, runner)
+    if unit in maintenance.TIMERS:
+        stable["timer_target"] = basic["Triggers"]
     # Preserve absence/presence explicitly. Never collapse "not a timer
     # property" and "present but empty" to the same signed identity.
     stable["present_properties"] = sorted(fields)

@@ -66,6 +66,7 @@ SCHEMA = "wolo.financial-maintenance-permit.v1"
 # Separate schema: a v1 five-role permit cannot become a solo-owner approval.
 SOLO_SCHEMA = "wolo.solo-owner-maintenance-permit.v1"
 FENCE_SCHEMA = "wolo.financial-maintenance-fence.v1"
+RECOVERABLE_FENCE_SCHEMA = "wolo.financial-maintenance-fence.v2"
 SHA = re.compile(r"[0-9a-f]{64}\Z")
 IDENT = re.compile(r"[a-z][a-z0-9_]{0,62}\Z")
 ROLE_NAMES = {"owner", "operator", "chain_reviewer", "finance_reviewer", "recovery_witness"}
@@ -386,9 +387,11 @@ def _verify_fence(receipt_path, expected_scope_sha256, *, now=None, runner=None,
     receipt, receipt_sha = private_json(receipt_path)
     require(expected_receipt_sha256 is None or receipt_sha == expected_receipt_sha256,
             "SIGNED_FENCE_CHANGED_AT_USE")
-    require(set(receipt) == {"schema", "scope_sha256", "permit_path", "permit_sha256",
-                            "hold_sha256", "prestate", "created_at", "resume_authorized"} and
-            receipt["schema"] == FENCE_SCHEMA and receipt["resume_authorized"] is False and
+    receipt_keys = {"schema", "scope_sha256", "permit_path", "permit_sha256",
+                    "hold_sha256", "prestate", "created_at", "resume_authorized"}
+    required = receipt_keys | {"capture_seal"} if receipt.get("schema") == RECOVERABLE_FENCE_SCHEMA else receipt_keys
+    require(set(receipt) == required and
+            receipt["schema"] in (FENCE_SCHEMA, RECOVERABLE_FENCE_SCHEMA) and receipt["resume_authorized"] is False and
             receipt["scope_sha256"] == expected_scope_sha256 == scope_digest(),
             "FENCE_RECEIPT_SCOPE_INVALID")
     permit, permit_sha = private_json(receipt["permit_path"])
@@ -455,7 +458,7 @@ def write_new(path, raw):
         raise
 
 
-def fence(permit_path, receipt_path, *, runner=None, expected_permit_sha256=None):
+def fence(permit_path, receipt_path, *, runner=None, expected_permit_sha256=None, capture_seal=None):
     runner = runner or run
     permit, permit_sha = private_json(permit_path)
     require(expected_permit_sha256 is None or permit_sha == expected_permit_sha256,
@@ -468,6 +471,13 @@ def fence(permit_path, receipt_path, *, runner=None, expected_permit_sha256=None
     prestate = {unit: show(unit, runner) for unit in UNITS}
     for unit in UNITS:
         require(not dropin(unit).exists() and not dropin(unit).is_symlink(), "FOREIGN_OR_EXISTING_GATE")
+    if capture_seal is not None:
+        from settlement_solo_resume import verify_capture
+        captured, _ = verify_capture(capture_seal, runner=runner)
+        require(all((prestate[u]["ActiveState"] == "active") ==
+                    captured["producer_identities"]["units"][u]["originally_active"] for u in UNITS),
+                "SIGNED_CAPTURE_PRESTATE_CHANGED")
+    validate_permit(permit)
     HOLD.parent.mkdir(mode=0o700, exist_ok=True)
     require(HOLD.parent.lstat().st_uid == 0 and
             stat.S_IMODE(HOLD.parent.lstat().st_mode) == 0o700 and not HOLD.parent.is_symlink(),
@@ -496,6 +506,8 @@ def fence(permit_path, receipt_path, *, runner=None, expected_permit_sha256=None
                "permit_path": str(Path(permit_path)), "permit_sha256": permit_sha,
                "hold_sha256": digest(hold), "prestate": prestate,
                "created_at": clock().isoformat(), "resume_authorized": False}
+    if capture_seal is not None:
+        receipt.update(schema=RECOVERABLE_FENCE_SCHEMA, capture_seal=capture_seal)
     write_new(receipt_path, canonical(receipt))
     verify_current_fence(receipt_path, scope_digest(), runner=runner)
     return receipt
@@ -1061,9 +1073,19 @@ def verify_current_backup(restore_receipt_path, expected_scope_sha256,
             "financial_release_authorized": False}
 
 
+def verify_resume_state(fence_path, backup_dir, restore_path, sealed, *, runner):
+    from settlement_solo_resume import verify_state
+    return verify_state(fence_path, backup_dir, restore_path, sealed, runner=runner)
+
+
+def resume_existing(fence_path, backup_dir, *, phase_window, runner=None):
+    from settlement_solo_resume import execute
+    return execute(fence_path, backup_dir, phase_window=phase_window, runner=runner)
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--mode", choices=("scope", "inspect-storage", "verify-fence", "fence", "backup", "restore-isolated", "capture", "offline-restore", "resume", "solo-capture", "solo-offline-restore"),
+    parser.add_argument("--mode", choices=("scope", "inspect-storage", "verify-fence", "fence", "backup", "restore-isolated", "capture", "offline-restore", "resume", "solo-capture", "solo-offline-restore", "solo-resume"),
                         default="scope")
     parser.add_argument("--permit", type=Path)
     parser.add_argument("--fence-receipt", type=Path)
@@ -1114,7 +1136,7 @@ def main(argv=None):
         # Deliberately preserve old v1 modes as an explicit hard refusal.
         # The signed v2 capture/restore modes are separate and MUST prove
         # enrolled authority before any mutation, including nonce consumption.
-        require(args.mode in ("capture", "offline-restore", "resume", "solo-capture", "solo-offline-restore"),
+        require(args.mode in ("capture", "offline-restore", "resume", "solo-capture", "solo-offline-restore", "solo-resume"),
                 "FIVE_HUMAN_CONTROLLER_NOT_INTEGRATED")
         fd = os.open(LOCK, os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW, 0o600)
         with os.fdopen(fd, "a") as lock:
@@ -1145,7 +1167,8 @@ def main(argv=None):
                         "EXACT_CAPTURE_INPUTS_REQUIRED")
                 if args.mode == "solo-capture":
                     fenced = fence(args.permit, args.fence_receipt,
-                                   expected_permit_sha256=req["artifacts"]["permit_sha256"])
+                                   expected_permit_sha256=req["artifacts"]["permit_sha256"],
+                                   capture_seal=req["capture_seal"])
                     backup(args.fence_receipt, args.output,
                            expected_fence_sha256=digest(canonical(fenced)))
                 else:
@@ -1154,6 +1177,8 @@ def main(argv=None):
             elif args.mode in ("offline-restore", "solo-offline-restore"):
                 require(args.output is not None, "EXACT_RESTORE_INPUT_REQUIRED")
                 restore_isolated(args.fence_receipt, args.output, phase_window=req)
+            elif args.mode == "solo-resume":
+                resume_existing(args.fence_receipt, args.output, phase_window=req)
             else:
                 # Independent RESUME signatures are necessary, not sufficient.
                 # No resume implementation may be inferred from a backup.

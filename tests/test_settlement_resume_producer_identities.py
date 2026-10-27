@@ -97,8 +97,11 @@ class ProducerIdentityTests(unittest.TestCase):
 
     def show(self, unit, runner):
         p = self.properties(unit)
-        return {key: p[key] for key in ("Id", "FragmentPath", "DropInPaths",
+        result = {key: p[key] for key in ("Id", "FragmentPath", "DropInPaths",
                                        "ActiveState", "MainPID") if key in p}
+        if unit == self.timer:
+            result['Triggers'] = self.once
+        return result
 
     def runner(self, args):
         if args[0] == "busctl":
@@ -155,6 +158,53 @@ class ProducerIdentityTests(unittest.TestCase):
         self.command_revision = 1
         with self.assertRaisesRegex(m.MaintenanceError, "PRODUCER_CONFIGURATION_DRIFT"):
             identity.verify_producer_identities(packet, runner=self.runner)
+
+    def test_unqualified_timer_target_is_refused_even_if_unit_bytes_are_sealed(self):
+        original=self.show
+        def wrong(unit,runner):
+            p=original(unit,runner)
+            if unit==self.timer:p['Triggers']='outside-finance.service'
+            return p
+        with patch.object(m,'show',side_effect=wrong), \
+             self.assertRaisesRegex(m.MaintenanceError,'PRODUCER_TIMER_TARGET_OUTSIDE_QUALIFIED_PAIR'):
+            self.capture()
+
+    def test_unsealed_native_credentials_or_bind_sources_cannot_be_hidden_in_hash(self):
+        original=self.properties
+        def extra(unit):
+            p=original(unit)
+            if unit==self.app:p['LoadCredential']='secret:/mutable/key'
+            return p
+        with patch.object(self,'properties',side_effect=extra), \
+             self.assertRaisesRegex(m.MaintenanceError,'PRODUCER_UNSEALED_EXECUTION_SOURCE'):
+            self.capture()
+
+    def test_preload_from_environment_or_root_private_env_file_is_not_sealed_code(self):
+        original=self.properties
+        def extra(unit):
+            p=original(unit)
+            if unit==self.app:p['Environment']='NODE_OPTIONS=--require=/mutable/hidden.js'
+            return p
+        with patch.object(self,'properties',side_effect=extra), \
+             self.assertRaisesRegex(m.MaintenanceError,'PRODUCER_UNSEALED_ENVIRONMENT_CODE'):
+            self.capture()
+        original_read=self.private_read
+        def envfile(path,source=False):
+            return b'LD_PRELOAD=/mutable/library.so' if str(path)=='/etc/demo.env' else original_read(path,source=source)
+        with patch.object(m,'private_read',side_effect=envfile), \
+             self.assertRaisesRegex(m.MaintenanceError,'PRODUCER_UNSEALED_ENVIRONMENT_CODE'):
+            self.capture()
+
+    def test_chroot_and_bind_namespace_cannot_hash_different_host_files(self):
+        original=self.properties
+        for key in ('RootDirectory','RootImage','BindPaths','BindReadOnlyPaths'):
+            def namespace(unit):
+                p=original(unit)
+                if unit==self.app:p[key]='/mutable/namespace'
+                return p
+            with self.subTest(key=key),patch.object(self,'properties',side_effect=namespace), \
+                 self.assertRaisesRegex(m.MaintenanceError,'PRODUCER_UNSEALED_EXECUTION_SOURCE'):
+                self.capture()
 
     def test_native_repeated_execution_and_envfile_properties_preserve_order(self):
         props = self.properties(self.app)
