@@ -9,6 +9,7 @@ from __future__ import annotations
 import hashlib
 import os
 from pathlib import Path
+import re
 import stat
 
 import settlement_financial_maintenance as m
@@ -343,7 +344,7 @@ def contain_partial(fence_path, backup_dir, *, phase_window, runner=None):
     prior = read_sealed(plan["prior_resume_commit"], "PRIOR_RESUME_COMMIT_CHANGED")
     prior_path = Path(plan["prior_resume_commit"]["path"])
     m.require(prior_path.parent == Path(backup_dir) and
-              (prior_path.name == JOURNAL or m.re.fullmatch(r"RESUME_COMMITTED\.[0-9a-f]{32}\.json", prior_path.name)) and
+              (prior_path.name == JOURNAL or re.fullmatch(r"RESUME_COMMITTED\.[0-9a-f]{32}\.json", prior_path.name)) and
               prior.get("schema") == "wolo.maintenance-resume-commit.v1" and
               prior.get("state") == "RESUME_COMMITTED" and
               prior.get("source_commit") == phase_window["source_commit"] and
@@ -358,7 +359,7 @@ def contain_partial(fence_path, backup_dir, *, phase_window, runner=None):
     expected = m.canonical({"scope_sha256": m.scope_digest(), "permit_sha256": fence["permit_sha256"]})
     m.require(m.digest(expected) == fence["hold_sha256"] == prior.get("original_hold_sha256"),
               "CONTAINMENT_HOLD_IDENTITY_CHANGED")
-    failures=[]
+    failures = []
     for unit in m.UNITS:
         try:
             m.require(m.private_read(m.dropin(unit)) == m.expected_dropin(), "OWNED_DROPIN_DRIFT")
@@ -371,18 +372,29 @@ def contain_partial(fence_path, backup_dir, *, phase_window, runner=None):
               "scope_sha256": m.scope_digest(), "fence_receipt_sha256": fence_sha,
               "prior_resume_commit": plan["prior_resume_commit"], "financial_release_authorized": False}
     prefix = Path(backup_dir) / ("CONTAINMENT_" + phase_window["nonce"])
-    m.write_new(prefix.with_suffix(".committed.json"), m.canonical(record))
     try:
-        if not m.HOLD.exists() and not m.HOLD.is_symlink():m.write_new(m.HOLD, expected)
+        m.write_new(prefix.with_suffix(".committed.json"), m.canonical(record))
+    except Exception:
+        # This is an authenticated STOP-only operation. Storage refusal must
+        # not leave partial producers running; no completion may be published.
+        failures.append("commit_marker")
+    try:
+        if not m.HOLD.exists() and not m.HOLD.is_symlink():
+            m.write_new(m.HOLD, expected)
         m.require(m.private_read(m.HOLD) == expected, "CONTAINMENT_FOREIGN_HOLD")
-    except Exception:  # Parser/IO errors must not skip remaining containment stops.failures.append("hold")
+    except Exception:
+        failures.append("hold")
     for unit in m.TIMERS + m.ONESHOTS + m.APPS:
-        try:runner(["systemctl", "stop", "--", unit], timeout=5)
-        except Exception:  # Parser/IO errors must not skip remaining containment stops.failures.append(unit)
-    try:m.inactive_observation(runner)
-    except Exception:  # Parser/IO errors must not skip remaining containment stops.failures.append("inactive_scope")
+        try:
+            runner(["systemctl", "stop", "--", unit], timeout=5)
+        except Exception:
+            failures.append(unit)
+    try:
+        m.inactive_observation(runner)
+    except Exception:
+        failures.append("inactive_scope")
     m.require(not failures, "PARTIAL_RESUME_CONTAINMENT_UNCERTAIN")
     phase_current(phase_window, contain=True)
-    result=dict(record,state="CONTAINMENT_COMPLETED")
-    m.write_new(prefix.with_suffix(".completed.json"),m.canonical(result))
+    result = dict(record, state="CONTAINMENT_COMPLETED")
+    m.write_new(prefix.with_suffix(".completed.json"), m.canonical(result))
     return result

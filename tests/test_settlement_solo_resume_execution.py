@@ -404,6 +404,13 @@ class ContainmentExecutionTests(unittest.TestCase):
         self.assertEqual(len([e for e in self.events if isinstance(e,tuple)]),len(m.UNITS))
         self.assertTrue(self.prior_path.exists())
 
+    def test_containment_marker_enospc_still_attempts_every_stop_without_completion(self):
+        with patch.object(m,'write_new',side_effect=OSError('synthetic ENOSPC')), \
+             self.assertRaisesRegex(m.MaintenanceError,'PARTIAL_RESUME_CONTAINMENT_UNCERTAIN'):
+            self.contain()
+        self.assertEqual(len([e for e in self.events if isinstance(e,tuple)]),len(m.UNITS))
+        self.assertFalse(list(self.folder.glob('CONTAINMENT_*.completed.json')))
+
     def test_mutable_runtime_owned_source_is_refused_before_read(self):
         with self.assertRaisesRegex(m.MaintenanceError,'RESUME_PRODUCER_SOURCE_MUST_BE_ROOT_CONTROLLED'):
             r.source_file_sha('/root/never-read',1000)
