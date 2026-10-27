@@ -1085,7 +1085,7 @@ def resume_existing(fence_path, backup_dir, *, phase_window, runner=None):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--mode", choices=("scope", "inspect-storage", "verify-fence", "fence", "backup", "restore-isolated", "capture", "offline-restore", "resume", "solo-capture", "solo-offline-restore", "solo-resume"),
+    parser.add_argument("--mode", choices=("scope", "inspect-storage", "verify-fence", "fence", "backup", "restore-isolated", "capture", "offline-restore", "resume", "solo-capture", "solo-offline-restore", "solo-resume", "solo-contain"),
                         default="scope")
     parser.add_argument("--permit", type=Path)
     parser.add_argument("--fence-receipt", type=Path)
@@ -1136,7 +1136,7 @@ def main(argv=None):
         # Deliberately preserve old v1 modes as an explicit hard refusal.
         # The signed v2 capture/restore modes are separate and MUST prove
         # enrolled authority before any mutation, including nonce consumption.
-        require(args.mode in ("capture", "offline-restore", "resume", "solo-capture", "solo-offline-restore", "solo-resume"),
+        require(args.mode in ("capture", "offline-restore", "resume", "solo-capture", "solo-offline-restore", "solo-resume", "solo-contain"),
                 "FIVE_HUMAN_CONTROLLER_NOT_INTEGRATED")
         fd = os.open(LOCK, os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW, 0o600)
         with os.fdopen(fd, "a") as lock:
@@ -1179,6 +1179,9 @@ def main(argv=None):
                 restore_isolated(args.fence_receipt, args.output, phase_window=req)
             elif args.mode == "solo-resume":
                 resume_existing(args.fence_receipt, args.output, phase_window=req)
+            elif args.mode == "solo-contain":
+                from settlement_solo_resume import contain_partial
+                contain_partial(args.fence_receipt, args.output, phase_window=req)
             else:
                 # Independent RESUME signatures are necessary, not sufficient.
                 # No resume implementation may be inferred from a backup.

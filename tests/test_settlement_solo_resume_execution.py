@@ -107,6 +107,23 @@ class ResumeExecutionTests(unittest.TestCase):
             self.execute()
         self.assertEqual(self.events,[])
 
+    def test_fresh_linked_recovery_consumes_containment_once_and_preserves_old_commit(self):
+        self.execute()
+        original=(self.folder/r.JOURNAL).read_bytes()
+        self.hold.write_bytes(self.hold_bytes)
+        self.observed['plan']['contained_partial']={'path':'/root/contained','sha256':'8'*64}
+        self.phase.update(nonce='1'*32,resume_recovery_allowed=True)
+        with patch.object(r,'read_sealed',return_value=self.observed['plan']):
+            self.execute()
+            self.assertEqual((self.folder/r.JOURNAL).read_bytes(),original)
+            self.assertTrue((self.folder/('RESUME_COMMITTED.'+'1'*32+'.json')).exists())
+            self.assertTrue((self.folder/('CONTAINMENT_CONSUMED.'+'8'*64+'.json')).exists())
+            self.phase['nonce']='2'*32
+            self.events=[]
+            with self.assertRaisesRegex(m.MaintenanceError,'PARTIAL_CONTAINMENT_ALREADY_CONSUMED'):
+                self.execute()
+            self.assertEqual(self.events,[])
+
     def test_wrong_source_has_no_side_effect(self):
         self.observed['plan']['source_commit']='b'*40
         with self.assertRaisesRegex(m.MaintenanceError,'RESUME_SOURCE_MISMATCH'):
@@ -200,9 +217,11 @@ class ResumeExecutionTests(unittest.TestCase):
     def test_actual_sigkill_after_commit_before_unlink_preserves_hold_and_nonce_boundary(self):
         pid=os.fork()
         if pid==0:
-            r.unlink_owned_hold=lambda expected:os.kill(os.getpid(),signal.SIGKILL)
-            self.execute()
-            os._exit(99)
+            try:
+                r.unlink_owned_hold=lambda expected:os.kill(os.getpid(),signal.SIGKILL)
+                self.execute()
+            finally:
+                os._exit(99)
         _,status=os.waitpid(pid,0)
         self.assertTrue(os.WIFSIGNALED(status));self.assertEqual(os.WTERMSIG(status),signal.SIGKILL)
         self.assertTrue(self.hold.exists());self.assertTrue((self.folder/r.JOURNAL).exists())
@@ -212,8 +231,10 @@ class ResumeExecutionTests(unittest.TestCase):
     def test_actual_sigkill_after_unlink_records_partial_return_without_automatic_replay(self):
         pid=os.fork()
         if pid==0:
-            self.execute(lambda *a,**kw:os.kill(os.getpid(),signal.SIGKILL))
-            os._exit(99)
+            try:
+                self.execute(lambda *a,**kw:os.kill(os.getpid(),signal.SIGKILL))
+            finally:
+                os._exit(99)
         _,status=os.waitpid(pid,0)
         self.assertTrue(os.WIFSIGNALED(status));self.assertEqual(os.WTERMSIG(status),signal.SIGKILL)
         self.assertFalse(self.hold.exists());self.assertTrue((self.folder/r.JOURNAL).exists())
@@ -228,7 +249,7 @@ class ResumeEvidenceTests(unittest.TestCase):
         self.spec={'path':'/root/resume-plan','sha256':'a'*64}
         self.plan={'schema':r.PLAN_SCHEMA,'source_commit':'a'*40,'fence_receipt_sha256':'b'*64,
                    'backup_manifest_sha256':'c'*64,'restore_receipt_sha256':'d'*64,
-                   'timer_qualifications':{}}
+                   'timer_qualifications':{},'contained_partial':None}
         self.fence={'schema':r.FENCE_SCHEMA,'capture_seal':{'path':'/root/capture','sha256':'e'*64},
                     'prestate':dict.fromkeys(m.UNITS,{'ActiveState':'inactive'})}
         self.capture={'producer_identities':{'units':{u:{'originally_active':False} for u in m.UNITS}}}
@@ -317,6 +338,64 @@ class ResumeEvidenceTests(unittest.TestCase):
              patch.object(r,'read_sealed',return_value=manifest),patch.object(r,'source_file_sha',return_value=('e'*64,1)), \
              self.assertRaisesRegex(m.MaintenanceError,'PRODUCER_BUILD_AND_ENTRYPOINT_REQUIRED'):
             r.verify_sources({unit:{}},lambda *a:None)
+
+
+class ContainmentExecutionTests(unittest.TestCase):
+    # Reuse only the disposable I/O setup, not another copy of its test suite.
+    write=ResumeExecutionTests.write
+    command=ResumeExecutionTests.command
+
+    def setUp(self):
+        ResumeExecutionTests.setUp(self)
+        self.stack.enter_context(patch.object(m,'UNITS',m.APPS+m.ONESHOTS+m.TIMERS))
+        self.phase.update(phase='contain_partial',operation=runtime.OPS['contain_partial'],
+                          resume_actions_allowed=False,contain_actions_allowed=True)
+        self.prior={'schema':'wolo.maintenance-resume-commit.v1','state':'RESUME_COMMITTED',
+            'source_commit':self.phase['source_commit'],'nonce':'f'*32,
+            'original_hold_sha256':m.digest(self.hold_bytes)}
+        self.prior_path=self.folder/r.JOURNAL
+        self.prior_path.write_bytes(m.canonical(self.prior))
+        self.spec={'path':str(self.prior_path),'sha256':'1'*64}
+        self.plan={'schema':r.CONTAIN_PLAN_SCHEMA,'source_commit':self.phase['source_commit'],
+            'fence_receipt_sha256':'2'*64,'backup_manifest_sha256':'3'*64,'prior_resume_commit':self.spec}
+        self.fence={'schema':r.FENCE_SCHEMA,'scope_sha256':'a'*64,'permit_sha256':'b'*64,
+                    'hold_sha256':m.digest(self.hold_bytes)}
+        self.files={self.prior_path:(self.prior,'1'*64),Path('/root/plan'):(self.plan,'f'*64),
+                    self.folder/'fence':(self.fence,'2'*64),self.folder/'backup.json':({'scope_sha256':'a'*64},'3'*64)}
+        self.stack.enter_context(patch.object(m,'private_json',side_effect=lambda p:self.files[Path(p)]))
+        self.stack.enter_context(patch.object(m,'private_read',side_effect=lambda p,**kw:
+            self.hold.read_bytes() if Path(p)==self.hold else m.expected_dropin()))
+        self.stack.enter_context(patch.object(m,'effective_condition',lambda *a:None))
+
+    def contain(self):return r.contain_partial(self.folder/'fence',self.folder,phase_window=self.phase,runner=self.command)
+
+    def test_fresh_containment_reasserts_missing_hold_and_only_stops_exact_scope(self):
+        self.hold.unlink()
+        result=self.contain()
+        self.assertEqual(result['state'],'CONTAINMENT_COMPLETED')
+        self.assertFalse(result['financial_release_authorized'])
+        self.assertEqual(self.hold.read_bytes(),self.hold_bytes)
+        self.assertTrue(self.prior_path.exists())
+        commands=[e for e in self.events if isinstance(e,tuple)]
+        self.assertEqual([c[-1] for c in commands],list(m.TIMERS+m.ONESHOTS+m.APPS))
+        self.assertTrue(all(c[1]=='stop' for c in commands))
+        self.assertEqual(self.events[0],'write:CONTAINMENT_'+self.phase['nonce']+'.committed.json')
+
+    def test_containment_never_accepts_capture_authority(self):
+        self.phase.update(phase='live_capture',operation=runtime.OPS['live_capture'])
+        with self.assertRaisesRegex(m.MaintenanceError,'RESUME_PHASE_ONLY'):self.contain()
+        self.assertEqual(self.events,[])
+
+    def test_rotated_prior_commit_never_touches_units_or_hold(self):
+        self.files[self.prior_path]=(self.prior,'9'*64)
+        with self.assertRaisesRegex(m.MaintenanceError,'PRIOR_RESUME_COMMIT_CHANGED'):self.contain()
+        self.assertEqual(self.events,[])
+
+    def test_foreign_hold_is_preserved_but_containment_stops_still_run(self):
+        self.hold.write_bytes(b'foreign-do-not-overwrite')
+        with self.assertRaisesRegex(m.MaintenanceError,'PARTIAL_RESUME_CONTAINMENT_UNCERTAIN'):self.contain()
+        self.assertEqual(self.hold.read_bytes(),b'foreign-do-not-overwrite')
+        self.assertEqual(len([e for e in self.events if isinstance(e,tuple)]),len(m.UNITS))
 
     def test_mutable_runtime_owned_source_is_refused_before_read(self):
         with self.assertRaisesRegex(m.MaintenanceError,'RESUME_PRODUCER_SOURCE_MUST_BE_ROOT_CONTROLLED'):

@@ -1922,7 +1922,8 @@ each capture, isolated verification and resume phase. No private owner key is lo
 the controller. Revoked/expired enrollments fail before nonce consumption.
 
 The existing `settlement_financial_maintenance.py` lease now dispatches
-`solo-capture`, `solo-offline-restore` and `solo-resume`. The new permit schema
+`solo-capture`, `solo-offline-restore`, `solo-resume` and stop-only
+`solo-contain`. The new permit schema
 `wolo.solo-owner-maintenance-permit.v1` accepts exactly one owner approval;
 all original scope, source, database, attestation, image, byte-budget and window
 guards remain. The old v1 schema still requires its original five role refs.
@@ -2050,7 +2051,8 @@ change is authorized by this documentation.
 
 The resume plan schema `wolo.maintenance-resume-plan.v1` binds the same source
 commit, exact fence, backup-manifest and restore-receipt digests, plus
-`timer_qualifications`. Every originally active timer needs a root-private
+`timer_qualifications` and `contained_partial` (null for initial resume).
+Every originally active timer needs a root-private
 `wolo.maintenance-timer-qualification.v1` packet binding that timer and service
 configuration digests, its source-manifest digest and two retained reviewed CI
 receipts (`idempotence_test`, `uncertainty_test`). Those receipts bind the same
@@ -2097,7 +2099,28 @@ commit marker without completion is a partial-return incident: inspect the
 actual HOLD, all units/jobs, both nonce ledgers and current DB/payment evidence;
 do not replay that procedure, restore old SQL, remove the marker or infer that
 no payment occurred. A fresh separately approved containment/recovery procedure
-is required; this initial resume executor deliberately refuses another attempt
-against a committed backup. This interruption boundary is not a live rollback
-certificate. Live maintenance remains HOLD until the complete production-size
-and partial-return recovery procedure is independently witnessed.
+is required. Stop-only `solo-contain` implements that narrow containment action:
+its `wolo.maintenance-partial-containment-plan.v1` binds the source, fence and
+backup digests and `prior_resume_commit` path/digest. Its new owner request binds
+that same prior commit as `previous_phase_receipt_sha256`. It verifies retained
+exact drop-ins, durably writes a separate containment-commit marker, attempts
+HOLD reassertion and stops only the original 18 units. Foreign HOLD bytes remain
+untouched, but all scoped stops are still attempted and any uncertainty refuses
+completion. It never starts a service, restores SQL or retries a payment.
+
+Only after actual containment completion may a new signed resume plan bind its
+completed receipt in `contained_partial`. That receipt is consumed exclusively
+once before a new nonce-specific resume commit. The original commit remains
+immutable. Both current financial censuses and settlement state must still
+equal the verified archives; changed or uncertain obligations require fresh
+financial reconciliation, never an old SQL restore. Old/noncurrent signatures,
+the original consumed nonce and a reused containment receipt cannot authorize
+this recovery. Preparation uses `--mode solo-contain --previous-receipt` pointing
+to the exact prior `RESUME_COMMITTED*.json`; execution uses the same complete
+argument shape as solo-resume, with that new phase's signed procedure/packet and
+`--previous-review` pointing to the original commit. A new owner signature and
+off-host consumption are required for **each** phase.
+
+This interruption boundary is not a live rollback certificate. Live maintenance
+remains HOLD until the complete production-size and partial-return recovery
+procedure is independently witnessed.

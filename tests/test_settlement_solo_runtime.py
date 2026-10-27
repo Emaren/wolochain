@@ -393,7 +393,7 @@ class RuntimeTests(unittest.TestCase):
         self.q['previous_phase_receipt_sha256']=r.sha(files[args.previous_review])
         plan={'schema':recovery.PLAN_SCHEMA,'source_commit':self.q['source_commit'],
             'fence_receipt_sha256':'1'*64,'backup_manifest_sha256':'2'*64,
-            'restore_receipt_sha256':'3'*64,'timer_qualifications':{}}
+            'restore_receipt_sha256':'3'*64,'timer_qualifications':{},'contained_partial':None}
         files[Path('/root/resume-plan')]=o.canonical(plan)
         proc=o.parse(files[args.procedure]);proc.update(mode=args.mode,permit_core_sha256=None,
             previous_phase_receipt_path=str(args.previous_review),capture_seal=None,

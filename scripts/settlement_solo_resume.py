@@ -20,6 +20,8 @@ SOURCE_SCHEMA = "wolo.maintenance-producer-source.v1"
 TIMER_SCHEMA = "wolo.maintenance-timer-qualification.v1"
 FENCE_SCHEMA = "wolo.financial-maintenance-fence.v2"
 JOURNAL = "RESUME_COMMITTED.json"
+CONTAIN_SCHEMA = "wolo.maintenance-partial-containment.v1"
+CONTAIN_PLAN_SCHEMA = "wolo.maintenance-partial-containment-plan.v1"
 
 
 def read_sealed(spec, reason):
@@ -129,9 +131,11 @@ def verify_capture(spec, *, runner, gated=False):
     return capture, observed
 
 
-def phase_current(phase):
-    m.require(type(phase) is dict and phase.get("phase") == "resume_existing" and
-              phase.get("resume_actions_allowed") is True, "RESUME_PHASE_ONLY")
+def phase_current(phase, *, contain=False):
+    name = "contain_partial" if contain else "resume_existing"
+    flag = "contain_actions_allowed" if contain else "resume_actions_allowed"
+    m.require(type(phase) is dict and phase.get("phase") == name and
+              phase.get(flag) is True, "RESUME_PHASE_ONLY")
     m.require(callable(phase.get("_admission_guard")), "RESUME_AUTHENTIC_ADMISSION_REQUIRED")
     phase["_admission_guard"]()
     from settlement_solo_runtime import validate_request, REQUEST_KEYS
@@ -177,7 +181,8 @@ def verify_state(fence_path, backup_dir, restore_path, sealed, *, runner):
               "RESUME_CAPTURE_IDENTITIES_MISSING")
     plan = read_sealed(sealed, "SIGNED_RESUME_PLAN_CHANGED")
     m.require(set(plan) == {"schema", "source_commit", "fence_receipt_sha256",
-              "backup_manifest_sha256", "restore_receipt_sha256", "timer_qualifications"} and
+              "backup_manifest_sha256", "restore_receipt_sha256", "timer_qualifications",
+              "contained_partial"} and
               plan["schema"] == PLAN_SCHEMA and fence_sha == plan["fence_receipt_sha256"],
               "SIGNED_RESUME_PLAN_MISMATCH")
     backup_dir, restore_path = Path(backup_dir), Path(restore_path)
@@ -191,6 +196,19 @@ def verify_state(fence_path, backup_dir, restore_path, sealed, *, runner):
     manifest, manifest_sha = m.private_json(backup_dir / "backup.json")
     m.require(manifest_sha == plan["backup_manifest_sha256"], "SIGNED_MANIFEST_CHANGED_AT_USE")
     capture, identities_now = verify_capture(fence["capture_seal"], runner=runner, gated=True)
+    if plan["contained_partial"] is not None:
+        contained = read_sealed(plan["contained_partial"], "PARTIAL_CONTAINMENT_RECEIPT_CHANGED")
+        m.require(contained.get("schema") == CONTAIN_SCHEMA and
+                  contained.get("state") == "CONTAINMENT_COMPLETED" and
+                  contained.get("source_commit") == plan["source_commit"] and
+                  contained.get("scope_sha256") == m.scope_digest() and
+                  contained.get("fence_receipt_sha256") == fence_sha and
+                  contained.get("financial_release_authorized") is False,
+                  "PARTIAL_CONTAINMENT_NOT_VERIFIED")
+        prior = read_sealed(contained["prior_resume_commit"], "PRIOR_RESUME_COMMIT_CHANGED")
+        m.require(prior.get("state") == "RESUME_COMMITTED" and
+                  Path(contained["prior_resume_commit"]["path"]).parent == backup_dir,
+                  "PRIOR_RESUME_COMMIT_CHANGED")
     for unit in m.UNITS:
         m.require((fence["prestate"][unit]["ActiveState"] == "active") ==
                   capture["producer_identities"]["units"][unit]["originally_active"],
@@ -237,12 +255,27 @@ def execute(fence_path, backup_dir, *, phase_window, runner=None):
     containment_runner = runner or m.run
     runner = m.bounded_runner(containment_runner, phase_window)
     path = Path(backup_dir) / JOURNAL
+    sealed = phase_window["resume_sealed"]
+    if path.exists() or path.is_symlink():
+        m.require(phase_window.get("resume_recovery_allowed") is True,
+                  "RESUME_ALREADY_COMMITTED_FRESH_RECOVERY_AUTHORITY_REQUIRED")
+        plan = read_sealed(sealed, "SIGNED_RESUME_PLAN_CHANGED")
+        m.require(plan.get("contained_partial") is not None,
+                  "RESUME_ALREADY_COMMITTED_FRESH_RECOVERY_AUTHORITY_REQUIRED")
+        path = Path(backup_dir) / ("RESUME_COMMITTED." + phase_window["nonce"] + ".json")
     m.require(not path.exists() and not path.is_symlink(),
               "RESUME_ALREADY_COMMITTED_FRESH_RECOVERY_AUTHORITY_REQUIRED")
-    sealed = phase_window["resume_sealed"]
     observed = verify_state(fence_path, backup_dir, Path(backup_dir) / "restore.json", sealed, runner=runner)
     m.require(observed["plan"]["source_commit"] == phase_window["source_commit"],
               "RESUME_SOURCE_MISMATCH")
+    phase_current(phase_window)
+    contained = observed["plan"].get("contained_partial")
+    if contained is not None:
+        consumed = Path(backup_dir) / ("CONTAINMENT_CONSUMED." + contained["sha256"] + ".json")
+        m.require(not consumed.exists() and not consumed.is_symlink(),
+                  "PARTIAL_CONTAINMENT_ALREADY_CONSUMED")
+        m.write_new(consumed, m.canonical({"resume_nonce": phase_window["nonce"],
+                                          "containment_sha256": contained["sha256"]}))
     phase_current(phase_window)  # Census/build I/O must not outlive authority.
     # Irreversible admission boundary: never auto-replay after this durable
     # marker, even if killed immediately before the HOLD unlink.
@@ -262,7 +295,8 @@ def execute(fence_path, backup_dir, *, phase_window, runner=None):
             m.require(m.show(unit, runner)["ActiveState"] == "active", "RESUMED_UNIT_NOT_ACTIVE")
         m.no_jobs(runner)
         phase_current(phase_window)
-        m.write_new(Path(backup_dir) / "RESUME_COMPLETED.json", m.canonical(dict(journal, state="RESUME_COMPLETED")))
+        completion = "RESUME_COMPLETED.json" if path.name == JOURNAL else "RESUME_COMPLETED." + phase_window["nonce"] + ".json"
+        m.write_new(Path(backup_dir) / completion, m.canonical(dict(journal, state="RESUME_COMPLETED")))
     except Exception:
         # SIGKILL cannot run cleanup. The durable COMMITTED marker is an
         # explicit partial-return state, never a promise of automatic re-fence.
@@ -290,3 +324,62 @@ def execute(fence_path, backup_dir, *, phase_window, runner=None):
         raise m.MaintenanceError("PARTIAL_RESUME_FENCED_FRESH_RECOVERY_AUTHORITY_REQUIRED") from None
     return {"status": "ORIGINAL_PRODUCERS_RESUMED", "financial_release_authorized": False,
             "custody_or_solvency_certified": False}
+
+
+def contain_partial(fence_path, backup_dir, *, phase_window, runner=None):
+    """Fresh owner-authorized STOP-only recovery after committed interruption.
+
+    It grants no new resume or payment authority. The original commit/HOLD and
+    ledgers are retained; a later resume must have its own fresh signature.
+    """
+    phase_current(phase_window, contain=True)
+    m.require(os.geteuid() == 0, "ROOT_REQUIRED")
+    runner = runner or m.run
+    plan = read_sealed(phase_window["resume_sealed"], "SIGNED_CONTAINMENT_PLAN_CHANGED")
+    m.require(set(plan) == {"schema", "source_commit", "fence_receipt_sha256",
+              "backup_manifest_sha256", "prior_resume_commit"} and
+              plan["schema"] == CONTAIN_PLAN_SCHEMA and
+              plan["source_commit"] == phase_window["source_commit"], "CONTAINMENT_PLAN_INVALID")
+    prior = read_sealed(plan["prior_resume_commit"], "PRIOR_RESUME_COMMIT_CHANGED")
+    prior_path = Path(plan["prior_resume_commit"]["path"])
+    m.require(prior_path.parent == Path(backup_dir) and
+              (prior_path.name == JOURNAL or m.re.fullmatch(r"RESUME_COMMITTED\.[0-9a-f]{32}\.json", prior_path.name)) and
+              prior.get("schema") == "wolo.maintenance-resume-commit.v1" and
+              prior.get("state") == "RESUME_COMMITTED" and
+              prior.get("source_commit") == phase_window["source_commit"] and
+              prior.get("nonce") != phase_window["nonce"], "PRIOR_RESUME_COMMIT_CHANGED")
+    fence, fence_sha = m.private_json(fence_path)
+    manifest, manifest_sha = m.private_json(Path(backup_dir) / "backup.json")
+    m.require(fence_sha == plan["fence_receipt_sha256"] and
+              manifest_sha == plan["backup_manifest_sha256"] and
+              fence.get("schema") == FENCE_SCHEMA and
+              fence.get("scope_sha256") == manifest.get("scope_sha256") == m.scope_digest(),
+              "CONTAINMENT_EVIDENCE_CHANGED")
+    expected = m.canonical({"scope_sha256": m.scope_digest(), "permit_sha256": fence["permit_sha256"]})
+    m.require(m.digest(expected) == fence["hold_sha256"] == prior.get("original_hold_sha256"),
+              "CONTAINMENT_HOLD_IDENTITY_CHANGED")
+    for unit in m.UNITS:
+        m.require(m.private_read(m.dropin(unit)) == m.expected_dropin(), "OWNED_DROPIN_DRIFT")
+        m.effective_condition(unit, runner)
+    phase_current(phase_window, contain=True)
+    record = {"schema": CONTAIN_SCHEMA, "state": "CONTAINMENT_COMMITTED",
+              "nonce": phase_window["nonce"], "source_commit": phase_window["source_commit"],
+              "scope_sha256": m.scope_digest(), "fence_receipt_sha256": fence_sha,
+              "prior_resume_commit": plan["prior_resume_commit"], "financial_release_authorized": False}
+    prefix = Path(backup_dir) / ("CONTAINMENT_" + phase_window["nonce"])
+    m.write_new(prefix.with_suffix(".committed.json"), m.canonical(record))
+    failures=[]
+    try:
+        if not m.HOLD.exists() and not m.HOLD.is_symlink():m.write_new(m.HOLD, expected)
+        m.require(m.private_read(m.HOLD) == expected, "CONTAINMENT_FOREIGN_HOLD")
+    except (OSError, RuntimeError):failures.append("hold")
+    for unit in m.TIMERS + m.ONESHOTS + m.APPS:
+        try:runner(["systemctl", "stop", "--", unit], timeout=5)
+        except (OSError, RuntimeError):failures.append(unit)
+    try:m.inactive_observation(runner)
+    except (OSError, RuntimeError):failures.append("inactive_scope")
+    m.require(not failures, "PARTIAL_RESUME_CONTAINMENT_UNCERTAIN")
+    phase_current(phase_window, contain=True)
+    result=dict(record,state="CONTAINMENT_COMPLETED")
+    m.write_new(prefix.with_suffix(".completed.json"),m.canonical(result))
+    return result

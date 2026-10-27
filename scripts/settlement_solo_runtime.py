@@ -42,12 +42,14 @@ WITNESS_CONFIG, WITNESS_NONCES = witness_paths(sys.platform)
 WITNESS_ENROLLMENT = WITNESS_CONFIG.with_name("solo-owner.json")
 REMOTE_COMMAND = "wolo-maintenance-witness-v1"
 MODES = {"solo-capture": "live_capture", "solo-offline-restore": "offline_verify",
-         "solo-resume": "resume_existing"}
+         "solo-resume": "resume_existing", "solo-contain": "contain_partial"}
 OPS = {"live_capture": "fence-drain-capture-hd-de",
        "offline_verify": "isolated-restore-verify-sealed-archives",
-       "resume_existing": "resume-original-qualified-producers"}
+       "resume_existing": "resume-original-qualified-producers",
+       "contain_partial": "contain-committed-partial-resume"}
 # Restore has a separate long window; it never renews the LIVE capture permit.
-WINDOWS = {"live_capture": 1800, "offline_verify": 14400, "resume_existing": 1800}
+WINDOWS = {"live_capture": 1800, "offline_verify": 14400, "resume_existing": 1800,
+           "contain_partial": 1800}
 SOURCES = frozenset({"settlement_solo_runtime.py", "settlement_solo_owner_intent_review.py",
                     "settlement_maintenance_nonce_store.py", "settlement_financial_maintenance.py",
                     "settlement_resume_producer_identities.py", "settlement_solo_resume.py"})
@@ -293,6 +295,26 @@ def authenticate_and_reserve(args):
                 approval["approval_sha256"] == sha(owner.base64.b64decode(
                     signed["signature_b64"], validate=True)), "SOLO_RUNTIME_OWNER_REFERENCE_MISMATCH")
         require(proc["previous_phase_receipt_path"] is None, "SOLO_RUNTIME_UNEXPECTED_LINEAGE")
+    elif args.mode == "solo-contain":
+        import settlement_solo_resume as recovery
+        plan = recovery.read_sealed(proc["resume_plan"], "SIGNED_CONTAINMENT_PLAN_CHANGED")
+        previous, previous_sha = m.private_json(args.previous_review)
+        fenced, fence_sha = m.private_json(args.fence_receipt)
+        permit, permit_sha = m.private_json(fenced["permit_path"])
+        m._validate_permit_contract(permit)
+        require(proc["capture_seal"] is None and proc["permit_core_sha256"] is None and
+                proc["previous_phase_receipt_path"] == str(args.previous_review) and
+                previous_sha == q["previous_phase_receipt_sha256"] and
+                previous.get("state") == "RESUME_COMMITTED" and
+                previous.get("source_commit") == q["source_commit"] and
+                plan.get("schema") == recovery.CONTAIN_PLAN_SCHEMA and
+                plan.get("source_commit") == q["source_commit"] and
+                plan.get("fence_receipt_sha256") == fence_sha and
+                plan.get("backup_manifest_sha256") == m.file_sha(args.output / "backup.json") and
+                plan.get("prior_resume_commit") == {"path":str(args.previous_review),"sha256":previous_sha} and
+                permit_sha == fenced.get("permit_sha256"), "SOLO_RUNTIME_CONTAINMENT_LINEAGE_MISMATCH")
+        artifacts = {"fence_receipt_sha256": fence_sha,
+                     "backup_manifest_sha256": plan["backup_manifest_sha256"]}
     else:
         fenced = m.verify_retained_fence(args.fence_receipt, m.scope_digest())
         permit = fenced["permit"]
@@ -348,6 +370,8 @@ def authenticate_and_reserve(args):
         validate_request(q, m.clock())
     return dict(q, live_actions_allowed=args.mode == "solo-capture",
                 resume_actions_allowed=args.mode == "solo-resume",
+                contain_actions_allowed=args.mode == "solo-contain",
+                resume_recovery_allowed=args.mode == "solo-resume" and plan.get("contained_partial") is not None,
                 resume_sealed=proc["resume_plan"], capture_seal=proc["capture_seal"],
                 _admission_guard=revalidate,
                 max_total_bytes=permit["max_total_bytes"], witness_receipt=ack,
