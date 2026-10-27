@@ -54,7 +54,7 @@ func VerifyPreparation(ctx context.Context, p Policy, r Request, proofs Proofs) 
 		if !ok {
 			return refuse()
 		}
-		ev, e := verifier.VerifyTransferProof(ctx, satchel.TransferIntent{Sender: p.Vault, Recipient: p.Escrow, AmountUWolo: w.PrincipalUWolo, Memo: FundingMemo(p.EpochID, w.TicketID)}, w.FundingTxHash, proof)
+		ev, e := verifier.VerifyMessageTransferProof(ctx, satchel.TransferIntent{Sender: p.Vault, Recipient: p.Escrow, AmountUWolo: w.PrincipalUWolo, Memo: FundingMemo(p.EpochID, w.TicketID)}, w.FundingTxHash, proof)
 		if e != nil || !ev.ConsensusAuthenticated() || ev.CreditAuthorized() || ev.Observation().Height <= p.HStar || ev.Receipt().TransferIndex != 0 || ev.Receipt().ID() != "wolo-1:"+w.FundingTxHash+":0" {
 			return refuse()
 		}
@@ -135,7 +135,7 @@ func ObserveReturn(ctx context.Context, p Policy, r Request, hash string, proof 
 	if e != nil {
 		return satchel.AuthenticatedEvidence{}, e
 	}
-	evidence, e := v.VerifyTransferProof(ctx, satchel.TransferIntent{Sender: p.Escrow, Recipient: p.Vault, AmountUWolo: r.AmountUWolo, Memo: r.Memo}, hash, proof)
+	evidence, e := v.VerifyMessageTransferProof(ctx, satchel.TransferIntent{Sender: p.Escrow, Recipient: p.Vault, AmountUWolo: r.AmountUWolo, Memo: r.Memo}, hash, proof)
 	if e != nil || !evidence.ConsensusAuthenticated() || evidence.CreditAuthorized() || evidence.Observation().Height <= p.HStar || evidence.Receipt().TransferIndex != 0 || evidence.Receipt().ID() != "wolo-1:"+strings.ToUpper(hash)+":0" || hash == r.FundingTxHash {
 		return satchel.AuthenticatedEvidence{}, errors.New("epoch_return_observation_refused")
 	}

@@ -97,7 +97,11 @@ reuse that money elsewhere. Genuine multi-leg/split funding is unfinished.
 
 `ObserveReturn` verifies a native exact return effect and remains noncrediting.
 It does not consume HD's global physical receipt or authenticate a later bank
-snapshot for an HD credit. Current full native bank proof admission is in
+snapshot for an HD credit. The separate native `VerifyMessageTransferProof` API retains the complete
+SDK bank event list and legacy event ordinal (the ante fee precedes the send),
+while its authenticated exact single MsgSend has canonical message index zero.
+The existing `ReadTransfer` API and event-ordinal identities are unchanged.
+Current full native bank proof admission is in
 `VerifyPreparation`; a future observe response needs the independently
 consumed latest H/H+1 bank commitment and economic ownership tuple. Native
 proof authentication cannot prove the truth or completeness of a signed
@@ -127,8 +131,8 @@ liability inventory, original owner mapping or market resolution.
    observe integration. Preserve historic 889, 8477, original 100-WOLO ambiguity,
    reused hashes, legacy HD/DE claims and all uncertain outgoing payments in
    their existing protected domain.
-5. Complete positive native SDK-to-v3-policy/journal tests, crash/timeout
-   execution tests, immutable source/binary reproduction, runtime witness,
+5. Complete actual escrow signer execution and crash/timeout tests, immutable
+   source/binary reproduction, runtime witness,
    full writer exclusion, quiesced backup/restore and exact transaction-specific
    owner permit before requesting a separately approved small real-WOLO canary.
 
@@ -151,3 +155,14 @@ corruption; expired-original read-only observation, atomic admission expiry/capa
 seals test journal semantics only and are explicitly not native bank proofs.
 The existing native SDK/Comet/ICS23 suites remain the underlying evidence
 boundary. CI is source verification, never custody certification.
+
+The dedicated `Held epoch v3 native evidence` CI job runs
+`scripts/check-epoch-escrow-native-v3.py`: it builds the v3 test binary before
+exporting fresh proofs from the existing continuous SDK lifecycle fixture, then
+immediately consumes them. Actual fee-paying funding, escrow return and
+matched-only fee sends exercise canonical message zero alongside legacy event
+one. Both native bank accounts use the same H/H+1 root. Wrong owner, denom,
+message ordinal, signed/trusted root, expiry, account-root disagreement and
+escrow reserve deficit are rejected. No freshness window or permit TTL is
+extended for compilation. The accepted native preparation still cannot execute
+because independent runtime custody/off-host nonce authority remains absent.

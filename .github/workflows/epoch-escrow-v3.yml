@@ -1,0 +1,27 @@
+name: Held epoch v3 native evidence
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native-epoch-v3:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      GOFLAGS: -tags=go1.27
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Held escrow policy, journal, unknown outcomes and command
+        run: go test -race ./internal/epochescrow ./cmd/woloescrowd -count=1
+      - name: Fresh native SDK funding, fee-paying MsgSend0, dual-account bank and return proofs
+        run: python3 scripts/check-epoch-escrow-native-v3.py

@@ -64,6 +64,7 @@ type lifecycleStep struct {
 	Proof         PortableProof    `json:"proof"`
 	VaultBalance  string           `json:"vault_balance_uwolo"`
 	VaultProof    BankProof        `json:"vault_bank_proof"`
+	EscrowProof   BankProof        `json:"escrow_bank_proof"`
 	DepositIntent *Intent          `json:"deposit_intent,omitempty"`
 	DepositProof  *PortableProof   `json:"deposit_proof,omitempty"`
 	ReplayHeight  int64            `json:"replay_height"`
@@ -313,15 +314,17 @@ func runContinuousSDKLifecycle(t *testing.T, scenario string, matched bool, reci
 	}
 	// Query the actual retained IAVL versions rather than synthesizing balances
 	// from the assertions above. Each proof must bind to the next signed header.
-	bankQueries := map[int64]*abci.ResponseQuery{}
-	vaultKey, err := nativeBankKey(vault.address.String())
-	require.NoError(t, err)
+	bankQueries := map[string]*abci.ResponseQuery{}
 	for _, step := range steps {
 		stateHeight := step.HeadHeight - 1
-		query, err := application.Query(context.Background(), &abci.RequestQuery{Path: "/store/bank/key", Data: vaultKey, Height: stateHeight, Prove: true})
-		require.NoError(t, err)
-		require.Zero(t, query.Code, query.Log)
-		bankQueries[stateHeight] = query
+		for _, account := range []string{vault.address.String(), escrow.address.String()} {
+			key, err := nativeBankKey(account)
+			require.NoError(t, err)
+			query, err := application.Query(context.Background(), &abci.RequestQuery{Path: "/store/bank/key", Data: key, Height: stateHeight, Prove: true})
+			require.NoError(t, err)
+			require.Zero(t, query.Code, query.Log)
+			bankQueries[bankQuery(stateHeight, key).Encode()] = query
+		}
 	}
 	anchor := TrustAnchor{Height: 1, Hash: hex.EncodeToString(commits[1].Header.Hash()), PeriodSeconds: 3600, EvidenceReference: "isolated-continuous-sdk-lifecycle-test-only"}
 	// The two local transcript roles share one deliberately isolated validator.
@@ -335,10 +338,7 @@ func runContinuousSDKLifecycle(t *testing.T, scenario string, matched bool, reci
 			var value any
 			switch r.URL.Path {
 			case "/abci_query":
-				h, err := strconv.ParseInt(r.URL.Query().Get("height"), 10, 64)
-				require.NoError(t, err)
-				require.Equal(t, bankQuery(h, vaultKey).Encode(), r.URL.RawQuery)
-				query := bankQueries[h]
+				query := bankQueries[r.URL.RawQuery]
 				require.NotNil(t, query)
 				value = core.ResultABCIQuery{Response: *query}
 			case "/status":
@@ -417,6 +417,19 @@ func runContinuousSDKLifecycle(t *testing.T, scenario string, matched bool, reci
 		require.NoError(t, err, step.Name)
 		require.Equal(t, step.VaultBalance, verifiedBank.BalanceUWolo())
 		step.VaultProof = bankProof
+		escrowBank, escrowProof, err := reader.ReadBankProof(context.Background(), escrow.address.String(), stateHeight)
+		require.NoError(t, err, step.Name)
+		require.Equal(t, bank.Height(), escrowBank.Height())
+		require.Equal(t, bank.AppHash(), escrowBank.AppHash())
+		require.Equal(t, bank.BlockHash(), escrowBank.BlockHash())
+		_, err = verifier.VerifyBankProof(context.Background(), escrow.address.String(), stateHeight, escrowProof)
+		require.NoError(t, err)
+		step.EscrowProof = escrowProof
+		canonical, err := verifier.VerifyMessageTransferProof(context.Background(), step.Intent, step.TxHash, proof)
+		require.NoError(t, err, step.Name)
+		require.Equal(t, uint32(0), canonical.Receipt().TransferIndex)
+		require.Equal(t, uint32(1), *canonical.Observation().TransferIndex, "canonical message identity must preserve raw fee/send events")
+		require.Equal(t, uint32(1), evidence.Receipt().TransferIndex, "legacy outgoing receipt remains event ordinal one")
 		if step.Name == "deposit" {
 			intent := Intent{OwnerID: "lifecycle-owner", Sender: step.Intent.Sender, Vault: step.Intent.Recipient, AmountUWolo: step.Intent.AmountUWolo, Memo: step.Intent.Memo, CreatedAt: start.Add(-time.Second), ExpiresAt: now.Add(10 * time.Minute)}
 			deposit, depositProof, err := reader.ReadDepositProof(context.Background(), intent, step.TxHash)
@@ -432,7 +445,7 @@ func runContinuousSDKLifecycle(t *testing.T, scenario string, matched bool, reci
 		exportDir = filepath.Join(exportDir, scenario)
 		require.NoError(t, os.MkdirAll(exportDir, 0700))
 		fixture := map[string]any{"fixture_only": true, "mainnet_authority": false, "chain_id": ChainID, "denom": Denom, "now": now, "anchor": anchor,
-			"roles":  map[string]any{"owner_id": "lifecycle-owner", "owner": owner.address.String(), "vault": vault.address.String(), "escrow": escrow.address.String(), "opponent": opponent.address.String(), "owner_public_key_hex": hex.EncodeToString(owner.key.PubKey().Bytes()), "owner_private_key_hex_test_only": hex.EncodeToString(owner.key.Bytes()), "owner_private_key_warning": "DETERMINISTIC ISOLATED FIXTURE ONLY; NEVER FUND OR PROVISION"},
+			"roles":  map[string]any{"owner_id": "lifecycle-owner", "owner": owner.address.String(), "vault": vault.address.String(), "escrow": escrow.address.String(), "opponent": opponent.address.String(), "owner_public_key_hex": hex.EncodeToString(owner.key.PubKey().Bytes()), "vault_public_key_hex": hex.EncodeToString(vault.key.PubKey().Bytes()), "escrow_public_key_hex": hex.EncodeToString(escrow.key.PubKey().Bytes()), "owner_private_key_hex_test_only": hex.EncodeToString(owner.key.Bytes()), "owner_private_key_warning": "DETERMINISTIC ISOLATED FIXTURE ONLY; NEVER FUND OR PROVISION"},
 			"recipe": recipe, "scenario": scenario, "bank_states": bankStates, "steps": steps, "committed_block_count": height, "successful_transfers": len(steps), "total_fee_uwolo": strconv.Itoa(len(steps)), "production_custody_available": false}
 		encoded, err := json.MarshalIndent(fixture, "", "  ")
 		require.NoError(t, err)
