@@ -358,9 +358,13 @@ def contain_partial(fence_path, backup_dir, *, phase_window, runner=None):
     expected = m.canonical({"scope_sha256": m.scope_digest(), "permit_sha256": fence["permit_sha256"]})
     m.require(m.digest(expected) == fence["hold_sha256"] == prior.get("original_hold_sha256"),
               "CONTAINMENT_HOLD_IDENTITY_CHANGED")
+    failures=[]
     for unit in m.UNITS:
-        m.require(m.private_read(m.dropin(unit)) == m.expected_dropin(), "OWNED_DROPIN_DRIFT")
-        m.effective_condition(unit, runner)
+        try:
+            m.require(m.private_read(m.dropin(unit)) == m.expected_dropin(), "OWNED_DROPIN_DRIFT")
+            m.effective_condition(unit, runner)
+        except (OSError, RuntimeError):
+            failures.append("gate")
     phase_current(phase_window, contain=True)
     record = {"schema": CONTAIN_SCHEMA, "state": "CONTAINMENT_COMMITTED",
               "nonce": phase_window["nonce"], "source_commit": phase_window["source_commit"],
@@ -368,7 +372,6 @@ def contain_partial(fence_path, backup_dir, *, phase_window, runner=None):
               "prior_resume_commit": plan["prior_resume_commit"], "financial_release_authorized": False}
     prefix = Path(backup_dir) / ("CONTAINMENT_" + phase_window["nonce"])
     m.write_new(prefix.with_suffix(".committed.json"), m.canonical(record))
-    failures=[]
     try:
         if not m.HOLD.exists() and not m.HOLD.is_symlink():m.write_new(m.HOLD, expected)
         m.require(m.private_read(m.HOLD) == expected, "CONTAINMENT_FOREIGN_HOLD")

@@ -397,6 +397,13 @@ class ContainmentExecutionTests(unittest.TestCase):
         self.assertEqual(self.hold.read_bytes(),b'foreign-do-not-overwrite')
         self.assertEqual(len([e for e in self.events if isinstance(e,tuple)]),len(m.UNITS))
 
+    def test_gate_drift_prevents_completion_but_never_skips_exact_scope_stops(self):
+        with patch.object(m,'effective_condition',side_effect=m.MaintenanceError('OWNED_DROPIN_DRIFT')), \
+             self.assertRaisesRegex(m.MaintenanceError,'PARTIAL_RESUME_CONTAINMENT_UNCERTAIN'):
+            self.contain()
+        self.assertEqual(len([e for e in self.events if isinstance(e,tuple)]),len(m.UNITS))
+        self.assertTrue(self.prior_path.exists())
+
     def test_mutable_runtime_owned_source_is_refused_before_read(self):
         with self.assertRaisesRegex(m.MaintenanceError,'RESUME_PRODUCER_SOURCE_MUST_BE_ROOT_CONTROLLED'):
             r.source_file_sha('/root/never-read',1000)
