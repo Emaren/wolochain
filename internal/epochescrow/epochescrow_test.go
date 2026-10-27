@@ -408,6 +408,11 @@ func TestJournalCapacityHoldRollsBackAndRetainsReadableHistory(t *testing.T) {
 	}
 	j, _ := journalFixture(t, p)
 	defer j.Close()
+	// This test uses private synthetic journal seals, not native proofs. Race
+	// instrumentation can take longer than their90s fixture permit; keep its
+	// injected unit-test clock fixed while testing the byte/event envelope.
+	// Production and the fresh native SDK harness always retain real time.
+	j.now = func() time.Time { return time.Unix(r.IssuedAt, 0) }
 	var first, last Request
 	var admitted int
 	capacity := false
