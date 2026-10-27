@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `codex/central-financial-resume` at `f88420c9c7450677e26dd870f0b6a20e6df3928c`
+Implementation baseline: `codex/central-financial-resume` at `155b84186c047825dccd3748a2e0fee0397131f7`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
