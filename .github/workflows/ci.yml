@@ -35,7 +35,7 @@ jobs:
         run: go build ./cmd/wolochaind
 
       - name: Settlement tests
-        run: go test ./cmd/wolochaind/cmd -count=1
+        run: go test ./cmd/wolochaind/cmd -count=1 -v
 
       - name: Full repo tests
         run: go test ./...
