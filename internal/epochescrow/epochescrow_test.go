@@ -455,9 +455,15 @@ func TestJournalCapacityHoldRollsBackAndRetainsReadableHistory(t *testing.T) {
 		if i%2 == 0 {
 			side = "right"
 		}
-		r.Plan.Wagers = append(r.Plan.Wagers, Wager{i, 10, i, i, "owner", side, "1000000", fmt.Sprintf("%064X", i), 0})
+		// Keep 1,000 economic legs while exercising the conserved-ticket contract.
+		// Sixteen legs per original receipt bound repeated signature work under race.
+		ticketID := 1 + (i-1)/16
+		r.Plan.Wagers = append(r.Plan.Wagers, Wager{i, 10, ticketID, i, "owner", side, "1000000", fmt.Sprintf("%064X", ticketID), 0})
 	}
 	fixtureTickets(t, p, &r)
+	if len(r.Tickets) != 63 {
+		t.Fatal("capacity fixture lost its conserved physical-ticket grouping")
+	}
 	outcomes, e := PlanSettlement(r.Plan)
 	if e != nil {
 		t.Fatal(e)
