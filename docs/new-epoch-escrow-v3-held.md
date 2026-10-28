@@ -23,6 +23,14 @@ keyring, signs, broadcasts, credits HD, or invokes 8092/8093. This source is the
 bounded policy/journal work packet; independent runtime custody and a complete
 financial executor are unfinished.
 
+The October 28 source correction evaluates bank currentness after both portable
+proof replays and revalidates the owner permit at that completion time. Replay
+observations must not be evaluated against an earlier admission timestamp.
+Fixed refusal stages distinguish funding, account authentication/currentness,
+account-root agreement, funding lag and signed-request-root disagreement without
+printing native replies or credentials. The native SDK test checks the earlier
+clock refusal, completion-time acceptance and unchanged stale/future limits.
+
 The exact upstream contract is HD
 [`docs/FINANCIAL_EPOCH_V3_WOLO_EXECUTOR_INTERFACE.md` at bde1a40808b661b4fbd257353d71b4700d52ed81](https://github.com/Emaren/app-prodn/blob/bde1a40808b661b4fbd257353d71b4700d52ed81/docs/FINANCIAL_EPOCH_V3_WOLO_EXECUTOR_INTERFACE.md),
 blob `463dba3119acd03b67d40c83136cd51b58ba6aae`. Its pure economic source is

@@ -42,21 +42,22 @@ func VerifyPreparation(ctx context.Context, p Policy, r Request, proofs Proofs) 
 	if e != nil {
 		return VerifiedPreparation{}, e
 	}
-	refuse := func() (VerifiedPreparation, error) {
-		return VerifiedPreparation{}, blocked("BANK_PROOF_STALE", "Native funding or same-root current account proofs are missing or inconsistent.", "refresh-native-proofs")
+	// Stages are fixed source labels, never RPC replies or nested error text.
+	refuse := func(stage string) (VerifiedPreparation, error) {
+		return VerifiedPreparation{}, blocked("BANK_PROOF_STALE", "Native proof refused at "+stage+".", "refresh-native-proofs")
 	}
 	if len(proofs.Funding) != len(r.Plan.Wagers) {
-		return refuse()
+		return refuse("funding_cardinality")
 	}
 	var latestFundingHeight int64
 	for _, w := range r.Plan.Wagers {
 		proof, ok := proofs.Funding[w.FundingTxHash]
 		if !ok {
-			return refuse()
+			return refuse("funding_missing")
 		}
 		ev, e := verifier.VerifyMessageTransferProof(ctx, satchel.TransferIntent{Sender: p.Vault, Recipient: p.Escrow, AmountUWolo: w.PrincipalUWolo, Memo: FundingMemo(p.EpochID, w.TicketID)}, w.FundingTxHash, proof)
 		if e != nil || !ev.ConsensusAuthenticated() || ev.CreditAuthorized() || ev.Observation().Height <= p.HStar || ev.Receipt().TransferIndex != 0 || ev.Receipt().ID() != "wolo-1:"+w.FundingTxHash+":0" {
-			return refuse()
+			return refuse("funding_authentication")
 		}
 		if ev.Observation().Height > latestFundingHeight {
 			latestFundingHeight = ev.Observation().Height
@@ -64,15 +65,37 @@ func VerifyPreparation(ctx context.Context, p Policy, r Request, proofs Proofs) 
 	}
 	vault, e := verifier.VerifyBankProof(ctx, p.Vault, proofs.Vault.Height, proofs.Vault)
 	if e != nil {
-		return refuse()
+		return refuse("vault_authentication")
 	}
 	escrow, e := verifier.VerifyBankProof(ctx, p.Escrow, proofs.Escrow.Height, proofs.Escrow)
 	if e != nil {
-		return refuse()
+		return refuse("escrow_authentication")
+	}
+	// Replay records Head.ObservedAt while authenticating each account. Evaluate
+	// freshness after both reads, never against the earlier admission timestamp.
+	// Revalidate the permit too: authentication must not extend its lifetime.
+	completedAt := time.Now()
+	if e := p.ValidateRequest(r, completedAt); e != nil {
+		return VerifiedPreparation{}, e
 	}
 	// Both accounts must be committed under the same current H+1 header/root.
-	if !vault.CurrentAt(now) || !escrow.CurrentAt(now) || vault.CreditAuthorized() || escrow.CreditAuthorized() || vault.Height() != escrow.Height() || vault.CommitHeight() != escrow.CommitHeight() || vault.AppHash() != escrow.AppHash() || vault.BlockHash() != escrow.BlockHash() || vault.HeadHeight() != escrow.HeadHeight() || vault.HeadBlockHash() != escrow.HeadBlockHash() || vault.Height() <= p.HStar || vault.Height() < latestFundingHeight+2 || vault.Height() != r.BankStateHeight || vault.CommitHeight() != r.BankCommitHeight || vault.BlockHash() != r.BankCommitHash || vault.AppHash() != r.BankAppHash {
-		return refuse()
+	if !vault.CurrentAt(completedAt) {
+		return refuse("vault_current")
+	}
+	if !escrow.CurrentAt(completedAt) {
+		return refuse("escrow_current")
+	}
+	if vault.CreditAuthorized() || escrow.CreditAuthorized() {
+		return refuse("bank_credit_authority")
+	}
+	if vault.Height() != escrow.Height() || vault.CommitHeight() != escrow.CommitHeight() || vault.AppHash() != escrow.AppHash() || vault.BlockHash() != escrow.BlockHash() || vault.HeadHeight() != escrow.HeadHeight() || vault.HeadBlockHash() != escrow.HeadBlockHash() {
+		return refuse("account_root_agreement")
+	}
+	if vault.Height() <= p.HStar || vault.Height() < latestFundingHeight+2 {
+		return refuse("funding_state_lag")
+	}
+	if vault.Height() != r.BankStateHeight || vault.CommitHeight() != r.BankCommitHeight || vault.BlockHash() != r.BankCommitHash || vault.AppHash() != r.BankAppHash {
+		return refuse("request_root_agreement")
 	}
 	debit, _ := number(r.AmountUWolo, false)
 	gas, _ := number(p.GasFeeUWolo, false)
@@ -89,7 +112,7 @@ func VerifyPreparation(ctx context.Context, p Policy, r Request, proofs Proofs) 
 		Request Request
 	}{p, r})
 	if json.Unmarshal(b, &frozen) != nil {
-		return refuse()
+		return refuse("request_copy")
 	}
 	expires := time.Unix(r.ExpiresAt, 0)
 	for _, t := range []time.Time{vault.ExpiresAt(), escrow.ExpiresAt()} {
@@ -98,7 +121,7 @@ func VerifyPreparation(ctx context.Context, p Policy, r Request, proofs Proofs) 
 		}
 	}
 	if ctx.Err() != nil || !time.Now().Before(expires) {
-		return refuse()
+		return refuse("preparation_expired_or_canceled")
 	}
 	return VerifiedPreparation{frozen.Policy, frozen.Request, Fingerprint(frozen.Request), expires, true}, nil
 }

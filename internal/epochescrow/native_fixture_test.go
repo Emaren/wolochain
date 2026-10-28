@@ -9,6 +9,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"os"
 	"strings"
 	"testing"
@@ -84,9 +85,26 @@ func TestNativeV3FeePayingProofPreparationAndObservation(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	beforeReplay := time.Now()
 	bank, err := verifier.VerifyBankProof(context.Background(), p.Vault, two.Vault.Height, two.Vault)
 	if err != nil {
 		t.Fatal(err)
+	}
+	escrowBank, err := verifier.VerifyBankProof(context.Background(), p.Escrow, two.Escrow.Height, two.Escrow)
+	if err != nil {
+		t.Fatal(err)
+	}
+	completedAt := time.Now()
+	t.Logf("native_bank state=%d commit=%d head=%d escrow_state=%d escrow_commit=%d escrow_head=%d current_vault=%t current_escrow=%t app_root_equal=%t commit_hash_equal=%t head_hash_equal=%t before_replay_current=%t",
+		bank.Height(), bank.CommitHeight(), bank.HeadHeight(), escrowBank.Height(), escrowBank.CommitHeight(), escrowBank.HeadHeight(), bank.CurrentAt(completedAt), escrowBank.CurrentAt(completedAt), bank.AppHash() == escrowBank.AppHash(), bank.BlockHash() == escrowBank.BlockHash(), bank.HeadBlockHash() == escrowBank.HeadBlockHash(), bank.CurrentAt(beforeReplay))
+	if !bank.CurrentAt(completedAt) || !escrowBank.CurrentAt(completedAt) || bank.CurrentAt(beforeReplay) || escrowBank.CurrentAt(beforeReplay) {
+		t.Fatal("genuine bank replay must be evaluated after its observations")
+	}
+	if bank.CurrentAt(completedAt.Add(31*time.Second)) || escrowBank.CurrentAt(completedAt.Add(31*time.Second)) {
+		t.Fatal("completion-time evaluation extended native proof freshness")
+	}
+	if bank.CurrentAt(beforeReplay.Add(-6*time.Second)) || escrowBank.CurrentAt(beforeReplay.Add(-6*time.Second)) {
+		t.Fatal("genuine bank evidence accepted observations from the future")
 	}
 	r.BankStateHeight = bank.Height()
 	r.BankCommitHeight = bank.CommitHeight()
@@ -111,6 +129,10 @@ func TestNativeV3FeePayingProofPreparationAndObservation(t *testing.T) {
 	proofs := Proofs{map[string]satchel.PortableProof{one.Hash: one.Proof, two.Hash: two.Proof}, two.Vault, two.Escrow}
 	v, err := VerifyPreparation(context.Background(), p, r, proofs)
 	if err != nil {
+		var blocker *Blocker
+		if errors.As(err, &blocker) {
+			t.Logf("native_preparation code=%s cause=%s", blocker.Code, blocker.Cause)
+		}
 		t.Fatal("genuine fee-paying SDK funding/bank proofs refused", err)
 	}
 	j, _ := journalFixture(t, p)
@@ -151,7 +173,7 @@ func TestNativeV3FeePayingProofPreparationAndObservation(t *testing.T) {
 	if _, err = j.Execute(context.Background(), r.OperationID, Fingerprint(r)); err == nil {
 		t.Fatal("native proof substituted for independent custody authority")
 	}
-	for _, name := range []string{"wrong_message_ordinal", "wrong_signed_root", "escrow_deficit", "wrong_owner", "wrong_denom", "stale_permit", "forged_trust_root", "account_root_disagreement"} {
+	for _, name := range []string{"wrong_message_ordinal", "wrong_signed_root", "escrow_deficit", "wrong_owner", "wrong_denom", "stale_permit", "future_permit", "forged_trust_root", "account_root_disagreement"} {
 		t.Run(name, func(t *testing.T) {
 			bad := freezeRequest(r)
 			badPolicy := p
@@ -170,6 +192,9 @@ func TestNativeV3FeePayingProofPreparationAndObservation(t *testing.T) {
 			case "stale_permit":
 				bad.IssuedAt = time.Now().Unix() - 200
 				bad.ExpiresAt = bad.IssuedAt + 90
+			case "future_permit":
+				bad.IssuedAt = time.Now().Unix() + 30
+				bad.ExpiresAt = bad.IssuedAt + 90
 			case "forged_trust_root":
 				badPolicy.TrustAnchor.Hash = strings.Repeat("f", 64)
 				bad.PolicySHA256 = PolicyDigest(badPolicy)
@@ -177,8 +202,23 @@ func TestNativeV3FeePayingProofPreparationAndObservation(t *testing.T) {
 				badProofs.Escrow = one.Escrow
 			}
 			sign(&bad)
-			if _, e := VerifyPreparation(context.Background(), badPolicy, bad, badProofs); e == nil {
+			_, e := VerifyPreparation(context.Background(), badPolicy, bad, badProofs)
+			if e == nil {
 				t.Fatal("native proof admitted conflicting economic identity")
+			}
+			var blocker *Blocker
+			if !errors.As(e, &blocker) {
+				t.Fatal("missing bounded native refusal", e)
+			}
+			t.Logf("native_negative case=%s code=%s cause=%s", name, blocker.Code, blocker.Cause)
+			if name == "wrong_signed_root" && (blocker.Code != "BANK_PROOF_STALE" || blocker.Cause != "Native proof refused at request_root_agreement.") {
+				t.Fatal("request root disagreement refused at the wrong stage", blocker.Code, blocker.Cause)
+			}
+			if name == "account_root_disagreement" && (blocker.Code != "BANK_PROOF_STALE" || blocker.Cause != "Native proof refused at account_root_agreement.") {
+				t.Fatal("authentic account root disagreement refused at the wrong stage", blocker.Code, blocker.Cause)
+			}
+			if (name == "stale_permit" || name == "future_permit") && blocker.Code != "EPOCH_REPLAY_REJECTED" {
+				t.Fatal("invalid permit refused at the wrong stage", blocker.Code)
 			}
 		})
 	}
