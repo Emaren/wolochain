@@ -356,4 +356,3 @@ if(!process.argv.includes("--economics-only")){
  }finally{await c.end();}
 }
 process.stdout.write(JSON.stringify(summary,null,2)+"\n");
-

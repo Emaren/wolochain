@@ -26,9 +26,7 @@ jobs:
     env:
       GOFLAGS: -tags=go1.27
       WOLO_EPOCH_SOURCE_COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
-      WOLO_EPOCH_GOLDEN_OUT: ${{ runner.temp }}/epoch-v3-golden.json
       WOLO_EPOCH_HD940_TEST_PG_DSN: postgres://postgres:isolated-test-only@127.0.0.1:5432/epoch_v3_hd940?sslmode=disable
-      WOLO_EPOCH_HD940_NODE_MODULES: ${{ runner.temp }}/epoch-v3-hd/node_modules
     steps:
       - uses: actions/checkout@v4
         with:
@@ -43,8 +41,13 @@ jobs:
       - name: Install bounded isolated compatibility-test dependencies
         run: npm install --prefix "$RUNNER_TEMP/epoch-v3-hd" --ignore-scripts --no-audit --no-fund tsx@4.20.6 pg@8.16.3
       - name: Fresh native SDK funding, fee-paying MsgSend0, dual-account bank and return proofs
+        env:
+          WOLO_EPOCH_GOLDEN_OUT: ${{ runner.temp }}/epoch-v3-golden.json
         run: python3 scripts/check-epoch-escrow-native-v3.py
       - name: Actual HD 940 source economics and disposable PG16 ticket parity
+        env:
+          WOLO_EPOCH_GOLDEN_OUT: ${{ runner.temp }}/epoch-v3-golden.json
+          WOLO_EPOCH_HD940_NODE_MODULES: ${{ runner.temp }}/epoch-v3-hd/node_modules
         run: '"$RUNNER_TEMP/epoch-v3-hd/node_modules/.bin/tsx" scripts/check-epoch-escrow-hd940.mts'
       - name: Held escrow policy, journal, unknown outcomes and command
         run: go test -race ./internal/epochescrow ./cmd/woloescrowd -count=1
