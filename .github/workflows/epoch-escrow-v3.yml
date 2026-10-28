@@ -50,6 +50,7 @@ jobs:
           WOLO_EPOCH_HD940_NODE_MODULES: ${{ runner.temp }}/epoch-v3-hd/node_modules
         run: '"$RUNNER_TEMP/epoch-v3-hd/node_modules/.bin/tsx" scripts/check-epoch-escrow-hd940.mts'
       - name: Held escrow policy, journal, unknown outcomes and command
+        if: ${{ !cancelled() }}
         run: go test -race ./internal/epochescrow ./cmd/woloescrowd -count=1
       - name: Retain public SDK-derived golden evidence
         if: ${{ always() }}

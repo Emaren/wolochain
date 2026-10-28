@@ -415,7 +415,7 @@ func TestExpiredOriginalReturnRemainsObservableWithoutExecutionAuthority(t *test
 		t.Fatalf("expired original could not reach read-only native verification: %v", err)
 	}
 	r.OwnerUID = "different"
-	if _, err = ObserveReturn(context.Background(), p, r, strings.Repeat("C", 64), satchel.PortableProof{}); err == nil || err.Error() != "EPOCH_REPLAY_REJECTED" {
+	if _, err = ObserveReturn(context.Background(), p, r, strings.Repeat("C", 64), satchel.PortableProof{}); err == nil || err.Error() != "ORIGINAL_TICKET_INVALID" {
 		t.Fatal("historical observer lost original ownership", err)
 	}
 }
