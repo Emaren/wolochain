@@ -44,7 +44,7 @@ func validLifecycleRecipe(recipe sdkLifecycleRecipe) bool {
 			return false
 		}
 	}
-	roles := map[string]bool{"owner": true, "vault": true, "escrow": true, "opponent": true}
+	roles := map[string]bool{"owner": true, "vault": true, "escrow": true, "opponent": true, "fee_recipient": true}
 	names := map[string]bool{}
 	for _, step := range recipe.Steps {
 		amount, e := strconv.ParseInt(step.AmountUWolo, 10, 64)

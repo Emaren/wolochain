@@ -23,26 +23,24 @@ func PlanSettlement(p Plan) ([]Outcome, error) {
 	if !epochPattern.MatchString(p.EpochID) || p.MarketID == 0 || len(p.Wagers) == 0 || len(p.Wagers) > 1000 || (p.Resolution != "left" && p.Resolution != "right" && p.Resolution != "void") {
 		return invalid()
 	}
-	seenID, seenLeg, seenFunding := map[uint64]bool{}, map[string]bool{}, map[string]bool{}
+	seenID, seenLeg := map[uint64]bool{}, map[string]bool{}
 	totals := map[string]uint64{"left": 0, "right": 0}
 	amounts := map[uint64]uint64{}
 	var previous uint64
 	for _, w := range p.Wagers {
 		n, e := number(w.PrincipalUWolo, false)
 		leg := OriginalOperationID(p.EpochID, w.TicketID) + ":" + strconv.FormatUint(w.LegID, 10)
-		if e != nil || n%1000000 != 0 || n > 10000000000 || w.WagerID == 0 || w.WagerID <= previous || w.MarketID != p.MarketID || w.TicketID == 0 || w.TicketID > 9007199254740991 || w.LegID == 0 || w.LegID > 9007199254740991 || w.WagerID > 9007199254740991 || w.MarketID > 9007199254740991 || !uidPattern.MatchString(w.OwnerUID) || (w.Side != "left" && w.Side != "right") || !txhash(w.FundingTxHash) || w.FundingMessageIndex != 0 || seenID[w.WagerID] || seenLeg[leg] || seenFunding[w.FundingTxHash] {
+		if e != nil || n%1000000 != 0 || n > 10000000000 || w.WagerID == 0 || w.WagerID <= previous || w.MarketID != p.MarketID || w.TicketID == 0 || w.TicketID > 9007199254740991 || w.LegID == 0 || w.LegID > 9007199254740991 || w.WagerID > 9007199254740991 || w.MarketID > 9007199254740991 || !uidPattern.MatchString(w.OwnerUID) || (w.Side != "left" && w.Side != "right") || !txhash(w.FundingTxHash) || w.FundingMessageIndex != 0 || seenID[w.WagerID] || seenLeg[leg] {
 			return invalid()
 		}
 		previous = w.WagerID
 		seenID[w.WagerID] = true
 		seenLeg[leg] = true
-		seenFunding[w.FundingTxHash] = true
 		amounts[w.WagerID] = n / 1000000
 		totals[w.Side] += n / 1000000
 	}
-	// HD #937 currently refuses duplicate original physical funding in one market.
-	// Cross-market split funding needs a future globally conserved ticket partition;
-	// this candidate never claims to authenticate that missing authority.
+	// A physical transfer may back several economic legs. The complete conserved
+	// original-ticket certificate is separately authenticated by ValidateRequest.
 	matched := totals["left"]
 	if totals["right"] < matched {
 		matched = totals["right"]

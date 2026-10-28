@@ -46,17 +46,17 @@ func VerifyPreparation(ctx context.Context, p Policy, r Request, proofs Proofs) 
 	refuse := func(stage string) (VerifiedPreparation, error) {
 		return VerifiedPreparation{}, blocked("BANK_PROOF_STALE", "Native proof refused at "+stage+".", "refresh-native-proofs")
 	}
-	if len(proofs.Funding) != len(r.Plan.Wagers) {
+	if len(proofs.Funding) != len(r.Tickets) {
 		return refuse("funding_cardinality")
 	}
 	var latestFundingHeight int64
-	for _, w := range r.Plan.Wagers {
-		proof, ok := proofs.Funding[w.FundingTxHash]
+	for _, ticket := range r.Tickets {
+		proof, ok := proofs.Funding[ticket.FundingTxHash]
 		if !ok {
 			return refuse("funding_missing")
 		}
-		ev, e := verifier.VerifyMessageTransferProof(ctx, satchel.TransferIntent{Sender: p.Vault, Recipient: p.Escrow, AmountUWolo: w.PrincipalUWolo, Memo: FundingMemo(p.EpochID, w.TicketID)}, w.FundingTxHash, proof)
-		if e != nil || !ev.ConsensusAuthenticated() || ev.CreditAuthorized() || ev.Observation().Height <= p.HStar || ev.Receipt().TransferIndex != 0 || ev.Receipt().ID() != "wolo-1:"+w.FundingTxHash+":0" {
+		ev, e := verifier.VerifyMessageTransferProof(ctx, satchel.TransferIntent{Sender: p.Vault, Recipient: p.Escrow, AmountUWolo: ticket.OriginalFundingPrincipalUWolo, Memo: FundingMemo(p.EpochID, ticket.TicketID)}, ticket.FundingTxHash, proof)
+		if e != nil || !ev.ConsensusAuthenticated() || ev.CreditAuthorized() || ev.Observation().Height <= p.HStar || ev.Receipt().TransferIndex != 0 || ev.Receipt().ID() != "wolo-1:"+ticket.FundingTxHash+":0" {
 			return refuse("funding_authentication")
 		}
 		if ev.Observation().Height > latestFundingHeight {

@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "qualification": "EXACT_HD_SOURCE_COPY_NOT_FINANCIAL_AUTHORITY",
+  "repository": "Emaren/app-prodn",
+  "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+  "files": [
+    {
+      "path": "lib/warSatchelEpochV3TicketFunding.ts",
+      "git_blob_sha": "fe65e21aefdcfbd4b1aa9945a36b106429b4acd5",
+      "source_url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3TicketFunding.ts",
+      "sha256": "d9ca5e46b8cf83c7ad8d745ee16e516f2c088c7951b6ef2863db037a7cc7e473"
+    },
+    {
+      "path": "lib/warSatchelNewEpochFinancialContracts.ts",
+      "git_blob_sha": "a88083d4d9d59cad7a7f1ce5bba022445673bfc8",
+      "source_url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelNewEpochFinancialContracts.ts",
+      "sha256": "35c3a9486679f1a345b5de3d04bfebcc5fa84d0c8c729c20f984a53a40ca1f1b"
+    },
+    {
+      "path": "lib/betWagerSettlement.ts",
+      "git_blob_sha": "ac62cc38aa8551669e2f9279692f59070094e1b0",
+      "source_url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/betWagerSettlement.ts",
+      "sha256": "cc8c4504bd3e5b5888d26a9aa4c25e497c2774056a7a91b0e1716c3b72d36b8a"
+    },
+    {
+      "path": "lib/warSatchelVaultBoundary.ts",
+      "git_blob_sha": "3fd6c91aee676930c3165c8a1abc15d7f3989832",
+      "source_url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelVaultBoundary.ts",
+      "sha256": "eec7ed470877d97c4cc66d68ff7fea18fbf73a144908c7271e40745ce64c8141"
+    },
+    {
+      "path": "lib/woloMainnetWallets.ts",
+      "git_blob_sha": "11209f76c54e2488a43cb0f4c96cb8ac14bc7bd0",
+      "source_url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/woloMainnetWallets.ts",
+      "sha256": "f5fe6c747d7885e5b8cb22444c9661a7c287417d84a783803c249ff4c72cb047"
+    },
+    {
+      "path": "prisma/migrations/20261027023000_epoch_v3_held_financial_ledger/migration.sql",
+      "git_blob_sha": "447229de5905f4d0fe31f641247d76231c98acf2",
+      "source_url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/prisma/migrations/20261027023000_epoch_v3_held_financial_ledger/migration.sql",
+      "sha256": "633583bb9cdb4d0731bdd05adf3200f66fb9a7b9d8eabb0dfad62302b9dd36db"
+    },
+    {
+      "path": "prisma/migrations/20261027040000_epoch_v3_native_proof_provenance/migration.sql",
+      "git_blob_sha": "a2acaea47eca0201efd1b9e00fdb76df7e249d0d",
+      "source_url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/prisma/migrations/20261027040000_epoch_v3_native_proof_provenance/migration.sql",
+      "sha256": "e98e9fe48cd320f80fc4da0650baad7bb306ac3ae045efeb1364d24336733849"
+    },
+    {
+      "path": "scripts/review/epoch_v3_roles_install_held.sql",
+      "git_blob_sha": "5f41a4d00dd6b6e38fc7778893f82af4ab88c83d",
+      "source_url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/scripts/review/epoch_v3_roles_install_held.sql",
+      "sha256": "8fbb0f314687e0cd3c64b776c78051f4f5b5423dd530b9ee091c1137e02908cb"
+    }
+  ]
+}

@@ -7,7 +7,6 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -217,13 +216,9 @@ func (j *Journal) Prepare(ctx context.Context, v VerifiedPreparation) (Decision,
 				return errors.New("epoch_economic_identity_already_consumed")
 			}
 		}
-		// Pin market truth and physical funding across all later decisions. The
-		// current HD contract has no globally conserved split-ticket certificate;
-		// a different market/leg for the same MsgSend therefore remains unavailable.
-		pins := map[string]string{"market-plan:" + v.request.EpochID + ":" + strconv.FormatUint(v.request.MarketID, 10): hash(v.request.Plan)}
-		for _, w := range v.request.Plan.Wagers {
-			pins["funding:"+w.FundingTxHash+":0"] = hash(w)
-		}
+		// Complete original-ticket partitions share one physical receipt across
+		// markets while preserving immutable ownership and allocation identities.
+		pins := preparationPins(j.policy, v.request)
 		for key, value := range pins {
 			if old := tx.Bucket(metadata).Get([]byte(key)); old != nil && string(old) != value {
 				return blocked("RETURN_ENTITLEMENT_COLLISION", "Market resolution or original physical funding was already bound to another immutable plan.", "review-original-ticket-partition")
@@ -403,11 +398,8 @@ func (j *Journal) verifyHistory(tx *bolt.Tx) error {
 		if string(tx.Bucket(economic).Get([]byte(d.Request.EntitlementID+":"+d.Request.Command))) != d.OperationID || string(tx.Bucket(nonces).Get([]byte(d.Request.Nonce))) != d.OperationID {
 			return refuse()
 		}
-		if string(tx.Bucket(metadata).Get([]byte("market-plan:"+d.Request.EpochID+":"+strconv.FormatUint(d.Request.MarketID, 10)))) != hash(d.Request.Plan) {
-			return refuse()
-		}
-		for _, w := range d.Request.Plan.Wagers {
-			if string(tx.Bucket(metadata).Get([]byte("funding:"+w.FundingTxHash+":0"))) != hash(w) {
+		for key, value := range preparationPins(j.policy, d.Request) {
+			if string(tx.Bucket(metadata).Get([]byte(key))) != value {
 				return refuse()
 			}
 		}

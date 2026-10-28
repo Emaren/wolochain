@@ -168,46 +168,47 @@ type Reserve struct {
 	NonOverlapSHA256           string `json:"nonoverlap_sha256"`
 }
 type Request struct {
-	BankStateHeight          int64   `json:"bank_state_height"`
-	BankCommitHeight         int64   `json:"bank_commit_height"`
-	BankCommitHash           string  `json:"bank_commit_hash"`
-	BankAppHash              string  `json:"bank_app_hash"`
-	Protocol                 string  `json:"protocol"`
-	Command                  string  `json:"command"`
-	ChainID                  string  `json:"chain_id"`
-	Denom                    string  `json:"denom"`
-	EpochID                  string  `json:"epoch_id"`
-	OperationID              string  `json:"operation_id"`
-	OriginalOperationID      string  `json:"original_operation_id"`
-	EntitlementID            string  `json:"entitlement_id"`
-	OwnerUID                 string  `json:"owner_uid"`
-	OwnerWallet              string  `json:"owner_wallet"`
-	OwnerPublicKeyHex        string  `json:"owner_public_key_hex"`
-	OriginalMandateSHA256    string  `json:"original_mandate_sha256"`
-	WagerID                  uint64  `json:"wager_id"`
-	TicketID                 uint64  `json:"ticket_id"`
-	MarketID                 uint64  `json:"market_id"`
-	LegID                    uint64  `json:"leg_id"`
-	FundingTxHash            string  `json:"funding_tx_hash"`
-	FundingMessageIndex      uint32  `json:"funding_message_index"`
-	Sender                   string  `json:"sender"`
-	Recipient                string  `json:"recipient"`
-	AmountUWolo              string  `json:"amount_uwolo"`
-	Memo                     string  `json:"memo"`
-	PolicySHA256             string  `json:"policy_sha256"`
-	SourceCommit             string  `json:"source_commit"`
-	BinarySHA256             string  `json:"binary_sha256"`
-	ConfigSHA256             string  `json:"config_sha256"`
-	Plan                     Plan    `json:"plan"`
-	ResolutionEvidenceSHA256 string  `json:"resolution_evidence_sha256"`
-	VaultReserve             Reserve `json:"vault_reserve"`
-	EscrowReserve            Reserve `json:"escrow_reserve"`
-	Nonce                    string  `json:"nonce"`
-	ReviewerPermitID         string  `json:"reviewer_permit_id"`
-	IssuedAt                 int64   `json:"issued_at"`
-	ExpiresAt                int64   `json:"expires_at"`
-	OwnerSignature           string  `json:"owner_signature"`
-	ReviewerSignature        string  `json:"reviewer_signature"`
+	BankStateHeight          int64            `json:"bank_state_height"`
+	BankCommitHeight         int64            `json:"bank_commit_height"`
+	BankCommitHash           string           `json:"bank_commit_hash"`
+	BankAppHash              string           `json:"bank_app_hash"`
+	Protocol                 string           `json:"protocol"`
+	Command                  string           `json:"command"`
+	ChainID                  string           `json:"chain_id"`
+	Denom                    string           `json:"denom"`
+	EpochID                  string           `json:"epoch_id"`
+	OperationID              string           `json:"operation_id"`
+	OriginalOperationID      string           `json:"original_operation_id"`
+	EntitlementID            string           `json:"entitlement_id"`
+	OwnerUID                 string           `json:"owner_uid"`
+	OwnerWallet              string           `json:"owner_wallet"`
+	OwnerPublicKeyHex        string           `json:"owner_public_key_hex"`
+	OriginalMandateSHA256    string           `json:"original_mandate_sha256"`
+	WagerID                  uint64           `json:"wager_id"`
+	TicketID                 uint64           `json:"ticket_id"`
+	MarketID                 uint64           `json:"market_id"`
+	LegID                    uint64           `json:"leg_id"`
+	FundingTxHash            string           `json:"funding_tx_hash"`
+	FundingMessageIndex      uint32           `json:"funding_message_index"`
+	Sender                   string           `json:"sender"`
+	Recipient                string           `json:"recipient"`
+	AmountUWolo              string           `json:"amount_uwolo"`
+	Memo                     string           `json:"memo"`
+	PolicySHA256             string           `json:"policy_sha256"`
+	SourceCommit             string           `json:"source_commit"`
+	BinarySHA256             string           `json:"binary_sha256"`
+	ConfigSHA256             string           `json:"config_sha256"`
+	Plan                     Plan             `json:"plan"`
+	Tickets                  []OriginalTicket `json:"tickets"`
+	ResolutionEvidenceSHA256 string           `json:"resolution_evidence_sha256"`
+	VaultReserve             Reserve          `json:"vault_reserve"`
+	EscrowReserve            Reserve          `json:"escrow_reserve"`
+	Nonce                    string           `json:"nonce"`
+	ReviewerPermitID         string           `json:"reviewer_permit_id"`
+	IssuedAt                 int64            `json:"issued_at"`
+	ExpiresAt                int64            `json:"expires_at"`
+	OwnerSignature           string           `json:"owner_signature"`
+	ReviewerSignature        string           `json:"reviewer_signature"`
 }
 
 // RequestMessage signs ordered canonical Go JSON of the complete immutable
@@ -244,6 +245,9 @@ func (p Policy) ValidateRequest(r Request, now time.Time) error {
 	}
 	outcomes, e := PlanSettlement(r.Plan)
 	if e != nil {
+		return e
+	}
+	if e := p.validateTickets(r); e != nil {
 		return e
 	}
 	var selected *Outcome

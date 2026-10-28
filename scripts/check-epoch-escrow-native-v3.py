@@ -12,7 +12,8 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parent.parent
 EPOCH = "test_epoch_20261026"
-ENTITLEMENT = f"satchel:e3:{EPOCH}:entitlement:10:1:1"
+ENTITLEMENT = f"satchel:e3:{EPOCH}:entitlement:77:200:11"
+VOID_ENTITLEMENT = f"satchel:e3:{EPOCH}:entitlement:78:200:12"
 
 
 def run(command, environment):
@@ -28,20 +29,27 @@ def main():
     with tempfile.TemporaryDirectory(prefix="wolo-epoch-native-v3-") as tmp:
         directory = Path(tmp).resolve()
         environment = os.environ.copy()
+        if not environment.get("WOLO_EPOCH_SOURCE_COMMIT"):
+            environment["WOLO_EPOCH_SOURCE_COMMIT"] = run(
+                ["git", "rev-parse", "HEAD"], environment).stdout.strip()
         binary = directory / "epoch-v3.test"
         run(["go", "test", "-tags=go1.27", "-mod=readonly", "-c", "-o",
              str(binary), "./internal/epochescrow"], environment)
         recipe = {"version": 1, "scenario": "native_epoch_v3", "steps": [
             {"name": "deposit", "sender_role": "owner", "recipient_role": "vault",
-             "amount_uwolo": "80000000", "memo": "disposable-epoch-v3-deposit"},
+             "amount_uwolo": "100000000", "memo": "disposable-epoch-v3-deposit"},
+            {"name": "opponent_deposit", "sender_role": "opponent", "recipient_role": "vault",
+             "amount_uwolo": "40000000", "memo": "disposable-epoch-v3-opponent-deposit"},
             {"name": "funding_one", "sender_role": "vault", "recipient_role": "escrow",
-             "amount_uwolo": "13000000", "memo": f"aoe2war/satchel/epoch-v3/{EPOCH}/ticket/1"},
+             "amount_uwolo": "100000000", "memo": f"aoe2war/satchel/epoch-v3/{EPOCH}/ticket/200"},
             {"name": "funding_two", "sender_role": "vault", "recipient_role": "escrow",
-             "amount_uwolo": "13000000", "memo": f"aoe2war/satchel/epoch-v3/{EPOCH}/ticket/2"},
+             "amount_uwolo": "40000000", "memo": f"aoe2war/satchel/epoch-v3/{EPOCH}/ticket/300"},
             {"name": "epoch_return", "sender_role": "escrow", "recipient_role": "vault",
-             "amount_uwolo": "25000000", "memo": f"aoe2war/satchel/epoch-v3/{EPOCH}/return/{ENTITLEMENT}"},
-            {"name": "epoch_fee", "sender_role": "escrow", "recipient_role": "opponent",
-             "amount_uwolo": "1000000", "memo": f"aoe2war/satchel/epoch-v3/{EPOCH}/fee/{ENTITLEMENT}"},
+             "amount_uwolo": "78000000", "memo": f"aoe2war/satchel/epoch-v3/{EPOCH}/return/{ENTITLEMENT}"},
+            {"name": "epoch_fee", "sender_role": "escrow", "recipient_role": "fee_recipient",
+             "amount_uwolo": "2000000", "memo": f"aoe2war/satchel/epoch-v3/{EPOCH}/fee/{ENTITLEMENT}"},
+            {"name": "epoch_void_return", "sender_role": "escrow", "recipient_role": "vault",
+             "amount_uwolo": "60000000", "memo": f"aoe2war/satchel/epoch-v3/{EPOCH}/return/{VOID_ENTITLEMENT}"},
         ]}
         recipe_path = directory / "recipe.json"
         recipe_path.write_text(json.dumps(recipe))
@@ -55,7 +63,7 @@ def main():
         result = run([str(binary), "-test.run=^TestNativeV3FeePayingProofPreparationAndObservation$",
                       "-test.v"], environment)
         print(result.stdout, end="")
-        print("PASS: real fee-paying SDK sends use canonical MsgSend0; legacy event1 unchanged; production execution HELD")
+        print("PASS: one original 100-WOLO ticket conserves 40+60 market legs; matched return78/fee2 and void return60 use genuine MsgSend0; legacy event1 unchanged; production execution HELD")
 
 
 if __name__ == "__main__":

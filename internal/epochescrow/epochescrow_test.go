@@ -14,6 +14,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -47,6 +49,7 @@ func fixture(t *testing.T) (Policy, Request) {
 	r.Plan = Plan{p.EpochID, 10, "left", []Wager{{1, 10, 1, 1, "owner", "left", "100000000", strings.Repeat("A", 64), 0}, {2, 10, 2, 2, "owner", "right", "300000000", strings.Repeat("B", 64), 0}}}
 	r.VaultReserve = Reserve{p.Vault, "100000000", "0", "2500", "1", strings.Repeat("8", 64), strings.Repeat("9", 64)}
 	r.EscrowReserve = Reserve{p.Escrow, "400000000", "0", "2500", "1", strings.Repeat("8", 64), strings.Repeat("9", 64)}
+	fixtureTickets(t, p, &r)
 	resign(t, &r)
 	if e := p.ValidateRequest(r, time.Unix(now, 0)); e != nil {
 		t.Fatalf("fixture: %v", e)
@@ -69,6 +72,57 @@ func resign(t *testing.T, r *Request) {
 	}
 	r.OwnerSignature = base64.StdEncoding.EncodeToString(sig)
 	r.ReviewerSignature = base64.StdEncoding.EncodeToString(ed25519.Sign(ed25519.NewKeyFromSeed(bytes32(7)), RequestMessage(*r)))
+}
+
+func fixtureTickets(t *testing.T, p Policy, r *Request) {
+	t.Helper()
+	byID := map[uint64]*OriginalTicket{}
+	for _, w := range r.Plan.Wagers {
+		ticket := byID[w.TicketID]
+		if ticket == nil {
+			ticket = &OriginalTicket{EpochID: p.EpochID, TicketID: w.TicketID, OwnerUID: w.OwnerUID, OwnerWallet: r.OwnerWallet, OwnerPublicKeyHex: r.OwnerPublicKeyHex, FundingTxHash: w.FundingTxHash, FundingMessageIndex: w.FundingMessageIndex}
+			byID[w.TicketID] = ticket
+		}
+		ticket.Allocations = append(ticket.Allocations, TicketAllocation{w.MarketID, w.LegID, w.WagerID, w.Side, w.PrincipalUWolo})
+	}
+	r.Tickets = nil
+	for _, ticket := range byID {
+		var total uint64
+		for _, leg := range ticket.Allocations {
+			n, e := number(leg.AmountUWolo, false)
+			if e != nil {
+				t.Fatal(e)
+			}
+			total += n
+		}
+		ticket.OriginalFundingPrincipalUWolo = strconv.FormatUint(total, 10)
+		sort.Slice(ticket.Allocations, func(i, j int) bool {
+			a, b := ticket.Allocations[i], ticket.Allocations[j]
+			return a.MarketID < b.MarketID || (a.MarketID == b.MarketID && a.LegID < b.LegID)
+		})
+		signFixtureTicket(t, p, ticket)
+		r.Tickets = append(r.Tickets, *ticket)
+	}
+	sort.Slice(r.Tickets, func(i, j int) bool { return r.Tickets[i].TicketID < r.Tickets[j].TicketID })
+	selectedFixtureMandate(p, r)
+}
+
+func signFixtureTicket(t *testing.T, p Policy, ticket *OriginalTicket) {
+	t.Helper()
+	owner := secp.GenPrivKeyFromSecret([]byte("disposable-epoch-v3-test-only/owner"))
+	sig, e := owner.Sign(OriginalTicketMessage(p, *ticket))
+	if e != nil {
+		t.Fatal(e)
+	}
+	ticket.OwnerSignature = base64.StdEncoding.EncodeToString(sig)
+}
+
+func selectedFixtureMandate(p Policy, r *Request) {
+	for _, ticket := range r.Tickets {
+		if ticket.TicketID == r.TicketID {
+			r.OriginalMandateSHA256 = OriginalTicketDigest(p, ticket)
+		}
+	}
 }
 func sealedFixture(p Policy, r Request) VerifiedPreparation {
 	return VerifiedPreparation{p, freezeRequest(r), Fingerprint(r), time.Unix(r.ExpiresAt, 0), true}
@@ -113,9 +167,9 @@ func TestHD937MatchedOnlyEconomics(t *testing.T) {
 		t.Fatal(out, e)
 	}
 }
-func TestPlanRejectsDuplicatePhysicalFundingAndWrongMarket(t *testing.T) {
+func TestPlanRejectsMalformedEconomics(t *testing.T) {
 	_, r := fixture(t)
-	for _, mutation := range []func(*Plan){func(p *Plan) { p.Wagers[1].FundingTxHash = p.Wagers[0].FundingTxHash }, func(p *Plan) { p.Wagers[1].MarketID++ }, func(p *Plan) { p.Wagers[1].FundingMessageIndex = 1 }, func(p *Plan) { p.Wagers[0].PrincipalUWolo = "100000001" }, func(p *Plan) { p.Wagers[0], p.Wagers[1] = p.Wagers[1], p.Wagers[0] }} {
+	for _, mutation := range []func(*Plan){func(p *Plan) { p.Wagers[1].MarketID++ }, func(p *Plan) { p.Wagers[1].FundingMessageIndex = 1 }, func(p *Plan) { p.Wagers[0].PrincipalUWolo = "100000001" }, func(p *Plan) { p.Wagers[0], p.Wagers[1] = p.Wagers[1], p.Wagers[0] }} {
 		p := r.Plan
 		p.Wagers = append([]Wager(nil), p.Wagers...)
 		mutation(&p)
@@ -290,6 +344,7 @@ func TestJournalNonceReuseAndMarketEquivocation(t *testing.T) {
 	next.OperationID = next.EntitlementID + ":return"
 	next.Memo = ReturnMemo(p.EpochID, next.EntitlementID)
 	next.AmountUWolo = "200000000"
+	selectedFixtureMandate(p, &next)
 	resign(t, &next)
 	if _, e := j.Prepare(context.Background(), sealedFixture(p, next)); e == nil {
 		t.Fatal("nonce reused")
@@ -402,6 +457,7 @@ func TestJournalCapacityHoldRollsBackAndRetainsReadableHistory(t *testing.T) {
 		}
 		r.Plan.Wagers = append(r.Plan.Wagers, Wager{i, 10, i, i, "owner", side, "1000000", fmt.Sprintf("%064X", i), 0})
 	}
+	fixtureTickets(t, p, &r)
 	outcomes, e := PlanSettlement(r.Plan)
 	if e != nil {
 		t.Fatal(e)
@@ -429,6 +485,7 @@ func TestJournalCapacityHoldRollsBackAndRetainsReadableHistory(t *testing.T) {
 		next.Memo = ReturnMemo(p.EpochID, next.EntitlementID)
 		next.AmountUWolo = outcomes[i].PayoutUWolo
 		next.Nonce = hash([]any{"capacity-test", i})
+		selectedFixtureMandate(p, &next)
 		resign(t, &next)
 		if _, e = j.Prepare(context.Background(), sealedFixture(p, next)); e != nil {
 			if e.Error() != "epoch_journal_capacity_hold" {

@@ -57,7 +57,7 @@ implementation baseline for this branch.
   execute command, economic identity, amount, memo and allowlisted destination.
   Zero-return/zero-fee outcomes cannot initiate native transfers.
 - `evidence.go`: the existing `satchel.ProofVerifier` authenticates every
-  original funding MsgSend against the protected Comet trust root, the exact
+  unique original funding MsgSend against the protected Comet trust root, the exact
   vault-to-escrow epoch memo and message ordinal zero. Both account-local bank
   proofs must be current and committed at the same H/H+1 root. Each account
   independently covers liabilities, finite unknown outflows, positive gas and
@@ -95,13 +95,27 @@ The original operation is `satchel:e3:<epoch>:<ticket>`. Entitlements are
 physical identity is exactly `(wolo-1, uppercase tx hash, message index 0)`.
 No legacy claim ID or old return memo can enter this namespace.
 
-HD #937 currently requires funding message index zero and unique physical
-funding per wager within a market. This candidate additionally pins the full
-original wager per physical receipt across later preparations. Reusing a
-physical funding MsgSend for another market/leg is held as
-`RETURN_ENTITLEMENT_COLLISION` until a globally conserved split-ticket
-partition is authenticated. It does not silently reject an amount and then
-reuse that money elsewhere. Genuine multi-leg/split funding is unfinished.
+The HD #940 ticket contract at `b7e07645e057340de051c5ffa78001ebc939191e`
+uses one original receipt with a complete conserved allocation. `OriginalTicket`
+now binds its epoch, owner UID/wallet/key, ticket, MsgSend0 receipt, full physical
+principal and 1–16 canonical market legs. The original owner signs
+`OriginalTicketMessage`: protocol, original-ticket domain, chain, denom, actual
+vault/escrow, exact funding memo and the unsigned typed ticket. Its SHA-256 is
+the selected request's original mandate digest. The current owner/reviewer
+request signatures additionally bind all included certificates and market truth.
+All allocations sum exactly to the authenticated original principal; every
+known current-market leg must occur in the plan. Each unique receipt is verified
+once against its full amount, regardless of the number of economic legs.
+
+Journal admission atomically pins the receipt, original ticket, owner mapping
+and every allocation (including future markets) to the immutable partition.
+History verification checks those same pins after restart. Conflicting
+partitions remain `RETURN_ENTITLEMENT_COLLISION`; identical receipt use by a
+different legal market preserves the original uncertainty fence. HD's existing
+atomic ledger remains the global receipt-consumption authority. No local journal
+claim certifies cross-system consumption, completeness of liabilities or real HD
+owner enrollment. Old held records without an original-ticket certificate are
+not migrated or repaired by this source.
 
 `ObserveReturn` verifies a native exact return effect and remains noncrediting.
 It does not consume HD's global physical receipt or authenticate a later bank
@@ -134,8 +148,8 @@ liability inventory, original owner mapping or market resolution.
    implement native confirmation and source-bound revocation. Every post-sign
    ambiguity must stay `UNKNOWN_NO_REPLAY`. No such path is exported yet.
 4. Authenticate original market truth, owner mandate and source-complete
-   account-local liabilities; implement globally conserved split-ticket
-   partitions, HD global physical receipt consumption and read-only lookup/
+   account-local liabilities; integrate the conserved ticket
+   partitions with HD global physical receipt consumption and read-only lookup/
    observe integration. Preserve historic 889, 8477, original 100-WOLO ambiguity,
    reused hashes, legacy HD/DE claims and all uncertain outgoing payments in
    their existing protected domain.
@@ -174,3 +188,20 @@ message ordinal, signed/trusted root, expiry, account-root disagreement and
 escrow reserve deficit are rejected. No freshness window or permit TTL is
 extended for compilation. The accepted native preparation still cannot execute
 because independent runtime custody/off-host nonce authority remains absent.
+
+The native recipe uses a genuine 100-WOLO original transfer allocated 40+60
+across markets 77/78, plus a separately owned 40-WOLO counterparty ticket.
+It verifies a 78-WOLO matched return, separate 2-WOLO economic fee and 60-WOLO
+void return, including the existing whole-WOLO fee rounding. Public golden
+evidence contains original transaction/proof bytes, bank commitments, signing
+bytes and fingerprints; it excludes fixture private keys. Archived timestamps
+are historical evidence, never a renewed current bank proof.
+
+`scripts/check-epoch-escrow-hd940.mts` runs minimal, hash-pinned actual HD #940
+TypeScript and SQL sources against that freshly generated evidence and an
+isolated PG16 database. Its direct SQL adapter is fixture-only; it does not
+activate the held native ingress. HD has no Go signing-byte implementation or
+published pinned verifier executable. Its old Wolo source pin, two native-ingest
+INSERT arity defects and the zero-payout loser label difference remain explicit
+cross-repository mismatches requiring separate HD review. No HD branch, role,
+migration, credential or financial enable flag is changed by this candidate.
