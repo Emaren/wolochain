@@ -204,7 +204,15 @@ def arithmetic(packet, input_sha256):
         if n is None:
             unknown_effects.add(key)
     known_exposure = sum_safe(v for v in unique_effect.values() if v is not None)
-    arithmetic_complete = not gaps and not unknown_effects and len(obligations) > 0
+    # Equal claimant-supplied hashes across HD/DE/founder/journal are not an
+    # independent proof that two sources reference the SAME physical debt.
+    # Pending a source-sealed overlap map, no positive numerical coverage margin
+    # may be inferred from counting those rows only once.
+    unverified_overlaps = sum(len(sources) > 1 for sources in origin_by_id.values())
+    arithmetic_complete = (
+        not gaps and not unknown_effects and len(obligations) > 0
+        and unverified_overlaps == 0
+    )
     # Effects are conservatively ADDITIVE to obligations even when hashes appear
     # related. An independently verified effect-to-obligation mapping is required
     # before offsetting any payout against an unpaid claim.
@@ -226,8 +234,8 @@ def arithmetic(packet, input_sha256):
         "bank_assets_claimed_uwolo": str(assets),
         "obligations_unique": len(unique_debt),
         "obligations_observed_rows": len(obligations),
-        "cross_source_obligation_identifiers": sum(
-            len(sources) > 1 for sources in origin_by_id.values()),
+        "cross_source_obligation_identifiers": unverified_overlaps,
+        "unverified_cross_source_obligation_overlaps": unverified_overlaps,
         "recorded_unpaid_requested_uwolo": str(debt),
         "unresolved_effects_unique": len(unique_effect),
         "unbounded_effects": len(unknown_effects),
@@ -247,7 +255,8 @@ def arithmetic(packet, input_sha256):
         "accounting_note": (
             "Claimed fingerprints/digests and completeness flags are not chain,"
             " signer or custodian attestations; ambiguous physical effects"
-            " remain additive. Never promote this report to release authority."),
+            " remain additive. Cross-source debt deduplication requires a"
+            " verified identity-overlap map. Never promote to release authority."),
     }
 
 

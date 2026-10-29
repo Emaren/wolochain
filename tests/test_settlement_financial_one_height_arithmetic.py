@@ -75,15 +75,42 @@ class OneHeightArithmeticTests(unittest.TestCase):
         self.assertEqual(r["obligations_unique"], 2)
         self.assertEqual(r["cross_source_obligation_identifiers"], 1)
         self.assertEqual(r["bounded_effect_additional_reserve_uwolo"], "100")
-        self.assertEqual(r["conditional_recorded_reserve_uwolo"], "500")
-        self.assertEqual(r["conditional_margin_uwolo"], "150")
+        self.assertEqual(r["unverified_cross_source_obligation_overlaps"], 1)
+        self.assertFalse(r["arithmetic_complete_for_claimed_scope"])
+        self.assertIsNone(r["conditional_recorded_reserve_uwolo"])
+        self.assertIsNone(r["conditional_margin_uwolo"])
         self.assertEqual(r["solvency_verdict"], "UNKNOWN_INDEPENDENT_EVIDENCE_REQUIRED")
         self.assertIsNone(r["global_liability_upper_bound_uwolo"])
         self.assertIsNone(r["bank_assets_authenticated_uwolo"])
         self.assertFalse(r["financial_release_authorized"])
         self.assertFalse(r["chain_finality_authenticated"])
 
+    def test_unambiguous_per_source_claims_have_conditional_math_only(self):
+        # The physical HD obligation is not separately reasserted by a founder
+        # source. These are still caller claims, NOT an authenticated reserve.
+        self.packet["obligations"].pop(1)
+        r = self.report()
+        self.assertEqual(r["cross_source_obligation_identifiers"], 0)
+        self.assertEqual(r["unverified_cross_source_obligation_overlaps"], 0)
+        self.assertTrue(r["arithmetic_complete_for_claimed_scope"])
+        self.assertEqual(r["conditional_recorded_reserve_uwolo"], "500")
+        self.assertEqual(r["conditional_margin_uwolo"], "150")
+        self.assertEqual(r["status"], "HOLD")
+        self.assertFalse(r["financial_release_authorized"])
+
+    def test_identical_cross_source_claims_require_independent_overlap_proof(self):
+        # HD and founder journal can each hold a distinct 300 uWOLO claim.
+        # A repeated economic_id_sha256, equal amount and complete=true
+        # alone cannot justify a positive available-reserve margin.
+        r = self.report()
+        self.assertEqual(r["cross_source_obligation_identifiers"], 1)
+        self.assertEqual(r["unverified_cross_source_obligation_overlaps"], 1)
+        self.assertIsNone(r["conditional_margin_uwolo"])
+        self.assertFalse(r["arithmetic_complete_for_claimed_scope"])
+        self.assertEqual(r["solvency_verdict"], "UNKNOWN_INDEPENDENT_EVIDENCE_REQUIRED")
+
     def test_underwater_math_is_reported_but_not_certified(self):
+        self.packet["obligations"].pop(1)
         self.packet["accounts"][0]["balance_uwolo"] = "10"
         self.packet["accounts"][1]["balance_uwolo"] = "10"
         self.packet["accounts"][2]["balance_uwolo"] = "10"
