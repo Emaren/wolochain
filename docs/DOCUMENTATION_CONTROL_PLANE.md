@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `session-b/passenvironment-producer-fence-20261029` at `2c72d166aa53edf898d4b0fb80ba6c5a7b95b629`
+Implementation baseline: `session-b/live-pid-producer-census-hold-20261029` at `9bc74463fa881615e97b02c15864389e8d7b54eb`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
