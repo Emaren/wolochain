@@ -224,23 +224,30 @@ func (s *ReviewerFinanceSource) ObserveFinance(ctx context.Context, height int64
 	}
 	start := time.Now()
 	initial := s.now()
+	completedAt := func() time.Time {
+		now := s.now()
+		if elapsed := initial.Add(time.Since(start)); elapsed.After(now) {
+			now = elapsed
+		}
+		return now
+	}
 	ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
 	defer cancel()
 	bank, _, err := s.bank.ReadBankProof(ctx, s.pg.vault, height)
 	if err != nil {
 		return ReviewerFinanceObservation{}, errors.Join(ReviewerFinanceBankInvalid, err)
 	}
-	if bank.VaultAddress() != s.pg.vault || bank.Height() != height || !bank.FreshAt(initial) {
+	// Head observations are timestamped during the bank query. Comparing them
+	// with the pre-query clock would reject authentic evidence as future-dated.
+	bankCompleted := completedAt()
+	if ctx.Err() != nil || bank.VaultAddress() != s.pg.vault || bank.Height() != height || bank.CommitHeight() != height+1 || !bank.FreshAt(bankCompleted) {
 		return ReviewerFinanceObservation{}, ReviewerFinanceBankInvalid
 	}
 	ledger, err := s.pg.readOwnerLedger(ctx)
 	if err != nil {
 		return ReviewerFinanceObservation{}, err
 	}
-	now := s.now()
-	if elapsed := initial.Add(time.Since(start)); elapsed.After(now) {
-		now = elapsed
-	}
+	now := completedAt()
 	if ctx.Err() != nil || !bank.FreshAt(now) || ledger.observedAt.After(now) || now.Sub(ledger.observedAt) > 2*time.Second {
 		return ReviewerFinanceObservation{}, ReviewerFinanceStale
 	}

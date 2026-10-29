@@ -3,6 +3,7 @@ package satchelservice
 import (
 	"context"
 	"database/sql"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"net/url"
@@ -76,6 +77,78 @@ func TestReviewerFinanceRejectsForgedBankBeforeDatabaseRead(t *testing.T) {
 	}
 }
 
+func reviewerFinanceNativeBank(t *testing.T) (*satchel.TrustedReader, string, int64) {
+	t.Helper()
+	config, fixture := isolatedBackendConfig(t)
+	chain := newNativeHTTPChainWithBalance(t, fixture.signer, 110000000)
+	chain.commit(t, nil)
+	chain.commit(t, nil)
+	primary, witness := chain.serve(t, false), chain.serve(t, true)
+	reader, err := satchel.NewTrustedReader(satchel.SourceConfig{RPC: primary.URL, REST: primary.URL, WitnessRPC: witness.URL}, satchel.TrustAnchor{
+		Height: 1, Hash: hex.EncodeToString(chain.commits[1].Header.Hash()), PeriodSeconds: 3600,
+		EvidenceReference: "isolated-reviewer-finance-sdk-test-validator-only",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(reader.Close)
+	return reader, config.Vault, chain.head - 1
+}
+
+// The probe retains the real reader's opaque evidence, never constructs it.
+type reviewerFinanceBankProbe struct {
+	reader reviewerBankReader
+	bank   satchel.AuthenticatedBankEvidence
+	after  func()
+}
+
+func (p *reviewerFinanceBankProbe) ReadBankProof(ctx context.Context, vault string, height int64) (satchel.AuthenticatedBankEvidence, satchel.BankProof, error) {
+	bank, proof, err := p.reader.ReadBankProof(ctx, vault, height)
+	p.bank = bank
+	if p.after != nil {
+		p.after()
+	}
+	return bank, proof, err
+}
+
+func TestReviewerFinanceChecksNativeBankAtQueryCompletion(t *testing.T) {
+	reader, vault, height := reviewerFinanceNativeBank(t)
+	for _, name := range []string{"fresh", "stale", "future", "canceled"} {
+		t.Run(name, func(t *testing.T) {
+			ctx, cancel := context.WithCancel(t.Context())
+			defer cancel()
+			probe := &reviewerFinanceBankProbe{reader: reader}
+			if name == "canceled" {
+				probe.after = cancel
+			}
+			var initial time.Time
+			clock := func() time.Time {
+				now := time.Now()
+				if name == "stale" {
+					now = now.Add(time.Minute)
+				} else if name == "future" {
+					now = now.Add(-time.Second)
+				}
+				if initial.IsZero() {
+					initial = now
+				}
+				return now
+			}
+			// No database is configured: fresh genuine bank evidence must reach
+			// the separate ledger boundary; bad clocks/cancellation must not.
+			source := &ReviewerFinanceSource{pg: &ReviewerReadOnlyPGSource{vault: vault}, bank: probe, now: clock}
+			_, err := source.ObserveFinance(ctx, height)
+			if name == "fresh" {
+				if !errors.Is(err, ReviewerFinanceUnavailable) || probe.bank.FreshAt(initial) || !probe.bank.FreshAt(time.Now()) {
+					t.Fatalf("authentic bank query was not checked at completion: %v", err)
+				}
+			} else if !errors.Is(err, ReviewerFinanceBankInvalid) {
+				t.Fatalf("invalid completion admitted to ledger boundary: %v", err)
+			}
+		})
+	}
+}
+
 func TestReviewerFinanceCannotTurnPartialObservationIntoCompleteCensus(t *testing.T) {
 	s := &ReviewerFinanceSource{}
 	census, err := s.AuthenticatedFeeCensus(context.Background(), reviewerTestWager())
@@ -143,7 +216,8 @@ INSERT INTO public.war_satchel_funded_journal VALUES(1,112000000,0,0,0),(1,-1200
 		t.Fatal(err)
 	}
 	defer db.Close()
-	s, err := NewReviewerReadOnlyPGSource(db, "satchel_reviewer_finance_it", "2500", testHTTPAddress(t, 101), testHTTPAddress(t, 102))
+	bank, vault, height := reviewerFinanceNativeBank(t)
+	s, err := NewReviewerReadOnlyPGSource(db, "satchel_reviewer_finance_it", "2500", vault, testHTTPAddress(t, 102))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -159,6 +233,50 @@ INSERT INTO public.war_satchel_funded_journal VALUES(1,112000000,0,0,0),(1,-1200
 		}
 	}
 	read("117000000")
+	finance := &ReviewerFinanceSource{pg: s, bank: bank, now: time.Now}
+	observation, err := finance.ObserveFinance(ctx, height)
+	if err != nil || !observation.FreshAt(time.Now()) || observation.Bank().CommitHeight() != height+1 || observation.Bank().BalanceUWolo() != "110000000" {
+		t.Fatalf("actual SDK bank and PostgreSQL observation failed: %v", err)
+	}
+	if total, err := observation.KnownOwnerLiabilitiesUWolo(); err != nil || total != "117000000" || observation.SpendingAuthorized() {
+		t.Fatalf("partial observation changed ledger or spending authority: %s %v", total, err)
+	}
+	clockCalls := 0
+	finance.now = func() time.Time {
+		clockCalls++
+		if clockCalls > 1 {
+			return time.Now().Add(-time.Hour)
+		}
+		return time.Now()
+	}
+	if _, err := finance.ObserveFinance(ctx, height); err != nil {
+		t.Fatalf("clock rollback lost the monotonic completion floor: %v", err)
+	}
+	// A bank observation can expire while the independent ledger is read.
+	clockCalls = 0
+	finance.now = func() time.Time {
+		clockCalls++
+		if clockCalls >= 3 {
+			return time.Now().Add(time.Minute)
+		}
+		return time.Now()
+	}
+	if _, err := finance.ObserveFinance(ctx, height); !errors.Is(err, ReviewerFinanceStale) {
+		t.Fatalf("bank expiry during ledger read accepted: %v", err)
+	}
+	finance.now = time.Now
+	s.now = func() time.Time { return time.Now().Add(time.Second) }
+	if _, err := finance.ObserveFinance(ctx, height); !errors.Is(err, ReviewerFinanceStale) {
+		t.Fatalf("future ledger timestamp accepted: %v", err)
+	}
+	s.now = time.Now
+	canceled, cancelObservation := context.WithCancel(ctx)
+	s.now = func() time.Time { cancelObservation(); return time.Now() }
+	if _, err := finance.ObserveFinance(canceled, height); !errors.Is(err, ReviewerFinanceStale) {
+		t.Fatalf("cancellation after ledger read accepted: %v", err)
+	}
+	cancelObservation()
+	s.now = time.Now
 	if _, err = admin.ExecContext(ctx, `GRANT CREATE ON SCHEMA public TO satchel_reviewer_finance_it`); err != nil {
 		t.Fatal(err)
 	}
