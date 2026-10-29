@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "84fdfffb008a3655f2043352348b853e07ac87f2d76e38188e7c59cf39c59519",
+      "sha256": "d348cf7a783e2924e8d3bdaa522bb904f105af5c2005add420653161c06d89a4",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -335,7 +335,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-26",
       "sensitivity": "restricted",
-      "sha256": "5bc7a04030f24c9d1c85d150b2fbf3413a20228923caec7ddf73d908ec73bfce",
+      "sha256": "5b1e934eff55e66e2d2dd16004055a8943c03be5ee91e3e450a4790b76a9f78d",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -589,7 +589,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-20",
       "sensitivity": "restricted",
-      "sha256": "4e8d7fc2c5c58e27583621e0a49ca0f5edb1f8c0fb9fe00bb660418b66c0e034",
+      "sha256": "e29c2fbe9320d513091721e51e128dc619a33580f0f5967a942fdd5265dd730f",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -1113,7 +1113,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "codex/independent-epoch-escrow-v3",
-    "commit": "a17d1702f8338de4baec20bfc8b440860a551f7c"
+    "commit": "08fcb9f3349dcd52380050eb8ce67ee11783bd6b"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

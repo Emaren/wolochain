@@ -844,3 +844,18 @@ The tests follow 100 WOLO through reservation, confirmed escrow funding,
 after current vault debt reaches zero, and reject malformed history and
 offsetting per-owner journal corruption. The same stages run in disposable
 PostgreSQL with the independent SELECT-only reader.
+
+
+## Pinned transport for independently signed original-game witnesses
+
+`ReviewerSignedLiveReader` uses the existing operator-pinned TLS, CA, SPKI and
+Bearer client to read `/satchel-source/v1/live-witness`. The only request input
+is a canonical durable operation ID. Responses have fixed byte, JSON-field and
+freshness bounds, checked after transport and decoding. Redirects, malformed or
+expired replies and caller-selected authority are refused.
+
+This transport does not issue witnesses or approvals. The existing independent
+Watcher verifier still checks the enrolled signing key, owner, exact game and
+separately read immutable original checkpoint. Its issuer and independently
+controlled production enrollment remain required; fetching JSON cannot supply
+that authority.
