@@ -827,3 +827,20 @@ The PostgreSQL regression also checks expiry during ledger I/O, a future ledger
 timestamp, cancellation and clock rollback. This corrects evidence collection;
 complete liability coverage and independently provisioned production custody
 inputs remain separate requirements of the existing reviewer.
+
+
+## Match HD current vault liabilities without losing spending history
+
+HD's `committed_uwolo` records cumulative proven vault-to-escrow spending.
+The existing Go reviewer now reconciles and validates that historical bucket
+without adding it to current vault liabilities. Available, reserved (including
+UNKNOWN sends), and withdrawal-pending funds remain current vault obligations.
+Returns and withdrawals retain historical spending; the separate escrow and
+global liability census remains required. No escrow claim is netted against
+the vault or treated as free gas.
+
+The tests follow 100 WOLO through reservation, confirmed escrow funding,
+78+60 returns and 138 withdrawal. They retain the 100-WOLO historical counter
+after current vault debt reaches zero, and reject malformed history and
+offsetting per-owner journal corruption. The same stages run in disposable
+PostgreSQL with the independent SELECT-only reader.
