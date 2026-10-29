@@ -78,7 +78,19 @@ def main():
             [str(held_command), "--verify-epoch-v3-portable-proof", "--json-stdin"],
             cwd=ROOT, env={"PATH": "/usr/bin:/bin", "HOME": "/nonexistent"},
             input=native_bytes, capture_output=True, timeout=5, check=False)
-        if (held.returncode != 2 or len(held.stdout) > 256 * 1024 or held.stderr or
+        # Existing go1.27 compatibility builds can emit a fixed dependency
+        # diagnostic on stderr. Permit only those known nonsecret lines; stdout
+        # must remain exactly the compact refusal, with no transcript echo.
+        warnings = {
+            ("WARNING: sonic/" + component +
+             " only supports (go1.17~1.26 and amd64 CPU) or "
+             "(go1.20~1.26 and arm64 CPU), but your environment is not "
+             "suitable and will fallback to encoding/json\n").encode()
+            for component in ("ast", "encoder", "decoder")
+        }
+        if (held.returncode != 2 or len(held.stdout) > 256 * 1024 or
+                len(held.stderr) > 256 * 1024 or
+                any(line not in warnings for line in held.stderr.splitlines(keepends=True)) or
                 held.stdout != b'{"code":"EPOCH_POLICY_INVALID"}\n'):
             raise RuntimeError("HELD_CLI_REFUSAL_CONTRACT_FAILED")
         print("HOLD: exact HD wire-v1 argv refuses genuine SDK golden; no positive verifier or financial authority")
