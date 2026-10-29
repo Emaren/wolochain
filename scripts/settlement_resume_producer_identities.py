@@ -18,7 +18,7 @@ import settlement_financial_maintenance as maintenance
 SCHEMA = "wolo.financial-maintenance-producer-identities.v1"
 CONFIG_PROPERTIES = (
     "Id", "FragmentPath", "DropInPaths", "ActiveState", "MainPID",
-    "EnvironmentFiles", "Environment", "ExecStart", "ExecStartPre",
+    "EnvironmentFiles", "Environment", "PassEnvironment", "ExecStart", "ExecStartPre",
     "ExecStartPost", "ExecStop", "ExecReload", "ExecCondition",
     "WorkingDirectory", "RootDirectory", "RootImage", "User", "Group",
     "LoadCredential", "SetCredential", "BindPaths", "BindReadOnlyPaths",
@@ -77,11 +77,14 @@ def read_properties(unit, runner):
             (unit in maintenance.TIMERS or
              (fields.get("ExecStart") and all(fields["ExecStart"]) and fields.get("MainPID", "").isdigit())),
             "PRODUCER_PROPERTIES_INCOMPLETE")
+    # Reject mutable system-manager inheritance; none of these sources is sealed.
+    require(not fields.get("PassEnvironment", "").strip(),
+            "PRODUCER_UNSEALED_ENVIRONMENT_CODE")
     # Timer units must not acquire service-only execution properties: accept
     # only known systemd timer/common fields, never an unchecked property
     # expansion that could silently broaden the signed resume scope.
     if unit in maintenance.TIMERS:
-        require(set(fields).issubset(COMMON_REQUIRED),
+        require(set(fields).issubset(COMMON_REQUIRED | {"PassEnvironment"}),
                 "UNEXPECTED_TIMER_EXECUTION_PROPERTY")
     return fields
 
