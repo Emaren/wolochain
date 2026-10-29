@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `codex/central-financial-resume` at `155b84186c047825dccd3748a2e0fee0397131f7`
+Implementation baseline: `session-b/passenvironment-producer-fence-20261029` at `9867adf64d14001289cb6358427273eb20f239d5`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
