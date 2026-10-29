@@ -197,6 +197,23 @@ class ProducerIdentityTests(unittest.TestCase):
             with self.assertRaisesRegex(m.MaintenanceError,'PRODUCER_UNSEALED_EXECUTION_SOURCE'):
                 identity.verify_producer_identities(packet,runner=self.runner)
 
+    def test_manager_pass_environment_must_be_empty(self):
+        original = self.properties
+        for unit in self.units:
+            for value in ("", "LD_PRELOAD", "NODE_OPTIONS"):
+                with self.subTest(unit=unit, value=value):
+                    def properties(name):
+                        fields = original(name)
+                        if name == unit:
+                            fields["PassEnvironment"] = value
+                        return fields
+                    with patch.object(self, "properties", side_effect=properties):
+                        if value:
+                            with self.assertRaisesRegex(m.MaintenanceError, "PRODUCER_UNSEALED_ENVIRONMENT_CODE"):
+                                self.capture()
+                        else:
+                            self.assertFalse(self.capture()["resume_authorized"])
+
     def test_preload_from_environment_or_root_private_env_file_is_not_sealed_code(self):
         original=self.properties
         def extra(unit):

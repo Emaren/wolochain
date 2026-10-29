@@ -202,6 +202,8 @@ class SoloOwnerIntentionTests(unittest.TestCase):
         # CLI uses a real clock; avoid mocking datetime.strptime and accidentally
         # replacing time validation with a MagicMock.
         current = datetime.now(timezone.utc)
+        self.enroll["valid_from"] = ISO(current - timedelta(days=1))
+        self.enroll["valid_until"] = ISO(current + timedelta(days=1))
         self.req["not_before"] = ISO(current - timedelta(minutes=1))
         self.req["expires_at"] = ISO(current + timedelta(minutes=10))
         with tempfile.TemporaryDirectory() as d:
