@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "e5b5396204f2106d6c12b99062b448b0e8fa69c62ec9165f1035829df006417b",
+      "sha256": "d4cb97a5dd4fcb40d12a5c79568c8cac8a45d51113fbeaab17a5b63b5f82c4df",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1066,8 +1066,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "session-b/passenvironment-producer-fence-20261029",
-    "commit": "2c72d166aa53edf898d4b0fb80ba6c5a7b95b629"
+    "branch": "session-b/live-pid-producer-census-hold-20261029",
+    "commit": "9bc74463fa881615e97b02c15864389e8d7b54eb"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
