@@ -809,3 +809,21 @@ Comet-authenticated bank balances, complete outstanding liabilities,
 pending transaction fees, custody operator keys or the six Wolo
 financial release controls. The bank census still always returns
 `ErrReviewerHeld`. Neither app nor chain production changed.
+
+
+## Bank-query completion time in the existing reviewer (October 29, 2026)
+
+`ReviewerFinanceSource.ObserveFinance` now checks native bank freshness after
+the bank query and again after the independent owner-ledger query. The reader
+timestamps head observations during I/O; checking against the earlier start
+time incorrectly rejected genuine evidence as future-dated. Completion checks
+retain the monotonic elapsed-time floor, cancellation, exact vault, H/H+1 and
+two-second ledger-age constraints.
+
+`TestReviewerFinanceChecksNativeBankAtQueryCompletion` uses real isolated SDK,
+IAVL and signed Comet evidence. It passes with this correction and reproduces
+`reviewer_finance_bank_unverifiable` against the previous implementation.
+The PostgreSQL regression also checks expiry during ledger I/O, a future ledger
+timestamp, cancellation and clock rollback. This corrects evidence collection;
+complete liability coverage and independently provisioned production custody
+inputs remain separate requirements of the existing reviewer.
