@@ -29,12 +29,16 @@ def main():
     with tempfile.TemporaryDirectory(prefix="wolo-epoch-native-v3-") as tmp:
         directory = Path(tmp).resolve()
         environment = os.environ.copy()
+        environment.setdefault("WOLO_EPOCH_GOLDEN_OUT", str(directory / "native-golden.json"))
         if not environment.get("WOLO_EPOCH_SOURCE_COMMIT"):
             environment["WOLO_EPOCH_SOURCE_COMMIT"] = run(
                 ["git", "rev-parse", "HEAD"], environment).stdout.strip()
         binary = directory / "epoch-v3.test"
         run(["go", "test", "-tags=go1.27", "-mod=readonly", "-c", "-o",
              str(binary), "./internal/epochescrow"], environment)
+        held_command = directory / "woloescrowd"
+        run(["go", "build", "-tags=go1.27", "-mod=readonly", "-o",
+             str(held_command), "./cmd/woloescrowd"], environment)
         recipe = {"version": 1, "scenario": "native_epoch_v3", "steps": [
             {"name": "deposit", "sender_role": "owner", "recipient_role": "vault",
              "amount_uwolo": "100000000", "memo": "disposable-epoch-v3-deposit"},
@@ -63,6 +67,21 @@ def main():
         result = run([str(binary), "-test.run=^TestNativeV3FeePayingProofPreparationAndObservation$",
                       "-test.v"], environment)
         print(result.stdout, end="")
+        # Never promote genuine SDK evidence into a stronger, unprovisioned
+        # wire-v1 claim. This is a refusal test; do not log the proof contents.
+        limit = (14 << 20) + (128 << 10)
+        with Path(environment["WOLO_EPOCH_GOLDEN_OUT"]).open("rb") as golden:
+            native_bytes = golden.read(limit + 1)
+        if not native_bytes or len(native_bytes) > limit:
+            raise RuntimeError("HELD_CLI_GOLDEN_INPUT_BOUND")
+        held = subprocess.run(
+            [str(held_command), "--verify-epoch-v3-portable-proof", "--json-stdin"],
+            cwd=ROOT, env={"PATH": "/usr/bin:/bin", "HOME": "/nonexistent"},
+            input=native_bytes, capture_output=True, timeout=5, check=False)
+        if (held.returncode != 2 or len(held.stdout) > 256 * 1024 or held.stderr or
+                held.stdout != b'{"code":"EPOCH_POLICY_INVALID"}\n'):
+            raise RuntimeError("HELD_CLI_REFUSAL_CONTRACT_FAILED")
+        print("HOLD: exact HD wire-v1 argv refuses genuine SDK golden; no positive verifier or financial authority")
         print("PASS: one original 100-WOLO ticket conserves 40+60 market legs; matched return78/fee2 and void return60 use genuine MsgSend0; legacy event1 unchanged; production execution HELD")
 
 

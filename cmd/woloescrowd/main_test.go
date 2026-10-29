@@ -63,3 +63,19 @@ func TestCompleteStructuralPolicyStillCannotOpenExecutor(t *testing.T) {
 		t.Fatal(code, out.String())
 	}
 }
+
+// This is a refusal contract, not a positive native wire verifier test. The
+// transcript cannot establish independent observer provenance or a complete
+// liability inventory, so this argv must not announce a successful verdict.
+func TestHDWireV1InvocationRemainsHeldWithoutPublishedTrustContract(t *testing.T) {
+	for _, args := range [][]string{
+		{"--verify-epoch-v3-portable-proof", "--json-stdin"},
+		{"--verify-epoch-v3-portable-proof", "--json-stdin", "--check"},
+		{"--verify-epoch-v3-portable-proof", "--json-stdin", "--config", "/not-enrolled-verifier-policy"},
+	} {
+		var out bytes.Buffer
+		if code := run(args, &out); code != 2 || out.String() != "{\"code\":\"EPOCH_POLICY_INVALID\"}\n" {
+			t.Fatal("unprovisioned wire invocation gained authority")
+		}
+	}
+}
