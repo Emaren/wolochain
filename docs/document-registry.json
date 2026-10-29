@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "3e798c5e4770a68c6e46266f959a3afc8e4c20c5bee62624274314e3074c270d",
+      "sha256": "400bcc186baa581cefecec6e11e3edcc92c8e487a2cbf931fc6ef11b3b97cec6",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -67,6 +67,29 @@
         "aoe2war"
       ],
       "title": "WoloChain Documentation Index",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "source-only-verifier-mismatch-not-financial-authority",
+      "id": "aoe2war.wolochain.epoch-v3-wire-v1-hold",
+      "owner": "wolochain-ops",
+      "path": "docs/epoch-v3-wire-v1-hold.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-10-28",
+      "sensitivity": "internal",
+      "sha256": "cc6eac5665bd8f45fe87c0d14668faa87e5a0f1baed0f5229353b37efd4af74a",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "Native epoch-v3 wire-v1 trust mismatch and held handoff",
       "type": "reference"
     },
     {
@@ -1090,7 +1113,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "codex/independent-epoch-escrow-v3",
-    "commit": "552b8a15e245d8bbbb20eec5dbc5c2b011d2392e"
+    "commit": "eac4e413588a9db7780ec18faa3ac7249b2674de"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
