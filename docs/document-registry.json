@@ -34,9 +34,9 @@
       "owner": "wolochain-ops",
       "path": "docs/BRANCH_AUTHORITY.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-10-18",
+      "reviewed_at": "2026-10-29",
       "sensitivity": "internal",
-      "sha256": "e74d04b64d9d6b1cd239beaa08e1677c39bbc857bc5dc0474159f2df77ad80dd",
+      "sha256": "f59f74d5fae649716c43f81b06b22fd099ba9d47245fbb23c9f32d69f7f22993",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
