@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "d4cb97a5dd4fcb40d12a5c79568c8cac8a45d51113fbeaab17a5b63b5f82c4df",
+      "sha256": "fec21a0bb4ce295c8d5bb70b33eb5743f179bf79b0b81982d19f8535f2545a27",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1066,8 +1066,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "session-b/live-pid-producer-census-hold-20261029",
-    "commit": "9bc74463fa881615e97b02c15864389e8d7b54eb"
+    "branch": "session-b/unverified-cross-source-liability-overlap-20261029",
+    "commit": "233d58b7a58373a933c6f5df8c0de8e8a4c42666"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

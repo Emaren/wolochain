@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `session-b/live-pid-producer-census-hold-20261029` at `9bc74463fa881615e97b02c15864389e8d7b54eb`
+Implementation baseline: `session-b/unverified-cross-source-liability-overlap-20261029` at `233d58b7a58373a933c6f5df8c0de8e8a4c42666`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
