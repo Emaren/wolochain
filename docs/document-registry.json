@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "bfdde048304df0f4a117f8a8cd1032b196d160db4265b08e11c2e02971441714",
+      "sha256": "7efa5c080cc84531b23490258bfae1969a5436b31f113d4fe357e222ad9ab15d",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -381,7 +381,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-30",
       "sensitivity": "restricted",
-      "sha256": "25452fed66e8e3df22834bd0035ecae1a30fc0ff35a5b2af4eb5c66de5cb5fda",
+      "sha256": "a159768ee35ccdd0c02f8be0005d1ca1fbedcbfe83079e91ba86544c2e9d0280",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -497,7 +497,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-30",
       "sensitivity": "restricted",
-      "sha256": "f86231ce6be046f4012890b2c24254e050f3d71ef7d5649e4324f4c0b4f0f986",
+      "sha256": "52f0b86caa53623166a3dcc6d234566f7539c881fb807c28396c50fb703abccb",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -543,7 +543,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-30",
       "sensitivity": "restricted",
-      "sha256": "62e3fcfefbdeeae850d1574668beb1271dcb6612f4063872f6c13d4f85f0b3c8",
+      "sha256": "1c2af7776a8a2bfea3ee1b3cc24f440efdb72723f01ab0d62b6d513defabdbbc",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -635,7 +635,7 @@
       "review_interval_days": 7,
       "reviewed_at": "2026-10-30",
       "sensitivity": "restricted",
-      "sha256": "fc09c73d312d3ff617b8b11397b842fdeb3d6ffc3185cfca5fe8ea7a05a839e9",
+      "sha256": "993b7da6af44b26296085ef2f3b3b1a52e47f5c86bb313c3e94ee8936d2e97bb",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -1113,7 +1113,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "codex/independent-epoch-escrow-v3",
-    "commit": "4c9929b1d31a2483e34b0d42c7ca6820cb664d5b"
+    "commit": "809d534773db0cb0df900e364aac422182bff289"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
