@@ -210,6 +210,9 @@ func TestCustodyFeeCheckpointLegacyPolicyDoesNotInventApprovalKey(t *testing.T) 
 		if err != nil {
 			t.Fatal(err)
 		}
+		if err := os.Chmod(dir, 0700); err != nil {
+			t.Fatal(err)
+		}
 		policy := engineTestPolicy(t)
 		policy.WagerApprovalKey = key
 		e, err := Open(filepath.Join(dir, "legacy.db"), policy, &engineTestBackend{})

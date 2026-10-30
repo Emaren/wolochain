@@ -4,6 +4,7 @@ import (
 	"crypto/ed25519"
 	"encoding/json"
 	"errors"
+	"os"
 	"path/filepath"
 	"reflect"
 	"sort"
@@ -445,7 +446,14 @@ func TestReviewerFeeMergeActualNativeSignedFee(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	engine, err := Open(filepath.Join(t.TempDir(), "custody.db"), policy, native.b)
+	stateDir, err := filepath.EvalSymlinks(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chmod(stateDir, 0700); err != nil {
+		t.Fatal(err)
+	}
+	engine, err := Open(filepath.Join(stateDir, "custody.db"), policy, native.b)
 	if err != nil {
 		t.Fatal(err)
 	}
