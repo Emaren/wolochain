@@ -73,6 +73,7 @@ type HTTPCustodyFeeCheckpointBackend interface {
 type HTTPHealth struct {
 	Accepting                  bool
 	VaultAddress               string
+	EscrowAddress              string
 	KeyFingerprint             string
 	BuildSHA256                string
 	ExclusiveAuthorityVerified bool
@@ -223,7 +224,7 @@ func (h *privateHTTPHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	if r.URL.Path != "/satchel/v1/one-shot" && r.URL.Path != "/satchel/v2/one-shot" && r.URL.Path != "/v1/satchel/withdrawals" && r.URL.Path != "/satchel/v1/reconcile" &&
 		r.URL.Path != "/satchel/v1/returns/prepare" && r.URL.Path != "/satchel/v1/returns/reconcile" &&
-		r.URL.Path != "/satchel/v1/proofs/deposit" && r.URL.Path != "/satchel/v1/proofs/operation" && r.URL.Path != "/satchel/v1/proofs/return" && r.URL.Path != "/satchel/v1/proofs/bank" {
+		r.URL.Path != "/satchel/v1/proofs/deposit" && r.URL.Path != "/satchel/v1/proofs/operation" && r.URL.Path != "/satchel/v1/proofs/return" && r.URL.Path != "/satchel/v1/proofs/bank" && r.URL.Path != "/satchel/v1/proofs/escrow-bank" {
 		httpFailure(w, http.StatusNotFound, "private_route_not_found")
 		return
 	}

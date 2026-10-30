@@ -70,6 +70,10 @@ func financialProofReason(err error) string {
 }
 
 func (h *privateHTTPHandler) financialProof(ctx context.Context, w http.ResponseWriter, path string, data []byte) {
+	if path == "/satchel/v1/proofs/escrow-bank" {
+		h.escrowBankProof(ctx, w, data)
+		return
+	}
 	if path == "/satchel/v1/proofs/bank" {
 		h.bankProof(ctx, w, data)
 		return
