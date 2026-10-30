@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "7efa5c080cc84531b23490258bfae1969a5436b31f113d4fe357e222ad9ab15d",
+      "sha256": "393fcafc99fdb021ae6ba07d1641b6d9048fcbb010b0995c09ce704c8575fd91",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -635,7 +635,7 @@
       "review_interval_days": 7,
       "reviewed_at": "2026-10-30",
       "sensitivity": "restricted",
-      "sha256": "993b7da6af44b26296085ef2f3b3b1a52e47f5c86bb313c3e94ee8936d2e97bb",
+      "sha256": "67135b363fc3621e03f1f588ac6465f83719842ab1257b893570a91ce051c108",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -1113,7 +1113,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "codex/independent-epoch-escrow-v3",
-    "commit": "809d534773db0cb0df900e364aac422182bff289"
+    "commit": "e8937b684cb14bf1e1447f37929cdf2feb9c4dd9"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
