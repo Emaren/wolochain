@@ -203,11 +203,13 @@ jobs:
       - name: Versioned private Satchel wire contract
         run: python3 -m unittest discover -s tests -p 'test_satchel_http_contract.py' -v
 
-      - name: Build isolated Satchel service
-        run: go build ./cmd/wolosatcheld
+      - name: Build isolated Satchel signer and independent reviewer
+        run: |
+          go build ./cmd/wolosatcheld
+          go build ./cmd/woloreviewerd
 
       - name: Satchel custody execution race contracts
-        run: go test -race ./internal/satchelservice ./cmd/wolosatcheld -count=1
+        run: go test -race ./internal/satchelservice ./cmd/wolosatcheld ./cmd/woloreviewerd -count=1
 
       - name: Chain invariant guard
         run: WOLO_SKIP_RUNTIME_CHECKS=1 ./scripts/check-chain-invariants.sh

@@ -69,6 +69,32 @@ Source ABI tests fail on route or Go JSON-field drift. The
 [controlled installation and recovery procedure](war-satchel-controlled-release.md)
 keeps the dedicated signer separate from legacy services and consensus.
 
+## Independent reviewer startup composition
+
+`cmd/woloreviewerd` composes the existing read-only PG, original live checkpoint,
+signed Watcher, native bank, custody fee and complete signed reserve readers
+with the durable 8095 issuer. Its protected configuration pins exact clean Git
+source, running binary, policy, all immutable credential/CA/public-key files and
+five distinct financial roles plus the separate Watcher witness key. It rejects
+root execution, inherited PG connection variables, unpinned inputs and shared
+transport credentials. A separate signed reviewer startup permit has a maximum
+120-second window. The current command deliberately caps its canary configuration
+at 1 WOLO; that does not change the product's existing smaller-owner-limits and
+10,000-WOLO ceiling contracts.
+
+The runtime binds its authorization callback before serving. The issuer checks
+it before intent, directly before signing, before persistence and before returning
+new or historical grants. Revocation never deletes a durable PENDING/SIGNED
+record or renews its authority times. Response buffering adds a final check.
+Filesystem changes cannot be made atomic with a CPU signature instruction;
+these bounded checks do not claim such atomicity. Every actual transfer still
+requires its separately governed custody permit and native execution guard.
+
+Source tests and composition cannot enroll real operators, original Watcher
+capture servers, trust anchors, read-only PG roles or signing authorities. The
+command creates none of those inputs and opens no custody keyring. New source
+requires exact-head CI and a separately pinned artifact before installation.
+
 ## HD interface and custody boundary
 
 ### October 22 — qualified runtime capability, no live activation
