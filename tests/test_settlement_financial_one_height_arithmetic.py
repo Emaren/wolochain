@@ -151,6 +151,58 @@ class OneHeightArithmeticTests(unittest.TestCase):
         self.packet["uncertain_effects"][-1]["upper_exposure_uwolo"] = "99"
         self.held("SAME_EFFECT_BOUND_CONFLICT")
 
+    def test_same_id_pending_gas_in_two_sources_never_becomes_free_reserve(self):
+        # Claimed HD/founder debt collision is removed so this regression
+        # isolates the independent prepared-send/fee fingerprint failure.
+        self.packet["obligations"].pop(1)
+        duplicate = copy.deepcopy(self.packet["uncertain_effects"][0])
+        duplicate["source"] = "external"
+        duplicate["source_sha256"] = SHA("9")
+        self.packet["uncertain_effects"].append(duplicate)
+        r = self.report()
+        self.assertEqual(r["unverified_cross_source_obligation_overlaps"], 0)
+        self.assertEqual(r["unverified_cross_source_uncertain_effect_overlaps"], 1)
+        self.assertEqual(r["unresolved_effects_unique"], 1)
+        # Two source-specific 100-uWOLO pending preparations can both execute.
+        # A matching claimant ID does not justify counting only one 100.
+        self.assertEqual(r["bounded_effect_additional_reserve_uwolo"], "200")
+        self.assertFalse(r["arithmetic_complete_for_claimed_scope"])
+        self.assertIsNone(r["conditional_recorded_reserve_uwolo"])
+        self.assertIsNone(r["conditional_margin_uwolo"])
+        self.assertFalse(r["financial_release_authorized"])
+
+    def test_simultaneous_pending_withdrawal_and_fee_are_additive(self):
+        self.packet["obligations"].pop(1)
+        # A distinct pending Satchel withdrawal is still an unpaid liability;
+        # prepared offhost gas is a separate unresolved physical exposure.
+        self.packet["obligations"].append({
+            "economic_id_sha256": SHA("e"), "source": "war_satchel",
+            "requested_unpaid_uwolo": "120", "source_sha256": SHA("8"),
+            "height": HEIGHT, "block_sha256": SHA("1"),
+        })
+        self.packet["uncertain_effects"].append({
+            "physical_effect_id_sha256": SHA("8"), "source": "external",
+            "upper_exposure_uwolo": "40", "source_sha256": SHA("9"),
+            "height": HEIGHT, "block_sha256": SHA("1"),
+        })
+        r = self.report()
+        self.assertEqual(r["unverified_cross_source_uncertain_effect_overlaps"], 0)
+        self.assertEqual(r["bounded_effect_additional_reserve_uwolo"], "140")
+        self.assertEqual(r["conditional_recorded_reserve_uwolo"], "660")
+        self.assertEqual(r["conditional_margin_uwolo"], "-10")
+        self.assertEqual(r["status"], "HOLD")
+        self.assertFalse(r["financial_release_authorized"])
+
+    def test_same_source_repeated_prepared_effect_is_not_double_counted(self):
+        self.packet["obligations"].pop(1)
+        self.packet["uncertain_effects"].append(
+            copy.deepcopy(self.packet["uncertain_effects"][0]))
+        r = self.report()
+        self.assertEqual(r["unverified_cross_source_uncertain_effect_overlaps"], 0)
+        self.assertEqual(r["bounded_effect_additional_reserve_uwolo"], "100")
+        self.assertEqual(r["conditional_margin_uwolo"], "150")
+        self.assertFalse(r["financial_release_authorized"])
+
     def test_forged_solvency_or_approval_fields_rejected(self):
         for name, value in (
             ("financial_release_authorized", True),

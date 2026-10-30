@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "fec21a0bb4ce295c8d5bb70b33eb5743f179bf79b0b81982d19f8535f2545a27",
+      "sha256": "1ceeae9542f5d466cbbe5534b4c65554b47468553b61fdc4c50d7a0fdb5fd3d1",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -356,9 +356,9 @@
       "owner": "wolochain-ops",
       "path": "docs/mainnet-wallets.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-10-15",
+      "reviewed_at": "2026-10-30",
       "sensitivity": "restricted",
-      "sha256": "e2d0cb5c0435840bf81a39c553ba7ae8e54b4cc30249c9c426c89dd837523cd3",
+      "sha256": "e044360208777657735405a0a61ac2be618535fc2ba8328200a725192589ed96",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -449,9 +449,9 @@
       "owner": "wolochain-ops",
       "path": "docs/war-satchel-chain-evidence-c3.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-10-15",
+      "reviewed_at": "2026-10-30",
       "sensitivity": "restricted",
-      "sha256": "65bca93828ccec1f81df1eda4250ea799cb3c59db8aa4dd399d31219cb6a1d35",
+      "sha256": "f61d30a50a4eae73dd2b1ad1fb14c752f4ffc88d87847dcad9f00a1acc9e6002",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -495,9 +495,9 @@
       "owner": "wolochain-ops",
       "path": "docs/war-satchel-custody-c2.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-10-15",
+      "reviewed_at": "2026-10-30",
       "sensitivity": "restricted",
-      "sha256": "7979cefe9453d4c7528d1e7a8379c872d17c9f73a50ebb63923a342d6c88ea2c",
+      "sha256": "f3a9a75b1b4c4d76c8ebf50941140e42260bd0ff7ca83d87538862caed92b19e",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -587,9 +587,9 @@
       "owner": "wolochain-ops",
       "path": "docs/war-satchel-mainnet-execution.md",
       "review_interval_days": 7,
-      "reviewed_at": "2026-10-22",
+      "reviewed_at": "2026-10-30",
       "sensitivity": "restricted",
-      "sha256": "ed9990c5c4e380fc25e99cd1c520e1dd60f2bcf4f8446c30699db176bb144edc",
+      "sha256": "f675b7ef57aaf74ab814f5d1f61e62cd8e949d14323c6808457c5f9cdc0cd689",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -1066,8 +1066,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "session-b/unverified-cross-source-liability-overlap-20261029",
-    "commit": "233d58b7a58373a933c6f5df8c0de8e8a4c42666"
+    "branch": "session-b/cross-source-uncertain-effect-fee-20261029",
+    "commit": "050823dffb53f6076237cdb4b1c3d7d4126d3737"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
