@@ -208,6 +208,10 @@ func (h *privateHTTPHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.custodyFeeCheckpoint(ctx, w, r)
 		return
 	}
+	if r.URL.Path == "/satchel/v1/custody/principal-checkpoint" {
+		h.custodyPrincipalCheckpoint(ctx, w, r)
+		return
+	}
 	if strings.HasPrefix(r.URL.Path, "/satchel/v1/operations/") {
 		if r.Method != http.MethodGet {
 			httpFailure(w, http.StatusMethodNotAllowed, "method_not_allowed")

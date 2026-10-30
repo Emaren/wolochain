@@ -197,6 +197,7 @@ enabled against it. HD must select the 8094 adapter in its separate release.
 | `POST /satchel/v1/one-shot` | Legacy replay compatibility; a new bearer-only wager is refused. Snake-case `request_id`, `chain_id`, `signer_role`, `from_address`, `to_address`, `amount:{denom,amount}`, `memo`; or protocol-1 camel-case `requestId`, `chainId`, `senderAddress`, `recipientAddress`, `denom`, `amountUwolo`, `memo`. |
 | `GET /satchel/v1/custody/journal` | Bounded consistent execution-history checkpoint, exact journal/policy digests and unresolved/confirmed totals; bank, credit and solvency authority always false. |
 | `POST /satchel/v1/custody/fee-checkpoint` | Read-only complete unresolved fee snapshot with at most 1,024 requested original identities, 64 KiB request and 4 MiB response; never authorizes spending. |
+| `POST /satchel/v1/custody/principal-checkpoint` | Bounded complete custody terminal history for the independent owner-partition reader; pinned peer/vault/policy provenance, no transfer or debt-discharge authority. |
 | `POST /satchel/v1/proofs/escrow-bank` | Server-selected current betting-escrow proof, authenticated independently with the protected CLI escrow role; no caller account/root or inferred free-reserve authority. |
 | `GET /satchel/v1/operations/<operation-id>` | Read an existing durable operation; never signs or resubmits. |
 | `POST /satchel/v1/reconcile` | Strict `operation_id`; observes the original signed transaction without transmitting it. |

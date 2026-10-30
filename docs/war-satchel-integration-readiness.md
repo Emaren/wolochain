@@ -48,6 +48,27 @@ The source increment requires new exact-head CI and does not install 8095,
 provision production authorities, approve any real inventory, or complete the
 separate principal-discharge and claim-return execution path.
 
+## Principal and escrow-return evidence continuation
+
+The principal partition reader now reconciles each owner’s complete wager and
+withdrawal holds against all four journal buckets under a genuine read-only PG
+snapshot. It compares complete custody history on both sides of the query and
+refuses unresolved operations or a native-confirmed outflow not posted in HD.
+The private fixed-peer checkpoint transport pins the configured vault and policy;
+its JSON is service provenance, not independent chain proof. The opaque partition
+result still grants no principal allowance until separately bound to the signed
+inventory and revalidated at the actual execution phase.
+
+The escrow-return inventory verifier reauthenticates native H/H+1 bank proof
+against its protected anchor and requires both reserve reviewers, exact producer
+pins, full unpaid entitlements, non-overlap and uncertain gas coverage. Paid
+entitlements require their actual native transfer proof, rather than a shaped
+journal receipt. The original allocation’s bank digest stays immutable while the
+execution bank changes. A selected payout is already one booked liability; its
+principal is not charged again as extra equity. Tests use real isolated SDK
+7-WOLO funding, 2-WOLO separate escrow assets and 5+2 return entitlements; they do
+not establish production custody or the missing legacy pre-sign executor guard.
+
 ## Controlled OS-process qualification, October 21
 
 Implementation `32f0d73d4509db074b5baf095c2338cb27c35132` adds
