@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "fec21a0bb4ce295c8d5bb70b33eb5743f179bf79b0b81982d19f8535f2545a27",
+      "sha256": "40e4342d117097f6ed7ca0689928c6d15ca56d0426245142355f8361d59052d5",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1066,8 +1066,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "session-b/unverified-cross-source-liability-overlap-20261029",
-    "commit": "233d58b7a58373a933c6f5df8c0de8e8a4c42666"
+    "branch": "session-b/cross-source-uncertain-effect-fee-20261029",
+    "commit": "04f0b6928e9cbd590e9854a9a655b212aa1f7b57"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `session-b/unverified-cross-source-liability-overlap-20261029` at `233d58b7a58373a933c6f5df8c0de8e8a4c42666`
+Implementation baseline: `session-b/cross-source-uncertain-effect-fee-20261029` at `04f0b6928e9cbd590e9854a9a655b212aa1f7b57`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
