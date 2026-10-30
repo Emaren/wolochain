@@ -8,12 +8,27 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "source-only-war-satchel-chain-evidence"
-reviewed_at: "2026-10-15"
+reviewed_at: "2026-10-30"
 review_interval_days: 14
 sensitivity: "restricted"
 ---
 
 # War Satchel C3 Chain Evidence
+
+## Independent source contract review — 2026-10-30 UTC
+
+Session B checked the exact held #121 source
+[`internal/satchel/trusted_reader.go`](https://github.com/Emaren/wolochain/blob/9c11a617ba1362fbdee1a9ef5903a1efad0e6db1/internal/satchel/trusted_reader.go)
+(blob `841fa3d5606bef142997d5b20a8324ddab01995b`):
+`NewTrustedReader` still requires an independently provisioned trust anchor;
+the authenticated reader still returns `CreditAuthorized() == false`.
+No reader fixture signs a real chain checkpoint or supplies an independent
+live witness. The separately authored
+[October 29 HEL1 read-only receipt](https://github.com/Emaren/wolochain/pull/115#issuecomment-6508382058)
+reports healthy legacy chain but **no 8094/8095 listener**; this is not a
+CometBFT bank proof, H/H+1 acceptance or current custody verification.
+The C3 document remains **source-only, NONCREDITING**; the original external
+trust/witness and funds-origin acceptance gates are unresolved.
 
 The later [authenticated financial bridge](war-satchel-financial-bridge.md)
 exports bounded portable transcripts and reuses this reader plus CometBFT
