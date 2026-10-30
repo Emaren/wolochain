@@ -176,6 +176,9 @@ func TestJournalRequiresPreexistingPrivateOwnedParentAndNoAliases(t *testing.T) 
 	if e != nil {
 		t.Fatal(e)
 	}
+	if err := os.Chmod(dir, 0700); err != nil {
+		t.Fatal(err)
+	}
 	path := filepath.Join(dir, "reviewer.db")
 	if privateJournalPath(path) != nil {
 		t.Fatal("new private journal path refused")
@@ -210,6 +213,9 @@ func TestInputGateRechecksSignedPermitAndPinnedFiles(t *testing.T) {
 	dir, e := filepath.EvalSymlinks(t.TempDir())
 	if e != nil {
 		t.Fatal(e)
+	}
+	if err := os.Chmod(dir, 0700); err != nil {
+		t.Fatal(err)
 	}
 	c := testConfig(t)
 	refs := []*filePin{&c.Postgres.Password, &c.Postgres.CA, &c.Postgres.ClientCertificate, &c.Postgres.ClientKey, &c.Watcher.CA, &c.Watcher.Token, &c.ReviewerPrivateKey, &c.HTTPToken, &c.CustodyToken}
