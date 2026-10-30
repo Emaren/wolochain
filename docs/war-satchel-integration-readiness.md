@@ -50,6 +50,15 @@ separate principal-discharge and claim-return execution path.
 
 ## Principal and escrow-return evidence continuation
 
+The reviewer daemon now requires the actual owner partition in its dual-reviewed
+census. The typed `principal_spend` value binds the original reservation,
+consent, owner ledger and complete custody/hold partition; it is reread at
+completion. Historical review bodies without that optional value retain their
+old non-authorizing library contract. This does not yet relax the custody
+spend guard: post-attempt principal revalidation and permanent consumption
+remain required before customer principal can be spent without extra equity.
+
+
 The principal partition reader now reconciles each owner’s complete wager and
 withdrawal holds against all four journal buckets under a genuine read-only PG
 snapshot. It compares complete custody history on both sides of the query and

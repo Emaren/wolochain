@@ -335,6 +335,7 @@ func compose(ctx context.Context, c config, gate *inputGate) (*composedReviewer,
 	}
 	var db *sql.DB
 	var custody *satchelservice.ReviewerCustodyFeeClient
+	var principalJournal *satchelservice.ReviewerPrincipalJournalClient
 	var issuer *satchelservice.ReviewerIssuer
 	cleanup := func() {
 		if issuer != nil {
@@ -342,6 +343,9 @@ func compose(ctx context.Context, c config, gate *inputGate) (*composedReviewer,
 		}
 		if custody != nil {
 			custody.Close()
+		}
+		if principalJournal != nil {
+			principalJournal.Close()
 		}
 		if db != nil {
 			_ = db.Close()
@@ -394,6 +398,14 @@ func compose(ctx context.Context, c config, gate *inputGate) (*composedReviewer,
 	if e != nil {
 		return nil, errHeld
 	}
+	principalJournal, e = satchelservice.NewReviewerPrincipalJournalClient(custodyToken, c.Vault, c.Custody.PolicySHA256)
+	if e != nil {
+		return nil, errHeld
+	}
+	principalPartitions, e := satchelservice.NewReviewerPrincipalPartitionSourceWithPolicyDigest(pg, principalJournal, c.Custody.PolicySHA256)
+	if e != nil {
+		return nil, errHeld
+	}
 	coverage, e := satchelservice.NewReviewerReserveFile(c.ReserveCoveragePath)
 	if e != nil {
 		return nil, errHeld
@@ -407,6 +419,7 @@ func compose(ctx context.Context, c config, gate *inputGate) (*composedReviewer,
 		Authority:           satchelservice.ReserveReviewAuthority{AccountingReviewerKey: accountingKey, CustodyReviewerKey: custodyKey, ExecutionAuthorityKey: executionKey, WagerApprovalKey: wagerKey, WithdrawalApprovalKey: withdrawalKey, ExpectedVault: c.Vault, ExpectedBuildSHA256: c.Custody.BuildSHA256, ExpectedConfigSHA256: c.Custody.ConfigSHA256, ExpectedPermitSHA256: c.Custody.PermitSHA256},
 		FeeSources:          satchelservice.ReviewerFeeMergeAuthority{Vault: c.Vault, CustodyPolicyDigest: c.Custody.PolicySHA256, IssuerPolicyDigest: c.IssuerPolicySHA256, WagerApprovalKey: wagerKey},
 		RequiredProducerIDs: c.RequiredProducerIDs, FeeUWolo: c.FeeUWolo, MinimumGasReserveUWolo: c.MinimumGasReserveUWolo, MinimumUnencumberedUWolo: c.MinimumUnencumberedUWolo,
+		PrincipalPartitions: principalPartitions,
 	})
 	if e != nil {
 		return nil, errHeld

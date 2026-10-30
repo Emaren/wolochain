@@ -43,17 +43,18 @@ type ReviewerReserveNonOverlap struct {
 }
 
 type ReviewerReserveCensusBody struct {
-	Protocol             int                         `json:"protocol"`
-	Scope                string                      `json:"scope"`
-	Vault                string                      `json:"vault"`
-	OperationID          string                      `json:"operation_id"`
-	ProposedFingerprint  string                      `json:"proposed_fingerprint"`
-	BookedPrincipalUWolo string                      `json:"booked_principal_uwolo"`
-	OwnerLedgerSHA256    string                      `json:"owner_ledger_sha256"`
-	CustodyJournalSHA256 string                      `json:"custody_journal_sha256"`
-	IssuerJournalSHA256  string                      `json:"issuer_journal_sha256"`
-	Producers            []ReviewerReserveProducer   `json:"producers"`
-	NonOverlap           []ReviewerReserveNonOverlap `json:"nonoverlap"`
+	Protocol             int                            `json:"protocol"`
+	Scope                string                         `json:"scope"`
+	Vault                string                         `json:"vault"`
+	OperationID          string                         `json:"operation_id"`
+	ProposedFingerprint  string                         `json:"proposed_fingerprint"`
+	BookedPrincipalUWolo string                         `json:"booked_principal_uwolo"`
+	OwnerLedgerSHA256    string                         `json:"owner_ledger_sha256"`
+	CustodyJournalSHA256 string                         `json:"custody_journal_sha256"`
+	IssuerJournalSHA256  string                         `json:"issuer_journal_sha256"`
+	Producers            []ReviewerReserveProducer      `json:"producers"`
+	NonOverlap           []ReviewerReserveNonOverlap    `json:"nonoverlap"`
+	PrincipalSpend       *ReviewerPrincipalSpendBinding `json:"principal_spend,omitempty"`
 }
 type ReviewerReserveCensusBundle struct {
 	Version int                       `json:"version"`
@@ -68,6 +69,7 @@ type ReviewerReserveCensusConfig struct {
 	FeeUWolo                 string
 	MinimumGasReserveUWolo   string
 	MinimumUnencumberedUWolo string
+	PrincipalPartitions      ReviewerPrincipalPartitionReader
 }
 
 type ReviewerReserveCensusSource struct {
@@ -291,7 +293,11 @@ func (s *ReviewerReserveCensusSource) AuthenticatedFeeCensus(ctx context.Context
 	if err != nil {
 		return none, ReviewerCensusSourceInvalid
 	}
-	census, err := s.verifyCoverage(bundle, proposed, observation, issued, custody, fees, completed())
+	principalPartitions, err := s.readPrincipalPartition(ctx, proposed)
+	if err != nil {
+		return none, err
+	}
+	census, err := s.verifyCoverage(bundle, proposed, observation, issued, custody, fees, completed(), principalPartitions...)
 	if err != nil {
 		return none, err
 	}
@@ -318,6 +324,16 @@ func (s *ReviewerReserveCensusSource) AuthenticatedFeeCensus(ctx context.Context
 	if err != nil || !bytes.Equal(raw, reread) || oldLedger != newLedger || ctx.Err() != nil || !freshObservation.FreshAt(completed()) || !freshObservation.bank.CurrentAt(completed()) {
 		return none, ReviewerCensusSnapshotChanged
 	}
+	finalPartitions, err := s.readPrincipalPartition(ctx, proposed)
+	if err != nil {
+		return none, err
+	}
+	if err = s.verifyPrincipalSpendBinding(bundle.Body, proposed, newLedger, again.JournalDigest, completed(), finalPartitions...); err != nil {
+		return none, err
+	}
+	if !freshObservation.FreshAt(completed()) || !freshObservation.bank.CurrentAt(completed()) || ctx.Err() != nil {
+		return none, ReviewerCensusSnapshotChanged
+	}
 	finalFees, err := MergeReviewerPendingFees(proposed, issued, again, s.config.FeeSources, completed())
 	if err != nil || hashJSON(finalFees) != hashJSON(fees) {
 		return none, ReviewerCensusSourceInvalid
@@ -328,7 +344,7 @@ func (s *ReviewerReserveCensusSource) AuthenticatedFeeCensus(ctx context.Context
 	return census, nil
 }
 
-func (s *ReviewerReserveCensusSource) verifyCoverage(bundle ReviewerReserveCensusBundle, proposed WagerReservation, observed ReviewerFinanceObservation, issued ReviewerIssuedFeeCheckpoint, custody ReviewerCustodyFeeCheckpoint, fees []ReviewerPendingFee, now time.Time) (ReviewerFeeCensus, error) {
+func (s *ReviewerReserveCensusSource) verifyCoverage(bundle ReviewerReserveCensusBundle, proposed WagerReservation, observed ReviewerFinanceObservation, issued ReviewerIssuedFeeCheckpoint, custody ReviewerCustodyFeeCheckpoint, fees []ReviewerPendingFee, now time.Time, principalPartitions ...VerifiedReviewerPrincipalPartition) (ReviewerFeeCensus, error) {
 	none := ReviewerFeeCensus{}
 	body := bundle.Body
 	review := bundle.Review
@@ -339,6 +355,9 @@ func (s *ReviewerReserveCensusSource) verifyCoverage(bundle ReviewerReserveCensu
 	ownerHash, err := ReviewerOwnerLedgerCheckpointDigest(observed)
 	if err != nil {
 		return none, ReviewerCensusSourceInvalid
+	}
+	if err = s.verifyPrincipalSpendBinding(body, proposed, ownerHash, custody.JournalDigest, now, principalPartitions...); err != nil {
+		return none, err
 	}
 	ownerAmount, err := reviewerAmount(owner, math.MaxInt64, false)
 	if err != nil {
