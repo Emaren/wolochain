@@ -22,8 +22,8 @@ func (b *escrowBankHTTPFixture) EscrowBankProof(ctx context.Context) (satchel.Ba
 func TestEscrowBankHTTPHasFixedProtectedRoleAndNoExecution(t *testing.T) {
 	cfg := testHTTPConfig(t)
 	cfg.Authorize = func(context.Context) bool { return false }
-	cfg.EscrowAddress = testHTTPAddress(t, 103)
-	b := &escrowBankHTTPFixture{bankHTTPFixture{vault: cfg.EscrowAddress}}
+	cfg.Health.EscrowAddress = testHTTPAddress(t, 103)
+	b := &escrowBankHTTPFixture{bankHTTPFixture{vault: cfg.Health.EscrowAddress}}
 	h := testHTTPHandler(t, b, cfg)
 	for _, body := range []string{`{}`, `{"protocol":2}`, `{"protocol":1,"account":"caller"}`, `{"protocol":1,"height":123}`, `{"protocol":1,"protocol":1}`} {
 		w := httptest.NewRecorder()
@@ -35,14 +35,14 @@ func TestEscrowBankHTTPHasFixedProtectedRoleAndNoExecution(t *testing.T) {
 	w := httptest.NewRecorder()
 	h.ServeHTTP(w, testHTTPRequest("POST", "/satchel/v1/proofs/escrow-bank", `{"protocol":1}`))
 	var proof satchel.BankProof
-	if w.Code != 200 || json.Unmarshal(w.Body.Bytes(), &proof) != nil || proof.Address != cfg.EscrowAddress || b.submissions.Load() != 0 || b.reconciliations.Load() != 0 || b.lookups.Load() != 0 {
+	if w.Code != 200 || json.Unmarshal(w.Body.Bytes(), &proof) != nil || proof.Address != cfg.Health.EscrowAddress || b.submissions.Load() != 0 || b.reconciliations.Load() != 0 || b.lookups.Load() != 0 {
 		t.Fatal("escrow bank read executed funds", w.Code, w.Body.String())
 	}
 	wire, _ := json.Marshal(proof)
 	if !bytes.Equal(wire, w.Body.Bytes()) {
 		t.Fatal("transcript was not canonical compact Go JSON")
 	}
-	b.vault = cfg.VaultAddress
+	b.vault = cfg.Health.VaultAddress
 	w = httptest.NewRecorder()
 	h.ServeHTTP(w, testHTTPRequest("POST", "/satchel/v1/proofs/escrow-bank", `{"protocol":1}`))
 	if w.Code != 503 {
