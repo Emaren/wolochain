@@ -423,7 +423,8 @@ func (s *ReviewerReserveCensusSource) verifyCoverage(bundle ReviewerReserveCensu
 	}
 	previous := ""
 	for _, item := range body.NonOverlap {
-		if item.EconomicKey <= previous || assignments[item.EconomicKey] != item.ProducerID {
+		producer, exists := assignments[item.EconomicKey]
+		if !exists || item.EconomicKey <= previous || producer != item.ProducerID {
 			return none, ReviewerCensusCoverageInvalid
 		}
 		previous = item.EconomicKey

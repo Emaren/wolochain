@@ -160,6 +160,13 @@ func censusMutateFixtureBundle(t *testing.T, f *custodyAuthorityFixture, bundle 
 		bundle.Body.Producers = bundle.Body.Producers[1:]
 	case "missing_nonoverlap":
 		bundle.Body.NonOverlap = bundle.Body.NonOverlap[1:]
+	case "unassigned_nonoverlap":
+		// Equal list lengths cannot prove an economic key was assigned. An
+		// absent map entry's zero value must not match an empty producer ID.
+		bundle.Body.NonOverlap[0] = ReviewerReserveNonOverlap{EconomicKey: "unassigned-economic-key", ProducerID: ""}
+		sort.Slice(bundle.Body.NonOverlap, func(i, j int) bool {
+			return bundle.Body.NonOverlap[i].EconomicKey < bundle.Body.NonOverlap[j].EconomicKey
+		})
 	case "duplicate_obligation":
 		bundle.Body.Producers[0].Obligations = []ReviewerReserveObligation{{EconomicKey: "vault-owner-liabilities", Kind: "confirmed", AmountUWolo: "100000000"}}
 	case "duplicate_fee":
@@ -237,7 +244,7 @@ func TestReviewerReserveCensusNativeProofValidatorAndCoverageFailures(t *testing
 	if err != nil || budget.Status != "BUDGET_SUFFICIENT_NONAUTHORIZING" || budget.SpendingAuthorized || budget.BankAuthenticated || budget.OwnerLedgerAuthenticated {
 		t.Fatal("validator created execution/credit authority", budget, err)
 	}
-	for _, name := range []string{"wrong_root", "wrong_height", "wrong_key", "gas", "floor", "zero_unknown", "missing_producer", "missing_nonoverlap", "duplicate_obligation", "duplicate_fee", "owner_understated", "booked_principal", "owner_digest", "issuer_digest", "custody_digest", "stale_review", "future_review", "uncovered", "invalid_amount"} {
+	for _, name := range []string{"wrong_root", "wrong_height", "wrong_key", "gas", "floor", "zero_unknown", "missing_producer", "missing_nonoverlap", "unassigned_nonoverlap", "duplicate_obligation", "duplicate_fee", "owner_understated", "booked_principal", "owner_digest", "issuer_digest", "custody_digest", "stale_review", "future_review", "uncovered", "invalid_amount"} {
 		t.Run(name, func(t *testing.T) {
 			raw, _ := json.Marshal(original)
 			var bundle ReviewerReserveCensusBundle
@@ -301,7 +308,7 @@ INSERT INTO public.war_satchel_funded_journal VALUES(1,100000000,0,0,0),(1,-7000
 	t.Cleanup(func() { _ = db.Close() })
 	f := newCustodyAuthorityFixture(t)
 	proposed, cfg := censusFixtureOriginal(f), censusFixtureConfig(t, f)
-	for _, name := range []string{"positive", "wrong_root", "wrong_key", "gas", "zero_unknown", "duplicate_obligation", "missing_producer", "missing_nonoverlap", "owner_understated", "stale_review", "future_review", "custody_stale", "custody_future", "custody_wrong_key", "review_revoked_during_read", "body_changed_during_read", "custody_changed_during_read", "ledger_changed_during_read", "wrong_pg_role", "proposed_owner_changed"} {
+	for _, name := range []string{"positive", "wrong_root", "wrong_key", "gas", "zero_unknown", "duplicate_obligation", "missing_producer", "missing_nonoverlap", "unassigned_nonoverlap", "owner_understated", "stale_review", "future_review", "custody_stale", "custody_future", "custody_wrong_key", "review_revoked_during_read", "body_changed_during_read", "custody_changed_during_read", "ledger_changed_during_read", "wrong_pg_role", "proposed_owner_changed"} {
 		t.Run(name, func(t *testing.T) {
 			connection := db
 			if name == "wrong_pg_role" {
