@@ -8,10 +8,23 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "source-only-war-satchel-chain-evidence"
-reviewed_at: "2026-10-15"
+reviewed_at: "2026-10-30"
 review_interval_days: 14
 sensitivity: "restricted"
 ---
+
+
+## Source review — October 30, 2026 UTC
+
+The current reviewer continuation reuses the later genuine Comet/ICS23
+`TrustedReader` and verifies H/H+1 currentness after I/O. The original C3 adapter
+and observations below remain explicitly historical NONCREDITING contracts;
+they are not production trust enrollment. The added reviewer reserve census
+requires a protected trust configuration and independently signed complete
+coverage bound to the actual bank and journal. Native SDK and PostgreSQL tests
+use isolated validators and test authorities. No mainnet trust anchor or
+independent production witness has been provisioned by this documentation
+renewal, and no source test proves operator independence or live credits.
 
 # War Satchel C3 Chain Evidence
 

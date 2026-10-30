@@ -8,10 +8,26 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "restricted-satchel-execution-and-provisioning-contract"
-reviewed_at: "2026-10-22"
+reviewed_at: "2026-10-30"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
+
+
+## Source review — October 30, 2026 UTC
+
+The reviewer continuation now supplies durable custody/issuer fee checkpoints
+and an explicit native-bank/HD-ledger/signed-inventory census composition. See
+[integration evidence](war-satchel-integration-readiness.md#reviewer-fee-and-reserve-composition-october-29).
+It does not install a reviewer, create enrolled keys or certify a real liability
+inventory. The conservative principal margin below remains enforced: the
+reviewed census's booked principal is not a proof of exclusive hold discharge.
+Actual claim-return execution and that typed discharge contract remain source
+work in progress. Existing UNKNOWN fencing, separate legacy routing and all
+historical liabilities remain binding. Owner authority to complete a governed
+release and a maximum 1-WOLO canary does not substitute for actual Keplr signing
+or the independent production prerequisites. No deployment or funds moved in
+this renewal.
 
 # War Satchel Mainnet Execution and Operator Gates
 

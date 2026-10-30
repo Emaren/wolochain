@@ -8,10 +8,23 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "runtime-evidence"
 authority: "mainnet-wallet-role-and-custody-map"
-reviewed_at: "2026-10-15"
+reviewed_at: "2026-10-30"
 review_interval_days: 14
 sensitivity: "restricted"
 ---
+
+
+## Satchel source review — October 30, 2026 UTC
+
+The role exclusions below were reviewed for the current Satchel source
+continuation. All historical balances, key selectors and runtime observations
+retain their original dates; this renewal performs no fresh custody challenge,
+balance census, key access or wallet operation. The October 29 21:07 UTC
+read-only receipt in the integration PR still showed the separate legacy and
+consensus executable identities stable and no 8094/8095 listener. No new Satchel
+deposit destination is established. Owner authorization for a bounded canary
+does not replace that owner's actual Keplr signatures or independent custody,
+liability and reserve admission.
 
 # WoloChain Mainnet Wallet And Key Plan
 

@@ -8,10 +8,24 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "source-only-war-satchel-custody-capability"
-reviewed_at: "2026-10-15"
+reviewed_at: "2026-10-30"
 review_interval_days: 14
 sensitivity: "restricted"
 ---
+
+
+## Source review — October 30, 2026 UTC
+
+The dormant C2 capability described below remains unavailable. Later runtime
+execution qualification is separately documented in
+[mainnet execution](war-satchel-mainnet-execution.md); neither that opaque
+capability nor the new reviewer fee census certifies custody from a public
+address or configuration flag. The census retains every unresolved fee and
+requires separately signed complete historical coverage. The October 29 21:07
+UTC read-only receipt showed no 8094/8095 listener. This renewal establishes no
+new vault, key possession, recovery receipt or production financial admission;
+all older custody observations retain their dates. Recovery remains owned by
+its separate session; this source work performs no recovery/provider setup.
 
 # War Satchel C2 Custody Capability
 
