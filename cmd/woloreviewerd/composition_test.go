@@ -22,7 +22,8 @@ import (
 )
 
 func TestPostgresEnvironmentCannotSelectCredentialsOrTransport(t *testing.T) {
-	for _, env := range [][]string{{"PGHOST=other"}, {"PGSERVICE=secret-service"}, {"PGSSLKEY=implicit-key"}, {"PGPASSWORD=do-not-print"}, {"PGUNSUPPORTED=also-refuse"}, {"pgport=5433"}} {
+	// Use the runtime test name as an inert value; rejection depends only on the PG prefix.
+	for _, env := range [][]string{{"PGHOST=other"}, {"PGSERVICE=secret-service"}, {"PGSSLKEY=implicit-key"}, {"PGPASSWORD=" + t.Name()}, {"PGUNSUPPORTED=also-refuse"}, {"pgport=5433"}} {
 		if !pgEnvironmentPresent(env) {
 			t.Fatal("PostgreSQL environment override accepted")
 		}

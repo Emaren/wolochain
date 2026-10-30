@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"errors"
 	"math"
+	"os"
 	"path/filepath"
 	"reflect"
 	"sort"
@@ -136,6 +137,7 @@ func newEscrowExecutionFixture(t *testing.T) *escrowExecutionFixture {
 	t.Cleanup(f.backend.Close)
 	dir, err := filepath.EvalSymlinks(t.TempDir())
 	require.NoError(t, err)
+	require.NoError(t, os.Chmod(dir, 0700))
 	f.engine, err = Open(filepath.Join(dir, "escrow-execution.db"), p, f.backend)
 	require.NoError(t, err)
 	t.Cleanup(func() { require.NoError(t, f.engine.Close()) })
