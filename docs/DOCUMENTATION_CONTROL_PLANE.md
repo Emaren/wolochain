@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `codex/independent-epoch-escrow-v3` at `08fcb9f3349dcd52380050eb8ce67ee11783bd6b`
+Implementation baseline: `codex/independent-epoch-escrow-v3` at `95e223c4c69f5a1d3e5544a89c60707c69a41bbd`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
