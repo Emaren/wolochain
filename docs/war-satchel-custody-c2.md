@@ -29,6 +29,22 @@ its separate session; this source work performs no recovery/provider setup.
 
 # War Satchel C2 Custody Capability
 
+## Independent source contract review — 2026-10-30 UTC
+
+Session B checked held-source
+[`custody_authority.go`](https://github.com/Emaren/wolochain/blob/9c11a617ba1362fbdee1a9ef5903a1efad0e6db1/internal/satchelservice/custody_authority.go)
+(blob `ba3e0a590bfb4daeece50072bdfbd496667fd02b`) and
+[`reserve_review.go`](https://github.com/Emaren/wolochain/blob/9c11a617ba1362fbdee1a9ef5903a1efad0e6db1/internal/satchelservice/reserve_review.go)
+(blob `a7157090a6352d64dc4c3f49678fc589470fff92`).
+Those contracts require retained native custody authority and independent
+reserve-review evidence; even a `QualifiedReserveReview` exposes
+`CustodyCapability() == "UNAVAILABLE"`. The separate
+[2026-10-29 21:07 UTC physical receipt](https://github.com/Emaren/wolochain/pull/115#issuecomment-6508382058)
+reports **no live 8094/8095 listener**. No dedicated keyring ownership, signed
+permit, off-host nonce, bank reserve/fee census or restore was re-attested in
+this review. C2 remains **UNAVAILABLE**. Reviewing source conditions does not
+install or qualify custody or authorize real Satchel credit.
+
 **C2 remains unavailable. No independently verified dedicated Satchel vault or
 signer has been established. No real WOLO deposit can be accepted under this
 source foundation.** This document specifies source behavior and outstanding
