@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "40e4342d117097f6ed7ca0689928c6d15ca56d0426245142355f8361d59052d5",
+      "sha256": "1ceeae9542f5d466cbbe5534b4c65554b47468553b61fdc4c50d7a0fdb5fd3d1",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1067,7 +1067,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "session-b/cross-source-uncertain-effect-fee-20261029",
-    "commit": "04f0b6928e9cbd590e9854a9a655b212aa1f7b57"
+    "commit": "050823dffb53f6076237cdb4b1c3d7d4126d3737"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

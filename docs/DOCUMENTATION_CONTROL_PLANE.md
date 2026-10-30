@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `session-b/cross-source-uncertain-effect-fee-20261029` at `04f0b6928e9cbd590e9854a9a655b212aa1f7b57`
+Implementation baseline: `session-b/cross-source-uncertain-effect-fee-20261029` at `050823dffb53f6076237cdb4b1c3d7d4126d3737`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
