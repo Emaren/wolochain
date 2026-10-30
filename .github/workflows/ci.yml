@@ -157,7 +157,10 @@ jobs:
       - name: HD non-additive financial obligation evidence contracts (read only)
         run: python3 -m unittest discover -s tests -p 'test_settlement_financial_obligation_envelope.py' -v
 
+      # Preserve independent negative-test evidence if DocsV2 correctly expires.
+      # This does NOT skip, waive, or replace the failing DocsV2 release gate.
       - name: Same-height financial arithmetic and missing-evidence negatives (HOLD only)
+        if: ${{ always() && !cancelled() }}
         run: python3 -m unittest discover -s tests -p 'test_settlement_financial_one_height_arithmetic.py' -v
 
       - name: Real single-owner phase signature review, NONAUTHORIZING (synthetic keys)
@@ -171,6 +174,10 @@ jobs:
         env:
           PYTHONDONTWRITEBYTECODE: '1'
         run: python3 -m unittest discover -s tests -p 'test_settlement_resume_producer_identities.py' -v
+      - name: Identity-bound resume, timer qualification and irreversible crash boundaries (disposable)
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: python3 -m unittest discover -s tests -p 'test_settlement_solo_resume_execution.py' -v
       - name: Cross-repo HD-only Wolo 8094 wire surface adversarial admission (NONAUTHORIZING)
         run: python3 -m unittest discover -s tests -p 'test_settlement_hd_satchel_wire_review.py' -v
 

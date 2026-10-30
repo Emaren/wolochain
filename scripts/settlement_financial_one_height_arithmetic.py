@@ -188,6 +188,8 @@ def arithmetic(packet, input_sha256):
     debt = sum_safe(unique_debt.values())
 
     unique_effect = {}
+    effect_source_rows = {}
+    effect_origins_by_id = {}
     unknown_effects = set()
     for row in effects:
         r = exact(row, UNCERTAIN, "UNCERTAIN_EFFECT_SCHEMA_INVALID")
@@ -201,10 +203,27 @@ def arithmetic(packet, input_sha256):
         require(key not in unique_effect or unique_effect[key] == n,
                 "SAME_EFFECT_BOUND_CONFLICT")
         unique_effect[key] = n
+        # The same fingerprint appearing in two independent producer sources
+        # is not proof the sources refer to the same physical prepared send.
+        # A repeated row inside ONE source is counted once; distinct source
+        # claims remain additive until separately authenticated as identical.
+        effect_source_rows[(key, r["source"])] = n
+        effect_origins_by_id.setdefault(key, set()).add(r["source"])
         if n is None:
             unknown_effects.add(key)
-    known_exposure = sum_safe(v for v in unique_effect.values() if v is not None)
-    arithmetic_complete = not gaps and not unknown_effects and len(obligations) > 0
+    known_exposure = sum_safe(
+        v for v in effect_source_rows.values() if v is not None)
+    unverified_effect_overlaps = sum(
+        len(sources) > 1 for sources in effect_origins_by_id.values())
+    # Equal claimant-supplied hashes across HD/DE/founder/journal are not an
+    # independent proof that two sources reference the SAME physical debt.
+    # Pending a source-sealed overlap map, no positive numerical coverage margin
+    # may be inferred from counting those rows only once.
+    unverified_overlaps = sum(len(sources) > 1 for sources in origin_by_id.values())
+    arithmetic_complete = (
+        not gaps and not unknown_effects and len(obligations) > 0
+        and unverified_overlaps == 0 and unverified_effect_overlaps == 0
+    )
     # Effects are conservatively ADDITIVE to obligations even when hashes appear
     # related. An independently verified effect-to-obligation mapping is required
     # before offsetting any payout against an unpaid claim.
@@ -226,11 +245,12 @@ def arithmetic(packet, input_sha256):
         "bank_assets_claimed_uwolo": str(assets),
         "obligations_unique": len(unique_debt),
         "obligations_observed_rows": len(obligations),
-        "cross_source_obligation_identifiers": sum(
-            len(sources) > 1 for sources in origin_by_id.values()),
+        "cross_source_obligation_identifiers": unverified_overlaps,
+        "unverified_cross_source_obligation_overlaps": unverified_overlaps,
         "recorded_unpaid_requested_uwolo": str(debt),
         "unresolved_effects_unique": len(unique_effect),
         "unbounded_effects": len(unknown_effects),
+        "unverified_cross_source_uncertain_effect_overlaps": unverified_effect_overlaps,
         "bounded_effect_additional_reserve_uwolo": str(known_exposure),
         "coverage_gaps": gaps,
         "arithmetic_complete_for_claimed_scope": arithmetic_complete,
@@ -247,7 +267,9 @@ def arithmetic(packet, input_sha256):
         "accounting_note": (
             "Claimed fingerprints/digests and completeness flags are not chain,"
             " signer or custodian attestations; ambiguous physical effects"
-            " remain additive. Never promote this report to release authority."),
+            " remain additive across sources. Cross-source debt and prepared"
+            " transaction deduplication require independent identity-overlap"
+            " evidence. Never promote to release authority."),
     }
 
 

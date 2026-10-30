@@ -8,12 +8,29 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "runtime-evidence"
 authority: "mainnet-wallet-role-and-custody-map"
-reviewed_at: "2026-10-15"
+reviewed_at: "2026-10-30"
 review_interval_days: 14
 sensitivity: "restricted"
 ---
 
 # WoloChain Mainnet Wallet And Key Plan
+
+## Documentation review — 2026-10-30 UTC (dated evidence only)
+
+Session B independently re-read this role/address reference and its historical
+June, September and October 15 source notes. The newer, separately authored
+[Codex read-only HEL1 receipt of 2026-10-29 21:07 UTC](https://github.com/Emaren/wolochain/pull/115#issuecomment-6508382058)
+reports `wolo-1` advancing without catch-up, original 8092/8093 listener
+identities stable, and **no dedicated 8094/8095 listener**. That receipt
+does **not** re-enumerate these wallet addresses or provide account balances,
+keyring possession, complete bank/escrow reserves, backup restoration or
+independent C2 custody. The last *direct allowlisted role/address inspection
+described in this document* remains the October 15 read. In particular, the
+"Current Mainnet Address Labels" below are reference labels with **dated
+provenance**, not an independently re-authenticated October 30 bank/custody
+census. Historical June faucet and settlement amounts must never be used as
+current reserves. This renews document scrutiny only: financial release,
+signer/custody qualification and Keplr canary authorization remain **HOLD**.
 
 ## Satchel C2 read-only role verification — October 15, 2026
 

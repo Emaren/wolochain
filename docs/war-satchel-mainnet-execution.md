@@ -8,12 +8,32 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "restricted-satchel-execution-and-provisioning-contract"
-reviewed_at: "2026-10-22"
+reviewed_at: "2026-10-30"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
 
 # War Satchel Mainnet Execution and Operator Gates
+
+## Independent source and gate review — 2026-10-30 UTC
+
+Session B re-read the operator/owner gates against the immutable held-source
+[`http.go`](https://github.com/Emaren/wolochain/blob/9c11a617ba1362fbdee1a9ef5903a1efad0e6db1/internal/satchelservice/http.go)
+(blob `2bb311876fd84ebb94eca760de6304df993b0d0c`) and
+[`reviewer_finance_observation.go`](https://github.com/Emaren/wolochain/blob/9c11a617ba1362fbdee1a9ef5903a1efad0e6db1/internal/satchelservice/reviewer_finance_observation.go)
+(blob `d08a835500bc8da406b19bd60eea1a0ea9574cfb`).
+The private HTTP handler does not equate health/accepted broadcast with
+credit. `AuthenticatedFeeCensus` still returns
+`ReviewerFinanceCoverageUnknown`: owner ledger and authenticated bank reads
+are NOT complete cross-source signer/withdrawal/uncertain-fee coverage.
+[Codex's separate October 29 HEL1 receipt](https://github.com/Emaren/wolochain/pull/115#issuecomment-6508382058)
+reports **8094/8095 absent**, and notes HD Satchel migrations not qualified.
+The [B #121 exact-head source CI](https://github.com/Emaren/wolochain/actions/runs/40979957375)
+passes 19 synthetic arithmetic cases but FAILS DocsV2 review expiry; it is
+not a funded execution, bank witness or signer approval. This source review
+does not validate pending prepared fees, unmaterialized broadcasts, signed
+dual-review identity, native keyring, replay/return executor, real recovery or
+owner Keplr authorization. The financial path remains **HOLD**.
 
 **Source implementation is not production authorization. C2 custody remains
 `UNAVAILABLE`; C3 evidence remains `NONCREDITING`.** No dedicated wallet, signer

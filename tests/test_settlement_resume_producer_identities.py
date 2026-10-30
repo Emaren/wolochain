@@ -35,6 +35,9 @@ class ProducerIdentityTests(unittest.TestCase):
         self.gated = False
         self.secret_revision = 0
         self.reads = 0
+        self.runtime_revision = 0
+        self.command_revision = 0
+        self.native_credentials = []
         self.drift_at = None
         self.invalid_env = False
         self.omit_service_mainpid = False
@@ -95,10 +98,23 @@ class ProducerIdentityTests(unittest.TestCase):
 
     def show(self, unit, runner):
         p = self.properties(unit)
-        return {key: p[key] for key in ("Id", "FragmentPath", "DropInPaths",
+        result = {key: p[key] for key in ("Id", "FragmentPath", "DropInPaths",
                                        "ActiveState", "MainPID") if key in p}
+        if unit == self.timer:
+            result['Triggers'] = self.once
+        return result
 
     def runner(self, args):
+        if args[0] == "busctl":
+            if "LoadUnit" in args:
+                return json.dumps({"type":"o","data":["/org/freedesktop/systemd1/unit/fixture"]})
+            field = args[-1]
+            if field in ('LoadCredential','SetCredential'):
+                return json.dumps({'type':'a(ss)' if field=='LoadCredential' else 'a(say)',
+                                   'data':self.native_credentials})
+            argv = ["/opt/demo", str(self.command_revision)]
+            return json.dumps({"type":"a(sasbttttuii)","data":[
+                ["/opt/demo",argv,False,self.runtime_revision,0,0,0,100,0,0]]})
         self.assertEqual(args[:3], ["systemctl", "--no-pager", "show"])
         self.assertEqual(args[4], "--")
         p = self.properties(args[5])
@@ -138,6 +154,110 @@ class ProducerIdentityTests(unittest.TestCase):
         capture = self.capture()
         self.assertEqual(set(capture["units"]), set(self.units))
         self.assertFalse(capture["financial_release_authorized"])
+
+    def test_native_execution_runtime_counters_do_not_become_configuration(self):
+        packet = self.capture()
+        self.runtime_revision = 123456
+        identity.verify_producer_identities(packet, runner=self.runner)
+        self.command_revision = 1
+        with self.assertRaisesRegex(m.MaintenanceError, "PRODUCER_CONFIGURATION_DRIFT"):
+            identity.verify_producer_identities(packet, runner=self.runner)
+
+    def test_unqualified_timer_target_is_refused_even_if_unit_bytes_are_sealed(self):
+        original=self.show
+        def wrong(unit,runner):
+            p=original(unit,runner)
+            if unit==self.timer:p['Triggers']='outside-finance.service'
+            return p
+        with patch.object(m,'show',side_effect=wrong), \
+             self.assertRaisesRegex(m.MaintenanceError,'PRODUCER_TIMER_TARGET_OUTSIDE_QUALIFIED_PAIR'):
+            self.capture()
+
+    def test_unsealed_native_credentials_or_bind_sources_cannot_be_hidden_in_hash(self):
+        original=self.properties
+        def extra(unit):
+            p=original(unit)
+            if unit==self.app:p['LoadCredential']='secret:/mutable/key'
+            return p
+        self.native_credentials=[['secret','/mutable/key']]
+        with patch.object(self,'properties',side_effect=extra), \
+             self.assertRaisesRegex(m.MaintenanceError,'PRODUCER_UNSEALED_EXECUTION_SOURCE'):
+            self.capture()
+
+    def test_native_empty_credentials_are_valid_despite_unprintable_human_rendering(self):
+        original=self.properties
+        def extra(unit):
+            p=original(unit)
+            if unit!=self.timer:p.update(LoadCredential='[unprintable]',SetCredential='[unprintable]')
+            return p
+        with patch.object(self,'properties',side_effect=extra):
+            packet=self.capture()
+            identity.verify_producer_identities(packet,runner=self.runner)
+            self.native_credentials=[['secret',[1,2,3]]]
+            with self.assertRaisesRegex(m.MaintenanceError,'PRODUCER_UNSEALED_EXECUTION_SOURCE'):
+                identity.verify_producer_identities(packet,runner=self.runner)
+
+    def test_manager_pass_environment_must_be_empty(self):
+        original = self.properties
+        for unit in self.units:
+            for value in ("", "LD_PRELOAD", "NODE_OPTIONS"):
+                with self.subTest(unit=unit, value=value):
+                    def properties(name):
+                        fields = original(name)
+                        if name == unit:
+                            fields["PassEnvironment"] = value
+                        return fields
+                    with patch.object(self, "properties", side_effect=properties):
+                        if value:
+                            with self.assertRaisesRegex(m.MaintenanceError, "PRODUCER_UNSEALED_ENVIRONMENT_CODE"):
+                                self.capture()
+                        else:
+                            self.assertFalse(self.capture()["resume_authorized"])
+
+    def test_preload_from_environment_or_root_private_env_file_is_not_sealed_code(self):
+        original=self.properties
+        def extra(unit):
+            p=original(unit)
+            if unit==self.app:p['Environment']='NODE_OPTIONS=--require=/mutable/hidden.js'
+            return p
+        with patch.object(self,'properties',side_effect=extra), \
+             self.assertRaisesRegex(m.MaintenanceError,'PRODUCER_UNSEALED_ENVIRONMENT_CODE'):
+            self.capture()
+        original_read=self.private_read
+        def envfile(path,source=False):
+            return b'LD_PRELOAD=/mutable/library.so' if str(path)=='/etc/demo.env' else original_read(path,source=source)
+        with patch.object(m,'private_read',side_effect=envfile), \
+             self.assertRaisesRegex(m.MaintenanceError,'PRODUCER_UNSEALED_ENVIRONMENT_CODE'):
+            self.capture()
+
+    def test_chroot_and_bind_namespace_cannot_hash_different_host_files(self):
+        original=self.properties
+        for key in ('RootDirectory','RootImage','BindPaths','BindReadOnlyPaths'):
+            def namespace(unit):
+                p=original(unit)
+                if unit==self.app:p[key]='/mutable/namespace'
+                return p
+            with self.subTest(key=key),patch.object(self,'properties',side_effect=namespace), \
+                 self.assertRaisesRegex(m.MaintenanceError,'PRODUCER_UNSEALED_EXECUTION_SOURCE'):
+                self.capture()
+
+    def test_native_repeated_execution_and_envfile_properties_preserve_order(self):
+        props = self.properties(self.app)
+        first = "EnvironmentFiles=/etc/first.env (ignore_errors=no)"
+        second = "EnvironmentFiles=/etc/second.env (ignore_errors=no)"
+        cmd1 = "ExecStartPre={ path=/opt/check-one; argv[]=/opt/check-one ; }"
+        cmd2 = "ExecStartPre={ path=/opt/check-two; argv[]=/opt/check-two ; }"
+        raw = "\n".join(k+"="+v for k,v in props.items() if k!="EnvironmentFiles")
+        raw += "\n"+first+"\n"+second+"\n"+cmd1+"\n"+cmd2
+        fields = identity.read_properties(self.app, lambda _: raw)
+        self.assertEqual(fields["EnvironmentFiles"], [first.partition("=")[2], second.partition("=")[2]])
+        self.assertEqual(fields["ExecStartPre"], [cmd1.partition("=")[2], cmd2.partition("=")[2]])
+        self.assertEqual(identity.env_file_paths(fields["EnvironmentFiles"]), ["/etc/first.env", "/etc/second.env"])
+
+    def test_duplicate_singular_properties_are_still_invalid(self):
+        raw = "\n".join(k+"="+v for k,v in self.properties(self.app).items())
+        with self.assertRaisesRegex(m.MaintenanceError, "PRODUCER_PROPERTIES_INVALID"):
+            identity.read_properties(self.app, lambda _: raw+"\nActiveState=inactive")
 
     def test_missing_required_service_mainpid_refused(self):
         self.omit_service_mainpid = True
