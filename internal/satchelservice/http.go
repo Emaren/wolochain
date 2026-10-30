@@ -63,6 +63,10 @@ type HTTPCustodyJournalBackend interface {
 	CustodyJournal() (CustodyJournal, error)
 }
 
+type HTTPCustodyFeeCheckpointBackend interface {
+	ReviewerFeeCheckpoint([]string) (ReviewerCustodyFeeCheckpoint, error)
+}
+
 // HTTPHealth describes the already-verified service identity. This self-report
 // does not certify vault ownership, bank reserves, recovery or chain consensus.
 // Construct it only after the engine verifies its operator-owned authority.
@@ -197,6 +201,10 @@ func (h *privateHTTPHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		httpWrite(w, http.StatusOK, snapshot)
+		return
+	}
+	if r.URL.Path == "/satchel/v1/custody/fee-checkpoint" {
+		h.custodyFeeCheckpoint(ctx, w, r)
 		return
 	}
 	if strings.HasPrefix(r.URL.Path, "/satchel/v1/operations/") {

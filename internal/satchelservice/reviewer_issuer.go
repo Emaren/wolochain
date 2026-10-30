@@ -142,7 +142,7 @@ func (r *ReviewerIssuer)ReviewOne(ctx context.Context,id string)ReviewerIssuedRe
  // Time and fee are derived from trusted evidence, never request body.
  if r.source.VerifyOwnerMandate(ctx,original)!=nil ||
   r.source.VerifyWatcherMarket(ctx,original)!=nil ||ctx.Err()!=nil{return pending}
- census,err:=r.source.AuthenticatedFeeCensus(ctx,original)
+ census,err:=r.authenticatedFeeCensusLocked(ctx,original)
  if err!=nil||ctx.Err()!=nil{return pending}
  budget,err:=AssessReviewerFeeBudget(census,original)
  if err!=nil||budget.Status!="BUDGET_SUFFICIENT_NONAUTHORIZING" ||
@@ -163,7 +163,7 @@ func (r *ReviewerIssuer)ReviewOne(ctx context.Context,id string)ReviewerIssuedRe
   r.source.VerifyWatcherMarket(ctx,fresh)!=nil||ctx.Err()!=nil {
   return pending
  }
- freshCensus,err:=r.source.AuthenticatedFeeCensus(ctx,fresh)
+ freshCensus,err:=r.authenticatedFeeCensusLocked(ctx,fresh)
  if err!=nil||ctx.Err()!=nil{return pending}
  finalBudget,err:=AssessReviewerFeeBudget(freshCensus,fresh)
  if err!=nil||finalBudget.Status!="BUDGET_SUFFICIENT_NONAUTHORIZING"||

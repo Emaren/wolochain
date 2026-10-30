@@ -15,6 +15,39 @@ sensitivity: "restricted"
 
 # War Satchel Integration Evidence and Operator Handoff
 
+## Reviewer fee and reserve composition, October 29
+
+The current continuation supplies `NewReviewerReserveCensusSource` for the
+existing independent reviewer. It joins an actual read-only HD ledger query,
+current native H/H+1 vault proof, the custody journal fee checkpoint and the
+issuer's private in-process issuance checkpoint. A protected signed inventory
+must bind the exact operation, original reservation fingerprint, booked
+principal, source journals, complete producer set and non-overlap assignment.
+Distinct enrolled accounting and custody reviewers must sign that inventory;
+execution, wager and withdrawal role keys must also remain distinct. These
+public signatures attest the reviewed source inventory; they cannot establish
+physical operator independence or discover an omitted external liability.
+
+`POST /satchel/v1/custody/fee-checkpoint` is private and read-only. Its requested
+IDs affect status lookup only: every unresolved custody fee remains included.
+Expired signed issuer approvals and crash-PENDING records remain obligations.
+Only matching authenticated original fingerprints can deduplicate an issuer
+fee against the actual custody journal. No expiry or empty caller list releases
+UNKNOWN. Reads are bounded, bank/ledger/review identities are checked again at
+completion, and changed, stale, future or unavailable evidence returns HOLD.
+The fixed loopback custody reader has no proxy, redirect or retry path. Coverage
+is reread from an owner-only protected file for each census.
+
+The added mandatory tests validate genuine isolated SDK bank evidence and
+signed test reviews. The existing isolated PostgreSQL CI job additionally runs
+`TestReviewerFinancePostgresReserveCensusSignsOnlyWithActualIndependentSources`
+through the actual `ReviewOne` call and durable issuer checkpoints. Its
+owner/Watcher adapters and financial reviewer keys are explicitly test-only;
+its signature is a reviewer grant and performs no Cosmos signing or broadcast.
+The source increment requires new exact-head CI and does not install 8095,
+provision production authorities, approve any real inventory, or complete the
+separate principal-discharge and claim-return execution path.
+
 ## Controlled OS-process qualification, October 21
 
 Implementation `32f0d73d4509db074b5baf095c2338cb27c35132` adds
