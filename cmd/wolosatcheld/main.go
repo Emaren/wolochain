@@ -133,7 +133,7 @@ func run(ctx context.Context, args []string, out, errout io.Writer) int {
 	}
 	public, _ := hex.DecodeString(cfg.PublicKeyHex)
 	fingerprint := sha256.Sum256(public)
-	handler, err := satchelservice.NewHTTPHandler(&serviceEngine{Engine: engine, trusted: trusted}, satchelservice.HTTPConfig{Token: strings.TrimSpace(string(token)), Accepting: true, Authorize: authorized, CustodyCapability: custodyAuthority.Capability, Health: satchelservice.HTTPHealth{Accepting: true, VaultAddress: cfg.Vault, KeyFingerprint: hex.EncodeToString(fingerprint[:]), BuildSHA256: binaryDigest, ExclusiveAuthorityVerified: true}})
+	handler, err := satchelservice.NewHTTPHandler(&serviceEngine{Engine: engine, trusted: trusted}, satchelservice.HTTPConfig{Token: strings.TrimSpace(string(token)), Accepting: true, Authorize: authorized, CustodyCapability: custodyAuthority.Capability, Health: satchelservice.HTTPHealth{Accepting: true, VaultAddress: cfg.Vault, EscrowAddress: cfg.BettingEscrow, KeyFingerprint: hex.EncodeToString(fingerprint[:]), BuildSHA256: binaryDigest, ExclusiveAuthorityVerified: true}})
 	for i := range token {
 		token[i] = 0
 	}
@@ -193,6 +193,9 @@ func (e *serviceEngine) DepositProof(ctx context.Context, r satchelservice.Depos
 }
 func (e *serviceEngine) BankProof(ctx context.Context) (satchel.BankProof, error) {
 	return e.Engine.BankProof(ctx, e.trusted)
+}
+func (e *serviceEngine) EscrowBankProof(ctx context.Context) (satchel.BankProof, error) {
+	return e.Engine.EscrowBankProof(ctx, e.trusted)
 }
 func (e *serviceEngine) OperationProof(ctx context.Context, id string) (satchelservice.FinancialProof, error) {
 	return e.Engine.OperationProof(ctx, id, e.trusted)

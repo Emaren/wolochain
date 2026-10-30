@@ -63,12 +63,17 @@ type HTTPCustodyJournalBackend interface {
 	CustodyJournal() (CustodyJournal, error)
 }
 
+type HTTPCustodyFeeCheckpointBackend interface {
+	ReviewerFeeCheckpoint([]string) (ReviewerCustodyFeeCheckpoint, error)
+}
+
 // HTTPHealth describes the already-verified service identity. This self-report
 // does not certify vault ownership, bank reserves, recovery or chain consensus.
 // Construct it only after the engine verifies its operator-owned authority.
 type HTTPHealth struct {
 	Accepting                  bool
 	VaultAddress               string
+	EscrowAddress              string
 	KeyFingerprint             string
 	BuildSHA256                string
 	ExclusiveAuthorityVerified bool
@@ -199,6 +204,14 @@ func (h *privateHTTPHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		httpWrite(w, http.StatusOK, snapshot)
 		return
 	}
+	if r.URL.Path == "/satchel/v1/custody/fee-checkpoint" {
+		h.custodyFeeCheckpoint(ctx, w, r)
+		return
+	}
+	if r.URL.Path == "/satchel/v1/custody/principal-checkpoint" {
+		h.custodyPrincipalCheckpoint(ctx, w, r)
+		return
+	}
 	if strings.HasPrefix(r.URL.Path, "/satchel/v1/operations/") {
 		if r.Method != http.MethodGet {
 			httpFailure(w, http.StatusMethodNotAllowed, "method_not_allowed")
@@ -215,7 +228,7 @@ func (h *privateHTTPHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	if r.URL.Path != "/satchel/v1/one-shot" && r.URL.Path != "/satchel/v2/one-shot" && r.URL.Path != "/v1/satchel/withdrawals" && r.URL.Path != "/satchel/v1/reconcile" &&
 		r.URL.Path != "/satchel/v1/returns/prepare" && r.URL.Path != "/satchel/v1/returns/reconcile" &&
-		r.URL.Path != "/satchel/v1/proofs/deposit" && r.URL.Path != "/satchel/v1/proofs/operation" && r.URL.Path != "/satchel/v1/proofs/return" && r.URL.Path != "/satchel/v1/proofs/bank" {
+		r.URL.Path != "/satchel/v1/proofs/deposit" && r.URL.Path != "/satchel/v1/proofs/operation" && r.URL.Path != "/satchel/v1/proofs/return" && r.URL.Path != "/satchel/v1/proofs/bank" && r.URL.Path != "/satchel/v1/proofs/escrow-bank" {
 		httpFailure(w, http.StatusNotFound, "private_route_not_found")
 		return
 	}

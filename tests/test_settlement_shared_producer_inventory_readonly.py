@@ -175,6 +175,37 @@ class SharedHdDeProducerInventoryTests(unittest.TestCase):
         self.assertFalse(report["financialProducersFenced"])
         self.assertFalse(report["productionCutoverAuthorized"])
 
+    def test_nonactive_pid_remains_review_candidate(self):
+        # systemd can run a financial writer in activating/deactivating state.
+        # A positive PID must never vanish merely because the allowlisted
+        # environment key list is empty.
+        for state in ("activating", "deactivating", "failed"):
+            with self.subTest(state=state):
+                with patch.object(self.inv, "run_systemctl", return_value=(
+                    "MainPID=4321\nActiveState=" + state +
+                    "\nLoadState=loaded\nUnitFileState=enabled\n"
+                )), patch.object(self.inv, "process_keys", return_value=(True, [])):
+                    observed = self.inv.info("aoe2hdbets-api.service")
+                self.assertFalse(observed["active"])
+                self.assertTrue(observed["mainPidPresent"])
+                self.assertTrue(observed["isCandidateForExplicitMaintenanceReview"])
+
+    def test_unreadable_live_pid_forces_incomplete_census(self):
+        unit = "aoe2dewarwagers-api.service"
+        with patch.object(self.inv, "discover_inventory",
+                          return_value=([unit], [])), \
+             patch.object(self.inv, "run_systemctl", return_value=(
+                 "MainPID=4321\nActiveState=activating\n"
+                 "LoadState=loaded\nUnitFileState=enabled\n"
+             )), \
+             patch.object(self.inv, "process_keys", return_value=(False, [])):
+            report = self.inv.inspect()
+        self.assertEqual(report["activeCandidateUnitsToReview"], [unit])
+        self.assertEqual(report["unitsWithIncompleteInspection"], [unit])
+        self.assertFalse(report["inventoryCompleteForDiscoveredUnits"])
+        self.assertFalse(report["productionCutoverAuthorized"])
+        self.assertFalse(report["financialProducersFenced"])
+
     def test_only_allowlisted_key_names_pass_through(self):
         fields = b"DATABASE_URL=postgres://a:SECRET@db/s\0" + (
             b"WOLO_SETTLEMENT_AUTH_TOKEN=VERY_SECRET\0"

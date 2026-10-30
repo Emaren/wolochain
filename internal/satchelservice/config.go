@@ -77,7 +77,14 @@ func PermitMessage(p ExecutionPermit) []byte {
 // No final-component or ancestor symlinks, FIFOs, shared files, remote URLs,
 // environment substitutions, or executable configuration are accepted.
 func ReadPrivateFile(path string, limit int64) ([]byte, error) {
-	if !filepath.IsAbs(path) || limit <= 0 || limit > 1<<20 {
+	return readPrivateFileBounded(path, limit, 1<<20)
+}
+
+// Keep the public key/config reader ceiling unchanged. The signed coverage
+// inventory has its own explicit two-MiB budget and the identical descriptor,
+// ownership, symlink, hardlink and before/after stability checks below.
+func readPrivateFileBounded(path string, limit, ceiling int64) ([]byte, error) {
+	if !filepath.IsAbs(path) || limit <= 0 || ceiling <= 0 || ceiling > 2<<20 || limit > ceiling {
 		return nil, errors.New("private_file_refused")
 	}
 	real, err := filepath.EvalSymlinks(path)

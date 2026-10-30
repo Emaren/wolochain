@@ -18,7 +18,7 @@ import settlement_financial_maintenance as maintenance
 SCHEMA = "wolo.financial-maintenance-producer-identities.v1"
 CONFIG_PROPERTIES = (
     "Id", "FragmentPath", "DropInPaths", "ActiveState", "MainPID",
-    "EnvironmentFiles", "Environment", "ExecStart", "ExecStartPre",
+    "EnvironmentFiles", "Environment", "PassEnvironment", "ExecStart", "ExecStartPre",
     "ExecStartPost", "ExecStop", "ExecReload", "ExecCondition",
     "WorkingDirectory", "RootDirectory", "RootImage", "User", "Group",
     "LoadCredential", "SetCredential", "BindPaths", "BindReadOnlyPaths",
@@ -32,8 +32,16 @@ COMMON_REQUIRED = frozenset(("Id", "FragmentPath", "DropInPaths", "ActiveState")
 SERVICE_REQUIRED = COMMON_REQUIRED | frozenset(("MainPID", "ExecStart"))
 STABLE_PROPERTIES = tuple(p for p in CONFIG_PROPERTIES
                           if p not in ("ActiveState", "MainPID", "Id"))
+# Native systemctl emits one property line per ordered command/env-file.
+# Repeated singular identity/state properties still fail closed.
+REPEATED_PROPERTIES = frozenset(("EnvironmentFiles", "ExecStart", "ExecStartPre",
+    "ExecStartPost", "ExecStop", "ExecReload", "ExecCondition", "LoadCredential",
+    "SetCredential", "BindPaths", "BindReadOnlyPaths"))
 ENVFILE = re.compile(r"(/[^\s]+) \(ignore_errors=(?:yes|no)\)")
 HEX64 = re.compile(r"[0-9a-f]{64}\Z")
+CODE_LOADING_ENV = re.compile(rb"(?:^|[^A-Za-z0-9_])(?:LD_[A-Z0-9_]+|DYLD_[A-Z0-9_]+|"
+    rb"NODE_OPTIONS|NODE_PATH|PYTHONPATH|PYTHONHOME|PYTHONSTARTUP|BASH_ENV|ENV|"
+    rb"RUBYOPT|RUBYLIB|PERL5OPT|PERL5LIB|PHP_INI_SCAN_DIR|GCONV_PATH)\s*=")
 
 
 def require(value, reason):
@@ -53,22 +61,30 @@ def read_properties(unit, runner):
     for line in raw.splitlines():
         require("=" in line, "PRODUCER_PROPERTIES_INVALID")
         key, value = line.split("=", 1)
-        require(key in CONFIG_PROPERTIES and key not in fields,
+        require(key in CONFIG_PROPERTIES and
+                (key not in fields or key in REPEATED_PROPERTIES),
                 "PRODUCER_PROPERTIES_INVALID")
-        fields[key] = value
+        if key in REPEATED_PROPERTIES:
+            fields.setdefault(key, []).append(value)
+            require(len(fields[key]) <= 32, "PRODUCER_PROPERTY_ITEMS_EXCEEDED")
+        else:
+            fields[key] = value
     expected = SERVICE_REQUIRED if unit in maintenance.APPS + maintenance.ONESHOTS else COMMON_REQUIRED
     require(unit in maintenance.UNITS and expected.issubset(fields) and
             fields.get("Id") == unit and
             fields.get("FragmentPath") and
             fields.get("ActiveState") in ("active", "inactive") and
             (unit in maintenance.TIMERS or
-             (fields.get("ExecStart") and fields.get("MainPID", "").isdigit())),
+             (fields.get("ExecStart") and all(fields["ExecStart"]) and fields.get("MainPID", "").isdigit())),
             "PRODUCER_PROPERTIES_INCOMPLETE")
+    # Reject mutable system-manager inheritance; none of these sources is sealed.
+    require(not fields.get("PassEnvironment", "").strip(),
+            "PRODUCER_UNSEALED_ENVIRONMENT_CODE")
     # Timer units must not acquire service-only execution properties: accept
     # only known systemd timer/common fields, never an unchecked property
     # expansion that could silently broaden the signed resume scope.
     if unit in maintenance.TIMERS:
-        require(set(fields).issubset(COMMON_REQUIRED),
+        require(set(fields).issubset(COMMON_REQUIRED | {"PassEnvironment"}),
                 "UNEXPECTED_TIMER_EXECUTION_PROPERTY")
     return fields
 
@@ -76,11 +92,96 @@ def read_properties(unit, runner):
 def env_file_paths(value):
     if not value:
         return []
-    matches = list(ENVFILE.finditer(value))
-    require(len(matches) <= 16 and
-            " ".join(item.group(0) for item in matches) == value,
+    values = [value] if isinstance(value, str) else value
+    require(type(values) is list and len(values) <= 16 and
+            all(type(item) is str for item in values),
             "UNPARSEABLE_PRODUCER_ENVIRONMENT_FILES")
-    return [item.group(1) for item in matches]
+    result = []
+    for text in values:
+        matches = list(ENVFILE.finditer(text))
+        require(len(matches) <= 16 and
+                " ".join(item.group(0) for item in matches) == text,
+                "UNPARSEABLE_PRODUCER_ENVIRONMENT_FILES")
+        result.extend(item.group(1) for item in matches)
+    require(len(result) <= 16, "UNPARSEABLE_PRODUCER_ENVIRONMENT_FILES")
+    return result
+
+
+EXECUTION_PROPERTIES = frozenset(("ExecStart", "ExecStartPre", "ExecStartPost",
+                                  "ExecStop", "ExecReload", "ExecCondition"))
+
+
+def native_empty_credentials(unit, fields, runner):
+    """Even empty credential arrays render '[unprintable]' in systemctl.
+
+    Validate native empty arrays. Nonempty inputs still need separate content
+    sealing and remain unavailable; no credential value enters any receipt.
+    """
+    expected = {"LoadCredential": "a(ss)", "SetCredential": "a(say)"}
+    present = set(fields).intersection(expected)
+    if not present:
+        return
+    raw = runner(["busctl", "--system", "--json=short", "call", "org.freedesktop.systemd1",
+        "/org/freedesktop/systemd1", "org.freedesktop.systemd1.Manager", "LoadUnit", "s", unit])
+    require(type(raw) is str and len(raw) <= 65536, "PRODUCER_NATIVE_UNIT_INVALID")
+    loaded = json.loads(raw)
+    require(type(loaded) is dict and loaded.get("type") == "o" and
+            type(loaded.get("data")) is list and len(loaded["data"]) == 1 and
+            type(loaded["data"][0]) is str and
+            re.fullmatch(r"/org/freedesktop/systemd1/unit/[A-Za-z0-9_]+", loaded["data"][0]),
+            "PRODUCER_NATIVE_UNIT_INVALID")
+    for name in sorted(present):
+        raw = runner(["busctl", "--system", "--json=short", "get-property",
+            "org.freedesktop.systemd1", loaded["data"][0], "org.freedesktop.systemd1.Service", name])
+        require(type(raw) is str and len(raw) <= 262144, "PRODUCER_NATIVE_CREDENTIAL_LIMIT")
+        value = json.loads(raw)
+        require(type(value) is dict and set(value) == {"type", "data"} and
+                value["type"] == expected[name] and type(value["data"]) is list,
+                "PRODUCER_NATIVE_CREDENTIAL_INVALID")
+        require(not value["data"], "PRODUCER_UNSEALED_EXECUTION_SOURCE")
+
+
+def native_execution_configuration(unit, fields, runner):
+    """Use native ordered argv tuples; PID/timing/exit values are runtime state.
+
+    Unit/drop-in bytes remain independently hashed. Do not parse argv out of
+    systemctl's lossy human rendering, or hash volatile last-run timestamps as
+    if stopping a unit changed its source configuration.
+    """
+    names = sorted(EXECUTION_PROPERTIES.intersection(fields))
+    if not names:
+        return {}
+    loaded = json.loads(runner(["busctl", "--system", "--json=short", "call",
+        "org.freedesktop.systemd1", "/org/freedesktop/systemd1",
+        "org.freedesktop.systemd1.Manager", "LoadUnit", "s", unit]))
+    require(loaded.get("type") == "o" and type(loaded.get("data")) is list and
+            len(loaded["data"]) == 1 and type(loaded["data"][0]) is str and
+            re.fullmatch(r"/org/freedesktop/systemd1/unit/[A-Za-z0-9_]+", loaded["data"][0]),
+            "PRODUCER_NATIVE_UNIT_INVALID")
+    result = {}
+    for name in names:
+        raw = runner(["busctl", "--system", "--json=short", "get-property",
+            "org.freedesktop.systemd1", loaded["data"][0],
+            "org.freedesktop.systemd1.Service", name])
+        require(type(raw) is str and len(raw) <= 262144, "PRODUCER_NATIVE_EXECUTION_LIMIT")
+        value = json.loads(raw)
+        require(type(value) is dict and set(value) == {"type", "data"} and
+                value["type"] == "a(sasbttttuii)" and type(value["data"]) is list and
+                len(value["data"]) <= 32, "PRODUCER_NATIVE_EXECUTION_INVALID")
+        text_rows = fields[name]
+        expected = 0 if text_rows == [""] else len(text_rows)
+        require(len(value["data"]) == expected, "PRODUCER_EXECUTION_CHANGED_DURING_SAMPLE")
+        rows = []
+        for row in value["data"]:
+            require(type(row) is list and len(row) == 10 and type(row[0]) is str and
+                    0 < len(row[0]) <= 4096 and row[0].startswith("/") and
+                    type(row[1]) is list and 0 < len(row[1]) <= 256 and
+                    all(type(a) is str and len(a) <= 16384 for a in row[1]) and
+                    type(row[2]) is bool and all(type(n) is int for n in row[3:]),
+                    "PRODUCER_NATIVE_EXECUTION_INVALID")
+            rows.append(row[:3])
+        result[name] = rows
+    return result
 
 
 def _configuration(unit, fields, runner, *, allow_owned_gate):
@@ -90,10 +191,17 @@ def _configuration(unit, fields, runner, *, allow_owned_gate):
     if unit not in maintenance.TIMERS:
         require(fields["MainPID"] == basic.get("MainPID"),
                 "PRODUCER_CHANGED_DURING_SAMPLE")
+    if unit in maintenance.APPS:
+        require((basic["ActiveState"] == "active" and int(basic["MainPID"]) > 0) or
+                (basic["ActiveState"] == "inactive" and basic["MainPID"] == "0"),
+                "PRODUCER_APP_PROCESS_IDENTITY_UNAVAILABLE")
     require(basic["ActiveState"] in ("active", "inactive") and
             (unit not in maintenance.ONESHOTS or
              (basic["ActiveState"] == "inactive" and basic["MainPID"] == "0")),
             "ACTIVE_OR_UNSTABLE_ONESHOT_REFUSED")
+    if unit in maintenance.TIMERS:
+        require(basic.get("Triggers", "").split() == [unit[:-6] + ".service"],
+                "PRODUCER_TIMER_TARGET_OUTSIDE_QUALIFIED_PAIR")
 
     fragment = fields["FragmentPath"]
     dropins = fields["DropInPaths"].split()
@@ -114,6 +222,16 @@ def _configuration(unit, fields, runner, *, allow_owned_gate):
                 "EXISTING_GATE_CANNOT_BE_PRESTATE")
 
     envs = env_file_paths(fields.get("EnvironmentFiles", ""))
+    # These knobs can execute code outside the sealed argv/build tree. Do not
+    # parse or log their secret values, or guess that a preload is harmless.
+    require(not CODE_LOADING_ENV.search(fields.get("Environment", "").encode()),
+            "PRODUCER_UNSEALED_ENVIRONMENT_CODE")
+    # These properties introduce extra filesystem/credential inputs. A path
+    # property hash cannot seal the underlying content or a mounted image.
+    native_empty_credentials(unit, fields, runner)
+    for key in ("BindPaths", "BindReadOnlyPaths", "RootDirectory", "RootImage"):
+        value = fields.get(key, "")
+        require(not value or value == [""], "PRODUCER_UNSEALED_EXECUTION_SOURCE")
     paths = [("fragment", fragment)] + [("dropin", p) for p in dropins] + [
         ("envfile", p) for p in envs]
     require(len(paths) <= 50 and len({p for _, p in paths}) == len(paths),
@@ -126,9 +244,14 @@ def _configuration(unit, fields, runner, *, allow_owned_gate):
         # Descriptor/stable inode read, root-owned source. The raw values never
         # enter the receipt; even Environment= and credential paths are hashed.
         raw = maintenance.private_read(source, source=True)
+        if kind == "envfile":
+            require(not CODE_LOADING_ENV.search(raw), "PRODUCER_UNSEALED_ENVIRONMENT_CODE")
         files.append((kind, sha(str(source).encode()), sha(raw)))
     stable = {key: fields[key] for key in STABLE_PROPERTIES
-              if key != "DropInPaths" and key in fields}
+              if key != "DropInPaths" and key not in EXECUTION_PROPERTIES and key in fields}
+    stable["native_execution"] = native_execution_configuration(unit, fields, runner)
+    if unit in maintenance.TIMERS:
+        stable["timer_target"] = basic["Triggers"]
     # Preserve absence/presence explicitly. Never collapse "not a timer
     # property" and "present but empty" to the same signed identity.
     stable["present_properties"] = sorted(fields)

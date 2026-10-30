@@ -17,29 +17,29 @@ const reviewerMaxOperationFeeUWolo = 1000000
 var reviewerOperationID = regexp.MustCompile(`^[A-Za-z0-9_.:-]{1,128}$`)
 
 type ReviewerPendingFee struct {
-	OperationID string
-	Stage       string // prepared or uncertain; UNKNOWN must never free gas
-	FeeUWolo    string
+	OperationID string `json:"operation_id"`
+	Stage       string `json:"stage"` // prepared or uncertain; UNKNOWN must never free gas
+	FeeUWolo    string `json:"fee_uwolo"`
 }
 
 type ReviewerFeeCensus struct {
-	ChainID                       string
-	Denom                         string
-	OperationID                   string
-	BankBalanceUWolo              string
-	AllOwnerLiabilitiesUWolo      string
-	PendingOperations             []ReviewerPendingFee
-	NewOperationFeeUWolo          string
-	MinimumUnencumberedGasUWolo   string
-	PendingOperationsComplete     bool // An ASSERTION; caller must prove this independently.
+	ChainID                     string
+	Denom                       string
+	OperationID                 string
+	BankBalanceUWolo            string
+	AllOwnerLiabilitiesUWolo    string
+	PendingOperations           []ReviewerPendingFee
+	NewOperationFeeUWolo        string
+	MinimumUnencumberedGasUWolo string
+	PendingOperationsComplete   bool // An ASSERTION; caller must prove this independently.
 }
 
 type ReviewerFeeBudget struct {
-	Status                    string
-	PendingFeeUWolo           string
-	RequiredUWolo             string
-	RemainingUWolo            string
-	SpendingAuthorized        bool // Always false; a positive result is only arithmetic.
+	Status                   string
+	PendingFeeUWolo          string
+	RequiredUWolo            string
+	RemainingUWolo           string
+	SpendingAuthorized       bool // Always false; a positive result is only arithmetic.
 	BankAuthenticated        bool // Always false; independent Comet proof still required.
 	OwnerLedgerAuthenticated bool // Always false; separate DB attestation still required.
 }

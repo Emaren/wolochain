@@ -50,6 +50,8 @@ type ReviewerIssuer struct {
  key ed25519.PrivateKey
  policy Policy
  now func()time.Time
+ issuanceAuthorization func(context.Context)bool
+ issuanceStarted bool
 }
 
 // OpenReviewerIssuer does not create, import or export a reviewer signing key.
@@ -127,6 +129,8 @@ func (r *ReviewerIssuer)ReviewOne(ctx context.Context,id string)ReviewerIssuedRe
  if r==nil || ctx==nil || !wagerIDs.MatchString(id)||ctx.Err()!=nil{return pending}
  r.mu.Lock();defer r.mu.Unlock()
  if r.db==nil{return pending}
+ r.issuanceStarted=true
+ if !r.issuanceAuthorizedLocked(ctx){return pending}
  original,err:=r.source.OriginalHold(ctx,id)
  if err!=nil||ctx.Err()!=nil||original.OperationID!=id||
   original.Version!=1||original.Signature!=""||
@@ -142,7 +146,7 @@ func (r *ReviewerIssuer)ReviewOne(ctx context.Context,id string)ReviewerIssuedRe
  // Time and fee are derived from trusted evidence, never request body.
  if r.source.VerifyOwnerMandate(ctx,original)!=nil ||
   r.source.VerifyWatcherMarket(ctx,original)!=nil ||ctx.Err()!=nil{return pending}
- census,err:=r.source.AuthenticatedFeeCensus(ctx,original)
+ census,err:=r.authenticatedFeeCensusLocked(ctx,original)
  if err!=nil||ctx.Err()!=nil{return pending}
  budget,err:=AssessReviewerFeeBudget(census,original)
  if err!=nil||budget.Status!="BUDGET_SUFFICIENT_NONAUTHORIZING" ||
@@ -163,7 +167,7 @@ func (r *ReviewerIssuer)ReviewOne(ctx context.Context,id string)ReviewerIssuedRe
   r.source.VerifyWatcherMarket(ctx,fresh)!=nil||ctx.Err()!=nil {
   return pending
  }
- freshCensus,err:=r.source.AuthenticatedFeeCensus(ctx,fresh)
+ freshCensus,err:=r.authenticatedFeeCensusLocked(ctx,fresh)
  if err!=nil||ctx.Err()!=nil{return pending}
  finalBudget,err:=AssessReviewerFeeBudget(freshCensus,fresh)
  if err!=nil||finalBudget.Status!="BUDGET_SUFFICIENT_NONAUTHORIZING"||
@@ -185,17 +189,19 @@ func (r *ReviewerIssuer)ReviewOne(ctx context.Context,id string)ReviewerIssuedRe
   check:=TransferRequest{OperationID:id,OwnerID:current.Approval.OwnerID,ChainID:"wolo-1",
    Denom:"uwolo",Sender:current.Approval.Vault,Recipient:current.Approval.Recipient,
    AmountUWolo:current.Approval.AmountUWolo,Memo:current.Approval.Memo,Kind:"wager",Reservation:current.Approval}
-  if r.policy.verifyWager(check,r.now())!=nil{return pending}
+  if r.policy.verifyWager(check,r.now())!=nil||!r.issuanceAuthorizedLocked(ctx){return pending}
   return ReviewerIssuedReply{Protocol:1,Status:"SIGNED",OperationID:id,Approval:current.Approval}
  }
  // The durable PENDING intent is synced BEFORE Ed25519 signing.
+ if !r.issuanceAuthorizedLocked(ctx){return pending}
  if r.writeEntry(id,reviewerEntry{Fingerprint:fingerprint,Status:"PENDING"},"")!=nil{return pending}
- if ctx.Err()!=nil{return pending}
+ if !r.issuanceAuthorizedLocked(ctx){return pending}
  original.Signature=base64.StdEncoding.EncodeToString(ed25519.Sign(r.key,WagerReservationMessage(original)))
  request:=TransferRequest{OperationID:id,OwnerID:original.OwnerID,ChainID:"wolo-1",
   Denom:"uwolo",Sender:original.Vault,Recipient:original.Recipient,
   AmountUWolo:original.AmountUWolo,Memo:original.Memo,Kind:"wager",Reservation:&original}
- if r.policy.verifyWager(request,r.now())!=nil||ctx.Err()!=nil{return pending}
+ if r.policy.verifyWager(request,r.now())!=nil||!r.issuanceAuthorizedLocked(ctx){return pending}
  if r.writeEntry(id,reviewerEntry{Fingerprint:fingerprint,Status:"SIGNED",Approval:&original},"PENDING")!=nil{return pending}
+ if !r.issuanceAuthorizedLocked(ctx){return pending}
  return ReviewerIssuedReply{Protocol:1,Status:"SIGNED",OperationID:id,Approval:&original}
 }

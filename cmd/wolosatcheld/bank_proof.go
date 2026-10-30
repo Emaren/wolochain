@@ -24,6 +24,7 @@ func bankProofCommand(ctx context.Context, mode string, args []string, out, erro
 	flags.SetOutput(io.Discard)
 	authorityPath := flags.String("authority", "", "existing operator-owned public financial authority")
 	height := flags.Int64("height", 0, "exact SDK state height H, authenticated by header H+1")
+	accountRole := flags.String("account-role", "vault", "protected authority account role: vault or escrow")
 	var proofPath, rpc, rest, witness string
 	if mode == "verify-bank-proof" {
 		flags.StringVar(&proofPath, "proof", "", "untrusted bounded bank transcript")
@@ -34,7 +35,7 @@ func bankProofCommand(ctx context.Context, mode string, args []string, out, erro
 	} else {
 		return fail()
 	}
-	if ctx == nil || ctx.Err() != nil || flags.Parse(args) != nil || flags.NArg() != 0 || *authorityPath == "" || *height <= 0 {
+	if ctx == nil || ctx.Err() != nil || flags.Parse(args) != nil || flags.NArg() != 0 || *authorityPath == "" || *height <= 0 || (*accountRole != "vault" && *accountRole != "escrow") {
 		return fail()
 	}
 	raw, err := readProofFile(*authorityPath, 64<<10)
@@ -45,6 +46,10 @@ func bankProofCommand(ctx context.Context, mode string, args []string, out, erro
 	if err != nil {
 		return fail()
 	}
+	account := authority.Vault
+	if *accountRole == "escrow" {
+		account = authority.BettingEscrow
+	}
 	ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
 	defer cancel()
 	if mode == "read-bank-proof" {
@@ -53,7 +58,7 @@ func bankProofCommand(ctx context.Context, mode string, args []string, out, erro
 			return fail()
 		}
 		defer reader.Close()
-		evidence, proof, err := reader.ReadBankProof(ctx, authority.Vault, *height)
+		evidence, proof, err := reader.ReadBankProof(ctx, account, *height)
 		if err != nil || !evidence.CurrentAt(time.Now()) || ctx.Err() != nil {
 			return fail()
 		}
@@ -77,7 +82,7 @@ func bankProofCommand(ctx context.Context, mode string, args []string, out, erro
 	if err != nil {
 		return fail()
 	}
-	evidence, err := verifier.VerifyBankProof(ctx, authority.Vault, *height, proof)
+	evidence, err := verifier.VerifyBankProof(ctx, account, *height, proof)
 	if err != nil || !evidence.CurrentAt(time.Now()) || ctx.Err() != nil {
 		return fail()
 	}

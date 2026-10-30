@@ -1,0 +1,28 @@
+{
+  "version": 3,
+  "epoch_id": "OPERATOR_MUST_PROVISION_IMMUTABLE_EPOCH",
+  "h_star": 0,
+  "vault": "UNPROVISIONED",
+  "escrow": "UNPROVISIONED",
+  "vault_public_key_hex": "UNPROVISIONED_PUBLIC_KEY_ONLY",
+  "escrow_public_key_hex": "UNPROVISIONED_PUBLIC_KEY_ONLY",
+  "vault_keyring_lineage_sha256": "UNPROVISIONED",
+  "escrow_keyring_lineage_sha256": "UNPROVISIONED",
+  "vault_uid": 0,
+  "escrow_uid": 0,
+  "legacy_uids": [],
+  "legacy_public_key_sha256": [],
+  "legacy_keyring_lineage_sha256": [],
+  "reviewer_public_key_hex": "UNPROVISIONED_PUBLIC_KEY_ONLY",
+  "fee_recipient": "UNPROVISIONED",
+  "gas_fee_uwolo": "2500",
+  "source_commit": "EXACT_REVIEWED_SOURCE_COMMIT_REQUIRED",
+  "binary_sha256": "EXACT_REPRODUCED_BINARY_REQUIRED",
+  "config_sha256": "EXACT_DEPLOYMENT_CONFIGURATION_REQUIRED",
+  "trust_anchor": {
+    "height": 0,
+    "hash": "UNPROVISIONED",
+    "period_seconds": 3600,
+    "evidence_reference": "UNPROVISIONED_INDEPENDENT_NATIVE_CHECKPOINT"
+  }
+}

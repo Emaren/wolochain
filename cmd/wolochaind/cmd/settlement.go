@@ -1087,6 +1087,7 @@ func newSettlementServeCmd() *cobra.Command {
 
 func (cfg settlementConfig) newSettlementHTTPHandler() http.Handler {
 	mux := http.NewServeMux()
+	mux.HandleFunc("/settlement/v1/runs/inspect", cfg.inspectSettlementRunHTTP)
 	mux.HandleFunc("/settlement/v1/health", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			writeJSONResponse(w, http.StatusMethodNotAllowed, map[string]string{"detail": "method not allowed"})

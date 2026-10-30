@@ -754,6 +754,179 @@
           }
         }
       }
+    },
+    "/satchel/v1/custody/fee-checkpoint": {
+      "post": {
+        "operationId": "custodyFeeCheckpoint",
+        "summary": "Read all durable unresolved fee obligations and exact requested original identities",
+        "x-financial-effect": "observe",
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/Failure400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Failure401"
+          },
+          "404": {
+            "$ref": "#/components/responses/Failure404"
+          },
+          "405": {
+            "$ref": "#/components/responses/Failure405"
+          },
+          "408": {
+            "$ref": "#/components/responses/Failure408"
+          },
+          "409": {
+            "$ref": "#/components/responses/Failure409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Failure413"
+          },
+          "415": {
+            "$ref": "#/components/responses/Failure415"
+          },
+          "503": {
+            "$ref": "#/components/responses/Failure503"
+          },
+          "200": {
+            "description": "Exact typed result; HTTP success alone is not financial confirmation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewerCustodyFeeCheckpoint"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustodyFeeCheckpointRequest"
+              }
+            }
+          }
+        },
+        "x-max-request-bytes": 65536,
+        "x-max-response-bytes": 4194304
+      }
+    },
+    "/satchel/v1/proofs/escrow-bank": {
+      "post": {
+        "operationId": "exportCurrentEscrowBankProof",
+        "summary": "Export current protected escrow H/H+1 proof, independently of custody vault",
+        "x-financial-effect": "observe",
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/Failure400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Failure401"
+          },
+          "404": {
+            "$ref": "#/components/responses/Failure404"
+          },
+          "405": {
+            "$ref": "#/components/responses/Failure405"
+          },
+          "408": {
+            "$ref": "#/components/responses/Failure408"
+          },
+          "409": {
+            "$ref": "#/components/responses/Proof409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Failure413"
+          },
+          "415": {
+            "$ref": "#/components/responses/Failure415"
+          },
+          "503": {
+            "$ref": "#/components/responses/Failure503"
+          },
+          "200": {
+            "description": "Exact typed result; HTTP success alone is not financial confirmation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BankStateProof"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BankProofRequest"
+              }
+            }
+          }
+        },
+        "description": "Read-only untrusted bank transcript. Account comes only from protected service configuration. Offline CLI --account-role escrow authenticates it against the enrolled anchor; physical balance alone cannot prove available reserves or authorize a return."
+      }
+    },
+    "/satchel/v1/custody/principal-checkpoint": {
+      "post": {
+        "operationId": "custodyPrincipalCheckpoint",
+        "summary": "Read bounded complete custody terminal history for actual owner-partition reconciliation",
+        "x-financial-effect": "observe",
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/Failure400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Failure401"
+          },
+          "404": {
+            "$ref": "#/components/responses/Failure404"
+          },
+          "405": {
+            "$ref": "#/components/responses/Failure405"
+          },
+          "408": {
+            "$ref": "#/components/responses/Failure408"
+          },
+          "409": {
+            "$ref": "#/components/responses/Failure409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Failure413"
+          },
+          "415": {
+            "$ref": "#/components/responses/Failure415"
+          },
+          "503": {
+            "$ref": "#/components/responses/Failure503"
+          },
+          "200": {
+            "description": "Exact typed result; HTTP success alone is not financial confirmation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrincipalCheckpoint"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PrincipalCheckpointRequest"
+              }
+            }
+          }
+        },
+        "x-max-request-bytes": 1024,
+        "x-max-response-bytes": 8388608
+      }
     }
   },
   "components": {
@@ -981,7 +1154,7 @@
           },
           "amount_uwolo": {
             "type": "string",
-            "pattern": "^(?:[1-9][0-9]{0,2}|1000)000000$"
+            "pattern": "^(?:[1-9][0-9]{0,3}|10000)000000$"
           },
           "memo": {
             "$ref": "#/components/schemas/WagerMemo"
@@ -1107,7 +1280,7 @@
           },
           "amountUwolo": {
             "type": "string",
-            "pattern": "^(?:[1-9][0-9]{0,2}|1000)000000$"
+            "pattern": "^(?:[1-9][0-9]{0,3}|10000)000000$"
           },
           "memo": {
             "$ref": "#/components/schemas/WagerMemo"
@@ -1922,7 +2095,7 @@
           },
           "amount": {
             "type": "string",
-            "pattern": "^(?:[1-9][0-9]{0,2}|1000)000000$"
+            "pattern": "^(?:[1-9][0-9]{0,3}|10000)000000$"
           }
         }
       },
@@ -2351,7 +2524,7 @@
         "type": "object",
         "additionalProperties": false,
         "x-go-type": "internal/satchel/bank_proof.go:BankProof",
-        "description": "UNTRUSTED portable RPC evidence. The configured vault and server-selected head-1 state must pass independent Comet and SDK ICS23 authentication. No credit, spending or solvency authority.",
+        "description": "UNTRUSTED portable RPC evidence for the server-selected protected vault or escrow role at head-1. Consumers must authenticate exact account and Comet/ICS23 H/H+1 proof against protected authority. No credit, spending or solvency authority.",
         "required": [
           "version",
           "chain_id",
@@ -2388,6 +2561,280 @@
             }
           }
         }
+      },
+      "ReviewerPendingFee": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "operation_id",
+          "stage",
+          "fee_uwolo"
+        ],
+        "properties": {
+          "operation_id": {
+            "$ref": "#/components/schemas/OperationID"
+          },
+          "stage": {
+            "enum": [
+              "prepared",
+              "uncertain"
+            ]
+          },
+          "fee_uwolo": {
+            "type": "string",
+            "pattern": "^(?:[1-9][0-9]{0,5}|1000000)$"
+          }
+        },
+        "x-go-type": "internal/satchelservice/reviewer_fee_budget.go:ReviewerPendingFee"
+      },
+      "CustodyFeeCheckpointRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "protocol",
+          "operation_ids"
+        ],
+        "properties": {
+          "protocol": {
+            "const": 1
+          },
+          "operation_ids": {
+            "type": "array",
+            "maxItems": 1024,
+            "uniqueItems": true,
+            "items": {
+              "$ref": "#/components/schemas/WagerOperationID"
+            }
+          }
+        },
+        "x-go-type": "internal/satchelservice/custody_fee_checkpoint.go:custodyFeeCheckpointRequest"
+      },
+      "ReviewerCustodyFeeCheckpoint": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "protocol",
+          "kind",
+          "chain_id",
+          "denom",
+          "vault",
+          "journal_digest",
+          "policy_digest",
+          "observed_at_ms",
+          "unresolved_fees",
+          "accounted_operations",
+          "accounted_fingerprints",
+          "wager_approval_key_fingerprint"
+        ],
+        "properties": {
+          "protocol": {
+            "const": 1
+          },
+          "kind": {
+            "const": "custody_fee_checkpoint"
+          },
+          "chain_id": {
+            "const": "wolo-1"
+          },
+          "denom": {
+            "const": "uwolo"
+          },
+          "vault": {
+            "$ref": "#/components/schemas/Address"
+          },
+          "journal_digest": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "policy_digest": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "observed_at_ms": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "unresolved_fees": {
+            "type": "array",
+            "maxItems": 10000,
+            "items": {
+              "$ref": "#/components/schemas/ReviewerPendingFee"
+            }
+          },
+          "accounted_operations": {
+            "type": "object",
+            "maxProperties": 1024,
+            "additionalProperties": {
+              "enum": [
+                "NOT_RECORDED",
+                "UNKNOWN",
+                "ACCEPTED",
+                "OBSERVED_NONCREDITING",
+                "CONFIRMED",
+                "FAILED",
+                "REFUSED"
+              ]
+            }
+          },
+          "accounted_fingerprints": {
+            "type": "object",
+            "maxProperties": 1024,
+            "additionalProperties": {
+              "type": "string",
+              "pattern": "^(?:[a-f0-9]{64})?$"
+            }
+          },
+          "wager_approval_key_fingerprint": {
+            "type": "string",
+            "pattern": "^(?:[a-f0-9]{64})?$"
+          }
+        },
+        "x-go-type": "internal/satchelservice/reviewer_fee_checkpoint.go:ReviewerCustodyFeeCheckpoint",
+        "description": "Read-only actual journal fee snapshot. Requested IDs restrict status lookup only, never unresolved fees. Fingerprints require authenticated original approval identity; empty identity cannot discharge an issuer obligation. No bank, credit or spending authority."
+      },
+      "PrincipalCheckpointRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "protocol",
+          "owner_id"
+        ],
+        "properties": {
+          "protocol": {
+            "const": 1
+          },
+          "owner_id": {
+            "$ref": "#/components/schemas/OwnerID"
+          }
+        },
+        "x-go-type": "internal/satchelservice/reviewer_principal_transport.go:reviewerPrincipalCheckpointRequest"
+      },
+      "PrincipalCheckpointEffect": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "operation_id",
+          "kind",
+          "owner_id",
+          "amount_uwolo",
+          "recipient",
+          "memo",
+          "original_fingerprint",
+          "reservation_digest",
+          "fee_uwolo",
+          "status",
+          "tx_hash",
+          "height"
+        ],
+        "properties": {
+          "operation_id": {
+            "$ref": "#/components/schemas/OperationID"
+          },
+          "kind": {
+            "enum": [
+              "wager",
+              "withdrawal"
+            ]
+          },
+          "owner_id": {
+            "$ref": "#/components/schemas/OwnerID"
+          },
+          "amount_uwolo": {
+            "$ref": "#/components/schemas/Amount"
+          },
+          "recipient": {
+            "$ref": "#/components/schemas/Address"
+          },
+          "memo": {
+            "type": "string",
+            "maxLength": 256
+          },
+          "original_fingerprint": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "reservation_digest": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "fee_uwolo": {
+            "type": "string",
+            "pattern": "^(?:|[1-9][0-9]{0,5}|1000000)$"
+          },
+          "status": {
+            "enum": [
+              "CONFIRMED",
+              "FAILED",
+              "REFUSED"
+            ]
+          },
+          "tx_hash": {
+            "type": "string",
+            "pattern": "^(?:[A-F0-9]{64})?$"
+          },
+          "height": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "x-go-type": "internal/satchelservice/reviewer_principal_transport.go:reviewerPrincipalEffectWire"
+      },
+      "PrincipalCheckpoint": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "protocol",
+          "kind",
+          "chain_id",
+          "denom",
+          "vault",
+          "policy_digest",
+          "journal_digest",
+          "owner_id",
+          "observed_at_ms",
+          "effects"
+        ],
+        "properties": {
+          "protocol": {
+            "const": 1
+          },
+          "kind": {
+            "const": "custody_principal_checkpoint"
+          },
+          "chain_id": {
+            "const": "wolo-1"
+          },
+          "denom": {
+            "const": "uwolo"
+          },
+          "vault": {
+            "$ref": "#/components/schemas/Address"
+          },
+          "policy_digest": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "journal_digest": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "owner_id": {
+            "$ref": "#/components/schemas/OwnerID"
+          },
+          "observed_at_ms": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "effects": {
+            "type": "array",
+            "maxItems": 10000,
+            "items": {
+              "$ref": "#/components/schemas/PrincipalCheckpointEffect"
+            }
+          }
+        },
+        "x-go-type": "internal/satchelservice/reviewer_principal_transport.go:reviewerPrincipalCheckpointWire",
+        "description": "Complete globally sorted terminal custody history, not an app-selected operation subset. Existing UNKNOWN/ACCEPTED effects refuse this checkpoint. Protected peer/vault/policy enrollment supplies service provenance; JSON does not establish independent Comet confirmation, operator independence or spending authority. The actual PG owner partition and independently signed reserve inventory remain required."
       }
     },
     "responses": {

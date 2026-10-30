@@ -34,9 +34,9 @@
       "owner": "wolochain-ops",
       "path": "docs/BRANCH_AUTHORITY.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-10-18",
+      "reviewed_at": "2026-10-29",
       "sensitivity": "internal",
-      "sha256": "e74d04b64d9d6b1cd239beaa08e1677c39bbc857bc5dc0474159f2df77ad80dd",
+      "sha256": "f59f74d5fae649716c43f81b06b22fd099ba9d47245fbb23c9f32d69f7f22993",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "b8f64f9f833d65eff27015c3c319b969a694c04132daf5db609b9bbe648dd40b",
+      "sha256": "e5d3e5eaf9cb3855172a2249eb6cdc25e6fd17fa36df94ca6825472fe56d84f5",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -67,6 +67,29 @@
         "aoe2war"
       ],
       "title": "WoloChain Documentation Index",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "source-only-verifier-mismatch-not-financial-authority",
+      "id": "aoe2war.wolochain.epoch-v3-wire-v1-hold",
+      "owner": "wolochain-ops",
+      "path": "docs/epoch-v3-wire-v1-hold.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-10-28",
+      "sensitivity": "internal",
+      "sha256": "cc6eac5665bd8f45fe87c0d14668faa87e5a0f1baed0f5229353b37efd4af74a",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "Native epoch-v3 wire-v1 trust mismatch and held handoff",
       "type": "reference"
     },
     {
@@ -312,7 +335,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-26",
       "sensitivity": "restricted",
-      "sha256": "5bc7a04030f24c9d1c85d150b2fbf3413a20228923caec7ddf73d908ec73bfce",
+      "sha256": "5b1e934eff55e66e2d2dd16004055a8943c03be5ee91e3e450a4790b76a9f78d",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -356,9 +379,9 @@
       "owner": "wolochain-ops",
       "path": "docs/mainnet-wallets.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-10-15",
+      "reviewed_at": "2026-10-30",
       "sensitivity": "restricted",
-      "sha256": "e2d0cb5c0435840bf81a39c553ba7ae8e54b4cc30249c9c426c89dd837523cd3",
+      "sha256": "a159768ee35ccdd0c02f8be0005d1ca1fbedcbfe83079e91ba86544c2e9d0280",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -366,6 +389,29 @@
         "aoe2war"
       ],
       "title": "WoloChain Mainnet Wallet And Key Plan",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "source-review-only-nonactivating-escrow-candidate",
+      "id": "aoe2war.wolochain.new-epoch-escrow-v3-held",
+      "owner": "wolochain-ops",
+      "path": "docs/new-epoch-escrow-v3-held.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-10-26",
+      "sensitivity": "internal",
+      "sha256": "b22e7afa879eb93a90f3050c4cad4077935dd8bef7296adf334904afdacf17e3",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "Held native new-epoch escrow v3 decision boundary",
       "type": "reference"
     },
     {
@@ -449,9 +495,9 @@
       "owner": "wolochain-ops",
       "path": "docs/war-satchel-chain-evidence-c3.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-10-15",
+      "reviewed_at": "2026-10-30",
       "sensitivity": "restricted",
-      "sha256": "65bca93828ccec1f81df1eda4250ea799cb3c59db8aa4dd399d31219cb6a1d35",
+      "sha256": "52f0b86caa53623166a3dcc6d234566f7539c881fb807c28396c50fb703abccb",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -495,9 +541,9 @@
       "owner": "wolochain-ops",
       "path": "docs/war-satchel-custody-c2.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-10-15",
+      "reviewed_at": "2026-10-30",
       "sensitivity": "restricted",
-      "sha256": "7979cefe9453d4c7528d1e7a8379c872d17c9f73a50ebb63923a342d6c88ea2c",
+      "sha256": "1c2af7776a8a2bfea3ee1b3cc24f440efdb72723f01ab0d62b6d513defabdbbc",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -543,7 +589,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-20",
       "sensitivity": "restricted",
-      "sha256": "d2d5f14b23d52792cc4618e65b585a626702aea3a1e40258f9b60340591c2137",
+      "sha256": "e29c2fbe9320d513091721e51e128dc619a33580f0f5967a942fdd5265dd730f",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -566,7 +612,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-21",
       "sensitivity": "restricted",
-      "sha256": "9b54610222554481602d7e3deddec93b737e899ea44d0e365563043a19cbb8b9",
+      "sha256": "21b115af0c67a6f47227216c3aca62c1450457616294e5b2c713553780b35a9f",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -587,9 +633,9 @@
       "owner": "wolochain-ops",
       "path": "docs/war-satchel-mainnet-execution.md",
       "review_interval_days": 7,
-      "reviewed_at": "2026-10-22",
+      "reviewed_at": "2026-10-30",
       "sensitivity": "restricted",
-      "sha256": "ed9990c5c4e380fc25e99cd1c520e1dd60f2bcf4f8446c30699db176bb144edc",
+      "sha256": "3bc667355e25b78f8cb43e950d5d099ce02b8f78419abc615380ad3648f5574c",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -642,7 +688,7 @@
         "wolochain",
         "aoe2war"
       ],
-      "title": "Codex Mission: WoloChain Mainnet ↔ Osmosis IBC Prep",
+      "title": "Codex Mission: WoloChain Mainnet \u2194 Osmosis IBC Prep",
       "type": "historical"
     },
     {
@@ -803,7 +849,7 @@
         "wolochain",
         "aoe2war"
       ],
-      "title": "WoloChain Mainnet → Osmosis Liquidity Transfer",
+      "title": "WoloChain Mainnet \u2192 Osmosis Liquidity Transfer",
       "type": "historical"
     },
     {
@@ -872,7 +918,7 @@
         "wolochain",
         "aoe2war"
       ],
-      "title": "WoloChain Mainnet → Osmosis Test Transfer",
+      "title": "WoloChain Mainnet \u2192 Osmosis Test Transfer",
       "type": "historical"
     },
     {
@@ -988,7 +1034,7 @@
         "aoe2war",
         "aoe2dewarwagers"
       ],
-      "title": "Financial-maintenance authority and writer review — 2026-10-24",
+      "title": "Financial-maintenance authority and writer review \u2014 2026-10-24",
       "type": "runbook"
     },
     {
@@ -1012,7 +1058,7 @@
         "aoe2war",
         "aoe2dewarwagers"
       ],
-      "title": "Production P1 source integrity, writer evidence, five-person authority and bounded recovery proposal — 2026-10-24",
+      "title": "Production P1 source integrity, writer evidence, five-person authority and bounded recovery proposal \u2014 2026-10-24",
       "type": "runbook"
     },
     {
@@ -1036,7 +1082,7 @@
         "aoe2war",
         "aoe2dewarwagers"
       ],
-      "title": "Financial maintenance phase integration operator runbook — 2026-10-24",
+      "title": "Financial maintenance phase integration operator runbook \u2014 2026-10-24",
       "type": "runbook"
     },
     {
@@ -1060,14 +1106,14 @@
         "aoe2war",
         "aoe2dewarwagers"
       ],
-      "title": "Financial controller source integrity and five-human enrollment — 2026-10-24",
+      "title": "Financial controller source integrity and five-human enrollment \u2014 2026-10-24",
       "type": "runbook"
     }
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "review/solo-resume-live-identity-inspect-20261026",
-    "commit": "3ed031e301d0f318e1915c9bd9c11d564c72bfef"
+    "branch": "codex/independent-epoch-escrow-v3",
+    "commit": "9cc318751ab789a4dcd154b9cce1ffe132957642"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

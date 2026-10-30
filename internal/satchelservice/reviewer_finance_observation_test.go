@@ -3,6 +3,7 @@ package satchelservice
 import (
 	"context"
 	"database/sql"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"net/url"
@@ -15,12 +16,15 @@ import (
 	_ "github.com/lib/pq"
 )
 
-func TestReviewerOwnerLiabilitiesIncludeAllBucketsAndRejectOverflow(t *testing.T) {
+func TestReviewerOwnerVaultLiabilitiesRetainHistoryAndRejectOverflow(t *testing.T) {
 	r := reviewerOwnerLedger{owners: "2", available: "88000000", reserved: "12000000", committed: "9000000", withdrawing: "3000000", revisions: "6", entries: "6"}
-	if total, err := r.total(); err != nil || total != "112000000" {
+	if total, err := r.total(); err != nil || total != "103000000" {
 		t.Fatalf("omitted encumbered liabilities: %s %v", total, err)
 	}
-	for _, name := range []string{"negative", "noncanonical", "overflow", "offset_owner_corruption", "wrong_vault", "missing"} {
+	if history, err := (ReviewerFinanceObservation{ledger: r}).HistoricalCommittedUWolo(); err != nil || history != "9000000" {
+		t.Fatalf("historical spending lost: %s %v", history, err)
+	}
+	for _, name := range []string{"negative", "noncanonical", "overflow", "negative_history", "noncanonical_history", "overflow_history", "missing_history", "offset_owner_corruption", "wrong_vault", "missing"} {
 		t.Run(name, func(t *testing.T) {
 			bad := r
 			switch name {
@@ -30,6 +34,14 @@ func TestReviewerOwnerLiabilitiesIncludeAllBucketsAndRejectOverflow(t *testing.T
 				bad.reserved = "012000000"
 			case "overflow":
 				bad.available = "9223372036854775807"
+			case "negative_history":
+				bad.committed = "-1"
+			case "noncanonical_history":
+				bad.committed = "09000000"
+			case "overflow_history":
+				bad.committed = "9223372036854775808"
+			case "missing_history":
+				bad.committed = ""
 			case "offset_owner_corruption":
 				bad.inconsistent = true
 			case "wrong_vault":
@@ -39,6 +51,34 @@ func TestReviewerOwnerLiabilitiesIncludeAllBucketsAndRejectOverflow(t *testing.T
 			}
 			if _, err := bad.total(); !errors.Is(err, ReviewerFinanceLedgerMismatch) || !errors.Is(err, ErrReviewerHeld) {
 				t.Fatalf("unsafe liability observation: %v", err)
+			}
+			if _, err := (ReviewerFinanceObservation{ledger: bad}).HistoricalCommittedUWolo(); !errors.Is(err, ReviewerFinanceLedgerMismatch) {
+				t.Fatalf("unreconciled history exposed: %v", err)
+			}
+		})
+	}
+}
+
+func TestReviewerOwnerVaultLiabilityLifecycleSeparatesEscrowAndHistory(t *testing.T) {
+	for _, stage := range []struct{ name, available, reserved, committed, withdrawing, liability string }{
+		{"deposit", "100000000", "0", "0", "0", "100000000"},
+		{"unknown_funding", "0", "100000000", "0", "0", "100000000"},
+		{"confirmed_funding_in_escrow", "0", "0", "100000000", "0", "0"},
+		{"winner_and_desync_return", "138000000", "0", "100000000", "0", "138000000"},
+		{"withdrawal_pending", "0", "0", "100000000", "138000000", "138000000"},
+		{"withdrawn", "0", "0", "100000000", "0", "0"},
+	} {
+		t.Run(stage.name, func(t *testing.T) {
+			observation := ReviewerFinanceObservation{ledger: reviewerOwnerLedger{owners: "1", revisions: "6", entries: "6",
+				available: stage.available, reserved: stage.reserved, committed: stage.committed, withdrawing: stage.withdrawing}}
+			if liability, err := observation.KnownOwnerLiabilitiesUWolo(); err != nil || liability != stage.liability {
+				t.Fatalf("vault liability=%s err=%v want=%s", liability, err, stage.liability)
+			}
+			if history, err := observation.HistoricalCommittedUWolo(); err != nil || history != stage.committed || observation.SpendingAuthorized() {
+				t.Fatalf("historical spend or authority changed: %s %v", history, err)
+			}
+			if _, err := (&ReviewerFinanceSource{}).AuthenticatedFeeCensus(t.Context(), reviewerTestWager()); !errors.Is(err, ReviewerFinanceCoverageUnknown) || len(observation.MissingCoverage()) != 4 {
+				t.Fatal("escrow/global obligations became covered by vault-only accounting")
 			}
 		})
 	}
@@ -73,6 +113,78 @@ func TestReviewerFinanceRejectsForgedBankBeforeDatabaseRead(t *testing.T) {
 	}
 	if bank.calls != 1 {
 		t.Fatal("canceled read reached source")
+	}
+}
+
+func reviewerFinanceNativeBank(t *testing.T) (*satchel.TrustedReader, string, int64) {
+	t.Helper()
+	config, fixture := isolatedBackendConfig(t)
+	chain := newNativeHTTPChainWithBalance(t, fixture.signer, 110000000)
+	chain.commit(t, nil)
+	chain.commit(t, nil)
+	primary, witness := chain.serve(t, false), chain.serve(t, true)
+	reader, err := satchel.NewTrustedReader(satchel.SourceConfig{RPC: primary.URL, REST: primary.URL, WitnessRPC: witness.URL}, satchel.TrustAnchor{
+		Height: 1, Hash: hex.EncodeToString(chain.commits[1].Header.Hash()), PeriodSeconds: 3600,
+		EvidenceReference: "isolated-reviewer-finance-sdk-test-validator-only",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(reader.Close)
+	return reader, config.Vault, chain.head - 1
+}
+
+// The probe retains the real reader's opaque evidence, never constructs it.
+type reviewerFinanceBankProbe struct {
+	reader reviewerBankReader
+	bank   satchel.AuthenticatedBankEvidence
+	after  func()
+}
+
+func (p *reviewerFinanceBankProbe) ReadBankProof(ctx context.Context, vault string, height int64) (satchel.AuthenticatedBankEvidence, satchel.BankProof, error) {
+	bank, proof, err := p.reader.ReadBankProof(ctx, vault, height)
+	p.bank = bank
+	if p.after != nil {
+		p.after()
+	}
+	return bank, proof, err
+}
+
+func TestReviewerFinanceChecksNativeBankAtQueryCompletion(t *testing.T) {
+	reader, vault, height := reviewerFinanceNativeBank(t)
+	for _, name := range []string{"fresh", "stale", "future", "canceled"} {
+		t.Run(name, func(t *testing.T) {
+			ctx, cancel := context.WithCancel(t.Context())
+			defer cancel()
+			probe := &reviewerFinanceBankProbe{reader: reader}
+			if name == "canceled" {
+				probe.after = cancel
+			}
+			var initial time.Time
+			clock := func() time.Time {
+				now := time.Now()
+				if name == "stale" {
+					now = now.Add(time.Minute)
+				} else if name == "future" {
+					now = now.Add(-time.Second)
+				}
+				if initial.IsZero() {
+					initial = now
+				}
+				return now
+			}
+			// No database is configured: fresh genuine bank evidence must reach
+			// the separate ledger boundary; bad clocks/cancellation must not.
+			source := &ReviewerFinanceSource{pg: &ReviewerReadOnlyPGSource{vault: vault}, bank: probe, now: clock}
+			_, err := source.ObserveFinance(ctx, height)
+			if name == "fresh" {
+				if !errors.Is(err, ReviewerFinanceUnavailable) || probe.bank.FreshAt(initial) || !probe.bank.FreshAt(time.Now()) {
+					t.Fatalf("authentic bank query was not checked at completion: %v", err)
+				}
+			} else if !errors.Is(err, ReviewerFinanceBankInvalid) {
+				t.Fatalf("invalid completion admitted to ledger boundary: %v", err)
+			}
+		})
 	}
 }
 
@@ -143,7 +255,8 @@ INSERT INTO public.war_satchel_funded_journal VALUES(1,112000000,0,0,0),(1,-1200
 		t.Fatal(err)
 	}
 	defer db.Close()
-	s, err := NewReviewerReadOnlyPGSource(db, "satchel_reviewer_finance_it", "2500", testHTTPAddress(t, 101), testHTTPAddress(t, 102))
+	bank, vault, height := reviewerFinanceNativeBank(t)
+	s, err := NewReviewerReadOnlyPGSource(db, "satchel_reviewer_finance_it", "2500", vault, testHTTPAddress(t, 102))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -158,7 +271,105 @@ INSERT INTO public.war_satchel_funded_journal VALUES(1,112000000,0,0,0),(1,-1200
 			t.Fatalf("actual PG total=%s error=%v want=%s", total, e, want)
 		}
 	}
-	read("117000000")
+	read("108000000")
+	t.Run("current vault liability follows appended journal lifecycle", func(t *testing.T) {
+		if _, err := admin.ExecContext(ctx, `INSERT INTO public.war_satchel_funded_balances VALUES(3,0,0,0,0,0)`); err != nil {
+			t.Fatal(err)
+		}
+		defer func() {
+			_, _ = admin.Exec(`DELETE FROM public.war_satchel_funded_journal WHERE owner_user_id=3; DELETE FROM public.war_satchel_funded_balances WHERE owner_user_id=3`)
+		}()
+		for _, stage := range []struct {
+			name                                    string
+			available, reserved, committed, pending int64
+			want                                    string
+		}{
+			{"deposit", 100000000, 0, 0, 0, "208000000"},
+			{"unknown funding", -100000000, 100000000, 0, 0, "208000000"},
+			{"confirmed funding to distinct escrow", 0, -100000000, 100000000, 0, "108000000"},
+			{"winner and Desync return", 138000000, 0, 0, 0, "246000000"},
+			{"withdrawal reserved", -138000000, 0, 0, 138000000, "246000000"},
+			{"withdrawal confirmed", 0, 0, 0, -138000000, "108000000"},
+		} {
+			t.Run(stage.name, func(t *testing.T) {
+				tx, err := admin.BeginTx(ctx, nil)
+				if err != nil {
+					t.Fatal(err)
+				}
+				defer tx.Rollback()
+				if _, err := tx.ExecContext(ctx, `INSERT INTO public.war_satchel_funded_journal VALUES(3,$1,$2,$3,$4)`, stage.available, stage.reserved, stage.committed, stage.pending); err != nil {
+					t.Fatal(err)
+				}
+				if _, err := tx.ExecContext(ctx, `UPDATE public.war_satchel_funded_balances SET available_uwolo=available_uwolo+$1,reserved_uwolo=reserved_uwolo+$2,committed_uwolo=committed_uwolo+$3,withdrawal_pending_uwolo=withdrawal_pending_uwolo+$4,version=version+1 WHERE owner_user_id=3`, stage.available, stage.reserved, stage.committed, stage.pending); err != nil {
+					t.Fatal(err)
+				}
+				if err := tx.Commit(); err != nil {
+					t.Fatal(err)
+				}
+				row, err := s.readOwnerLedger(ctx)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if total, err := row.total(); err != nil || total != stage.want {
+					t.Fatalf("actual PG lifecycle liability=%s err=%v want=%s", total, err, stage.want)
+				}
+			})
+		}
+		row, err := s.readOwnerLedger(ctx)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if history, err := (ReviewerFinanceObservation{ledger: row}).HistoricalCommittedUWolo(); err != nil || history != "109000000" {
+			t.Fatalf("confirmed withdrawal erased historical spend: %s %v", history, err)
+		}
+	})
+	finance := &ReviewerFinanceSource{pg: s, bank: bank, now: time.Now}
+	observation, err := finance.ObserveFinance(ctx, height)
+	if err != nil || !observation.FreshAt(time.Now()) || observation.Bank().CommitHeight() != height+1 || observation.Bank().BalanceUWolo() != "110000000" {
+		t.Fatalf("actual SDK bank and PostgreSQL observation failed: %v", err)
+	}
+	if total, err := observation.KnownOwnerLiabilitiesUWolo(); err != nil || total != "108000000" || observation.SpendingAuthorized() {
+		t.Fatalf("partial observation changed ledger or spending authority: %s %v", total, err)
+	}
+	if history, err := observation.HistoricalCommittedUWolo(); err != nil || history != "9000000" {
+		t.Fatalf("actual PG historical spend changed: %s %v", history, err)
+	}
+	clockCalls := 0
+	finance.now = func() time.Time {
+		clockCalls++
+		if clockCalls > 1 {
+			return time.Now().Add(-time.Hour)
+		}
+		return time.Now()
+	}
+	if _, err := finance.ObserveFinance(ctx, height); err != nil {
+		t.Fatalf("clock rollback lost the monotonic completion floor: %v", err)
+	}
+	// A bank observation can expire while the independent ledger is read.
+	clockCalls = 0
+	finance.now = func() time.Time {
+		clockCalls++
+		if clockCalls >= 3 {
+			return time.Now().Add(time.Minute)
+		}
+		return time.Now()
+	}
+	if _, err := finance.ObserveFinance(ctx, height); !errors.Is(err, ReviewerFinanceStale) {
+		t.Fatalf("bank expiry during ledger read accepted: %v", err)
+	}
+	finance.now = time.Now
+	s.now = func() time.Time { return time.Now().Add(time.Second) }
+	if _, err := finance.ObserveFinance(ctx, height); !errors.Is(err, ReviewerFinanceStale) {
+		t.Fatalf("future ledger timestamp accepted: %v", err)
+	}
+	s.now = time.Now
+	canceled, cancelObservation := context.WithCancel(ctx)
+	s.now = func() time.Time { cancelObservation(); return time.Now() }
+	if _, err := finance.ObserveFinance(canceled, height); !errors.Is(err, ReviewerFinanceStale) {
+		t.Fatalf("cancellation after ledger read accepted: %v", err)
+	}
+	cancelObservation()
+	s.now = time.Now
 	if _, err = admin.ExecContext(ctx, `GRANT CREATE ON SCHEMA public TO satchel_reviewer_finance_it`); err != nil {
 		t.Fatal(err)
 	}
@@ -168,7 +379,19 @@ INSERT INTO public.war_satchel_funded_journal VALUES(1,112000000,0,0,0),(1,-1200
 	if _, err = admin.ExecContext(ctx, `REVOKE CREATE ON SCHEMA public FROM satchel_reviewer_finance_it`); err != nil {
 		t.Fatal(err)
 	}
-	read("117000000")
+	read("108000000")
+	// Historical committed spend is excluded from current debt, but still
+	// reconciled per owner: offsetting corruption cannot disappear in its SUM.
+	if _, err = admin.ExecContext(ctx, `UPDATE public.war_satchel_funded_balances SET committed_uwolo=committed_uwolo+CASE owner_user_id WHEN 1 THEN -1 ELSE 1 END`); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = s.readOwnerLedger(ctx); !errors.Is(err, ReviewerFinanceLedgerMismatch) {
+		t.Fatalf("offsetting historical journal corruption accepted: %v", err)
+	}
+	if _, err = admin.ExecContext(ctx, `UPDATE public.war_satchel_funded_balances SET committed_uwolo=committed_uwolo+CASE owner_user_id WHEN 1 THEN 1 ELSE -1 END`); err != nil {
+		t.Fatal(err)
+	}
+	read("108000000")
 	// A SELECT-only RLS principal can otherwise see a reconciled subset (or
 	// zero rows) and silently omit a customer's obligations.
 	if _, err = admin.ExecContext(ctx, `ALTER TABLE public.war_satchel_funded_balances ENABLE ROW LEVEL SECURITY; ALTER TABLE public.war_satchel_funded_journal ENABLE ROW LEVEL SECURITY`); err != nil {
@@ -180,7 +403,7 @@ INSERT INTO public.war_satchel_funded_journal VALUES(1,112000000,0,0,0),(1,-1200
 	if _, err = admin.ExecContext(ctx, `ALTER TABLE public.war_satchel_funded_balances DISABLE ROW LEVEL SECURITY; ALTER TABLE public.war_satchel_funded_journal DISABLE ROW LEVEL SECURITY`); err != nil {
 		t.Fatal(err)
 	}
-	read("117000000")
+	read("108000000")
 	// Same global sum, wrong owners: an aggregate-only reconciliation misses it.
 	if _, err = admin.ExecContext(ctx, `UPDATE public.war_satchel_funded_balances SET available_uwolo=available_uwolo+CASE owner_user_id WHEN 1 THEN 1 ELSE -1 END`); err != nil {
 		t.Fatal(err)
@@ -191,7 +414,7 @@ INSERT INTO public.war_satchel_funded_journal VALUES(1,112000000,0,0,0),(1,-1200
 	if _, err = admin.ExecContext(ctx, `UPDATE public.war_satchel_funded_balances SET available_uwolo=available_uwolo+CASE owner_user_id WHEN 1 THEN -1 ELSE 1 END`); err != nil {
 		t.Fatal(err)
 	}
-	read("117000000")
+	read("108000000")
 	if _, err = admin.ExecContext(ctx, `GRANT UPDATE(available_uwolo) ON public.war_satchel_funded_balances TO satchel_reviewer_finance_it`); err != nil {
 		t.Fatal(err)
 	}
@@ -201,7 +424,7 @@ INSERT INTO public.war_satchel_funded_journal VALUES(1,112000000,0,0,0),(1,-1200
 	if _, err = admin.ExecContext(ctx, `REVOKE UPDATE(available_uwolo) ON public.war_satchel_funded_balances FROM satchel_reviewer_finance_it`); err != nil {
 		t.Fatal(err)
 	}
-	read("117000000")
+	read("108000000")
 	if _, err = admin.ExecContext(ctx, `INSERT INTO public.war_satchel_funded_journal VALUES(3,1,0,0,0)`); err != nil {
 		t.Fatal(err)
 	}
