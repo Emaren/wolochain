@@ -8,12 +8,45 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "source-integration-proof-not-production-approval"
-reviewed_at: "2026-10-20"
+reviewed_at: "2026-11-01"
 review_interval_days: 14
 sensitivity: "restricted"
 ---
 
 # Authenticated War Satchel Financial Bridge
+
+## November 1: durable escrow-account execution source — HELD
+
+`Engine.ExecuteQualifiedEscrowReturn` now provides a separate escrow-return
+spending primitive grounded in the existing opaque `VerifiedEscrowReturnExecution`
+reserve verifier and already signed original owner allocation. It derives the
+escrow sender, exact vault beneficiary, amount, memo, and operation identity
+from protected engine policy and the prepared claim. It never accepts those
+economic fields from a caller-supplied payment request.
+
+The new `escrow-return-spend-v1` Bolt journal records an intent **before**
+native SDK signing, records attempted signing before calling the backend,
+then seals the actual signed bytes/hash before any broadcast and the broadcast
+attempt before network I/O. Prior journal identities are consumed permanently.
+A lost response, failed signing, revocation, bad signed bytes or uncertain
+broadcast remains **UNKNOWN** without automatic retry or payout credit.
+Authenticated financial reconciliation still must separately prove an actual
+return receipt; even successful broadcast acceptance is not finality.
+
+The implementation uses the existing separate SDK backend interface and
+requires explicit independent pre-sign and pre-broadcast authorization
+callbacks. Tests cover positive *test-backend* invocation once, exact immutable
+journal replay, signed-but-revoked hold, absent permits, signing ambiguity,
+and no conversion of pending claims to paid receipts. The full native Satchel
+package and both command packages passed local tests. These controlled fixtures
+are source evidence, **not real independently enrolled production signers**.
+
+**Critical remaining C01:** No protected escrow keyring, independent permit
+issuer, runtime entrypoint/transport, or real signer lease has yet been wired
+to invoke this primitive. Neither `woloescrowd` nor the vault-only 8094 service
+can legitimately spend escrow funds from this source alone. No legacy 8092
+return route is authorized. Production custody activation, source admission,
+owner permission, bank and reserve proof, and recovery remain held.
 
 ## November 1: exact journal transport and protected return preparation
 
