@@ -15,6 +15,50 @@ sensitivity: "restricted"
 
 # Authenticated War Satchel Financial Bridge
 
+## November 1: exact journal transport and protected return preparation
+
+The private `GET /satchel/v1/custody/journal-snapshot` exports canonical JSON
+from one validated, read-only Bolt view under the existing execution mutex.
+An occupied mutex refuses immediately. It transports the exact existing v1
+`B`/`V`/`E` frames, including stored signed transactions, and public policy.
+The limits remain 8 MiB framed data, 100,000 records, depth 64 and 16 MiB
+encoded output. It performs no signing, confirmation, journal write or credit.
+These are sensitive financial records, never a browser/public evidence API.
+
+`VerifyCustodyJournalSnapshot` checks canonical bytes and exact framing against
+the **separately authenticated** policy and journal digests. The journal root is
+SHA-256 of `aoe2war/satchel/execution-journal/v1` followed by a NUL byte and the
+raw ordered frames. Policy has its separate existing commitment. V1 excludes
+Bolt sequence counters and physical database metadata. Matching expectations
+chosen by an attacker proves no independent provenance, bank balance, native
+finality, liability completeness or execution authority. No new snapshot root
+or synthetic engine replaces the original signed-review commitment.
+
+Production-bound `PrepareReturnRun` additionally requires the SHA-pinned
+`escrow_return_execution_file` enrollment in the actual custody config and
+permit. It pins reviewed producer sources, protected fee/floors and the private
+operation-specific dual-signed reserve review. The existing verifier checks
+all unpaid allocations and unresolved fees against the current authenticated
+escrow bank. A second protected H/H+1 read must agree. Completion is sampled
+after native lease inspection; cancellation, expiry, changed protected bytes,
+root, original allocation or journal rejects before the preparation write.
+
+Genuine SDK tests execute the funding and fee-headroom transfers, provision
+the actual `NewCustodyAuthority`, prepare without spending, reject stale review
+after the journal write, and allow an identical read/preparation only after
+fresh review. Revocation, forged/expired review, root substitution, changed
+journal/allocation and cancellation preserve state and cause no new signature
+or broadcast. Separate raw-snapshot tests cover actual confirmed SDK records,
+mutation/omission, bounds, unavailable/busy engines and private HTTP transport.
+
+**Preparation remains non-authorizing.** It changes the journal, requiring a
+fresh post-prepare review before the still-incomplete protected 8094 execution
+bridge. Existing 8094 key enrollment is vault-only; it does not imply escrow
+key control. The pending HD adapter's legacy 8092 route is not a qualified
+product execution path. No old 8092/8093 fallback, new signer authority, funded
+flag or production migration is enabled by this increment. Older sections
+below describe their dated source baselines, not a current deployment receipt.
+
 ## October 20: original LIVE source and authenticated bank state
 
 The current held app candidate is [PR #729](https://github.com/Emaren/app-prodn/pull/729)

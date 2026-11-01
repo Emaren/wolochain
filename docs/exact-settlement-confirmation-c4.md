@@ -8,12 +8,22 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "source-only-exact-settlement-confirmation"
-reviewed_at: "2026-10-16"
+reviewed_at: "2026-11-01"
 review_interval_days: 14
 sensitivity: "restricted"
 ---
 
 # Exact Settlement Confirmation C4
+
+## November 1 source review; dated runtime evidence retained
+
+Reviewed the current source contracts against the protected legacy confirmation,
+request/receipt uncertainty and two-service release boundaries. This renewal
+adds no runtime observation, financial disposition or production authority.
+The historical implementation and runtime receipts below retain their dates.
+New Satchel #115 source and its 8094/8095 qualification remain a separate path;
+legacy 8092/8093 must not be used as a fallback for the new return executor.
+Claim #889 and every uncertain historical outflow remain held.
 
 C4 corrects the legacy false-confirmation path from merged
 [PR #20](https://github.com/Emaren/wolochain/pull/20),

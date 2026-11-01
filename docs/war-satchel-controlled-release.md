@@ -15,6 +15,58 @@ sensitivity: "restricted"
 
 # War Satchel Controlled Release Gates
 
+## November 1 financial activation sequence
+
+Source development continues on Wolo draft #115 and HD draft #838. Wolo
+`a604c6ece91ef808ae3f3098fdaa9ce45d9c8ac0` has successful full/native CI;
+HD `818ef8303840c53e071328824cefa84ec08700f2` has successful required CI.
+Newer unpublished files do not inherit those results. Neither source receipt
+establishes an installed signer/reviewer or a funded production product.
+
+| Operational control | Independently verified production status | Closure evidence and owner |
+| --- | --- | --- |
+| Complete producer fencing | HOLD | Chain/app operators: actual HD, DE, legacy and external producer census, build-bound signed maintenance lease, independently witnessed drain and safe resume. Source #116 is not a live fence. |
+| Historical reconciliation | HOLD | Accounting/custody reviewers: original 100-WOLO intent and authenticated committed effect; explicit #889/#8477 and reused-hash disposition. UNKNOWN never permits retry. |
+| Global liabilities/reserves | HOLD | Independent accounting/custody: complete nonoverlapping obligations, pending fees and uncertainty at fresh authenticated vault/escrow H/H+1 roots, account-local gas and cushion. |
+| Quiesced protected backup | HOLD | Recovery lane E and operators: consistent current financial DB/WAL, journals, policy/config and service-state receipt after approved fencing. No provider decision or backup action is supplied here. |
+| Independently witnessed recovery | HOLD | Recovery lane E and independent witness: isolated actual restore and state-preserving paired settlement recovery; source tests and website rollback do not substitute. |
+| Authenticated release authority | HOLD | Independently enrolled custody, reviewer and owner principals: exact source/binary/config/policy, protected key roles, fresh nonce and distinct signed staging/activation authority. |
+
+The financial deployment order is:
+
+1. Finish and independently review the protected 8094 execution bridge,
+   post-attempt principal consumption, HD native verifier/role confinement,
+   additive migration 14 and genuine original-Watcher product E2E. Run full
+   exact-head Go/race/native and isolated PostgreSQL tests on the final SHAs.
+2. Produce reproducible immutable signer/reviewer/app artifacts. Verify their
+   actual embedded source, binary digests and migration manifest; historical
+   `72a3bca5` verifier artifacts cannot represent newer source contracts.
+3. Obtain the six authentic operational receipts above. Prepare one reviewed,
+   exact artifact/config-bound operator action and code-only rollback, then
+   obtain the distinct owner authorization required for that concrete action.
+4. Stage isolated 8094/8095 without funding or customer-route activation.
+   Verify actual protected escrow/vault key separation, revocation, restricted
+   HD writer identity and current native bank/journal coverage. Preserve
+   consensus and original 8092/8093 identities; never use their legacy authority
+   as an escrow-return fallback.
+5. After explicit activation approval, request the selected owner's genuine
+   Keplr deposit and profile-mandate signatures for at most **1 WOLO** from
+   `wolo1wue7vyque2pssskgdrww0fcadlq9ps6mtn605e`. Written authorization is not
+   either signature. No unrelated wallet supplies the canary principal.
+6. Independently verify deposit/unique HD credit, authentic original-Watcher
+   game observation, solo/team mandate admission, exactly one wager, settlement
+   or refund, return/withdrawal, user-visible history and full journal/bank
+   conservation. Retain UNKNOWN after any ambiguity; recover by read-only
+   proof inspection and never blind resubmission. Enable the reviewed funded
+   product only after these receipts and production health/rollback checks.
+
+There is no executable live cutover command yet: protected escrow enrollment,
+final artifacts and independent physical receipts are not established. Source
+work does not need another general owner permission. The next eventual owner
+action is the concrete source-pinned staging/activation approval after those
+prerequisites, followed by actual Keplr signatures. F's website release remains
+independent throughout this sequence. Financial verdict remains HOLD.
+
 The release candidate builds on the combined source in draft
 [PR #38](https://github.com/Emaren/wolochain/pull/38), initially
 `68cdc1ae2f1c877f40e7ee3f8c094729f080394f`; the

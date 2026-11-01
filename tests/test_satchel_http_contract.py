@@ -42,7 +42,7 @@ class SatchelHTTPContract(unittest.TestCase):
         paths.add('/satchel/v1/operations/{operation_id}')
         self.assertEqual(paths, set(self.doc['paths']))
         for path, methods in self.doc['paths'].items():
-            self.assertEqual(list(methods), ['get' if path.endswith('/health') or path.endswith('/custody/journal') or '{operation_id}' in path else 'post'])
+            self.assertEqual(list(methods), ['get' if path.endswith('/health') or path.endswith('/custody/journal') or path.endswith('/custody/journal-snapshot') or '{operation_id}' in path else 'post'])
             for method in methods.values():
                 self.assertIn('200', method['responses'])
                 self.assertIn('401', method['responses'])

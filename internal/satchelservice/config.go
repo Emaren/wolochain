@@ -21,31 +21,33 @@ import (
 )
 
 type Config struct {
-	Version                   int                 `json:"version"`
-	Vault                     string              `json:"vault"`
-	PublicKeyHex              string              `json:"public_key_hex"`
-	BettingEscrow             string              `json:"betting_escrow"`
-	ProtectedAddresses        []string            `json:"protected_addresses"`
-	MaxAmountUWolo            uint64              `json:"max_amount_uwolo"`
-	RPC                       string              `json:"rpc"`
-	REST                      string              `json:"rest"`
-	WitnessRPC                string              `json:"witness_rpc"`
-	TrustAnchor               satchel.TrustAnchor `json:"trust_anchor"`
-	KeyringDir                string              `json:"keyring_dir"`
-	KeyName                   string              `json:"key_name"`
-	PassphraseFile            string              `json:"passphrase_file"`
-	TokenFile                 string              `json:"token_file"`
-	StatePath                 string              `json:"state_path"`
-	FeesUWolo                 string              `json:"fees_uwolo"`
-	GasLimit                  uint64              `json:"gas_limit"`
-	TimeoutBlocks             uint64              `json:"timeout_blocks"`
-	WithdrawalApprovalKeyHex  string              `json:"withdrawal_approval_key_hex"`
-	WagerApprovalKeyHex       string              `json:"wager_approval_key_hex"`
-	ActivationAuthorityKeyHex string              `json:"activation_authority_key_hex"`
-	PermitFile                string              `json:"permit_file"`
-	AccountingReviewerKeyHex  string              `json:"accounting_reviewer_key_hex,omitempty"`
-	CustodyReviewerKeyHex     string              `json:"custody_reviewer_key_hex,omitempty"`
-	ReserveReviewFile         string              `json:"reserve_review_file,omitempty"`
+	Version                     int                 `json:"version"`
+	Vault                       string              `json:"vault"`
+	PublicKeyHex                string              `json:"public_key_hex"`
+	BettingEscrow               string              `json:"betting_escrow"`
+	ProtectedAddresses          []string            `json:"protected_addresses"`
+	MaxAmountUWolo              uint64              `json:"max_amount_uwolo"`
+	RPC                         string              `json:"rpc"`
+	REST                        string              `json:"rest"`
+	WitnessRPC                  string              `json:"witness_rpc"`
+	TrustAnchor                 satchel.TrustAnchor `json:"trust_anchor"`
+	KeyringDir                  string              `json:"keyring_dir"`
+	KeyName                     string              `json:"key_name"`
+	PassphraseFile              string              `json:"passphrase_file"`
+	TokenFile                   string              `json:"token_file"`
+	StatePath                   string              `json:"state_path"`
+	FeesUWolo                   string              `json:"fees_uwolo"`
+	GasLimit                    uint64              `json:"gas_limit"`
+	TimeoutBlocks               uint64              `json:"timeout_blocks"`
+	WithdrawalApprovalKeyHex    string              `json:"withdrawal_approval_key_hex"`
+	WagerApprovalKeyHex         string              `json:"wager_approval_key_hex"`
+	ActivationAuthorityKeyHex   string              `json:"activation_authority_key_hex"`
+	PermitFile                  string              `json:"permit_file"`
+	AccountingReviewerKeyHex    string              `json:"accounting_reviewer_key_hex,omitempty"`
+	CustodyReviewerKeyHex       string              `json:"custody_reviewer_key_hex,omitempty"`
+	ReserveReviewFile           string              `json:"reserve_review_file,omitempty"`
+	EscrowReturnExecutionFile   string              `json:"escrow_return_execution_file,omitempty"`
+	EscrowReturnExecutionSHA256 string              `json:"escrow_return_execution_sha256,omitempty"`
 }
 
 // ExecutionPermit is an independent operator's scoped authorization to execute
@@ -171,6 +173,13 @@ func LoadConfig(path string) (Config, string, error) {
 					return c, "", errors.New("independent_reserve_review_configuration_required")
 				}
 			}
+		}
+	}
+	if c.EscrowReturnExecutionFile != "" || c.EscrowReturnExecutionSHA256 != "" {
+		if c.AccountingReviewerKeyHex == "" || c.CustodyReviewerKeyHex == "" ||
+			!filepath.IsAbs(c.EscrowReturnExecutionFile) || filepath.Clean(c.EscrowReturnExecutionFile) != c.EscrowReturnExecutionFile ||
+			!validReserveDigest(c.EscrowReturnExecutionSHA256) {
+			return c, "", errors.New("escrow_return_execution_configuration_required")
 		}
 	}
 	for _, address := range c.ProtectedAddresses {

@@ -29,7 +29,8 @@
     "maximum_request_timeout_ms": 8000,
     "default_concurrent_requests": 4,
     "maximum_concurrent_requests": 16,
-    "automatic_financial_retries": false
+    "automatic_financial_retries": false,
+    "max_journal_snapshot_bytes": 16777216
   },
   "x-state-semantics": {
     "ACCEPTED": "Original bytes durably fenced; one broadcast acknowledgment, no committed execution proof.",
@@ -926,6 +927,52 @@
         },
         "x-max-request-bytes": 1024,
         "x-max-response-bytes": 8388608
+      }
+    },
+    "/satchel/v1/custody/journal-snapshot": {
+      "get": {
+        "operationId": "custodyJournalSnapshot",
+        "summary": "Private exact raw journal frames; compare with independently authenticated policy and journal roots; never execution or credit authority",
+        "x-financial-effect": "observe",
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/Failure400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Failure401"
+          },
+          "404": {
+            "$ref": "#/components/responses/Failure404"
+          },
+          "405": {
+            "$ref": "#/components/responses/Failure405"
+          },
+          "408": {
+            "$ref": "#/components/responses/Failure408"
+          },
+          "409": {
+            "$ref": "#/components/responses/Failure409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Failure413"
+          },
+          "415": {
+            "$ref": "#/components/responses/Failure415"
+          },
+          "503": {
+            "$ref": "#/components/responses/Failure503"
+          },
+          "200": {
+            "description": "Exact typed result; HTTP success alone is not financial confirmation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustodyJournalProofSnapshot"
+                }
+              }
+            }
+          }
+        }
       }
     }
   },
@@ -2835,6 +2882,78 @@
         },
         "x-go-type": "internal/satchelservice/reviewer_principal_transport.go:reviewerPrincipalCheckpointWire",
         "description": "Complete globally sorted terminal custody history, not an app-selected operation subset. Existing UNKNOWN/ACCEPTED effects refuse this checkpoint. Protected peer/vault/policy enrollment supplies service provenance; JSON does not establish independent Comet confirmation, operator independence or spending authority. The actual PG owner partition and independently signed reserve inventory remain required."
+      },
+      "CustodyJournalProofSnapshot": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "policy",
+          "frames"
+        ],
+        "description": "Sensitive canonical JSON from ONE validated Bolt view. Frames encode the exact v1 B/V/E stream in base64, including stored signed transaction records. Sequence counters and physical database metadata are not bound by v1. Authenticate the expected journal and policy roots independently before financial interpretation; HTTP success creates no authority.",
+        "properties": {
+          "version": {
+            "const": 1
+          },
+          "policy": {
+            "$ref": "#/components/schemas/CustodyJournalPublicPolicy"
+          },
+          "frames": {
+            "type": "string",
+            "contentEncoding": "base64",
+            "maxLength": 11184812
+          }
+        },
+        "x-go-type": "internal/satchelservice/custody_journal_snapshot.go:CustodyJournalProofSnapshot"
+      },
+      "CustodyJournalPublicPolicy": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "vault",
+          "betting_escrow",
+          "protected_addresses",
+          "max_amount_uwolo",
+          "withdrawal_approval_key",
+          "wager_approval_key"
+        ],
+        "properties": {
+          "vault": {
+            "type": "string"
+          },
+          "betting_escrow": {
+            "type": "string"
+          },
+          "protected_addresses": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "max_amount_uwolo": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "withdrawal_approval_key": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "contentEncoding": "base64"
+          },
+          "wager_approval_key": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "contentEncoding": "base64"
+          }
+        },
+        "x-go-type": "internal/satchelservice/engine.go:Policy"
       }
     },
     "responses": {

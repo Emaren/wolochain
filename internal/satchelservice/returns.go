@@ -153,6 +153,11 @@ func (e *Engine) PrepareReturnRun(ctx context.Context, a ReturnApproval) (Return
 	if ctx.Err() != nil {
 		return ReturnRun{}, ctx.Err()
 	}
+	if e.custodyAuthority != nil {
+		if _, err := e.custodyAuthority.qualifyEscrowReturnLocked(ctx, a); err != nil {
+			return ReturnRun{}, err
+		}
+	}
 	if _, err := e.prepareReturn(a); err != nil {
 		return ReturnRun{}, err
 	}

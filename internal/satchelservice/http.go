@@ -63,6 +63,12 @@ type HTTPCustodyJournalBackend interface {
 	CustodyJournal() (CustodyJournal, error)
 }
 
+// Exact private financial evidence for independent comparison with a separately
+// authenticated journal root. This route confers no execution or credit grant.
+type HTTPCustodyJournalSnapshotBackend interface {
+	CustodyJournalSnapshot() ([]byte, error)
+}
+
 type HTTPCustodyFeeCheckpointBackend interface {
 	ReviewerFeeCheckpoint([]string) (ReviewerCustodyFeeCheckpoint, error)
 }
@@ -183,6 +189,10 @@ func (h *privateHTTPHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		h.health(ctx, w)
+		return
+	}
+	if r.URL.Path == "/satchel/v1/custody/journal-snapshot" {
+		h.custodyJournalSnapshot(ctx, w, r)
 		return
 	}
 	if r.URL.Path == "/satchel/v1/custody/journal" {
