@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "75e9924e22ef12bbd95dbd31a45ca28014318836d15c52e35ec6f63cd5704107",
+      "sha256": "f4e4905e139d3c737ec20d7c4d50f111142387e59e6aab645cc213e8555bdb45",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1113,7 +1113,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "codex/c01-enrolled-native-executor-20261101",
-    "commit": "0e4ad13f2e757cc476350315143b31ce3c5415f3"
+    "commit": "7a0ba63df7c0c3494094943a877245aad3ac9dee"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
