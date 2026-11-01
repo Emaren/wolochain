@@ -59,6 +59,21 @@ product execution path. No old 8092/8093 fallback, new signer authority, funded
 flag or production migration is enabled by this increment. Older sections
 below describe their dated source baselines, not a current deployment receipt.
 
+The existing `KeyringBackend` additionally supports an explicitly composed
+`claim_return` role with one fixed vault destination, a required original
+funding/approval verifier and both pre-sign/pre-broadcast guards. The default
+vault backend refuses returns; the return role refuses wagers/withdrawals.
+It binds the original owner/claim, amount, memo and canonical complete partition,
+then reuses the same SDK DIRECT sign/validate/broadcast machinery. The vault
+engine rejects return metadata before intent persistence and during recovery;
+existing vault fingerprints and historical records remain unchanged.
+Focused tests build and validate real SDK transaction bytes and reject changed
+identity, partition, expiry, missing guards and revoked approval before a new
+signature or broadcast. These transaction-building fixtures are not native
+committed finality or protected runtime enrollment. The dedicated escrow key,
+immutable attempt/no-resign lifecycle, current reserve grant and production
+8094 composition must still be completed before this role can serve returns.
+
 ## October 20: original LIVE source and authenticated bank state
 
 The current held app candidate is [PR #729](https://github.com/Emaren/app-prodn/pull/729)

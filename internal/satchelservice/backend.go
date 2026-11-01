@@ -61,7 +61,13 @@ type BackendConfig struct {
 	ProtectedAddresses                  []string
 	WithdrawalVerifier                  func(TransferRequest) error
 	WagerVerifier                       func(TransferRequest) error
-	ConfirmTransaction                  func(context.Context, TransferRequest, SignedTransaction) (Confirmation, error)
+	// ReturnDestination selects a dedicated escrow-return role. It must be the
+	// sole approved destination; the ordinary vault backend never accepts this
+	// role. The verifier and existing pre-sign/pre-broadcast callbacks must be
+	// supplied by protected runtime composition, not a request or feature flag.
+	ReturnDestination  string
+	ReturnVerifier     func(TransferRequest) error
+	ConfirmTransaction func(context.Context, TransferRequest, SignedTransaction) (Confirmation, error)
 	// A production custody issuer rechecks its opaque operation grant after
 	// network I/O, immediately before SDK signing and the broadcast call.
 	AuthorizeSign      func(context.Context, TransferRequest) bool
@@ -129,6 +135,13 @@ func newBackend(cfg BackendConfig) (*KeyringBackend, error) {
 			return nil, ErrBackend
 		}
 		seen[destination] = true
+	}
+	if cfg.ReturnDestination != "" || cfg.ReturnVerifier != nil {
+		if !backendAddress(cfg.ReturnDestination) || cfg.ReturnDestination == cfg.Vault ||
+			len(cfg.ApprovedDestinations) != 1 || cfg.ApprovedDestinations[0] != cfg.ReturnDestination ||
+			cfg.ReturnVerifier == nil || cfg.AuthorizeSign == nil || cfg.AuthorizeBroadcast == nil {
+			return nil, ErrBackend
+		}
 	}
 	parse := func(raw string) (*url.URL, error) {
 		u, err := url.Parse(raw)
@@ -219,7 +232,44 @@ func (b *KeyringBackend) validateRequest(r TransferRequest, fresh bool) error {
 	if r.ChainID != "wolo-1" || r.Denom != "uwolo" || r.Sender != b.cfg.Vault || !backendAddress(r.Recipient) || r.Recipient == r.Sender || !backendAmount(r.AmountUWolo, b.cfg.MaxAmountUWolo) || !ids.MatchString(r.OperationID) || len(r.Memo) == 0 || len(r.Memo) > 256 || !utf8.ValidString(r.Memo) {
 		return ErrBackend
 	}
+	if (b.cfg.ReturnDestination != "" && r.Kind != "claim_return") || (r.Kind != "claim_return" && r.ReturnApproval != nil) {
+		return ErrBackend
+	}
 	switch r.Kind {
+	case "claim_return":
+		a := r.ReturnApproval
+		if b.cfg.ReturnDestination == "" || b.cfg.ReturnVerifier == nil || b.cfg.AuthorizeSign == nil || b.cfg.AuthorizeBroadcast == nil ||
+			r.Recipient != b.cfg.ReturnDestination || r.Approval != nil || r.OwnerMandate != nil || r.Reservation != nil || a == nil ||
+			a.Version != 2 || !claimIDs.MatchString(a.ClaimID) || a.ClaimID == "889" || !ownerUIDPattern.MatchString(a.OwnerID) || r.OwnerID != a.OwnerID ||
+			r.OperationID != "satchel:claim-return:"+a.ClaimID || !wagerIDs.MatchString(a.OperationID) ||
+			r.AmountUWolo != a.AmountUWolo || r.Memo != "aoe2war/satchel/claim-return/v1/"+a.ClaimID ||
+			!validReviewTime(a.IssuedAt, a.ExpiresAt, time.Now().Unix(), fresh) || !boundedAllocation(a.Allocation) {
+			return ErrBackend
+		}
+		p := a.Allocation
+		// These checks bind the complete original partition, not a caller's
+		// selected leg. They establish structure only: ReturnVerifier must check
+		// genuine signatures, original funding and the actual durable journal.
+		if p == nil || p.Version != 2 || p.OperationID != a.OperationID || p.OwnerID != a.OwnerID || p.TicketID != a.TicketID ||
+			!ids.MatchString(p.AllocationID) || p.Revision == 0 || p.Revision > 100000 || !claimIDs.MatchString(p.TicketID) ||
+			!nonzeroDigest(p.FundingTxHash) || p.FundingTxHash != strings.ToUpper(p.FundingTxHash) || !ids.MatchString(p.FundsBudgetID) ||
+			!nonzeroDigest(p.BankEvidenceDigest) || p.BankHeight <= 0 || !nonzeroDigest(p.BankBlockHash) ||
+			!validReviewTime(p.IssuedAt, p.ExpiresAt, time.Now().Unix(), fresh) ||
+			a.AllocationDigest != AllocationDigest(*p, Policy{Vault: b.cfg.ReturnDestination, BettingEscrow: b.cfg.Vault}) {
+			return ErrBackend
+		}
+		var declaredStake uint64
+		for _, leg := range p.Legs {
+			n, ok := positive(leg.StakeUWolo, ProductMaxWagerUWolo)
+			if !ok || n > ProductMaxWagerUWolo-declaredStake {
+				return ErrBackend
+			}
+			declaredStake += n
+		}
+		if _, err := validateAllocationEconomics(*a, declaredStake); err != nil || (fresh && b.cfg.ReturnVerifier(r) != nil) {
+			return ErrBackend
+		}
+		return nil
 	case "wager":
 		whole, err := strconv.ParseUint(r.AmountUWolo, 10, 64)
 		if !wagerIDs.MatchString(r.OperationID) || r.Approval != nil || !ticketMemo.MatchString(r.Memo) || err != nil || whole%1000000 != 0 {
