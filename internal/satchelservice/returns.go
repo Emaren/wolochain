@@ -244,6 +244,16 @@ func (e *Engine) recordReturn(r returnRecord, receipt ReturnReceipt) error {
 			return nil
 		}
 		r = stored
+		if b := tx.Bucket(escrowReturnSpendBucket); b != nil && b.Get([]byte(r.Approval.ClaimID)) != nil {
+			var execution escrowReturnSpendRecord
+			if json.Unmarshal(b.Get([]byte(r.Approval.ClaimID)), &execution) != nil || execution.Version != 1 ||
+				execution.Request.ReturnApproval == nil || hashJSON(*execution.Request.ReturnApproval) != hashJSON(r.Approval) ||
+				execution.ApprovalHash != hashJSON(execution.Request) || execution.Signed.Hash != receipt.TxHash ||
+				len(execution.Signed.Bytes) == 0 || !strings.EqualFold(custodySHA(execution.Signed.Bytes), receipt.TxHash) ||
+				execution.Result.TxHash != receipt.TxHash || !execution.Result.DurableFenced {
+				return errors.New("return_execution_identity_unverifiable")
+			}
+		}
 		// Consume the physical single-MsgSend transaction, not a caller-selected
 		// bank event representation. Never mint a second receipt namespace.
 		key := []byte("wolo-1:" + receipt.TxHash)

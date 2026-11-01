@@ -44,6 +44,7 @@ type custodyAuthorityFixture struct {
 	SDKSigns                       atomic.Int32
 	afterSign                      func()
 	fundingKey                     *sdksecp.PrivKey
+	bankHook                       atomic.Pointer[func()]
 }
 type custodyObservedSDKSigner struct {
 	inner   backendSigner
@@ -88,6 +89,11 @@ func newCustodyAuthorityFixtureWithConfig(t *testing.T, provision func(*Config))
 	proxy.Transport = transport
 	t.Cleanup(transport.CloseIdleConnections)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/abci_query" {
+			if hook := f.bankHook.Load(); hook != nil {
+				(*hook)()
+			}
+		}
 		if strings.HasPrefix(r.URL.Path, "/cosmos/auth/v1beta1/accounts/") && f.pauseAccount.Load() {
 			close(f.accountEntered)
 			select {

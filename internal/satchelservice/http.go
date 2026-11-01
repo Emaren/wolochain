@@ -51,6 +51,14 @@ type HTTPReturnBackend interface {
 	ReconcileClaimReturn(context.Context, ReturnApproval, string) (ReturnReceipt, error)
 }
 
+type HTTPEnrolledEscrowReturnBackend interface {
+	ExecuteEnrolledClaimReturn(context.Context, ReturnApproval) (EscrowReturnSpendResult, error)
+}
+
+type HTTPEscrowReturnSpendReader interface {
+	ReadEscrowReturnSpend(string) (EscrowReturnSpendResult, error)
+}
+
 // HTTPFinancialProofBackend exports evidence only. It cannot credit, sign,
 // broadcast or reserve an operation, including when the permit has expired.
 type HTTPFinancialProofBackend interface {
@@ -191,6 +199,34 @@ func (h *privateHTTPHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.health(ctx, w)
 		return
 	}
+	if strings.HasPrefix(r.URL.Path, "/satchel/v1/returns/execution/") {
+		if r.Method != http.MethodGet {
+			httpFailure(w, http.StatusMethodNotAllowed, "method_not_allowed")
+			return
+		}
+		id := strings.TrimPrefix(r.URL.Path, "/satchel/v1/returns/execution/")
+		if !claimIDs.MatchString(id) || id == "889" {
+			httpFailure(w, http.StatusBadRequest, "invalid_claim_id")
+			return
+		}
+		backend, ok := h.backend.(HTTPEscrowReturnSpendReader)
+		if !ok {
+			httpFailure(w, http.StatusServiceUnavailable, "escrow_return_inspection_unavailable")
+			return
+		}
+		result, err := backend.ReadEscrowReturnSpend(id)
+		if err != nil {
+			httpFailure(w, http.StatusNotFound, "escrow_return_execution_unknown")
+			return
+		}
+		if ctx.Err() != nil || result.OperationID != "satchel:claim-return:"+id || result.Status != "UNKNOWN" || !result.DurableFenced ||
+			!httpReasonPattern.MatchString(result.Reason) || (result.TxHash != "" && (!httpHashPattern.MatchString(result.TxHash) || result.TxHash != strings.ToUpper(result.TxHash))) {
+			httpFailure(w, http.StatusConflict, "escrow_return_inspection_unverifiable")
+			return
+		}
+		httpWrite(w, http.StatusOK, result)
+		return
+	}
 	if r.URL.Path == "/satchel/v1/custody/journal-snapshot" {
 		h.custodyJournalSnapshot(ctx, w, r)
 		return
@@ -237,7 +273,7 @@ func (h *privateHTTPHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if r.URL.Path != "/satchel/v1/one-shot" && r.URL.Path != "/satchel/v2/one-shot" && r.URL.Path != "/v1/satchel/withdrawals" && r.URL.Path != "/satchel/v1/reconcile" &&
-		r.URL.Path != "/satchel/v1/returns/prepare" && r.URL.Path != "/satchel/v1/returns/reconcile" &&
+		r.URL.Path != "/satchel/v1/returns/prepare" && r.URL.Path != "/satchel/v1/returns/reconcile" && r.URL.Path != "/satchel/v1/returns/execute" &&
 		r.URL.Path != "/satchel/v1/proofs/deposit" && r.URL.Path != "/satchel/v1/proofs/operation" && r.URL.Path != "/satchel/v1/proofs/return" && r.URL.Path != "/satchel/v1/proofs/bank" && r.URL.Path != "/satchel/v1/proofs/escrow-bank" {
 		httpFailure(w, http.StatusNotFound, "private_route_not_found")
 		return
@@ -251,7 +287,10 @@ func (h *privateHTTPHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	readOnly := r.URL.Path == "/satchel/v1/reconcile" || r.URL.Path == "/satchel/v1/returns/reconcile" || strings.HasPrefix(r.URL.Path, "/satchel/v1/proofs/")
-	if !readOnly && !h.accepting(ctx) {
+	// Escrow execution has its own account-local reserve/key authority; the
+	// global signed permit is still mandatory, without borrowing vault equity.
+	escrowExecute := r.URL.Path == "/satchel/v1/returns/execute"
+	if (escrowExecute && (!h.identity.Accepting || h.authorize == nil || !h.authorize(ctx))) || (!escrowExecute && !readOnly && !h.accepting(ctx)) {
 		httpFailure(w, http.StatusServiceUnavailable, "custody_service_unavailable")
 		return
 	}
@@ -313,6 +352,30 @@ func (h *privateHTTPHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *privateHTTPHandler) claimReturn(ctx context.Context, w http.ResponseWriter, path string, data []byte) {
+	if path == "/satchel/v1/returns/execute" {
+		backend, ok := h.backend.(HTTPEnrolledEscrowReturnBackend)
+		var approval ReturnApproval
+		if strictHTTPJSON(data, &approval) != nil || !httpReturnV2(approval) {
+			httpFailure(w, http.StatusBadRequest, "invalid_return_approval")
+			return
+		}
+		if !ok {
+			httpFailure(w, http.StatusServiceUnavailable, "enrolled_escrow_unavailable")
+			return
+		}
+		result, err := backend.ExecuteEnrolledClaimReturn(ctx, approval)
+		if err != nil {
+			httpFailure(w, http.StatusConflict, "escrow_return_held_or_unknown")
+			return
+		}
+		if result.OperationID != "satchel:claim-return:"+approval.ClaimID || result.Status != "UNKNOWN" || !result.DurableFenced ||
+			!httpReasonPattern.MatchString(result.Reason) || (result.TxHash != "" && (!httpHashPattern.MatchString(result.TxHash) || result.TxHash != strings.ToUpper(result.TxHash))) {
+			httpFailure(w, http.StatusServiceUnavailable, "escrow_return_identity_unverifiable")
+			return
+		}
+		httpWrite(w, http.StatusOK, result)
+		return
+	}
 	backend, ok := h.backend.(HTTPReturnBackend)
 	if !ok {
 		httpFailure(w, http.StatusServiceUnavailable, "return_adapter_unavailable")

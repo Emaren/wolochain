@@ -88,8 +88,10 @@ func (e *Engine) ExecuteEnrolledEscrowReturn(
 			return false
 		}
 		var bundle EscrowReturnExecutionBundle
+		completed := qualified.now() // after all lease and file I/O
 		return strictHTTPJSON(signed, &bundle) == nil &&
-			hashJSON(bundle) == qualified.bundleHash
+			hashJSON(bundle) == qualified.bundleHash && ctx.Err() == nil &&
+			completed.Before(qualified.expires) && qualified.bank.CurrentAt(completed)
 	}
 	guards := EscrowReturnSpendGuard{
 		Permit: func(ctx context.Context, req TransferRequest) bool {

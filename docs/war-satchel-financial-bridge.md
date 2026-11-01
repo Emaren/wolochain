@@ -15,6 +15,67 @@ sensitivity: "restricted"
 
 # Authenticated War Satchel Financial Bridge
 
+## C01: protected executable connection (November 1 source candidate)
+
+The existing `wolosatcheld` custody process can
+optionally compose `NewEnrolledEscrowExecutor` over its **existing** engine and
+the qualified `ExecuteEnrolledEscrowReturn` / `ExecuteQualifiedEscrowReturn`
+path. No new listener, journal, controller or legacy signer is introduced.
+Missing `escrow_signer_enrollment_file` / SHA-256 keeps execution unavailable.
+When configured, the protected enrollment pins a clean embedded source commit,
+distinct escrow public key/keyring/name/unlock file and operation-permit path.
+The running binary, actual config, original financial permit and independent
+reserve enrollment remain bound by the existing custody authority.
+
+`POST /satchel/v1/returns/execute` accepts only the exact signed `ReturnApproval`.
+Sender, vault destination, amount, fee and original partition derive from the
+protected policy and immutable approval; callers cannot supply signing options.
+A separate `EscrowReturnOperationPermit`, signed by the existing independent
+activation authority, binds source/binary/config/enrollment, exact original
+approval and raw reserve review, claim, amount, fee, nonce and short expiry.
+Neither the daemon nor its CLI signs these permissions. The local immutable
+spend record retains the exact signed operation permit and reserve-review bytes
+before signing. Its bounded write must also fit the existing 8-MiB complete
+journal; otherwise the transaction rolls back before any SDK call, with all
+historical data preserved. The local immutable
+spend journal consumes the nonce permanently; this is not a substitute for the
+independently witnessed release/nonce authority required by C08.
+
+After final native bank I/O, the runtime rechecks protected files and both
+permission identities, then samples completion. Global permit expiry is also
+part of the operation deadline. SDK callbacks use an opaque in-process context
+and do not reacquire their own signing mutex. A prior unresolved escrow attempt
+fences later claims even with fresh reserve review. Native reconciliation must
+match the exact persisted signed transaction; no new nonce or absence of an ACK
+releases uncertainty. Previously stored histories and original allocation bank
+metadata are retained.
+
+`woloescrowd execute-enrolled-return --config ABS --approval ABS` is a fixed
+authenticated client of this 8094 route, not another signer. Private bounded
+files, literal loopback target, no proxy/redirect/compression and one request
+are enforced. Errors/timeouts remain UNKNOWN, with no automatic retry or legacy
+8092/8093 fallback. HTTP success and the CLI's noncrediting UNKNOWN observation
+are not native finality or HD credit. Existing `/returns/reconcile` and
+`/proofs/return` retain the independent native-proof boundary.
+For recovery, use private read-only
+`GET /satchel/v1/returns/execution/{claim_id}`. It remains available after permit
+expiry; missing state is UNKNOWN and never permission to repeat the execution
+POST. HD must retain its own durable UNKNOWN attempt before its first POST.
+
+Local genuine SDK tests cover the protected runtime, post-I/O revocation,
+post-sign signed-permit replacement, changed authority and two conserved
+5+2-WOLO return legs with actual native gas. A new CI-only test runs the actual
+clean-source signer and CLI executables against an isolated SDK chain, verifies
+their source identity, independently authenticates the committed transfer and
+checks the real reconciliation route. It never opens mainnet or production
+keys. Its exact-head CI outcome must be recorded separately from local tests.
+
+**C01–C09 remain OPEN.** C01 still requires independently accepted final source,
+immutable release artifacts, real enrolled custody/reviewer and financial
+permissions, physical execution/recovery evidence and acceptance. No funded
+flag, production service, migration or real wallet was changed. The older
+sections below retain their historical source scope.
+
 ## November 1: native reserved-return runtime composition — HELD
 
 The additive \`Engine.ExecuteEnrolledEscrowReturn\` source now connects the

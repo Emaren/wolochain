@@ -40,9 +40,10 @@ class SatchelHTTPContract(unittest.TestCase):
         # Prefix route uses a path parameter, not a second route convention.
         paths = {path for path in paths if not path.endswith('/')}
         paths.add('/satchel/v1/operations/{operation_id}')
+        paths.add('/satchel/v1/returns/execution/{claim_id}')
         self.assertEqual(paths, set(self.doc['paths']))
         for path, methods in self.doc['paths'].items():
-            self.assertEqual(list(methods), ['get' if path.endswith('/health') or path.endswith('/custody/journal') or path.endswith('/custody/journal-snapshot') or '{operation_id}' in path else 'post'])
+            self.assertEqual(list(methods), ['get' if path.endswith('/health') or path.endswith('/custody/journal') or path.endswith('/custody/journal-snapshot') or '{operation_id}' in path or '{claim_id}' in path else 'post'])
             for method in methods.values():
                 self.assertIn('200', method['responses'])
                 self.assertIn('401', method['responses'])
