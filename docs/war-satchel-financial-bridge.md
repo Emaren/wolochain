@@ -15,6 +15,38 @@ sensitivity: "restricted"
 
 # Authenticated War Satchel Financial Bridge
 
+## November 1: native reserved-return runtime composition — HELD
+
+The additive \`Engine.ExecuteEnrolledEscrowReturn\` source now connects the
+*existing* protected \`CustodyAuthority.qualifyEscrowReturnLocked\` current
+signed bank/reviewer proof to the already qualified \`#122\`
+\`ExecuteQualifiedEscrowReturn\` durable signing journal. It is callable only
+by trusted in-process runtime code, not an HTTP request. It requires an
+actual leased **different native Cosmos SDK keyring** whose public identity
+matches the escrow sender, sole destination is the vault, and no vault
+keyring directory/key name/unlock file is shared.
+
+The fresh signed two-reviewer escrow bundle is verified **after** original
+return preparation, then checked for byte identity again at pre-sign and
+pre-broadcast together with the current owner financial permit, vault lease,
+escrow lease, exact approval and independent external guards. Missing or
+rotated files, wrong account, source/config drift, missing permit or
+revocation fail closed. Signing/broadcast/replay UNKNOWN semantics are
+owned by the existing durable journal; no credit follows acceptance.
+
+Native test coverage uses an **isolated SDK chain** and a real
+file-backed escrow keyring, plus negative missing-permit, wrong-role and
+review-revocation scenarios. This source/test increment still needs exact
+GitHub CI and independent review; its fixtures cannot enroll production
+custody or replace the separately protected runtime daemon.
+
+**Remaining, unchanged C01 gate:** Actual daemon/CLI/subprocess activation
+must supply genuine independently enrolled escrow keyring and authenticated
+pre-sign/pre-broadcast review controls. A current independent consensus
+receipt, permanent nonce uncertainty containment, financial producer
+fencing, backup/recovery and witnessed mainnet acceptance remain
+mandatory. No 8092 fallback, 8094 vault-role substitution or funds move.
+
 ## November 1: durable escrow-account execution source — HELD
 
 `Engine.ExecuteQualifiedEscrowReturn` now provides a separate escrow-return
