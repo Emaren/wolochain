@@ -37,10 +37,12 @@ func runExecuteReturn(args []string, out io.Writer) int {
 func newExecuteReturnTransport() *http.Transport {
 	return &http.Transport{Proxy: nil,
 		DialContext:           (&net.Dialer{Timeout: 2 * time.Second}).DialContext,
-		ResponseHeaderTimeout: 8 * time.Second, DisableCompression: true,
+		ResponseHeaderTimeout: 12 * time.Second, DisableCompression: true,
 		DisableKeepAlives: true, MaxConnsPerHost: 1, MaxResponseHeaderBytes: 8192}
 }
 
+// The request budget allows bounded SDK proof I/O; every signing/broadcast guard
+// still checks current signed expiry after its last I/O. No retry is permitted.
 // The transport seam is private test support. Production dispatch always uses
 // the fixed transport above; no environment, argv or request selects a target.
 func runExecuteReturnWithTransport(args []string, out io.Writer, transport http.RoundTripper) int {
@@ -59,7 +61,7 @@ func runExecuteReturnWithTransport(args []string, out io.Writer, transport http.
 	if paths["--config"] == "" || paths["--approval"] == "" {
 		return fail("ESCROW_RETURN_CLIENT_INPUT_INVALID")
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 8*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 	cfg, _, err := satchelservice.LoadConfig(paths["--config"])
 	if err != nil || ctx.Err() != nil {
@@ -92,7 +94,7 @@ func runExecuteReturnWithTransport(args []string, out io.Writer, transport http.
 	request.Header.Set("Content-Type", "application/json")
 	request.Header.Set("Accept", "application/json")
 	request.Header.Set("Accept-Encoding", "identity")
-	client := &http.Client{Transport: transport, Timeout: 8 * time.Second,
+	client := &http.Client{Transport: transport, Timeout: 15 * time.Second,
 		CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
 	response, err := client.Do(request) // Exactly one application request; never retry an ambiguous outcome.
 	if err != nil {

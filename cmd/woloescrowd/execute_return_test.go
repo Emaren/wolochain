@@ -88,7 +88,7 @@ func TestExecuteEnrolledReturnFixedAuthenticatedSingleRequestNoncreditingObserva
 		require.Equal(t, "identity", r.Header.Get("Accept-Encoding"))
 		deadline, ok := r.Context().Deadline()
 		require.True(t, ok)
-		require.LessOrEqual(t, time.Until(deadline), 8*time.Second)
+		require.LessOrEqual(t, time.Until(deadline), 15*time.Second)
 		body, err := io.ReadAll(r.Body)
 		require.NoError(t, err)
 		expected, err := os.ReadFile(f.approvalPath)
@@ -110,13 +110,13 @@ func TestExecuteEnrolledReturnFixedAuthenticatedSingleRequestNoncreditingObserva
 	}
 }
 
-func TestExecuteEnrolledReturnActualTransportWaitsForBoundedExecutionHeaders(t *testing.T) {
+func TestExecuteEnrolledReturnActualTransportWaitsBeyondEightSecondsWithoutRetry(t *testing.T) {
 	f := enrolledReturnClientFiles(t)
 	var calls atomic.Int32
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		calls.Add(1)
 		select {
-		case <-time.After(3100 * time.Millisecond):
+		case <-time.After(9000 * time.Millisecond):
 		case <-r.Context().Done():
 			return
 		}
