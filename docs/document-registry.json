@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "3d35c158c0f7bf0d014ea0fd6dbdef07746dfcf5eefbe24a587f8c37b33a81e4",
+      "sha256": "c5776c3372928ceaaa3d5e819d2fb9d846f8aa102d78ef08a8757ffc8d43b079",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -589,7 +589,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-11-01",
       "sensitivity": "restricted",
-      "sha256": "e0aea026c081afa4601c1217a0a6ae4e345fceb9f35f1a43dd29d2e937fad45c",
+      "sha256": "0dfbad819157153844135dd0b336c7202a1c620a7d5b7081472b92e331f89b95",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -1112,8 +1112,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "codex/c01-escrow-return-durable-execution-20261101",
-    "commit": "4120e1d70fbf7d423019153cd01579f457bf97bd"
+    "branch": "codex/c01-enrolled-native-executor-20261101",
+    "commit": "3816c0249916417a94c511fb519c958a269b114c"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
