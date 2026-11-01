@@ -270,24 +270,25 @@ func (p *nativeHTTPProcess) kill(t *testing.T) {
 // retained IAVL proofs and correctly signed continuous Comet headers. The two
 // local servers share one isolated validator; they do not claim independence.
 type nativeHTTPChain struct {
-	mu          sync.Mutex
-	application *app.App
-	validator   cmted.PrivKey
-	validators  *cmt.ValidatorSet
-	commits     map[int64]*core.ResultCommit
-	results     map[int64]*core.ResultBlockResults
-	transaction *core.ResultTx
-	rest        any
-	appHash     []byte
-	lastResults []*abci.ExecTxResult
-	head        int64
-	start       time.Time
-	vault       sdk.AccAddress
-	bankKey     []byte
-	broadcasts  int
-	executed    chan struct{}
-	releaseACK  chan struct{}
-	ackReleased sync.Once
+	mu           sync.Mutex
+	application  *app.App
+	validator    cmted.PrivKey
+	validators   *cmt.ValidatorSet
+	commits      map[int64]*core.ResultCommit
+	results      map[int64]*core.ResultBlockResults
+	transaction  *core.ResultTx
+	rest         any
+	appHash      []byte
+	lastResults  []*abci.ExecTxResult
+	head         int64
+	start        time.Time
+	vault        sdk.AccAddress
+	bankKey      []byte
+	broadcasts   int
+	executed     chan struct{}
+	releaseACK   chan struct{}
+	ackReleased  sync.Once
+	executedOnce sync.Once
 }
 
 func newNativeHTTPChain(t *testing.T, signer *testBackendSigner) *nativeHTTPChain {
@@ -396,7 +397,10 @@ func (f *nativeHTTPChain) serve(t *testing.T, witness bool) *httptest.Server {
 			for i := 0; i < 3; i++ {
 				f.commit(t, nil)
 			}
-			close(f.executed)
+			// Original funding and actual escrow return are TWO legitimate SDK
+			// transfers in one disposable chain. Notify observers only once:
+			// double-close panics before HTTP ACK and would fake ambiguity.
+			f.executedOnce.Do(func() { close(f.executed) })
 			<-f.releaseACK // The parent kills only the isolated signer process here.
 			_ = json.NewEncoder(w).Encode(map[string]any{"result": map[string]any{"hash": hash}})
 			return
