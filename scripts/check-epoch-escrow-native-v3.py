@@ -91,7 +91,7 @@ def main():
         if (held.returncode != 2 or len(held.stdout) > 256 * 1024 or
                 len(held.stderr) > 256 * 1024 or
                 any(line not in warnings for line in held.stderr.splitlines(keepends=True)) or
-                held.stdout != b'{"code":"EPOCH_POLICY_INVALID"}\n'):
+                held.stdout != b'{"code":"PRODUCTION_TRUST_ENROLLMENT_REQUIRED"}\n'):
             raise RuntimeError("HELD_CLI_REFUSAL_CONTRACT_FAILED")
         print("HOLD: exact HD wire-v1 argv refuses genuine SDK golden; no positive verifier or financial authority")
         print("PASS: one original 100-WOLO ticket conserves 40+60 market legs; matched return78/fee2 and void return60 use genuine MsgSend0; legacy event1 unchanged; production execution HELD")
