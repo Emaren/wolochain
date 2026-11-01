@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "ef26b4972b89dd523f488a46d60ae5d735a29c9d01d72ab3dac312377c9f8c77",
+      "sha256": "3d35c158c0f7bf0d014ea0fd6dbdef07746dfcf5eefbe24a587f8c37b33a81e4",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -587,9 +587,9 @@
       "owner": "wolochain-ops",
       "path": "docs/war-satchel-financial-bridge.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-10-20",
+      "reviewed_at": "2026-11-01",
       "sensitivity": "restricted",
-      "sha256": "4cce7935649f5c48a78228b32896dafeacc07a710328af06f7ebca8a36a7eb0c",
+      "sha256": "e0aea026c081afa4601c1217a0a6ae4e345fceb9f35f1a43dd29d2e937fad45c",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -1112,8 +1112,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "codex/independent-epoch-escrow-v3",
-    "commit": "ae8460d36910c3335f5f196b0f0aee98475f3825"
+    "branch": "codex/c01-escrow-return-durable-execution-20261101",
+    "commit": "4120e1d70fbf7d423019153cd01579f457bf97bd"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
