@@ -84,6 +84,11 @@ func TestEnrolledEscrowNativeSDKExecutesOnlyOneActualEscrowMsgSend(t *testing.T)
 	result, err := c.engine.ExecuteEnrolledEscrowReturn(t.Context(), f.approval, escrow, guards)
 	require.NoError(t, err)
 	require.Equal(t, "UNKNOWN", result.Status, "native broadcast alone must never grant customer credit")
+	// Distinguish a genuine chain-side SDK effect from a pre-broadcast refusal.
+	// This is diagnostic evidence; UNKNOWN is still a hard financial HOLD.
+	t.Logf("escrow native held outcome: reason=%s txhash_present=%t broadcasts_delta=%d",
+		result.Reason, result.TxHash != "", c.chain.broadcasts-before)
+	require.Equal(t, before+1, c.chain.broadcasts, "actual native SDK chain must receive one transaction before acceptance")
 	require.Equal(t, "broadcast_accepted_unconfirmed", result.Reason)
 	require.NotEmpty(t, result.TxHash)
 	require.Equal(t, before+1, c.chain.broadcasts, "exactly one real SDK escrow MsgSend")
