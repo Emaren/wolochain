@@ -130,8 +130,25 @@ func TestEscrowServiceProductionExecutables(t *testing.T) {
 	before := counts()
 	cli := func() EscrowReturnSpendResult {
 		cmd := exec.CommandContext(ctx, clientPath, "execute-enrolled-return", "--config", c.path, "--approval", approvalPath)
-		output, err := cmd.CombinedOutput()
-		require.NoError(t, err, "actual CLI: %s", output)
+		var stderr bytes.Buffer
+		cmd.Stderr = &stderr
+		output, err := cmd.Output()
+		if err != nil {
+			inspection, _ := http.NewRequestWithContext(ctx, http.MethodGet, "http://127.0.0.1:8094/satchel/v1/returns/execution/"+f.approval.ClaimID, nil)
+			inspection.Header.Set("Authorization", "Bearer "+testHTTPToken)
+			status, observation := 0, []byte(nil)
+			if response, readErr := client.Do(inspection); readErr == nil {
+				status = response.StatusCode
+				observation, _ = io.ReadAll(io.LimitReader(response.Body, 64<<10))
+				_ = response.Body.Close()
+			}
+			var serverLog []byte
+			if file, openErr := os.Open(logPath); openErr == nil {
+				serverLog, _ = io.ReadAll(io.LimitReader(file, 16<<10))
+				_ = file.Close()
+			}
+			t.Fatalf("actual CLI failed: %v stdout=%s stderr=%s; read-only attempt status=%d body=%s broadcasts_delta=%d; fixed daemon log=%s", err, output, stderr.Bytes(), status, observation, counts()-before, serverLog)
+		}
 		var observed struct {
 			Protocol            int                     `json:"protocol"`
 			Kind                string                  `json:"kind"`

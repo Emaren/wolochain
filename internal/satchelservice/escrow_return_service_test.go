@@ -228,6 +228,20 @@ func TestEscrowServiceGlobalRevocationDuringFinalBankIOCannotSign(t *testing.T) 
 	require.Equal(t, before, c.chain.broadcasts)
 }
 
+func TestEscrowServiceFinalBroadcastBankRootRecheckRefusesChangedHead(t *testing.T) {
+	f := newEscrowServiceFixture(t)
+	c := f.custody
+	before, signs := c.chain.broadcasts, c.SDKSigns.Load()
+	c.afterSign = func() { c.chain.mu.Lock(); defer c.chain.mu.Unlock(); c.chain.commit(t, nil) }
+	result, err := f.service.Execute(t.Context(), f.approval)
+	require.NoError(t, err)
+	require.Equal(t, "UNKNOWN", result.Status)
+	require.Equal(t, "broadcast_uncertain", result.Reason)
+	require.NotEmpty(t, result.TxHash)
+	require.Equal(t, signs+1, c.SDKSigns.Load())
+	require.Equal(t, before, c.chain.broadcasts, "final SDK callback must require fresh root despite current outer file guards")
+}
+
 func (f *escrowServiceFixture) prepareSecondLeg(t *testing.T, uncertainFirst bool) ReturnApproval {
 	t.Helper()
 	writeReview := func() ReturnApproval {

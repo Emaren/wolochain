@@ -10,10 +10,13 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"net"
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -105,6 +108,31 @@ func TestExecuteEnrolledReturnFixedAuthenticatedSingleRequestNoncreditingObserva
 		_, err := os.Stat(path)
 		require.True(t, os.IsNotExist(err), "client must not create or open runtime financial state")
 	}
+}
+
+func TestExecuteEnrolledReturnActualTransportWaitsForBoundedExecutionHeaders(t *testing.T) {
+	f := enrolledReturnClientFiles(t)
+	var calls atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls.Add(1)
+		select {
+		case <-time.After(3100 * time.Millisecond):
+		case <-r.Context().Done():
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = io.WriteString(w, enrolledReturnUnknownReply())
+	}))
+	defer server.Close()
+	transport := newExecuteReturnTransport()
+	defer transport.CloseIdleConnections()
+	// Map only this test socket. Production argv/config cannot change8094.
+	transport.DialContext = func(ctx context.Context, network, address string) (net.Conn, error) {
+		return (&net.Dialer{Timeout: time.Second}).DialContext(ctx, network, server.Listener.Addr().String())
+	}
+	var out bytes.Buffer
+	require.Zero(t, runExecuteReturnWithTransport(f.args, &out, transport), out.String())
+	require.EqualValues(t, 1, calls.Load(), "a delayed header must never cause a retry")
 }
 
 func TestExecuteEnrolledReturnAmbiguousOrForgedHTTPNeverRetriesOrEchoes(t *testing.T) {

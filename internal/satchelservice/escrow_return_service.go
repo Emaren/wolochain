@@ -173,10 +173,10 @@ func newEnrolledEscrowExecutor(issuer *CustodyAuthority, source func() (string, 
 				return nil
 			})
 		},
-		AuthorizeSign: func(ctx context.Context, req TransferRequest) bool { return s.authorized(ctx, req) },
+		AuthorizeSign: func(ctx context.Context, req TransferRequest) bool { return s.authorizeIrreversible(ctx, req) },
 		AuthorizeBroadcast: func(ctx context.Context, tx SignedTransaction) bool {
 			g, _ := ctx.Value(enrolledEscrowOperationKey{}).(*enrolledEscrowOperation)
-			return g != nil && s.authorized(ctx, g.request) && s.native.ValidateSigned(g.request, tx) == nil
+			return g != nil && s.authorizeIrreversible(ctx, g.request) && s.native.ValidateSigned(g.request, tx) == nil
 		},
 		ConfirmTransaction: func(ctx context.Context, req TransferRequest, tx SignedTransaction) (Confirmation, error) {
 			evidence, err := issuer.reader.ReadTransfer(ctx, satchel.TransferIntent{Sender: req.Sender, Recipient: req.Recipient, AmountUWolo: req.AmountUWolo, Memo: req.Memo}, tx.Hash)
@@ -209,10 +209,24 @@ func (s *EnrolledEscrowExecutor) authorized(ctx context.Context, req TransferReq
 	if g == nil || g.executor != s || hashJSON(req) != hashJSON(g.request) {
 		return false
 	}
-	a := s.issuer
 	if !s.protectedCurrent(ctx, g) {
 		return false
 	}
+	completed := time.Now()
+	return ctx.Err() == nil && completed.Before(g.expires) &&
+		validReviewTime(req.ReturnApproval.IssuedAt, req.ReturnApproval.ExpiresAt, completed.Unix(), true) &&
+		validReviewTime(req.ReturnApproval.Allocation.IssuedAt, req.ReturnApproval.Allocation.ExpiresAt, completed.Unix(), true)
+}
+
+// Fresh bank collection belongs at the irreversible SDK boundaries, after its
+// account/head I/O and immediately before the actual signing/broadcast call.
+// Outer guards retain protected permission checks without repeating this I/O.
+func (s *EnrolledEscrowExecutor) authorizeIrreversible(ctx context.Context, req TransferRequest) bool {
+	if !s.authorized(ctx, req) {
+		return false
+	}
+	g, _ := ctx.Value(enrolledEscrowOperationKey{}).(*enrolledEscrowOperation)
+	a := s.issuer
 	bank, proof, err := a.reader.ReadCurrentBankProof(ctx, a.config.BettingEscrow)
 	if err != nil {
 		return false

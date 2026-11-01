@@ -29,12 +29,16 @@ var enrolledReturnHash = regexp.MustCompile(`^[A-F0-9]{64}$`)
 var enrolledReturnToken = regexp.MustCompile(`^[A-Za-z0-9_-]{48,512}$`)
 
 func runExecuteReturn(args []string, out io.Writer) int {
-	transport := &http.Transport{Proxy: nil,
-		DialContext:           (&net.Dialer{Timeout: 2 * time.Second}).DialContext,
-		ResponseHeaderTimeout: 3 * time.Second, DisableCompression: true,
-		DisableKeepAlives: true, MaxConnsPerHost: 1, MaxResponseHeaderBytes: 8192}
+	transport := newExecuteReturnTransport()
 	defer transport.CloseIdleConnections()
 	return runExecuteReturnWithTransport(args, out, transport)
+}
+
+func newExecuteReturnTransport() *http.Transport {
+	return &http.Transport{Proxy: nil,
+		DialContext:           (&net.Dialer{Timeout: 2 * time.Second}).DialContext,
+		ResponseHeaderTimeout: 8 * time.Second, DisableCompression: true,
+		DisableKeepAlives: true, MaxConnsPerHost: 1, MaxResponseHeaderBytes: 8192}
 }
 
 // The transport seam is private test support. Production dispatch always uses
