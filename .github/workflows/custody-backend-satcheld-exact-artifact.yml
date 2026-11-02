@@ -2,11 +2,19 @@ name: Custody runtime wolosatcheld exact-source artifact (NO DEPLOY)
 
 on:
   pull_request:
-    branches: [integration/20261018-satchel-ops-finance-held, codex/satchel-production-backend, codex/satchel-custody-authority, codex/solo-owner-offline-intent-20261026]
+    branches: [integration/20261018-satchel-ops-finance-held, codex/satchel-production-backend, codex/satchel-custody-authority, codex/solo-owner-offline-intent-20261026, codex/c01-enrolled-native-executor-20261101]
   workflow_dispatch:
+    inputs:
+      profile:
+        description: Immutable reviewed candidate profile; no source override
+        type: choice
+        required: true
+        default: integrated-custody-runtime
+        options: [integrated-custody-runtime, c01-enrolled-escrow-runtime]
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: integrated-custody-runtime-artifact-${{ github.event.pull_request.number || github.ref }}
@@ -14,6 +22,7 @@ concurrency:
 
 jobs:
   artifact:
+    if: ${{ github.base_ref != 'codex/c01-enrolled-native-executor-20261101' && (github.event_name != 'workflow_dispatch' || inputs.profile != 'c01-enrolled-escrow-runtime') }}
     name: Reproducible custody runtime wolosatcheld artifact — UNDEPLOYED
     runs-on: ubuntu-24.04
     timeout-minutes: 55
@@ -119,5 +128,126 @@ jobs:
         with:
           name: integrated-custody-runtime-${{ env.EXPECTED_SOURCE }}-${{ github.run_id }}-${{ github.run_attempt }}-github-receipt
           path: ${{ runner.temp }}/integrated-custody-runtime-receipt/
+          if-no-files-found: error
+          retention-days: 30
+
+  c01-artifact:
+    if: ${{ github.repository == 'Emaren/wolochain' && ((github.event_name == 'pull_request' && github.event.pull_request.number == 124 && github.base_ref == 'codex/c01-enrolled-native-executor-20261101' && github.head_ref == 'codex/c01-executable-deadline-repair-20261101' && github.event.pull_request.head.repo.full_name == 'Emaren/wolochain') || (github.event_name == 'workflow_dispatch' && inputs.profile == 'c01-enrolled-escrow-runtime')) }}
+    name: Exact C01 enrolled escrow wolosatcheld artifact — UNDEPLOYED
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    env:
+      EXPECTED_SOURCE: 93e51f24acdc2a88af80b1b0d3b1db808701de8e
+      BUILDER_COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
+      GOTOOLCHAIN: local
+      GOFLAGS: -tags=go1.27
+      GOMAXPROCS: '2'
+      PYTHONDONTWRITEBYTECODE: '1'
+
+    steps:
+      - name: Checkout reviewed artifact machinery
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ env.BUILDER_COMMIT }}
+          path: artifact-tools
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Require successful full and native CI at the exact C01 source
+        env:
+          C01_GITHUB_READ_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import importlib.util, json, os, pathlib
+          path = pathlib.Path(os.environ['GITHUB_WORKSPACE']) / 'artifact-tools/scripts/settlement-artifact.py'
+          spec = importlib.util.spec_from_file_location('artifact', path)
+          artifact = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(artifact)
+          receipt = artifact.source_ci_receipt('c01-enrolled-escrow-runtime')
+          if receipt['source_commit'] != os.environ['EXPECTED_SOURCE']:
+              raise SystemExit('SOURCE_CI_HOLD workflow/source pin mismatch')
+          destination = pathlib.Path(os.environ['RUNNER_TEMP']) / 'c01-source-ci-receipt.json'
+          with destination.open('x') as output:
+              output.write(json.dumps(receipt, sort_keys=True, indent=2) + '\n')
+          print('Exact-source full and native GitHub CI receipts verified; no financial authority.')
+          PY
+
+      - name: Checkout immutable qualified implementation, distinct from artifact machinery
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ env.EXPECTED_SOURCE }}
+          path: implementation
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Pin Go compiler and forbid toolchain substitution
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version: '1.24.6'
+          check-latest: false
+          cache: false
+
+      - name: Existing adversarial provenance and source-CI gate contracts
+        working-directory: artifact-tools
+        run: python3 -m unittest discover -s tests -p 'test_settlement_artifact*.py' -v
+
+      - name: One signer-verifier binary, two sequential fresh-cache builds
+        run: bash artifact-tools/scripts/build-settlement-artifact.sh --profile c01-enrolled-escrow-runtime "$GITHUB_WORKSPACE/implementation" "$RUNNER_TEMP/c01-enrolled-escrow-runtime-candidate"
+
+      - name: Upload immutable UNDEPLOYED C01 candidate
+        id: c01-candidate
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: c01-enrolled-escrow-runtime-${{ env.EXPECTED_SOURCE }}-linux-amd64-${{ github.run_id }}-${{ github.run_attempt }}-UNDEPLOYED
+          path: ${{ runner.temp }}/c01-enrolled-escrow-runtime-candidate/
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 30
+
+      - name: Record externally identified archive, source-CI and binary receipts
+        env:
+          CANDIDATE_ARTIFACT_ID: ${{ steps.c01-candidate.outputs.artifact-id }}
+          CANDIDATE_ARTIFACT_DIGEST: ${{ steps.c01-candidate.outputs.artifact-digest }}
+          CANDIDATE_ARTIFACT_URL: ${{ steps.c01-candidate.outputs.artifact-url }}
+        run: |
+          python3 - <<'PY'
+          import hashlib, json, os, pathlib, re
+          root = pathlib.Path(os.environ['RUNNER_TEMP'])
+          manifest_path = root / 'c01-enrolled-escrow-runtime-candidate/manifest.json'
+          manifest = json.loads(manifest_path.read_bytes())
+          source_ci_raw = (root / 'c01-source-ci-receipt.json').read_bytes()
+          source_ci = json.loads(source_ci_raw)
+          artifact_id, digest = os.environ['CANDIDATE_ARTIFACT_ID'], os.environ['CANDIDATE_ARTIFACT_DIGEST']
+          if not re.fullmatch(r'[1-9][0-9]*', artifact_id) or not re.fullmatch(r'[0-9a-f]{64}', digest):
+              raise SystemExit('C01_ARTIFACT_RECEIPT_INVALID')
+          if source_ci['source_commit'] != os.environ['EXPECTED_SOURCE'] or manifest['source']['commit'] != os.environ['EXPECTED_SOURCE']:
+              raise SystemExit('C01_ARTIFACT_SOURCE_MISMATCH')
+          receipt = {
+              'schema_version': 1, 'production_authorized': False,
+              'source_commit': os.environ['EXPECTED_SOURCE'], 'profile': 'c01-enrolled-escrow-runtime',
+              'github': manifest['github'], 'source_ci': source_ci['source_ci'],
+              'source_pull_request': source_ci['source_ci'][0]['pull_request'],
+              'builder_ancestry': source_ci['builder_ancestry'],
+              'source_ci_receipt_sha256': hashlib.sha256(source_ci_raw).hexdigest(),
+              'artifact_id': artifact_id, 'artifact_digest_sha256': digest,
+              'artifact_url': os.environ['CANDIDATE_ARTIFACT_URL'],
+              'manifest_sha256': hashlib.sha256(manifest_path.read_bytes()).hexdigest(),
+              'binary_sha256': manifest['binary']['sha256'],
+              'rebuild_sha256': manifest['reproducibility']['second_sha256'],
+          }
+          destination = root / 'c01-enrolled-escrow-runtime-receipt'
+          destination.mkdir()
+          (destination / 'source-ci-receipt.json').write_bytes(source_ci_raw)
+          (destination / 'github-artifact-receipt.json').write_text(json.dumps(receipt, sort_keys=True, indent=2) + '\n')
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as summary:
+              summary.write('UNDEPLOYED C01 source artifact; no custody, operator, runtime or deployment authority.\n\n')
+              summary.write(json.dumps(receipt, sort_keys=True, indent=2) + '\n')
+          PY
+
+      - name: Preserve external C01 receipt separately for independent acceptance
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: c01-enrolled-escrow-runtime-${{ env.EXPECTED_SOURCE }}-${{ github.run_id }}-${{ github.run_attempt }}-github-receipt
+          path: ${{ runner.temp }}/c01-enrolled-escrow-runtime-receipt/
           if-no-files-found: error
           retention-days: 30
