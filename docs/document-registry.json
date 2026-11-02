@@ -518,9 +518,9 @@
       "owner": "wolochain-ops",
       "path": "docs/war-satchel-controlled-release.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-10-18",
+      "reviewed_at": "2026-11-02",
       "sensitivity": "restricted",
-      "sha256": "bd18f40d1c736342b2fe87d8d092378e232e1bb06142c8d652ca2c2590a0978b",
+      "sha256": "37046c53685e6e772de1cc73fddd96a78141de62da75315ee57f2c19b0db9882",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [

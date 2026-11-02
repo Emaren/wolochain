@@ -8,20 +8,62 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "source-integration-proof-not-production-approval"
-reviewed_at: "2026-10-18"
+reviewed_at: "2026-11-02"
 review_interval_days: 14
 sensitivity: "restricted"
 ---
 
 # War Satchel Controlled Release Gates
 
-## November 1 financial activation sequence
+## November 2 source and operating-control review
 
-Source development continues on Wolo draft #115 and HD draft #838. Wolo
-`a604c6ece91ef808ae3f3098fdaa9ce45d9c8ac0` has successful full/native CI;
-HD `818ef8303840c53e071328824cefa84ec08700f2` has successful required CI.
-Newer unpublished files do not inherit those results. Neither source receipt
-establishes an installed signer/reviewer or a funded production product.
+**Reviewer: Codex, acting under Tony Blum's explicit source-engineering and
+review directive, November 2, 2026.** This is an automated, owner-delegated
+source/documentation review by the implementation lane. No independent human,
+custodian, reserve reviewer, production observer or wallet signer is claimed.
+The repository owner remains `wolochain-ops`. This review does not issue a
+financial permit or renew an operational receipt.
+
+Reviewed source is Wolo #115 → #122 → #123 → #124. The C01 implementation
+reviewed here is `8529e5dd2bf647840308c608957b3ad16bbeb827`, sealed at
+`c97470d85fe13496c6777fe19bf68ad08688731b`. The review checked the actual
+[8094 HTTP route](../internal/satchelservice/http.go),
+[enrolled escrow role](../internal/satchelservice/escrow_return_service.go),
+[current reserve qualification](../internal/satchelservice/escrow_return_runtime.go),
+[durable UNKNOWN journal](../internal/satchelservice/escrow_return_durable_spend.go),
+[fixed-target CLI](../cmd/woloescrowd/execute_return.go),
+[8095 reviewer](../cmd/woloreviewerd/main.go),
+[artifact profiles](../scripts/settlement-artifact.py), existing six-control
+[financial checklist](settlement-contracts/financial-release-checklist.json)
+and [App Master Register #1108](https://github.com/Emaren/app-prodn/issues/1108).
+App branches, live services, protected financial state and keys were not changed.
+
+At this review, [native evidence #41383669730](https://github.com/Emaren/wolochain/actions/runs/41383669730)
+succeeded at `c97470d`; [full CI #41383669778](https://github.com/Emaren/wolochain/actions/runs/41383669778)
+failed because this document's previous October 18 review expired November 1.
+That stop occurred **before** certification of the repaired production-binary
+test. Native success does not override it; a new exact-head full/native result
+is required after this substantive document correction.
+
+The earlier executable failure at `9f40ae3` returned before durable intent,
+with zero broadcasts and read-only recovery 404. Its fixture signed a reserve
+review for approximately 110 seconds, beyond genuine native bank evidence's
+approximately 30-second lifetime. The repaired fixture derives its review
+expiry from that evidence; production freshness, expiry, reserve and custody
+checks are unchanged. Current tests distinguish actual clean-built binary
+execution/refusals from in-process native SDK post-sign drift, signing loss and
+restart tests. Fixed boundary/status/context diagnostics disclose no raw
+permission, credential, request body or transport error. Exact CI must confirm
+the executable verdict before any source qualification claim.
+
+**Physical scoreboard: C01–C09 all OPEN (9/9).** The previous qualified Wolo
+and HD source heads are dated ancestor evidence, not present installation or
+funded-product receipts. The unpublished `c01-enrolled-escrow-runtime` artifact
+profile is still under review; its candidate pin has not qualified. Historical
+`composed-satcheld`, `custody-runtime` and `integrated-custody-runtime` profiles
+retain their original source identities and cannot represent C01 by renaming.
+A source-CI receipt, archive or owner-delegated review cannot establish external
+custody, independent reserve completeness, recovery or transaction signing.
 
 | Operational control | Independently verified production status | Closure evidence and owner |
 | --- | --- | --- |
@@ -32,15 +74,33 @@ establishes an installed signer/reviewer or a funded production product.
 | Independently witnessed recovery | HOLD | Recovery lane E and independent witness: isolated actual restore and state-preserving paired settlement recovery; source tests and website rollback do not substitute. |
 | Authenticated release authority | HOLD | Independently enrolled custody, reviewer and owner principals: exact source/binary/config/policy, protected key roles, fresh nonce and distinct signed staging/activation authority. |
 
+The production 8095 HTTP surface currently exposes
+`POST /reviewer/v1/wagers` under its separate protected startup permit. It reads
+restricted HD/Watcher, bank, liability and pending-fee evidence; it is not a
+transaction signer. There is **no automatic escrow-return-review endpoint** in
+that surface. The 8094 return executor consumes an enrolled protected
+`EscrowReturnExecutionBundle` file with both independent reserve signatures,
+refreshed after preparation, plus a separate exact owner operation permit.
+Producing/provisioning that genuine return review remains a required boundary;
+no wager review, fixture signature or daemon-local fallback substitutes for it.
+
 The financial deployment order is:
 
-1. Finish and independently review the protected 8094 execution bridge,
-   post-attempt principal consumption, HD native verifier/role confinement,
-   additive migration 14 and genuine original-Watcher product E2E. Run full
-   exact-head Go/race/native and isolated PostgreSQL tests on the final SHAs.
-2. Produce reproducible immutable signer/reviewer/app artifacts. Verify their
-   actual embedded source, binary digests and migration manifest; historical
-   `72a3bca5` verifier artifacts cannot represent newer source contracts.
+1. Qualify the existing protected C01 execution bridge with full exact-head
+   CI, the actual clean-built `woloescrowd` → `wolosatcheld` subprocess and
+   native SDK/HD evidence. Keep expiry/revocation, H/H+1 current-root checks,
+   account-local reserves, signed byte identity and permanent UNKNOWN fencing.
+   The App engineer separately qualifies C02: restricted HD writer/receipt
+   consumption, migration 14, original Watcher/mandates and complete lifecycle.
+   Communicate the interface through #1108; do not edit that engineer's branches.
+2. Finish the distinct `c01-enrolled-escrow-runtime` profile using the existing
+   builder. Pin the genuinely qualified source separately from builder/workflow
+   identity; authenticate both exact-source CI runs and their reviewed PR
+   context before two sequential fresh-cache builds. Retain compiler/package,
+   clean VCS, reproducibility, archive/manifest/binary digests and the separate
+   external GitHub receipt. Qualify the reviewer executable and its protected
+   configuration independently; a `wolosatcheld` archive does not also certify
+   `woloreviewerd` or the CLI. Historical pins must remain unchanged.
 3. Obtain the six authentic operational receipts above. Prepare one reviewed,
    exact artifact/config-bound operator action and code-only rollback, then
    obtain the distinct owner authorization required for that concrete action.
@@ -60,14 +120,15 @@ The financial deployment order is:
    proof inspection and never blind resubmission. Enable the reviewed funded
    product only after these receipts and production health/rollback checks.
 
-There is no executable live cutover command yet: protected escrow enrollment,
-final artifacts and independent physical receipts are not established. Source
+No source-pinned C01 production installation/start action has qualified:
+protected escrow enrollment, final artifacts and independent physical receipts
+are not established. Source
 work does not need another general owner permission. The next eventual owner
 action is the concrete source-pinned staging/activation approval after those
 prerequisites, followed by actual Keplr signatures. F's website release remains
 independent throughout this sequence. Financial verdict remains HOLD.
 
-The release candidate builds on the combined source in draft
+Historical source lineage begins with the combined source in draft
 [PR #38](https://github.com/Emaren/wolochain/pull/38), initially
 `68cdc1ae2f1c877f40e7ee3f8c094729f080394f`; the
 [source-bound index](DOCUMENTATION_CONTROL_PLANE.md) identifies the current
@@ -85,14 +146,17 @@ or a claim that they remain current. The candidate requires a fresh bounded
 identity/financial receipt immediately before protected execution; unresolved
 liabilities stay held until independently proven otherwise.
 
-## Future website-only lane: observational evidence, separate authority
+## Historical website-only schema contract: separate authority
 
 The [website HOLD evidence v1 schema](settlement-contracts/wolo-website-hold-evidence-v1.schema.json)
-defines a bounded handoff for a **future app-owned release controller**. It does
-not implement that lane or make website candidate `7ee1606a0172b9248f3b9c52c92670a5b4e3645a`
-eligible. The existing Wolo source-authority gate continues to report `BLOCKED`;
-the historical `bdbce253` cutover and newer Satchel release remain distinct.
-Every financial, custody and app deployment authorization in this handoff is false.
+is the Wolo-side observational contract originally supplied for an app-owned
+website-only lane. Its schema alone does not implement or authorize a release.
+The former `7ee1606a` candidate and historical `bdbce253` source-authority gate
+are dated context, not today's app release instruction. Current nonfinancial
+website admission, F/G/Nginx and public deployment belong exclusively to the
+App engineer and #1108. An unresolved Wolo financial gate must not be used here
+to block that independently qualified website release. Every financial and
+custody authorization in this Wolo handoff remains false.
 
 The consumer must independently authenticate the operator channel and exact
 observer source/hash, and pin an externally reviewed immutable baseline outside
@@ -135,7 +199,7 @@ The tests deliberately demonstrate that schema validity alone does not enforce
 cross-field equality, freshness or authentication. The future controller must
 refuse those semantically invalid inputs even when their shape is valid.
 
-## Fresh read-only production observation
+## Historical October 17 read-only production receipt
 
 The [machine-readable receipt](settlement-contracts/satchel-live-readonly-20261017.json)
 records the observations below. At 2026-10-17 20:57 UTC, existing SSH access
@@ -181,11 +245,14 @@ financial hold remains unchanged.
 
 ## Dependency order for operator execution
 
-1. Independently review the final source and exact CI receipts. Download the
-   composed `wolosatcheld` archive plus its separately anchored GitHub receipt;
-   authenticate archive and manifest digests, then run the shared offline
-   verifier with `--profile composed-satcheld` and the exact CI identity. The
-   legacy `526d5eb6` artifact is a separate `wolochaind` candidate.
+1. Independently accept the final C01 source and both exact-head CI receipts,
+   including the production executable test. After the distinct C01 artifact
+   profile qualifies, authenticate its immutable source/builder/workflow and
+   archive/manifest/binary digests using the shared offline verifier under
+   `--profile c01-enrolled-escrow-runtime`. No arbitrary SHA/profile override
+   or historical `composed-satcheld` substitution is allowed. Missing C01
+   profile/source-CI/external receipt means HOLD, not an installation fallback.
+   The legacy `526d5eb6` artifact remains a separate `wolochaind` candidate.
 2. HD must consume the portable proof through a pinned offline verifier using
    its own operator-provisioned anchor and stored intent, verify signed v2
    allocations and owner withdrawal mandates, and atomically consume both
@@ -210,7 +277,8 @@ financial hold remains unchanged.
    unchanged throughout; retired rescue/rollback scripts stay retired.
 6. With named operator approval, execute only the separately reviewed protected
    settlement cutover and schema installation. Provision the isolated signer
-   at a versioned path from the verified composed artifact. No installation,
+   at a versioned path from its exact qualified C01 artifact. Independently
+   qualify the distinct 8095 reviewer artifact and protected review boundary. No installation,
    key creation, service restart or financial activation is authorized while
    the preceding evidence is missing. Conditional reviewed commands below are
    an operator procedure, not permission to execute them.
@@ -229,131 +297,77 @@ financial hold remains unchanged.
 | Deposit | BLOCKED | Independently reviewed current app proof/receipt integration and protected schema admission; independent vault/reserve/trust provisioning |
 | Signed auto-bet authorization | BLOCKED | deployed owner/ADR-36/revocation/Watcher proof; held source permits at most 10,000 WOLO per newly authorized wager and 50,000 WOLO per owner-signed daily Auto Bet cap; independently configured signer limits and every existing smaller mandate remain binding |
 | Automatic betting | BLOCKED | dedicated signer runtime plus HD reservation/concurrency/mandate integration and canary |
-| Settlement | BLOCKED | exact-source legacy cutover, authoritative match allocation review and complete liabilities/drain |
+| Settlement | BLOCKED | qualified distinct 8094 escrow return execution, signed original allocations, 8095 reserve review, restricted HD proof/credit and complete liabilities/drain; any legacy replacement remains separately governed |
 | Refund | BLOCKED | HD signed v2 allocation + authenticated proof consumption; full unmatched principal remains mandatory |
 | Withdrawal | BLOCKED | HD owner-mandate/independent approval worker, durable reservation proof and authenticated finalize/recovery consumer |
 
 No end-to-end production financial canary or new production deployment is
-claimed. C2 remains `UNAVAILABLE`; all portable proof receipts are
-`NONCREDITING`. Source CI and reproducible artifacts cannot clear these gates.
+claimed. C01–C09 remain OPEN; a portable native proof is noncrediting until
+HD independently verifies the stored intent and atomically consumes its global
+physical receipt identity. Source CI and reproducible artifacts cannot clear
+physical custody or release gates.
 
-## Protected installation procedure — commands, not execution authority
+## Protected installation admission — no current executable action
 
-These commands have **not** been run. An operator may execute them only after
-named human approval of this exact candidate, authenticated artifact receipts,
-independent key-control/role exclusion evidence, reviewed app integration,
-current bank/liability reconciliation (including fees), producer fencing,
-quiesced recovery snapshots and independently provisioned Comet trust. No key,
-token or permit generation command is included. All configuration/secret files
-must already exist from the separate governed provisioning process; the bearer
-credential must never be printed, put in shell history or copied into a PR.
+The former single-daemon installation example is withdrawn from the current
+C01 path: it lacked the final C01 artifact, distinct 8095 qualification and
+transaction-specific escrow enrollment now required by source. It was never a
+production receipt. The following existing-source boundaries define the next
+concrete action packet; they do not install or start anything:
 
-Use the reviewed artifact profile whose pinned implementation actually contains
-this candidate. The historical `composed-satcheld` profile pins `155fcf67` and
-**does not** contain later source changes. Do not bypass its source mismatch or
-substitute a locally self-consistent unsigned manifest. Set the variables below
-from independently authenticated GitHub run/artifact receipts, not from the
-untrusted candidate itself. Use a clean candidate source/tooling checkout.
+- Independently authenticated C01 source/full/native CI and reviewed artifact
+  source/builder/workflow identity, immutable archive ID and digest, manifest
+  digest, binary digest, compiler/package provenance and reproducibility.
+- Exact service unit, versioned binary path, dedicated EUID, network policy,
+  protected configuration digest, existing separately provisioned vault and
+  escrow keyrings/unlock files and public identities. No legacy or consensus
+  keys; no key creation/export by the runtime or CLI.
+- Genuine independent checkpoint/witness and fresh account-local H/H+1 bank
+  evidence. The configuration-only `--check` output `TRUST_UNCHECKED` does not
+  authenticate chain trust or authorize service start.
+- Distinct independently qualified `woloreviewerd` source/binary/configuration
+  on 8095, restricted PostgreSQL principal, complete liabilities and pending
+  fees, signed reserve review covering the **post-prepare** current journal.
+- Owner/execution permission bound to exact source/binary/configuration,
+  enrollment, original approval, raw signed review, amount/fee, fresh nonce and
+  short expiry. The runtime must neither issue that permission nor accept
+  broad conversational permission in its place.
+- Genuine C03–C08 maintenance, uncertainty, solvency, backup, actual restore,
+  custody and operator receipts; then separately scoped staging/start approval
+  and a state-preserving code rollback that retains latest UNKNOWN histories.
 
-```sh
-set -eu
-: "${APPROVED_SOURCE_SHA:?exact independently reviewed full source SHA}"
-: "${APPROVED_BINARY_SHA256:?independently authenticated artifact digest}"
-: "${APPROVED_PROFILE:?reviewed pinned artifact profile for this source}"
-: "${CLEAN_SOURCE:?clean checkout of exact compiled implementation}"
-: "${ARTIFACT_DIR:?verified downloaded and unpacked artifact directory}"
-: "${AUTHENTICATED_MANIFEST_SHA256:?separately authenticated manifest digest}"
-: "${VERIFIED_BUILDER_COMMIT:?reviewed artifact tooling commit}"
-: "${VERIFIED_RUN_ID:?GitHub run ID}"
-: "${VERIFIED_RUN_ATTEMPT:?GitHub run attempt}"
-: "${VERIFIED_WORKFLOW_REF:?exact workflow ref}"
-: "${VERIFIED_WORKFLOW_SHA:?exact workflow SHA}"
-test "$(git -C "$CLEAN_SOURCE" rev-parse HEAD)" = "$APPROVED_SOURCE_SHA"
-python3 scripts/settlement-artifact.py verify --profile "$APPROVED_PROFILE" \
-  --source-dir "$CLEAN_SOURCE" --binary "$ARTIFACT_DIR/wolosatcheld" \
-  --manifest "$ARTIFACT_DIR/manifest.json" \
-  --expected-manifest-sha256 "$AUTHENTICATED_MANIFEST_SHA256" \
-  --repository Emaren/wolochain --builder-commit "$VERIFIED_BUILDER_COMMIT" \
-  --run-id "$VERIFIED_RUN_ID" --run-attempt "$VERIFIED_RUN_ATTEMPT" \
-  --workflow-ref "$VERIFIED_WORKFLOW_REF" --workflow-sha "$VERIFIED_WORKFLOW_SHA"
-printf '%s  %s\n' "$APPROVED_BINARY_SHA256" "$ARTIFACT_DIR/wolosatcheld" | sha256sum -c -
-```
+The reviewed operator packet must use the existing protected deployment and
+recovery mechanisms for its exact action. It must capture the real running
+PID/executable digest/source, service/config/UID/network identity, lease,
+permission/revocation, bank/journal and readiness receipts. Compare original
+8092/8093 and consensus identities before and after. Authenticated 8094 health
+alone never permits producer resume, deposit publication or HD credit.
 
-First installation uses only the new dedicated service. The OS account,
-private configuration, public approval keys, existing independently provisioned
-keyring, checkpoint/witness, signed activation permit and private directories
-must already be reviewed and installed. Their absence is a STOP, not a reason
-to reuse a legacy role. Private files must be owned by the service EUID with no
-group/world access and no symlink components; the executable and service unit
-are root-owned. `-check` checks permit/configuration only and explicitly reports
-`TRUST_UNCHECKED`; actual startup must authenticate current chain trust.
+The exact protected app return contract is:
 
-```sh
-RELEASE_DIR="/opt/wolo-satchel/releases/$APPROVED_SOURCE_SHA"
-test ! -e "$RELEASE_DIR"
-test ! -e /etc/systemd/system/wolo-satchel.service
-id wolo-satchel >/dev/null
-sudo install -d -o root -g root -m 0755 "$RELEASE_DIR"
-sudo install -o root -g root -m 0755 "$ARTIFACT_DIR/wolosatcheld" "$RELEASE_DIR/wolosatcheld"
-sudo -u wolo-satchel "$RELEASE_DIR/wolosatcheld" -config /etc/wolo-satchel/config.json -check
-UNIT_FILE="$(mktemp --suffix=.service)"
-sed "s/REVIEWED_SHA/$APPROVED_SOURCE_SHA/g" \
-  mainnet-prep/systemd/wolo-satchel.service.example > "$UNIT_FILE"
-systemd-analyze verify "$UNIT_FILE"
-sudo install -o root -g root -m 0644 "$UNIT_FILE" /etc/systemd/system/wolo-satchel.service
-rm -- "$UNIT_FILE"
-sudo systemctl daemon-reload
-# Requires the separate explicit service-start approval. Do not enable on boot.
-sudo systemctl start wolo-satchel.service
-sudo systemctl is-active --quiet wolo-satchel.service
-SATCHEL_PID="$(sudo systemctl show -P MainPID wolo-satchel.service)"
-sudo readlink "/proc/$SATCHEL_PID/exe"
-sudo sha256sum "/proc/$SATCHEL_PID/exe"
-```
+1. HD durably records immutable UNKNOWN before its first execution POST.
+2. Prepare the original signed return, obtain a fresh independent reserve
+   review of the new journal and exact signed owner operation permission.
+3. POST the **same** `ReturnApproval` to `/satchel/v1/returns/execute` on 8094.
+   The separate 8095 reviewer never becomes a signer or legacy executor.
+4. Use read-only `GET /satchel/v1/returns/execution/{claim_id}` for recovery.
+   Missing state/404 is UNKNOWN and cannot authorize repeating the POST.
+5. Authenticate `/returns/reconcile` and `/proofs/return` against the original
+   intent and stored signed bytes. Only restricted HD atomic global physical
+   receipt consumption may credit an entitlement. Preserve original ticket and
+   canonical complete market partition, MsgSend index 0 and legacy event ordinal 1.
 
-The runtime executable digest must match `APPROVED_BINARY_SHA256`. The separate
-operator health probe must load the bearer secret from its protected file
-without printing it or placing it in process argv, authenticate 8094, verify
-exact vault/build identity, and retain only a private/redacted receipt. Do not
-open financial producers or publish a deposit destination after health alone.
-The app activation hold remains disabled pending independently approved canary.
+On interruption, retain the latest journal, signed bytes, original approval,
+nonce, uncertain fees and owner/reserve authorities. Never restore older
+financial state, switch to an empty state path, remove journal buckets or
+re-sign/rebroadcast an ambiguous attempt. A downgrade requires an actual
+journal-format compatibility receipt; if absent, hold the new service under
+approved recovery rather than destroying history.
 
-For first-installation rollback, keep all producers fenced and stop **only**
-this new service under recovery approval. Preserve the latest journal, including
-UNKNOWN attempts, even if no successful payment is known:
-
-```sh
-sudo systemctl stop wolo-satchel.service
-test "$(sudo systemctl show -P ActiveState wolo-satchel.service)" = inactive
-# Capture/checksum the now-quiesced state under the reviewed private snapshot
-# procedure. Never replace operations.db with a pre-operation backup.
-```
-
-An upgrade/downgrade requires a separately proven journal-format compatibility
-receipt and versioned old unit/binary. Stopping the new service and preserving
-state is the safe fallback when compatibility is unknown. Never delete journal
-buckets, switch to an old empty state path, or restore an older database to make
-UNKNOWN work retryable.
-
-Legacy 8092/8093 replacement stays a **separate exact bdbce253 procedure**. The
-existing controller accepts only its pinned old/new binaries and a root-owned
-short-lived external financial permit. Inspect is nonmutating; promote/rollback
-are listed solely for a later independently authorized operator cutover:
-
-```sh
-sudo python3 scripts/settlement-bdbce253-code-cutover.py --mode inspect
-# AFTER explicit protected legacy cutover approval and all financial gates:
-sudo python3 scripts/settlement-bdbce253-code-cutover.py --mode promote \
-  --permit /root/aoe2war-release/approved-two-service-permit.json
-# Under approved recovery, retaining current request/run history and fences:
-sudo python3 scripts/settlement-bdbce253-code-cutover.py --mode rollback \
-  --permit /root/aoe2war-release/approved-two-service-permit.json
-# A partial/inactive interrupted switch uses the same reviewed permit:
-sudo python3 scripts/settlement-bdbce253-code-cutover.py --mode recover-interrupted \
-  --permit /root/aoe2war-release/approved-two-service-permit.json
-```
-
-These commands must never target `wolochaind-mainnet.service`, its executable,
-its state or its keys. Neither recovery path resumes HD/DE financial producers.
+Legacy 8092/8093 replacement remains the **separate exact `bdbce253` procedure**
+in the existing [mainnet runbook](mainnet-settlement-runbook.md). Its short-lived
+root-private permit, pinned old/new binary and state-preserving paired recovery
+controls remain binding. Neither it nor C01 may target the consensus service,
+executable, state or keys, or resume HD/DE producers without separate authority.
 Founder #889 and accepted legacy transactions retain their individual holds;
-a release permit is not payment evidence and cannot clear them.
+a release permit is never payment evidence.
