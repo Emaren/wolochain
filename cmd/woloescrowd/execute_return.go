@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -96,20 +97,40 @@ func runExecuteReturnWithTransport(args []string, out io.Writer, transport http.
 	request.Header.Set("Accept-Encoding", "identity")
 	client := &http.Client{Transport: transport, Timeout: 15 * time.Second,
 		CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
+	// Only fixed classifications and numeric status cross this diagnostic
+	// boundary. Never echo a transport error, body, token, approval or URI.
+	unknown := func(phase string, status int, boundary string) int {
+		_ = json.NewEncoder(out).Encode(struct {
+			Code       string `json:"code"`
+			Phase      string `json:"phase"`
+			HTTPStatus int    `json:"http_status"`
+			Boundary   string `json:"boundary"`
+		}{"ESCROW_RETURN_OUTCOME_UNKNOWN", phase, status, satchelservice.EscrowReturnBoundaryName(boundary)})
+		return 2
+	}
 	response, err := client.Do(request) // Exactly one application request; never retry an ambiguous outcome.
 	if err != nil {
-		return fail("ESCROW_RETURN_OUTCOME_UNKNOWN")
+		phase := "transport_failure"
+		var network net.Error
+		if errors.Is(err, context.DeadlineExceeded) || (errors.As(err, &network) && network.Timeout()) {
+			phase = "transport_timeout"
+		}
+		return unknown(phase, 0, "")
 	}
 	defer response.Body.Close()
-	if response.StatusCode != http.StatusOK || (response.Header.Get("Content-Encoding") != "" && response.Header.Get("Content-Encoding") != "identity") {
-		return fail("ESCROW_RETURN_OUTCOME_UNKNOWN")
+	boundary := response.Header.Get("X-Wolo-Escrow-Boundary")
+	if response.StatusCode != http.StatusOK {
+		return unknown("http_status", response.StatusCode, boundary)
+	}
+	if response.Header.Get("Content-Encoding") != "" && response.Header.Get("Content-Encoding") != "identity" {
+		return unknown("response_encoding", response.StatusCode, boundary)
 	}
 	body, err := io.ReadAll(io.LimitReader(response.Body, enrolledReturnMaxBytes+1))
 	var result satchelservice.EscrowReturnSpendResult
 	if err != nil || len(body) > enrolledReturnMaxBytes || !enrolledReturnStrictJSON(body, &result) || ctx.Err() != nil ||
 		result.OperationID != "satchel:claim-return:"+approval.ClaimID || result.Status != "UNKNOWN" || !result.DurableFenced ||
 		!enrolledReturnReason(result.Reason) || (result.TxHash != "" && (!enrolledReturnHash.MatchString(result.TxHash) || result.TxHash == strings.Repeat("0", 64))) {
-		return fail("ESCROW_RETURN_OUTCOME_UNKNOWN")
+		return unknown("response_validation", response.StatusCode, boundary)
 	}
 	// A valid reply means only that the existing runtime reports a fenced
 	// UNKNOWN. CheckTx acceptance, transport success and this DTO never credit HD.

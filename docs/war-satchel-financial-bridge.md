@@ -70,6 +70,19 @@ their source identity, independently authenticates the committed transfer and
 checks the real reconciliation route. It never opens mainnet or production
 keys. Its exact-head CI outcome must be recorded separately from local tests.
 
+The failed real-executable run at `9f40ae3` returned before either durable
+intent or broadcast. Its fixture extended the signed reserve review to 110
+seconds, exceeding the genuine native bank evidence's maximum 30-second
+lifetime. Production correctly refuses that condition; the fixture now bounds
+review expiry by the authentic bank evidence. A native regression keeps the
+overlong signed review negative and then executes the same original claim with
+a valid signed lifetime. Exact-head executable CI must confirm the repair.
+The private execution response supplies only fixed nonsecret boundary labels,
+elapsed milliseconds and context state. The CLI distinguishes transport
+timeout, HTTP refusal and invalid response without echoing input, signed
+permissions, response bodies or raw errors. Every such failure remains UNKNOWN;
+these observations never grant permission to retry or credit.
+
 **C01–C09 remain OPEN.** C01 still requires independently accepted final source,
 immutable release artifacts, real enrolled custody/reviewer and financial
 permissions, physical execution/recovery evidence and acceptance. No funded

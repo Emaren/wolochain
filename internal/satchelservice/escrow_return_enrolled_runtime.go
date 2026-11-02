@@ -29,6 +29,7 @@ func (e *Engine) ExecuteEnrolledEscrowReturn(
 		external.Permit == nil || external.PreBroadcast == nil {
 		return none, ErrEscrowRuntimeHeld
 	}
+	escrowBoundary(ctx, "enrolled_signer")
 	issuer := e.custodyAuthority
 	if issuer.engine != e || issuer.native == nil || signer == issuer.native ||
 		signer.cfg.Vault != e.policy.BettingEscrow ||
@@ -48,6 +49,7 @@ func (e *Engine) ExecuteEnrolledEscrowReturn(
 	}
 	// Qualify AFTER original claim preparation, against its NEW current Bolt
 	// snapshot; before first intent write, any stale reserve review fails.
+	escrowBoundary(ctx, "engine_lock")
 	e.mu.Lock()
 	qualified, err := issuer.qualifyEscrowReturnLocked(ctx, approval)
 	e.mu.Unlock()
@@ -102,6 +104,7 @@ func (e *Engine) ExecuteEnrolledEscrowReturn(
 				external.PreBroadcast(ctx, req, tx)
 		},
 	}
+	escrowBoundary(ctx, "durable_intent")
 	return e.ExecuteQualifiedEscrowReturn(ctx, approval, qualified, signer, guards)
 }
 

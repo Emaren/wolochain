@@ -363,7 +363,10 @@ func (h *privateHTTPHandler) claimReturn(ctx context.Context, w http.ResponseWri
 			httpFailure(w, http.StatusServiceUnavailable, "enrolled_escrow_unavailable")
 			return
 		}
+		diagnostic := &escrowBoundaryObservation{stage: "request", started: time.Now()}
+		ctx = context.WithValue(ctx, escrowBoundaryKey{}, diagnostic)
 		result, err := backend.ExecuteEnrolledClaimReturn(ctx, approval)
+		escrowBoundaryHeaders(ctx, w, diagnostic)
 		if err != nil {
 			httpFailure(w, http.StatusConflict, "escrow_return_held_or_unknown")
 			return

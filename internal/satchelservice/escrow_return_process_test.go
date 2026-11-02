@@ -29,6 +29,12 @@ func TestEscrowServiceProductionExecutables(t *testing.T) {
 	if signerPath == "" && clientPath == "" {
 		t.Skip("requires explicit CI-built production executables and isolated loopback8094")
 	}
+	for _, mode := range []string{"review_outlives_bank", "expired_permission", "stale_bank_root", "revoked_permission", "confirmed_replay"} {
+		t.Run(mode, func(t *testing.T) { testEscrowServiceProductionExecutable(t, signerPath, clientPath, mode) })
+	}
+}
+
+func testEscrowServiceProductionExecutable(t *testing.T, signerPath, clientPath, mode string) {
 	require.True(t, filepath.IsAbs(signerPath))
 	require.True(t, filepath.IsAbs(clientPath))
 	info, err := buildinfo.ReadFile(signerPath)
@@ -87,7 +93,15 @@ func TestEscrowServiceProductionExecutables(t *testing.T) {
 	global.Signature = base64.StdEncoding.EncodeToString(ed25519.Sign(key, PermitMessage(global)))
 	globalBytes = custodyWrite(t, c.config.PermitFile, global)
 	f.bundle.Review.BuildSHA256, f.bundle.Review.ConfigSHA256, f.bundle.Review.PermitSHA256 = binaryDigest, configDigest, custodySHA(globalBytes)
-	f.bundle.Review.IssuedAt, f.bundle.Review.ExpiresAt = time.Now().Unix()-1, time.Now().Unix()+110
+	// A signed review cannot outlive its authentic bank evidence. Extending it
+	// to +110s invalidates a maximum-30s bank proof before intent. Derive the
+	// test review's deadline from the genuine native evidence, never a waiver.
+	bank, _, err := c.reader.ReadCurrentBankProof(t.Context(), c.config.BettingEscrow)
+	require.NoError(t, err)
+	f.bundle.Review.IssuedAt = time.Now().Unix() - 1
+	f.bundle.Review.ExpiresAt = bank.ExpiresAt().Unix() - 1
+	require.Greater(t, f.bundle.Review.ExpiresAt, time.Now().Unix())
+	require.False(t, time.Unix(f.bundle.Review.ExpiresAt, 0).After(bank.ExpiresAt()))
 	reviewBytes := f.reserve.sign(t, &f.bundle)
 	require.NoError(t, os.WriteFile(f.reviewPath, reviewBytes, 0600))
 	f.permit.SourceCommit, f.permit.BinarySHA256, f.permit.ConfigSHA256 = source, binaryDigest, configDigest
@@ -128,6 +142,58 @@ func TestEscrowServiceProductionExecutables(t *testing.T) {
 	}
 	counts := func() int { c.chain.mu.Lock(); defer c.chain.mu.Unlock(); return c.chain.broadcasts }
 	before := counts()
+	if mode != "confirmed_replay" {
+		expectedBoundary := "owner_verification"
+		switch mode {
+		case "review_outlives_bank":
+			// Reproduce the exact failing executable fixture, with valid test
+			// signatures but a review lifetime beyond authentic bank freshness.
+			f.bundle.Review.ExpiresAt = time.Now().Unix() + 110
+			expectedBoundary = "reserve_review_outlives_bank"
+		case "stale_bank_root":
+			f.bundle.Review.CommitBlockHash = strings.Repeat("F", 64)
+			expectedBoundary = "reserve_inventory"
+		case "expired_permission":
+			f.permit.IssuedAt, f.permit.ExpiresAt = time.Now().Unix()-60, time.Now().Unix()-1
+		case "revoked_permission":
+			expectedBoundary = "owner_permission"
+		}
+		if mode == "review_outlives_bank" || mode == "stale_bank_root" {
+			reviewBytes = f.reserve.sign(t, &f.bundle)
+			require.NoError(t, os.WriteFile(f.reviewPath, reviewBytes, 0600))
+			f.permit.ReserveReviewSHA256 = custodySHA(reviewBytes)
+		}
+		f.writePermit(t)
+		if mode == "revoked_permission" {
+			require.NoError(t, os.Remove(f.permitPath))
+		}
+		cmd := exec.CommandContext(ctx, clientPath, "execute-enrolled-return", "--config", c.path, "--approval", approvalPath)
+		var stderr bytes.Buffer
+		cmd.Stderr = &stderr
+		output, err := cmd.Output()
+		require.Error(t, err, "real executable must refuse this signed fixture")
+		var diagnostic struct {
+			Code       string `json:"code"`
+			Phase      string `json:"phase"`
+			HTTPStatus int    `json:"http_status"`
+			Boundary   string `json:"boundary"`
+		}
+		require.NoError(t, json.Unmarshal(output, &diagnostic), "fixed CLI diagnostic: %s", output)
+		require.Equal(t, "ESCROW_RETURN_OUTCOME_UNKNOWN", diagnostic.Code)
+		require.Equal(t, "http_status", diagnostic.Phase)
+		require.Equal(t, http.StatusConflict, diagnostic.HTTPStatus)
+		require.Equal(t, expectedBoundary, diagnostic.Boundary)
+		require.Equal(t, before, counts(), "refused subprocess must not broadcast")
+		inspection, err := http.NewRequestWithContext(ctx, http.MethodGet, "http://127.0.0.1:8094/satchel/v1/returns/execution/"+f.approval.ClaimID, nil)
+		require.NoError(t, err)
+		inspection.Header.Set("Authorization", "Bearer "+testHTTPToken)
+		observed, err := client.Do(inspection)
+		require.NoError(t, err)
+		_, _ = io.Copy(io.Discard, io.LimitReader(observed.Body, 64<<10))
+		require.NoError(t, observed.Body.Close())
+		require.Equal(t, http.StatusNotFound, observed.StatusCode, "refusal must precede durable intent; absence still never authorizes retry")
+		return
+	}
 	cli := func() EscrowReturnSpendResult {
 		cmd := exec.CommandContext(ctx, clientPath, "execute-enrolled-return", "--config", c.path, "--approval", approvalPath)
 		var stderr bytes.Buffer
