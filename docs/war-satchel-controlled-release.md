@@ -21,7 +21,7 @@ sensitivity: "restricted"
 review directive, November 2, 2026.** This is an automated, owner-delegated
 source/documentation review by the implementation lane. No independent human,
 custodian, reserve reviewer, production observer or wallet signer is claimed.
-The repository owner remains `wolochain-ops`. This review does not issue a
+The document owner remains `wolochain-ops`. This review does not issue a
 financial permit or renew an operational receipt.
 
 Reviewed source is Wolo #115 → #122 → #123 → #124. The C01 implementation
@@ -74,7 +74,7 @@ custody, independent reserve completeness, recovery or transaction signing.
 | Independently witnessed recovery | HOLD | Recovery lane E and independent witness: isolated actual restore and state-preserving paired settlement recovery; source tests and website rollback do not substitute. |
 | Authenticated release authority | HOLD | Independently enrolled custody, reviewer and owner principals: exact source/binary/config/policy, protected key roles, fresh nonce and distinct signed staging/activation authority. |
 
-The production 8095 HTTP surface currently exposes
+The `woloreviewerd` source HTTP contract exposes
 `POST /reviewer/v1/wagers` under its separate protected startup permit. It reads
 restricted HD/Watcher, bank, liability and pending-fee evidence; it is not a
 transaction signer. There is **no automatic escrow-return-review endpoint** in
@@ -280,8 +280,8 @@ financial hold remains unchanged.
    at a versioned path from its exact qualified C01 artifact. Independently
    qualify the distinct 8095 reviewer artifact and protected review boundary. No installation,
    key creation, service restart or financial activation is authorized while
-   the preceding evidence is missing. Conditional reviewed commands below are
-   an operator procedure, not permission to execute them.
+   the preceding evidence is missing. The concrete operator packet below is
+   an admission requirement, not permission to execute it.
 7. A separately approved small canary must prove exact running binaries,
    authenticated deposit, owner/cap/revocation behavior, no double reservation,
    settlement, full unmatched principal refund, partial matched allocation,
@@ -297,7 +297,7 @@ financial hold remains unchanged.
 | Deposit | BLOCKED | Independently reviewed current app proof/receipt integration and protected schema admission; independent vault/reserve/trust provisioning |
 | Signed auto-bet authorization | BLOCKED | deployed owner/ADR-36/revocation/Watcher proof; held source permits at most 10,000 WOLO per newly authorized wager and 50,000 WOLO per owner-signed daily Auto Bet cap; independently configured signer limits and every existing smaller mandate remain binding |
 | Automatic betting | BLOCKED | dedicated signer runtime plus HD reservation/concurrency/mandate integration and canary |
-| Settlement | BLOCKED | qualified distinct 8094 escrow return execution, signed original allocations, 8095 reserve review, restricted HD proof/credit and complete liabilities/drain; any legacy replacement remains separately governed |
+| Settlement | BLOCKED | qualified distinct 8094 escrow return execution, signed original allocations, independently signed escrow reserve review, restricted HD proof/credit and complete liabilities/drain; any legacy replacement remains separately governed |
 | Refund | BLOCKED | HD signed v2 allocation + authenticated proof consumption; full unmatched principal remains mandatory |
 | Withdrawal | BLOCKED | HD owner-mandate/independent approval worker, durable reservation proof and authenticated finalize/recovery consumer |
 
@@ -326,8 +326,10 @@ concrete action packet; they do not install or start anything:
   evidence. The configuration-only `--check` output `TRUST_UNCHECKED` does not
   authenticate chain trust or authorize service start.
 - Distinct independently qualified `woloreviewerd` source/binary/configuration
-  on 8095, restricted PostgreSQL principal, complete liabilities and pending
-  fees, signed reserve review covering the **post-prepare** current journal.
+  on 8095 with its restricted PostgreSQL principal and genuine wager-review
+  inputs. Separately require complete liabilities/pending fees and the dual-signed
+  escrow reserve review covering the **post-prepare** current journal; the
+  wager-only HTTP route does not issue that return review.
 - Owner/execution permission bound to exact source/binary/configuration,
   enrollment, original approval, raw signed review, amount/fee, fresh nonce and
   short expiry. The runtime must neither issue that permission nor accept
@@ -349,7 +351,9 @@ The exact protected app return contract is:
 2. Prepare the original signed return, obtain a fresh independent reserve
    review of the new journal and exact signed owner operation permission.
 3. POST the **same** `ReturnApproval` to `/satchel/v1/returns/execute` on 8094.
-   The separate 8095 reviewer never becomes a signer or legacy executor.
+   Its response is raw UNKNOWN with `durable_fenced=true`; a transaction hash
+   is neither finality nor HD credit. The separate 8095 reviewer never becomes
+   a signer or legacy executor.
 4. Use read-only `GET /satchel/v1/returns/execution/{claim_id}` for recovery.
    Missing state/404 is UNKNOWN and cannot authorize repeating the POST.
 5. Authenticate `/returns/reconcile` and `/proofs/return` against the original
