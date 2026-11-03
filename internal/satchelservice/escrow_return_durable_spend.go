@@ -129,25 +129,12 @@ func (e *Engine) ExecuteQualifiedEscrowReturn(
 		// The verified reserve snapshot binds the *old* Bolt bucket tree.
 		// An unresolved escrow sequence also fences every later claim. New
 		// permission is not proof that ambiguous signed bytes cannot execute.
-		if b != nil {
-			if err := b.ForEach(func(id, data []byte) error {
-				var old escrowReturnSpendRecord
-				var paid returnRecord
-				operation, _ := ctx.Value(enrolledEscrowOperationKey{}).(*enrolledEscrowOperation)
-				if data == nil || json.Unmarshal(data, &old) != nil || !e.validEscrowSpendRecord(old, string(id)) || old.Request.ReturnApproval == nil ||
-					old.Request.OperationID != "satchel:claim-return:"+string(id) || old.ApprovalHash != hashJSON(old.Request) ||
-					old.Result.Status != "UNKNOWN" || !old.Result.DurableFenced || old.Signed.Hash == "" ||
-					json.Unmarshal(prepared.Get(id), &paid) != nil || paid.Receipt == nil ||
-					paid.Receipt.TxHash != old.Signed.Hash || !validReturnReceipt(paid, *paid.Receipt) {
-					return ErrEscrowReturnSpend
-				}
-				if operation != nil && old.OperationNonce == operation.nonce {
-					return ErrEscrowReturnSpend
-				}
-				return nil
-			}); err != nil {
-				return err
-			}
+		nonce := ""
+		if operation, _ := ctx.Value(enrolledEscrowOperationKey{}).(*enrolledEscrowOperation); operation != nil {
+			nonce = operation.nonce
+		}
+		if err := e.escrowSpendHistoryTx(tx, nonce); err != nil {
+			return err
 		}
 		// The verified reserve snapshot binds the *old* Bolt bucket tree.
 		// Creating the new spend bucket before the journal comparison would
@@ -319,4 +306,29 @@ func (e *Engine) validEscrowSpendRecord(state escrowReturnSpendRecord, id string
 		permit.Vault == e.policy.Vault && permit.Escrow == e.policy.BettingEscrow && review.Version == 1 && review.Body.Scope == EscrowReturnExecutionScope &&
 		permit.Nonce == state.OperationNonce && permit.ApprovalSHA256 == hashJSON(*a) && permit.ClaimID == id && permit.AmountUWolo == a.AmountUWolo &&
 		permit.ReserveReviewSHA256 == custodySHA(state.ReserveReviewRaw) && hashJSON(review) == state.ProofHash
+}
+
+// The same permanent uncertainty/nonce fence is used by read-only checks and
+// the final atomic intent write. A check cannot clear or reserve any history.
+func (e *Engine) escrowSpendHistoryTx(tx *bolt.Tx, nonce string) error {
+	b := tx.Bucket(escrowReturnSpendBucket)
+	if b == nil {
+		return nil
+	}
+	prepared := tx.Bucket(returns)
+	if prepared == nil {
+		return ErrEscrowReturnSpend
+	}
+	return b.ForEach(func(id, data []byte) error {
+		var old escrowReturnSpendRecord
+		var paid returnRecord
+		if data == nil || json.Unmarshal(data, &old) != nil || !e.validEscrowSpendRecord(old, string(id)) || old.Request.ReturnApproval == nil ||
+			old.Request.OperationID != "satchel:claim-return:"+string(id) || old.ApprovalHash != hashJSON(old.Request) ||
+			old.Result.Status != "UNKNOWN" || !old.Result.DurableFenced || old.Signed.Hash == "" ||
+			json.Unmarshal(prepared.Get(id), &paid) != nil || paid.Receipt == nil || paid.Receipt.TxHash != old.Signed.Hash || !validReturnReceipt(paid, *paid.Receipt) ||
+			(nonce != "" && old.OperationNonce == nonce) {
+			return ErrEscrowReturnSpend
+		}
+		return nil
+	})
 }

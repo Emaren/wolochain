@@ -194,6 +194,13 @@ type serviceEngine struct {
 	escrow  *satchelservice.EnrolledEscrowExecutor
 }
 
+func (e *serviceEngine) CheckEnrolledClaimReturn(ctx context.Context, a satchelservice.ReturnApproval) (satchelservice.EscrowReturnExecutionCheck, error) {
+	if e.escrow == nil {
+		return satchelservice.EscrowReturnExecutionCheck{}, satchelservice.ErrEscrowRuntimeHeld
+	}
+	return e.escrow.CheckExecution(ctx, a)
+}
+
 func (e *serviceEngine) ExecuteEnrolledClaimReturn(ctx context.Context, a satchelservice.ReturnApproval) (satchelservice.EscrowReturnSpendResult, error) {
 	if e.escrow == nil {
 		return satchelservice.EscrowReturnSpendResult{}, satchelservice.ErrEscrowRuntimeHeld
