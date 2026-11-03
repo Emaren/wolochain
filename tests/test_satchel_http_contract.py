@@ -104,6 +104,21 @@ class SatchelHTTPContract(unittest.TestCase):
         for name in ('ReturnApproval', 'ReturnEntitlement', 'ReturnReceipt'):
             self.assertEqual(set(self.schemas[name]['properties']['claim_kind']['enum']), {'bet_refund', 'bet_payout'})
 
+    def test_escrow_check_route_is_observational_and_never_authorizes_money(self):
+        route = self.doc['paths']['/satchel/v1/returns/check-execution']['post']
+        self.assertEqual(route['operationId'], 'checkEnrolledEscrowReturn')
+        self.assertEqual(route['x-financial-effect'], 'observe')
+        self.assertEqual(route['requestBody']['content']['application/json']['schema'],
+                         {'$ref': '#/components/schemas/ReturnApproval'})
+        self.assertEqual(route['responses']['200']['content']['application/json']['schema'],
+                         {'$ref': '#/components/schemas/EscrowReturnExecutionCheck'})
+        schema = self.schemas['EscrowReturnExecutionCheck']
+        self.assertEqual(schema['properties']['protocol'], {'type': 'integer', 'const': 1})
+        self.assertEqual(schema['properties']['kind'], {'type': 'string', 'const': 'escrow_return_execution_check'})
+        self.assertEqual(schema['properties']['execution_authorized'], {'const': False})
+        self.assertEqual(schema['properties']['credit_authorized'], {'const': False})
+        self.assertEqual(set(schema['required']), set(schema['properties']))
+
     def test_custody_checkpoint_is_not_bank_or_customer_ledger_authority(self):
         schema = self.schemas['CustodyJournal']
         props = schema['properties']

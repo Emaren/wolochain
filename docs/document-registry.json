@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "44c166cd4e4e88622de7de450b701aa01b67a78c34f4c8644ee1477ba06d7d48",
+      "sha256": "b6177e3151d1b4f8912387051f55a53ce5742424a5273227f256eeb4cd698b71",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -402,9 +402,9 @@
       "owner": "wolochain-ops",
       "path": "docs/new-epoch-escrow-v3-held.md",
       "review_interval_days": 7,
-      "reviewed_at": "2026-10-26",
+      "reviewed_at": "2026-11-03",
       "sensitivity": "internal",
-      "sha256": "b22e7afa879eb93a90f3050c4cad4077935dd8bef7296adf334904afdacf17e3",
+      "sha256": "f821a0f2e5922e62e41f6f2babe93981af122678a61da386af28e579dd2c5663",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -1112,8 +1112,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "codex/c01-executable-deadline-repair-20261101",
-    "commit": "661fe20b36342760eb6ea6da6ad407154d73008a"
+    "branch": "codex/central-thirdlane-c01-check-20261103",
+    "commit": "1b505c055c6d4f0fdaec37ba797c12f161ac2180"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

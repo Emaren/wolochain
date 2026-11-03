@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `codex/c01-executable-deadline-repair-20261101` at `661fe20b36342760eb6ea6da6ad407154d73008a`
+Implementation baseline: `codex/central-thirdlane-c01-check-20261103` at `1b505c055c6d4f0fdaec37ba797c12f161ac2180`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
