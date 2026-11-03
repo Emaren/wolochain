@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `codex/central-thirdlane-c01-check-20261103` at `eb1ead27bd42d8e1c4b80c1bc25487c3160b963e`
+Implementation baseline: `codex/central-thirdlane-c01-check-20261103` at `1b505c055c6d4f0fdaec37ba797c12f161ac2180`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
