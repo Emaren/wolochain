@@ -246,12 +246,12 @@ financial hold remains unchanged.
 ## Dependency order for operator execution
 
 1. Independently accept the final C01 source and both exact-head CI receipts,
-   including the production executable test. After the distinct C01 artifact
+   including the production executable test. After the distinct C02 artifact
    profile qualifies, authenticate its immutable source/builder/workflow and
    archive/manifest/binary digests using the shared offline verifier under
-   `--profile c01-enrolled-escrow-runtime`. No arbitrary SHA/profile override
-   or historical `composed-satcheld` substitution is allowed. Missing C01
-   profile/source-CI/external receipt means HOLD, not an installation fallback.
+   `--profile c02-native-return-check-runtime` for the check-capable runtime.
+   Missing exact profile, source CI or external artifact receipt keeps
+   installation on HOLD. The original C01 artifact preserves its frozen pin.
    The legacy `526d5eb6` artifact remains a separate `wolochaind` candidate.
 2. HD must consume the portable proof through a pinned offline verifier using
    its own operator-provisioned anchor and stored intent, verify signed v2
@@ -330,6 +330,9 @@ concrete action packet; they do not install or start anything:
   inputs. Separately require complete liabilities/pending fees and the dual-signed
   escrow reserve review covering the **post-prepare** current journal; the
   wager-only HTTP route does not issue that return review.
+- Tony is the sole human authority. Custody, accounting, reviewer and
+  execution keys and service identities must satisfy the existing separation
+  rules. Their evidence identifies the technical role and its scope.
 - Owner/execution permission bound to exact source/binary/configuration,
   enrollment, original approval, raw signed review, amount/fee, fresh nonce and
   short expiry. The runtime must neither issue that permission nor accept
@@ -347,10 +350,14 @@ alone never permits producer resume, deposit publication or HD credit.
 
 The exact protected app return contract is:
 
-1. HD durably records immutable UNKNOWN before its first execution POST.
-2. Prepare the original signed return, obtain a fresh independent reserve
-   review of the new journal and exact signed owner operation permission.
-3. POST the **same** `ReturnApproval` to `/satchel/v1/returns/execute` on 8094.
+1. Under the exact HD financial lease, prepare the original signed return.
+   Obtain a fresh reserve review of the resulting journal and exact signed
+   owner operation permission.
+2. POST that approval to `/satchel/v1/returns/check-execution`. Bind the
+   nonexecuting result to a separately authenticated current H/H+1 escrow
+   bank proof. Keep the permit and review digests with the attempt.
+3. Commit immutable UNKNOWN in HD, then use the same lease to POST the
+   **same** `ReturnApproval` to `/satchel/v1/returns/execute` on 8094.
    Its response is raw UNKNOWN with `durable_fenced=true`; a transaction hash
    is neither finality nor HD credit. The separate 8095 reviewer never becomes
    a signer or legacy executor.

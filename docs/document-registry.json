@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "0e87fa33833db65661bb8afeeeb0a7e79534b668df1f9a65227cbe17eaf0afb7",
+      "sha256": "1c47a3e19a621ed3e33bf86482e57def6985e489aa978d47cf18892d99a0518a",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -520,7 +520,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-11-02",
       "sensitivity": "restricted",
-      "sha256": "06d123bc88a5aaf1c5f24a4b268c2763214298a12af8951e89303963a29e82e0",
+      "sha256": "1c295bcb3ddf25004958f4d3e67071869979c9ec04b9655a5b6bdaf6f0f30d10",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -566,7 +566,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-22",
       "sensitivity": "restricted",
-      "sha256": "5104b0cd389184cbb0f2845011de434dae405b199fd063c1d6e687dee97c1f46",
+      "sha256": "f7ab2acdb949f5b9e2e05539fe49217da2e07dd1cb5f7db38111ea0e33f2982d",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -1112,8 +1112,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "codex/c01-source-merge-repair-20261103",
-    "commit": "211d693920c1d275043428c37413159bb4bcc31e"
+    "branch": "codex/c01-executable-deadline-repair-20261101",
+    "commit": "5e23bb7bc05bc875c4f8d39c279b25700331642d"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
