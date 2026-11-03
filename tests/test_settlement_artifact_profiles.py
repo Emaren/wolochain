@@ -114,7 +114,14 @@ class BackendArtifactSourceContractTests(unittest.TestCase):
         artifact = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(artifact)
         profile = "c02-native-return-check-runtime"
+        reviewer = "c02-independent-reviewer-runtime"
         policy = artifact.profile_policy(profile)
+        reviewer_policy = artifact.profile_policy(reviewer)
+        self.assertEqual(reviewer_policy, {
+            "source": REVIEWED_C02_SOURCE, "binary": "woloreviewerd",
+            "package": "./cmd/woloreviewerd", "main_path": "github.com/emaren/wolochain/cmd/woloreviewerd",
+            "workflow": policy["workflow"], "purpose": "UNDEPLOYED_C02_INDEPENDENT_REVIEWER_RUNTIME_CANDIDATE",
+        })
         self.assertEqual(policy["source"], REVIEWED_C02_SOURCE)
         self.assertEqual(artifact.profile_policy("c01-enrolled-escrow-runtime")["source"], REVIEWED_C01_SOURCE)
         self.assertEqual(policy["package"], "./cmd/wolosatcheld")
@@ -124,8 +131,11 @@ class BackendArtifactSourceContractTests(unittest.TestCase):
         job = workflow.split("\n  c02-artifact:\n", 1)[1]
         self.assertEqual(re.findall(r"^\s+EXPECTED_SOURCE: ([0-9a-f]{40})$", job, re.MULTILINE), [REVIEWED_C02_SOURCE])
         for contract in ("ref: ${{ env.BUILDER_COMMIT }}", "ref: ${{ env.EXPECTED_SOURCE }}",
-                         "artifact.source_ci_receipt('" + profile + "')",
-                         "build-settlement-artifact.sh --profile " + profile,
+                         "profile: [" + profile + ", " + reviewer + "]",
+                         "artifact.source_ci_receipt(os.environ['ARTIFACT_PROFILE'])",
+                         'build-settlement-artifact.sh --profile "$ARTIFACT_PROFILE"',
+                         "source_ci['profile'] != profile or manifest['profile'] != profile",
+                         "name: ${{ matrix.profile }}-${{ env.EXPECTED_SOURCE }}-",
                          "go-version: '1.24.6'", "'production_authorized': False",
                          "'builder_ancestry': source_ci['builder_ancestry']",
                          "steps.c02-candidate.outputs.artifact-id",
@@ -146,9 +156,20 @@ class BackendArtifactSourceContractTests(unittest.TestCase):
         with mock.patch.object(artifact, "inspect_binary", return_value=binary), \
                 mock.patch.object(artifact, "source_identity", return_value=source):
             artifact.verify_manifest(manifest, "unused", "unused", identity, profile=profile)
-            for other in ("c01-enrolled-escrow-runtime", "integrated-custody-runtime"):
+            for other in (reviewer, "c01-enrolled-escrow-runtime", "integrated-custody-runtime"):
                 with self.assertRaisesRegex(artifact.ArtifactError, "manifest mismatch"):
                     artifact.verify_manifest(manifest, "unused", "unused", identity, profile=other)
+            reviewer_manifest = artifact._manifest(binary, source, identity, reviewer)
+            artifact.verify_manifest(reviewer_manifest, "unused", "unused", identity, profile=reviewer)
+            with self.assertRaisesRegex(artifact.ArtifactError, "manifest mismatch"):
+                artifact.verify_manifest(reviewer_manifest, "unused", "unused", identity, profile=profile)
+            wrong_identity = dict(identity, workflow_ref=identity["workflow_ref"].replace(policy["workflow"], ".github/workflows/ci.yml"))
+            with self.assertRaisesRegex(artifact.ArtifactError, "workflow reference mismatch"):
+                artifact.verify_manifest(reviewer_manifest, "unused", "unused", wrong_identity, profile=reviewer)
+        for selected, other_policy in ((profile, reviewer_policy), (reviewer, policy)):
+            metadata = "binary: go1.24.6\n\tpath\t" + other_policy["main_path"]
+            with self.assertRaisesRegex(artifact.ArtifactError, "binary main package mismatch"):
+                artifact._parse_go_metadata(metadata, selected)
         with mock.patch.object(artifact, "C02_NATIVE_RETURN_CHECK_SOURCE", "NONACCEPTING"):
             with self.assertRaisesRegex(artifact.ArtifactError, "NONACCEPTING C02"):
                 artifact.profile_policy(profile)
@@ -278,7 +299,10 @@ class C01SourceCIGateTests(unittest.TestCase):
             "commits": [{"sha": builder}],
         }
         with mock.patch.dict(os.environ, {"BUILDER_COMMIT": builder}):
+            reviewer = self.run_gate("c02-independent-reviewer-runtime", source)
+            self.assertEqual(reviewer["profile"], "c02-independent-reviewer-runtime")
             result = self.run_gate("c02-native-return-check-runtime", source)
+            self.assertEqual(reviewer["source_ci"], result["source_ci"])
             self.assertEqual(result["source_commit"], source)
             self.assertEqual(result["builder_ancestry"]["builder_commit"], builder)
             self.assertTrue(all(row["head_sha"] == source and row["pull_request"]["head_sha"] == builder

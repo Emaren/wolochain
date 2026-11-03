@@ -28,6 +28,7 @@ artifact line and the two enrolled escrow candidates:
 | `custody-runtime` | `72a3bca5f66aff51e1c6577b914d64403785d635` | `wolosatcheld`, version 2 |
 | `c01-enrolled-escrow-runtime` | `93e51f24acdc2a88af80b1b0d3b1db808701de8e` | `wolosatcheld`, version 2 |
 | `c02-native-return-check-runtime` | `f7b5a74928e041a6a90ac983d87649e0484677a4` | `wolosatcheld`, version 2 |
+| `c02-independent-reviewer-runtime` | `f7b5a74928e041a6a90ac983d87649e0484677a4` | `woloreviewerd`, version 2 |
 
 The new runtime source contains the opaque, operation-bounded custody issuer
 and the 10,000 WOLO wager / 50,000 WOLO daily product ceilings. Existing smaller
@@ -67,6 +68,12 @@ as an ancestor of the workflow's builder. The separate candidate archive
 and GitHub receipt retain the profile, archive digest and reproducible binary
 digest. The frozen C01 profile remains available for the earlier executable
 and its escrow bank verification command.
+
+The same workflow produces the reviewer as a separate package, executable and
+artifact receipt. Its source pin is shared with the return runtime. Each
+profile independently binds its package and purpose so an archive or manifest
+from one profile cannot qualify the other. The reviewer serves wager approval
+on 8095. The protected 8094 return reserve review retains its own authority.
 
 ## Building and checking the candidate
 

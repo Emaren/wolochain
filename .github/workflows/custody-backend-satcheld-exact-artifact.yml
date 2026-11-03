@@ -254,10 +254,15 @@ jobs:
 
   c02-artifact:
     if: ${{ github.repository == 'Emaren/wolochain' && ((github.event_name == 'pull_request' && github.event.pull_request.number == 124 && github.base_ref == 'codex/c01-enrolled-native-executor-20261101' && github.head_ref == 'codex/c01-executable-deadline-repair-20261101' && github.event.pull_request.head.repo.full_name == 'Emaren/wolochain') || (github.event_name == 'workflow_dispatch' && inputs.profile == 'c02-native-return-check-runtime')) }}
-    name: Exact C02 native return check wolosatcheld artifact — UNDEPLOYED
+    name: Exact ${{ matrix.profile }} artifact — UNDEPLOYED
+    strategy:
+      fail-fast: false
+      matrix:
+        profile: [c02-native-return-check-runtime, c02-independent-reviewer-runtime]
     runs-on: ubuntu-24.04
     timeout-minutes: 55
     env:
+      ARTIFACT_PROFILE: ${{ matrix.profile }}
       EXPECTED_SOURCE: f7b5a74928e041a6a90ac983d87649e0484677a4
       BUILDER_COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
       GOTOOLCHAIN: local
@@ -284,7 +289,7 @@ jobs:
           spec = importlib.util.spec_from_file_location('artifact', path)
           artifact = importlib.util.module_from_spec(spec)
           spec.loader.exec_module(artifact)
-          receipt = artifact.source_ci_receipt('c02-native-return-check-runtime')
+          receipt = artifact.source_ci_receipt(os.environ['ARTIFACT_PROFILE'])
           if receipt['source_commit'] != os.environ['EXPECTED_SOURCE']:
               raise SystemExit('SOURCE_CI_HOLD workflow/source pin mismatch')
           destination = pathlib.Path(os.environ['RUNNER_TEMP']) / 'c02-source-ci-receipt.json'
@@ -312,15 +317,15 @@ jobs:
         working-directory: artifact-tools
         run: python3 -m unittest discover -s tests -p 'test_settlement_artifact*.py' -v
 
-      - name: One signer-verifier binary, two sequential fresh-cache builds
-        run: bash artifact-tools/scripts/build-settlement-artifact.sh --profile c02-native-return-check-runtime "$GITHUB_WORKSPACE/implementation" "$RUNNER_TEMP/c02-native-return-check-runtime-candidate"
+      - name: Two sequential fresh-cache builds of the selected binary
+        run: bash artifact-tools/scripts/build-settlement-artifact.sh --profile "$ARTIFACT_PROFILE" "$GITHUB_WORKSPACE/implementation" "$RUNNER_TEMP/${ARTIFACT_PROFILE}-candidate"
 
       - name: Upload immutable UNDEPLOYED C02 candidate
         id: c02-candidate
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: c02-native-return-check-runtime-${{ env.EXPECTED_SOURCE }}-linux-amd64-${{ github.run_id }}-${{ github.run_attempt }}-UNDEPLOYED
-          path: ${{ runner.temp }}/c02-native-return-check-runtime-candidate/
+          name: ${{ matrix.profile }}-${{ env.EXPECTED_SOURCE }}-linux-amd64-${{ github.run_id }}-${{ github.run_attempt }}-UNDEPLOYED
+          path: ${{ runner.temp }}/${{ matrix.profile }}-candidate/
           if-no-files-found: error
           compression-level: 0
           retention-days: 30
@@ -334,7 +339,8 @@ jobs:
           python3 - <<'PY'
           import hashlib, json, os, pathlib, re
           root = pathlib.Path(os.environ['RUNNER_TEMP'])
-          manifest_path = root / 'c02-native-return-check-runtime-candidate/manifest.json'
+          profile = os.environ['ARTIFACT_PROFILE']
+          manifest_path = root / f'{profile}-candidate/manifest.json'
           manifest = json.loads(manifest_path.read_bytes())
           source_ci_raw = (root / 'c02-source-ci-receipt.json').read_bytes()
           source_ci = json.loads(source_ci_raw)
@@ -343,9 +349,11 @@ jobs:
               raise SystemExit('C02_ARTIFACT_RECEIPT_INVALID')
           if source_ci['source_commit'] != os.environ['EXPECTED_SOURCE'] or manifest['source']['commit'] != os.environ['EXPECTED_SOURCE']:
               raise SystemExit('C02_ARTIFACT_SOURCE_MISMATCH')
+          if source_ci['profile'] != profile or manifest['profile'] != profile:
+              raise SystemExit('C02_ARTIFACT_PROFILE_MISMATCH')
           receipt = {
               'schema_version': 1, 'production_authorized': False,
-              'source_commit': os.environ['EXPECTED_SOURCE'], 'profile': 'c02-native-return-check-runtime',
+              'source_commit': os.environ['EXPECTED_SOURCE'], 'profile': profile,
               'github': manifest['github'], 'source_ci': source_ci['source_ci'],
               'source_pull_request': source_ci['source_ci'][0]['pull_request'],
               'builder_ancestry': source_ci['builder_ancestry'],
@@ -356,7 +364,7 @@ jobs:
               'binary_sha256': manifest['binary']['sha256'],
               'rebuild_sha256': manifest['reproducibility']['second_sha256'],
           }
-          destination = root / 'c02-native-return-check-runtime-receipt'
+          destination = root / f'{profile}-receipt'
           destination.mkdir()
           (destination / 'source-ci-receipt.json').write_bytes(source_ci_raw)
           (destination / 'github-artifact-receipt.json').write_text(json.dumps(receipt, sort_keys=True, indent=2) + '\n')
@@ -368,7 +376,7 @@ jobs:
       - name: Preserve external C02 receipt separately for independent acceptance
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: c02-native-return-check-runtime-${{ env.EXPECTED_SOURCE }}-${{ github.run_id }}-${{ github.run_attempt }}-github-receipt
-          path: ${{ runner.temp }}/c02-native-return-check-runtime-receipt/
+          name: ${{ matrix.profile }}-${{ env.EXPECTED_SOURCE }}-${{ github.run_id }}-${{ github.run_attempt }}-github-receipt
+          path: ${{ runner.temp }}/${{ matrix.profile }}-receipt/
           if-no-files-found: error
           retention-days: 30
