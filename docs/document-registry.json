@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "b6177e3151d1b4f8912387051f55a53ce5742424a5273227f256eeb4cd698b71",
+      "sha256": "59cd32a35970584fa44f22aa8dae1c9066ccd673d968a9e30134e6dea772853f",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -404,7 +404,7 @@
       "review_interval_days": 7,
       "reviewed_at": "2026-11-03",
       "sensitivity": "internal",
-      "sha256": "f821a0f2e5922e62e41f6f2babe93981af122678a61da386af28e579dd2c5663",
+      "sha256": "301b915f8cf63c2644f37748b4398455b74314c08cfbf7805521752b2156e631",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -1112,8 +1112,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "codex/central-thirdlane-c01-check-20261103",
-    "commit": "1b505c055c6d4f0fdaec37ba797c12f161ac2180"
+    "branch": "codex/c01-source-merge-repair-20261103",
+    "commit": "05ea81eb9653b6dda37d92e48567ddfc0b7e3820"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
