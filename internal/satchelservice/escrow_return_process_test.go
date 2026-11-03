@@ -173,6 +173,38 @@ func testEscrowServiceProductionExecutable(t *testing.T, signerPath, clientPath,
 	logPath := child.logPath
 	counts := func() int { c.chain.mu.Lock(); defer c.chain.mu.Unlock(); return c.chain.broadcasts }
 	before := counts()
+	checkClient := &http.Client{Timeout: 8500 * time.Millisecond, Transport: client.Transport}
+	request := func(method, path string, body []byte) (int, []byte) {
+		req, err := http.NewRequestWithContext(ctx, method, "http://127.0.0.1:8094"+path, bytes.NewReader(body))
+		require.NoError(t, err)
+		req.Header.Set("Authorization", "Bearer "+testHTTPToken)
+		if method == http.MethodPost {
+			req.Header.Set("Content-Type", "application/json")
+		}
+		response, err := checkClient.Do(req)
+		require.NoError(t, err)
+		defer response.Body.Close()
+		raw, err := io.ReadAll(io.LimitReader(response.Body, HTTPMaxBodyBytes+1))
+		require.NoError(t, err)
+		require.LessOrEqual(t, len(raw), HTTPMaxBodyBytes)
+		return response.StatusCode, raw
+	}
+	checkPath := "/satchel/v1/returns/check-execution"
+	journalPath := "/satchel/v1/custody/journal"
+	executionPath := "/satchel/v1/returns/execution/" + f.approval.ClaimID
+	approvalRaw, err := os.ReadFile(approvalPath)
+	require.NoError(t, err)
+	checkUnchanged := func(check func()) {
+		status, journal := request(http.MethodGet, journalPath, nil)
+		require.Equal(t, http.StatusOK, status)
+		check()
+		status, after := request(http.MethodGet, journalPath, nil)
+		require.Equal(t, http.StatusOK, status)
+		require.JSONEq(t, string(journal), string(after))
+		status, _ = request(http.MethodGet, executionPath, nil)
+		require.Equal(t, http.StatusNotFound, status)
+		require.Equal(t, before, counts())
+	}
 	if mode != "confirmed_replay" && mode != "interrupted_broadcast_restart" {
 		expectedBoundary := "owner_verification"
 		switch mode {
@@ -198,6 +230,11 @@ func testEscrowServiceProductionExecutable(t *testing.T, signerPath, clientPath,
 		if mode == "revoked_permission" {
 			require.NoError(t, os.Remove(f.permitPath))
 		}
+		checkUnchanged(func() {
+			status, raw := request(http.MethodPost, checkPath, approvalRaw)
+			require.Equal(t, http.StatusConflict, status, string(raw))
+			require.Contains(t, string(raw), "escrow_return_check_held")
+		})
 		cmd := exec.CommandContext(ctx, clientPath, "execute-enrolled-return", "--config", c.path, "--approval", approvalPath)
 		var stderr bytes.Buffer
 		cmd.Stderr = &stderr
@@ -225,6 +262,31 @@ func testEscrowServiceProductionExecutable(t *testing.T, signerPath, clientPath,
 		require.Equal(t, http.StatusNotFound, observed.StatusCode, "refusal must precede durable intent; absence still never authorizes retry")
 		return
 	}
+	permitBytes, err := os.ReadFile(f.permitPath)
+	require.NoError(t, err)
+	checkUnchanged(func() {
+		// Check twice against the same signed nonce. The second check and the
+		// subsequent real execute must still accept it.
+		for i := 0; i < 2; i++ {
+			status, raw := request(http.MethodPost, checkPath, approvalRaw)
+			require.Equal(t, http.StatusOK, status, string(raw))
+			var checked EscrowReturnExecutionCheck
+			require.NoError(t, json.Unmarshal(raw, &checked))
+			require.Equal(t, 1, checked.Protocol)
+			require.Equal(t, "escrow_return_execution_check", checked.Kind)
+			require.Equal(t, f.approval, checked.Approval)
+			require.Equal(t, custodySHA(permitBytes), checked.OperationPermitSHA256)
+			require.Equal(t, custodySHA(reviewBytes), checked.ReserveReviewSHA256)
+			require.Equal(t, bank.Height(), checked.StateHeight)
+			require.Equal(t, bank.CommitHeight(), checked.CommitHeight)
+			require.Equal(t, checked.StateHeight+1, checked.CommitHeight)
+			require.Equal(t, bank.BlockHash(), checked.CommitBlockHash)
+			require.Greater(t, checked.ExpiresAt, time.Now().Unix())
+			require.LessOrEqual(t, checked.ExpiresAt, f.bundle.Review.ExpiresAt)
+			require.False(t, checked.ExecutionAuthorized)
+			require.False(t, checked.CreditAuthorized)
+		}
+	})
 	cli := func() EscrowReturnSpendResult {
 		cmd := exec.CommandContext(ctx, clientPath, "execute-enrolled-return", "--config", c.path, "--approval", approvalPath)
 		var stderr bytes.Buffer

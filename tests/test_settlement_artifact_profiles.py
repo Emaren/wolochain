@@ -21,6 +21,7 @@ REVIEWED_BACKEND_SOURCE = "8c509e8f62ca3ec60711dc2654a03b12f22b0773"
 REVIEWED_RUNTIME_SOURCE = "72a3bca5f66aff51e1c6577b914d64403785d635"
 REVIEWED_INTEGRATED_SOURCE = "88c63356b81e19dbda0dbcf7c2135ac607878ca4"
 REVIEWED_C01_SOURCE = "93e51f24acdc2a88af80b1b0d3b1db808701de8e"
+REVIEWED_C02_SOURCE = "f7b5a74928e041a6a90ac983d87649e0484677a4"
 HISTORICAL_BACKEND_SOURCE = "99f32de617964565875ed4689bea0d688bb99147"
 
 
@@ -108,6 +109,50 @@ class BackendArtifactSourceContractTests(unittest.TestCase):
         self.assertIn("contents: read", workflow)
         self.assertNotIn("contents: write", workflow)
 
+    def test_c02_profile_is_distinct_and_reuses_reviewed_provenance_builder(self):
+        spec = importlib.util.spec_from_file_location("c02_profile", ROOT / "scripts/settlement-artifact.py")
+        artifact = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(artifact)
+        profile = "c02-native-return-check-runtime"
+        policy = artifact.profile_policy(profile)
+        self.assertEqual(policy["source"], REVIEWED_C02_SOURCE)
+        self.assertEqual(artifact.profile_policy("c01-enrolled-escrow-runtime")["source"], REVIEWED_C01_SOURCE)
+        self.assertEqual(policy["package"], "./cmd/wolosatcheld")
+        self.assertEqual(policy["main_path"], "github.com/emaren/wolochain/cmd/wolosatcheld")
+        self.assertEqual(policy["purpose"], "UNDEPLOYED_C02_NATIVE_RETURN_CHECK_RUNTIME_CANDIDATE")
+        workflow = (ROOT / policy["workflow"]).read_text()
+        job = workflow.split("\n  c02-artifact:\n", 1)[1]
+        self.assertEqual(re.findall(r"^\s+EXPECTED_SOURCE: ([0-9a-f]{40})$", job, re.MULTILINE), [REVIEWED_C02_SOURCE])
+        for contract in ("ref: ${{ env.BUILDER_COMMIT }}", "ref: ${{ env.EXPECTED_SOURCE }}",
+                         "artifact.source_ci_receipt('" + profile + "')",
+                         "build-settlement-artifact.sh --profile " + profile,
+                         "go-version: '1.24.6'", "'production_authorized': False",
+                         "'builder_ancestry': source_ci['builder_ancestry']",
+                         "steps.c02-candidate.outputs.artifact-id",
+                         "steps.c02-candidate.outputs.artifact-digest", "'rebuild_sha256'",
+                         "C01_GITHUB_READ_TOKEN: ${{ github.token }}",
+                         "Preserve external C02 receipt separately for independent acceptance"):
+            self.assertIn(contract, job)
+        self.assertNotIn("go build", job)
+        self.assertLess(job.index("artifact.source_ci_receipt("), job.index("build-settlement-artifact.sh"))
+        identity = {"repository": "Emaren/wolochain", "builder_commit": "d" * 40,
+                    "run_id": "1", "run_attempt": "1", "workflow_sha": "e" * 40,
+                    "workflow_ref": "Emaren/wolochain/" + policy["workflow"] + "@refs/pull/124/merge"}
+        source = {"commit": REVIEWED_C02_SOURCE, "vcs_time": "2026-11-03T00:00:00Z"}
+        binary = {"sha256": "f" * 64, "go": {"build_settings": {"vcs.time": source["vcs_time"]}}}
+        manifest = artifact._manifest(binary, source, identity, profile)
+        self.assertEqual(manifest["profile"], profile)
+        self.assertTrue(all(value is False for value in manifest["authority"].values()))
+        with mock.patch.object(artifact, "inspect_binary", return_value=binary), \
+                mock.patch.object(artifact, "source_identity", return_value=source):
+            artifact.verify_manifest(manifest, "unused", "unused", identity, profile=profile)
+            for other in ("c01-enrolled-escrow-runtime", "integrated-custody-runtime"):
+                with self.assertRaisesRegex(artifact.ArtifactError, "manifest mismatch"):
+                    artifact.verify_manifest(manifest, "unused", "unused", identity, profile=other)
+        with mock.patch.object(artifact, "C02_NATIVE_RETURN_CHECK_SOURCE", "NONACCEPTING"):
+            with self.assertRaisesRegex(artifact.ArtifactError, "NONACCEPTING C02"):
+                artifact.profile_policy(profile)
+
     def test_c01_profile_preserves_every_historical_source_and_reuses_single_builder(self):
         specification = importlib.util.spec_from_file_location("c01_profile", ROOT / "scripts/settlement-artifact.py")
         artifact = importlib.util.module_from_spec(specification)
@@ -128,6 +173,7 @@ class BackendArtifactSourceContractTests(unittest.TestCase):
         self.assertEqual(policy["workflow"], artifact.BACKEND_WORKFLOW_PATH)
         workflow = (ROOT / policy["workflow"]).read_text()
         old, c01 = workflow.split("\n  c01-artifact:\n", 1)
+        c01 = c01.split("\n  c02-artifact:\n", 1)[0]
         self.assertIn("github.base_ref != 'codex/c01-enrolled-native-executor-20261101'", old)
         self.assertIn("inputs.profile != 'c01-enrolled-escrow-runtime'", old)
         self.assertIn("github.base_ref == 'codex/c01-enrolled-native-executor-20261101'", c01)
@@ -184,7 +230,7 @@ class C01SourceCIGateTests(unittest.TestCase):
             }]}
         self.token = hashlib.sha256(self.id().encode()).hexdigest()
 
-    def run_gate(self):
+    def run_gate(self, profile="c01-enrolled-escrow-runtime", source=REVIEWED_C01_SOURCE):
         outer = self
 
         class Opener:
@@ -202,7 +248,7 @@ class C01SourceCIGateTests(unittest.TestCase):
                 key = url.path[len(prefix):] if url.path.startswith(prefix) else url.path
                 if key.endswith("/runs"):
                     outer.assertEqual(outer.artifact.urllib.parse.parse_qs(url.query), {
-                        "head_sha": [REVIEWED_C01_SOURCE], "event": ["pull_request"], "per_page": ["50"],
+                        "head_sha": [source], "event": ["pull_request"], "per_page": ["50"],
                     })
                 body = outer.responses[key]
                 if isinstance(body, Exception):
@@ -213,11 +259,34 @@ class C01SourceCIGateTests(unittest.TestCase):
 
         with mock.patch.dict(os.environ, {"C01_GITHUB_READ_TOKEN": self.token}), \
                 mock.patch.object(self.artifact.urllib.request, "build_opener", return_value=Opener()) as factory:
-            result = self.artifact.source_ci_receipt("c01-enrolled-escrow-runtime")
+            result = self.artifact.source_ci_receipt(profile)
             self.assertEqual(factory.call_args.args[0].proxies, {})
             redirect = factory.call_args.args[1]
             self.assertIsNone(redirect.redirect_request(None, None, 302, "", {}, "https://other.invalid"))
             return result
+
+    def test_c02_check_capable_source_with_moving_builder_head(self):
+        source, builder = REVIEWED_C02_SOURCE, "e" * 40
+        for workflow in ("ci.yml/runs", "epoch-escrow-v3.yml/runs"):
+            row = self.responses[workflow]["workflow_runs"][0]
+            row["head_sha"] = source
+            row["pull_requests"][0]["head"]["sha"] = builder
+        key = "/repos/Emaren/wolochain/compare/" + source + "..." + builder
+        self.responses[key] = {
+            "status": "ahead", "ahead_by": 1, "behind_by": 0, "total_commits": 1,
+            "base_commit": {"sha": source}, "merge_base_commit": {"sha": source},
+            "commits": [{"sha": builder}],
+        }
+        with mock.patch.dict(os.environ, {"BUILDER_COMMIT": builder}):
+            result = self.run_gate("c02-native-return-check-runtime", source)
+            self.assertEqual(result["source_commit"], source)
+            self.assertEqual(result["builder_ancestry"]["builder_commit"], builder)
+            self.assertTrue(all(row["head_sha"] == source and row["pull_request"]["head_sha"] == builder
+                                for row in result["source_ci"]))
+            self.assertFalse(result["production_authorized"])
+            self.responses[key]["merge_base_commit"]["sha"] = REVIEWED_C01_SOURCE
+            with self.assertRaisesRegex(self.artifact.ArtifactError, "SOURCE_CI_HOLD"):
+                self.run_gate("c02-native-return-check-runtime", source)
 
     def test_both_real_workflow_receipts_are_exact_and_non_authorizing(self):
         result = self.run_gate()

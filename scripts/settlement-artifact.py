@@ -34,6 +34,7 @@ BACKEND_SOURCE = "8c509e8f62ca3ec60711dc2654a03b12f22b0773"
 RUNTIME_SOURCE = "72a3bca5f66aff51e1c6577b914d64403785d635"
 INTEGRATED_RUNTIME_SOURCE = "88c63356b81e19dbda0dbcf7c2135ac607878ca4"
 C01_ENROLLED_SOURCE = "93e51f24acdc2a88af80b1b0d3b1db808701de8e"
+C02_NATIVE_RETURN_CHECK_SOURCE = "f7b5a74928e041a6a90ac983d87649e0484677a4"
 C01_SOURCE_PULL_REQUEST = 124
 C01_SOURCE_PULL_REQUEST_ID = 5112667912
 C01_SOURCE_REPOSITORY_ID = 990989676
@@ -91,8 +92,17 @@ def _require(condition: bool, message: str) -> None:
 
 def profile_policy(profile: str = "legacy526") -> dict:
     """Only reviewed source pins; callers cannot supply an arbitrary revision."""
-    _require(type(profile) is str and profile in ("legacy526", "composed-satcheld", "custody-backend", "custody-runtime", "integrated-custody-runtime", "legacy-replay", "archived-historical", "c01-enrolled-escrow-runtime"),
+    _require(type(profile) is str and profile in ("legacy526", "composed-satcheld", "custody-backend", "custody-runtime", "integrated-custody-runtime", "legacy-replay", "archived-historical", "c01-enrolled-escrow-runtime", "c02-native-return-check-runtime"),
              "unknown artifact profile")
+    if profile == "c02-native-return-check-runtime":
+        _require(re.fullmatch(r"[0-9a-f]{40}", C02_NATIVE_RETURN_CHECK_SOURCE) is not None,
+                 "NONACCEPTING C02 source pin unavailable")
+        return {
+            "source": C02_NATIVE_RETURN_CHECK_SOURCE, "binary": "wolosatcheld",
+            "main_path": "github.com/emaren/wolochain/cmd/wolosatcheld",
+            "package": "./cmd/wolosatcheld", "workflow": BACKEND_WORKFLOW_PATH,
+            "purpose": "UNDEPLOYED_C02_NATIVE_RETURN_CHECK_RUNTIME_CANDIDATE",
+        }
     if profile == "c01-enrolled-escrow-runtime":
         _require(re.fullmatch(r"[0-9a-f]{40}", C01_ENROLLED_SOURCE) is not None,
                  "NONACCEPTING C01 source pin unavailable")
@@ -205,13 +215,14 @@ def _c01_source_pull_request(run: dict, source: str) -> dict:
 
 
 def source_ci_receipt(profile: str) -> dict:
-    """Read the fixed GitHub source checks before building the C01 candidate.
+    """Read the fixed GitHub source checks before building the named runtime candidate.
 
     This authenticates workflow results through GitHub, not operator custody or
     financial admission. There is no caller URL, source SHA or workflow override.
     Missing, unfinished, failed or ambiguous receipts keep the artifact held.
     """
-    _require(profile == "c01-enrolled-escrow-runtime", "SOURCE_CI_HOLD unsupported profile")
+    _require(profile in ("c01-enrolled-escrow-runtime", "c02-native-return-check-runtime"),
+             "SOURCE_CI_HOLD unsupported profile")
     source = profile_policy(profile)["source"]
     token = os.environ.get("C01_GITHUB_READ_TOKEN", "")
     _require(bool(token), "SOURCE_CI_HOLD authenticated GitHub access required")
@@ -568,7 +579,7 @@ def load_manifest(path: str | Path, expected_sha256: str | None = None) -> dict:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("command", choices=("create", "verify"))
-    parser.add_argument("--profile", choices=("legacy526", "composed-satcheld", "custody-backend", "custody-runtime", "integrated-custody-runtime", "legacy-replay", "archived-historical", "c01-enrolled-escrow-runtime"), default="legacy526")
+    parser.add_argument("--profile", choices=("legacy526", "composed-satcheld", "custody-backend", "custody-runtime", "integrated-custody-runtime", "legacy-replay", "archived-historical", "c01-enrolled-escrow-runtime", "c02-native-return-check-runtime"), default="legacy526")
     for argument in ("source-dir", "binary", "manifest", "builder-commit", "repository",
                      "run-id", "run-attempt", "workflow-ref", "workflow-sha"):
         parser.add_argument("--" + argument, required=True)
