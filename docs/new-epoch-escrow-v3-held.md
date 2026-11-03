@@ -8,12 +8,22 @@ systems: ["wolochain", "aoe2war"]
 audience: ["developers", "operators", "ai-agents"]
 source_of_truth: "git"
 authority: "source-review-only-nonactivating-escrow-candidate"
-reviewed_at: "2026-10-26"
+reviewed_at: "2026-11-03"
 review_interval_days: 7
 sensitivity: "internal"
 ---
 
 # Held native new-epoch escrow v3 decision boundary
+
+**November 3, 2026 source review (nonactivating):** Verified that
+`internal/epochescrow/policy.go` still pins `ProductionEnabled = false` and
+returns `NEW_ESCROW_SIGNER_ABSENT`, while `journal.go` retains the held
+`Execute` gate. The separately developed Satchel claim-return read-only
+`/satchel/v1/returns/check-execution` endpoint is **not** an activation of
+this v3 epoch escrow or an independent custody attestation. Owner-operated
+key custody remains the single-human authority model; distinct restricted
+cryptographic roles do not imply independent human reviewers. Existing
+NO-GO and recovery/financial-admission requirements remain unchanged.
 
 **NO-GO for financial execution.** `internal/epochescrow` supplies actual Go
 policy, economic validation, native portable-proof verification and durable
