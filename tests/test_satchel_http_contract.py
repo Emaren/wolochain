@@ -19,6 +19,19 @@ class SatchelHTTPContract(unittest.TestCase):
         cls.doc = json.loads(PATH.read_text())
         cls.schemas = cls.doc['components']['schemas']
 
+    def test_openapi_has_no_duplicate_json_keys_at_any_depth(self):
+        from collections import Counter
+
+        def reject_duplicate_keys(pairs):
+            duplicates = [key for key, count in Counter(key for key, _ in pairs).items() if count > 1]
+            if duplicates:
+                raise ValueError(f"Duplicate JSON keys can shadow money contract fields: {duplicates}")
+            return dict(pairs)
+
+        duplicate_free = json.loads(PATH.read_text(), object_pairs_hook=reject_duplicate_keys)
+        self.assertEqual(duplicate_free['paths']['/satchel/v1/returns/check-execution']['post']['x-financial-effect'], 'observe')
+        self.assertIn('EscrowReturnExecutionCheck', duplicate_free['components']['schemas'])
+
     def test_exact_private_transport_and_finite_limits(self):
         self.assertEqual(self.doc['openapi'], '3.1.0')
         self.assertEqual(self.doc['info']['version'], '1.0.0')
