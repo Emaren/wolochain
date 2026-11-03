@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "59cd32a35970584fa44f22aa8dae1c9066ccd673d968a9e30134e6dea772853f",
+      "sha256": "0e87fa33833db65661bb8afeeeb0a7e79534b668df1f9a65227cbe17eaf0afb7",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1113,7 +1113,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "codex/c01-source-merge-repair-20261103",
-    "commit": "05ea81eb9653b6dda37d92e48567ddfc0b7e3820"
+    "commit": "211d693920c1d275043428c37413159bb4bcc31e"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

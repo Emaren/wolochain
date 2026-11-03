@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `codex/c01-source-merge-repair-20261103` at `05ea81eb9653b6dda37d92e48567ddfc0b7e3820`
+Implementation baseline: `codex/c01-source-merge-repair-20261103` at `211d693920c1d275043428c37413159bb4bcc31e`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
