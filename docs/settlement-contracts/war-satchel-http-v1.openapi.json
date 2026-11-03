@@ -1146,6 +1146,62 @@
           }
         ]
       }
+    },
+    "/satchel/v1/returns/check-execution": {
+      "post": {
+        "operationId": "checkEnrolledEscrowReturnExecution",
+        "summary": "Check authenticated original escrow-return entitlement against current reserve, lease and bank without executing",
+        "x-financial-effect": "preflight-non-authorizing",
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/Failure400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Failure401"
+          },
+          "404": {
+            "$ref": "#/components/responses/Failure404"
+          },
+          "405": {
+            "$ref": "#/components/responses/Failure405"
+          },
+          "408": {
+            "$ref": "#/components/responses/Failure408"
+          },
+          "409": {
+            "$ref": "#/components/responses/Failure409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Failure413"
+          },
+          "415": {
+            "$ref": "#/components/responses/Failure415"
+          },
+          "503": {
+            "$ref": "#/components/responses/Failure503"
+          },
+          "200": {
+            "description": "Non-authorizing execution check. No signing, broadcast, transfer or credit; reply expires within 120s.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EscrowReturnExecutionCheck"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReturnApproval"
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1153,7 +1209,7 @@
       "PrivateBearer": {
         "type": "http",
         "scheme": "bearer",
-        "description": "Exactly one Authorization header; Bearer plus private 48\u2013512 character base64url token. Literal loopback only and no Origin header. Token is not owner consent, custody attestation or withdrawal approval."
+        "description": "Exactly one Authorization header; Bearer plus private 48–512 character base64url token. Literal loopback only and no Origin header. Token is not owner consent, custody attestation or withdrawal approval."
       }
     },
     "schemas": {
@@ -2299,7 +2355,7 @@
       },
       "WagerMemo": {
         "type": "string",
-        "pattern": "^AoE2HDBets bet ticket v1 \u00b7 ticket [1-9][0-9]{0,11}$"
+        "pattern": "^AoE2HDBets bet ticket v1 · ticket [1-9][0-9]{0,11}$"
       },
       "WagerCoin": {
         "type": "object",
@@ -3215,6 +3271,64 @@
             "const": true
           }
         }
+      },
+      "EscrowReturnExecutionCheck": {
+        "type": "object",
+        "additionalProperties": false,
+        "x-go-type": "internal/satchelservice/escrow_return_check.go:EscrowReturnExecutionCheck",
+        "required": [
+          "protocol",
+          "kind",
+          "approval",
+          "operation_permit_sha256",
+          "reserve_review_sha256",
+          "state_height",
+          "commit_height",
+          "commit_block_hash",
+          "expires_at",
+          "execution_authorized",
+          "credit_authorized"
+        ],
+        "properties": {
+          "protocol": {
+            "const": 1
+          },
+          "kind": {
+            "const": "escrow_return_execution_check"
+          },
+          "approval": {
+            "$ref": "#/components/schemas/ReturnApproval"
+          },
+          "operation_permit_sha256": {
+            "$ref": "#/components/schemas/Digest"
+          },
+          "reserve_review_sha256": {
+            "$ref": "#/components/schemas/Digest"
+          },
+          "state_height": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "commit_height": {
+            "type": "integer",
+            "minimum": 2
+          },
+          "commit_block_hash": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{64}$"
+          },
+          "expires_at": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "execution_authorized": {
+            "const": false
+          },
+          "credit_authorized": {
+            "const": false
+          }
+        },
+        "description": "Authenticated time-bounded nonexecuting preflight only; current bank, source, permit, reviewer and lease are checked. Never grants financial execution or credit; fresh check is not transfer or settlement proof."
       }
     },
     "responses": {

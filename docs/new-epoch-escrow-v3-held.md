@@ -215,3 +215,15 @@ published pinned verifier executable. Its old Wolo source pin, two native-ingest
 INSERT arity defects and the zero-payout loser label difference remain explicit
 cross-repository mismatches requiring separate HD review. No HD branch, role,
 migration, credential or financial enable flag is changed by this candidate.
+
+## Source-only re-review — 2026-11-03
+
+Independently rechecked the actual `internal/epochescrow/policy.go`
+`ProductionEnabled=false` constant and the held `Journal.Execute`
+refusal in `internal/epochescrow/journal.go`. This document remains
+a nonactivating new-epoch-v3 reference, not a C01 escrow-return
+execution receipt. The separately implemented
+`internal/satchelservice/escrow_return_check.go` is a read-only
+qualification of an **existing** protected return; it does not enroll
+a new-epoch-v3 signer or activate custody. No owner, reserve or
+chain finality is inferred from this metadata refresh.
