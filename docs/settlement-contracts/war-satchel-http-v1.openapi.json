@@ -1153,7 +1153,7 @@
       "PrivateBearer": {
         "type": "http",
         "scheme": "bearer",
-        "description": "Exactly one Authorization header; Bearer plus private 48\u2013512 character base64url token. Literal loopback only and no Origin header. Token is not owner consent, custody attestation or withdrawal approval."
+        "description": "Exactly one Authorization header; Bearer plus private 48–512 character base64url token. Literal loopback only and no Origin header. Token is not owner consent, custody attestation or withdrawal approval."
       }
     },
     "schemas": {
@@ -2299,7 +2299,7 @@
       },
       "WagerMemo": {
         "type": "string",
-        "pattern": "^AoE2HDBets bet ticket v1 \u00b7 ticket [1-9][0-9]{0,11}$"
+        "pattern": "^AoE2HDBets bet ticket v1 · ticket [1-9][0-9]{0,11}$"
       },
       "WagerCoin": {
         "type": "object",

@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `codex/central-thirdlane-c01-check-20261103` at `1b505c055c6d4f0fdaec37ba797c12f161ac2180`
+Implementation baseline: `codex/c01-source-merge-repair-20261103` at `211d693920c1d275043428c37413159bb4bcc31e`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
