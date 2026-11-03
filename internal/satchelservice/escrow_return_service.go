@@ -288,7 +288,7 @@ func (s *EnrolledEscrowExecutor) reviewBytes() ([]byte, error) {
 }
 
 func (s *EnrolledEscrowExecutor) Execute(ctx context.Context, a ReturnApproval) (EscrowReturnSpendResult, error) {
-	if s == nil || ctx == nil || ctx.Err() != nil || !claimIDs.MatchString(a.ClaimID) || a.Allocation == nil {
+	if s == nil || s.issuer == nil || s.native == nil || ctx == nil || ctx.Err() != nil || !claimIDs.MatchString(a.ClaimID) || a.Allocation == nil {
 		return EscrowReturnSpendResult{}, ErrEscrowRuntimeHeld
 	}
 	// Detach all caller-owned partition slices before any authorization or I/O.
@@ -325,23 +325,37 @@ func (s *EnrolledEscrowExecutor) Execute(ctx context.Context, a ReturnApproval) 
 	if prior != nil {
 		return *prior, nil
 	}
+	g, err := s.bindEscrowOperation(ctx, a, req)
+	if err != nil {
+		return EscrowReturnSpendResult{}, err
+	}
+	ctx, cancel := context.WithDeadline(context.WithValue(ctx, enrolledEscrowOperationKey{}, g), g.expires)
+	defer cancel()
+	return s.issuer.engine.ExecuteEnrolledEscrowReturn(ctx, a, s.native, EscrowReturnSpendGuard{Permit: s.authorized, PreBroadcast: func(ctx context.Context, r TransferRequest, tx SignedTransaction) bool {
+		return s.authorized(ctx, r) && s.native.ValidateSigned(r, tx) == nil
+	}})
+}
+
+// Shared by nonexecuting checks and the actual execution. This verifies the
+// original signed operation permission; it never issues one or consumes a nonce.
+func (s *EnrolledEscrowExecutor) bindEscrowOperation(ctx context.Context, a ReturnApproval, req TransferRequest) (*enrolledEscrowOperation, error) {
 	escrowBoundary(ctx, "owner_permission")
 	permitRaw, err := ReadPrivateFile(s.enrollment.OperationPermitFile, 64<<10)
 	var permit EscrowReturnOperationPermit
 	if err != nil || !chainjson.ValidFolded(permitRaw) || strictHTTPJSON(permitRaw, &permit) != nil {
-		return EscrowReturnSpendResult{}, ErrEscrowRuntimeHeld
+		return nil, ErrEscrowRuntimeHeld
 	}
 	escrowBoundary(ctx, "reserve_review")
 	reviewRaw, err := s.reviewBytes()
 	var bundle EscrowReturnExecutionBundle
 	if err != nil || !chainjson.ValidFolded(reviewRaw) || strictHTTPJSON(reviewRaw, &bundle) != nil {
-		return EscrowReturnSpendResult{}, ErrEscrowRuntimeHeld
+		return nil, ErrEscrowRuntimeHeld
 	}
 	c := s.issuer.config
 	escrowBoundary(ctx, "global_permission")
 	globalDigest, globalExpiry, err := s.issuer.currentFiles(ctx)
 	if err != nil {
-		return EscrowReturnSpendResult{}, ErrEscrowRuntimeHeld
+		return nil, ErrEscrowRuntimeHeld
 	}
 	escrowBoundary(ctx, "owner_verification")
 	key, _ := hex.DecodeString(c.ActivationAuthorityKeyHex)
@@ -351,7 +365,7 @@ func (s *EnrolledEscrowExecutor) Execute(ctx context.Context, a ReturnApproval) 
 		permit.Vault != c.Vault || permit.Escrow != c.BettingEscrow || permit.ClaimID != a.ClaimID || permit.ApprovalSHA256 != hashJSON(a) || permit.ReserveReviewSHA256 != custodySHA(reviewRaw) ||
 		permit.AmountUWolo != a.AmountUWolo || permit.FeeUWolo != c.FeesUWolo || !validReserveDigest(permit.Nonce) || !validReviewTime(permit.IssuedAt, permit.ExpiresAt, now.Unix(), true) ||
 		permit.ExpiresAt-permit.IssuedAt > 120 || !validReviewSignature(permit.Signature, ed25519.PublicKey(key), EscrowReturnOperationPermitMessage(permit)) {
-		return EscrowReturnSpendResult{}, ErrEscrowRuntimeHeld
+		return nil, ErrEscrowRuntimeHeld
 	}
 	expires := time.Unix(permit.ExpiresAt, 0)
 	if globalExpiry.Before(expires) {
@@ -362,10 +376,5 @@ func (s *EnrolledEscrowExecutor) Execute(ctx context.Context, a ReturnApproval) 
 			expires = time.Unix(end, 0)
 		}
 	}
-	g := &enrolledEscrowOperation{executor: s, request: req, permitDigest: custodySHA(permitRaw), permitRaw: append([]byte(nil), permitRaw...), reviewRaw: append([]byte(nil), reviewRaw...), globalPermitDigest: globalDigest, nonce: permit.Nonce, reviewDigest: custodySHA(reviewRaw), stateHeight: bundle.Review.StateHeight, commitHash: bundle.Review.CommitBlockHash, expires: expires}
-	ctx, cancel := context.WithDeadline(context.WithValue(ctx, enrolledEscrowOperationKey{}, g), expires)
-	defer cancel()
-	return s.issuer.engine.ExecuteEnrolledEscrowReturn(ctx, a, s.native, EscrowReturnSpendGuard{Permit: s.authorized, PreBroadcast: func(ctx context.Context, r TransferRequest, tx SignedTransaction) bool {
-		return s.authorized(ctx, r) && s.native.ValidateSigned(r, tx) == nil
-	}})
+	return &enrolledEscrowOperation{executor: s, request: req, permitDigest: custodySHA(permitRaw), permitRaw: append([]byte(nil), permitRaw...), reviewRaw: append([]byte(nil), reviewRaw...), globalPermitDigest: globalDigest, nonce: permit.Nonce, reviewDigest: custodySHA(reviewRaw), stateHeight: bundle.Review.StateHeight, commitHash: bundle.Review.CommitBlockHash, expires: expires}, nil
 }
