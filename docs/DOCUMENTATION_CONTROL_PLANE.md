@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/c03-native-successors-observed-20261104` at `8ebcd7436d22df631bade68f692ac955392401ad`
+Implementation baseline: `fix/c07-archived-journal-restore-held-20261104` at `c5e837e42da3696f969fd448664596dd4432442e`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
