@@ -236,12 +236,15 @@ material:
   names and active timer names, **not** user-manager env, ExecStart,
   logs, credential or service file content. Missing or inaccessible
   user DBus creates `NOT_INSPECTED`, not empty evidence.
-- Read-only `docker ps`/`podman ps` container names with their
-  restart-policy boolean. It does not inspect volume mounts,
-  environment, tokens, network bindings, grants, or database contents.
-  A running Hasura service is treated as a *potential* financial
-  writer until independently classified; absent Docker/Podman tooling
-  is `ENGINE_UNAVAILABLE`, not complete host coverage.
+- Read-only `docker ps --all`/`podman ps --all` enumerates **running,
+  paused, and stopped** containers, and reads only the named container's
+  restart-policy label and runtime state. Dormant auto-restart containers
+  remain potential financial writers after a daemon/host restart.
+  Unknown or malformed state returns `NOT_INSPECTED`, never a false
+  exclusion. It does not inspect volume mounts, environment, tokens,
+  network bindings, grants, or database contents. Hasura remains a
+  potential writer until independently classified; absent Docker/Podman
+  tooling is `ENGINE_UNAVAILABLE`, not complete host coverage.
 - All financial-ready, producer-fenced and Satchel activation flags
   stay false; successful observational output exits **3** and
   critical evidence failures exit 2. It cannot start/stop systemd,
