@@ -1,0 +1,47 @@
+# Source-reviewed C01 staging template, NOT an activation permit.
+# No [Install] section: this unit MUST NOT be automatically enabled.
+# Separate reviewer identity does NOT mean an independent human reviewer.
+[Unit]
+Description=WOLO C01 independent technical wager reviewer (8095; held without enrollment)
+ConditionPathExists=/etc/wolo-financial-c01/reviewer.json
+StartLimitIntervalSec=300s
+StartLimitBurst=1
+
+[Service]
+Type=simple
+Restart=no
+TimeoutStartSec=30s
+TimeoutStopSec=20s
+UMask=0077
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+AmbientCapabilities=
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectControlGroups=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectClock=yes
+ProtectHostname=yes
+ProtectProc=invisible
+ProcSubset=pid
+RestrictSUIDSGID=yes
+RestrictNamespaces=yes
+RestrictRealtime=yes
+LockPersonality=yes
+SystemCallArchitectures=native
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+IPAddressDeny=any
+IPAddressAllow=localhost
+MemoryMax=512M
+TasksMax=96
+LimitNOFILE=512
+User=wolo-reviewer
+Group=wolo-reviewer
+WorkingDirectory=/var/lib/wolo-financial-role-state/v1/reviewer
+ReadWritePaths=/var/lib/wolo-financial-role-state/v1/reviewer
+RuntimeDirectory=wolo-reviewer-c01
+RuntimeDirectoryMode=0700
+ExecStart=/usr/local/libexec/wolo-c01/f7b5a74928e041a6a90ac983d87649e0484677a4/woloreviewerd --config /etc/wolo-financial-c01/reviewer.json

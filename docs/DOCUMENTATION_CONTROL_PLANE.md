@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/c03-dormant-container-restarts-20261104` at `868969bf7f63876231bd04e662682f91873bfa99`
+Implementation baseline: `fix/c01-confined-held-units-20261104` at `f5c37c3878f5c5e73e3b15281d9694527d68b50d`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
