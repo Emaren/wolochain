@@ -15,7 +15,8 @@ import subprocess
 import sys
 
 SCHEMA = "wolo.financial.producer-activation-topology.v1"
-PREFIXES = ("aoe2hdbets-", "aoe2dewarwagers-", "aoe2war-", "aoe2-wolo-")
+PREFIXES = ("aoe2hdbets-", "aoe2dewarwagers-", "aoe2war-", "aoe2-wolo-",
+            "wolo-satchel-c01.", "wolo-reviewer-c01.")
 PROTECTED = (
     "wolochaind-mainnet.service",
     "wolochain-mainnet-settlement.service",
@@ -36,6 +37,11 @@ MAX_UNITS = 100
 MAX_OUTPUT = 96_000
 MAX_RELATIONS = 150
 MAX_PROP_BYTES = 16_000
+UNIT_FILE_STATES = frozenset({
+    "enabled", "disabled", "static", "masked", "indirect", "generated",
+    "transient", "linked", "linked-runtime", "enabled-runtime",
+    "masked-runtime", "alias", "bad", "not-found",
+})
 EXPECTED = frozenset({
     "aoe2-wolo-transfer-heartbeat.service",
     "aoe2-wolo-transfer-heartbeat.timer",
@@ -56,6 +62,8 @@ EXPECTED = frozenset({
     "aoe2hdbets-web.service",
     "aoe2war-prewarm.service",
     "aoe2war-prewarm.timer",
+    "wolo-satchel-c01.service",
+    "wolo-reviewer-c01.service",
 })
 
 
@@ -90,6 +98,28 @@ def discover(raw: str) -> list[str]:
         names.append(name)
         if len(names) > MAX_UNITS:
             raise TopologyError("UNBOUNDED_FINANCIAL_UNIT_SET")
+    return sorted(names)
+
+
+def discover_installed(raw: str) -> list[str]:
+    """Bounded installed unit-file names, never unit file contents or paths."""
+    if len(raw) > MAX_OUTPUT:
+        raise TopologyError("UNIT_FILE_LIST_UNBOUNDED")
+    names: list[str] = []
+    for line in raw.splitlines():
+        fields = line.strip().split()
+        if not fields:
+            continue
+        name = fields[0]
+        if not any(name.startswith(prefix) for prefix in PREFIXES):
+            continue
+        if len(fields) < 2 or not UNIT.fullmatch(name) or (
+            fields[1] not in UNIT_FILE_STATES
+        ) or name in names:
+            raise TopologyError("UNIT_FILE_IDENTITY_OR_STATE_INVALID")
+        names.append(name)
+        if len(names) > MAX_UNITS:
+            raise TopologyError("UNIT_FILE_LIST_TOO_LARGE")
     return sorted(names)
 
 
@@ -133,7 +163,10 @@ def parse_show(raw: str, expected: str) -> dict:
         "unitType": "timer" if expected.endswith(".timer") else "service",
         "restartConfigured": fields.get("Restart", "") not in ("", "no"),
         "relations": edges,
-        "owner": "DE" if expected.startswith("aoe2dewarwagers-") else "HD_OR_SHARED",
+        "owner": ("WOLO_CUSTODY" if expected == "wolo-satchel-c01.service"
+                  else "WOLO_REVIEWER" if expected == "wolo-reviewer-c01.service"
+                  else "DE" if expected.startswith("aoe2dewarwagers-")
+                  else "HD_OR_SHARED"),
         "sourceRuntimeParityProven": False,
         "paymentCapabilityExcluded": False,
         "safeToStop": False,
@@ -141,7 +174,8 @@ def parse_show(raw: str, expected: str) -> dict:
 
 
 def topology(discovered: list[str], observations: list[dict],
-             observed_at: datetime | None = None) -> dict:
+             observed_at: datetime | None = None,
+             installed: list[str] | None = None) -> dict:
     if len(discovered) != len(observations) or not discovered or len(discovered) > MAX_UNITS:
         raise TopologyError("INCOMPLETE_TOPOLOGY")
     unit_names = [o.get("unit") for o in observations if isinstance(o, dict)]
@@ -161,6 +195,21 @@ def topology(discovered: list[str], observations: list[dict],
                            if o["unitType"] == "timer" and o["activeObserved"])
     unknown = sorted(name_set - EXPECTED)
     missing = sorted(EXPECTED - name_set)
+    if installed is None:
+        installed_names: set[str] = set()
+        installed_inventory_available = False
+    else:
+        if len(installed) > MAX_UNITS or installed != sorted(set(installed)) or (
+            any(not UNIT.fullmatch(name) for name in installed)
+        ):
+            raise TopologyError("INSTALLED_UNIT_INVENTORY_DRIFT")
+        installed_names = set(installed)
+        installed_inventory_available = True
+    # A service with an installed .service file may be absent from systemctl
+    # list-units if it has never been loaded. Neither state is proof of a
+    # disabled payment writer, and neither creates authorization to stop it.
+    installed_but_not_loaded = sorted((EXPECTED - name_set) & installed_names)
+    not_installed = sorted((EXPECTED - name_set) - installed_names)
     return {
         "schema": SCHEMA,
         "observedAtUtc": (observed_at or datetime.now(timezone.utc)).astimezone(
@@ -172,12 +221,25 @@ def topology(discovered: list[str], observations: list[dict],
         "knownActivationGraphUnitNames": triggers,
         "newOrUnmappedUnits": unknown,
         "expectedAbsentUnitNames": missing,
+        "installedUnitFileInventoryObserved": installed_inventory_available,
+        "installedButNotLoadedExpectedUnitNames": installed_but_not_loaded,
+        "notInstalledExpectedUnitNames": (
+            not_installed if installed_inventory_available else []
+        ),
+        "installedUnitFilesNotLoaded": sorted(installed_names-name_set),
+        "systemdUnitAndUnitFileInventoryAtomic": False,
         "units": observations,
         "cronUserContainersAndExternalSignersCovered": False,
         "financialIngressFenced": False,
         "paymentsReconciled": False,
         "independentBankSolvencyProven": False,
         "protectedWoloUnitsAlwaysExcluded": list(PROTECTED),
+        "nativeCustodyReviewerSuccessorsObserved": sorted(name_set & {
+            "wolo-satchel-c01.service", "wolo-reviewer-c01.service"}),
+        "nativeSuccessorsInstalledButNotLoaded": sorted(
+            set(installed_but_not_loaded) & {
+                "wolo-satchel-c01.service", "wolo-reviewer-c01.service"}),
+        "nativeSuccessorsAreFinancialWritersExcluded": False,
         "systemdMutationsPerformed": False,
         "cutoverAuthorized": False,
         "satchelActivationAuthorized": False,
@@ -193,7 +255,10 @@ def inspect() -> dict:
     for name in names:
         lines = run("show", "--property=" + ",".join(PROPS), name)
         observations.append(parse_show(lines, name))
-    return topology(names, observations)
+    installed_raw=run("list-unit-files", "--type=service", "--type=timer",
+                      "--no-legend", "--plain")
+    installed=discover_installed(installed_raw)
+    return topology(names, observations, installed=installed)
 
 
 def main(argv: list[str] | None = None) -> int:

@@ -82,7 +82,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "4f776de194b9dbe88a605c75f0aa6136d68a0bfa7b1a2084cfa292e7e147868a",
+      "sha256": "b8f55caafbd26e70b407b3c4a3c270d02f8eb8731d870330e256c2c28443f8d6",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -473,7 +473,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-11-04",
       "sensitivity": "internal",
-      "sha256": "e02d155023fe1b871bc4533510e008b738469504f064a26209e101070035585b",
+      "sha256": "674a30dfd8d1f58dd26906d0a7a4b7196dabf5369143d086c390a4204af112f3",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -1135,8 +1135,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/c04-exact-original-readonly-20261104",
-    "commit": "4b0bf7f4627990578690210b7cf2a451ff2f7e40"
+    "branch": "fix/c03-native-successors-observed-20261104",
+    "commit": "8ebcd7436d22df631bade68f692ac955392401ad"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
