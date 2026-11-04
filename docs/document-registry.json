@@ -82,7 +82,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "b5133ef7bae89f21c8b2f59d3c58265ba9b56a2bcc5bfb0a449f2a617ed834a8",
+      "sha256": "0c16b4198661ff58f3e612ad22432b02d1a294f7831f76986f2b2570c2aa7654",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -543,7 +543,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-11-02",
       "sensitivity": "restricted",
-      "sha256": "763515cb23a728119bdd357c971b4e3af68eec1b86c46cd96020c8241f031b44",
+      "sha256": "253ffeac6e4b82c909a02ca48097bc8ac0476ad8a00605828f58201b26bd2e7f",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -1135,8 +1135,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/c07-archived-journal-restore-held-20261104",
-    "commit": "c5e837e42da3696f969fd448664596dd4432442e"
+    "branch": "fix/c04-founder889-comet-index-audit-20261104",
+    "commit": "0baed583fa2977ee0b0f3801a3ab6dd11e020c1e"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
