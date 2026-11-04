@@ -131,6 +131,9 @@ jobs:
       - name: C01 native confined held service-unit contracts (no activation)
         run: python3 -m unittest discover -s tests -p 'test_c01_held_systemd_units.py' -v
 
+      - name: C04 indexed founder original payout forensic refusal (offline)
+        run: python3 -m unittest discover -s tests -p 'test_settlement_founder889_txindex_readonly.py' -v
+
       - name: Founder request-state forensics contracts (read only)
         run: python3 -m unittest discover -s tests -p 'test_settlement_founder15_state_readonly.py' -v
 

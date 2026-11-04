@@ -307,6 +307,37 @@ HD independently verifies the stored intent and atomically consumes its global
 physical receipt identity. Source CI and reproducible artifacts cannot clear
 physical custody or release gates.
 
+## C04 founder #889 indexed-transfer forensic guard — 2026-11-04
+
+Source-pinned `scripts/settlement_founder889_txindex_readonly.py` reads
+only the original protected founder payout request and the positive-control
+legacy accepted 100-WOLO request, then queries **loopback** CometBFT
+`/tx_search`, `/block` and `/status`. It never reads signer keys,
+broadens network access or calls broadcast methods. It verifies the known
+100-WOLO transaction's exact committed hash/height/recipient before testing
+the recorded founder sender, recipient and exact 300-WOLO amount. Historical
+blocks and bounded event matching are included for any candidate transfers.
+
+The actual native HEL1 execution at about 17:14 UTC on November 4 found
+**seven indexed incoming transactions** of any amount for the original
+founder recipient, **zero indexed exact 300-WOLO transfers to that recipient**,
+**one** same-signer 300-WOLO payment to a *different* recipient on June 13,
+and **two** same-signer-to-original-recipient transfers of *other* amounts
+on June 13–14. The founder claim #889 payout attempt was July 4 and its
+local response was `failed`, `retryable=true`, with no transaction hash.
+This audit explicitly retains `founder889_payment_fate=UNKNOWN`,
+`retry_authorized=false`, `c04_closed=false` despite no indexed matching
+transfer, because the local index's lifetime completeness, any alternative
+signers, and independent consensus trust cannot be proven from one
+operator-controlled node. **Never authorize a retry based on an empty index.**
+
+Eleven regression tests exercise zero- and positive-match HOLD, corrupted
+controls, path/size/symlink refusal, malicious RPC route refusal, candidate
+overflow, bad block header, and node not ready. The exact script contains
+only loopback, read-only history lookups; response output contains hashes
+of confidential identities, never the identities, original memo or private
+request ID.
+
 ## C07 historical journal-only restore — 2026-11-04 (still HOLD)
 
 The separately staged `scripts/settlement_archived_journal_restore_drill.py`
