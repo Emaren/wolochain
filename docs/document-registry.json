@@ -82,7 +82,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "b8f55caafbd26e70b407b3c4a3c270d02f8eb8731d870330e256c2c28443f8d6",
+      "sha256": "b5133ef7bae89f21c8b2f59d3c58265ba9b56a2bcc5bfb0a449f2a617ed834a8",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -543,7 +543,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-11-02",
       "sensitivity": "restricted",
-      "sha256": "6fcf7b040338ab4a1dc23d73ac4dbc3b923481c5cb835343ac59b4c3d79ba7d8",
+      "sha256": "763515cb23a728119bdd357c971b4e3af68eec1b86c46cd96020c8241f031b44",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -1135,8 +1135,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/c03-native-successors-observed-20261104",
-    "commit": "8ebcd7436d22df631bade68f692ac955392401ad"
+    "branch": "fix/c07-archived-journal-restore-held-20261104",
+    "commit": "c5e837e42da3696f969fd448664596dd4432442e"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

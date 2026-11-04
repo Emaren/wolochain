@@ -307,6 +307,37 @@ HD independently verifies the stored intent and atomically consumes its global
 physical receipt identity. Source CI and reproducible artifacts cannot clear
 physical custody or release gates.
 
+## C07 historical journal-only restore — 2026-11-04 (still HOLD)
+
+The separately staged `scripts/settlement_archived_journal_restore_drill.py`
+performs a **real isolated, root-only restore of an already archived and
+checksummed settlement journal**. It is intentionally not a backup of
+current production. The exact source checks the archived primary, founder and
+six config/unit manifest entries, rejects symlinks, unexpected journal files,
+path traversal, duplicate or changed hashes, then copies ONLY journal JSON to
+the dedicated mounted recovery filesystem. It verifies all restored bytes,
+fsyncs and atomically publishes a restricted receipt. It never copies
+protected environment/config, keyrings, custody keys, signer binaries,
+PostgreSQL, or WAL; never starts a service or performs a network call.
+
+The 2026-10-23 HEL1 archived snapshot produced an intentional exit **3 HOLD**
+with **1,750 primary + 646 founder = 2,396** journal files restored. A
+separate, independent root rehash of all restored files validated the archival
+manifest content, restricted modes and unchanged original consensus/8092/8093
+service PIDs. The archive is older than current production. This proves a
+bounded **archived journal rehydration mechanic**, not a current backed-up
+financial state. No current financial table, WAL, reserve, fee, pending claim,
+customer obligation or historical authority is reconstructed from that output.
+
+C06 requires a new *consistent, encrypted, independently recoverable* current
+HD+DE PostgreSQL/WAL, primary+founder journals, policies, config and custody
+metadata snapshot **after an actual authorized all-producer fence**. The
+previous attempted live `pg_basebackup` was blocked by execution safety
+control; this journal-only drill is not an alternative attempt at that blocked
+backup. C07 requires a separate independently witnessed restore of that
+same current consistent snapshot and paired rollback, without rebroadcasting
+UNKNOWN. Thus **C06 and C07 remain OPEN** regardless of this drill's success.
+
 ## Native C01 confined service HOLD templates — 2026-11-04
 
 The tracked `deploy/systemd/wolo-satchel-c01.service` and

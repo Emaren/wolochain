@@ -125,6 +125,9 @@ jobs:
           python3 -m unittest discover -s tests -p 'test_settlement_producer_activation_topology.py' -v
           python3 -m unittest discover -s tests -p 'test_settlement_auxiliary_producer_surfaces.py' -v
 
+      - name: C07 isolated historical journal-only restore and tamper refusal (offline)
+        run: python3 -m unittest discover -s tests -p 'test_settlement_archived_journal_restore_drill.py' -v
+
       - name: C01 native confined held service-unit contracts (no activation)
         run: python3 -m unittest discover -s tests -p 'test_c01_held_systemd_units.py' -v
 
