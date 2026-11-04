@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "f859bae45eec481e82e9f2fb719032aa6b529a89f1c9c96a46cc1728a06eb4b7",
+      "sha256": "6a13dfb5d427412bd14c7eb386fe9a456b63531f6d87969be8f32eb9835f6eeb",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -520,7 +520,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-11-02",
       "sensitivity": "restricted",
-      "sha256": "1c295bcb3ddf25004958f4d3e67071869979c9ec04b9655a5b6bdaf6f0f30d10",
+      "sha256": "6fcf7b040338ab4a1dc23d73ac4dbc3b923481c5cb835343ac59b4c3d79ba7d8",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -1112,8 +1112,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/c03-dormant-container-restarts-20261104",
-    "commit": "868969bf7f63876231bd04e662682f91873bfa99"
+    "branch": "fix/c01-confined-held-units-20261104",
+    "commit": "f5c37c3878f5c5e73e3b15281d9694527d68b50d"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
