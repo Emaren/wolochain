@@ -132,8 +132,17 @@ func run(ctx context.Context, args []string, out, errout io.Writer) int {
 		return 2
 	}
 	public, _ := hex.DecodeString(cfg.PublicKeyHex)
+	var escrowExecutor *satchelservice.EnrolledEscrowExecutor
+	if cfg.EscrowSignerEnrollmentFile != "" {
+		escrowExecutor, err = satchelservice.NewEnrolledEscrowExecutor(custodyAuthority)
+		if err != nil {
+			fmt.Fprintln(errout, "satchel: protected escrow enrollment unavailable")
+			return 2
+		}
+		defer escrowExecutor.Close()
+	}
 	fingerprint := sha256.Sum256(public)
-	handler, err := satchelservice.NewHTTPHandler(&serviceEngine{Engine: engine, trusted: trusted}, satchelservice.HTTPConfig{Token: strings.TrimSpace(string(token)), Accepting: true, Authorize: authorized, CustodyCapability: custodyAuthority.Capability, Health: satchelservice.HTTPHealth{Accepting: true, VaultAddress: cfg.Vault, EscrowAddress: cfg.BettingEscrow, KeyFingerprint: hex.EncodeToString(fingerprint[:]), BuildSHA256: binaryDigest, ExclusiveAuthorityVerified: true}})
+	handler, err := satchelservice.NewHTTPHandler(&serviceEngine{Engine: engine, trusted: trusted, escrow: escrowExecutor}, satchelservice.HTTPConfig{Token: strings.TrimSpace(string(token)), Accepting: true, Authorize: authorized, CustodyCapability: custodyAuthority.Capability, Health: satchelservice.HTTPHealth{Accepting: true, VaultAddress: cfg.Vault, EscrowAddress: cfg.BettingEscrow, KeyFingerprint: hex.EncodeToString(fingerprint[:]), BuildSHA256: binaryDigest, ExclusiveAuthorityVerified: true}})
 	for i := range token {
 		token[i] = 0
 	}
@@ -182,6 +191,21 @@ func (b *permittedBackend) NativeCustodyBackend() *satchelservice.KeyringBackend
 type serviceEngine struct {
 	*satchelservice.Engine
 	trusted *satchel.TrustedReader
+	escrow  *satchelservice.EnrolledEscrowExecutor
+}
+
+func (e *serviceEngine) CheckEnrolledClaimReturn(ctx context.Context, a satchelservice.ReturnApproval) (satchelservice.EscrowReturnExecutionCheck, error) {
+	if e.escrow == nil {
+		return satchelservice.EscrowReturnExecutionCheck{}, satchelservice.ErrEscrowRuntimeHeld
+	}
+	return e.escrow.CheckExecution(ctx, a)
+}
+
+func (e *serviceEngine) ExecuteEnrolledClaimReturn(ctx context.Context, a satchelservice.ReturnApproval) (satchelservice.EscrowReturnSpendResult, error) {
+	if e.escrow == nil {
+		return satchelservice.EscrowReturnSpendResult{}, satchelservice.ErrEscrowRuntimeHeld
+	}
+	return e.escrow.Execute(ctx, a)
 }
 
 func (e *serviceEngine) ReconcileClaimReturn(ctx context.Context, a satchelservice.ReturnApproval, hash string) (satchelservice.ReturnReceipt, error) {

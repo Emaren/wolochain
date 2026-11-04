@@ -8,12 +8,162 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "source-integration-proof-not-production-approval"
-reviewed_at: "2026-10-20"
+reviewed_at: "2026-11-01"
 review_interval_days: 14
 sensitivity: "restricted"
 ---
 
 # Authenticated War Satchel Financial Bridge
+
+## C01: protected executable connection (November 1 source candidate)
+
+The existing `wolosatcheld` custody process can
+optionally compose `NewEnrolledEscrowExecutor` over its **existing** engine and
+the qualified `ExecuteEnrolledEscrowReturn` / `ExecuteQualifiedEscrowReturn`
+path. No new listener, journal, controller or legacy signer is introduced.
+Missing `escrow_signer_enrollment_file` / SHA-256 keeps execution unavailable.
+When configured, the protected enrollment pins a clean embedded source commit,
+distinct escrow public key/keyring/name/unlock file and operation-permit path.
+The running binary, actual config, original financial permit and independent
+reserve enrollment remain bound by the existing custody authority.
+
+`POST /satchel/v1/returns/execute` accepts only the exact signed `ReturnApproval`.
+Sender, vault destination, amount, fee and original partition derive from the
+protected policy and immutable approval; callers cannot supply signing options.
+A separate `EscrowReturnOperationPermit`, signed by the existing independent
+activation authority, binds source/binary/config/enrollment, exact original
+approval and raw reserve review, claim, amount, fee, nonce and short expiry.
+Neither the daemon nor its CLI signs these permissions. The local immutable
+spend record retains the exact signed operation permit and reserve-review bytes
+before signing. Its bounded write must also fit the existing 8-MiB complete
+journal; otherwise the transaction rolls back before any SDK call, with all
+historical data preserved. The local immutable
+spend journal consumes the nonce permanently; this is not a substitute for the
+independently witnessed release/nonce authority required by C08.
+
+After final native bank I/O, the runtime rechecks protected files and both
+permission identities, then samples completion. Global permit expiry is also
+part of the operation deadline. SDK callbacks use an opaque in-process context
+and do not reacquire their own signing mutex. A prior unresolved escrow attempt
+fences later claims even with fresh reserve review. Native reconciliation must
+match the exact persisted signed transaction; no new nonce or absence of an ACK
+releases uncertainty. Previously stored histories and original allocation bank
+metadata are retained.
+
+`woloescrowd execute-enrolled-return --config ABS --approval ABS` is a fixed
+authenticated client of this 8094 route, not another signer. Private bounded
+files, literal loopback target, no proxy/redirect/compression and one request
+are enforced. Errors/timeouts remain UNKNOWN, with no automatic retry or legacy
+8092/8093 fallback. HTTP success and the CLI's noncrediting UNKNOWN observation
+are not native finality or HD credit. Existing `/returns/reconcile` and
+`/proofs/return` retain the independent native-proof boundary.
+For recovery, use private read-only
+`GET /satchel/v1/returns/execution/{claim_id}`. It remains available after permit
+expiry; missing state is UNKNOWN and never permission to repeat the execution
+POST. HD must retain its own durable UNKNOWN attempt before its first POST.
+
+Local genuine SDK tests cover the protected runtime, post-I/O revocation,
+post-sign signed-permit replacement, changed authority and two conserved
+5+2-WOLO return legs with actual native gas. A new CI-only test runs the actual
+clean-source signer and CLI executables against an isolated SDK chain, verifies
+their source identity, independently authenticates the committed transfer and
+checks the real reconciliation route. It never opens mainnet or production
+keys. Its exact-head CI outcome must be recorded separately from local tests.
+
+The executable suite also kills only the isolated real daemon after the genuine
+SDK commits an escrow return and before its acknowledgement reaches custody.
+It reads the durable `broadcast_started` UNKNOWN, exact signed bytes and nonce,
+then restarts the same binary/configuration/journal/keyrings with the owner
+operation permit removed. Read-only recovery and authentic native reconciliation
+must preserve that spend record byte-for-byte; an explicit duplicate CLI
+observation must not broadcast again. The original successful binary path was
+qualified at `d6208da` (full CI 41473748363 and native 41473748368); this added
+interruption test requires its own new exact-head result and grants no mainnet
+authority.
+
+The failed real-executable run at `9f40ae3` returned before either durable
+intent or broadcast. Its fixture extended the signed reserve review to 110
+seconds, exceeding the genuine native bank evidence's maximum 30-second
+lifetime. Production correctly refuses that condition; the fixture now bounds
+review expiry by the authentic bank evidence. A native regression keeps the
+overlong signed review negative and then executes the same original claim with
+a valid signed lifetime. Exact-head executable CI must confirm the repair.
+The private execution response supplies only fixed nonsecret boundary labels,
+elapsed milliseconds and context state. The CLI distinguishes transport
+timeout, HTTP refusal and invalid response without echoing input, signed
+permissions, response bodies or raw errors. Every such failure remains UNKNOWN;
+these observations never grant permission to retry or credit.
+
+**C01–C09 remain OPEN.** C01 still requires independently accepted final source,
+immutable release artifacts, real enrolled custody/reviewer and financial
+permissions, physical execution/recovery evidence and acceptance. No funded
+flag, production service, migration or real wallet was changed. The older
+sections below retain their historical source scope.
+
+## November 1: native reserved-return runtime composition — HELD
+
+The additive \`Engine.ExecuteEnrolledEscrowReturn\` source now connects the
+*existing* protected \`CustodyAuthority.qualifyEscrowReturnLocked\` current
+signed bank/reviewer proof to the already qualified \`#122\`
+\`ExecuteQualifiedEscrowReturn\` durable signing journal. It is callable only
+by trusted in-process runtime code, not an HTTP request. It requires an
+actual leased **different native Cosmos SDK keyring** whose public identity
+matches the escrow sender, sole destination is the vault, and no vault
+keyring directory/key name/unlock file is shared.
+
+The fresh signed two-reviewer escrow bundle is verified **after** original
+return preparation, then checked for byte identity again at pre-sign and
+pre-broadcast together with the current owner financial permit, vault lease,
+escrow lease, exact approval and independent external guards. Missing or
+rotated files, wrong account, source/config drift, missing permit or
+revocation fail closed. Signing/broadcast/replay UNKNOWN semantics are
+owned by the existing durable journal; no credit follows acceptance.
+
+Native test coverage uses an **isolated SDK chain** and a real
+file-backed escrow keyring, plus negative missing-permit, wrong-role and
+review-revocation scenarios. This source/test increment still needs exact
+GitHub CI and independent review; its fixtures cannot enroll production
+custody or replace the separately protected runtime daemon.
+
+**Remaining, unchanged C01 gate:** Actual daemon/CLI/subprocess activation
+must supply genuine independently enrolled escrow keyring and authenticated
+pre-sign/pre-broadcast review controls. A current independent consensus
+receipt, permanent nonce uncertainty containment, financial producer
+fencing, backup/recovery and witnessed mainnet acceptance remain
+mandatory. No 8092 fallback, 8094 vault-role substitution or funds move.
+
+## November 1: durable escrow-account execution source — HELD
+
+`Engine.ExecuteQualifiedEscrowReturn` now provides a separate escrow-return
+spending primitive grounded in the existing opaque `VerifiedEscrowReturnExecution`
+reserve verifier and already signed original owner allocation. It derives the
+escrow sender, exact vault beneficiary, amount, memo, and operation identity
+from protected engine policy and the prepared claim. It never accepts those
+economic fields from a caller-supplied payment request.
+
+The new `escrow-return-spend-v1` Bolt journal records an intent **before**
+native SDK signing, records attempted signing before calling the backend,
+then seals the actual signed bytes/hash before any broadcast and the broadcast
+attempt before network I/O. Prior journal identities are consumed permanently.
+A lost response, failed signing, revocation, bad signed bytes or uncertain
+broadcast remains **UNKNOWN** without automatic retry or payout credit.
+Authenticated financial reconciliation still must separately prove an actual
+return receipt; even successful broadcast acceptance is not finality.
+
+The implementation uses the existing separate SDK backend interface and
+requires explicit independent pre-sign and pre-broadcast authorization
+callbacks. Tests cover positive *test-backend* invocation once, exact immutable
+journal replay, signed-but-revoked hold, absent permits, signing ambiguity,
+and no conversion of pending claims to paid receipts. The full native Satchel
+package and both command packages passed local tests. These controlled fixtures
+are source evidence, **not real independently enrolled production signers**.
+
+**Critical remaining C01:** No protected escrow keyring, independent permit
+issuer, runtime entrypoint/transport, or real signer lease has yet been wired
+to invoke this primitive. Neither `woloescrowd` nor the vault-only 8094 service
+can legitimately spend escrow funds from this source alone. No legacy 8092
+return route is authorized. Production custody activation, source admission,
+owner permission, bank and reserve proof, and recovery remain held.
 
 ## November 1: exact journal transport and protected return preparation
 

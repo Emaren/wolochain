@@ -1,6 +1,6 @@
-// woloescrowd validates the held independent v3 policy. It intentionally cannot
-// open a signer, listener or execution journal until real authority enrollment
-// and off-host nonce reservation have an independently reviewed implementation.
+// woloescrowd validates held policy/portable evidence and can submit an exact
+// approved return to the protected 8094 boundary. It never opens a signer,
+// listener or execution journal; the existing runtime owns those authorities.
 package main
 
 import (
@@ -26,6 +26,9 @@ func run(args []string, out io.Writer) int {
 }
 
 func runWithIO(args []string, in io.Reader, out io.Writer) int {
+	if len(args) > 0 && args[0] == "execute-enrolled-return" {
+		return runExecuteReturn(args[1:], out)
+	}
 	if portableArguments(args) {
 		return runPortable(args, in, out, portableDependencies{
 			loadPins: nativeverifier.LoadProtectedPinsContext,
