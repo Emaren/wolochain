@@ -262,15 +262,18 @@ class AuxiliaryProducerTests(unittest.TestCase):
     def test_container_restart_policy_is_not_financial_exclusion(self):
         def mock_command(args,**kw):
             if args[1]=="ps":
+                self.assertIn("--all", args)
                 return 0,"historical-hasura\n"
             if args[1]=="inspect":
                 self.assertIn("HostConfig.RestartPolicy.Name",args[3])
-                return 0,"always\n"
+                self.assertIn("State.Status",args[3])
+                return 0,"always|exited\n"
             self.fail(f"unexpected args {args}")
         with patch.object(A,"command",side_effect=mock_command):
             out=A.container_inventory("docker")
         self.assertEqual(out["status"],"OBSERVED_ONLY")
         self.assertEqual(out["names"],[{"name":"historical-hasura",
+                                       "runtimeState":"exited",
                                        "restartConfigured":True,
                                        "potentialFinancialWriter":True}])
         self.assertFalse(out["containerEnvOrMountsInspected"])
@@ -279,6 +282,42 @@ class AuxiliaryProducerTests(unittest.TestCase):
             absent=A.container_inventory("podman")
         self.assertEqual(absent["status"],"ENGINE_UNAVAILABLE")
         self.assertFalse(absent["restartPolicyObserved"])
+
+    def test_running_and_dormant_containers_both_remain_potential_writers(self):
+        def mock_command(args, **kw):
+            if args[1] == "ps":
+                self.assertIn("--all", args)
+                return 0, "active-betting\npaused-custody\nstopped-restart\n"
+            if args[1] == "inspect":
+                status = {
+                    "active-betting": "no|running\n",
+                    "paused-custody": "unless-stopped|paused\n",
+                    "stopped-restart": "always|exited\n",
+                }
+                return 0, status[args[-1]]
+            self.fail(f"unknown command {args}")
+        with patch.object(A, "command", side_effect=mock_command):
+            out = A.container_inventory("docker")
+        self.assertEqual([x["runtimeState"] for x in out["names"]],
+                         ["running", "paused", "exited"])
+        self.assertEqual([x["restartConfigured"] for x in out["names"]],
+                         [False, True, True])
+        self.assertTrue(all(x["potentialFinancialWriter"] for x in out["names"]))
+        self.assertEqual(out["status"], "OBSERVED_ONLY")
+
+    def test_missing_container_state_does_not_silently_exclude_writer(self):
+        for response in ("always\n", "always|mystery\n", "invalid|running\n",
+                         "always|running|extra\n"):
+            def mock_command(args, **kw):
+                if args[1] == "ps":
+                    return 0, "latent-writer\n"
+                return 0, response
+            with self.subTest(response=response), patch.object(
+                A, "command", side_effect=mock_command
+            ):
+                out = A.container_inventory("docker")
+            self.assertEqual(out["status"], "NOT_INSPECTED")
+            self.assertFalse(out["restartPolicyObserved"])
 
     def test_forged_duplicate_names_and_inspection_error_fail_closed(self):
         with patch.object(A,"command",return_value=(0,"a\n" * 2)):
@@ -368,7 +407,8 @@ class AuxiliaryProducerTests(unittest.TestCase):
             "financialIngressFenced":False,"satchelActivationAuthorized":False,
             "productionMutated":False,
         }
-        with patch.object(A,"inspect",return_value=report),patch("builtins.print"):
+        with patch.object(A.sys, "platform", "linux"), \
+             patch.object(A,"inspect",return_value=report), patch("builtins.print"):
             self.assertEqual(A.main(["--inspect"]),3)
         with patch("builtins.print"):
             self.assertEqual(A.main(["--apply"]),2)
