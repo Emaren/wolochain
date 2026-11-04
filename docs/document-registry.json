@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "76e6f0ae51da8ae8dd903639507d530bb213f60bf32073cf108be2b961465d59",
+      "sha256": "f859bae45eec481e82e9f2fb719032aa6b529a89f1c9c96a46cc1728a06eb4b7",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1112,8 +1112,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "codex/c01-executable-deadline-repair-20261101",
-    "commit": "53b582ec1be68614f991f04be97a874e77f49d5b"
+    "branch": "fix/c03-dormant-container-restarts-20261104",
+    "commit": "868969bf7f63876231bd04e662682f91873bfa99"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
