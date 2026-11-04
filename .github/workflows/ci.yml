@@ -19,6 +19,8 @@ jobs:
       PYTHONDONTWRITEBYTECODE: '1'
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - name: Guarded current settlement code-only cutover and fault rollback (offline)
         run: |
           python3 -m unittest discover -s tests -p 'test_settlement_bdbce253_code_cutover.py' -v
@@ -58,6 +60,8 @@ jobs:
       SATCHEL_REVIEWER_TEST_PG_DSN: postgres://postgres:isolated-test-only@127.0.0.1:5432/satchel_reviewer_test?sslmode=disable
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
@@ -69,11 +73,13 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GOFLAGS: -tags=go1.27
+      PYTHONDONTWRITEBYTECODE: '1'
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           # Documentation authority verifies the recorded implementation ancestor.
           fetch-depth: 0
 
@@ -157,11 +163,29 @@ jobs:
       - name: HD non-additive financial obligation evidence contracts (read only)
         run: python3 -m unittest discover -s tests -p 'test_settlement_financial_obligation_envelope.py' -v
 
+      # Preserve independent negative-test evidence if DocsV2 correctly expires.
+      # This does NOT skip, waive, or replace the failing DocsV2 release gate.
       - name: Same-height financial arithmetic and missing-evidence negatives (HOLD only)
+        if: ${{ always() && !cancelled() }}
         run: python3 -m unittest discover -s tests -p 'test_settlement_financial_one_height_arithmetic.py' -v
 
       - name: Real single-owner phase signature review, NONAUTHORIZING (synthetic keys)
         run: python3 -m unittest discover -s tests -p 'test_settlement_solo_owner_intent_review.py' -v
+
+      - name: Single-owner runtime authority, off-host nonce and guarded dispatch (disposable)
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: python3 -m unittest discover -s tests -p 'test_settlement_solo_runtime.py' -v
+      - name: Pre-resume producer identity snapshots refuse drift and active oneshots (NONAUTHORIZING)
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: python3 -m unittest discover -s tests -p 'test_settlement_resume_producer_identities.py' -v
+      - name: Identity-bound resume, timer qualification and irreversible crash boundaries (disposable)
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: python3 -m unittest discover -s tests -p 'test_settlement_solo_resume_execution.py' -v
+      - name: Cross-repo HD-only Wolo 8094 wire surface adversarial admission (NONAUTHORIZING)
+        run: python3 -m unittest discover -s tests -p 'test_settlement_hd_satchel_wire_review.py' -v
 
       - name: Financial six-control evidence HOLD audit (offline, never approval)
         run: |
@@ -180,11 +204,20 @@ jobs:
       - name: Versioned private Satchel wire contract
         run: python3 -m unittest discover -s tests -p 'test_satchel_http_contract.py' -v
 
-      - name: Build isolated Satchel service
-        run: go build ./cmd/wolosatcheld
+      - name: Build isolated Satchel signer and independent reviewer
+        run: |
+          go build -o "$RUNNER_TEMP/wolosatcheld-c01" ./cmd/wolosatcheld
+          go build -o "$RUNNER_TEMP/woloreviewerd-c01" ./cmd/woloreviewerd
+          go build -o "$RUNNER_TEMP/woloescrowd-c01" ./cmd/woloescrowd
+
+      - name: Actual protected C01 signer and CLI subprocess against isolated SDK
+        env:
+          SATCHEL_C01_SIGNER_EXECUTABLE: ${{ runner.temp }}/wolosatcheld-c01
+          SATCHEL_C01_CLIENT_EXECUTABLE: ${{ runner.temp }}/woloescrowd-c01
+        run: go test -race -p=1 ./internal/satchelservice -run '^TestEscrowServiceProductionExecutables$' -count=1 -timeout=120s
 
       - name: Satchel custody execution race contracts
-        run: go test -race ./internal/satchelservice ./cmd/wolosatcheld -count=1
+        run: go test -race ./internal/satchelservice ./cmd/wolosatcheld ./cmd/woloreviewerd -count=1
 
       - name: Chain invariant guard
         run: WOLO_SKIP_RUNTIME_CHECKS=1 ./scripts/check-chain-invariants.sh

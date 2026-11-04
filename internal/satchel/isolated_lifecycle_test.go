@@ -64,6 +64,7 @@ type lifecycleStep struct {
 	Proof         PortableProof    `json:"proof"`
 	VaultBalance  string           `json:"vault_balance_uwolo"`
 	VaultProof    BankProof        `json:"vault_bank_proof"`
+	EscrowProof   BankProof        `json:"escrow_bank_proof"`
 	DepositIntent *Intent          `json:"deposit_intent,omitempty"`
 	DepositProof  *PortableProof   `json:"deposit_proof,omitempty"`
 	ReplayHeight  int64            `json:"replay_height"`
@@ -115,6 +116,7 @@ func runContinuousSDKLifecycle(t *testing.T, scenario string, matched bool, reci
 		return lifecycleWallet{key, sdk.AccAddress(key.PubKey().Address())}
 	}
 	owner, vault, escrow, opponent := wallet("owner"), wallet("vault"), wallet("escrow"), wallet("opponent")
+	feeRecipient := wallet("fee-recipient")
 	require.NotEqual(t, owner.address, vault.address)
 	require.NotEqual(t, vault.address, escrow.address)
 	require.NotEqual(t, owner.address, escrow.address)
@@ -156,7 +158,7 @@ func runContinuousSDKLifecycle(t *testing.T, scenario string, matched bool, reci
 	transactions := map[string]*core.ResultTx{}
 	rests := map[string]map[string]any{}
 	bankStates := []map[string]any{}
-	snapshot := func(label string, height int64, expected [3]int64, expectedOpponent, fees int64) {
+	snapshot := func(label string, height int64, expected [3]int64, expectedOpponent, expectedFeeRecipient, fees int64) {
 		ctx := application.NewUncachedContext(false, cmtproto.Header{Height: height})
 		if height == 0 {
 			ctx = application.NewContextLegacy(false, cmtproto.Header{})
@@ -173,10 +175,13 @@ func runContinuousSDKLifecycle(t *testing.T, scenario string, matched bool, reci
 		opponentActual := application.BankKeeper.GetBalance(ctx, opponent.address, Denom).Amount
 		require.Equal(t, sdkmath.NewInt(expectedOpponent), opponentActual, label+" counterparty")
 		values["opponent"] = opponentActual.String()
-		require.Equal(t, int64(100000201)+opponentInitial, expected[0]+expected[1]+expected[2]+expectedOpponent+fees, "principal and operating fees conserve")
+		feeRecipientActual := application.BankKeeper.GetBalance(ctx, feeRecipient.address, Denom).Amount
+		require.Equal(t, sdkmath.NewInt(expectedFeeRecipient), feeRecipientActual, label+" economic fee recipient")
+		values["fee_recipient"] = feeRecipientActual.String()
+		require.Equal(t, int64(100000201)+opponentInitial, expected[0]+expected[1]+expected[2]+expectedOpponent+expectedFeeRecipient+fees, "principal and operating fees conserve")
 		bankStates = append(bankStates, map[string]any{"after": label, "height": height, "balances_uwolo": values, "cumulative_fee_uwolo": strconv.FormatInt(fees, 10)})
 	}
-	snapshot("genesis", 0, [3]int64{100000001, 100, 100}, opponentInitial, 0)
+	snapshot("genesis", 0, [3]int64{100000001, 100, 100}, opponentInitial, 0, 0)
 	appHash := init.AppHash
 	var lastResults []*abci.ExecTxResult
 	var height int64
@@ -240,31 +245,32 @@ func runContinuousSDKLifecycle(t *testing.T, scenario string, matched bool, reci
 	commitBlock(nil)
 	steps := []lifecycleStep{}
 	type paymentSpec struct {
-		name     string
-		from, to lifecycleWallet
-		amount   int64
-		memo     string
-		expected [3]int64
-		opponent int64
+		name         string
+		from, to     lifecycleWallet
+		amount       int64
+		memo         string
+		expected     [3]int64
+		opponent     int64
+		feeRecipient int64
 	}
 	specs := []paymentSpec{
-		{"deposit", owner, vault, 100000000, "aoe2war/satchel/v1/lifecycle-owner/abcdefghijklmnop", [3]int64{0, 100000100, 100}, opponentInitial},
-		{"wager", vault, escrow, 12000000, "AoE2HDBets bet ticket v1 · ticket 1", [3]int64{0, 88000099, 12000100}, opponentInitial},
+		{"deposit", owner, vault, 100000000, "aoe2war/satchel/v1/lifecycle-owner/abcdefghijklmnop", [3]int64{0, 100000100, 100}, opponentInitial, 0},
+		{"wager", vault, escrow, 12000000, "AoE2HDBets bet ticket v1 · ticket 1", [3]int64{0, 88000099, 12000100}, opponentInitial, 0},
 	}
 	if matched {
 		specs = append(specs,
-			paymentSpec{"counterparty_funding", opponent, escrow, 12000000, "AoE2HDBets bet ticket v1 · ticket 2", [3]int64{0, 88000099, 24000100}, 0},
-			paymentSpec{"matched_payout", escrow, vault, 24000000, "aoe2war/satchel/claim-return/v1/101", [3]int64{0, 112000099, 99}, 0},
-			paymentSpec{"withdrawal", vault, owner, 112000000, "aoe2war/satchel/withdraw/v1/00000000-0000-4000-8000-000000000001", [3]int64{112000000, 98, 99}, 0})
+			paymentSpec{"counterparty_funding", opponent, escrow, 12000000, "AoE2HDBets bet ticket v1 · ticket 2", [3]int64{0, 88000099, 24000100}, 0, 0},
+			paymentSpec{"matched_payout", escrow, vault, 24000000, "aoe2war/satchel/claim-return/v1/101", [3]int64{0, 112000099, 99}, 0, 0},
+			paymentSpec{"withdrawal", vault, owner, 112000000, "aoe2war/satchel/withdraw/v1/00000000-0000-4000-8000-000000000001", [3]int64{112000000, 98, 99}, 0, 0})
 	} else {
 		specs = append(specs,
-			paymentSpec{"full_unmatched_refund", escrow, vault, 12000000, "aoe2war/satchel/claim-return/v1/101", [3]int64{0, 100000099, 99}, 0},
-			paymentSpec{"withdrawal", vault, owner, 100000000, "aoe2war/satchel/withdraw/v1/00000000-0000-4000-8000-000000000001", [3]int64{100000000, 98, 99}, 0})
+			paymentSpec{"full_unmatched_refund", escrow, vault, 12000000, "aoe2war/satchel/claim-return/v1/101", [3]int64{0, 100000099, 99}, 0, 0},
+			paymentSpec{"withdrawal", vault, owner, 100000000, "aoe2war/satchel/withdraw/v1/00000000-0000-4000-8000-000000000001", [3]int64{100000000, 98, 99}, 0, 0})
 	}
 	if recipe != nil {
 		specs = nil
-		wallets := map[string]lifecycleWallet{"owner": owner, "vault": vault, "escrow": escrow, "opponent": opponent}
-		remaining := map[string]int64{"owner": 100000001, "vault": 100, "escrow": 100, "opponent": opponentInitial}
+		wallets := map[string]lifecycleWallet{"owner": owner, "vault": vault, "escrow": escrow, "opponent": opponent, "fee_recipient": feeRecipient}
+		remaining := map[string]int64{"owner": 100000001, "vault": 100, "escrow": 100, "opponent": opponentInitial, "fee_recipient": 0}
 		for _, transfer := range recipe.Steps {
 			amount, e := strconv.ParseInt(transfer.AmountUWolo, 10, 64)
 			require.NoError(t, e)
@@ -272,7 +278,7 @@ func runContinuousSDKLifecycle(t *testing.T, scenario string, matched bool, reci
 			remaining[transfer.SenderRole] -= amount + 1
 			remaining[transfer.RecipientRole] += amount
 			specs = append(specs, paymentSpec{transfer.Name, wallets[transfer.SenderRole], wallets[transfer.RecipientRole], amount, transfer.Memo,
-				[3]int64{remaining["owner"], remaining["vault"], remaining["escrow"]}, remaining["opponent"]})
+				[3]int64{remaining["owner"], remaining["vault"], remaining["escrow"]}, remaining["opponent"], remaining["fee_recipient"]})
 		}
 	}
 	for n, spec := range specs {
@@ -300,7 +306,7 @@ func runContinuousSDKLifecycle(t *testing.T, scenario string, matched bool, reci
 		resultObject["height"], resultObject["txhash"], resultObject["timestamp"], resultObject["logs"] = strconv.FormatInt(height, 10), hash, commits[height].Time.Format(time.RFC3339Nano), []any{}
 		delete(resultObject, "code") // Legitimate Cosmos successful zero-code omission.
 		rests[hash] = map[string]any{"tx": map[string]any{"body": bodyObject}, "tx_response": resultObject}
-		snapshot(spec.name, height, spec.expected, spec.opponent, int64(n+1))
+		snapshot(spec.name, height, spec.expected, spec.opponent, spec.feeRecipient, int64(n+1))
 		commitBlock(nil)
 		commitBlock(nil)
 		commitBlock(nil)
@@ -309,19 +315,21 @@ func runContinuousSDKLifecycle(t *testing.T, scenario string, matched bool, reci
 		require.Len(t, repeated.TxResults, 1)
 		require.NotZero(t, repeated.TxResults[0].Code, "actual ante handler must refuse identical sequence")
 		steps[n].ReplayHeight, steps[n].ReplayCode = height, repeated.TxResults[0].Code
-		snapshot(spec.name+"_replay_refused", height, spec.expected, spec.opponent, int64(n+1))
+		snapshot(spec.name+"_replay_refused", height, spec.expected, spec.opponent, spec.feeRecipient, int64(n+1))
 	}
 	// Query the actual retained IAVL versions rather than synthesizing balances
 	// from the assertions above. Each proof must bind to the next signed header.
-	bankQueries := map[int64]*abci.ResponseQuery{}
-	vaultKey, err := nativeBankKey(vault.address.String())
-	require.NoError(t, err)
+	bankQueries := map[string]*abci.ResponseQuery{}
 	for _, step := range steps {
 		stateHeight := step.HeadHeight - 1
-		query, err := application.Query(context.Background(), &abci.RequestQuery{Path: "/store/bank/key", Data: vaultKey, Height: stateHeight, Prove: true})
-		require.NoError(t, err)
-		require.Zero(t, query.Code, query.Log)
-		bankQueries[stateHeight] = query
+		for _, account := range []string{vault.address.String(), escrow.address.String()} {
+			key, err := nativeBankKey(account)
+			require.NoError(t, err)
+			query, err := application.Query(context.Background(), &abci.RequestQuery{Path: "/store/bank/key", Data: key, Height: stateHeight, Prove: true})
+			require.NoError(t, err)
+			require.Zero(t, query.Code, query.Log)
+			bankQueries[bankQuery(stateHeight, key).Encode()] = query
+		}
 	}
 	anchor := TrustAnchor{Height: 1, Hash: hex.EncodeToString(commits[1].Header.Hash()), PeriodSeconds: 3600, EvidenceReference: "isolated-continuous-sdk-lifecycle-test-only"}
 	// The two local transcript roles share one deliberately isolated validator.
@@ -335,10 +343,7 @@ func runContinuousSDKLifecycle(t *testing.T, scenario string, matched bool, reci
 			var value any
 			switch r.URL.Path {
 			case "/abci_query":
-				h, err := strconv.ParseInt(r.URL.Query().Get("height"), 10, 64)
-				require.NoError(t, err)
-				require.Equal(t, bankQuery(h, vaultKey).Encode(), r.URL.RawQuery)
-				query := bankQueries[h]
+				query := bankQueries[r.URL.RawQuery]
 				require.NotNil(t, query)
 				value = core.ResultABCIQuery{Response: *query}
 			case "/status":
@@ -412,11 +417,27 @@ func runContinuousSDKLifecycle(t *testing.T, scenario string, matched bool, reci
 		require.Equal(t, step.VaultBalance, bank.BalanceUWolo())
 		require.Equal(t, stateHeight, bank.Height())
 		require.Equal(t, step.HeadHeight, bank.CommitHeight())
-		require.True(t, bank.FreshAt(now))
+		require.True(t, bank.CurrentAt(now))
 		verifiedBank, err := verifier.VerifyBankProof(context.Background(), vault.address.String(), stateHeight, bankProof)
 		require.NoError(t, err, step.Name)
 		require.Equal(t, step.VaultBalance, verifiedBank.BalanceUWolo())
+		require.True(t, verifiedBank.CurrentAt(now))
 		step.VaultProof = bankProof
+		escrowBank, escrowProof, err := reader.ReadBankProof(context.Background(), escrow.address.String(), stateHeight)
+		require.NoError(t, err, step.Name)
+		require.Equal(t, bank.Height(), escrowBank.Height())
+		require.Equal(t, bank.AppHash(), escrowBank.AppHash())
+		require.Equal(t, bank.BlockHash(), escrowBank.BlockHash())
+		require.True(t, escrowBank.CurrentAt(now))
+		verifiedEscrow, err := verifier.VerifyBankProof(context.Background(), escrow.address.String(), stateHeight, escrowProof)
+		require.NoError(t, err)
+		require.True(t, verifiedEscrow.CurrentAt(now))
+		step.EscrowProof = escrowProof
+		canonical, err := verifier.VerifyMessageTransferProof(context.Background(), step.Intent, step.TxHash, proof)
+		require.NoError(t, err, step.Name)
+		require.Equal(t, uint32(0), canonical.Receipt().TransferIndex)
+		require.Equal(t, uint32(1), *canonical.Observation().TransferIndex, "canonical message identity must preserve raw fee/send events")
+		require.Equal(t, uint32(1), evidence.Receipt().TransferIndex, "legacy outgoing receipt remains event ordinal one")
 		if step.Name == "deposit" {
 			intent := Intent{OwnerID: "lifecycle-owner", Sender: step.Intent.Sender, Vault: step.Intent.Recipient, AmountUWolo: step.Intent.AmountUWolo, Memo: step.Intent.Memo, CreatedAt: start.Add(-time.Second), ExpiresAt: now.Add(10 * time.Minute)}
 			deposit, depositProof, err := reader.ReadDepositProof(context.Background(), intent, step.TxHash)
@@ -432,7 +453,7 @@ func runContinuousSDKLifecycle(t *testing.T, scenario string, matched bool, reci
 		exportDir = filepath.Join(exportDir, scenario)
 		require.NoError(t, os.MkdirAll(exportDir, 0700))
 		fixture := map[string]any{"fixture_only": true, "mainnet_authority": false, "chain_id": ChainID, "denom": Denom, "now": now, "anchor": anchor,
-			"roles":  map[string]any{"owner_id": "lifecycle-owner", "owner": owner.address.String(), "vault": vault.address.String(), "escrow": escrow.address.String(), "opponent": opponent.address.String(), "owner_public_key_hex": hex.EncodeToString(owner.key.PubKey().Bytes()), "owner_private_key_hex_test_only": hex.EncodeToString(owner.key.Bytes()), "owner_private_key_warning": "DETERMINISTIC ISOLATED FIXTURE ONLY; NEVER FUND OR PROVISION"},
+			"roles":  map[string]any{"owner_id": "lifecycle-owner", "owner": owner.address.String(), "vault": vault.address.String(), "escrow": escrow.address.String(), "opponent": opponent.address.String(), "fee_recipient": feeRecipient.address.String(), "opponent_id": "lifecycle-opponent", "opponent_public_key_hex": hex.EncodeToString(opponent.key.PubKey().Bytes()), "opponent_private_key_hex_test_only": hex.EncodeToString(opponent.key.Bytes()), "owner_public_key_hex": hex.EncodeToString(owner.key.PubKey().Bytes()), "vault_public_key_hex": hex.EncodeToString(vault.key.PubKey().Bytes()), "escrow_public_key_hex": hex.EncodeToString(escrow.key.PubKey().Bytes()), "owner_private_key_hex_test_only": hex.EncodeToString(owner.key.Bytes()), "owner_private_key_warning": "DETERMINISTIC ISOLATED FIXTURE ONLY; NEVER FUND OR PROVISION"},
 			"recipe": recipe, "scenario": scenario, "bank_states": bankStates, "steps": steps, "committed_block_count": height, "successful_transfers": len(steps), "total_fee_uwolo": strconv.Itoa(len(steps)), "production_custody_available": false}
 		encoded, err := json.MarshalIndent(fixture, "", "  ")
 		require.NoError(t, err)

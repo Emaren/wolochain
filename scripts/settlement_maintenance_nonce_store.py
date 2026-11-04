@@ -17,7 +17,7 @@ import stat
 
 NONCE = re.compile(r"[0-9a-f]{32}\Z")
 SHA256 = re.compile(r"[0-9a-f]{64}\Z")
-PHASES = {"live_capture", "offline_verify", "resume"}
+PHASES = {"live_capture", "offline_verify", "resume", "resume_existing", "contain_partial"}
 SCHEMA = "wolo.financial-maintenance-nonce-record.v1"
 RECORD_KEYS = {"schema", "nonce", "signed_packet_sha256", "phase"}
 RECORD_NAME = re.compile(r"nonce-[0-9a-f]{64}\.json\Z")
@@ -105,8 +105,13 @@ def reserve_once(root, nonce, signed_packet_sha256, phase):
     require(type(phase) is str and phase in PHASES, "PHASE_INVALID")
     dirfd = _open_private_dir(root)
     try:
-        lockfd = os.open(".nonce.lock", os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW,
-                         0o600, dir_fd=dirfd)
+        try:
+            lockfd = os.open(".nonce.lock", os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW,
+                             0o600, dir_fd=dirfd)
+        except OSError as exc:
+            # Some filesystems can refuse one concurrent O_CREAT/openat. Never
+            # retry admission or infer that a missing ACK means an unused nonce.
+            raise ReservationRefused("NONCE_LOCK_STORAGE_UNAVAILABLE") from exc
         try:
             st = os.fstat(lockfd)
             require(stat.S_ISREG(st.st_mode) and st.st_uid == os.geteuid() and

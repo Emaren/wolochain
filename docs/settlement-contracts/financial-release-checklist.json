@@ -1,6 +1,6 @@
 {
   "schema": "aoe2war.wolo.financial-release-checklist.v1",
-  "updated_at_utc": "2026-10-26T09:21:09.845635+00:00",
+  "updated_at_utc": "2026-10-26T15:43:29.584018+00:00",
   "canonical_issue": "https://github.com/Emaren/wolochain/issues/5",
   "role": "Single current observational six-control index; never a release permit or autonomous controller",
   "overall_status": "HOLD",
@@ -12,7 +12,7 @@
   "controls": {
     "hd_de_producers_isolated": {
       "status": "BLOCKED",
-      "observed_at_utc": "2026-10-26T09:21:09.845635+00:00",
+      "observed_at_utc": "2026-10-26T15:43:29.584018+00:00",
       "evidence": [
         "producer-refresh-handoff.json",
         "settlement-shared-producer-inventory-readonly.json",
@@ -21,9 +21,10 @@
         "producer-containers-identities.json",
         "operator-reported-runtime-producers-20261023.json",
         "producer-observation-20261024.json",
-        "runtime-observation-20261026-summary.json"
+        "runtime-observation-20261026-summary.json",
+        "postrenaissance-runtime-observation-20261026.json"
       ],
-      "established": "October26 root SSH read-only observation: six financial timer families remain active; no producer fencing or drain occurred. Existing19-unit inventory/18-unit candidate maintenance scope remains historical source evidence; external and independent writer coverage is not certified.",
+      "established": "October26 15:43UTC root SSH: certified HD source/build unchanged; consensus and both settlement processes active with retained binary hashes; candidate maintenance HOLD absent. No fence, drain, restart or financial mutation performed. Actual source scope is18units (4apps+7service/timer pairs). External/independent writer exclusion is unverified; timer and bank/liability observations were not refreshed by this bounded runtime probe.",
       "unknowns": [
         "nonprefix/user/cron/container/external financial authority",
         "all signers, queues, HTTP and independently signed paths"
@@ -191,6 +192,10 @@
     "runtime-observation-20261026-summary.json": {
       "path": "docs/settlement-contracts/financial-release-evidence-20261018/runtime-observation-20261026-summary.json",
       "sha256": "e14a9b4306cf91ac8b23081c3a7b65844e35a14bfa7e7c5609bf6962e887cbc4"
+    },
+    "postrenaissance-runtime-observation-20261026.json": {
+      "path": "docs/settlement-contracts/financial-release-evidence-20261018/postrenaissance-runtime-observation-20261026.json",
+      "sha256": "3b338982eef332f3e9ffafb6a6f1c301d9daaf1819a237af67bdefb72d6e3ddd"
     }
   },
   "independent_consensus_authentication_proven": false,

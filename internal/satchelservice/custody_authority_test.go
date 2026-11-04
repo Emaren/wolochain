@@ -21,6 +21,7 @@ import (
 	"testing"
 	"time"
 
+	sdksecp "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	signing "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/emaren/wolochain/internal/satchel"
@@ -42,6 +43,9 @@ type custodyAuthorityFixture struct {
 	pauseAccount                   atomic.Bool
 	SDKSigns                       atomic.Int32
 	afterSign                      func()
+	fundingKey                     *sdksecp.PrivKey
+	bankHook                       atomic.Pointer[func()]
+	broadcastResponseHook          atomic.Pointer[func(*http.Response) error]
 }
 type custodyObservedSDKSigner struct {
 	inner   backendSigner
@@ -65,9 +69,16 @@ func custodyWrite(t *testing.T, path string, value any) []byte {
 }
 func newCustodyAuthorityFixture(t *testing.T) *custodyAuthorityFixture {
 	t.Helper()
+	return newCustodyAuthorityFixtureWithConfig(t, nil)
+}
+
+// The hook runs before serialization, permit issuance and runtime binding.
+// Tests must provision the real authority rather than mutate a bound config.
+func newCustodyAuthorityFixtureWithConfig(t *testing.T, provision func(*Config)) *custodyAuthorityFixture {
+	t.Helper()
 	backend, old := isolatedBackendConfig(t)
 	f := &custodyAuthorityFixture{request: old.request, accountEntered: make(chan struct{}), releaseAccount: make(chan struct{}),
-		accounting: ed25519.NewKeyFromSeed(bytes.Repeat([]byte{71}, 32)), custody: ed25519.NewKeyFromSeed(bytes.Repeat([]byte{72}, 32))}
+		accounting: ed25519.NewKeyFromSeed(bytes.Repeat([]byte{71}, 32)), custody: ed25519.NewKeyFromSeed(bytes.Repeat([]byte{72}, 32)), fundingKey: old.signer.key}
 	f.chain = newNativeHTTPChainWithBalance(t, old.signer, 110000000)
 	f.chain.commit(t, nil)
 	f.chain.commit(t, nil) // actual retained state2, authenticated head3
@@ -75,10 +86,26 @@ func newCustodyAuthorityFixture(t *testing.T) *custodyAuthorityFixture {
 	u, err := url.Parse(primary.URL)
 	require.NoError(t, err)
 	proxy := httputil.NewSingleHostReverseProxy(u)
+	// Optional isolated-process fault boundary: the real upstream SDK handler
+	// has already committed before ModifyResponse sees its broadcast reply.
+	// Ordinary fixture funding/setup never arms this hook.
+	proxy.ModifyResponse = func(response *http.Response) error {
+		if response.Request.Method == http.MethodPost && response.Request.URL.Path == "/" {
+			if hook := f.broadcastResponseHook.Load(); hook != nil {
+				return (*hook)(response)
+			}
+		}
+		return nil
+	}
 	transport := &http.Transport{Proxy: nil}
 	proxy.Transport = transport
 	t.Cleanup(transport.CloseIdleConnections)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/abci_query" {
+			if hook := f.bankHook.Load(); hook != nil {
+				(*hook)()
+			}
+		}
 		if strings.HasPrefix(r.URL.Path, "/cosmos/auth/v1beta1/accounts/") && f.pauseAccount.Load() {
 			close(f.accountEntered)
 			select {
@@ -103,6 +130,9 @@ func newCustodyAuthorityFixture(t *testing.T) *custodyAuthorityFixture {
 		ActivationAuthorityKeyHex: hex.EncodeToString(activation.Public().(ed25519.PublicKey)), PermitFile: filepath.Join(dir, "permit.json"),
 		AccountingReviewerKeyHex: hex.EncodeToString(f.accounting.Public().(ed25519.PublicKey)), CustodyReviewerKeyHex: hex.EncodeToString(f.custody.Public().(ed25519.PublicKey)), ReserveReviewFile: filepath.Join(dir, "review.json")}
 	f.path = filepath.Join(dir, "config.json")
+	if provision != nil {
+		provision(&f.config)
+	}
 	custodyWrite(t, f.path, f.config)
 	require.NoError(t, os.WriteFile(f.config.TokenFile, []byte(testHTTPToken), 0600))
 	_, digest, err := LoadConfig(f.path)

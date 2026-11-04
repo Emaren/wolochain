@@ -1,0 +1,6 @@
+{
+  "name": "wolo-held-hd940-source-compatibility-fixture",
+  "private": true,
+  "type": "module",
+  "description": "Wolo-owned module loader metadata; the eight HD source snapshots remain byte exact."
+}

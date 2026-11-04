@@ -13,7 +13,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-22",
       "sensitivity": "public",
-      "sha256": "3fce51a92af3e6b520a95aec728111653ff9c49890bf96cff68a27a58ed939d5",
+      "sha256": "6e1d4b1c4350b837cda23f73414f517b1c6d213ea6755aa5c003eed277d235df",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -34,9 +34,9 @@
       "owner": "wolochain-ops",
       "path": "docs/BRANCH_AUTHORITY.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-10-18",
+      "reviewed_at": "2026-10-29",
       "sensitivity": "internal",
-      "sha256": "e74d04b64d9d6b1cd239beaa08e1677c39bbc857bc5dc0474159f2df77ad80dd",
+      "sha256": "f59f74d5fae649716c43f81b06b22fd099ba9d47245fbb23c9f32d69f7f22993",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "eda0582cf114c29a18062596f2ec354743a00c2d46cb73d34fa2dda5d1dc7956",
+      "sha256": "c2b03796e322c0c2ab409fe9a88fe31320e9df8c02c8183062e3c1749336b320",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -75,14 +75,37 @@
         "operators",
         "ai-agents"
       ],
+      "authority": "source-only-verifier-mismatch-not-financial-authority",
+      "id": "aoe2war.wolochain.epoch-v3-wire-v1-hold",
+      "owner": "wolochain-ops",
+      "path": "docs/epoch-v3-wire-v1-hold.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-10-28",
+      "sensitivity": "internal",
+      "sha256": "cc6eac5665bd8f45fe87c0d14668faa87e5a0f1baed0f5229353b37efd4af74a",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "Native epoch-v3 wire-v1 trust mismatch and held handoff",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
       "authority": "source-only-exact-settlement-confirmation",
       "id": "aoe2war.wolochain.exact-settlement-confirmation-c4",
       "owner": "wolochain-ops",
       "path": "docs/exact-settlement-confirmation-c4.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-10-16",
+      "reviewed_at": "2026-11-01",
       "sensitivity": "restricted",
-      "sha256": "a60d1138aaedcd03461a7332972f02f41aea5ee25efaf5e94a7d7c6424295ccd",
+      "sha256": "1624c026b8074ae284abe7c2a102d59354103890cfef5ff7971dbb285268e5d8",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -103,9 +126,9 @@
       "owner": "wolochain-ops",
       "path": "docs/legacy-settlement-hardening.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-10-17",
+      "reviewed_at": "2026-11-01",
       "sensitivity": "restricted",
-      "sha256": "302fb9f6b0b9729c3b65b072d64d33c7503d1d48b86d85d78572eb6e94d3657c",
+      "sha256": "a61fb414d11340d9553f9fb1cbedcbf38552d344ecd6e151d5b33217994eb8a1",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -312,7 +335,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-26",
       "sensitivity": "restricted",
-      "sha256": "e1ee6875f4f92ff6b0fb4511b9f064de5fdbe4a3405a67b7d6d53380bb6c56d2",
+      "sha256": "5b1e934eff55e66e2d2dd16004055a8943c03be5ee91e3e450a4790b76a9f78d",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -335,7 +358,7 @@
       "review_interval_days": 0,
       "reviewed_at": "2026-08-10",
       "sensitivity": "internal",
-      "sha256": "21a2ce4a82178d5622411108beebabc761fa2daa3feee2c6bc6b485ae61fc8cd",
+      "sha256": "104cc8fce8ab5998065fef5a6e1a0a338c899db551927823517e0e7a60880f00",
       "source_of_truth": "historical-evidence",
       "status": "historical",
       "systems": [
@@ -356,9 +379,9 @@
       "owner": "wolochain-ops",
       "path": "docs/mainnet-wallets.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-10-15",
+      "reviewed_at": "2026-10-30",
       "sensitivity": "restricted",
-      "sha256": "e2d0cb5c0435840bf81a39c553ba7ae8e54b4cc30249c9c426c89dd837523cd3",
+      "sha256": "a159768ee35ccdd0c02f8be0005d1ca1fbedcbfe83079e91ba86544c2e9d0280",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -374,6 +397,29 @@
         "operators",
         "ai-agents"
       ],
+      "authority": "source-review-only-nonactivating-escrow-candidate",
+      "id": "aoe2war.wolochain.new-epoch-escrow-v3-held",
+      "owner": "wolochain-ops",
+      "path": "docs/new-epoch-escrow-v3-held.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-03",
+      "sensitivity": "internal",
+      "sha256": "301b915f8cf63c2644f37748b4398455b74314c08cfbf7805521752b2156e631",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "Held native new-epoch escrow v3 decision boundary",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
       "authority": "machine-readable-settlement-contract-index",
       "id": "aoe2war.wolochain.settlement-contracts",
       "owner": "wolochain-ops",
@@ -381,7 +427,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-20",
       "sensitivity": "public",
-      "sha256": "3b3530d155dd210eb005cb87d3f08efaa44ab3599b5ef21c8a1d7cf8e4ce1b0b",
+      "sha256": "6d089735649761ba86236a2866211e0d7e1b0c264b9ef06f2f934afa2b9c0853",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -402,9 +448,9 @@
       "owner": "wolochain-ops",
       "path": "docs/settlement-contracts/producer-owner-correlation.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-10-20",
+      "reviewed_at": "2026-11-04",
       "sensitivity": "internal",
-      "sha256": "0c64850fec32b6a983e117d4a7b6d5d1f9fef9ac91c2b27c84c0d5c186691ea0",
+      "sha256": "2911df22e512b95b1fc14461715a26f0ed4844170d7ac209dcc83e73f80239f6",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -428,7 +474,7 @@
       "review_interval_days": 60,
       "reviewed_at": "2026-10-10",
       "sensitivity": "restricted",
-      "sha256": "f32e06332dec62b89a11639a396dd0924b74d350ef0faa2b061d6d3ec9734249",
+      "sha256": "826660e5d5c75a823dc4cc59cdf41c4467afd08892971dca824277b0713c8acb",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -449,9 +495,9 @@
       "owner": "wolochain-ops",
       "path": "docs/war-satchel-chain-evidence-c3.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-10-15",
+      "reviewed_at": "2026-10-30",
       "sensitivity": "restricted",
-      "sha256": "65bca93828ccec1f81df1eda4250ea799cb3c59db8aa4dd399d31219cb6a1d35",
+      "sha256": "52f0b86caa53623166a3dcc6d234566f7539c881fb807c28396c50fb703abccb",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -472,9 +518,9 @@
       "owner": "wolochain-ops",
       "path": "docs/war-satchel-controlled-release.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-10-18",
+      "reviewed_at": "2026-11-02",
       "sensitivity": "restricted",
-      "sha256": "c8d14dee532121bc1940ce8c10eec0a326e54e400b89ce2fee4dd2b4de0620e2",
+      "sha256": "1c295bcb3ddf25004958f4d3e67071869979c9ec04b9655a5b6bdaf6f0f30d10",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -495,9 +541,9 @@
       "owner": "wolochain-ops",
       "path": "docs/war-satchel-custody-c2.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-10-15",
+      "reviewed_at": "2026-10-30",
       "sensitivity": "restricted",
-      "sha256": "7979cefe9453d4c7528d1e7a8379c872d17c9f73a50ebb63923a342d6c88ea2c",
+      "sha256": "1c2af7776a8a2bfea3ee1b3cc24f440efdb72723f01ab0d62b6d513defabdbbc",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -520,7 +566,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-22",
       "sensitivity": "restricted",
-      "sha256": "5104b0cd389184cbb0f2845011de434dae405b199fd063c1d6e687dee97c1f46",
+      "sha256": "29ee3c51b14e2c8db73a689d49facbdaa19a5dcb25c9a7645bac1e1648ce8388",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -541,9 +587,9 @@
       "owner": "wolochain-ops",
       "path": "docs/war-satchel-financial-bridge.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-10-20",
+      "reviewed_at": "2026-11-01",
       "sensitivity": "restricted",
-      "sha256": "d2d5f14b23d52792cc4618e65b585a626702aea3a1e40258f9b60340591c2137",
+      "sha256": "10690f8b6a11c79bb4dcbb98368a2e68dc997a8fdabc5df4cfa322393031b000",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -566,7 +612,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-21",
       "sensitivity": "restricted",
-      "sha256": "9b54610222554481602d7e3deddec93b737e899ea44d0e365563043a19cbb8b9",
+      "sha256": "21b115af0c67a6f47227216c3aca62c1450457616294e5b2c713553780b35a9f",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -587,9 +633,9 @@
       "owner": "wolochain-ops",
       "path": "docs/war-satchel-mainnet-execution.md",
       "review_interval_days": 7,
-      "reviewed_at": "2026-10-22",
+      "reviewed_at": "2026-10-30",
       "sensitivity": "restricted",
-      "sha256": "ed9990c5c4e380fc25e99cd1c520e1dd60f2bcf4f8446c30699db176bb144edc",
+      "sha256": "3bc667355e25b78f8cb43e950d5d099ce02b8f78419abc615380ad3648f5574c",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -771,9 +817,9 @@
       "owner": "wolochain-ops",
       "path": "mainnet-prep/STATUS.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-10-17",
+      "reviewed_at": "2026-11-01",
       "sensitivity": "restricted",
-      "sha256": "00cd2930b67f389df939d525dd2484ab277a14664570773721c7082aae23f9e5",
+      "sha256": "999e79cc963f2d2686a34e34fa54e92d3d667be9ac38449c0700b9e7fefb8651",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -1066,8 +1112,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "codex/solo-owner-offline-intent-20261026",
-    "commit": "96a7c0a48e48f61fafa41a904f58cc7ef8c6cd8c"
+    "branch": "fix/c03-installed-unit-20261104",
+    "commit": "7916f6f41a81310f25d14c6d5c2db25bf0dc4058"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

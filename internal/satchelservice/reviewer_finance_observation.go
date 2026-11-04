@@ -32,8 +32,10 @@ func (e ReviewerFinanceFailure) Is(target error) bool { return target == ErrRevi
 // Every component is NUMERIC before addition: PostgreSQL BIGINT arithmetic
 // must not wrap or overflow before the bounded Go validation. Reconciliation
 // is per owner, so offsetting corruption between owners cannot cancel out.
-// FULL JOIN also catches orphan journal rows. Committed funds remain customer
-// liabilities; they are never silently omitted or counted as free vault gas.
+// FULL JOIN also catches orphan journal rows. The committed bucket is validated
+// historical spend after funding left the vault; current vault liabilities are
+// available, reserved (including UNKNOWN sends), and withdrawal-pending funds.
+// Separate escrow obligations still require the independent global census.
 const reviewerPGFinanceQuery = `
 WITH journal AS (
  SELECT owner_user_id, count(*)::numeric AS entries,
@@ -99,13 +101,15 @@ func (r reviewerOwnerLedger) total() (string, error) {
 	if r.inconsistent || r.wrongVault {
 		return "", ReviewerFinanceLedgerMismatch
 	}
-	for _, value := range []string{r.owners, r.revisions, r.entries} {
+	// Historical committed spend must remain canonical and reconciled even
+	// though it is not another outstanding debt of this physical vault.
+	for _, value := range []string{r.owners, r.revisions, r.entries, r.committed} {
 		if _, err := reviewerAmount(value, math.MaxInt64, false); err != nil {
 			return "", ReviewerFinanceLedgerMismatch
 		}
 	}
 	var sum uint64
-	for _, value := range []string{r.available, r.reserved, r.committed, r.withdrawing} {
+	for _, value := range []string{r.available, r.reserved, r.withdrawing} {
 		n, err := reviewerAmount(value, math.MaxInt64, false)
 		if err != nil {
 			return "", ReviewerFinanceLedgerMismatch
@@ -182,8 +186,21 @@ type ReviewerFinanceObservation struct {
 }
 
 func (o ReviewerFinanceObservation) Bank() satchel.AuthenticatedBankEvidence { return o.bank }
+
+// KnownOwnerLiabilitiesUWolo reports current liabilities of the custody vault.
+// It excludes cumulative historical spending and does not inventory claims
+// against the distinct betting escrow or establish unencumbered funds.
 func (o ReviewerFinanceObservation) KnownOwnerLiabilitiesUWolo() (string, error) {
 	return o.ledger.total()
+}
+
+// HistoricalCommittedUWolo retains validated cumulative owner spending. This
+// history is neither a current vault liability nor available reserve/equity.
+func (o ReviewerFinanceObservation) HistoricalCommittedUWolo() (string, error) {
+	if _, err := o.ledger.total(); err != nil {
+		return "", err
+	}
+	return o.ledger.committed, nil
 }
 func (o ReviewerFinanceObservation) SpendingAuthorized() bool { return false }
 func (o ReviewerFinanceObservation) FreshAt(now time.Time) bool {
@@ -224,23 +241,30 @@ func (s *ReviewerFinanceSource) ObserveFinance(ctx context.Context, height int64
 	}
 	start := time.Now()
 	initial := s.now()
+	completedAt := func() time.Time {
+		now := s.now()
+		if elapsed := initial.Add(time.Since(start)); elapsed.After(now) {
+			now = elapsed
+		}
+		return now
+	}
 	ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
 	defer cancel()
 	bank, _, err := s.bank.ReadBankProof(ctx, s.pg.vault, height)
 	if err != nil {
 		return ReviewerFinanceObservation{}, errors.Join(ReviewerFinanceBankInvalid, err)
 	}
-	if bank.VaultAddress() != s.pg.vault || bank.Height() != height || !bank.FreshAt(initial) {
+	// Head observations are timestamped during the bank query. Comparing them
+	// with the pre-query clock would reject authentic evidence as future-dated.
+	bankCompleted := completedAt()
+	if ctx.Err() != nil || bank.VaultAddress() != s.pg.vault || bank.Height() != height || bank.CommitHeight() != height+1 || !bank.FreshAt(bankCompleted) {
 		return ReviewerFinanceObservation{}, ReviewerFinanceBankInvalid
 	}
 	ledger, err := s.pg.readOwnerLedger(ctx)
 	if err != nil {
 		return ReviewerFinanceObservation{}, err
 	}
-	now := s.now()
-	if elapsed := initial.Add(time.Since(start)); elapsed.After(now) {
-		now = elapsed
-	}
+	now := completedAt()
 	if ctx.Err() != nil || !bank.FreshAt(now) || ledger.observedAt.After(now) || now.Sub(ledger.observedAt) > 2*time.Second {
 		return ReviewerFinanceObservation{}, ReviewerFinanceStale
 	}

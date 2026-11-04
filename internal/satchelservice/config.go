@@ -21,31 +21,35 @@ import (
 )
 
 type Config struct {
-	Version                   int                 `json:"version"`
-	Vault                     string              `json:"vault"`
-	PublicKeyHex              string              `json:"public_key_hex"`
-	BettingEscrow             string              `json:"betting_escrow"`
-	ProtectedAddresses        []string            `json:"protected_addresses"`
-	MaxAmountUWolo            uint64              `json:"max_amount_uwolo"`
-	RPC                       string              `json:"rpc"`
-	REST                      string              `json:"rest"`
-	WitnessRPC                string              `json:"witness_rpc"`
-	TrustAnchor               satchel.TrustAnchor `json:"trust_anchor"`
-	KeyringDir                string              `json:"keyring_dir"`
-	KeyName                   string              `json:"key_name"`
-	PassphraseFile            string              `json:"passphrase_file"`
-	TokenFile                 string              `json:"token_file"`
-	StatePath                 string              `json:"state_path"`
-	FeesUWolo                 string              `json:"fees_uwolo"`
-	GasLimit                  uint64              `json:"gas_limit"`
-	TimeoutBlocks             uint64              `json:"timeout_blocks"`
-	WithdrawalApprovalKeyHex  string              `json:"withdrawal_approval_key_hex"`
-	WagerApprovalKeyHex       string              `json:"wager_approval_key_hex"`
-	ActivationAuthorityKeyHex string              `json:"activation_authority_key_hex"`
-	PermitFile                string              `json:"permit_file"`
-	AccountingReviewerKeyHex  string              `json:"accounting_reviewer_key_hex,omitempty"`
-	CustodyReviewerKeyHex     string              `json:"custody_reviewer_key_hex,omitempty"`
-	ReserveReviewFile         string              `json:"reserve_review_file,omitempty"`
+	Version                      int                 `json:"version"`
+	Vault                        string              `json:"vault"`
+	PublicKeyHex                 string              `json:"public_key_hex"`
+	BettingEscrow                string              `json:"betting_escrow"`
+	ProtectedAddresses           []string            `json:"protected_addresses"`
+	MaxAmountUWolo               uint64              `json:"max_amount_uwolo"`
+	RPC                          string              `json:"rpc"`
+	REST                         string              `json:"rest"`
+	WitnessRPC                   string              `json:"witness_rpc"`
+	TrustAnchor                  satchel.TrustAnchor `json:"trust_anchor"`
+	KeyringDir                   string              `json:"keyring_dir"`
+	KeyName                      string              `json:"key_name"`
+	PassphraseFile               string              `json:"passphrase_file"`
+	TokenFile                    string              `json:"token_file"`
+	StatePath                    string              `json:"state_path"`
+	FeesUWolo                    string              `json:"fees_uwolo"`
+	GasLimit                     uint64              `json:"gas_limit"`
+	TimeoutBlocks                uint64              `json:"timeout_blocks"`
+	WithdrawalApprovalKeyHex     string              `json:"withdrawal_approval_key_hex"`
+	WagerApprovalKeyHex          string              `json:"wager_approval_key_hex"`
+	ActivationAuthorityKeyHex    string              `json:"activation_authority_key_hex"`
+	PermitFile                   string              `json:"permit_file"`
+	AccountingReviewerKeyHex     string              `json:"accounting_reviewer_key_hex,omitempty"`
+	CustodyReviewerKeyHex        string              `json:"custody_reviewer_key_hex,omitempty"`
+	ReserveReviewFile            string              `json:"reserve_review_file,omitempty"`
+	EscrowReturnExecutionFile    string              `json:"escrow_return_execution_file,omitempty"`
+	EscrowReturnExecutionSHA256  string              `json:"escrow_return_execution_sha256,omitempty"`
+	EscrowSignerEnrollmentFile   string              `json:"escrow_signer_enrollment_file,omitempty"`
+	EscrowSignerEnrollmentSHA256 string              `json:"escrow_signer_enrollment_sha256,omitempty"`
 }
 
 // ExecutionPermit is an independent operator's scoped authorization to execute
@@ -77,7 +81,14 @@ func PermitMessage(p ExecutionPermit) []byte {
 // No final-component or ancestor symlinks, FIFOs, shared files, remote URLs,
 // environment substitutions, or executable configuration are accepted.
 func ReadPrivateFile(path string, limit int64) ([]byte, error) {
-	if !filepath.IsAbs(path) || limit <= 0 || limit > 1<<20 {
+	return readPrivateFileBounded(path, limit, 1<<20)
+}
+
+// Keep the public key/config reader ceiling unchanged. The signed coverage
+// inventory has its own explicit two-MiB budget and the identical descriptor,
+// ownership, symlink, hardlink and before/after stability checks below.
+func readPrivateFileBounded(path string, limit, ceiling int64) ([]byte, error) {
+	if !filepath.IsAbs(path) || limit <= 0 || ceiling <= 0 || ceiling > 2<<20 || limit > ceiling {
 		return nil, errors.New("private_file_refused")
 	}
 	real, err := filepath.EvalSymlinks(path)
@@ -164,6 +175,19 @@ func LoadConfig(path string) (Config, string, error) {
 					return c, "", errors.New("independent_reserve_review_configuration_required")
 				}
 			}
+		}
+	}
+	if c.EscrowReturnExecutionFile != "" || c.EscrowReturnExecutionSHA256 != "" {
+		if c.AccountingReviewerKeyHex == "" || c.CustodyReviewerKeyHex == "" ||
+			!filepath.IsAbs(c.EscrowReturnExecutionFile) || filepath.Clean(c.EscrowReturnExecutionFile) != c.EscrowReturnExecutionFile ||
+			!validReserveDigest(c.EscrowReturnExecutionSHA256) {
+			return c, "", errors.New("escrow_return_execution_configuration_required")
+		}
+	}
+	if c.EscrowSignerEnrollmentFile != "" || c.EscrowSignerEnrollmentSHA256 != "" {
+		if c.EscrowReturnExecutionFile == "" || !filepath.IsAbs(c.EscrowSignerEnrollmentFile) ||
+			filepath.Clean(c.EscrowSignerEnrollmentFile) != c.EscrowSignerEnrollmentFile || !validReserveDigest(c.EscrowSignerEnrollmentSHA256) {
+			return c, "", errors.New("escrow_signer_enrollment_required")
 		}
 	}
 	for _, address := range c.ProtectedAddresses {

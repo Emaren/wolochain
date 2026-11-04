@@ -147,16 +147,18 @@ def info(unit: str) -> dict:
     pid = fields.get("MainPID", "")
     inspectable, keys = process_keys(pid)
     active = fields.get("ActiveState") == "active"
+    pid_present = bool(pid.isdecimal() and int(pid) > 0)
     return {
         "unit": unit,
         "isTimer": unit.endswith(".timer"),
         "active": active,
         "loadState": fields.get("LoadState", "unknown"),
         "unitFileState": fields.get("UnitFileState", "unknown"),
-        "mainPidPresent": bool(pid.isdecimal() and int(pid) > 0),
+        "mainPidPresent": pid_present,
         "processEnvironmentInspectable": inspectable,
         "configuredFinancialKeyNames": keys,
-        "isCandidateForExplicitMaintenanceReview": active or bool(keys),
+        # A process in activating/deactivating/failed state can still execute.
+        "isCandidateForExplicitMaintenanceReview": active or pid_present or bool(keys),
     }
 
 
@@ -166,7 +168,12 @@ def inspect() -> dict:
     incomplete_units = []
     for name in discovered:
         try:
-            units.append(info(name))
+            observed = info(name)
+            units.append(observed)
+            # An observed live PID with inaccessible /proc environment is
+            # evidence UNKNOWN, not an independently complete inventory.
+            if observed.get("mainPidPresent") and not observed.get("processEnvironmentInspectable"):
+                incomplete_units.append(name)
         except (OSError, ValueError, subprocess.SubprocessError):
             # Keep the successful inventory visible but NEVER silently conclude
             # a failed inspection is safe or that a writer is inert.

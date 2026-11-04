@@ -1202,5 +1202,30 @@ class ActualIsolatedRestoreTests(unittest.TestCase):
             self.assertFalse((output / "INCOMPLETE").exists())
 
 
+
+class ProtectedSourcePermissionTests(unittest.TestCase):
+    """Source mode 0640 is not broader than the already allowed 0644.
+
+    Root UID, root GID, protected ancestors, regular-file type and no-follow
+    inode checks remain separately mandatory in private_read.
+    """
+
+    def test_root_owned_source_mode_subset(self):
+        for mode in (0o600, 0o640, 0o644):
+            with self.subTest(mode=oct(mode)):
+                self.assertTrue(MOD.source_mode_allowed(mode, source=True))
+        for mode in (0o400, 0o604, 0o620, 0o660, 0o664,
+                     0o666, 0o755, 0o777):
+            with self.subTest(rejected=oct(mode)):
+                self.assertFalse(MOD.source_mode_allowed(mode, source=True))
+
+    def test_private_financial_and_authority_files_still_0600_only(self):
+        self.assertTrue(MOD.source_mode_allowed(0o600, source=False))
+        for mode in (0o400, 0o640, 0o644, 0o660, 0o664,
+                     0o666, 0o700, 0o777):
+            with self.subTest(rejected=oct(mode)):
+                self.assertFalse(MOD.source_mode_allowed(mode, source=False))
+
+
 if __name__ == "__main__":
     unittest.main()

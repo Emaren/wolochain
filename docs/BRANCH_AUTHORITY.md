@@ -8,16 +8,67 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "git-branch-authority-contract"
-reviewed_at: "2026-10-18"
+reviewed_at: "2026-10-29"
 review_interval_days: 14
 sensitivity: "internal"
 ---
 
 # WoloChain Branch Authority
 
-Reviewed: 2026-10-14
+Reviewed: 2026-10-29 (GitHub source only)
 
-## Current federation source
+## October 29, 2026 — current GitHub source-authority review
+
+Scope: remote GitHub source, PR refs and verified source CI only. **No live
+Mac worktree, HEL1 runtime, signer, custody, bank, financial ledger or restore
+evidence was collected.** The October 14–18 observations below remain
+historical, not today's runtime truth.
+
+| Source role | Exact SHA | Disposition |
+| --- | --- | --- |
+| Default `main` | `a2fba6bfd98d7b28fb113badbadf23ec9096a4af` | Separate source branch, not a deployed-binary receipt. |
+| Federation `wolo-1-mainnet-prep` | `98f781d61fa6b35d2cc09b48f84605a617efc2c4` | Current documentation source; not runtime authority. |
+| [Held escrow #115](https://github.com/Emaren/wolochain/pull/115) | `00892e0d82362f53227188cde4ca34d7b6b5dd9a` | Qualified **pre-documentation** head, unmerged. |
+| [Held parent #111](https://github.com/Emaren/wolochain/pull/111) | `e547f24446be1318060c8f48123786f396c4e841` | Unmerged recovery/maintenance source. |
+| [Held sibling #116](https://github.com/Emaren/wolochain/pull/116) | `fac1e4282140843024bb4232c340154e271b4c61` | Unmerged, independent recovery source. |
+| [Diagnostic #117](https://github.com/Emaren/wolochain/pull/117) | `b2c699f6df138a510e3f0a74a87c5cbb3858b388` | Unmerged; July settlement CI did not reproduce. |
+
+Current GitHub comparison `main...wolo-1-mainnet-prep`: **2 main-only /
+230 prep-only** commits; common ancestor
+`b746c22341567df373be2cbcef3843e965961f72`. The earlier 2/35 and
+2/40 counts below are dated history. No automatic branch reconciliation.
+
+At the pre-documentation #115 head, genuine disposable native
+[SDK+HD/PG16 #40770005487](https://github.com/Emaren/wolochain/actions/runs/40770005487)
+and [standard CI #40770005517](https://github.com/Emaren/wolochain/actions/runs/40770005517)
+passed: Comet/ICS23 H/H+1 two-bank proof, conserved one 100-WOLO
+physical MsgSend0 with 40+60 legs, return and fee fixtures. These are
+**source tests, not production custody or funded authority**. A native
+non-signing Go wire-v1 verifier executable is still absent. Held HD #940
+ingress is disabled and has outstanding receipts/certificates SQL INSERT
+placeholder-arity faults. July main failure remains historically
+unclassified despite a passing diagnostic #117 run.
+
+**Wave-1 application release excludes ALL funded Wolo features:** no
+Keplr-to-Satchel live credit, v3 escrow signing, automatic wagers,
+financial migration, legacy settlement writer changes, key provisioning,
+nonce issuance or transfers. Protect current legacy 8092/8093 financial
+listeners, validator, prospective 8094 vault, keys and nonces, historical
+claims, rollback and restore assets. Original ambiguous 100-WOLO
+transfer, founder #889, #8477, complete non-overlapping HD/DE liabilities,
+current per-account bank reserves, producer fencing, legal authorization,
+independent custody, isolated restores and owner/witness approvals remain
+HOLD/UNKNOWN.
+
+The last certified website deployment was
+`app-prodn@33e0f42b3d34d324b6cbab6c0347d4f5aff6fb8a`,
+BUILD_ID `DQ2jMprNQ_Njq6QM8GHju`. This Git review does not refresh live
+Wolo PID, executable, config, runtime source or financial writer evidence;
+Session F must independently prove these against the *new exact W1*
+candidate. Codex unpublished WIP stays protected: no reset, clean,
+parallel financial-controller rewrite or broad merge.
+
+## Historical October 14–18 source and worktree inventory
 
 
 ### October 18, 2026 — combined Satchel/operations candidate
