@@ -88,7 +88,7 @@ func TestExecuteEnrolledReturnFixedAuthenticatedSingleRequestNoncreditingObserva
 		require.Equal(t, "identity", r.Header.Get("Accept-Encoding"))
 		deadline, ok := r.Context().Deadline()
 		require.True(t, ok)
-		require.LessOrEqual(t, time.Until(deadline), 8*time.Second)
+		require.LessOrEqual(t, time.Until(deadline), 15*time.Second)
 		body, err := io.ReadAll(r.Body)
 		require.NoError(t, err)
 		expected, err := os.ReadFile(f.approvalPath)
@@ -110,13 +110,13 @@ func TestExecuteEnrolledReturnFixedAuthenticatedSingleRequestNoncreditingObserva
 	}
 }
 
-func TestExecuteEnrolledReturnActualTransportWaitsForBoundedExecutionHeaders(t *testing.T) {
+func TestExecuteEnrolledReturnActualTransportWaitsBeyondEightSecondsWithoutRetry(t *testing.T) {
 	f := enrolledReturnClientFiles(t)
 	var calls atomic.Int32
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		calls.Add(1)
 		select {
-		case <-time.After(3100 * time.Millisecond):
+		case <-time.After(9000 * time.Millisecond):
 		case <-r.Context().Done():
 			return
 		}
@@ -191,7 +191,17 @@ func TestExecuteEnrolledReturnAmbiguousOrForgedHTTPNeverRetriesOrEchoes(t *testi
 			transport := enrolledReturnTestTransport(func(*http.Request) (*http.Response, error) { calls++; return response() })
 			var out bytes.Buffer
 			require.Equal(t, 2, runExecuteReturnWithTransport(f.args, &out, transport))
-			require.Equal(t, `{"code":"ESCROW_RETURN_OUTCOME_UNKNOWN"}`+"\n", out.String())
+			var diagnostic struct {
+				Code       string `json:"code"`
+				Phase      string `json:"phase"`
+				HTTPStatus int    `json:"http_status"`
+				Boundary   string `json:"boundary"`
+			}
+			require.NoError(t, json.Unmarshal(out.Bytes(), &diagnostic))
+			require.Equal(t, "ESCROW_RETURN_OUTCOME_UNKNOWN", diagnostic.Code)
+			require.NotEmpty(t, diagnostic.Phase)
+			require.Equal(t, "unclassified", diagnostic.Boundary)
+			require.NotContains(t, out.String(), "sensitive-transport-fixture")
 			require.Equal(t, 1, calls, "no retry or legacy redirect")
 		})
 	}
@@ -256,4 +266,24 @@ func TestExecuteEnrolledReturnRejectsTargetSignerAndRuntimeOverrides(t *testing.
 	var out bytes.Buffer
 	require.Equal(t, 2, run([]string{"execute-enrolled-return"}, &out))
 	require.Equal(t, `{"code":"ESCROW_RETURN_CLIENT_INPUT_INVALID"}`+"\n", out.String(), "new dispatch must preserve a bounded refusal")
+}
+
+func TestExecuteEnrolledReturnSafeBoundaryDiagnosticWithoutRetry(t *testing.T) {
+	f := enrolledReturnClientFiles(t)
+	for _, boundary := range []string{"reserve_review_outlives_bank", "sensitive-transport-fixture"} {
+		calls := 0
+		transport := enrolledReturnTestTransport(func(*http.Request) (*http.Response, error) {
+			calls++
+			r := enrolledReturnHTTPResponse(http.StatusConflict, "sensitive-transport-fixture")
+			r.Header.Set("X-Wolo-Escrow-Boundary", boundary)
+			return r, nil
+		})
+		var out bytes.Buffer
+		require.Equal(t, 2, runExecuteReturnWithTransport(f.args, &out, transport))
+		require.Equal(t, 1, calls)
+		require.Contains(t, out.String(), `"phase":"http_status"`)
+		require.Contains(t, out.String(), `"http_status":409`)
+		require.Contains(t, out.String(), `"boundary":"`+satchelservice.EscrowReturnBoundaryName(boundary)+`"`)
+		require.NotContains(t, out.String(), "sensitive-transport-fixture")
+	}
 }

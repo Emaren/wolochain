@@ -51,6 +51,10 @@ type HTTPReturnBackend interface {
 	ReconcileClaimReturn(context.Context, ReturnApproval, string) (ReturnReceipt, error)
 }
 
+type HTTPEscrowReturnCheckBackend interface {
+	CheckEnrolledClaimReturn(context.Context, ReturnApproval) (EscrowReturnExecutionCheck, error)
+}
+
 type HTTPEnrolledEscrowReturnBackend interface {
 	ExecuteEnrolledClaimReturn(context.Context, ReturnApproval) (EscrowReturnSpendResult, error)
 }
@@ -273,7 +277,7 @@ func (h *privateHTTPHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if r.URL.Path != "/satchel/v1/one-shot" && r.URL.Path != "/satchel/v2/one-shot" && r.URL.Path != "/v1/satchel/withdrawals" && r.URL.Path != "/satchel/v1/reconcile" &&
-		r.URL.Path != "/satchel/v1/returns/prepare" && r.URL.Path != "/satchel/v1/returns/reconcile" && r.URL.Path != "/satchel/v1/returns/execute" &&
+		r.URL.Path != "/satchel/v1/returns/prepare" && r.URL.Path != "/satchel/v1/returns/reconcile" && r.URL.Path != "/satchel/v1/returns/execute" && r.URL.Path != "/satchel/v1/returns/check-execution" &&
 		r.URL.Path != "/satchel/v1/proofs/deposit" && r.URL.Path != "/satchel/v1/proofs/operation" && r.URL.Path != "/satchel/v1/proofs/return" && r.URL.Path != "/satchel/v1/proofs/bank" && r.URL.Path != "/satchel/v1/proofs/escrow-bank" {
 		httpFailure(w, http.StatusNotFound, "private_route_not_found")
 		return
@@ -289,7 +293,7 @@ func (h *privateHTTPHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	readOnly := r.URL.Path == "/satchel/v1/reconcile" || r.URL.Path == "/satchel/v1/returns/reconcile" || strings.HasPrefix(r.URL.Path, "/satchel/v1/proofs/")
 	// Escrow execution has its own account-local reserve/key authority; the
 	// global signed permit is still mandatory, without borrowing vault equity.
-	escrowExecute := r.URL.Path == "/satchel/v1/returns/execute"
+	escrowExecute := r.URL.Path == "/satchel/v1/returns/execute" || r.URL.Path == "/satchel/v1/returns/check-execution"
 	if (escrowExecute && (!h.identity.Accepting || h.authorize == nil || !h.authorize(ctx))) || (!escrowExecute && !readOnly && !h.accepting(ctx)) {
 		httpFailure(w, http.StatusServiceUnavailable, "custody_service_unavailable")
 		return
@@ -352,6 +356,36 @@ func (h *privateHTTPHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *privateHTTPHandler) claimReturn(ctx context.Context, w http.ResponseWriter, path string, data []byte) {
+	if path == "/satchel/v1/returns/check-execution" {
+		backend, ok := h.backend.(HTTPEscrowReturnCheckBackend)
+		var approval ReturnApproval
+		if strictHTTPJSON(data, &approval) != nil || !httpReturnV2(approval) {
+			httpFailure(w, http.StatusBadRequest, "invalid_return_approval")
+			return
+		}
+		if !ok {
+			httpFailure(w, http.StatusServiceUnavailable, "enrolled_escrow_unavailable")
+			return
+		}
+		diagnostic := &escrowBoundaryObservation{stage: "request", started: time.Now()}
+		ctx = context.WithValue(ctx, escrowBoundaryKey{}, diagnostic)
+		checked, err := backend.CheckEnrolledClaimReturn(ctx, approval)
+		escrowBoundaryHeaders(ctx, w, diagnostic)
+		completed := time.Now()
+		if err != nil {
+			httpFailure(w, http.StatusConflict, "escrow_return_check_held")
+			return
+		}
+		if ctx.Err() != nil || checked.Protocol != 1 || checked.Kind != "escrow_return_execution_check" || hashJSON(checked.Approval) != hashJSON(approval) ||
+			checked.ExecutionAuthorized || checked.CreditAuthorized || !validReserveDigest(checked.OperationPermitSHA256) || !validReserveDigest(checked.ReserveReviewSHA256) ||
+			checked.StateHeight <= 0 || checked.CommitHeight <= checked.StateHeight || checked.CommitHeight-checked.StateHeight != 1 ||
+			!validReserveDigest(strings.ToLower(checked.CommitBlockHash)) || checked.ExpiresAt <= completed.Unix() || checked.ExpiresAt-completed.Unix() > 120 {
+			httpFailure(w, http.StatusConflict, "escrow_return_check_unverifiable")
+			return
+		}
+		httpWrite(w, http.StatusOK, checked)
+		return
+	}
 	if path == "/satchel/v1/returns/execute" {
 		backend, ok := h.backend.(HTTPEnrolledEscrowReturnBackend)
 		var approval ReturnApproval
@@ -363,7 +397,10 @@ func (h *privateHTTPHandler) claimReturn(ctx context.Context, w http.ResponseWri
 			httpFailure(w, http.StatusServiceUnavailable, "enrolled_escrow_unavailable")
 			return
 		}
+		diagnostic := &escrowBoundaryObservation{stage: "request", started: time.Now()}
+		ctx = context.WithValue(ctx, escrowBoundaryKey{}, diagnostic)
 		result, err := backend.ExecuteEnrolledClaimReturn(ctx, approval)
+		escrowBoundaryHeaders(ctx, w, diagnostic)
 		if err != nil {
 			httpFailure(w, http.StatusConflict, "escrow_return_held_or_unknown")
 			return

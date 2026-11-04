@@ -59,7 +59,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "f4e4905e139d3c737ec20d7c4d50f111142387e59e6aab645cc213e8555bdb45",
+      "sha256": "76e6f0ae51da8ae8dd903639507d530bb213f60bf32073cf108be2b961465d59",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -402,9 +402,9 @@
       "owner": "wolochain-ops",
       "path": "docs/new-epoch-escrow-v3-held.md",
       "review_interval_days": 7,
-      "reviewed_at": "2026-10-26",
+      "reviewed_at": "2026-11-03",
       "sensitivity": "internal",
-      "sha256": "b22e7afa879eb93a90f3050c4cad4077935dd8bef7296adf334904afdacf17e3",
+      "sha256": "301b915f8cf63c2644f37748b4398455b74314c08cfbf7805521752b2156e631",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -518,9 +518,9 @@
       "owner": "wolochain-ops",
       "path": "docs/war-satchel-controlled-release.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-10-18",
+      "reviewed_at": "2026-11-02",
       "sensitivity": "restricted",
-      "sha256": "bd18f40d1c736342b2fe87d8d092378e232e1bb06142c8d652ca2c2590a0978b",
+      "sha256": "1c295bcb3ddf25004958f4d3e67071869979c9ec04b9655a5b6bdaf6f0f30d10",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -566,7 +566,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-22",
       "sensitivity": "restricted",
-      "sha256": "5104b0cd389184cbb0f2845011de434dae405b199fd063c1d6e687dee97c1f46",
+      "sha256": "29ee3c51b14e2c8db73a689d49facbdaa19a5dcb25c9a7645bac1e1648ce8388",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -589,7 +589,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-11-01",
       "sensitivity": "restricted",
-      "sha256": "e573507220e2131587f4882a91425c28f532ef8b24e5f93a0f9de606f410d88d",
+      "sha256": "10690f8b6a11c79bb4dcbb98368a2e68dc997a8fdabc5df4cfa322393031b000",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -1112,8 +1112,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "codex/c01-enrolled-native-executor-20261101",
-    "commit": "7a0ba63df7c0c3494094943a877245aad3ac9dee"
+    "branch": "codex/c01-executable-deadline-repair-20261101",
+    "commit": "53b582ec1be68614f991f04be97a874e77f49d5b"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

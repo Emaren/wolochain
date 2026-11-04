@@ -169,6 +169,49 @@ func TestEscrowServiceSignedPermissionRefusalsDoNotSign(t *testing.T) {
 	}
 }
 
+func TestEscrowServiceReviewCannotOutliveGenuineBankEvidence(t *testing.T) {
+	f := newEscrowServiceFixture(t)
+	c := f.custody
+	bank, _, err := c.reader.ReadCurrentBankProof(t.Context(), c.config.BettingEscrow)
+	require.NoError(t, err)
+	require.True(t, bank.CurrentAt(time.Now()))
+	// A correctly signed reserve review cannot extend the native bank proof's
+	// lifetime. The actual-executable fixture previously requested 110 seconds
+	// despite the genuine current bank evidence's 30-second freshness bound.
+	f.bundle.Review.IssuedAt = time.Now().Unix() - 1
+	f.bundle.Review.ExpiresAt = bank.ExpiresAt().Unix() + 1
+	review := f.reserve.sign(t, &f.bundle)
+	require.NoError(t, os.WriteFile(f.reviewPath, review, 0600))
+	f.permit.ReserveReviewSHA256 = custodySHA(review)
+	f.writePermit(t)
+	before := readTestCustodyJournal(t, c.engine)
+	signs, broadcasts := c.SDKSigns.Load(), c.chain.broadcasts
+	diagnostic := &escrowBoundaryObservation{stage: "request", started: time.Now()}
+	ctx := context.WithValue(t.Context(), escrowBoundaryKey{}, diagnostic)
+	_, err = f.service.Execute(ctx, f.approval)
+	require.ErrorIs(t, err, ErrEscrowRuntimeHeld)
+	require.Equal(t, "reserve_review_outlives_bank", diagnostic.stage)
+	require.Equal(t, before, readTestCustodyJournal(t, c.engine), "review refusal must precede durable intent")
+	require.Equal(t, signs, c.SDKSigns.Load())
+	require.Equal(t, broadcasts, c.chain.broadcasts)
+	_, err = c.engine.ReadEscrowReturnSpend(f.approval.ClaimID)
+	require.ErrorIs(t, err, ErrEscrowReturnSpend)
+
+	// Correct only the fixture's independently signed lifetime and its exact
+	// owner-permit digest; preserve the same native proof and original claim.
+	f.bundle.Review.ExpiresAt = bank.ExpiresAt().Unix() - 1
+	require.Greater(t, f.bundle.Review.ExpiresAt, time.Now().Unix())
+	review = f.reserve.sign(t, &f.bundle)
+	require.NoError(t, os.WriteFile(f.reviewPath, review, 0600))
+	f.permit.ReserveReviewSHA256 = custodySHA(review)
+	f.writePermit(t)
+	result, err := f.service.Execute(t.Context(), f.approval)
+	require.NoError(t, err)
+	require.Equal(t, "broadcast_accepted_unconfirmed", result.Reason)
+	require.Equal(t, signs+1, c.SDKSigns.Load())
+	require.Equal(t, broadcasts+1, c.chain.broadcasts)
+}
+
 func TestEscrowServiceSignedRevocationAfterSDKSigningPreservesUnknown(t *testing.T) {
 	f := newEscrowServiceFixture(t)
 	c := f.custody

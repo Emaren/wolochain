@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `codex/c01-enrolled-native-executor-20261101` at `7a0ba63df7c0c3494094943a877245aad3ac9dee`
+Implementation baseline: `codex/c01-executable-deadline-repair-20261101` at `53b582ec1be68614f991f04be97a874e77f49d5b`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 

@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -37,10 +38,12 @@ func runExecuteReturn(args []string, out io.Writer) int {
 func newExecuteReturnTransport() *http.Transport {
 	return &http.Transport{Proxy: nil,
 		DialContext:           (&net.Dialer{Timeout: 2 * time.Second}).DialContext,
-		ResponseHeaderTimeout: 8 * time.Second, DisableCompression: true,
+		ResponseHeaderTimeout: 12 * time.Second, DisableCompression: true,
 		DisableKeepAlives: true, MaxConnsPerHost: 1, MaxResponseHeaderBytes: 8192}
 }
 
+// The request budget allows bounded SDK proof I/O; every signing/broadcast guard
+// still checks current signed expiry after its last I/O. No retry is permitted.
 // The transport seam is private test support. Production dispatch always uses
 // the fixed transport above; no environment, argv or request selects a target.
 func runExecuteReturnWithTransport(args []string, out io.Writer, transport http.RoundTripper) int {
@@ -59,7 +62,7 @@ func runExecuteReturnWithTransport(args []string, out io.Writer, transport http.
 	if paths["--config"] == "" || paths["--approval"] == "" {
 		return fail("ESCROW_RETURN_CLIENT_INPUT_INVALID")
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 8*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 	cfg, _, err := satchelservice.LoadConfig(paths["--config"])
 	if err != nil || ctx.Err() != nil {
@@ -92,22 +95,42 @@ func runExecuteReturnWithTransport(args []string, out io.Writer, transport http.
 	request.Header.Set("Content-Type", "application/json")
 	request.Header.Set("Accept", "application/json")
 	request.Header.Set("Accept-Encoding", "identity")
-	client := &http.Client{Transport: transport, Timeout: 8 * time.Second,
+	client := &http.Client{Transport: transport, Timeout: 15 * time.Second,
 		CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
+	// Only fixed classifications and numeric status cross this diagnostic
+	// boundary. Never echo a transport error, body, token, approval or URI.
+	unknown := func(phase string, status int, boundary string) int {
+		_ = json.NewEncoder(out).Encode(struct {
+			Code       string `json:"code"`
+			Phase      string `json:"phase"`
+			HTTPStatus int    `json:"http_status"`
+			Boundary   string `json:"boundary"`
+		}{"ESCROW_RETURN_OUTCOME_UNKNOWN", phase, status, satchelservice.EscrowReturnBoundaryName(boundary)})
+		return 2
+	}
 	response, err := client.Do(request) // Exactly one application request; never retry an ambiguous outcome.
 	if err != nil {
-		return fail("ESCROW_RETURN_OUTCOME_UNKNOWN")
+		phase := "transport_failure"
+		var network net.Error
+		if errors.Is(err, context.DeadlineExceeded) || (errors.As(err, &network) && network.Timeout()) {
+			phase = "transport_timeout"
+		}
+		return unknown(phase, 0, "")
 	}
 	defer response.Body.Close()
-	if response.StatusCode != http.StatusOK || (response.Header.Get("Content-Encoding") != "" && response.Header.Get("Content-Encoding") != "identity") {
-		return fail("ESCROW_RETURN_OUTCOME_UNKNOWN")
+	boundary := response.Header.Get("X-Wolo-Escrow-Boundary")
+	if response.StatusCode != http.StatusOK {
+		return unknown("http_status", response.StatusCode, boundary)
+	}
+	if response.Header.Get("Content-Encoding") != "" && response.Header.Get("Content-Encoding") != "identity" {
+		return unknown("response_encoding", response.StatusCode, boundary)
 	}
 	body, err := io.ReadAll(io.LimitReader(response.Body, enrolledReturnMaxBytes+1))
 	var result satchelservice.EscrowReturnSpendResult
 	if err != nil || len(body) > enrolledReturnMaxBytes || !enrolledReturnStrictJSON(body, &result) || ctx.Err() != nil ||
 		result.OperationID != "satchel:claim-return:"+approval.ClaimID || result.Status != "UNKNOWN" || !result.DurableFenced ||
 		!enrolledReturnReason(result.Reason) || (result.TxHash != "" && (!enrolledReturnHash.MatchString(result.TxHash) || result.TxHash == strings.Repeat("0", 64))) {
-		return fail("ESCROW_RETURN_OUTCOME_UNKNOWN")
+		return unknown("response_validation", response.StatusCode, boundary)
 	}
 	// A valid reply means only that the existing runtime reports a fenced
 	// UNKNOWN. CheckTx acceptance, transport success and this DTO never credit HD.

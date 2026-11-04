@@ -45,6 +45,7 @@ type custodyAuthorityFixture struct {
 	afterSign                      func()
 	fundingKey                     *sdksecp.PrivKey
 	bankHook                       atomic.Pointer[func()]
+	broadcastResponseHook          atomic.Pointer[func(*http.Response) error]
 }
 type custodyObservedSDKSigner struct {
 	inner   backendSigner
@@ -85,6 +86,17 @@ func newCustodyAuthorityFixtureWithConfig(t *testing.T, provision func(*Config))
 	u, err := url.Parse(primary.URL)
 	require.NoError(t, err)
 	proxy := httputil.NewSingleHostReverseProxy(u)
+	// Optional isolated-process fault boundary: the real upstream SDK handler
+	// has already committed before ModifyResponse sees its broadcast reply.
+	// Ordinary fixture funding/setup never arms this hook.
+	proxy.ModifyResponse = func(response *http.Response) error {
+		if response.Request.Method == http.MethodPost && response.Request.URL.Path == "/" {
+			if hook := f.broadcastResponseHook.Load(); hook != nil {
+				return (*hook)(response)
+			}
+		}
+		return nil
+	}
 	transport := &http.Transport{Proxy: nil}
 	proxy.Transport = transport
 	t.Cleanup(transport.CloseIdleConnections)
