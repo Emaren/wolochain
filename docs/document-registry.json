@@ -29,6 +29,29 @@
         "operators",
         "ai-agents"
       ],
+      "authority": "noncrediting-original-request-chain-evidence",
+      "id": "aoe2war.wolochain.c04-original-request-proof",
+      "owner": "wolochain-ops",
+      "path": "cmd/wolo-c04-verify/README.md",
+      "review_interval_days": 14,
+      "reviewed_at": "2026-11-04",
+      "sensitivity": "restricted",
+      "sha256": "878e561a4099ab94c03e319b55d241a851782ab157b91628b55a7147654209c8",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C04 \u2014 bounded original-request / chain-proof observation",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
       "authority": "git-branch-authority-contract",
       "id": "aoe2war.wolochain.branch-authority",
       "owner": "wolochain-ops",
@@ -59,7 +82,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "6a13dfb5d427412bd14c7eb386fe9a456b63531f6d87969be8f32eb9835f6eeb",
+      "sha256": "4f776de194b9dbe88a605c75f0aa6136d68a0bfa7b1a2084cfa292e7e147868a",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1112,8 +1135,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/c01-confined-held-units-20261104",
-    "commit": "f5c37c3878f5c5e73e3b15281d9694527d68b50d"
+    "branch": "fix/c04-exact-original-readonly-20261104",
+    "commit": "4b0bf7f4627990578690210b7cf2a451ff2f7e40"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
