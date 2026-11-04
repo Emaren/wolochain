@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/c04-exact-original-readonly-20261104` at `4b0bf7f4627990578690210b7cf2a451ff2f7e40`
+Implementation baseline: `fix/c03-native-successors-observed-20261104` at `8ebcd7436d22df631bade68f692ac955392401ad`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
