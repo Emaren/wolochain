@@ -25,6 +25,25 @@ The correlation tool uses `--runtime <file> --hd-source <file> --de-source <file
 
 The report marks the following **false unconditionally**: deployed-source-to-running-executable parity, producer isolation, reconciled transfers, financial release, website release, and mutation of production. All input sources can be mutually consistent while independent HD/DE wallets, direct mnemonic and keyring paths, processes, HTTP/timer/cron ingress, and outstanding obligations remain unknown.
 
+## November 4 — source-bound static successor coverage
+
+The installed HEL1 `wolo-satchel-c01.service` and
+`wolo-reviewer-c01.service` are separate financial services, not ordinary
+HD/DE web units. The original financial topology inspector did not match their
+names. The C03 source now matches **these exact successor names only**,
+classifies their prospective roles as `WOLO_CUSTODY` and `WOLO_REVIEWER`,
+and imports the prior installed-unit-file parity check so that a static unit
+which is installed but absent from `systemctl list-units --all` is recorded
+as **INSTALLED_BUT_NOT_LOADED**, never as a missing service file.
+
+This only improves source and current systemd census completeness. The report
+still explicitly marks `nativeSuccessorsAreFinancialWritersExcluded=false`,
+`financialIngressFenced=false`, and `satchelActivationAuthorized=false`.
+Loaded, dormant, and reactivatable financial successors must all remain in the
+future coordinated C03 source-bound fence and deterministic resume proof.
+Neither a successful inventory, a systemd sandbox score, nor an absent
+protected config is independent financial authority.
+
 ## First owner-review sequence
 
 1. Obtain the current protected-systemd inventory through its existing audited root-read-only collector, without copying process environment values or shell command lines to public documents.
