@@ -192,6 +192,7 @@ func (v *EscrowReturnExecutionVerifier) verifyLocked(ctx context.Context, a Retu
 	if strictHTTPJSON(raw, &bundle) != nil || bundle.Version != 1 {
 		return none, ErrEscrowReturnExecution
 	}
+	escrowBoundary(ctx, "reserve_native_proof")
 	current, err := v.proof.VerifyBankProof(ctx, v.config.Authority.ExpectedVault, bank.Height(), proof)
 	if err != nil || !bank.CurrentAt(v.now()) || !current.CurrentAt(v.now()) || bank.VaultAddress() != current.VaultAddress() || bank.BalanceUWolo() != current.BalanceUWolo() ||
 		bank.Height() != current.Height() || bank.BlockHash() != current.BlockHash() || bank.AppHash() != current.AppHash() || current.HeadTime().After(v.now()) || ctx.Err() != nil {
@@ -201,6 +202,7 @@ func (v *EscrowReturnExecutionVerifier) verifyLocked(ctx context.Context, a Retu
 	var actual CustodyJournal
 	var obligations map[string]ReviewerReserveObligation
 	var pending map[string]ReviewerPendingFee
+	escrowBoundary(ctx, "reserve_obligations")
 	err = e.db.View(func(tx *bolt.Tx) error {
 		var err error
 		actual, err = e.custodyJournalTx(tx)
@@ -213,11 +215,16 @@ func (v *EscrowReturnExecutionVerifier) verifyLocked(ctx context.Context, a Retu
 	if err != nil || ctx.Err() != nil {
 		return none, ErrEscrowReturnExecution
 	}
+	escrowBoundary(ctx, "reserve_inventory")
+	if time.Unix(bundle.Review.ExpiresAt, 0).After(current.ExpiresAt()) {
+		escrowBoundary(ctx, "reserve_review_outlives_bank")
+	}
 	if err := v.verifyInventory(bundle, a, actual, obligations, pending, current, v.now()); err != nil {
 		return none, ErrEscrowReturnExecution
 	}
 	// No retained statement survives a journal change or elapsed native/review
 	// deadline during signature verification. Compare a new actual Bolt view.
+	escrowBoundary(ctx, "reserve_completion")
 	completed := v.now()
 	if ctx.Err() != nil || !bank.CurrentAt(completed) || !current.CurrentAt(completed) || completed.Unix() < bundle.Review.IssuedAt || completed.Unix() >= bundle.Review.ExpiresAt {
 		return none, ErrEscrowReturnExecution

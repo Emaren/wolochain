@@ -1,9 +1,8 @@
 package satchelservice
 
-// This is the separately journaled ESCROW-account return execution boundary.
-// It is NOT wired to the vault's 8094 HTTP service, legacy 8092, or a live
-// keyring. Source qualification cannot enroll a signer or authorize funding.
-// Existing signed reviewer reserve proof and native SDK backend are reused.
+// This is the existing separately journaled ESCROW-account return boundary.
+// Protected 8094 composition reuses it with the distinct SDK keyring role.
+// It has no legacy 8092/8093 transport; source qualification grants no funding.
 import (
 	"context"
 	"crypto/sha256"
@@ -11,6 +10,8 @@ import (
 	"encoding/json"
 	"errors"
 	"strings"
+
+	"github.com/emaren/wolochain/internal/chainjson"
 
 	bolt "go.etcd.io/bbolt"
 )
@@ -28,12 +29,16 @@ type EscrowReturnSpendResult struct {
 	DurableFenced bool   `json:"durable_fenced"`
 }
 type escrowReturnSpendRecord struct {
-	Version      int
-	ApprovalHash string
-	Request      TransferRequest
-	ProofHash    string
-	Signed       SignedTransaction
-	Result       EscrowReturnSpendResult
+	Version               int
+	ApprovalHash          string
+	Request               TransferRequest
+	ProofHash             string
+	OperationPermitSHA256 string `json:",omitempty"`
+	OperationNonce        string `json:",omitempty"`
+	OperationPermitRaw    []byte `json:",omitempty"`
+	ReserveReviewRaw      []byte `json:",omitempty"`
+	Signed                SignedTransaction
+	Result                EscrowReturnSpendResult
 }
 
 // Existing backend callbacks must re-validate protected escrow identity,
@@ -45,7 +50,7 @@ type EscrowReturnSpendGuard struct {
 	PreBroadcast func(context.Context, TransferRequest, SignedTransaction) bool
 }
 
-// ExecuteQualifiedEscrowReturn is an *unwired* source primitive for the
+// ExecuteQualifiedEscrowReturn is the lower-level primitive for the
 // separately enrolled escrow-account signer. All runs require a private opaque
 // VerifiedEscrowReturnExecution, a prepared original owner entitlement, exact
 // escrow→vault transfer, and independent permits. It never signs via e.backend.
@@ -83,7 +88,7 @@ func (e *Engine) ExecuteQualifiedEscrowReturn(
 		if b != nil && b.Get(key) != nil {
 			prior := b.Get(key)
 			existing = true
-			if json.Unmarshal(prior, &state) != nil || state.Version != 1 ||
+			if json.Unmarshal(prior, &state) != nil || !e.validEscrowSpendRecord(state, string(key)) ||
 				state.ApprovalHash != identity ||
 				state.Result.OperationID != req.OperationID ||
 				!state.Result.DurableFenced {
@@ -122,6 +127,16 @@ func (e *Engine) ExecuteQualifiedEscrowReturn(
 			return ErrEscrowReturnSpend
 		}
 		// The verified reserve snapshot binds the *old* Bolt bucket tree.
+		// An unresolved escrow sequence also fences every later claim. New
+		// permission is not proof that ambiguous signed bytes cannot execute.
+		nonce := ""
+		if operation, _ := ctx.Value(enrolledEscrowOperationKey{}).(*enrolledEscrowOperation); operation != nil {
+			nonce = operation.nonce
+		}
+		if err := e.escrowSpendHistoryTx(tx, nonce); err != nil {
+			return err
+		}
+		// The verified reserve snapshot binds the *old* Bolt bucket tree.
 		// Creating the new spend bucket before the journal comparison would
 		// invalidate its own independently signed snapshot.
 		b, err = tx.CreateBucketIfNotExists(escrowReturnSpendBucket)
@@ -132,7 +147,21 @@ func (e *Engine) ExecuteQualifiedEscrowReturn(
 			Request: req, ProofHash: qualified.bundleHash,
 			Result: EscrowReturnSpendResult{OperationID: req.OperationID,
 				Status: "UNKNOWN", Reason: "intent_persisted", DurableFenced: true}}
-		return writeEscrowSpend(b, key, state)
+		if operation, _ := ctx.Value(enrolledEscrowOperationKey{}).(*enrolledEscrowOperation); operation != nil {
+			state.OperationPermitSHA256, state.OperationNonce = operation.permitDigest, operation.nonce
+			state.OperationPermitRaw = append([]byte(nil), operation.permitRaw...)
+			state.ReserveReviewRaw = append([]byte(nil), operation.reviewRaw...)
+		}
+		if err := writeEscrowSpend(b, key, state); err != nil {
+			return err
+		}
+		// Refuse before signing if the raw signed authorities cannot fit the
+		// existing bounded journal. Preserve every old record on rollback.
+		complete, err := e.custodyJournalTx(tx)
+		if err != nil || complete.BytesRead > custodyJournalMaxBytes-(128<<10) {
+			return ErrEscrowReturnSpend
+		}
+		return nil // reserve worst-case signed-byte/status growth before signing
 	})
 	if err != nil {
 		return none, ErrEscrowReturnSpend
@@ -212,7 +241,7 @@ func (e *Engine) ExecuteQualifiedEscrowReturn(
 
 func writeEscrowSpend(b *bolt.Bucket, key []byte, state escrowReturnSpendRecord) error {
 	data, err := json.Marshal(state)
-	if err != nil || len(data) > 131072 {
+	if err != nil || len(data) > 4<<20 {
 		return ErrEscrowReturnSpend
 	}
 	return b.Put(key, data)
@@ -233,10 +262,7 @@ func (e *Engine) ReadEscrowReturnSpend(id string) (EscrowReturnSpendResult, erro
 		if b == nil || b.Get([]byte(id)) == nil {
 			return ErrEscrowReturnSpend
 		}
-		if json.Unmarshal(b.Get([]byte(id)), &state) != nil || state.Version != 1 ||
-			state.Result.Status != "UNKNOWN" || !state.Result.DurableFenced ||
-			state.Result.OperationID != "satchel:claim-return:"+id ||
-			state.ApprovalHash != hashJSON(state.Request) {
+		if json.Unmarshal(b.Get([]byte(id)), &state) != nil || !e.validEscrowSpendRecord(state, id) {
 			return ErrEscrowReturnSpend
 		}
 		return nil
@@ -245,4 +271,64 @@ func (e *Engine) ReadEscrowReturnSpend(id string) (EscrowReturnSpendResult, erro
 		return none, ErrEscrowReturnSpend
 	}
 	return state.Result, nil
+}
+
+// Consistency-only recovery validation. It grants no current permission,
+// native finality or credit, and does not require historical permits unexpired.
+func (e *Engine) validEscrowSpendRecord(state escrowReturnSpendRecord, id string) bool {
+	r, a := state.Request, state.Request.ReturnApproval
+	if state.Version != 1 || !claimIDs.MatchString(id) || id == "889" || a == nil || a.Version != 2 || a.Allocation == nil || a.ClaimID != id ||
+		r.OperationID != "satchel:claim-return:"+id || state.Result.OperationID != r.OperationID || state.ApprovalHash != hashJSON(r) ||
+		r.Kind != "claim_return" || r.ChainID != "wolo-1" || r.Denom != "uwolo" || r.Sender != e.policy.BettingEscrow || r.Recipient != e.policy.Vault ||
+		r.OwnerID != a.OwnerID || r.AmountUWolo != a.AmountUWolo || r.Memo != "aoe2war/satchel/claim-return/v1/"+id || r.Approval != nil || r.OwnerMandate != nil || r.Reservation != nil ||
+		state.Result.Status != "UNKNOWN" || !state.Result.DurableFenced || !validReserveDigest(state.ProofHash) {
+		return false
+	}
+	if state.Result.TxHash == "" {
+		if len(state.Signed.Bytes) != 0 || state.Signed.Hash != "" {
+			return false
+		}
+	} else if len(state.Signed.Bytes) == 0 || len(state.Signed.Bytes) > 65536 || state.Result.TxHash != state.Signed.Hash ||
+		state.Signed.Hash != strings.ToUpper(state.Signed.Hash) || !nonzeroDigest(state.Signed.Hash) || !strings.EqualFold(custodySHA(state.Signed.Bytes), state.Signed.Hash) {
+		return false
+	}
+	if state.OperationPermitSHA256 == "" && state.OperationNonce == "" && len(state.OperationPermitRaw) == 0 && len(state.ReserveReviewRaw) == 0 {
+		return true
+	} // original#122 records
+	if !validReserveDigest(state.OperationNonce) || !validReserveDigest(state.OperationPermitSHA256) || len(state.OperationPermitRaw) > 64<<10 || len(state.ReserveReviewRaw) > escrowReturnExecutionMaxBytes ||
+		!chainjson.ValidFolded(state.OperationPermitRaw) || !chainjson.ValidFolded(state.ReserveReviewRaw) || custodySHA(state.OperationPermitRaw) != state.OperationPermitSHA256 {
+		return false
+	}
+	var permit EscrowReturnOperationPermit
+	var review EscrowReturnExecutionBundle
+	return strictHTTPJSON(state.OperationPermitRaw, &permit) == nil && strictHTTPJSON(state.ReserveReviewRaw, &review) == nil &&
+		permit.Version == 1 && permit.Scope == escrowOperationPermitScope && permit.ChainID == "wolo-1" && permit.Denom == "uwolo" &&
+		permit.Vault == e.policy.Vault && permit.Escrow == e.policy.BettingEscrow && review.Version == 1 && review.Body.Scope == EscrowReturnExecutionScope &&
+		permit.Nonce == state.OperationNonce && permit.ApprovalSHA256 == hashJSON(*a) && permit.ClaimID == id && permit.AmountUWolo == a.AmountUWolo &&
+		permit.ReserveReviewSHA256 == custodySHA(state.ReserveReviewRaw) && hashJSON(review) == state.ProofHash
+}
+
+// The same permanent uncertainty/nonce fence is used by read-only checks and
+// the final atomic intent write. A check cannot clear or reserve any history.
+func (e *Engine) escrowSpendHistoryTx(tx *bolt.Tx, nonce string) error {
+	b := tx.Bucket(escrowReturnSpendBucket)
+	if b == nil {
+		return nil
+	}
+	prepared := tx.Bucket(returns)
+	if prepared == nil {
+		return ErrEscrowReturnSpend
+	}
+	return b.ForEach(func(id, data []byte) error {
+		var old escrowReturnSpendRecord
+		var paid returnRecord
+		if data == nil || json.Unmarshal(data, &old) != nil || !e.validEscrowSpendRecord(old, string(id)) || old.Request.ReturnApproval == nil ||
+			old.Request.OperationID != "satchel:claim-return:"+string(id) || old.ApprovalHash != hashJSON(old.Request) ||
+			old.Result.Status != "UNKNOWN" || !old.Result.DurableFenced || old.Signed.Hash == "" ||
+			json.Unmarshal(prepared.Get(id), &paid) != nil || paid.Receipt == nil || paid.Receipt.TxHash != old.Signed.Hash || !validReturnReceipt(paid, *paid.Receipt) ||
+			(nonce != "" && old.OperationNonce == nonce) {
+			return ErrEscrowReturnSpend
+		}
+		return nil
+	})
 }

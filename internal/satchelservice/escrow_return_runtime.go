@@ -42,6 +42,7 @@ func (a *CustodyAuthority) qualifyEscrowReturnLocked(ctx context.Context, approv
 		a.config.EscrowReturnExecutionFile == "" || !validReserveDigest(a.config.EscrowReturnExecutionSHA256) || !a.nativeLeaseHeld() {
 		return none, ErrEscrowReturnExecution
 	}
+	escrowBoundary(ctx, "reserve_enrollment")
 	permitDigest, permitExpiry, err := a.currentFiles(ctx)
 	if err != nil {
 		return none, ErrEscrowReturnExecution
@@ -81,10 +82,12 @@ func (a *CustodyAuthority) qualifyEscrowReturnLocked(ctx context.Context, approv
 	if err != nil {
 		return none, ErrEscrowReturnExecution
 	}
+	escrowBoundary(ctx, "reserve_bank")
 	bank, proof, err := a.reader.ReadCurrentBankProof(ctx, a.config.BettingEscrow)
 	if err != nil {
 		return none, ErrEscrowReturnExecution
 	}
+	escrowBoundary(ctx, "reserve_journal")
 	journal, err := a.engine.custodyJournalLocked()
 	if err != nil {
 		return none, ErrEscrowReturnExecution
@@ -93,10 +96,12 @@ func (a *CustodyAuthority) qualifyEscrowReturnLocked(ctx context.Context, approv
 	if err != nil {
 		return none, ErrEscrowReturnExecution
 	}
+	escrowBoundary(ctx, "reserve_late_bank")
 	lateBank, lateProof, err := a.reader.ReadCurrentBankProof(ctx, a.config.BettingEscrow)
 	if err != nil {
 		return none, ErrEscrowReturnExecution
 	}
+	escrowBoundary(ctx, "reserve_late_proof")
 	lateBank, err = verifier.proof.VerifyBankProof(ctx, a.config.BettingEscrow, lateBank.Height(), lateProof)
 	if err != nil || lateBank.Height() != bank.Height() || lateBank.CommitHeight() != bank.CommitHeight() ||
 		lateBank.BlockHash() != bank.BlockHash() || lateBank.AppHash() != bank.AppHash() || lateBank.BalanceUWolo() != bank.BalanceUWolo() {
@@ -104,6 +109,7 @@ func (a *CustodyAuthority) qualifyEscrowReturnLocked(ctx context.Context, approv
 	}
 	// Revoke or replace any source during bank/proof I/O and this admission is
 	// discarded. The engine mutex preserves the checked journal through prepare.
+	escrowBoundary(ctx, "reserve_revocation")
 	finalPermit, finalExpiry, err := a.currentFiles(ctx)
 	if err != nil || finalPermit != permitDigest || !finalExpiry.Equal(permitExpiry) {
 		return none, ErrEscrowReturnExecution

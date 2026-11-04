@@ -73,6 +73,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GOFLAGS: -tags=go1.27
+      PYTHONDONTWRITEBYTECODE: '1'
 
     steps:
       - name: Checkout
@@ -205,8 +206,15 @@ jobs:
 
       - name: Build isolated Satchel signer and independent reviewer
         run: |
-          go build ./cmd/wolosatcheld
-          go build ./cmd/woloreviewerd
+          go build -o "$RUNNER_TEMP/wolosatcheld-c01" ./cmd/wolosatcheld
+          go build -o "$RUNNER_TEMP/woloreviewerd-c01" ./cmd/woloreviewerd
+          go build -o "$RUNNER_TEMP/woloescrowd-c01" ./cmd/woloescrowd
+
+      - name: Actual protected C01 signer and CLI subprocess against isolated SDK
+        env:
+          SATCHEL_C01_SIGNER_EXECUTABLE: ${{ runner.temp }}/wolosatcheld-c01
+          SATCHEL_C01_CLIENT_EXECUTABLE: ${{ runner.temp }}/woloescrowd-c01
+        run: go test -race -p=1 ./internal/satchelservice -run '^TestEscrowServiceProductionExecutables$' -count=1 -timeout=120s
 
       - name: Satchel custody execution race contracts
         run: go test -race ./internal/satchelservice ./cmd/wolosatcheld ./cmd/woloreviewerd -count=1

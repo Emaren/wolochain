@@ -270,24 +270,25 @@ func (p *nativeHTTPProcess) kill(t *testing.T) {
 // retained IAVL proofs and correctly signed continuous Comet headers. The two
 // local servers share one isolated validator; they do not claim independence.
 type nativeHTTPChain struct {
-	mu          sync.Mutex
-	application *app.App
-	validator   cmted.PrivKey
-	validators  *cmt.ValidatorSet
-	commits     map[int64]*core.ResultCommit
-	results     map[int64]*core.ResultBlockResults
-	transaction *core.ResultTx
-	rest        any
-	appHash     []byte
-	lastResults []*abci.ExecTxResult
-	head        int64
-	start       time.Time
-	vault       sdk.AccAddress
-	bankKey     []byte
-	broadcasts  int
-	executed    chan struct{}
-	releaseACK  chan struct{}
-	ackReleased sync.Once
+	mu           sync.Mutex
+	application  *app.App
+	validator    cmted.PrivKey
+	validators   *cmt.ValidatorSet
+	commits      map[int64]*core.ResultCommit
+	results      map[int64]*core.ResultBlockResults
+	transaction  *core.ResultTx
+	rest         any
+	appHash      []byte
+	lastResults  []*abci.ExecTxResult
+	head         int64
+	start        time.Time
+	vault        sdk.AccAddress
+	bankKey      []byte
+	broadcasts   int
+	executed     chan struct{}
+	releaseACK   chan struct{}
+	ackReleased  sync.Once
+	executedOnce sync.Once
 }
 
 func newNativeHTTPChain(t *testing.T, signer *testBackendSigner) *nativeHTTPChain {
@@ -396,7 +397,10 @@ func (f *nativeHTTPChain) serve(t *testing.T, witness bool) *httptest.Server {
 			for i := 0; i < 3; i++ {
 				f.commit(t, nil)
 			}
-			close(f.executed)
+			// Original funding and actual escrow return are TWO legitimate SDK
+			// transfers in one disposable chain. Notify observers only once:
+			// double-close panics before HTTP ACK and would fake ambiguity.
+			f.executedOnce.Do(func() { close(f.executed) })
 			<-f.releaseACK // The parent kills only the isolated signer process here.
 			_ = json.NewEncoder(w).Encode(map[string]any{"result": map[string]any{"hash": hash}})
 			return
@@ -434,6 +438,29 @@ func (f *nativeHTTPChain) serve(t *testing.T, witness bool) *httptest.Server {
 				"pub_key": map[string]string{"@type": "/cosmos.crypto.secp256k1.PubKey", "key": base64.StdEncoding.EncodeToString(account.GetPubKey().Bytes())}}})
 			return
 		default:
+			// The existing fixture has always served only the vault account.
+			// A separately signed escrow MsgSend must query its OWN actual SDK
+			// account number and sequence. Serve only genuine AuthKeeper state:
+			// never invent an account, a sequence, or a financial balance.
+			if strings.HasPrefix(r.URL.Path, "/cosmos/auth/v1beta1/accounts/") {
+				require.Equal(t, http.MethodGet, r.Method)
+				address, err := sdk.AccAddressFromBech32(strings.TrimPrefix(r.URL.Path, "/cosmos/auth/v1beta1/accounts/"))
+				require.NoError(t, err)
+				ctx := f.application.NewUncachedContext(false, cmtproto.Header{Height: f.head})
+				account := f.application.AuthKeeper.GetAccount(ctx, address)
+				require.NotNil(t, account, "escrow role must query an account actually present on the disposable SDK chain")
+				var public any
+				if key := account.GetPubKey(); key != nil {
+					public = map[string]string{"@type": "/cosmos.crypto.secp256k1.PubKey", "key": base64.StdEncoding.EncodeToString(key.Bytes())}
+				}
+				_ = json.NewEncoder(w).Encode(map[string]any{"account": map[string]any{
+					"@type":          "/cosmos.auth.v1beta1.BaseAccount",
+					"address":        address.String(),
+					"account_number": strconv.FormatUint(account.GetAccountNumber(), 10),
+					"sequence":       strconv.FormatUint(account.GetSequence(), 10),
+					"pub_key":        public}})
+				return
+			}
 			require.Equal(t, "/cosmos/tx/v1beta1/txs/"+strings.ToUpper(hex.EncodeToString(f.transaction.Hash)), r.URL.Path)
 			_ = json.NewEncoder(w).Encode(f.rest)
 			return

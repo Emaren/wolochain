@@ -19,6 +19,19 @@ class SatchelHTTPContract(unittest.TestCase):
         cls.doc = json.loads(PATH.read_text())
         cls.schemas = cls.doc['components']['schemas']
 
+    def test_openapi_has_no_duplicate_json_keys_at_any_depth(self):
+        from collections import Counter
+
+        def reject_duplicate_keys(pairs):
+            duplicates = [key for key, count in Counter(key for key, _ in pairs).items() if count > 1]
+            if duplicates:
+                raise ValueError(f"Duplicate JSON keys can shadow money contract fields: {duplicates}")
+            return dict(pairs)
+
+        duplicate_free = json.loads(PATH.read_text(), object_pairs_hook=reject_duplicate_keys)
+        self.assertEqual(duplicate_free['paths']['/satchel/v1/returns/check-execution']['post']['x-financial-effect'], 'observe')
+        self.assertIn('EscrowReturnExecutionCheck', duplicate_free['components']['schemas'])
+
     def test_exact_private_transport_and_finite_limits(self):
         self.assertEqual(self.doc['openapi'], '3.1.0')
         self.assertEqual(self.doc['info']['version'], '1.0.0')
@@ -40,9 +53,10 @@ class SatchelHTTPContract(unittest.TestCase):
         # Prefix route uses a path parameter, not a second route convention.
         paths = {path for path in paths if not path.endswith('/')}
         paths.add('/satchel/v1/operations/{operation_id}')
+        paths.add('/satchel/v1/returns/execution/{claim_id}')
         self.assertEqual(paths, set(self.doc['paths']))
         for path, methods in self.doc['paths'].items():
-            self.assertEqual(list(methods), ['get' if path.endswith('/health') or path.endswith('/custody/journal') or path.endswith('/custody/journal-snapshot') or '{operation_id}' in path else 'post'])
+            self.assertEqual(list(methods), ['get' if path.endswith('/health') or path.endswith('/custody/journal') or path.endswith('/custody/journal-snapshot') or '{operation_id}' in path or '{claim_id}' in path else 'post'])
             for method in methods.values():
                 self.assertIn('200', method['responses'])
                 self.assertIn('401', method['responses'])
@@ -102,6 +116,21 @@ class SatchelHTTPContract(unittest.TestCase):
             self.assertEqual(self.schemas[name]['properties']['claim_id']['not'], {'const': '889'})
         for name in ('ReturnApproval', 'ReturnEntitlement', 'ReturnReceipt'):
             self.assertEqual(set(self.schemas[name]['properties']['claim_kind']['enum']), {'bet_refund', 'bet_payout'})
+
+    def test_escrow_check_route_is_observational_and_never_authorizes_money(self):
+        route = self.doc['paths']['/satchel/v1/returns/check-execution']['post']
+        self.assertEqual(route['operationId'], 'checkEnrolledEscrowReturn')
+        self.assertEqual(route['x-financial-effect'], 'observe')
+        self.assertEqual(route['requestBody']['content']['application/json']['schema'],
+                         {'$ref': '#/components/schemas/ReturnApproval'})
+        self.assertEqual(route['responses']['200']['content']['application/json']['schema'],
+                         {'$ref': '#/components/schemas/EscrowReturnExecutionCheck'})
+        schema = self.schemas['EscrowReturnExecutionCheck']
+        self.assertEqual(schema['properties']['protocol'], {'type': 'integer', 'const': 1})
+        self.assertEqual(schema['properties']['kind'], {'type': 'string', 'const': 'escrow_return_execution_check'})
+        self.assertEqual(schema['properties']['execution_authorized'], {'const': False})
+        self.assertEqual(schema['properties']['credit_authorized'], {'const': False})
+        self.assertEqual(set(schema['required']), set(schema['properties']))
 
     def test_custody_checkpoint_is_not_bank_or_customer_ledger_authority(self):
         schema = self.schemas['CustodyJournal']

@@ -28,6 +28,11 @@ type escrowRuntimeFixture struct {
 
 func newEscrowRuntimeFixture(t *testing.T) *escrowRuntimeFixture {
 	t.Helper()
+	return newEscrowRuntimeFixtureWithConfig(t, nil)
+}
+
+func newEscrowRuntimeFixtureWithConfig(t *testing.T, provision func(*Config)) *escrowRuntimeFixture {
+	t.Helper()
 	f := &escrowRuntimeFixture{}
 	var enrollment escrowReturnRuntimeEnrollment
 	f.custody = newCustodyAuthorityFixtureWithConfig(t, func(c *Config) {
@@ -40,6 +45,9 @@ func newEscrowRuntimeFixture(t *testing.T) *escrowRuntimeFixture {
 		}
 		c.EscrowReturnExecutionFile = filepath.Join(dir, "escrow-enrollment.json")
 		c.EscrowReturnExecutionSHA256 = custodySHA(custodyWrite(t, c.EscrowReturnExecutionFile, enrollment))
+		if provision != nil {
+			provision(c)
+		}
 	})
 	c := f.custody
 	c.chain.release()
