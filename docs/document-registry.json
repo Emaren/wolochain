@@ -448,9 +448,9 @@
       "owner": "wolochain-ops",
       "path": "docs/settlement-contracts/producer-owner-correlation.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-10-20",
+      "reviewed_at": "2026-11-04",
       "sensitivity": "internal",
-      "sha256": "0c64850fec32b6a983e117d4a7b6d5d1f9fef9ac91c2b27c84c0d5c186691ea0",
+      "sha256": "2911df22e512b95b1fc14461715a26f0ed4844170d7ac209dcc83e73f80239f6",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [

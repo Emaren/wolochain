@@ -8,7 +8,7 @@ systems: ["wolochain","aoe2war","aoe2dewarwagers"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "non-authorizing-financial-producer-evidence-correlation"
-reviewed_at: "2026-10-20"
+reviewed_at: "2026-11-04"
 review_interval_days: 14
 sensitivity: "internal"
 ---
@@ -502,3 +502,28 @@ would be required to **prove** their identities; aggregate count delta
 and file mtime alone cannot prove membership. Do not turn journal
 recording into chain solvency, finance approval, replay, refund, or
 automatic betting permission.
+
+
+## November 4, 2026 — substantive source review (AI, not financial approval)
+
+Reviewed against the current C01 held integration source (GitHub PR #124
+merged into the codex/c01-enrolled-native-executor-20261101 parent at
+c1e14d7). This is an **AI-conducted documentation/source review**, not an
+independent operator inspection or human financial sign-off.
+
+Verified that settlement_producer_owner_triage.py remains a bounded
+sanitized-file correlator with deliberate exit 3 even for valid inputs;
+settlement_maintenance_board.py retains six-control HOLD and exit 3;
+and settlement_producer_activation_topology.py only observes selected
+systemd metadata through bounded read operations and explicitly returns
+cutoverAuthorized=false. Targeted owner-triage, activation-topology,
+and resume-producer identity tests were rerun for this review.
+
+The new C01 escrow-return executor source is **not evidence** that the
+HD/DE/external financial-producer inventory, coordinated writer fence,
+authenticated reserve, historical ambiguous payouts, financial recovery
+or mainnet funded canary has passed. The dated October observations above
+remain historical. No fresh live HEL1 owner mapping, signer custody proof
+or independent solvency attestation was obtained by this review; none
+is asserted here. WoloChain C01–C09 remain physically open and financial
+release is held pending separate executable and custody controls.
