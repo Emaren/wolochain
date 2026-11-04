@@ -16,8 +16,9 @@ sensitivity: "restricted"
 # War Satchel Exact Source Artifact Contract
 
 The shared [builder](../scripts/build-settlement-artifact.sh) and
-[offline verifier](../scripts/settlement-artifact.py) implement four named
-profiles. Historical pins retain their original meanings:
+[offline verifier](../scripts/settlement-artifact.py) implement named profiles
+with frozen implementation pins. The following pins cover the original
+artifact line and the two enrolled escrow candidates:
 
 | Profile | Exact implementation | Binary / manifest |
 | --- | --- | --- |
@@ -25,6 +26,9 @@ profiles. Historical pins retain their original meanings:
 | `composed-satcheld` | `155fcf67fb2127a2227de5ea785e51bdbb0155c0` | `wolosatcheld`, version 2 |
 | `custody-backend` | `8c509e8f62ca3ec60711dc2654a03b12f22b0773` | `wolosatcheld`, version 2 |
 | `custody-runtime` | `72a3bca5f66aff51e1c6577b914d64403785d635` | `wolosatcheld`, version 2 |
+| `c01-enrolled-escrow-runtime` | `93e51f24acdc2a88af80b1b0d3b1db808701de8e` | `wolosatcheld`, version 2 |
+| `c02-native-return-check-runtime` | `f7b5a74928e041a6a90ac983d87649e0484677a4` | `wolosatcheld`, version 2 |
+| `c02-independent-reviewer-runtime` | `f7b5a74928e041a6a90ac983d87649e0484677a4` | `woloreviewerd`, version 2 |
 
 The new runtime source contains the opaque, operation-bounded custody issuer
 and the 10,000 WOLO wager / 50,000 WOLO daily product ceilings. Existing smaller
@@ -56,6 +60,20 @@ independently retained GitHub receipts. New uploads use `custody-runtime` names,
 profile and purpose. A workflow run or local test result alone is not an artifact
 acceptance receipt: independently download and validate the new archive before
 changing a consumer pin.
+
+The C02 profile includes the read-only return execution check and the
+canonical OpenAPI contract. The same builder requires successful full and
+native CI at its immutable implementation SHA and authenticates that source
+as an ancestor of the workflow's builder. The separate candidate archive
+and GitHub receipt retain the profile, archive digest and reproducible binary
+digest. The frozen C01 profile remains available for the earlier executable
+and its escrow bank verification command.
+
+The same workflow produces the reviewer as a separate package, executable and
+artifact receipt. Its source pin is shared with the return runtime. Each
+profile independently binds its package and purpose so an archive or manifest
+from one profile cannot qualify the other. The reviewer serves wager approval
+on 8095. The protected 8094 return reserve review retains its own authority.
 
 ## Building and checking the candidate
 

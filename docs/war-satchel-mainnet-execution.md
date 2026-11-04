@@ -8,12 +8,48 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "restricted-satchel-execution-and-provisioning-contract"
-reviewed_at: "2026-10-22"
+reviewed_at: "2026-10-30"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
 
+
+## Source review — October 30, 2026 UTC
+
+The reviewer continuation now supplies durable custody/issuer fee checkpoints
+and an explicit native-bank/HD-ledger/signed-inventory census composition. See
+[integration evidence](war-satchel-integration-readiness.md#reviewer-fee-and-reserve-composition-october-29).
+It does not install a reviewer, create enrolled keys or certify a real liability
+inventory. The conservative principal margin below remains enforced: the
+reviewed census's booked principal is not a proof of exclusive hold discharge.
+Actual claim-return execution and that typed discharge contract remain source
+work in progress. Existing UNKNOWN fencing, separate legacy routing and all
+historical liabilities remain binding. Owner authority to complete a governed
+release and a maximum 1-WOLO canary does not substitute for actual Keplr signing
+or the independent production prerequisites. No deployment or funds moved in
+this renewal.
+
 # War Satchel Mainnet Execution and Operator Gates
+
+## Independent source and gate review — 2026-10-30 UTC
+
+Session B re-read the operator/owner gates against the immutable held-source
+[`http.go`](https://github.com/Emaren/wolochain/blob/9c11a617ba1362fbdee1a9ef5903a1efad0e6db1/internal/satchelservice/http.go)
+(blob `2bb311876fd84ebb94eca760de6304df993b0d0c`) and
+[`reviewer_finance_observation.go`](https://github.com/Emaren/wolochain/blob/9c11a617ba1362fbdee1a9ef5903a1efad0e6db1/internal/satchelservice/reviewer_finance_observation.go)
+(blob `d08a835500bc8da406b19bd60eea1a0ea9574cfb`).
+The private HTTP handler does not equate health/accepted broadcast with
+credit. `AuthenticatedFeeCensus` still returns
+`ReviewerFinanceCoverageUnknown`: owner ledger and authenticated bank reads
+are NOT complete cross-source signer/withdrawal/uncertain-fee coverage.
+[Codex's separate October 29 HEL1 receipt](https://github.com/Emaren/wolochain/pull/115#issuecomment-6508382058)
+reports **8094/8095 absent**, and notes HD Satchel migrations not qualified.
+The [B #121 exact-head source CI](https://github.com/Emaren/wolochain/actions/runs/40979957375)
+passes 19 synthetic arithmetic cases but FAILS DocsV2 review expiry; it is
+not a funded execution, bank witness or signer approval. This source review
+does not validate pending prepared fees, unmaterialized broadcasts, signed
+dual-review identity, native keyring, replay/return executor, real recovery or
+owner Keplr authorization. The financial path remains **HOLD**.
 
 **Source implementation is not production authorization. C2 custody remains
 `UNAVAILABLE`; C3 evidence remains `NONCREDITING`.** No dedicated wallet, signer
@@ -32,6 +68,32 @@ The exact private wire schemas and safe failure semantics are versioned in
 Source ABI tests fail on route or Go JSON-field drift. The
 [controlled installation and recovery procedure](war-satchel-controlled-release.md)
 keeps the dedicated signer separate from legacy services and consensus.
+
+## Independent reviewer startup composition
+
+`cmd/woloreviewerd` composes the existing read-only PG, original live checkpoint,
+signed Watcher, native bank, custody fee and complete signed reserve readers
+with the durable 8095 issuer. Its protected configuration pins exact clean Git
+source, running binary, policy, all immutable credential/CA/public-key files and
+five distinct financial roles plus the separate Watcher witness key. It rejects
+root execution, inherited PG connection variables, unpinned inputs and shared
+transport credentials. A separate signed reviewer startup permit has a maximum
+120-second window. The current command deliberately caps its canary configuration
+at 1 WOLO; that does not change the product's existing smaller-owner-limits and
+10,000-WOLO ceiling contracts.
+
+The runtime binds its authorization callback before serving. The issuer checks
+it before intent, directly before signing, before persistence and before returning
+new or historical grants. Revocation never deletes a durable PENDING/SIGNED
+record or renews its authority times. Response buffering adds a final check.
+Filesystem changes cannot be made atomic with a CPU signature instruction;
+these bounded checks do not claim such atomicity. Every actual transfer still
+requires its separately governed custody permit and native execution guard.
+
+Source tests and composition cannot enroll real operators, original Watcher
+capture servers, trust anchors, read-only PG roles or signing authorities. The
+command creates none of those inputs and opens no custody keyring. New source
+requires exact-head CI and a separately pinned artifact before installation.
 
 ## HD interface and custody boundary
 
@@ -134,6 +196,9 @@ enabled against it. HD must select the 8094 adapter in its separate release.
 | `POST /satchel/v2/one-shot` | Protocol 2 snake-case wager with required independently signed owner ledger reservation; exact schema is in the versioned OpenAPI contract. |
 | `POST /satchel/v1/one-shot` | Legacy replay compatibility; a new bearer-only wager is refused. Snake-case `request_id`, `chain_id`, `signer_role`, `from_address`, `to_address`, `amount:{denom,amount}`, `memo`; or protocol-1 camel-case `requestId`, `chainId`, `senderAddress`, `recipientAddress`, `denom`, `amountUwolo`, `memo`. |
 | `GET /satchel/v1/custody/journal` | Bounded consistent execution-history checkpoint, exact journal/policy digests and unresolved/confirmed totals; bank, credit and solvency authority always false. |
+| `POST /satchel/v1/custody/fee-checkpoint` | Read-only complete unresolved fee snapshot with at most 1,024 requested original identities, 64 KiB request and 4 MiB response; never authorizes spending. |
+| `POST /satchel/v1/custody/principal-checkpoint` | Bounded complete custody terminal history for the independent owner-partition reader; pinned peer/vault/policy provenance, no transfer or debt-discharge authority. |
+| `POST /satchel/v1/proofs/escrow-bank` | Server-selected current betting-escrow proof, authenticated independently with the protected CLI escrow role; no caller account/root or inferred free-reserve authority. |
 | `GET /satchel/v1/operations/<operation-id>` | Read an existing durable operation; never signs or resubmits. |
 | `POST /satchel/v1/reconcile` | Strict `operation_id`; observes the original signed transaction without transmitting it. |
 | `POST /v1/satchel/withdrawals` | Owner-bound withdrawal plus independent approval; a service token alone is insufficient. |

@@ -1,6 +1,7 @@
 """Named profiles share one non-executing artifact proof implementation."""
 
 import contextlib
+import copy
 import hashlib
 import importlib.util
 import io
@@ -19,6 +20,8 @@ ROOT = Path(__file__).resolve().parents[1]
 REVIEWED_BACKEND_SOURCE = "8c509e8f62ca3ec60711dc2654a03b12f22b0773"
 REVIEWED_RUNTIME_SOURCE = "72a3bca5f66aff51e1c6577b914d64403785d635"
 REVIEWED_INTEGRATED_SOURCE = "88c63356b81e19dbda0dbcf7c2135ac607878ca4"
+REVIEWED_C01_SOURCE = "93e51f24acdc2a88af80b1b0d3b1db808701de8e"
+REVIEWED_C02_SOURCE = "f7b5a74928e041a6a90ac983d87649e0484677a4"
 HISTORICAL_BACKEND_SOURCE = "99f32de617964565875ed4689bea0d688bb99147"
 
 
@@ -70,11 +73,12 @@ class BackendArtifactSourceContractTests(unittest.TestCase):
         artifact = importlib.util.module_from_spec(specification)
         specification.loader.exec_module(artifact)
         workflow = (ROOT / artifact.BACKEND_WORKFLOW_PATH).read_text()
+        historical_job = workflow.split("\n  c01-artifact:\n", 1)[0]
         self.assertEqual(artifact.profile_policy("custody-backend")["source"],
                          REVIEWED_BACKEND_SOURCE)
         self.assertEqual(artifact.profile_policy("custody-runtime")["source"],
                          REVIEWED_RUNTIME_SOURCE)
-        self.assertEqual(re.findall(r"^\s+EXPECTED_SOURCE: ([0-9a-f]{40})$", workflow,
+        self.assertEqual(re.findall(r"^\s+EXPECTED_SOURCE: ([0-9a-f]{40})$", historical_job,
                                     re.MULTILINE), [REVIEWED_INTEGRATED_SOURCE])
         self.assertNotEqual(REVIEWED_RUNTIME_SOURCE, REVIEWED_BACKEND_SOURCE)
         self.assertIn("--profile integrated-custody-runtime", workflow)
@@ -98,11 +102,343 @@ class BackendArtifactSourceContractTests(unittest.TestCase):
             "codex/satchel-production-backend",
             "codex/satchel-custody-authority",
             "codex/solo-owner-offline-intent-20261026",
+            "codex/c01-enrolled-native-executor-20261101",
         })
         self.assertIn("ref: ${{ env.EXPECTED_SOURCE }}", workflow)
         self.assertIn("ref: ${{ env.BUILDER_COMMIT }}", workflow)
         self.assertIn("contents: read", workflow)
         self.assertNotIn("contents: write", workflow)
+
+    def test_c02_profile_is_distinct_and_reuses_reviewed_provenance_builder(self):
+        spec = importlib.util.spec_from_file_location("c02_profile", ROOT / "scripts/settlement-artifact.py")
+        artifact = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(artifact)
+        profile = "c02-native-return-check-runtime"
+        reviewer = "c02-independent-reviewer-runtime"
+        policy = artifact.profile_policy(profile)
+        reviewer_policy = artifact.profile_policy(reviewer)
+        self.assertEqual(reviewer_policy, {
+            "source": REVIEWED_C02_SOURCE, "binary": "woloreviewerd",
+            "package": "./cmd/woloreviewerd", "main_path": "github.com/emaren/wolochain/cmd/woloreviewerd",
+            "workflow": policy["workflow"], "purpose": "UNDEPLOYED_C02_INDEPENDENT_REVIEWER_RUNTIME_CANDIDATE",
+        })
+        self.assertEqual(policy["source"], REVIEWED_C02_SOURCE)
+        self.assertEqual(artifact.profile_policy("c01-enrolled-escrow-runtime")["source"], REVIEWED_C01_SOURCE)
+        self.assertEqual(policy["package"], "./cmd/wolosatcheld")
+        self.assertEqual(policy["main_path"], "github.com/emaren/wolochain/cmd/wolosatcheld")
+        self.assertEqual(policy["purpose"], "UNDEPLOYED_C02_NATIVE_RETURN_CHECK_RUNTIME_CANDIDATE")
+        workflow = (ROOT / policy["workflow"]).read_text()
+        job = workflow.split("\n  c02-artifact:\n", 1)[1]
+        self.assertEqual(re.findall(r"^\s+EXPECTED_SOURCE: ([0-9a-f]{40})$", job, re.MULTILINE), [REVIEWED_C02_SOURCE])
+        for contract in ("ref: ${{ env.BUILDER_COMMIT }}", "ref: ${{ env.EXPECTED_SOURCE }}",
+                         "profile: [" + profile + ", " + reviewer + "]",
+                         "artifact.source_ci_receipt(os.environ['ARTIFACT_PROFILE'])",
+                         'build-settlement-artifact.sh --profile "$ARTIFACT_PROFILE"',
+                         "source_ci['profile'] != profile or manifest['profile'] != profile",
+                         "name: ${{ matrix.profile }}-${{ env.EXPECTED_SOURCE }}-",
+                         "go-version: '1.24.6'", "'production_authorized': False",
+                         "'builder_ancestry': source_ci['builder_ancestry']",
+                         "steps.c02-candidate.outputs.artifact-id",
+                         "steps.c02-candidate.outputs.artifact-digest", "'rebuild_sha256'",
+                         "C01_GITHUB_READ_TOKEN: ${{ github.token }}",
+                         "Preserve external C02 receipt separately for independent acceptance"):
+            self.assertIn(contract, job)
+        self.assertNotIn("go build", job)
+        self.assertLess(job.index("artifact.source_ci_receipt("), job.index("build-settlement-artifact.sh"))
+        identity = {"repository": "Emaren/wolochain", "builder_commit": "d" * 40,
+                    "run_id": "1", "run_attempt": "1", "workflow_sha": "e" * 40,
+                    "workflow_ref": "Emaren/wolochain/" + policy["workflow"] + "@refs/pull/124/merge"}
+        source = {"commit": REVIEWED_C02_SOURCE, "vcs_time": "2026-11-03T00:00:00Z"}
+        binary = {"sha256": "f" * 64, "go": {"build_settings": {"vcs.time": source["vcs_time"]}}}
+        manifest = artifact._manifest(binary, source, identity, profile)
+        self.assertEqual(manifest["profile"], profile)
+        self.assertTrue(all(value is False for value in manifest["authority"].values()))
+        with mock.patch.object(artifact, "inspect_binary", return_value=binary), \
+                mock.patch.object(artifact, "source_identity", return_value=source):
+            artifact.verify_manifest(manifest, "unused", "unused", identity, profile=profile)
+            for other in (reviewer, "c01-enrolled-escrow-runtime", "integrated-custody-runtime"):
+                with self.assertRaisesRegex(artifact.ArtifactError, "manifest mismatch"):
+                    artifact.verify_manifest(manifest, "unused", "unused", identity, profile=other)
+            reviewer_manifest = artifact._manifest(binary, source, identity, reviewer)
+            artifact.verify_manifest(reviewer_manifest, "unused", "unused", identity, profile=reviewer)
+            with self.assertRaisesRegex(artifact.ArtifactError, "manifest mismatch"):
+                artifact.verify_manifest(reviewer_manifest, "unused", "unused", identity, profile=profile)
+            wrong_identity = dict(identity, workflow_ref=identity["workflow_ref"].replace(policy["workflow"], ".github/workflows/ci.yml"))
+            with self.assertRaisesRegex(artifact.ArtifactError, "workflow reference mismatch"):
+                artifact.verify_manifest(reviewer_manifest, "unused", "unused", wrong_identity, profile=reviewer)
+        for selected, other_policy in ((profile, reviewer_policy), (reviewer, policy)):
+            metadata = "binary: go1.24.6\n\tpath\t" + other_policy["main_path"]
+            with self.assertRaisesRegex(artifact.ArtifactError, "binary main package mismatch"):
+                artifact._parse_go_metadata(metadata, selected)
+        with mock.patch.object(artifact, "C02_NATIVE_RETURN_CHECK_SOURCE", "NONACCEPTING"):
+            with self.assertRaisesRegex(artifact.ArtifactError, "NONACCEPTING C02"):
+                artifact.profile_policy(profile)
+
+    def test_c01_profile_preserves_every_historical_source_and_reuses_single_builder(self):
+        specification = importlib.util.spec_from_file_location("c01_profile", ROOT / "scripts/settlement-artifact.py")
+        artifact = importlib.util.module_from_spec(specification)
+        specification.loader.exec_module(artifact)
+        historical = {
+            "legacy526": "526d5eb6123f6cc0394b5e78489c668e77e46106",
+            "composed-satcheld": "155fcf67fb2127a2227de5ea785e51bdbb0155c0",
+            "custody-backend": REVIEWED_BACKEND_SOURCE, "custody-runtime": REVIEWED_RUNTIME_SOURCE,
+            "integrated-custody-runtime": REVIEWED_INTEGRATED_SOURCE,
+            "legacy-replay": "cb24cb2546392c981da8dcac18a04d1df4241330",
+            "archived-historical": "c575b175e6dc74c720479a04e41490a842032203",
+        }
+        self.assertEqual({name: artifact.profile_policy(name)["source"] for name in historical}, historical)
+        policy = artifact.profile_policy("c01-enrolled-escrow-runtime")
+        self.assertEqual(policy["source"], REVIEWED_C01_SOURCE)
+        self.assertEqual(policy["binary"], "wolosatcheld")
+        self.assertEqual(policy["package"], "./cmd/wolosatcheld")
+        self.assertEqual(policy["workflow"], artifact.BACKEND_WORKFLOW_PATH)
+        workflow = (ROOT / policy["workflow"]).read_text()
+        old, c01 = workflow.split("\n  c01-artifact:\n", 1)
+        c01 = c01.split("\n  c02-artifact:\n", 1)[0]
+        self.assertIn("github.base_ref != 'codex/c01-enrolled-native-executor-20261101'", old)
+        self.assertIn("inputs.profile != 'c01-enrolled-escrow-runtime'", old)
+        self.assertIn("github.base_ref == 'codex/c01-enrolled-native-executor-20261101'", c01)
+        self.assertIn("github.event.pull_request.number == 124", c01)
+        self.assertIn("github.head_ref == 'codex/c01-executable-deadline-repair-20261101'", c01)
+        self.assertIn("github.event.pull_request.head.repo.full_name == 'Emaren/wolochain'", c01)
+        self.assertIn("inputs.profile == 'c01-enrolled-escrow-runtime'", c01)
+        self.assertEqual(re.findall(r"^\s+EXPECTED_SOURCE: ([0-9a-f]{40})$", c01, re.MULTILINE), [REVIEWED_C01_SOURCE])
+        self.assertIn("actions: read", workflow)
+        self.assertNotIn("contents: write", workflow)
+        self.assertIn("artifact.source_ci_receipt('c01-enrolled-escrow-runtime')", c01)
+        self.assertLess(c01.index("artifact.source_ci_receipt("), c01.index("build-settlement-artifact.sh"))
+        self.assertIn("--profile c01-enrolled-escrow-runtime", c01)
+        self.assertNotIn("go build", c01, "one shared two-build recipe, not three role builds")
+        self.assertIn("'source_ci': source_ci['source_ci']", c01)
+        self.assertIn("'source_pull_request': source_ci['source_ci'][0]['pull_request']", c01)
+        self.assertIn("'source_ci_receipt_sha256'", c01)
+        self.assertIn("'production_authorized': False", c01)
+        self.assertIn("'rebuild_sha256'", c01)
+        self.assertIn("steps.c01-candidate.outputs.artifact-id", c01)
+        self.assertIn("steps.c01-candidate.outputs.artifact-digest", c01)
+        with mock.patch.object(artifact, "C01_ENROLLED_SOURCE", "NONACCEPTING_PENDING_CI"):
+            with self.assertRaisesRegex(artifact.ArtifactError, "NONACCEPTING C01"):
+                artifact.profile_policy("c01-enrolled-escrow-runtime")
+
+
+class C01SourceCIGateTests(unittest.TestCase):
+    """Actual read-only API boundary with bounded mocked GitHub responses."""
+
+    def setUp(self):
+        specification = importlib.util.spec_from_file_location("c01_ci_gate", ROOT / "scripts/settlement-artifact.py")
+        self.artifact = importlib.util.module_from_spec(specification)
+        specification.loader.exec_module(self.artifact)
+        self.responses = {}
+        self.requests = []
+        for n, workflow in enumerate(("ci.yml", "epoch-escrow-v3.yml"), 1):
+            self.responses[workflow] = {"id": n, "path": ".github/workflows/"+workflow, "state": "active"}
+            self.responses[workflow+"/runs"] = {"workflow_runs": [{
+                "id": n+100, "workflow_id": n, "head_sha": REVIEWED_C01_SOURCE,
+                "event": "pull_request", "path": ".github/workflows/"+workflow,
+                "repository": {"full_name": "Emaren/wolochain", "id": 990989676}, "status": "completed",
+                "head_repository": {"full_name": "Emaren/wolochain", "id": 990989676},
+                "head_branch": "codex/c01-executable-deadline-repair-20261101",
+                "pull_requests": [{
+                    "number": 124, "id": 5112667912,
+                    "url": "https://api.github.com/repos/Emaren/wolochain/pulls/124",
+                    "head": {"ref": "codex/c01-executable-deadline-repair-20261101", "sha": REVIEWED_C01_SOURCE,
+                             "repo": {"id": 990989676, "url": "https://api.github.com/repos/Emaren/wolochain", "name": "wolochain"}},
+                    "base": {"ref": "codex/c01-enrolled-native-executor-20261101", "sha": "75743d4ef6574226d5b6244ad45150ccd92d4171",
+                             "repo": {"id": 990989676, "url": "https://api.github.com/repos/Emaren/wolochain", "name": "wolochain"}},
+                }],
+                "conclusion": "success", "run_attempt": 1,
+                "html_url": f"https://github.com/Emaren/wolochain/actions/runs/{n+100}",
+            }]}
+        self.token = hashlib.sha256(self.id().encode()).hexdigest()
+
+    def run_gate(self, profile="c01-enrolled-escrow-runtime", source=REVIEWED_C01_SOURCE):
+        outer = self
+
+        class Opener:
+            def open(self, request, timeout):
+                outer.requests.append(request)
+                url = outer.artifact.urllib.parse.urlsplit(request.full_url)
+                outer.assertEqual(url.scheme, "https")
+                outer.assertEqual(url.netloc, "api.github.com")
+                prefix = "/repos/Emaren/wolochain/actions/workflows/"
+                comparison = "/repos/Emaren/wolochain/compare/"
+                outer.assertTrue(url.path.startswith(prefix) or url.path.startswith(comparison))
+                outer.assertEqual(request.get_method(), "GET")
+                outer.assertEqual(request.get_header("Authorization"), "Bearer "+outer.token)
+                outer.assertLessEqual(timeout, 8)
+                key = url.path[len(prefix):] if url.path.startswith(prefix) else url.path
+                if key.endswith("/runs"):
+                    outer.assertEqual(outer.artifact.urllib.parse.parse_qs(url.query), {
+                        "head_sha": [source], "event": ["pull_request"], "per_page": ["50"],
+                    })
+                body = outer.responses[key]
+                if isinstance(body, Exception):
+                    raise body
+                response = io.BytesIO(body if type(body) is bytes else json.dumps(body).encode())
+                response.status = 200
+                return response
+
+        with mock.patch.dict(os.environ, {"C01_GITHUB_READ_TOKEN": self.token}), \
+                mock.patch.object(self.artifact.urllib.request, "build_opener", return_value=Opener()) as factory:
+            result = self.artifact.source_ci_receipt(profile)
+            self.assertEqual(factory.call_args.args[0].proxies, {})
+            redirect = factory.call_args.args[1]
+            self.assertIsNone(redirect.redirect_request(None, None, 302, "", {}, "https://other.invalid"))
+            return result
+
+    def test_c02_check_capable_source_with_moving_builder_head(self):
+        source, builder = REVIEWED_C02_SOURCE, "e" * 40
+        for workflow in ("ci.yml/runs", "epoch-escrow-v3.yml/runs"):
+            row = self.responses[workflow]["workflow_runs"][0]
+            row["head_sha"] = source
+            row["pull_requests"][0]["head"]["sha"] = builder
+        key = "/repos/Emaren/wolochain/compare/" + source + "..." + builder
+        self.responses[key] = {
+            "status": "ahead", "ahead_by": 1, "behind_by": 0, "total_commits": 1,
+            "base_commit": {"sha": source}, "merge_base_commit": {"sha": source},
+            "commits": [{"sha": builder}],
+        }
+        with mock.patch.dict(os.environ, {"BUILDER_COMMIT": builder}):
+            reviewer = self.run_gate("c02-independent-reviewer-runtime", source)
+            self.assertEqual(reviewer["profile"], "c02-independent-reviewer-runtime")
+            result = self.run_gate("c02-native-return-check-runtime", source)
+            self.assertEqual(reviewer["source_ci"], result["source_ci"])
+            self.assertEqual(result["source_commit"], source)
+            self.assertEqual(result["builder_ancestry"]["builder_commit"], builder)
+            self.assertTrue(all(row["head_sha"] == source and row["pull_request"]["head_sha"] == builder
+                                for row in result["source_ci"]))
+            self.assertFalse(result["production_authorized"])
+            self.responses[key]["merge_base_commit"]["sha"] = REVIEWED_C01_SOURCE
+            with self.assertRaisesRegex(self.artifact.ArtifactError, "SOURCE_CI_HOLD"):
+                self.run_gate("c02-native-return-check-runtime", source)
+
+    def test_both_real_workflow_receipts_are_exact_and_non_authorizing(self):
+        result = self.run_gate()
+        self.assertEqual(len(self.requests), 4)
+        self.assertEqual(result["source_commit"], REVIEWED_C01_SOURCE)
+        self.assertEqual([row["run_id"] for row in result["source_ci"]], [101, 102])
+        self.assertTrue(all(row["head_sha"] == REVIEWED_C01_SOURCE for row in result["source_ci"]))
+        self.assertTrue(all(row["pull_request"]["number"] == 124 and row["pull_request"]["head_sha"] == REVIEWED_C01_SOURCE
+                            and row["pull_request"]["base_ref"] == "codex/c01-enrolled-native-executor-20261101"
+                            for row in result["source_ci"]))
+        self.assertFalse(result["production_authorized"])
+
+    def test_moving_live_pr_head_requires_authenticated_exact_builder_ancestry(self):
+        builder = "d" * 40
+        key = "/repos/Emaren/wolochain/compare/"+REVIEWED_C01_SOURCE+"..."+builder
+        comparison = {"status": "ahead", "ahead_by": 1, "behind_by": 0, "total_commits": 1,
+                      "base_commit": {"sha": REVIEWED_C01_SOURCE}, "merge_base_commit": {"sha": REVIEWED_C01_SOURCE},
+                      "commits": [{"sha": builder}]}
+        self.responses[key] = comparison
+        for workflow in ("ci.yml/runs", "epoch-escrow-v3.yml/runs"):
+            self.responses[workflow]["workflow_runs"][0]["pull_requests"][0]["head"]["sha"] = builder
+        with mock.patch.dict(os.environ, {"BUILDER_COMMIT": builder}):
+            result = self.run_gate()
+            self.assertEqual(len(self.requests), 5)
+            self.assertEqual(result["builder_ancestry"]["builder_commit"], builder)
+            self.assertTrue(all(r["head_sha"] == REVIEWED_C01_SOURCE and r["pull_request"]["head_sha"] == builder
+                                for r in result["source_ci"]))
+            for field, value in (("status", "diverged"), ("behind_by", 1), ("total_commits", 0),
+                                 ("base_commit", {"sha": REVIEWED_INTEGRATED_SOURCE}),
+                                 ("merge_base_commit", {"sha": REVIEWED_INTEGRATED_SOURCE}),
+                                 ("commits", [{"sha": REVIEWED_INTEGRATED_SOURCE}])):
+                with self.subTest(field=field):
+                    self.responses[key] = dict(comparison, **{field: value})
+                    with self.assertRaisesRegex(self.artifact.ArtifactError, "SOURCE_CI_HOLD"):
+                        self.run_gate()
+            self.responses[key] = comparison
+            self.responses["epoch-escrow-v3.yml/runs"]["workflow_runs"][0]["pull_requests"][0]["head"]["sha"] = REVIEWED_C01_SOURCE
+            with self.assertRaisesRegex(self.artifact.ArtifactError, "SOURCE_CI_HOLD changing PR context"):
+                self.run_gate()
+            self.responses["epoch-escrow-v3.yml/runs"]["workflow_runs"][0]["pull_requests"][0]["head"]["sha"] = builder
+        with mock.patch.dict(os.environ, {"BUILDER_COMMIT": "e"*40}):
+            with self.assertRaisesRegex(self.artifact.ArtifactError, "SOURCE_CI_HOLD live PR/builder mismatch"):
+                self.run_gate()
+
+    def test_reviewed_source_pr_identity_must_match_without_other_context_fallback(self):
+        original = self.responses["ci.yml/runs"]
+        for name, change in (
+                ("missing", lambda r: r.pop("pull_requests")),
+                ("ambiguous", lambda r: r["pull_requests"].append(copy.deepcopy(r["pull_requests"][0]))),
+                ("number", lambda r: r["pull_requests"][0].update(number=123)),
+                ("id", lambda r: r["pull_requests"][0].update(id=1)),
+                ("url", lambda r: r["pull_requests"][0].update(url="https://api.github.com/repos/other/wolochain/pulls/124")),
+                ("head_ref", lambda r: r["pull_requests"][0]["head"].update(ref="unreviewed")),
+                ("head_sha", lambda r: r["pull_requests"][0]["head"].update(sha=REVIEWED_INTEGRATED_SOURCE)),
+                ("base_ref", lambda r: r["pull_requests"][0]["base"].update(ref="main")),
+                ("base_sha", lambda r: r["pull_requests"][0]["base"].update(sha=REVIEWED_INTEGRATED_SOURCE)),
+                ("head_repository", lambda r: r["head_repository"].update(full_name="fork/wolochain")),
+                ("head_repository_id", lambda r: r["head_repository"].update(id=1)),
+                ("head_repo_id", lambda r: r["pull_requests"][0]["head"]["repo"].update(id=1)),
+                ("head_repo_url", lambda r: r["pull_requests"][0]["head"]["repo"].update(url="https://api.github.com/repos/fork/wolochain")),
+                ("base_repo_id", lambda r: r["pull_requests"][0]["base"]["repo"].update(id=1)),
+                ("base_repo_url", lambda r: r["pull_requests"][0]["base"]["repo"].update(url="https://api.github.com/repos/fork/wolochain")),
+                ("head_branch", lambda r: r.update(head_branch="unreviewed")),
+        ):
+            with self.subTest(name=name):
+                changed = copy.deepcopy(original["workflow_runs"][0])
+                changed["id"] = 900
+                changed["html_url"] = "https://github.com/Emaren/wolochain/actions/runs/900"
+                change(changed)
+                self.responses["ci.yml/runs"] = {"workflow_runs": [original["workflow_runs"][0], changed]}
+                try:
+                    with self.assertRaisesRegex(self.artifact.ArtifactError, "SOURCE_CI_HOLD"):
+                        self.run_gate()
+                finally:
+                    self.responses["ci.yml/runs"] = original
+
+    def test_missing_pending_failed_wrong_context_and_old_success_hold(self):
+        for field, value in (("status", "in_progress"), ("conclusion", "failure"), ("conclusion", "skipped"),
+                             ("head_sha", REVIEWED_INTEGRATED_SOURCE), ("workflow_id", 999),
+                             ("path", ".github/workflows/release.yml"), ("event", "push"),
+                             ("repository", {"full_name": "other/wolochain"}), ("run_attempt", 0),
+                             ("html_url", "https://other.invalid/run")):
+            with self.subTest(field=field, value=value):
+                original = self.responses["ci.yml/runs"]
+                changed = dict(original["workflow_runs"][0], **{field: value})
+                self.responses["ci.yml/runs"] = {"workflow_runs": [changed]}
+                try:
+                    with self.assertRaisesRegex(self.artifact.ArtifactError, "SOURCE_CI_HOLD"):
+                        self.run_gate()
+                finally:
+                    self.responses["ci.yml/runs"] = original
+        self.responses["ci.yml/runs"]["workflow_runs"].append(dict(self.responses["ci.yml/runs"]["workflow_runs"][0], id=900, status="queued", conclusion=None))
+        with self.assertRaisesRegex(self.artifact.ArtifactError, "SOURCE_CI_HOLD"):
+            self.run_gate()  # older success cannot excuse latest unfinished run
+        self.responses["ci.yml/runs"] = {"workflow_runs": []}
+        with self.assertRaisesRegex(self.artifact.ArtifactError, "SOURCE_CI_HOLD"):
+            self.run_gate()
+
+    def test_invalid_run_page_cannot_fall_back_to_an_older_green(self):
+        original = self.responses["ci.yml/runs"]
+        for field, value in (("head_sha", REVIEWED_INTEGRATED_SOURCE), ("workflow_id", 999), ("event", "push"), ("id", None)):
+            with self.subTest(field=field):
+                changed = dict(original["workflow_runs"][0], **{field: value})
+                self.responses["ci.yml/runs"] = {"workflow_runs": [original["workflow_runs"][0], changed]}
+                try:
+                    with self.assertRaisesRegex(self.artifact.ArtifactError, "SOURCE_CI_HOLD"):
+                        self.run_gate()
+                finally:
+                    self.responses["ci.yml/runs"] = original
+        self.responses["ci.yml/runs"] = {"workflow_runs": original["workflow_runs"] * 2}
+        try:
+            with self.assertRaisesRegex(self.artifact.ArtifactError, "SOURCE_CI_HOLD"):
+                self.run_gate()
+        finally:
+            self.responses["ci.yml/runs"] = original
+
+    def test_native_receipt_missing_or_api_error_remains_held_without_private_echo(self):
+        for body in ({"workflow_runs": []}, b"not-json", b"x"*((2 << 20)+1), OSError("private-network-fixture")):
+            self.responses["epoch-escrow-v3.yml/runs"] = body
+            with self.assertRaisesRegex(self.artifact.ArtifactError, "SOURCE_CI_HOLD") as error:
+                self.run_gate()
+            self.assertNotIn(self.token, str(error.exception))
+            self.assertNotIn("private-network-fixture", str(error.exception))
+        with mock.patch.dict(os.environ, {"C01_GITHUB_READ_TOKEN": ""}), \
+                mock.patch.object(self.artifact.urllib.request, "build_opener") as factory:
+            with self.assertRaisesRegex(self.artifact.ArtifactError, "SOURCE_CI_HOLD"):
+                self.artifact.source_ci_receipt("c01-enrolled-escrow-runtime")
+            factory.assert_not_called()
 
 
 class ComposedProfileTests(unittest.TestCase):
@@ -207,17 +543,55 @@ class ComposedProfileTests(unittest.TestCase):
                     self.artifact.verify_manifest(manifest, self.binary, self.source, identity,
                                                   profile="custody-runtime")
 
+    def test_c01_candidate_has_exact_source_profile_and_external_receipt_context(self):
+        identity = self.runtime_identity()
+        with mock.patch.object(self.artifact, "C01_ENROLLED_SOURCE", self.revision), \
+                mock.patch.object(self.artifact, "INTEGRATED_RUNTIME_SOURCE", self.revision):
+            profile = "c01-enrolled-escrow-runtime"
+            manifest = self.artifact.create_manifest(self.binary, self.rebuild, self.source, identity, profile=profile)
+            self.artifact.verify_manifest(manifest, self.binary, self.source, identity, profile=profile)
+            self.assertEqual(manifest["profile"], profile)
+            self.assertEqual(manifest["purpose"], "UNDEPLOYED_C01_ENROLLED_ESCROW_RUNTIME_CANDIDATE")
+            self.assertTrue(all(value is False for value in manifest["authority"].values()))
+            for other in ("integrated-custody-runtime", "custody-runtime", "custody-backend"):
+                with self.subTest(other=other), self.assertRaises(self.artifact.ArtifactError):
+                    self.artifact.verify_manifest(manifest, self.binary, self.source, identity, profile=other)
+            wrong_context = dict(identity, workflow_ref="Emaren/wolochain/"+self.artifact.COMPOSED_WORKFLOW_PATH+"@refs/heads/main")
+            with self.assertRaisesRegex(self.artifact.ArtifactError, "workflow reference mismatch"):
+                self.artifact.create_manifest(self.binary, self.rebuild, self.source, wrong_context, profile=profile)
+            metadata = self.run_tool(["go", "version", "-m", str(self.binary)]).stdout
+            self.artifact._parse_go_metadata(metadata, profile=profile)
+            for old, new in ((self.revision, REVIEWED_INTEGRATED_SOURCE), ("vcs.modified=false", "vcs.modified=true"),
+                             ("go1.24.6", "go1.24.7"), ("GOARCH=amd64", "GOARCH=arm64"),
+                             ("-tags=go1.27", "-tags=unreviewed"), ("/cmd/wolosatcheld", "/cmd/woloreviewerd")):
+                with self.subTest(setting=old), self.assertRaises(self.artifact.ArtifactError):
+                    self.artifact._parse_go_metadata(metadata.replace(old, new), profile=profile)
+            path = self.root / "c01-manifest.json"
+            path.write_text(json.dumps(manifest, sort_keys=True)+"\n")
+            digest = hashlib.sha256(path.read_bytes()).hexdigest()
+            arguments = ["verify", "--profile", profile, "--source-dir", str(self.source), "--binary", str(self.binary), "--manifest", str(path)]
+            for key, value in identity.items():
+                arguments.extend(("--"+key.replace("_", "-"), value))
+            with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                self.assertEqual(self.artifact.main(arguments), 2)
+                self.assertEqual(self.artifact.main(arguments+["--expected-manifest-sha256", digest]), 0)
+                path.write_bytes(path.read_bytes()+b" ")
+                self.assertEqual(self.artifact.main(arguments+["--expected-manifest-sha256", digest]), 2)
+
     def test_same_binary_manifest_cannot_be_replayed_between_backend_and_runtime_profiles(self):
         # Even identical source/bytes/workflow cannot turn an old profile receipt
         # into the new candidate. The profile and purpose are part of the proof.
         identity = self.runtime_identity()
         with mock.patch.object(self.artifact, "RUNTIME_SOURCE", self.revision), \
                 mock.patch.object(self.artifact, "BACKEND_SOURCE", self.revision), \
-                mock.patch.object(self.artifact, "INTEGRATED_RUNTIME_SOURCE", self.revision):
+                mock.patch.object(self.artifact, "INTEGRATED_RUNTIME_SOURCE", self.revision), \
+                mock.patch.object(self.artifact, "C01_ENROLLED_SOURCE", self.revision):
             for source_profile, target_profile in (("custody-backend", "custody-runtime"),
                                                    ("custody-runtime", "custody-backend"),
                                                    ("custody-runtime", "integrated-custody-runtime"),
-                                                   ("integrated-custody-runtime", "custody-runtime")):
+                                                   ("integrated-custody-runtime", "custody-runtime"),
+                                                   ("integrated-custody-runtime", "c01-enrolled-escrow-runtime"),
+                                                   ("c01-enrolled-escrow-runtime", "integrated-custody-runtime")):
                 with self.subTest(source_profile=source_profile):
                     manifest = self.artifact.create_manifest(self.binary, self.rebuild, self.source,
                                                             identity, profile=source_profile)

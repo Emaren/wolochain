@@ -1,6 +1,7 @@
 """Actual crypto + durable witness replay tests; disposable, NEVER production GO."""
 import base64
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import ExitStack
 from copy import deepcopy
 from datetime import datetime, timedelta, timezone
 import importlib.util
@@ -20,6 +21,7 @@ import settlement_solo_runtime as r
 import settlement_solo_owner_intent_review as o
 import settlement_maintenance_nonce_store as n
 import settlement_financial_maintenance as m
+import settlement_solo_resume as recovery
 import test_settlement_solo_owner_intent_review as intent_fixtures
 from test_settlement_financial_maintenance import valid_permit
 
@@ -125,6 +127,22 @@ class RuntimeTests(unittest.TestCase):
         with self.assertRaisesRegex(o.AuthorityHold, "INVALID_PUBLIC_KEY_OR_SIGNATURE"):
             self.consume(packet)
         self.assertEqual(list(self.nonces.iterdir()), [])
+
+    def test_real_resume_signature_has_separate_phase_operation_and_one_use(self):
+        self.q.update(phase='resume_existing',operation=r.OPS['resume_existing'],
+                      previous_phase_receipt_sha256='9'*64)
+        packet=self.signed()
+        self.assertEqual(self.consume(packet)['phase'],'resume_existing')
+        with self.assertRaisesRegex(n.ReservationRefused,'NONCE_ALREADY_RESERVED'):
+            self.consume(packet)
+
+    def test_valid_capture_signature_cannot_authorize_resume_after_json_relabel(self):
+        packet=o.parse(self.signed())
+        packet['request'].update(phase='resume_existing',operation=r.OPS['resume_existing'],
+                                 previous_phase_receipt_sha256='9'*64)
+        with self.assertRaisesRegex(o.AuthorityHold,'INVALID_PUBLIC_KEY_OR_SIGNATURE'):
+            self.consume(o.canonical(packet))
+        self.assertEqual(list(self.nonces.iterdir()),[])
 
     def test_forged_revoked_wrong_host_source_or_funded_phase_never_burns_nonce(self):
         original = deepcopy(self.q)
@@ -305,6 +323,8 @@ class RuntimeTests(unittest.TestCase):
                 "permit_core_sha256": r.sha(m.canonical(core)),
                 "fence_receipt_path": str(args.fence_receipt), "output_path": str(args.output),
                 "previous_phase_receipt_path": None,
+                "capture_seal": {"path":"/root/capture-seal", "sha256":"3"*64},
+                "resume_plan": None,
                 "runtime_binaries": dict.fromkeys(r.RUNTIME_UNITS, "1" * 64),
                 "writer_inventory_sha256": r.sha(o.canonical(writers))}
         self.q["procedure_sha256"] = r.sha(o.canonical(proc))
@@ -332,6 +352,7 @@ class RuntimeTests(unittest.TestCase):
             frozen.strptime.side_effect = datetime.strptime
             stack.enter_context(patch.object(r, "source_check"))
             stack.enter_context(patch.object(r, "verify_runtime", side_effect=runtime_effect))
+            stack.enter_context(patch.object(recovery, "verify_capture"))
             stack.enter_context(patch.object(r, "NONCE_ROOT", local))
             remote = stack.enter_context(patch.object(r, "consume_remote", return_value={"fixture": True},
                                                      side_effect=remote_error))
@@ -360,6 +381,41 @@ class RuntimeTests(unittest.TestCase):
         self.assertEqual(result["max_total_bytes"], permit["max_total_bytes"])
         self.assertEqual(len(list((self.folder / "local").glob("nonce-*"))), 1)
         self.assertNotIn("financial_release_authorized", result)
+
+    def test_real_resume_admission_requires_sealed_offline_lineage_before_nonce(self):
+        args,permit,files=self.admission_fixture()
+        args.mode='solo-resume';args.previous_review=Path('/root/offline-completion')
+        self.q.update(phase='resume_existing',operation=r.OPS['resume_existing'])
+        previous={'schema':'wolo.solo-maintenance-completion.v1','phase':'offline_verify',
+            'completed':True,'source_commit':self.q['source_commit'],'scope_sha256':m.scope_digest(),
+            'fence_receipt_sha256':'1'*64,'backup_manifest_sha256':'2'*64,'restore_receipt_sha256':'3'*64}
+        files[args.previous_review]=o.canonical(previous)
+        self.q['previous_phase_receipt_sha256']=r.sha(files[args.previous_review])
+        plan={'schema':recovery.PLAN_SCHEMA,'source_commit':self.q['source_commit'],
+            'fence_receipt_sha256':'1'*64,'backup_manifest_sha256':'2'*64,
+            'restore_receipt_sha256':'3'*64,'timer_qualifications':{},'contained_partial':None}
+        files[Path('/root/resume-plan')]=o.canonical(plan)
+        proc=o.parse(files[args.procedure]);proc.update(mode=args.mode,permit_core_sha256=None,
+            previous_phase_receipt_path=str(args.previous_review),capture_seal=None,
+            resume_plan={'path':'/root/resume-plan','sha256':r.sha(o.canonical(plan))})
+        files[args.procedure]=o.canonical(proc)
+        self.q['procedure_sha256']=r.sha(files[args.procedure]);files[args.packet]=self.signed()
+        local=self.folder/'local';local.mkdir(mode=0o700)
+        with ExitStack() as stack:
+            stack.enter_context(patch.object(m,'private_read',side_effect=lambda p,**kw:files[Path(p)]))
+            stack.enter_context(patch.object(m,'private_json',side_effect=lambda p:(o.parse(files[Path(p)]),r.sha(files[Path(p)]))))
+            stack.enter_context(patch.object(m,'verify_retained_fence',return_value={'permit':permit}))
+            stack.enter_context(patch.object(m,'file_sha',side_effect=lambda p:'1'*64 if Path(p)==args.fence_receipt else '2'*64))
+            verified=stack.enter_context(patch.object(m,'verify_resume_state'))
+            stack.enter_context(patch.object(r,'source_check'));stack.enter_context(patch.object(r,'verify_runtime'))
+            frozen=stack.enter_context(patch.object(o,'datetime'));frozen.now.return_value=NOW
+            frozen.strptime.side_effect=datetime.strptime
+            stack.enter_context(patch.object(m,'clock',return_value=NOW))
+            stack.enter_context(patch.object(r,'NONCE_ROOT',local))
+            remote=stack.enter_context(patch.object(r,'consume_remote',return_value={'fixture':True}))
+            result=r.authenticate_and_reserve(args)
+            self.assertTrue(result['resume_actions_allowed']);self.assertFalse(result['live_actions_allowed'])
+            self.assertEqual(result['resume_sealed'],proc['resume_plan']);verified.assert_called_once();remote.assert_called_once()
 
     def test_admission_tampering_or_missing_observation_precedes_nonce(self):
         args, permit, files = self.admission_fixture()
@@ -406,6 +462,7 @@ class RuntimeTests(unittest.TestCase):
             st = actual_fstat(fd)
             return SimpleNamespace(st_mode=st.st_mode, st_uid=0, st_nlink=st.st_nlink)
         req = dict(self.q, live_actions_allowed=True, max_total_bytes=1 << 20,
+                   capture_seal={"path":"/root/capture-seal","sha256":"3"*64},
                    witness_receipt={"synthetic": True}, artifacts={"permit_sha256": "2" * 64})
         with patch.object(m, "LOCK", lock), patch.object(m.os, "geteuid", return_value=0), \
              patch.object(m.os, "fstat", side_effect=root_fstat), patch.object(m, "clock", return_value=NOW), \
@@ -416,7 +473,8 @@ class RuntimeTests(unittest.TestCase):
             self.assertEqual(m.main(raw), 0)
             admit.assert_called_once()
             fence.assert_called_once_with(Path("/root/permit"), Path("/root/fence"),
-                                          expected_permit_sha256="2" * 64)
+                                          expected_permit_sha256="2" * 64,
+                                          capture_seal=req["capture_seal"])
             backup.assert_called_once_with(Path("/root/fence"), Path("/root/backup"),
                                            expected_fence_sha256=m.digest(m.canonical({"synthetic": True})))
             receipt = json.loads(write.call_args.args[1])

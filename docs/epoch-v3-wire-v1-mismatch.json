@@ -1,0 +1,2894 @@
+{
+  "schema": "aoe2war.epoch-v3.wire-v1-mismatch/v1",
+  "result": "HOLD",
+  "verifierImplemented": false,
+  "purpose": "Field-by-field read-only contract assessment. Expected success values below are requirements, never emitted verifier results or financial authority.",
+  "wolo_source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+  "preserved_docs_parent": "00892e0d82362f53227188cde4ca34d7b6b5dd9a",
+  "hd_source": {
+    "repository": "Emaren/app-prodn",
+    "pull_request": 940,
+    "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+    "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+    "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8",
+    "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts"
+  },
+  "scope": {
+    "new_cli_success": "Not implemented; no synthetic positive wire verdict.",
+    "native_sdk_golden": "Preserved authentic disposable source evidence; does not certify live bank, custody, independent observation or complete liabilities.",
+    "financial_state": "HARD HOLD; ProductionEnabled remains false, NEW_ESCROW_SIGNER_ABSENT and HD compile-time financial ingestion remains false.",
+    "changes": "This assessment does not authorize signer/key access, live RPC, ledger credit, journal mutation, production migration or release."
+  },
+  "field_matrix": [
+    {
+      "field": "wire_version",
+      "expected": "Integer 1.",
+      "source_authenticator": "Compiled protocol constants and nonactivation policy.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 59,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L59",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/policy.go",
+          "line": 24
+        }
+      ],
+      "requires_external_trust": "None for the constant itself.",
+      "missing_seam": "The held command has no portable-proof dispatch or wire-v1 success serializer; current verifier invocation returns a fixed refusal.",
+      "blocked_test": "Exact argv must continue refusing until all other required fields are supportable; assert unchanged held execution behavior.",
+      "status": "CONSTANT_AVAILABLE_DISPATCH_ABSENT"
+    },
+    {
+      "field": "protocol",
+      "expected": "Exact string aoe2war/escrow-epoch/v3.",
+      "source_authenticator": "Compiled protocol constants and nonactivation policy.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 59,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L59",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/policy.go",
+          "line": 24
+        }
+      ],
+      "requires_external_trust": "None for the constant itself.",
+      "missing_seam": "The held command has no portable-proof dispatch or wire-v1 success serializer; current verifier invocation returns a fixed refusal.",
+      "blocked_test": "Exact argv must continue refusing until all other required fields are supportable; assert unchanged held execution behavior.",
+      "status": "CONSTANT_AVAILABLE_DISPATCH_ABSENT"
+    },
+    {
+      "field": "legacy_payment_authorized",
+      "expected": "Boolean false; no legacy financial authorization.",
+      "source_authenticator": "Compiled protocol constants and nonactivation policy.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 59,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L59",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/policy.go",
+          "line": 24
+        }
+      ],
+      "requires_external_trust": "None for the constant itself.",
+      "missing_seam": "The held command has no portable-proof dispatch or wire-v1 success serializer; current verifier invocation returns a fixed refusal.",
+      "blocked_test": "Exact argv must continue refusing until all other required fields are supportable; assert unchanged held execution behavior.",
+      "status": "CONSTANT_AVAILABLE_DISPATCH_ABSENT"
+    },
+    {
+      "field": "native_verdict",
+      "expected": "Exact success string COMET_ICS23_NATIVE_VERIFIED, emitted only after all required native and provenance checks.",
+      "source_authenticator": "Compose existing transfer/bank verification with independent install, observer, ownership and reserve provenance.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 59,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L59",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/message_receipt.go",
+          "line": 32
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/portable_proof.go",
+          "line": 140
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 233
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 89
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/evidence.go",
+          "line": 81
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/evidence.go",
+          "line": 128
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchelservice/reserve_review.go",
+          "line": 151
+        }
+      ],
+      "requires_external_trust": "All external roots and provenance listed in this matrix.",
+      "missing_seam": "A native SDK golden is source evidence; it cannot supply missing production authority or justify a manufactured wire success.",
+      "blocked_test": "Genuine SDK-positive wire verdict cannot be claimed while independent observer and grounded inventory inputs are absent.",
+      "status": "SUCCESS_VERDICT_BLOCKED_BY_EXTERNAL_PROVENANCE"
+    },
+    {
+      "field": "native_consensus_authenticated",
+      "expected": "Boolean true only after actual native cryptographic verification and all required external provenance checks; not an emitted value in this HOLD assessment.",
+      "source_authenticator": "Existing Comet light-client validation of signed commits/validators under an independently provisioned protected anchor.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 59,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L59",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/message_receipt.go",
+          "line": 32
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/portable_proof.go",
+          "line": 140
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 233
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 89
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/evidence.go",
+          "line": 81
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/evidence.go",
+          "line": 128
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchelservice/reserve_review.go",
+          "line": 151
+        }
+      ],
+      "requires_external_trust": "All external roots and provenance listed in this matrix.",
+      "missing_seam": "No wire success dispatch exists. The authenticated consensus/root mechanism exists, but independent observer/install/ownership/grounded review inputs remain absent.",
+      "blocked_test": "Genuine SDK-positive transcript plus forged/insufficient signatures or altered native proof/root must be evaluated by native Go, without manufacturing a wire success for missing external provenance.",
+      "status": "NATIVE_AUTHENTICATOR_AVAILABLE_WIRE_AND_EXTERNAL_PROVENANCE_ABSENT"
+    },
+    {
+      "field": "native_ics23_authenticated",
+      "expected": "Boolean true only after actual native cryptographic verification and all required external provenance checks; not an emitted value in this HOLD assessment.",
+      "source_authenticator": "Existing native bank IAVL/ICS23 membership verification and exact transaction/result verification under authenticated roots; never a caller assertion.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 59,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L59",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/message_receipt.go",
+          "line": 32
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/portable_proof.go",
+          "line": 140
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 233
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 89
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/evidence.go",
+          "line": 81
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/evidence.go",
+          "line": 128
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchelservice/reserve_review.go",
+          "line": 151
+        }
+      ],
+      "requires_external_trust": "All external roots and provenance listed in this matrix.",
+      "missing_seam": "No wire success dispatch exists. The authenticated consensus/root mechanism exists, but independent observer/install/ownership/grounded review inputs remain absent.",
+      "blocked_test": "Genuine SDK-positive transcript plus forged/insufficient signatures or altered native proof/root must be evaluated by native Go, without manufacturing a wire success for missing external provenance.",
+      "status": "NATIVE_AUTHENTICATOR_AVAILABLE_WIRE_AND_EXTERNAL_PROVENANCE_ABSENT"
+    },
+    {
+      "field": "chain_id",
+      "expected": "Exact string wolo-1.",
+      "source_authenticator": "Verified transaction, bank proofs and protected policy must agree.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 59,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L59",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/message_receipt.go",
+          "line": 32
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/portable_proof.go",
+          "line": 140
+        }
+      ],
+      "requires_external_trust": "An independently provisioned protected Comet trust anchor and accepted source/build/install pin, never an anchor from untrusted stdin.",
+      "missing_seam": "The held command has no portable-proof dispatch or wire-v1 success serializer; current verifier invocation returns a fixed refusal.",
+      "blocked_test": "Genuine positive receipt plus independent rejection of wrong chain/denom/hash, failed transaction, multiple MsgSend and ordinal greater than zero.",
+      "status": "NATIVE_AUTHENTICATOR_AVAILABLE_EXTERNAL_ROOT_AND_CLI_ABSENT"
+    },
+    {
+      "field": "denom",
+      "expected": "Exact string uwolo.",
+      "source_authenticator": "Exact authenticated MsgSend coin and native bank collections key.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 59,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L59",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/message_receipt.go",
+          "line": 32
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/portable_proof.go",
+          "line": 140
+        }
+      ],
+      "requires_external_trust": "An independently provisioned protected Comet trust anchor and accepted source/build/install pin, never an anchor from untrusted stdin.",
+      "missing_seam": "The held command has no portable-proof dispatch or wire-v1 success serializer; current verifier invocation returns a fixed refusal.",
+      "blocked_test": "Genuine positive receipt plus independent rejection of wrong chain/denom/hash, failed transaction, multiple MsgSend and ordinal greater than zero.",
+      "status": "NATIVE_AUTHENTICATOR_AVAILABLE_EXTERNAL_ROOT_AND_CLI_ABSENT"
+    },
+    {
+      "field": "tx_hash",
+      "expected": "Uppercase 64-hex SHA256 of the exact selected transaction bytes.",
+      "source_authenticator": "Authenticated transaction lookup and exact original transaction bytes.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 59,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L59",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/message_receipt.go",
+          "line": 32
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/portable_proof.go",
+          "line": 140
+        }
+      ],
+      "requires_external_trust": "An independently provisioned protected Comet trust anchor and accepted source/build/install pin, never an anchor from untrusted stdin.",
+      "missing_seam": "The held command has no portable-proof dispatch or wire-v1 success serializer; current verifier invocation returns a fixed refusal.",
+      "blocked_test": "Genuine positive receipt plus independent rejection of wrong chain/denom/hash, failed transaction, multiple MsgSend and ordinal greater than zero.",
+      "status": "NATIVE_AUTHENTICATOR_AVAILABLE_EXTERNAL_ROOT_AND_CLI_ABSENT"
+    },
+    {
+      "field": "message_index",
+      "expected": "Integer 0 in the physical SDK MsgSend namespace.",
+      "source_authenticator": "Existing canonical message receipt API; preserve legacy bank-event ordinal 1.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 59,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L59",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/message_receipt.go",
+          "line": 32
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/portable_proof.go",
+          "line": 140
+        }
+      ],
+      "requires_external_trust": "An independently provisioned protected Comet trust anchor and accepted source/build/install pin, never an anchor from untrusted stdin.",
+      "missing_seam": "The held command has no portable-proof dispatch or wire-v1 success serializer; current verifier invocation returns a fixed refusal.",
+      "blocked_test": "Genuine positive receipt plus independent rejection of wrong chain/denom/hash, failed transaction, multiple MsgSend and ordinal greater than zero.",
+      "status": "NATIVE_AUTHENTICATOR_AVAILABLE_EXTERNAL_ROOT_AND_CLI_ABSENT"
+    },
+    {
+      "field": "message_ordinal_kind",
+      "expected": "Exact string SDK_MSG_SEND.",
+      "source_authenticator": "Existing canonical message receipt API, not event renumbering.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 59,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L59",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/message_receipt.go",
+          "line": 32
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/portable_proof.go",
+          "line": 140
+        }
+      ],
+      "requires_external_trust": "An independently provisioned protected Comet trust anchor and accepted source/build/install pin, never an anchor from untrusted stdin.",
+      "missing_seam": "The held command has no portable-proof dispatch or wire-v1 success serializer; current verifier invocation returns a fixed refusal.",
+      "blocked_test": "Genuine positive receipt plus independent rejection of wrong chain/denom/hash, failed transaction, multiple MsgSend and ordinal greater than zero.",
+      "status": "NATIVE_AUTHENTICATOR_AVAILABLE_EXTERNAL_ROOT_AND_CLI_ABSENT"
+    },
+    {
+      "field": "tx_success_proven",
+      "expected": "Boolean true only from authenticated successful selected transaction.",
+      "source_authenticator": "Existing strict transaction/result authentication; never a caller success flag.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 59,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L59",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/message_receipt.go",
+          "line": 32
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/portable_proof.go",
+          "line": 140
+        }
+      ],
+      "requires_external_trust": "An independently provisioned protected Comet trust anchor and accepted source/build/install pin, never an anchor from untrusted stdin.",
+      "missing_seam": "The held command has no portable-proof dispatch or wire-v1 success serializer; current verifier invocation returns a fixed refusal.",
+      "blocked_test": "Genuine positive receipt plus independent rejection of wrong chain/denom/hash, failed transaction, multiple MsgSend and ordinal greater than zero.",
+      "status": "NATIVE_AUTHENTICATOR_AVAILABLE_EXTERNAL_ROOT_AND_CLI_ABSENT"
+    },
+    {
+      "field": "funding_message_count",
+      "expected": "Integer 1 for the selected authenticated one-MsgSend physical receipt.",
+      "source_authenticator": "Existing exact protobuf parser rejects multiple/ambiguous messages.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 79,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L79",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/message_receipt.go",
+          "line": 32
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/portable_proof.go",
+          "line": 140
+        }
+      ],
+      "requires_external_trust": "An independently provisioned protected Comet trust anchor and accepted source/build/install pin, never an anchor from untrusted stdin.",
+      "missing_seam": "The held command has no portable-proof dispatch or wire-v1 success serializer; current verifier invocation returns a fixed refusal.",
+      "blocked_test": "Genuine positive receipt plus independent rejection of wrong chain/denom/hash, failed transaction, multiple MsgSend and ordinal greater than zero.",
+      "status": "NATIVE_AUTHENTICATOR_AVAILABLE_EXTERNAL_ROOT_AND_CLI_ABSENT"
+    },
+    {
+      "field": "sender",
+      "expected": "Exact authenticated selected MsgSend sender and purpose-appropriate protected account.",
+      "source_authenticator": "VerifyMessageTransferProof and its copied authenticated Observation, matched against the exact purpose intent.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 59,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L59",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/message_receipt.go",
+          "line": 32
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/portable_proof.go",
+          "line": 140
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/trusted_reader.go",
+          "line": 43
+        }
+      ],
+      "requires_external_trust": "An independently provisioned protected Comet trust anchor and accepted source/build/install pin, never an anchor from untrusted stdin.",
+      "missing_seam": "The held command has no portable-proof dispatch or wire-v1 success serializer; current verifier invocation returns a fixed refusal.",
+      "blocked_test": "Reject changed sender, recipient, amount and memo; selected receipt time must match its authenticated block rather than the request clock.",
+      "status": "NATIVE_AUTHENTICATOR_AVAILABLE_EXTERNAL_ROOT_AND_CLI_ABSENT"
+    },
+    {
+      "field": "recipient",
+      "expected": "Exact authenticated selected MsgSend recipient and purpose-appropriate protected account.",
+      "source_authenticator": "VerifyMessageTransferProof and its copied authenticated Observation, matched against the exact purpose intent.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 59,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L59",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/message_receipt.go",
+          "line": 32
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/portable_proof.go",
+          "line": 140
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/trusted_reader.go",
+          "line": 43
+        }
+      ],
+      "requires_external_trust": "An independently provisioned protected Comet trust anchor and accepted source/build/install pin, never an anchor from untrusted stdin.",
+      "missing_seam": "The held command has no portable-proof dispatch or wire-v1 success serializer; current verifier invocation returns a fixed refusal.",
+      "blocked_test": "Reject changed sender, recipient, amount and memo; selected receipt time must match its authenticated block rather than the request clock.",
+      "status": "NATIVE_AUTHENTICATOR_AVAILABLE_EXTERNAL_ROOT_AND_CLI_ABSENT"
+    },
+    {
+      "field": "amount_uwolo",
+      "expected": "Canonical positive decimal string for the whole selected physical transfer, not a per-leg funding amount.",
+      "source_authenticator": "VerifyMessageTransferProof and its copied authenticated Observation, matched against the exact purpose intent.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 59,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L59",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/message_receipt.go",
+          "line": 32
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/portable_proof.go",
+          "line": 140
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/trusted_reader.go",
+          "line": 43
+        }
+      ],
+      "requires_external_trust": "An independently provisioned protected Comet trust anchor and accepted source/build/install pin, never an anchor from untrusted stdin.",
+      "missing_seam": "The held command has no portable-proof dispatch or wire-v1 success serializer; current verifier invocation returns a fixed refusal.",
+      "blocked_test": "Reject changed sender, recipient, amount and memo; selected receipt time must match its authenticated block rather than the request clock.",
+      "status": "NATIVE_AUTHENTICATOR_AVAILABLE_EXTERNAL_ROOT_AND_CLI_ABSENT"
+    },
+    {
+      "field": "memo",
+      "expected": "Exact authenticated purpose/epoch/ticket or entitlement memo; no caller substitution.",
+      "source_authenticator": "VerifyMessageTransferProof and its copied authenticated Observation, matched against the exact purpose intent.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 59,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L59",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/message_receipt.go",
+          "line": 32
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/portable_proof.go",
+          "line": 140
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/trusted_reader.go",
+          "line": 43
+        }
+      ],
+      "requires_external_trust": "An independently provisioned protected Comet trust anchor and accepted source/build/install pin, never an anchor from untrusted stdin.",
+      "missing_seam": "The held command has no portable-proof dispatch or wire-v1 success serializer; current verifier invocation returns a fixed refusal.",
+      "blocked_test": "Reject changed sender, recipient, amount and memo; selected receipt time must match its authenticated block rather than the request clock.",
+      "status": "NATIVE_AUTHENTICATOR_AVAILABLE_EXTERNAL_ROOT_AND_CLI_ABSENT"
+    },
+    {
+      "field": "chain_time",
+      "expected": "Authenticated selected transaction BlockTime serialized as an agreed UTC timestamp; HD currently uses this INSERT value without a dedicated wire-shape check.",
+      "source_authenticator": "VerifyMessageTransferProof and its copied authenticated Observation, matched against the exact purpose intent.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 171,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L171",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/message_receipt.go",
+          "line": 32
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/portable_proof.go",
+          "line": 140
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/trusted_reader.go",
+          "line": 43
+        }
+      ],
+      "requires_external_trust": "An independently provisioned protected Comet trust anchor and accepted source/build/install pin, never an anchor from untrusted stdin.",
+      "missing_seam": "The held command has no portable-proof dispatch or wire-v1 success serializer; current verifier invocation returns a fixed refusal. HD must separately validate the authenticated chain-time wire value.",
+      "blocked_test": "Reject changed sender, recipient, amount and memo; selected receipt time must match its authenticated block rather than the request clock.",
+      "status": "NATIVE_AUTHENTICATOR_AVAILABLE_EXTERNAL_ROOT_AND_CLI_ABSENT"
+    },
+    {
+      "field": "epoch_id",
+      "expected": "Exact protected epoch identifier; original ticket, request and bank H* scope agree.",
+      "source_authenticator": "Existing OriginalTicketMessage, ticket validation, RequestMessage and owner/reviewer signature checks.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 59,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L59",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/ticket.go",
+          "line": 43
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/ticket.go",
+          "line": 58
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/policy.go",
+          "line": 236
+        }
+      ],
+      "requires_external_trust": "Protected policy/reviewer keys plus independently enrolled ownership provenance; a claimant signing its own UID label is insufficient.",
+      "missing_seam": "No externally qualified UID-to-wallet source or protected owner-issuer enrollment is supplied by the golden; new wire dispatch is absent.",
+      "blocked_test": "Reject owner substitution, forged mandate and a valid attacker signature over another owner's UID.",
+      "status": "EXTERNAL_OWNERSHIP_AND_CLI_ABSENT"
+    },
+    {
+      "field": "owner_uid",
+      "expected": "Exact independently established owner UID bound to the wallet/public key and immutable original ticket.",
+      "source_authenticator": "Existing OriginalTicketMessage, ticket validation, RequestMessage and owner/reviewer signature checks.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 59,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L59",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/ticket.go",
+          "line": 43
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/ticket.go",
+          "line": 58
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/policy.go",
+          "line": 236
+        }
+      ],
+      "requires_external_trust": "Protected policy/reviewer keys plus independently enrolled ownership provenance; a claimant signing its own UID label is insufficient.",
+      "missing_seam": "No externally qualified UID-to-wallet source or protected owner-issuer enrollment is supplied by the golden; new wire dispatch is absent.",
+      "blocked_test": "Reject owner substitution, forged mandate and a valid attacker signature over another owner's UID.",
+      "status": "EXTERNAL_OWNERSHIP_AND_CLI_ABSENT"
+    },
+    {
+      "field": "owner_mandate_authenticated",
+      "expected": "Boolean true only after exact original mandate signatures and independently trusted UID-to-wallet ownership provenance pass.",
+      "source_authenticator": "Existing OriginalTicketMessage, ticket validation, RequestMessage and owner/reviewer signature checks.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 59,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L59",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/ticket.go",
+          "line": 43
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/ticket.go",
+          "line": 58
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/policy.go",
+          "line": 236
+        }
+      ],
+      "requires_external_trust": "Protected policy/reviewer keys plus independently enrolled ownership provenance; a claimant signing its own UID label is insufficient.",
+      "missing_seam": "No externally qualified UID-to-wallet source or protected owner-issuer enrollment is supplied by the golden; new wire dispatch is absent.",
+      "blocked_test": "Reject owner substitution, forged mandate and a valid attacker signature over another owner's UID.",
+      "status": "EXTERNAL_OWNERSHIP_AND_CLI_ABSENT"
+    },
+    {
+      "field": "purpose",
+      "expected": "One exact accepted purpose: deposit, wager_funding, escrow_return, fee or withdrawal; unsupported purposes must refuse.",
+      "source_authenticator": "Existing native proof APIs plus purpose-specific immutable intent authentication.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 59,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L59",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/message_receipt.go",
+          "line": 32
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/portable_proof.go",
+          "line": 140
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/policy.go",
+          "line": 266
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/evidence.go",
+          "line": 150
+        }
+      ],
+      "requires_external_trust": "Protected semantic purpose/owner authority, not the incoming purpose string.",
+      "missing_seam": "VerifyPreparation currently validates return/fee preparation; no uniform five-purpose CLI input/authority mapping is implemented. A vault-to-escrow funding proof must never masquerade as wallet-to-vault deposit authority.",
+      "blocked_test": "Independently reject a genuine wager_funding proof relabelled as deposit, return, fee or withdrawal.",
+      "status": "PURPOSE_AUTHORITY_SEAM_UNDEFINED"
+    },
+    {
+      "field": "economic_key",
+      "expected": "Exact canonical authenticated purpose-specific economic identity, equal to HD's separately trusted expectedEconomicKey.",
+      "source_authenticator": "Ticket/request immutable identities and existing entitlement/original-operation helpers.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 59,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L59",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/ticket.go",
+          "line": 43
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/ticket.go",
+          "line": 58
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/policy.go",
+          "line": 236
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/policy.go",
+          "line": 224
+        }
+      ],
+      "requires_external_trust": "An agreed owner/reviewer-authorized mapping from purpose to immutable economic identity.",
+      "missing_seam": "Exact HD compares an arbitrary configured string; it does not define whether funding uses ticket:ID or OriginalOperationID, nor return entitlement versus return operation. SQL admission consumes OriginalOperationID. No canonical mapping may be silently invented.",
+      "blocked_test": "A signed valid receipt with a substituted market, ticket, day or economic key must fail against an agreed canonical contract.",
+      "status": "CANONICAL_ECONOMIC_KEY_UNSPECIFIED"
+    },
+    {
+      "field": "original_funding_principal_uwolo",
+      "expected": "Authenticated whole original ticket principal; for wager_funding it must equal selected amount_uwolo, while all leg allocations conserve that original principal.",
+      "source_authenticator": "Complete signed OriginalTicket and exact full funding transfer verification.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 79,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L79",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/ticket.go",
+          "line": 43
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/ticket.go",
+          "line": 58
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/policy.go",
+          "line": 236
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/evidence.go",
+          "line": 51
+        }
+      ],
+      "requires_external_trust": "An independently provisioned protected Comet trust anchor and accepted source/build/install pin, never an anchor from untrusted stdin. Complete authenticated original allocation mandate.",
+      "missing_seam": "Native original-ticket mechanism exists; wire binding and independently grounded owner provenance remain absent.",
+      "blocked_test": "Genuine 100-WOLO receipt with 40+60 legs; reject 40-WOLO per-leg substitution, oversplit, altered original amount and physical receipt reuse.",
+      "status": "NATIVE_TICKET_AUTHENTICATOR_AVAILABLE_WIRE_SEAM_ABSENT"
+    },
+    {
+      "field": "funding_height",
+      "expected": "Positive JavaScript-safe integer height of the selected receipt persisted by HD; bank state must also be at least two states after latest relevant original funding.",
+      "source_authenticator": "Authenticated selected transaction Observation.Height and latest physical funding height.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 88,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L88",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/message_receipt.go",
+          "line": 32
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/portable_proof.go",
+          "line": 140
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/evidence.go",
+          "line": 51
+        }
+      ],
+      "requires_external_trust": "An independently provisioned protected Comet trust anchor and accepted source/build/install pin, never an anchor from untrusted stdin.",
+      "missing_seam": "HD reuses funding_height for return/fee receipt certificates; no new CLI establishes both selected-effect lag and latest-original-funding lag.",
+      "blocked_test": "Reject H below selected receipt height plus 2 or latest original funding height plus 2; do not use an earlier funding checkpoint for a later return.",
+      "status": "NATIVE_AUTHENTICATOR_AVAILABLE_WIRE_HEIGHT_SEAM_ABSENT"
+    },
+    {
+      "field": "bank_state_height",
+      "expected": "JavaScript-safe integer H, above epoch H* and at least latest relevant receipt/funding height plus 2.",
+      "source_authenticator": "Independent native account evidence Height; enforce both accounts at the identical state.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 88,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L88",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 233
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 89
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/evidence.go",
+          "line": 81
+        }
+      ],
+      "requires_external_trust": "An independently provisioned protected Comet trust anchor and accepted source/build/install pin, never an anchor from untrusted stdin.",
+      "missing_seam": "The held command has no portable-proof dispatch or wire-v1 success serializer; current verifier invocation returns a fixed refusal.",
+      "blocked_test": "Reject altered chain, height, block/app root, IAVL/ICS23 path, account/key, reorg and stale H/H+1; never relax expiry or state lag.",
+      "status": "NATIVE_BANK_AUTHENTICATOR_AVAILABLE_EXTERNAL_ROOT_AND_CLI_ABSENT"
+    },
+    {
+      "field": "bank_commit_height",
+      "expected": "JavaScript-safe integer H+1.",
+      "source_authenticator": "Authenticated signed commit header committing ABCI state H.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 88,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L88",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 233
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 89
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/evidence.go",
+          "line": 81
+        }
+      ],
+      "requires_external_trust": "An independently provisioned protected Comet trust anchor and accepted source/build/install pin, never an anchor from untrusted stdin.",
+      "missing_seam": "The held command has no portable-proof dispatch or wire-v1 success serializer; current verifier invocation returns a fixed refusal.",
+      "blocked_test": "Reject altered chain, height, block/app root, IAVL/ICS23 path, account/key, reorg and stale H/H+1; never relax expiry or state lag.",
+      "status": "NATIVE_BANK_AUTHENTICATOR_AVAILABLE_EXTERNAL_ROOT_AND_CLI_ABSENT"
+    },
+    {
+      "field": "block_sha256",
+      "expected": "Uppercase 64-hex authenticated commit block hash.",
+      "source_authenticator": "AuthenticatedBankEvidence.BlockHash from verified Comet commit.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 88,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L88",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 233
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 89
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/evidence.go",
+          "line": 81
+        }
+      ],
+      "requires_external_trust": "An independently provisioned protected Comet trust anchor and accepted source/build/install pin, never an anchor from untrusted stdin.",
+      "missing_seam": "The held command has no portable-proof dispatch or wire-v1 success serializer; current verifier invocation returns a fixed refusal.",
+      "blocked_test": "Reject altered chain, height, block/app root, IAVL/ICS23 path, account/key, reorg and stale H/H+1; never relax expiry or state lag.",
+      "status": "NATIVE_BANK_AUTHENTICATOR_AVAILABLE_EXTERNAL_ROOT_AND_CLI_ABSENT"
+    },
+    {
+      "field": "app_sha256",
+      "expected": "Uppercase 64-hex identical authenticated application root for both bank accounts.",
+      "source_authenticator": "AuthenticatedBankEvidence.AppHash and native ICS23 membership.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 88,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L88",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 233
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 89
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/evidence.go",
+          "line": 81
+        }
+      ],
+      "requires_external_trust": "An independently provisioned protected Comet trust anchor and accepted source/build/install pin, never an anchor from untrusted stdin.",
+      "missing_seam": "The held command has no portable-proof dispatch or wire-v1 success serializer; current verifier invocation returns a fixed refusal.",
+      "blocked_test": "Reject altered chain, height, block/app root, IAVL/ICS23 path, account/key, reorg and stale H/H+1; never relax expiry or state lag.",
+      "status": "NATIVE_BANK_AUTHENTICATOR_AVAILABLE_EXTERNAL_ROOT_AND_CLI_ABSENT"
+    },
+    {
+      "field": "primary_head_height",
+      "expected": "JavaScript-safe integer exactly equal to bank_commit_height H+1.",
+      "source_authenticator": "Native Comet light-client verification and completed-time CurrentAt for the applicable transcript role.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 79,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L79",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 233
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 89
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/evidence.go",
+          "line": 81
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/portable_proof.go",
+          "line": 29
+        }
+      ],
+      "requires_external_trust": "An independently provisioned protected Comet trust anchor and accepted source/build/install pin, never an anchor from untrusted stdin. Independently authenticated observation/capture source identities.",
+      "missing_seam": "PortableProof source labels authenticate transcript routing, not independent endpoint operators. Offline replay cannot distinguish one server copied into both role labels without additional signed source provenance.",
+      "blocked_test": "Reject same-server witness masquerade, missing/insufficient validator signatures and mismatched current head using independently enrolled source attestations; current portable input cannot prove the first property.",
+      "status": "INDEPENDENT_OBSERVER_PROVENANCE_UNREPRESENTED"
+    },
+    {
+      "field": "witness_head_height",
+      "expected": "JavaScript-safe integer exactly equal to bank_commit_height H+1.",
+      "source_authenticator": "Native Comet light-client verification and completed-time CurrentAt for the applicable transcript role.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 79,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L79",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 233
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 89
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/evidence.go",
+          "line": 81
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/portable_proof.go",
+          "line": 29
+        }
+      ],
+      "requires_external_trust": "An independently provisioned protected Comet trust anchor and accepted source/build/install pin, never an anchor from untrusted stdin. Independently authenticated observation/capture source identities.",
+      "missing_seam": "PortableProof source labels authenticate transcript routing, not independent endpoint operators. Offline replay cannot distinguish one server copied into both role labels without additional signed source provenance.",
+      "blocked_test": "Reject same-server witness masquerade, missing/insufficient validator signatures and mismatched current head using independently enrolled source attestations; current portable input cannot prove the first property.",
+      "status": "INDEPENDENT_OBSERVER_PROVENANCE_UNREPRESENTED"
+    },
+    {
+      "field": "vault_address",
+      "expected": "Exact protected proposed vault address, different from escrow and equal to vault_bank.account.",
+      "source_authenticator": "Protected policy, public-key-derived address validation and exact authenticated account key.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 112,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L112",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/policy.go",
+          "line": 104
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 233
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 89
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/evidence.go",
+          "line": 81
+        }
+      ],
+      "requires_external_trust": "Independent protected policy enrollment. Runtime custody separation is a separately required owner fact.",
+      "missing_seam": "Source policy checks do not provision or certify real custody; fixed policy/install configuration and wire dispatch are absent.",
+      "blocked_test": "Reject wrong account, key/address mismatch and vault/escrow collision without claiming runtime custody from a source pass.",
+      "status": "NATIVE_ACCOUNT_BINDING_AVAILABLE_INSTALL_AND_CUSTODY_UNPROVISIONED"
+    },
+    {
+      "field": "escrow_address",
+      "expected": "Exact protected proposed independent escrow address, different from vault and equal to escrow_bank.account.",
+      "source_authenticator": "Protected policy, public-key-derived address validation and exact authenticated account key.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 112,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L112",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/policy.go",
+          "line": 104
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 233
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 89
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/evidence.go",
+          "line": 81
+        }
+      ],
+      "requires_external_trust": "Independent protected policy enrollment. Runtime custody separation is a separately required owner fact.",
+      "missing_seam": "Source policy checks do not provision or certify real custody; fixed policy/install configuration and wire dispatch are absent.",
+      "blocked_test": "Reject wrong account, key/address mismatch and vault/escrow collision without claiming runtime custody from a source pass.",
+      "status": "NATIVE_ACCOUNT_BINDING_AVAILABLE_INSTALL_AND_CUSTODY_UNPROVISIONED"
+    },
+    {
+      "field": "observed_at",
+      "expected": "Verifier completion time, not a caller-supplied observation timestamp.",
+      "source_authenticator": "Read the verifier clock after all proof and authority checks complete.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 98,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L98",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/evidence.go",
+          "line": 74
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/evidence.go",
+          "line": 117
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 65
+        }
+      ],
+      "requires_external_trust": "Trusted local runtime clock and all applicable external review lifetimes.",
+      "missing_seam": "No wire serializer exists; archived native JSON cannot be promoted into a current observation.",
+      "blocked_test": "Reject future/expired evidence, expiry during verification, timeout, partial output and any timestamp extension.",
+      "status": "COMPLETION_CLOCK_AND_EXPIRY_WIRE_SEAM_ABSENT"
+    },
+    {
+      "field": "expires_at",
+      "expected": "Actual minimum native anchor/head, mandate and grounded-review expiry; later than completion and no more than 120 seconds after observed_at.",
+      "source_authenticator": "AuthenticatedBankEvidence.ExpiresAt and exact existing approval/review lifetimes; never extend synthetic time.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 98,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L98",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/evidence.go",
+          "line": 74
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/evidence.go",
+          "line": 117
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 65
+        }
+      ],
+      "requires_external_trust": "Trusted local runtime clock and all applicable external review lifetimes.",
+      "missing_seam": "No wire serializer exists; archived native JSON cannot be promoted into a current observation.",
+      "blocked_test": "Reject future/expired evidence, expiry during verification, timeout, partial output and any timestamp extension.",
+      "status": "COMPLETION_CLOCK_AND_EXPIRY_WIRE_SEAM_ABSENT"
+    },
+    {
+      "field": "raw_proof_bundle_sha256",
+      "expected": "Lowercase SHA256 of exact raw UTF8 stdin bytes, including original whitespace; must equal HD rawSha.",
+      "source_authenticator": "Hash bounded stdin bytes before decoding.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 150,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L150",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/portable_proof.go",
+          "line": 24
+        }
+      ],
+      "requires_external_trust": "No external trust for the checksum itself; proof authenticity is independently required.",
+      "missing_seam": "The held command has no portable-proof dispatch or wire-v1 success serializer; current verifier invocation returns a fixed refusal.",
+      "blocked_test": "Reject tampered raw input/digest; malformed, duplicate/unknown-key, trailing or oversized JSON must refuse before a success verdict.",
+      "status": "DIGEST_BYTES_DEFINED_DISPATCH_ABSENT"
+    },
+    {
+      "field": "native_verifier_source",
+      "expected": "Exact accepted nonzero 40-hex Wolo source commit, mapped externally to the installed binary.",
+      "source_authenticator": "Protected independent accepted source/build/install manifest matched to build provenance.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 121,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L121",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/policy.go",
+          "line": 90
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "cmd/woloescrowd/main.go",
+          "line": 20
+        }
+      ],
+      "requires_external_trust": "Independent source-to-binary build receipt and protected root-controlled install manifest.",
+      "missing_seam": "A caller source field or self-reported linker string is insufficient. HD still pins ae9f0277b58f2288e7b1fc25b03eef2a30271577. The held command has no portable-proof dispatch or wire-v1 success serializer; current verifier invocation returns a fixed refusal.",
+      "blocked_test": "Reject tampered executable, source/binary disagreement, unexpected old source pin, writable/symlink install and legacy binary reuse.",
+      "status": "INSTALL_PIN_UNPROVISIONED"
+    },
+    {
+      "field": "native_verifier_binary_sha256",
+      "expected": "Lowercase SHA256 of exact executing binary bytes, matching the independently accepted install digest.",
+      "source_authenticator": "Descriptor-bound executable measurement plus protected external expected binary digest.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 121,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L121",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/policy.go",
+          "line": 90
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "cmd/woloescrowd/main.go",
+          "line": 20
+        }
+      ],
+      "requires_external_trust": "Independent source-to-binary build receipt and protected root-controlled install manifest.",
+      "missing_seam": "The process calculating its own digest cannot certify the build/install chain. No independently accepted verifier installation artifact is supplied. The held command has no portable-proof dispatch or wire-v1 success serializer; current verifier invocation returns a fixed refusal.",
+      "blocked_test": "Reject tampered executable, source/binary disagreement, unexpected old source pin, writable/symlink install and legacy binary reuse.",
+      "status": "INSTALL_PIN_UNPROVISIONED"
+    },
+    {
+      "field": "trust_anchor_sha256",
+      "expected": "Lowercase SHA256 matching an agreed exact protected anchor-byte/canonicalization contract and HD install configuration.",
+      "source_authenticator": "Independently provisioned anchor plus an agreed byte-level digest.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 75,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L75",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/portable_proof.go",
+          "line": 131
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/trusted_reader.go",
+          "line": 25
+        }
+      ],
+      "requires_external_trust": "An independently provisioned protected Comet trust anchor and accepted source/build/install pin, never an anchor from untrusted stdin.",
+      "missing_seam": "HD compares supplied expected trustAnchorSha256 but defines no anchor serialization/domain. Never accept the anchor solely from stdin. The held command has no portable-proof dispatch or wire-v1 success serializer; current verifier invocation returns a fixed refusal.",
+      "blocked_test": "Reject changed domain, serialization, trust root or selected proof bytes; no byte-parity PASS before owner agreement.",
+      "status": "DIGEST_CONTRACT_UNSPECIFIED"
+    },
+    {
+      "field": "proof_sha256",
+      "expected": "Lowercase digest of the exact selected verified physical receipt proof under an agreed domain/serialization.",
+      "source_authenticator": "Digest only after selected native proof authentication.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 105,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L105",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/message_receipt.go",
+          "line": 32
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/portable_proof.go",
+          "line": 140
+        }
+      ],
+      "requires_external_trust": "Accepted shared Go/HD byte/domain contract; external authority remains independently required.",
+      "missing_seam": "HD checks 64-hex format but does not define whether this hashes a raw subdocument, canonical proof, or verification result. The held command has no portable-proof dispatch or wire-v1 success serializer; current verifier invocation returns a fixed refusal.",
+      "blocked_test": "Reject changed domain, serialization, trust root or selected proof bytes; no byte-parity PASS before owner agreement.",
+      "status": "DIGEST_CONTRACT_UNSPECIFIED"
+    },
+    {
+      "field": "verification_record_sha256",
+      "expected": "Lowercase digest of an agreed canonical domain-separated verified record, excluding its own digest field.",
+      "source_authenticator": "Deterministic digest after native verification, identity binding and all external provenance gates.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 105,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L105",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/policy.go",
+          "line": 217
+        }
+      ],
+      "requires_external_trust": "Accepted shared Go/HD byte/domain contract; external authority remains independently required.",
+      "missing_seam": "HD provides no record schema, exclusion set, canonicalization or hash domain; a digest label alone cannot authenticate the record. The held command has no portable-proof dispatch or wire-v1 success serializer; current verifier invocation returns a fixed refusal.",
+      "blocked_test": "Reject changed domain, serialization, trust root or selected proof bytes; no byte-parity PASS before owner agreement.",
+      "status": "DIGEST_CONTRACT_UNSPECIFIED"
+    },
+    {
+      "field": "vault_bank",
+      "expected": "Required independent vault account object with all fourteen listed child fields; roots agree with the other account without combining balances.",
+      "source_authenticator": "Separate native bank verification plus independently grounded account-local review.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 110,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L110",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 233
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 89
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/evidence.go",
+          "line": 81
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/evidence.go",
+          "line": 128
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchelservice/reserve_review.go",
+          "line": 151
+        }
+      ],
+      "requires_external_trust": "An independently provisioned protected Comet trust anchor and accepted source/build/install pin, never an anchor from untrusted stdin. Protected review roots and complete signed inventory/nonoverlap evidence.",
+      "missing_seam": "Wire object factory and independently grounded financial manifests are absent.",
+      "blocked_test": "Reject missing account object, shared aggregate, account collision, changed root and either account's independent deficit.",
+      "status": "BANK_OBJECT_EXTERNAL_FINANCIAL_PROVENANCE_ABSENT"
+    },
+    {
+      "field": "vault_bank.account_role",
+      "expected": "Exact role string vault.",
+      "source_authenticator": "Protected semantic account role and exact bank address.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 37,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L37",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 233
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 89
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/evidence.go",
+          "line": 81
+        }
+      ],
+      "requires_external_trust": "Role derivation must use protected policy, not a claimant role label.",
+      "missing_seam": "Account-local object factory is absent.",
+      "blocked_test": "Reject swapped role/account object.",
+      "status": "NATIVE_ROLE_BINDING_AVAILABLE_CLI_ABSENT"
+    },
+    {
+      "field": "vault_bank.account",
+      "expected": "Exact protected vault address and authenticated bank key.",
+      "source_authenticator": "VerifyBankProof requested address, returned evidence address and protected policy.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 37,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L37",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 233
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 89
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/evidence.go",
+          "line": 81
+        }
+      ],
+      "requires_external_trust": "An independently provisioned protected Comet trust anchor and accepted source/build/install pin, never an anchor from untrusted stdin.",
+      "missing_seam": "Account-local object factory is absent.",
+      "blocked_test": "Reject wrong address/key and vault/escrow collision.",
+      "status": "NATIVE_BANK_AUTHENTICATOR_AVAILABLE_EXTERNAL_ROOT_AND_CLI_ABSENT"
+    },
+    {
+      "field": "vault_bank.bank_state_height",
+      "expected": "Exact same H as top-level bank_state_height.",
+      "source_authenticator": "Verified account evidence Height.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 37,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L37",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 233
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 89
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/evidence.go",
+          "line": 81
+        }
+      ],
+      "requires_external_trust": "An independently provisioned protected Comet trust anchor and accepted source/build/install pin, never an anchor from untrusted stdin.",
+      "missing_seam": "The held command has no portable-proof dispatch or wire-v1 success serializer; current verifier invocation returns a fixed refusal.",
+      "blocked_test": "Reject per-account H disagreement.",
+      "status": "NATIVE_BANK_AUTHENTICATOR_AVAILABLE_EXTERNAL_ROOT_AND_CLI_ABSENT"
+    },
+    {
+      "field": "vault_bank.bank_commit_height",
+      "expected": "Exact H+1, equal to top-level bank_commit_height.",
+      "source_authenticator": "Verified account commit height.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 37,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L37",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 233
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 89
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/evidence.go",
+          "line": 81
+        }
+      ],
+      "requires_external_trust": "An independently provisioned protected Comet trust anchor and accepted source/build/install pin, never an anchor from untrusted stdin.",
+      "missing_seam": "The held command has no portable-proof dispatch or wire-v1 success serializer; current verifier invocation returns a fixed refusal.",
+      "blocked_test": "Reject per-account H/H+1 mismatch.",
+      "status": "NATIVE_BANK_AUTHENTICATOR_AVAILABLE_EXTERNAL_ROOT_AND_CLI_ABSENT"
+    },
+    {
+      "field": "vault_bank.block_sha256",
+      "expected": "Exact uppercase commit hash, identical to top-level and other account.",
+      "source_authenticator": "Verified native Comet commit hash.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 37,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L37",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 233
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 89
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/evidence.go",
+          "line": 81
+        }
+      ],
+      "requires_external_trust": "An independently provisioned protected Comet trust anchor and accepted source/build/install pin, never an anchor from untrusted stdin.",
+      "missing_seam": "The held command has no portable-proof dispatch or wire-v1 success serializer; current verifier invocation returns a fixed refusal.",
+      "blocked_test": "Reject account commit-root disagreement.",
+      "status": "NATIVE_BANK_AUTHENTICATOR_AVAILABLE_EXTERNAL_ROOT_AND_CLI_ABSENT"
+    },
+    {
+      "field": "vault_bank.app_sha256",
+      "expected": "Exact uppercase application root, identical to top-level and other account.",
+      "source_authenticator": "Verified native ICS23 bank membership against authenticated app root.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 37,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L37",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 233
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 89
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/evidence.go",
+          "line": 81
+        }
+      ],
+      "requires_external_trust": "An independently provisioned protected Comet trust anchor and accepted source/build/install pin, never an anchor from untrusted stdin.",
+      "missing_seam": "The held command has no portable-proof dispatch or wire-v1 success serializer; current verifier invocation returns a fixed refusal.",
+      "blocked_test": "Reject forged root/path or account root disagreement.",
+      "status": "NATIVE_BANK_AUTHENTICATOR_AVAILABLE_EXTERNAL_ROOT_AND_CLI_ABSENT"
+    },
+    {
+      "field": "vault_bank.bank_balance_uwolo",
+      "expected": "Canonical nonnegative decimal string of this account's independently verified balance.",
+      "source_authenticator": "AuthenticatedBankEvidence.BalanceUWolo.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 37,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L37",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 233
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 89
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/evidence.go",
+          "line": 81
+        }
+      ],
+      "requires_external_trust": "An independently provisioned protected Comet trust anchor and accepted source/build/install pin, never an anchor from untrusted stdin.",
+      "missing_seam": "The held command has no portable-proof dispatch or wire-v1 success serializer; current verifier invocation returns a fixed refusal.",
+      "blocked_test": "Reject invented balance, overflow and use of the other account's surplus.",
+      "status": "NATIVE_BALANCE_AUTHENTICATOR_AVAILABLE_CLI_ABSENT"
+    },
+    {
+      "field": "vault_bank.liabilities_uwolo",
+      "expected": "Canonical nonnegative amount from a complete independently grounded account-local inventory; exact debit coverage where applicable must be accounted separately and never omitted.",
+      "source_authenticator": "Existing proof-bound reserve-review primitive can verify signatures/bank binding; cannot establish inventory completeness by itself.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 37,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L37",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/evidence.go",
+          "line": 128
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchelservice/reserve_review.go",
+          "line": 151
+        }
+      ],
+      "requires_external_trust": "Independently trusted accounting/custody reviewers, current full inventory and writer census.",
+      "missing_seam": "Request Reserve currently checks amount/digest shape, not source completeness or cross-writer liabilities.",
+      "blocked_test": "Reject omitted liability/exact debit and insufficient vault balance even when the other account has surplus.",
+      "status": "GROUNDED_FINANCIAL_INVENTORY_ABSENT"
+    },
+    {
+      "field": "vault_bank.maximum_unknown_outflow_uwolo",
+      "expected": "Canonical conservative maximum of this account's unresolved outflows; no implicit zero waiver of protected historical claims.",
+      "source_authenticator": "Existing SignedReserveReview uncertain-liability field and independent reviewer signatures.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 37,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L37",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/evidence.go",
+          "line": 128
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchelservice/reserve_review.go",
+          "line": 151
+        }
+      ],
+      "requires_external_trust": "Externally reviewed unknown-claim/outflow upper bound, including protected historical exposures.",
+      "missing_seam": "No current complete uncertainty census or signed provenance is supplied by caller JSON/golden.",
+      "blocked_test": "Reject unknown-outflow omission, unsupported zero reservation and overflow.",
+      "status": "GROUNDED_FINANCIAL_INVENTORY_ABSENT"
+    },
+    {
+      "field": "vault_bank.gas_uwolo",
+      "expected": "Canonical strictly positive independently approved account-local gas reservation.",
+      "source_authenticator": "Protected fee policy plus independently grounded reserve review.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 37,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L37",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/evidence.go",
+          "line": 128
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchelservice/reserve_review.go",
+          "line": 151
+        }
+      ],
+      "requires_external_trust": "Accepted fee/gas policy and signed account-local inventory.",
+      "missing_seam": "HD shape permits zero; requested native contract must require positive gas without weakening existing native validation.",
+      "blocked_test": "Reject zero, omitted, overflowed or insufficient gas reserve.",
+      "status": "GROUNDED_FINANCIAL_INVENTORY_ABSENT"
+    },
+    {
+      "field": "vault_bank.operating_floor_uwolo",
+      "expected": "Canonical strictly positive independently approved operating floor for this account.",
+      "source_authenticator": "Protected reserve policy plus independently grounded reserve review.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 37,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L37",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/evidence.go",
+          "line": 128
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchelservice/reserve_review.go",
+          "line": 151
+        }
+      ],
+      "requires_external_trust": "Independently approved account-local operating minimum.",
+      "missing_seam": "HD shape permits zero; current source-only assertions do not establish a real approved floor.",
+      "blocked_test": "Reject zero, omitted, overflowed or uncovered floor.",
+      "status": "GROUNDED_FINANCIAL_INVENTORY_ABSENT"
+    },
+    {
+      "field": "vault_bank.inventory_sha256",
+      "expected": "Lowercase digest of exact independently audited inventory bytes, bound by protected reviewer signatures to this bank root, account, source/build and expiry.",
+      "source_authenticator": "SignedReserveReview LiabilityInventorySHA256, JournalSnapshotSHA256 and reviewer signatures.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 37,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L37",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/evidence.go",
+          "line": 128
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchelservice/reserve_review.go",
+          "line": 151
+        }
+      ],
+      "requires_external_trust": "Complete immutable audited inventory and independently provisioned accounting/custody roots.",
+      "missing_seam": "Nonempty caller digest is not inventory evidence; exact inventory byte/domain contract and current reviewed source are absent.",
+      "blocked_test": "Reject missing inventory, mismatched root/build/expiry and invented digest with no authentic review.",
+      "status": "GROUNDED_FINANCIAL_INVENTORY_ABSENT"
+    },
+    {
+      "field": "vault_bank.nonoverlap_sha256",
+      "expected": "Lowercase digest of exact independently witnessed account/liability nonoverlap evidence.",
+      "source_authenticator": "SignedReserveReview NonOverlapWitnessSHA256 with independently trusted reviewers.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 37,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L37",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/evidence.go",
+          "line": 128
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchelservice/reserve_review.go",
+          "line": 151
+        }
+      ],
+      "requires_external_trust": "Actual cross-account/cross-writer nonoverlap inventory and external witness provenance.",
+      "missing_seam": "Two different addresses or digest strings cannot establish nonoverlap of liabilities or custody.",
+      "blocked_test": "Reject shared/overlapping obligations, absent witness and mismatched nonoverlap commitment.",
+      "status": "GROUNDED_NONOVERLAP_PROVENANCE_ABSENT"
+    },
+    {
+      "field": "vault_bank.proof_sha256",
+      "expected": "Lowercase digest of this account's independently verified BankProof under an agreed raw-byte/domain contract.",
+      "source_authenticator": "Native bank verifier plus deterministic selected bank-proof hashing.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 37,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L37",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 233
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 89
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/evidence.go",
+          "line": 81
+        }
+      ],
+      "requires_external_trust": "Agreed Go/HD bank proof digest contract; independent native anchor remains required.",
+      "missing_seam": "HD checks format only and supplies no bank-proof serialization/domain definition.",
+      "blocked_test": "Reject substituted account proof, serialization/domain disagreement and mismatch with the verified account.",
+      "status": "DIGEST_CONTRACT_UNSPECIFIED"
+    },
+    {
+      "field": "escrow_bank",
+      "expected": "Required independent escrow account object with all fourteen listed child fields; roots agree with the other account without combining balances.",
+      "source_authenticator": "Separate native bank verification plus independently grounded account-local review.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 110,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L110",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 233
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 89
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/evidence.go",
+          "line": 81
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/evidence.go",
+          "line": 128
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchelservice/reserve_review.go",
+          "line": 151
+        }
+      ],
+      "requires_external_trust": "An independently provisioned protected Comet trust anchor and accepted source/build/install pin, never an anchor from untrusted stdin. Protected review roots and complete signed inventory/nonoverlap evidence.",
+      "missing_seam": "Wire object factory and independently grounded financial manifests are absent.",
+      "blocked_test": "Reject missing account object, shared aggregate, account collision, changed root and either account's independent deficit.",
+      "status": "BANK_OBJECT_EXTERNAL_FINANCIAL_PROVENANCE_ABSENT"
+    },
+    {
+      "field": "escrow_bank.account_role",
+      "expected": "Exact role string escrow.",
+      "source_authenticator": "Protected semantic account role and exact bank address.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 37,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L37",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 233
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 89
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/evidence.go",
+          "line": 81
+        }
+      ],
+      "requires_external_trust": "Role derivation must use protected policy, not a claimant role label.",
+      "missing_seam": "Account-local object factory is absent.",
+      "blocked_test": "Reject swapped role/account object.",
+      "status": "NATIVE_ROLE_BINDING_AVAILABLE_CLI_ABSENT"
+    },
+    {
+      "field": "escrow_bank.account",
+      "expected": "Exact protected escrow address and authenticated bank key.",
+      "source_authenticator": "VerifyBankProof requested address, returned evidence address and protected policy.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 37,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L37",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 233
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 89
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/evidence.go",
+          "line": 81
+        }
+      ],
+      "requires_external_trust": "An independently provisioned protected Comet trust anchor and accepted source/build/install pin, never an anchor from untrusted stdin.",
+      "missing_seam": "Account-local object factory is absent.",
+      "blocked_test": "Reject wrong address/key and vault/escrow collision.",
+      "status": "NATIVE_BANK_AUTHENTICATOR_AVAILABLE_EXTERNAL_ROOT_AND_CLI_ABSENT"
+    },
+    {
+      "field": "escrow_bank.bank_state_height",
+      "expected": "Exact same H as top-level bank_state_height.",
+      "source_authenticator": "Verified account evidence Height.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 37,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L37",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 233
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 89
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/evidence.go",
+          "line": 81
+        }
+      ],
+      "requires_external_trust": "An independently provisioned protected Comet trust anchor and accepted source/build/install pin, never an anchor from untrusted stdin.",
+      "missing_seam": "The held command has no portable-proof dispatch or wire-v1 success serializer; current verifier invocation returns a fixed refusal.",
+      "blocked_test": "Reject per-account H disagreement.",
+      "status": "NATIVE_BANK_AUTHENTICATOR_AVAILABLE_EXTERNAL_ROOT_AND_CLI_ABSENT"
+    },
+    {
+      "field": "escrow_bank.bank_commit_height",
+      "expected": "Exact H+1, equal to top-level bank_commit_height.",
+      "source_authenticator": "Verified account commit height.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 37,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L37",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 233
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 89
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/evidence.go",
+          "line": 81
+        }
+      ],
+      "requires_external_trust": "An independently provisioned protected Comet trust anchor and accepted source/build/install pin, never an anchor from untrusted stdin.",
+      "missing_seam": "The held command has no portable-proof dispatch or wire-v1 success serializer; current verifier invocation returns a fixed refusal.",
+      "blocked_test": "Reject per-account H/H+1 mismatch.",
+      "status": "NATIVE_BANK_AUTHENTICATOR_AVAILABLE_EXTERNAL_ROOT_AND_CLI_ABSENT"
+    },
+    {
+      "field": "escrow_bank.block_sha256",
+      "expected": "Exact uppercase commit hash, identical to top-level and other account.",
+      "source_authenticator": "Verified native Comet commit hash.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 37,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L37",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 233
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 89
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/evidence.go",
+          "line": 81
+        }
+      ],
+      "requires_external_trust": "An independently provisioned protected Comet trust anchor and accepted source/build/install pin, never an anchor from untrusted stdin.",
+      "missing_seam": "The held command has no portable-proof dispatch or wire-v1 success serializer; current verifier invocation returns a fixed refusal.",
+      "blocked_test": "Reject account commit-root disagreement.",
+      "status": "NATIVE_BANK_AUTHENTICATOR_AVAILABLE_EXTERNAL_ROOT_AND_CLI_ABSENT"
+    },
+    {
+      "field": "escrow_bank.app_sha256",
+      "expected": "Exact uppercase application root, identical to top-level and other account.",
+      "source_authenticator": "Verified native ICS23 bank membership against authenticated app root.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 37,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L37",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 233
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 89
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/evidence.go",
+          "line": 81
+        }
+      ],
+      "requires_external_trust": "An independently provisioned protected Comet trust anchor and accepted source/build/install pin, never an anchor from untrusted stdin.",
+      "missing_seam": "The held command has no portable-proof dispatch or wire-v1 success serializer; current verifier invocation returns a fixed refusal.",
+      "blocked_test": "Reject forged root/path or account root disagreement.",
+      "status": "NATIVE_BANK_AUTHENTICATOR_AVAILABLE_EXTERNAL_ROOT_AND_CLI_ABSENT"
+    },
+    {
+      "field": "escrow_bank.bank_balance_uwolo",
+      "expected": "Canonical nonnegative decimal string of this account's independently verified balance.",
+      "source_authenticator": "AuthenticatedBankEvidence.BalanceUWolo.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 37,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L37",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 233
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 89
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/evidence.go",
+          "line": 81
+        }
+      ],
+      "requires_external_trust": "An independently provisioned protected Comet trust anchor and accepted source/build/install pin, never an anchor from untrusted stdin.",
+      "missing_seam": "The held command has no portable-proof dispatch or wire-v1 success serializer; current verifier invocation returns a fixed refusal.",
+      "blocked_test": "Reject invented balance, overflow and use of the other account's surplus.",
+      "status": "NATIVE_BALANCE_AUTHENTICATOR_AVAILABLE_CLI_ABSENT"
+    },
+    {
+      "field": "escrow_bank.liabilities_uwolo",
+      "expected": "Canonical nonnegative amount from a complete independently grounded account-local inventory; exact debit coverage where applicable must be accounted separately and never omitted.",
+      "source_authenticator": "Existing proof-bound reserve-review primitive can verify signatures/bank binding; cannot establish inventory completeness by itself.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 37,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L37",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/evidence.go",
+          "line": 128
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchelservice/reserve_review.go",
+          "line": 151
+        }
+      ],
+      "requires_external_trust": "Independently trusted accounting/custody reviewers, current full inventory and writer census.",
+      "missing_seam": "Request Reserve currently checks amount/digest shape, not source completeness or cross-writer liabilities.",
+      "blocked_test": "Reject omitted liability/exact debit and insufficient escrow balance even when the other account has surplus.",
+      "status": "GROUNDED_FINANCIAL_INVENTORY_ABSENT"
+    },
+    {
+      "field": "escrow_bank.maximum_unknown_outflow_uwolo",
+      "expected": "Canonical conservative maximum of this account's unresolved outflows; no implicit zero waiver of protected historical claims.",
+      "source_authenticator": "Existing SignedReserveReview uncertain-liability field and independent reviewer signatures.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 37,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L37",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/evidence.go",
+          "line": 128
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchelservice/reserve_review.go",
+          "line": 151
+        }
+      ],
+      "requires_external_trust": "Externally reviewed unknown-claim/outflow upper bound, including protected historical exposures.",
+      "missing_seam": "No current complete uncertainty census or signed provenance is supplied by caller JSON/golden.",
+      "blocked_test": "Reject unknown-outflow omission, unsupported zero reservation and overflow.",
+      "status": "GROUNDED_FINANCIAL_INVENTORY_ABSENT"
+    },
+    {
+      "field": "escrow_bank.gas_uwolo",
+      "expected": "Canonical strictly positive independently approved account-local gas reservation.",
+      "source_authenticator": "Protected fee policy plus independently grounded reserve review.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 37,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L37",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/evidence.go",
+          "line": 128
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchelservice/reserve_review.go",
+          "line": 151
+        }
+      ],
+      "requires_external_trust": "Accepted fee/gas policy and signed account-local inventory.",
+      "missing_seam": "HD shape permits zero; requested native contract must require positive gas without weakening existing native validation.",
+      "blocked_test": "Reject zero, omitted, overflowed or insufficient gas reserve.",
+      "status": "GROUNDED_FINANCIAL_INVENTORY_ABSENT"
+    },
+    {
+      "field": "escrow_bank.operating_floor_uwolo",
+      "expected": "Canonical strictly positive independently approved operating floor for this account.",
+      "source_authenticator": "Protected reserve policy plus independently grounded reserve review.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 37,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L37",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/evidence.go",
+          "line": 128
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchelservice/reserve_review.go",
+          "line": 151
+        }
+      ],
+      "requires_external_trust": "Independently approved account-local operating minimum.",
+      "missing_seam": "HD shape permits zero; current source-only assertions do not establish a real approved floor.",
+      "blocked_test": "Reject zero, omitted, overflowed or uncovered floor.",
+      "status": "GROUNDED_FINANCIAL_INVENTORY_ABSENT"
+    },
+    {
+      "field": "escrow_bank.inventory_sha256",
+      "expected": "Lowercase digest of exact independently audited inventory bytes, bound by protected reviewer signatures to this bank root, account, source/build and expiry.",
+      "source_authenticator": "SignedReserveReview LiabilityInventorySHA256, JournalSnapshotSHA256 and reviewer signatures.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 37,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L37",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/evidence.go",
+          "line": 128
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchelservice/reserve_review.go",
+          "line": 151
+        }
+      ],
+      "requires_external_trust": "Complete immutable audited inventory and independently provisioned accounting/custody roots.",
+      "missing_seam": "Nonempty caller digest is not inventory evidence; exact inventory byte/domain contract and current reviewed source are absent.",
+      "blocked_test": "Reject missing inventory, mismatched root/build/expiry and invented digest with no authentic review.",
+      "status": "GROUNDED_FINANCIAL_INVENTORY_ABSENT"
+    },
+    {
+      "field": "escrow_bank.nonoverlap_sha256",
+      "expected": "Lowercase digest of exact independently witnessed account/liability nonoverlap evidence.",
+      "source_authenticator": "SignedReserveReview NonOverlapWitnessSHA256 with independently trusted reviewers.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 37,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L37",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/evidence.go",
+          "line": 128
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchelservice/reserve_review.go",
+          "line": 151
+        }
+      ],
+      "requires_external_trust": "Actual cross-account/cross-writer nonoverlap inventory and external witness provenance.",
+      "missing_seam": "Two different addresses or digest strings cannot establish nonoverlap of liabilities or custody.",
+      "blocked_test": "Reject shared/overlapping obligations, absent witness and mismatched nonoverlap commitment.",
+      "status": "GROUNDED_NONOVERLAP_PROVENANCE_ABSENT"
+    },
+    {
+      "field": "escrow_bank.proof_sha256",
+      "expected": "Lowercase digest of this account's independently verified BankProof under an agreed raw-byte/domain contract.",
+      "source_authenticator": "Native bank verifier plus deterministic selected bank-proof hashing.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 37,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L37",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 233
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 89
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/evidence.go",
+          "line": 81
+        }
+      ],
+      "requires_external_trust": "Agreed Go/HD bank proof digest contract; independent native anchor remains required.",
+      "missing_seam": "HD checks format only and supplies no bank-proof serialization/domain definition.",
+      "blocked_test": "Reject substituted account proof, serialization/domain disagreement and mismatch with the verified account.",
+      "status": "DIGEST_CONTRACT_UNSPECIFIED"
+    }
+  ],
+  "independent_blockers": [
+    {
+      "id": "INDEPENDENT_OBSERVER_PROVENANCE",
+      "irreducible_from_current_input": true,
+      "reason": "PortableProof contains only role labels and raw RPC transcripts, not authenticated independent capture/operator provenance. A valid one-server transcript copied into primary and witness roles cannot be distinguished offline using these inputs.",
+      "source_citations": [
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/portable_proof.go",
+          "line": 29
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/portable_proof.go",
+          "line": 180
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/bank_proof.go",
+          "line": 249
+        }
+      ],
+      "required_external_input": "Independently enrolled signed capture/witness evidence bound to exact proof/head/time plus externally reviewed operator independence; no trust keys from stdin.",
+      "blocked_test": "Same-server witness masquerade must reject independently; cryptographic consensus authentication alone does not establish operator independence."
+    },
+    {
+      "id": "GROUNDED_RESERVE_COMPLETENESS",
+      "irreducible_from_current_input": true,
+      "reason": "Native ICS23 proves assets; Reserve fields and nonempty hashes do not prove all liabilities, maximum uncertain outflows, inventory completeness or nonoverlap. The reusable signed review primitive itself cannot establish completeness or reviewer independence.",
+      "source_citations": [
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/evidence.go",
+          "line": 128
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchelservice/reserve_review.go",
+          "line": 3
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchelservice/reserve_review.go",
+          "line": 151
+        }
+      ],
+      "required_external_input": "Current complete immutable account-local inventory, cross-writer census, conservative unknown-claim reservations and independently provisioned accounting/custody reviews.",
+      "blocked_test": "An otherwise genuine bank proof with omitted historical/external liabilities must not manufacture a grounded reserve success."
+    },
+    {
+      "id": "GLOBAL_CONSUMPTION_OUTSIDE_STATELESS_PROOF",
+      "irreducible_from_current_input": true,
+      "reason": "Repeated stateless verification cannot establish global prior receipt nonconsumption across markets, days, manual/external writers or signing journals. Existing journal fences and HD atomic unique receipt consumption remain distinct authorities.",
+      "source_citations": [
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/journal.go",
+          "line": 176
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/epochescrow/journal.go",
+          "line": 264
+        },
+        {
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/prisma/migrations/20261027023000_epoch_v3_held_financial_ledger/migration.sql#L183",
+          "path": "prisma/migrations/20261027023000_epoch_v3_held_financial_ledger/migration.sql",
+          "line": 183
+        }
+      ],
+      "required_external_input": "Protected current journal/receipt authority and existing downstream atomic consumption, with independently reviewed cross-estate writer exclusion. No duplicate controller.",
+      "blocked_test": "Cross-invocation/global receipt replay cannot be declared rejected from proof bytes alone."
+    },
+    {
+      "id": "SOURCE_BINARY_TRUST_INSTALL",
+      "irreducible_from_current_input": true,
+      "reason": "Self-reported source, an executable calculating its own digest and a caller-provided anchor cannot certify independent accepted build/install provenance.",
+      "source_citations": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 121,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L121",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        },
+        {
+          "repository": "Emaren/wolochain",
+          "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+          "path": "internal/satchel/portable_proof.go",
+          "line": 131
+        }
+      ],
+      "required_external_input": "Independent accepted source-to-binary build receipt, root-controlled installation manifest and separately provisioned Comet anchor/capture/reviewer roots.",
+      "blocked_test": "Tampered source/binary/root must fail against external accepted pins rather than self-consistent caller values."
+    }
+  ],
+  "invocation_contract": {
+    "expected_argv": [
+      "--verify-epoch-v3-portable-proof",
+      "--json-stdin"
+    ],
+    "config_flag_absence_is_irreducible": false,
+    "implementable_design": "A single fixed absolute root-controlled nonsecret verifier configuration, independent of stdin and sanitized environment, can support the exact argv. Fail closed if missing/unqualified. Preserve existing --check/config semantics. This design is not implemented by this assessment.",
+    "protected_reader_conflict": "ReadPrivateFile requires file owner equal process EUID and mode with no group/world permissions. An ordinary nonroot HD child cannot reuse it for root-owned 0600 config. Do not run HD as root to bypass this.",
+    "source_citations": [
+      {
+        "repository": "Emaren/wolochain",
+        "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+        "path": "cmd/woloescrowd/main.go",
+        "line": 20
+      },
+      {
+        "repository": "Emaren/wolochain",
+        "source_snapshot": "45065503ca035790cc28edf9ad361ef68fd719f4",
+        "path": "internal/satchelservice/config.go",
+        "line": 79
+      },
+      {
+        "repository": "Emaren/app-prodn",
+        "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+        "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+        "line": 151,
+        "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L151",
+        "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+      }
+    ],
+    "required_reader_properties": [
+      "Fixed path; no stdin/environment path override.",
+      "Root-owned nonsecret data and root-protected ancestors; no symlinks or group/world writes.",
+      "Same checked descriptor for bounded strict read; no executable configuration.",
+      "Do not provision or install configuration under this source-only action."
+    ],
+    "bounds": {
+      "stdin_max_bytes": 14811136,
+      "hd_timeout_ms": 5000,
+      "hd_stdout_max_bytes": 262144,
+      "required_output": "Exactly one bounded compact JSON success or fixed nonsecret refusal plus nonzero exit; no raw proofs or keys in logs.",
+      "strict_decode": "UTF8, unknown/duplicate/folded-key and trailing-data refusal; explicit deadline, bounded allocations; no live RPC fallback."
+    }
+  },
+  "digest_contract": {
+    "already_defined": [
+      {
+        "field": "raw_proof_bundle_sha256",
+        "bytes": "Exact raw stdin UTF8 bytes, unchanged whitespace.",
+        "source": {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 150,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L150",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        }
+      },
+      {
+        "field": "native_verifier_binary_sha256",
+        "bytes": "Exact installed executable file bytes; also require external expected digest.",
+        "source": {
+          "repository": "Emaren/app-prodn",
+          "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+          "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+          "line": 140,
+          "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L140",
+          "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+        }
+      }
+    ],
+    "unspecified_in_exact_hd": [
+      "trust_anchor_sha256 serialization",
+      "proof_sha256 selected receipt proof bytes/domain",
+      "vault_bank.proof_sha256 bytes/domain",
+      "escrow_bank.proof_sha256 bytes/domain",
+      "verification_record_sha256 canonical record/exclusion set/domain",
+      "inventory_sha256 independently audited artifact bytes/domain",
+      "nonoverlap_sha256 independently witnessed artifact bytes/domain"
+    ],
+    "disposition": "Do not invent byte parity or echo caller hashes. Agree a precise source-reviewed Go/HD contract and independently verify required external artifacts before any success verdict."
+  },
+  "hd_owner_repairs": [
+    {
+      "id": "RECEIPTS_INSERT_ARITY",
+      "source_citation": {
+        "repository": "Emaren/app-prodn",
+        "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+        "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+        "line": 171,
+        "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L171",
+        "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+      },
+      "observed": {
+        "column_count": 14,
+        "value_count": 13,
+        "parameter_count": 12
+      },
+      "exact_repair": "Append $12 for chain_time to VALUES. Result must have 14 columns, 14 VALUES and 12 supplied parameters.",
+      "extra_requirement": "Validate chain_time as authenticated selected receipt BlockTime."
+    },
+    {
+      "id": "CERTIFICATE_INSERT_ARITY",
+      "source_citation": {
+        "repository": "Emaren/app-prodn",
+        "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+        "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+        "line": 173,
+        "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L173",
+        "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+      },
+      "observed": {
+        "column_count": 28,
+        "value_count": 27,
+        "parameter_count": 25
+      },
+      "exact_repair": "Append $25 for issuer_provenance to VALUES. Result must have 28 columns, 28 VALUES and 25 supplied parameters."
+    },
+    {
+      "id": "STALE_NATIVE_SOURCE_PIN",
+      "source_citation": {
+        "repository": "Emaren/app-prodn",
+        "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+        "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+        "line": 18,
+        "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L18",
+        "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+      },
+      "observed_pin": "ae9f0277b58f2288e7b1fc25b03eef2a30271577",
+      "exact_repair": "Update only after a real new native verifier source and independent source/binary/anchor/install contract are accepted. Do not substitute a docs-only SHA as proof of an implemented verifier.",
+      "required_pin_contract": [
+        "Accepted full Wolo source commit.",
+        "Independently accepted source-to-binary build mapping and exact executable SHA256.",
+        "Agreed protected trust-anchor byte hash and independent source/reviewer roots.",
+        "Root-protected fixed configuration/install manifest; ordinary nonroot execution.",
+        "Canonical economic-key and digest contracts shared with HD."
+      ]
+    },
+    {
+      "id": "INGESTION_AND_CREDIT_HOLD",
+      "source_citation": {
+        "repository": "Emaren/app-prodn",
+        "commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+        "path": "lib/warSatchelEpochV3NativePgIngest.ts",
+        "line": 16,
+        "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelEpochV3NativePgIngest.ts#L16",
+        "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8"
+      },
+      "exact_requirement": "Keep EPOCH_V3_NATIVE_PG_FINANCIAL_ENABLED=false; preserve restricted NOLOGIN proof-writer group with separately enrolled LOGIN NOINHERIT, SERIALIZABLE atomic persistence and result PERSISTED_UNCREDITED. Do not credit positions or enable a production consumer."
+    },
+    {
+      "id": "KNOWN_SAME_MARKET_PLANNER_LIMIT",
+      "source_citation": {
+        "url": "https://github.com/Emaren/app-prodn/blob/b7e07645e057340de051c5ffa78001ebc939191e/lib/warSatchelNewEpochFinancialContracts.ts#L150",
+        "path": "lib/warSatchelNewEpochFinancialContracts.ts",
+        "line": 150
+      },
+      "exact_requirement": "Retain documented actual HD same-market repeated-original-receipt rejection. The cross-market 40+60 golden is authentic source parity; do not widen this P0 or silently normalize this mismatch."
+    }
+  ],
+  "required_independent_pg16_tests": [
+    {
+      "id": "REAL_INSERT_POSITIVE",
+      "test": "Execute repaired actual ingress INSERT statements in a disposable PG16 database using separately enrolled LOGIN NOINHERIT with SET LOCAL ROLE epoch_v3_proof_writer; persist one receipt, its native certificate and both account evidence rows.",
+      "status": "BLOCKED_BY_HELD_VERIFIER_AND_DORMANT_SQL_ARITIES"
+    },
+    {
+      "id": "UNCREDITED_ONLY",
+      "test": "Successful persistence returns PERSISTED_UNCREDITED and leaves positions, entitlements and receipt consumption unchanged.",
+      "status": "REQUIRED_BEFORE_ANY_FUTURE_ENABLE"
+    },
+    {
+      "id": "ATOMIC_ROLLBACK_EACH_STAGE",
+      "test": "Fail separately after receipt INSERT, certificate INSERT, each bank INSERT and epoch/account validation; assert no partial financial rows survive.",
+      "status": "REQUIRED_IN_DISPOSABLE_PG16"
+    },
+    {
+      "id": "PRIVILEGE_SEPARATION",
+      "test": "Ordinary app and consumer logins cannot INSERT native proof rows or SET ROLE proof writer; proof writer cannot update positions, credit, settle or gain UPDATE on immutable bank records.",
+      "status": "REQUIRED_IN_DISPOSABLE_PG16"
+    },
+    {
+      "id": "IMMUTABLE_SAME_ROOT",
+      "test": "Equal immutable same-root evidence can be reused; changed amount, inventory, nonoverlap, proof or root refuses atomically without UPDATE privileges.",
+      "status": "REQUIRED_IN_DISPOSABLE_PG16"
+    },
+    {
+      "id": "DUPLICATE_AND_SERIALIZABLE",
+      "test": "Concurrent physical-receipt duplicates, changed operations and serialization conflicts fail closed; no automatic retry turns an unknown outcome into a second consumption.",
+      "status": "REQUIRED_IN_DISPOSABLE_PG16"
+    },
+    {
+      "id": "VERIFIER_REFUSAL_BEFORE_WRITE",
+      "test": "Malformed/oversized/duplicate-key/trailing JSON, missing config/root, source/binary/anchor/raw digest mismatch, timeout, nonzero exit or partial stdout causes zero PG writes.",
+      "status": "BLOCKED_BY_MISSING_GENUINE_WIRE_IMPLEMENTATION"
+    }
+  ],
+  "next_integration_action": "Resolve the fixed protected install/pin and independently authenticated observer plus grounded review input contract with the HD owner; keep the existing exact native SDK golden and held command refusal until those inputs can support an honest wire-v1 verdict."
+}

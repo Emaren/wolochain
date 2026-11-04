@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "hd_commit": "b7e07645e057340de051c5ffa78001ebc939191e",
+  "financial_activation_authorized": false,
+  "mismatches": [
+    {
+      "id": "HD_ZERO_LOSER_KIND",
+      "source": "lib/warSatchelNewEpochFinancialContracts.ts",
+      "line": 174,
+      "hd_value": "unmatched_refund",
+      "candidate_json_value": "lost",
+      "scope": "zero payout fully matched loser; exact numeric amounts match",
+      "handling": "Keep actual HD label in SQL; record label difference explicitly."
+    },
+    {
+      "id": "HD_RECEIPT_INSERT_ARITY",
+      "source": "lib/warSatchelEpochV3NativePgIngest.ts",
+      "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8",
+      "columns": 14,
+      "values": 13,
+      "parameters_supplied": 12,
+      "missing_placeholder": "$12 chain_time",
+      "handling": "Held ingress is not invoked or repaired."
+    },
+    {
+      "id": "HD_CERTIFICATE_INSERT_ARITY",
+      "source": "lib/warSatchelEpochV3NativePgIngest.ts",
+      "git_blob_sha": "f50789bc65eb54aa9cf6c2e72a6d603107bbd3b8",
+      "columns": 28,
+      "values": 27,
+      "parameters_supplied": 25,
+      "missing_placeholder": "$25 issuer_provenance",
+      "handling": "Held ingress is not invoked or repaired."
+    },
+    {
+      "id": "HD_OLD_NATIVE_SOURCE_PIN",
+      "source": "lib/warSatchelEpochV3NativePgIngest.ts",
+      "expected_wolo_source": "ae9f0277b58f2288e7b1fc25b03eef2a30271577",
+      "handling": "Future installed verifier needs separately reviewed HD source update."
+    },
+    {
+      "id": "HD_CANONICAL_REQUEST_ENCODER_ABSENT",
+      "handling": "This Wolo-owned adapter independently orders typed semantic fields and checks exact Go bytes/hash domains. It is not existing HD signing code."
+    },
+    {
+      "id": "HD_HELD_INGRESS_AND_FEE_RECONCILER",
+      "handling": "SQL fixture calls unchanged consume_receipt for fee uniqueness and reconcile_return for user returns. This is not the disabled ingress or a deployed fee worker."
+    },
+    {
+      "id": "HD_SAME_MARKET_SPLIT_PLANNER_LIMIT",
+      "source": "lib/warSatchelNewEpochFinancialContracts.ts",
+      "line": 150,
+      "handling": "Actual HD planner rejection duplicate_funding_or_leg is asserted. Go and SQL allow conserved same-market legs; cross-market 40+60 golden passes. No normalization or HD fix."
+    }
+  ]
+}
