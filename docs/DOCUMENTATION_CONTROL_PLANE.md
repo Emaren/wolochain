@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/c01-confined-held-units-20261104` at `f5c37c3878f5c5e73e3b15281d9694527d68b50d`
+Implementation baseline: `fix/c04-exact-original-readonly-20261104` at `4b0bf7f4627990578690210b7cf2a451ff2f7e40`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
@@ -27,21 +27,21 @@ This page is generated from the validated front matter in this repository. Cross
 
 ## Documentation health
 
-- Authoritative repository documents: **48**
+- Authoritative repository documents: **49**
 - Path moves in this migration: **0**
 - Every listed document has an explicit owner, lifecycle, authority, and review interval.
 
 ### Types
 
 - `historical`: 14
-- `reference`: 25
+- `reference`: 26
 - `runbook`: 7
 - `working`: 2
 
 ### Lifecycle
 
 - `active`: 16
-- `draft`: 18
+- `draft`: 19
 - `historical`: 14
 
 ## Documents
@@ -49,6 +49,7 @@ This page is generated from the validated front matter in this repository. Cross
 | Document | Type | Status | Authority |
 | --- | --- | --- | --- |
 | [WoloChain](../README.md) | `reference` | `active` | `chain-repository-entrypoint` |
+| [C04 — bounded original-request / chain-proof observation](../cmd/wolo-c04-verify/README.md) | `reference` | `draft` | `noncrediting-original-request-chain-evidence` |
 | [WoloChain Branch Authority](BRANCH_AUTHORITY.md) | `reference` | `active` | `git-branch-authority-contract` |
 | [Native epoch-v3 wire-v1 trust mismatch and held handoff](epoch-v3-wire-v1-hold.md) | `reference` | `draft` | `source-only-verifier-mismatch-not-financial-authority` |
 | [Exact Settlement Confirmation C4](exact-settlement-confirmation-c4.md) | `reference` | `draft` | `source-only-exact-settlement-confirmation` |

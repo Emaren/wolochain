@@ -1,3 +1,18 @@
+---
+id: "aoe2war.wolochain.c04-original-request-proof"
+title: "C04 — bounded original-request / chain-proof observation"
+type: "reference"
+status: "draft"
+owner: "wolochain-ops"
+systems: ["wolochain","aoe2war"]
+audience: ["developers","operators","ai-agents"]
+source_of_truth: "git"
+authority: "noncrediting-original-request-chain-evidence"
+reviewed_at: "2026-11-04"
+review_interval_days: 14
+sensitivity: "restricted"
+---
+
 # C04 — bounded original-request / chain-proof observation
 
 The `wolo-c04-verify` CLI is a strictly **noncrediting, root-only** historical proof reader. It joins a SHA-256 fingerprint of the original settlement request ID (not the request ID itself) to one protected recorded `accepted` request, then reuses `internal/satchel.ChainReader.ReadTransfer` to cross-check the **actual immutable memo, sender, recipient, amount, MsgSend bytes, CometBFT transaction Merkle proof and H/H+1 result commitments**. It outputs only the public hash, block height/hash, source fingerprint and explicit refusal booleans. The original wallet addresses, memo and request ID never appear in reports or diagnostics.
