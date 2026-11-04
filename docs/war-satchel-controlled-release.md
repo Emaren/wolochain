@@ -307,7 +307,29 @@ HD independently verifies the stored intent and atomically consumes its global
 physical receipt identity. Source CI and reproducible artifacts cannot clear
 physical custody or release gates.
 
-## Protected installation admission — no current executable action
+## Native C01 confined service HOLD templates — 2026-11-04
+
+The tracked `deploy/systemd/wolo-satchel-c01.service` and
+`deploy/systemd/wolo-reviewer-c01.service` are **static, nonenabled** units
+for the separately qualified native binaries pinned to
+`f7b5a74928e041a6a90ac983d87649e0484677a4`. They run as the distinct
+`wolo-satchel` and `wolo-reviewer` service accounts, have independent 0700
+state directories, strictly read-only system mounts and write access limited to
+their own state, no inherited Linux capabilities, no automatic restart, and
+loopback-only network permission. There is no Nginx or consensus dependency.
+
+A `ConditionPathExists` check for each protected operator-config path is
+**NOT a permit, signature, custody key or authenticated chain checkpoint**.
+The runtime itself must validate exact binary/config/source/reviewer identity,
+trust anchor, live reserve inventory and short-lived signed permissions.
+No real protected config, reviewer authority or actual operation permit is
+installed by these templates. Do not `enable` or `start` them under the
+currently held financial release; copy only as reviewed, hash-verified
+nonexecuting artifacts until C03–C08 physical acceptance exists. Do not
+broaden egress from loopback without a separately reviewed independent
+checkpoint proxy boundary.
+
+## Protected installation admission — no current activation action
 
 The former single-daemon installation example is withdrawn from the current
 C01 path: it lacked the final C01 artifact, distinct 8095 qualification and
