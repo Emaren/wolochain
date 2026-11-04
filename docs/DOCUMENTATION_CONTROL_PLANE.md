@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/c07-archived-journal-restore-held-20261104` at `c5e837e42da3696f969fd448664596dd4432442e`
+Implementation baseline: `fix/c04-founder889-comet-index-audit-20261104` at `0baed583fa2977ee0b0f3801a3ab6dd11e020c1e`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
