@@ -90,6 +90,56 @@ class TopologyTests(unittest.TestCase):
         self.assertEqual(result["newOrUnmappedUnits"],[x])
         self.assertFalse(result["cutoverAuthorized"])
 
+    def test_installed_static_unit_is_not_missing_service_file(self):
+        loaded=[TIMER]
+        observations=[MOD.parse_show(show(TIMER),TIMER)]
+        static="aoe2hdbets-bet-stake-reconcile-plan.service"
+        installed=sorted([TIMER,static])
+        report=MOD.topology(loaded,observations,installed=installed)
+        self.assertTrue(report["installedUnitFileInventoryObserved"])
+        self.assertIn(static,report["expectedAbsentUnitNames"])
+        self.assertIn(static,report["installedButNotLoadedExpectedUnitNames"])
+        self.assertNotIn(static,report["notInstalledExpectedUnitNames"])
+        self.assertIn(static,report["installedUnitFilesNotLoaded"])
+        self.assertIs(report["systemdUnitAndUnitFileInventoryAtomic"],False)
+        self.assertIs(report["financialIngressFenced"],False)
+        self.assertIs(report["cutoverAuthorized"],False)
+
+    def test_uninstalled_expected_is_distinct_from_installed_but_unloaded(self):
+        report=MOD.topology([TIMER],[MOD.parse_show(show(TIMER),TIMER)],
+                            installed=[TIMER])
+        self.assertEqual(report["installedButNotLoadedExpectedUnitNames"],[])
+        self.assertIn("aoe2hdbets-bet-stake-reconcile-plan.service",
+                      report["notInstalledExpectedUnitNames"])
+        self.assertEqual(report["status"],"HOLD")
+
+    def test_unit_file_parser_rejects_secret_paths_and_duplicate_or_unsafe_state(self):
+        raw=("aoe2hdbets-web.service enabled enabled\n"
+             "aoe2hdbets-bet-stake-reconcile-plan.service static -\n"
+             "wolochaind-mainnet.service enabled enabled\n")
+        installed=MOD.discover_installed(raw)
+        self.assertEqual(installed,[
+            "aoe2hdbets-bet-stake-reconcile-plan.service",
+            "aoe2hdbets-web.service",
+        ])
+        for item in (
+            "aoe2hdbets-web.service unknown-magic -\n",
+            "aoe2hdbets-web.service enabled -\n"
+            "aoe2hdbets-web.service enabled -\n",
+            "aoe2hdbets-web.service /tmp/private.env -\n",
+            "aoe2hdbets-../../etc/passwd.service static -\n",
+        ):
+            with self.subTest(item=item),self.assertRaises(MOD.TopologyError):
+                MOD.discover_installed(item)
+
+    def test_new_unmapped_unit_stays_visible_even_if_installed(self):
+        unknown="aoe2hdbets-new-payer.timer"
+        report=MOD.topology([unknown],[MOD.parse_show(show(unknown),unknown)],
+                            installed=[unknown])
+        self.assertEqual(report["newOrUnmappedUnits"],[unknown])
+        self.assertFalse(report["satchelActivationAuthorized"])
+        self.assertFalse(report["paymentsReconciled"])
+
     def test_duplicate_and_unbounded_unit_discovery_denied(self):
         with self.assertRaises(MOD.TopologyError):
             MOD.discover("aoe2hdbets-web.service loaded active running A\n"
@@ -106,11 +156,17 @@ class TopologyTests(unittest.TestCase):
                 return "aoe2hdbets-web.service loaded active running Web\n"
             if args[0]=="show":
                 return show("aoe2hdbets-web.service",MainPID="1234")
+            if args[0]=="list-unit-files":
+                return ("aoe2hdbets-web.service enabled enabled\n"
+                        "aoe2hdbets-bet-stake-reconcile-plan.service static -\n")
             raise AssertionError("unexpected command")
         with patch.object(MOD,"run",side_effect=fake):
             report=MOD.inspect()
         self.assertEqual(report["unitsObserved"],1)
-        self.assertEqual(len(calls),2)
+        self.assertEqual(len(calls),3)
+        self.assertEqual(calls[-1][0],"list-unit-files")
+        self.assertIn("aoe2hdbets-bet-stake-reconcile-plan.service",
+                      report["installedButNotLoadedExpectedUnitNames"])
         self.assertFalse(report["financialIngressFenced"])
         self.assertFalse(report["systemdMutationsPerformed"])
 
