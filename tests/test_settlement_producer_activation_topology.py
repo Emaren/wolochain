@@ -112,6 +112,30 @@ class TopologyTests(unittest.TestCase):
         self.assertFalse(report["financialIngressFenced"])
         self.assertFalse(report["satchelActivationAuthorized"])
 
+    def test_new_web_and_release_observers_are_known_not_fenced(self):
+        units = sorted([
+            "aoe2hdbets-web-prod.service",
+            "aoe2hdbets-web-r24.service",
+            "aoe2war-estate-observe.service",
+            "aoe2war-release-readiness-observer.service",
+            "aoe2war-release-readiness-observer.timer",
+            "aoe2war-steam-egress-refresh.service",
+            "aoe2war-steam-egress-refresh.timer",
+        ])
+        self.assertTrue(set(units).issubset(MOD.EXPECTED))
+        observations = [MOD.parse_show(show(name, MainPID="123" if
+                        name.endswith(".service") else "0"), name)
+                        for name in units]
+        report = MOD.topology(units, observations, installed=units)
+        self.assertEqual(report["newOrUnmappedUnits"], [])
+        self.assertFalse(report["financialIngressFenced"])
+        self.assertFalse(report["cutoverAuthorized"])
+        self.assertFalse(report["satchelActivationAuthorized"])
+        self.assertTrue(all(
+            not u["safeToStop"] and not u["paymentCapabilityExcluded"]
+            and not u["sourceRuntimeParityProven"]
+            for u in report["units"]))
+
     def test_unloaded_native_successor_is_not_silently_excluded(self):
         report=MOD.topology([TIMER],[MOD.parse_show(show(TIMER),TIMER)],
                             installed=sorted([TIMER,"wolo-reviewer-c01.service"]))
