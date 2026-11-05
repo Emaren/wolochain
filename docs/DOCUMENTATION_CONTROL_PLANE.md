@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/c08-explicit-offhost-forward-20261104` at `fafb6064203cb2f66700bf424257522a3a11b753`
+Implementation baseline: `fix/c08-intel-unprivileged-witness-20261104` at `f93f368f12a87440fe9342335521a34b0588cafc`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
