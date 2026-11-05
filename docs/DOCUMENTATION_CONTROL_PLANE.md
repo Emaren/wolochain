@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/c08-intel-unprivileged-witness-20261104` at `f93f368f12a87440fe9342335521a34b0588cafc`
+Implementation baseline: `fix/c08-exact-source-limit-20261105` at `96869dbd94c12af1055c176ddf72e467678b801a`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
