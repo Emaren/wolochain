@@ -82,7 +82,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "f34adb17615112ea8a48797015a2d92cd65bd7d874dd6c57cb9f7d1b96af1a17",
+      "sha256": "25681d2a6cf9b709d3a69aa85cd1acb71c6b3b2b324062524e7ef1c0403c53cc",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1135,8 +1135,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/c03-controller-uncovered-unit-veto-20261105",
-    "commit": "fa27763c3b3466a1f4676ec7840fc066efd7d231"
+    "branch": "fix/c05-disjoint-liability-proof-guard-20261105",
+    "commit": "aa8f7a35f75d8b4d967424010bf903970b88517a"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
