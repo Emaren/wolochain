@@ -82,7 +82,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "afbbfdd33258945aab322e249578402c5de6068aafd78f5913eda7e51dbcec5a",
+      "sha256": "7cca1573c2d680a9032fc26ce3e207050fdde62451c93cede263b59ee9d80e0a",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -103,9 +103,9 @@
       "owner": "wolochain-ops",
       "path": "docs/epoch-v3-wire-v1-hold.md",
       "review_interval_days": 7,
-      "reviewed_at": "2026-10-28",
+      "reviewed_at": "2026-11-05",
       "sensitivity": "internal",
-      "sha256": "cc6eac5665bd8f45fe87c0d14668faa87e5a0f1baed0f5229353b37efd4af74a",
+      "sha256": "875f09dff24cab7f74ee61eb1951e69bd3341b614687697d0a571ec5c5750f4a",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -633,9 +633,9 @@
       "owner": "wolochain-ops",
       "path": "docs/war-satchel-integration-readiness.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-10-21",
+      "reviewed_at": "2026-11-05",
       "sensitivity": "restricted",
-      "sha256": "21b115af0c67a6f47227216c3aca62c1450457616294e5b2c713553780b35a9f",
+      "sha256": "cfe9bce2e9b7d249e4808569a7deb861ca49894166b7998ab2a5cb2f52d7c91c",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -1136,7 +1136,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "fix/c08-explicit-offhost-forward-20261104",
-    "commit": "88e78f4a819f10033809990e0459c68805897c44"
+    "commit": "fafb6064203cb2f66700bf424257522a3a11b753"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
