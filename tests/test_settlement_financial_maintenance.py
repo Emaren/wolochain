@@ -115,9 +115,17 @@ class FakeSystemd:
         self.foreign_condition = False
         self.loaded = False
         self.pid_after_stop = None
+        self.extra_systemd_units = set()
+        self.extra_systemd_installed = set()
 
     def __call__(self, argv, **kwargs):
         self.calls.append(list(argv))
+        if argv[:3] == ["systemctl", "--no-pager", "list-units"]:
+            names = set(MOD.UNITS) | self.extra_systemd_units
+            return "".join(f"{n} loaded active running Synthetic\n" for n in sorted(names))
+        if argv[:3] == ["systemctl", "--no-pager", "list-unit-files"]:
+            names = set(MOD.UNITS) | self.extra_systemd_installed
+            return "".join(f"{n} enabled\n" for n in sorted(names))
         if argv[:3] == ["systemctl", "--no-pager", "show"]:
             unit = argv[-1]
             active = self.active[unit]
@@ -267,6 +275,28 @@ class FenceTests(unittest.TestCase):
 
     def do_fence(self):
         return MOD.fence(self.permit, self.receipt, runner=self.runner)
+
+    def test_unknown_active_web_unit_blocks_before_any_hold_or_stop(self):
+        self.runner.extra_systemd_units.add("aoe2hdbets-web-prod.service")
+        with self.assertRaisesRegex(MOD.MaintenanceError,
+                                    "FINANCIAL_SYSTEMD_UNIT_OUTSIDE_SIGNED_FENCE_SCOPE"):
+            self.do_fence()
+        self.assertFalse(MOD.HOLD.exists())
+        self.assertFalse(any(c[:2] == ["systemctl", "stop"] for c in self.runner.calls))
+
+    def test_dormant_installed_financial_unit_also_refuses_fence(self):
+        self.runner.extra_systemd_installed.add("aoe2war-steam-egress-refresh.timer")
+        with self.assertRaisesRegex(MOD.MaintenanceError,
+                                    "FINANCIAL_SYSTEMD_UNIT_OUTSIDE_SIGNED_FENCE_SCOPE"):
+            self.do_fence()
+        self.assertFalse(MOD.HOLD.exists())
+
+    def test_new_unit_after_a_valid_fence_invalidates_receipt(self):
+        self.do_fence()
+        self.runner.extra_systemd_units.add("aoe2hdbets-web-r24.service")
+        with self.assertRaisesRegex(MOD.MaintenanceError,
+                                    "FINANCIAL_SYSTEMD_UNIT_OUTSIDE_SIGNED_FENCE_SCOPE"):
+            MOD.verify_current_fence(self.receipt, MOD.scope_digest(), runner=self.runner)
 
     def test_gates_are_loaded_before_stops_and_timer_order_is_exact(self):
         value = self.do_fence()

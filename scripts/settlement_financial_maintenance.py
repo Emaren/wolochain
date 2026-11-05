@@ -36,6 +36,15 @@ FAMILIES = ("aoe2hdbets-bet-stake-reconcile", "aoe2hdbets-challenge-reconcile",
 TIMERS = tuple(x + ".timer" for x in FAMILIES)
 ONESHOTS = tuple(x + ".service" for x in FAMILIES)
 UNITS = APPS + ONESHOTS + TIMERS
+# Source-bound identity universe. A previously unknown additional HD/DE/Wolo
+# systemd unit must not survive a nominal 18-unit financial freeze unexamined.
+# These prefixes are a *discovery* scope, never permission to stop such units.
+FINANCIAL_SYSTEMD_PREFIXES = (
+    "aoe2hdbets-", "aoe2dewarwagers-", "aoe2war-", "aoe2-wolo-",
+    "wolo-satchel-c01.", "wolo-reviewer-c01.",
+)
+FINANCIAL_SYSTEMD_UNIT = re.compile(r"[a-zA-Z0-9_.@:-]{1,120}\.(?:service|timer)\Z")
+MAX_FINANCIAL_SYSTEMD_LISTING = 96_000
 HOLD = Path("/etc/wolochain-financial-maintenance/HOLD")
 DROPIN = "90-wolo-financial-maintenance.conf"
 SYSTEMD = Path("/etc/systemd/system")
@@ -94,6 +103,43 @@ def digest(raw):
 
 def canonical(value):
     return json.dumps(value, sort_keys=True, separators=(",", ":")).encode()
+
+
+def reject_unfenced_financial_systemd_units(runner):
+    """Fail before any financial HOLD/write if systemd's actual activation
+    universe exceeds the exact permit's 18 owned units.
+
+    This deliberately refuses new public web/Steam/release units, even when
+    currently inactive. A dormant enabled unit may start during a backup.
+    Operators must obtain independently reviewed writer exclusions and a new
+    controller source/permit, not silently treat unknown units as inert.
+    """
+    observed = set()
+    for cmd in (
+        ["systemctl", "--no-pager", "list-units", "--all", "--type=service",
+         "--type=timer", "--no-legend", "--plain"],
+        ["systemctl", "--no-pager", "list-unit-files", "--type=service",
+         "--type=timer", "--no-legend", "--plain"],
+    ):
+        raw = runner(cmd)
+        require(isinstance(raw, str) and len(raw) <= MAX_FINANCIAL_SYSTEMD_LISTING,
+                "UNBOUNDED_OR_MISSING_FINANCIAL_SYSTEMD_INVENTORY")
+        names = set()
+        for line in raw.splitlines():
+            fields = line.strip().split()
+            if not fields:
+                continue
+            name = fields[0].lstrip("●")
+            if not name.startswith(FINANCIAL_SYSTEMD_PREFIXES):
+                continue
+            require(FINANCIAL_SYSTEMD_UNIT.fullmatch(name) and name not in names,
+                    "MALFORMED_OR_DUPLICATE_FINANCIAL_SYSTEMD_UNIT")
+            names.add(name)
+            require(len(names) <= 100, "UNBOUNDED_FINANCIAL_SYSTEMD_UNITS")
+        observed.update(names)
+    require(observed and set(UNITS).issuperset(observed),
+            "FINANCIAL_SYSTEMD_UNIT_OUTSIDE_SIGNED_FENCE_SCOPE")
+    return tuple(sorted(observed))
 
 
 def scope_digest():
@@ -407,6 +453,7 @@ def _verify_fence(receipt_path, expected_scope_sha256, *, now=None, runner=None,
             "OWNED_HOLD_MISSING_OR_CHANGED")
     for unit in UNITS:
         require(private_read(dropin(unit)) == expected_dropin(), "OWNED_DROPIN_DRIFT")
+    reject_unfenced_financial_systemd_units(runner)
     observed = inactive_observation(runner)
     (_validate_permit_contract(permit) if retained else validate_permit(permit, now=now))
     at = now or clock()
@@ -467,6 +514,7 @@ def fence(permit_path, receipt_path, *, runner=None, expected_permit_sha256=None
     runner = bounded_runner(runner, permit)
     require(os.geteuid() == 0, "ROOT_REQUIRED")
     require(not HOLD.exists() and not HOLD.is_symlink(), "EXISTING_HOLD_REQUIRES_REVIEW")
+    reject_unfenced_financial_systemd_units(runner)
     no_jobs(runner)
     prestate = {unit: show(unit, runner) for unit in UNITS}
     for unit in UNITS:
@@ -501,6 +549,7 @@ def fence(permit_path, receipt_path, *, runner=None, expected_permit_sha256=None
         runner(["systemctl", "stop", "--", unit])
     wait_for_no_jobs(runner, permit)
     inactive_observation(runner)
+    reject_unfenced_financial_systemd_units(runner)
     validate_permit(permit)
     receipt = {"schema": FENCE_SCHEMA, "scope_sha256": scope_digest(),
                "permit_path": str(Path(permit_path)), "permit_sha256": permit_sha,
