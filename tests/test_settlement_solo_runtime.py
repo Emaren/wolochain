@@ -199,6 +199,27 @@ class RuntimeTests(unittest.TestCase):
                 m.restore_isolated(Path("/root/fence"), output, phase_window=phase)
             run.assert_not_called()
 
+    def test_exact_offhost_reverse_ssh_loopback_requires_unique_port_and_host(self):
+        # Loopback is a deliberately routed SSH tunnel, not self-witness.
+        # SSH host key, external host identity and the signed owner request
+        # are still verified at actual admission.
+        w = self.c["witness"]
+        w["host"] = "127.0.0.1"
+        w["port"] = 22995
+        self.assertEqual(r.load_config(o.canonical(self.c))["witness"]["host"], "127.0.0.1")
+        for host, port in (
+            ("127.0.0.1", 22), ("127.0.0.1", 22996),
+            ("localhost", 22995), ("localhost", 22),
+        ):
+            with self.subTest(host=host, port=port):
+                w["host"], w["port"] = host, port
+                with self.assertRaisesRegex(o.AuthorityHold, "SEPARATELY_ENROLLED_WITNESS_REQUIRED"):
+                    r.load_config(o.canonical(self.c))
+        w["host"], w["port"] = "127.0.0.1", 22995
+        w["host_identity_sha256"] = self.c["host_identity_sha256"]
+        with self.assertRaisesRegex(o.AuthorityHold, "SEPARATELY_ENROLLED_WITNESS_REQUIRED"):
+            r.load_config(o.canonical(self.c))
+
     def test_same_host_witness_and_expired_window_are_refused(self):
         self.c["witness"]["host_identity_sha256"] = self.c["host_identity_sha256"]
         with self.assertRaisesRegex(o.AuthorityHold, "SEPARATELY_ENROLLED_WITNESS_REQUIRED"):

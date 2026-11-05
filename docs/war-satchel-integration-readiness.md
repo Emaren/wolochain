@@ -8,10 +8,20 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "source-integration-proof-not-production-approval"
-reviewed_at: "2026-10-21"
+reviewed_at: "2026-11-05"
 review_interval_days: 14
 sensitivity: "restricted"
 ---
+
+## November 5, 2026 — bounded documentation review
+
+This remains **source integration history, not release authorization**.
+The reviewed historical tests, exact older HD PRs and migration frontiers
+below must not be interpreted as current deployment evidence. In the current
+HEL1 physical checks the original validator and settlement 8092/8093 remain
+active, whereas Satchel/independent reviewer 8094/8095 have not been activated.
+The held C08 Intel off-host SSH witness work is a separate maintenance control;
+it neither proves funded custody nor retires the bank/liability/finality holds.
 
 # War Satchel Integration Evidence and Operator Handoff
 

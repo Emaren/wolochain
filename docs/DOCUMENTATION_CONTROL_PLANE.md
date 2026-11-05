@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/c04-founder889-comet-index-audit-20261104` at `0baed583fa2977ee0b0f3801a3ab6dd11e020c1e`
+Implementation baseline: `fix/c08-explicit-offhost-forward-20261104` at `fafb6064203cb2f66700bf424257522a3a11b753`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 

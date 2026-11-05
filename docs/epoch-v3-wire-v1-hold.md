@@ -8,10 +8,19 @@ systems: ["wolochain", "aoe2war"]
 audience: ["developers", "operators", "ai-agents"]
 source_of_truth: "git"
 authority: "source-only-verifier-mismatch-not-financial-authority"
-reviewed_at: "2026-10-28"
+reviewed_at: "2026-11-05"
 review_interval_days: 7
 sensitivity: "internal"
 ---
+
+## November 5, 2026 — bounded documentation review
+
+This remains a **historical, source-only HOLD**: the wire-v1 CLI refusal,
+missing independently enrolled trust inputs, and exact earlier test receipts
+are not a current custody admission or production verifier. The C08 reverse-SSH
+witness source change in held PR #138 does not satisfy the separate wire-v1
+proof contract. The dated implementation/artifact references below are kept as
+history, not represented as newly verified live binaries or financial approval.
 
 # Native epoch-v3 wire-v1 trust mismatch and held handoff
 
