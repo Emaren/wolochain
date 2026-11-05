@@ -69,6 +69,7 @@ WINDOWS = {"live_capture": 1800, "offline_verify": 14400, "resume_existing": 180
 SOURCES = frozenset({"settlement_solo_runtime.py", "settlement_solo_owner_intent_review.py",
                     "settlement_maintenance_nonce_store.py", "settlement_financial_maintenance.py",
                     "settlement_resume_producer_identities.py", "settlement_solo_resume.py"})
+MAX_PINNED_CONTROLLER_SOURCE_BYTES = 131072  # 128 KiB; strict finite source-only read
 RUNTIME_UNITS = ("wolochaind-mainnet.service", "wolochain-mainnet-settlement.service",
                  "wolochain-founder-rewards-settlement.service")
 WRITERS = frozenset({"hd_web_api", "de_shared_financial_writers", "seven_timer_service_pairs",
@@ -254,7 +255,8 @@ def consume_remote(config, packet_raw):
 def source_check(config):
     for name, expected in config["controller_files"].items():
         from settlement_financial_maintenance import private_read
-        require(sha(private_read(Path(__file__).with_name(name), source=True)) == expected,
+        require(sha(private_read(Path(__file__).with_name(name),
+                                limit=MAX_PINNED_CONTROLLER_SOURCE_BYTES, source=True)) == expected,
                 "SOLO_RUNTIME_CONTROLLER_SOURCE_DRIFT")
     require(host_identity() == config["host_identity_sha256"], "SOLO_RUNTIME_HOST_DRIFT")
 

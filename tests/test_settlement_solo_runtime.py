@@ -80,6 +80,30 @@ class RuntimeTests(unittest.TestCase):
             return r.consume_witness(self.c if config is None else config, o.canonical(self.e),
                 self.signed() if packet is None else packet, nonce_root=self.nonces, now=NOW)
 
+    def test_full_actual_six_source_files_fit_bounded_protected_self_check(self):
+        # Regression for the 66,795-byte real financial controller on HEL1:
+        # m.private_read(source=True) defaults to 65,536; that used to block
+        # correct SHA-pinned installation before any nonce could be admitted.
+        actual = {name: (ROOT / "scripts" / name).read_bytes() for name in r.SOURCES}
+        self.assertGreater(len(actual["settlement_financial_maintenance.py"]), 65536)
+        self.assertLessEqual(max(map(len, actual.values())),
+                             r.MAX_PINNED_CONTROLLER_SOURCE_BYTES)
+        self.c["controller_files"] = {name: r.sha(blob) for name, blob in actual.items()}
+        def private_source(path, limit=65536, *, source=False):
+            self.assertTrue(source)
+            self.assertEqual(limit, r.MAX_PINNED_CONTROLLER_SOURCE_BYTES)
+            data = actual[Path(path).name]
+            if len(data) > limit:
+                raise m.MaintenanceError("ROOT_PRIVATE_REGULAR_FILE_REQUIRED")
+            return data
+        with patch.object(m, "private_read", side_effect=private_source), \
+             patch.object(r, "host_identity", return_value=self.c["host_identity_sha256"]):
+            r.source_check(self.c)
+            self.c["controller_files"]["settlement_financial_maintenance.py"] = "a" * 64
+            with self.assertRaisesRegex(o.AuthorityHold, "SOLO_RUNTIME_CONTROLLER_SOURCE_DRIFT"):
+                r.source_check(self.c)
+        self.assertEqual(r.MAX_PINNED_CONTROLLER_SOURCE_BYTES, 131072)
+
     def test_new_production_domain_real_signature_and_durable_consumption(self):
         packet = self.signed()
         ack = self.consume(packet)
