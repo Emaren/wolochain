@@ -15,6 +15,27 @@ sensitivity: "restricted"
 
 # WoloChain Mainnet Settlement Runbook
 
+## November 5, 2026 — C08 real protected-source size admission repair (HELD)
+
+HEL1 root verified all six files from immutable held Wolo merge
+9447bb62545781aa293d88a931b30b4c7a89dd97 and preserved the live
+validator/8092/8093. An actual root-owned source_check rejected the
+66,795-byte settlement_financial_maintenance.py: the original
+private_read(source=True) default was only 65,536 bytes. This was a
+source-only implementation defect, not bad file ownership or an authority
+denial. The exact held repair passes a finite 131,072-byte source-only
+limit when verifying the six pinned controller files; secret/config/permit
+read limits and root:root ownership, no-symlink, regular-file, stable-inode,
+no-write-mode and per-file SHA256 requirements remain unchanged. A focused
+regression uses the actual repository file lengths and proves source drift
+still fails closed.
+
+The corrected source requires fresh full CI, merge to HELD source, and
+root-only exact-revision restaging before CLI admission. This is NOT an
+approved maintenance phase or evidence of funded production readiness.
+Original financial units remain untouched. Do not weaken root private
+file checks merely to suppress this error.
+
 ## November 5, 2026 — Intel rootless owner-witness fallback (HELD)
 
 The owner's physically separate macOS 11.7.4 Intel Mac successfully ran an

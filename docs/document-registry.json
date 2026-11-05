@@ -82,7 +82,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "8b6f9a5fa010df97672919887fba6ac45e1f57b7db6ab894989ac35a12f721cf",
+      "sha256": "d2a375321d0506d4874c9d3c59fc4eea41338b63d45af0793e48450ae6fbba46",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -358,7 +358,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-10-26",
       "sensitivity": "restricted",
-      "sha256": "7b6cd771278fbaa172dbf0aa04f1514fc0b9b96a9c6727556a25b7fc4029a3f1",
+      "sha256": "9e03e8798975828f3d41e686dcf4b10ab769a289b2baf94b7d7c01515ce0b670",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -1135,8 +1135,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/c08-intel-unprivileged-witness-20261104",
-    "commit": "f93f368f12a87440fe9342335521a34b0588cafc"
+    "branch": "fix/c08-exact-source-limit-20261105",
+    "commit": "96869dbd94c12af1055c176ddf72e467678b801a"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
