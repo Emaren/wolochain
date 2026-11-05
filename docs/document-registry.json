@@ -82,7 +82,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "d2a375321d0506d4874c9d3c59fc4eea41338b63d45af0793e48450ae6fbba46",
+      "sha256": "c327d22347f34dadd8dab0acf25d8010c98dcfc0d1ac25d5d657115b1e2a1ce2",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1135,8 +1135,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/c08-exact-source-limit-20261105",
-    "commit": "96869dbd94c12af1055c176ddf72e467678b801a"
+    "branch": "fix/c03-activation-topology-20261105",
+    "commit": "45d4076ae21759cac427cb5cbae1f2f7f6037167"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

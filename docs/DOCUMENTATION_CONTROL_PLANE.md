@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/c08-exact-source-limit-20261105` at `96869dbd94c12af1055c176ddf72e467678b801a`
+Implementation baseline: `fix/c03-activation-topology-20261105` at `45d4076ae21759cac427cb5cbae1f2f7f6037167`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 

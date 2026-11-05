@@ -60,6 +60,15 @@ EXPECTED = frozenset({
     "aoe2hdbets-trophy-tributes.service",
     "aoe2hdbets-trophy-tributes.timer",
     "aoe2hdbets-web.service",
+    # Include newer production website and read-only release observer units
+    # in the finance-ownership review universe. Recognition is never approval.
+    "aoe2hdbets-web-prod.service",
+    "aoe2hdbets-web-r24.service",
+    "aoe2war-estate-observe.service",
+    "aoe2war-release-readiness-observer.service",
+    "aoe2war-release-readiness-observer.timer",
+    "aoe2war-steam-egress-refresh.service",
+    "aoe2war-steam-egress-refresh.timer",
     "aoe2war-prewarm.service",
     "aoe2war-prewarm.timer",
     "wolo-satchel-c01.service",
