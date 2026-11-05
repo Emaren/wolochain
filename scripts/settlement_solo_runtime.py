@@ -126,7 +126,11 @@ def load_config(raw):
     require(type(w) is dict and set(w) == {"host", "user", "port", "identity_path",
                 "known_hosts_path", "known_hosts_sha256", "host_identity_sha256"}
             and type(w["host"]) is str and re.fullmatch(r"[a-zA-Z0-9][a-zA-Z0-9.-]{0,252}", w["host"])
-            and w["host"] not in {"localhost", "127.0.0.1"}
+            # The sole explicit exception is a loopback reverse-SSH forward
+            # from HEL1 to a physically separate, host-key-pinned Intel Mac.
+            # No arbitrary localhost aliases or other loopback ports qualify.
+            and (w["host"] not in {"localhost", "127.0.0.1"} or
+                 (w["host"] == "127.0.0.1" and w["port"] == 22995))
             and type(w["user"]) is str and re.fullmatch(r"[a-z_][a-z0-9_-]{0,31}", w["user"])
             and type(w["port"]) is int and 1 <= w["port"] <= 65535
             and all(type(w[k]) is str and Path(w[k]).is_absolute()
