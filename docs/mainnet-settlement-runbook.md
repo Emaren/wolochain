@@ -15,6 +15,35 @@ sensitivity: "restricted"
 
 # WoloChain Mainnet Settlement Runbook
 
+## November 5, 2026 — Intel rootless owner-witness fallback (HELD)
+
+The owner's physically separate macOS 11.7.4 Intel Mac successfully ran an
+unprivileged loopback SSH daemon with no administrative password, while HEL1
+retains the dedicated outbound host-key-pinned SSH identity and the
+loopback-only reverse tunnel. The nonroot Darwin witness configuration and
+nonce paths are derived from the operating-system account database rather
+than the SSH client's requested command or a writable environment variable.
+Root Darwin and Linux paths retain their existing protected semantics.
+
+This is a source-only alternate witness-storage mode, not a deployed
+controller or financial production approval. The user-owned private directory
+and 0600 evidence guard against an attacker controlling only the VPS. They
+are not root-protected on Intel: a compromised Intel user account may
+erase/replay its own nonce ledger. A separately enrolled root-owned/hardware
+witness is stronger for disaster recovery and remains preferable. This
+fallback does not weaken owner Ed25519 verification, separate host identity,
+private pinned binaries, frozen source, one-use nonce reservation, SSH
+host-key pinning, or phase expiry.
+
+The existing production SSH endpoint on Intel port 22996 still forces
+/usr/bin/false; a rootless endpoint running locally on 22997 was probed
+for loopback accessibility only. There is no completed signed challenge,
+no observed replay rejection through the tunnel, no authorized
+financial maintenance phase, and no bank/finality/asset certification.
+No funds, mainnet wallet or legacy settlement service are changed by this
+source.
+
+
 ## October 26, 2026 — aggregate replay evidence and actual P1 frontier
 
 [Held PR107](https://github.com/Emaren/wolochain/pull/107) extends qualified

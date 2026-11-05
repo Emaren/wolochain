@@ -30,10 +30,26 @@ ACK_SCHEMA = "wolo.solo-maintenance-offhost-consumption.v1"
 CONFIG = Path("/etc/wolochain-financial-maintenance/authority/solo-runtime.json")
 ENROLLMENT = CONFIG.with_name("solo-owner.json")
 NONCE_ROOT = Path("/var/lib/wolo-financial-authority-nonces/solo-runtime-v1")
-def witness_paths(platform):
-    # macOS /etc and /var are symlinks. Keep the strict canonical-file reader;
-    # enroll canonical paths rather than weakening it for the owner's Mac.
-    prefix = Path("/private") if platform == "darwin" else Path("/")
+def witness_paths(platform, *, effective_uid=None, account_home=None):
+    # macOS /etc and /var are symlinks. Keep root's original protected
+    # paths, but support a physically separate Intel witness under the actual
+    # local account with NO sudo escalation. This is not a root-independent
+    # store: compromise of the Intel account can erase its nonce history.
+    if platform == "darwin":
+        uid = os.geteuid() if effective_uid is None else effective_uid
+        if uid != 0:
+            if account_home is None:
+                import pwd
+                account_home = pwd.getpwuid(uid).pw_dir
+            home = Path(account_home)
+            owner.require(home.is_absolute() and home != Path("/") and ".." not in home.parts,
+                    "WITNESS_ACCOUNT_HOME_INVALID")
+            base = home / ".wolo-owner-authority/witness-runtime"
+            return (base / "authority/solo-witness.json",
+                    base / "nonces")
+        prefix = Path("/private")
+    else:
+        prefix = Path("/")
     return (prefix / "etc/wolochain-financial-maintenance/authority/solo-witness.json",
             prefix / "var/lib/wolo-financial-authority-nonces/solo-witness-v1")
 

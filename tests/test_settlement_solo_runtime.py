@@ -169,7 +169,7 @@ class RuntimeTests(unittest.TestCase):
         self.assertEqual(len(list(self.nonces.glob("nonce-*"))), 1)
 
     def test_owner_mac_witness_paths_preserve_canonical_no_symlink_policy(self):
-        config, ledger = r.witness_paths("darwin")
+        config, ledger = r.witness_paths("darwin", effective_uid=0)
         self.assertEqual(str(config), "/private/etc/wolochain-financial-maintenance/authority/solo-witness.json")
         self.assertTrue(str(ledger).startswith("/private/var/"))
         self.assertEqual(str(r.witness_paths("linux")[0]), "/etc/wolochain-financial-maintenance/authority/solo-witness.json")
@@ -198,6 +198,27 @@ class RuntimeTests(unittest.TestCase):
             with self.assertRaisesRegex(m.MaintenanceError, "SIGNED_MANIFEST_CHANGED_AT_USE"):
                 m.restore_isolated(Path("/root/fence"), output, phase_window=phase)
             run.assert_not_called()
+
+    def test_nonroot_darwin_witness_is_offhost_and_never_root_authority(self):
+        from pathlib import Path
+        root_conf, root_nonce = r.witness_paths("darwin", effective_uid=0)
+        self.assertEqual(str(root_conf), "/private/etc/wolochain-financial-maintenance/authority/solo-witness.json")
+        self.assertEqual(str(root_nonce), "/private/var/lib/wolo-financial-authority-nonces/solo-witness-v1")
+        user_conf, user_nonce = r.witness_paths(
+            "darwin", effective_uid=501, account_home="/Users/owner_witness")
+        self.assertEqual(str(user_conf),
+                         "/Users/owner_witness/.wolo-owner-authority/witness-runtime/authority/solo-witness.json")
+        self.assertEqual(str(user_nonce),
+                         "/Users/owner_witness/.wolo-owner-authority/witness-runtime/nonces")
+        self.assertNotEqual(user_conf, root_conf)
+        self.assertNotEqual(user_nonce, root_nonce)
+        with self.assertRaisesRegex(o.AuthorityHold, "WITNESS_ACCOUNT_HOME_INVALID"):
+            r.witness_paths("darwin", effective_uid=501, account_home="../../untrusted")
+        with self.assertRaisesRegex(o.AuthorityHold, "WITNESS_ACCOUNT_HOME_INVALID"):
+            r.witness_paths("darwin", effective_uid=501, account_home="/")
+        linux_conf, linux_nonce = r.witness_paths("linux", effective_uid=501)
+        self.assertEqual(str(linux_conf), "/etc/wolochain-financial-maintenance/authority/solo-witness.json")
+        self.assertEqual(str(linux_nonce), "/var/lib/wolo-financial-authority-nonces/solo-witness-v1")
 
     def test_exact_offhost_reverse_ssh_loopback_requires_unique_port_and_host(self):
         # Loopback is a deliberately routed SSH tunnel, not self-witness.
