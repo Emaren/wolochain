@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `session-b/c04-founder889-attribution-20261106` at `9b7e1faebb7c2d5079e962265f15c8038bf98623`
+Implementation baseline: `session-b/c04-hashless69-quarantine-20261106` at `60386ad63362596b7e4b7fb75c951f87cac90159`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 

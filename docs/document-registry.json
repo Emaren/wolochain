@@ -151,7 +151,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "db3a2b50d1c9d21b9b50949914b249af93ea6ed29e0f454249a2fb3fdf2b8d36",
+      "sha256": "6e76345e35bb42e9f4ff30c3156f40ae1972d80fc6a96faab22a6fdc25e46bc2",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1228,8 +1228,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "session-b/c04-founder889-attribution-20261106",
-    "commit": "9b7e1faebb7c2d5079e962265f15c8038bf98623"
+    "branch": "session-b/c04-hashless69-quarantine-20261106",
+    "commit": "60386ad63362596b7e4b7fb75c951f87cac90159"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
