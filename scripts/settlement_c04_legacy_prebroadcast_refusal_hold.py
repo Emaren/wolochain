@@ -8,6 +8,7 @@ legacy broadcast is not proof that no other financial signer ever paid.
 from __future__ import annotations
 
 import argparse
+from datetime import datetime, timedelta
 import hashlib
 import json
 import os
@@ -86,6 +87,16 @@ def positive_int(v, label):
     return v
 
 
+def utc_timestamp(value, reason):
+    require(type(value) is str and 10 <= len(value) <= 40, reason)
+    try:
+        dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        raise Refusal(reason) from None
+    require(dt.tzinfo is not None and dt.utcoffset() == timedelta(0), reason)
+    return dt
+
+
 def wallet_digest(address):
     require(type(address) is str and address.startswith("wolo1") and
             40 <= len(address) <= 100, "INVALID_JOURNAL_WALLET")
@@ -100,6 +111,19 @@ def classify(observation: dict, journal: dict, input_hashes: dict) -> dict:
     require(observation.get("wallet_material_exported") is False and
             observation.get("production_mutated") is False,
             "OBSERVATION_NOT_NONMUTATING")
+    require(observation.get("service_name") == "wolochain-mainnet-settlement.service"
+            and observation.get("running_process_executable_matches_disk") is True,
+            "EXECUTABLE_SERVICE_IDENTITY_NOT_VERIFIED")
+    installed = utc_timestamp(observation.get("legacy_binary_mtime_utc"),
+                              "BINARY_INSTALL_TIME_NOT_VERIFIED")
+    started = utc_timestamp(observation.get("service_active_enter_utc"),
+                            "SERVICE_START_TIME_NOT_VERIFIED")
+    observed = utc_timestamp(observation.get("observed_utc"),
+                             "LIVE_OBSERVATION_TIME_NOT_VERIFIED")
+    recorded = utc_timestamp(journal.get("updated_at"),
+                             "JOURNAL_RECORD_TIME_NOT_VERIFIED")
+    require(installed <= started <= recorded <= observed,
+            "BINARY_START_JOURNAL_TEMPORAL_BINDING_UNVERIFIED")
     claim = observation.get("claim")
     wager = observation.get("wager")
     require(type(claim) is dict and type(wager) is dict, "SOURCE_ROW_MISSING")
@@ -166,6 +190,8 @@ def classify(observation: dict, journal: dict, input_hashes: dict) -> dict:
         "status": "HOLD",
         "scope": "claim-9645-market-946520-only",
         "source_revision_bound": EXPECTED_VCS,
+        "source_binary_active_before_journal_record": True,
+        "journal_recorded_utc": journal["updated_at"],
         "local_legacy_journal_prebroadcast_refusal": True,
         "legacy_run_failure_code": FAILURE,
         "local_legacy_executor_broadcast_count_evidenced": 0,

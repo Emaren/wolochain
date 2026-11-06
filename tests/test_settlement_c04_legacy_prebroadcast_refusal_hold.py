@@ -32,6 +32,11 @@ class C04PrebroadcastRefusalTests(unittest.TestCase):
             "schema": self.m.OBSERVATION_SCHEMA,
             "legacy_binary_vcs": self.m.EXPECTED_VCS,
             "legacy_binary_sha256": self.m.EXPECTED_BINARY_SHA,
+            "service_name": "wolochain-mainnet-settlement.service",
+            "running_process_executable_matches_disk": True,
+            "legacy_binary_mtime_utc": "2026-10-01T21:54:06.380968+00:00",
+            "service_active_enter_utc": "2026-10-16T13:31:22+00:00",
+            "observed_utc": "2026-11-06T03:30:00+00:00",
             "wallet_material_exported": False,
             "production_mutated": False,
             "recipient_wallet_sha256": self.m.wallet_digest(self.address),
@@ -49,6 +54,7 @@ class C04PrebroadcastRefusalTests(unittest.TestCase):
             },
         }
         self.journal = {
+            "updated_at": "2026-10-23T18:26:18.455903+00:00",
             "fingerprint": "synthetic-fingerprint",
             "request": {
                 "settlement_run_id": "aoe2-bet-market-946520",
@@ -149,6 +155,27 @@ class C04PrebroadcastRefusalTests(unittest.TestCase):
         self.journal["response"]["idempotent_replay"] = False
         self.journal["request"]["payouts"].append(copy.deepcopy(self.journal["request"]["payouts"][0]))
         self.denied("EXACTLY_ONE_PAYOUT")
+
+    def test_binary_must_precede_legacy_service_and_record(self):
+        self.obs["legacy_binary_mtime_utc"] = "2026-11-01T00:00:00+00:00"
+        self.denied("BINARY_START_JOURNAL_TEMPORAL_BINDING")
+
+    def test_service_must_be_active_before_recorded_attempt(self):
+        self.obs["service_active_enter_utc"] = "2026-10-24T00:00:00+00:00"
+        self.denied("BINARY_START_JOURNAL_TEMPORAL_BINDING")
+
+    def test_running_process_inode_and_service_identity_required(self):
+        self.obs["running_process_executable_matches_disk"] = False
+        self.denied("EXECUTABLE_SERVICE_IDENTITY")
+        self.obs["running_process_executable_matches_disk"] = True
+        self.obs["service_name"] = "wolo-reviewer-c01.service"
+        self.denied("EXECUTABLE_SERVICE_IDENTITY")
+
+    def test_bad_timezone_and_journal_timestamp_cannot_pass(self):
+        self.journal["updated_at"] = "2026-10-23T18:26:18"
+        self.denied("JOURNAL_RECORD_TIME")
+        self.journal["updated_at"] = "2026-09-28T00:00:00+00:00"
+        self.denied("BINARY_START_JOURNAL_TEMPORAL_BINDING")
 
     def test_runtime_identity_not_replaceable_by_an_observer(self):
         self.obs["legacy_binary_vcs"] = "c" * 40
