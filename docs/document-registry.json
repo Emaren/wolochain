@@ -82,7 +82,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "6492d11c82575f71ab368658e360c76c8535884b69ee2d870757cb3345ea27ca",
+      "sha256": "dbdb38abae024b5b43c90152dac6e47517a747a99b9c95b29a1b1ecab99452fa",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1160,7 +1160,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "fix/c03-traffic-activation-scope-20261106",
-    "commit": "55069a0cec1bf6f4ea1cf2f06e01e64a5c608c13"
+    "commit": "48f5f70862a94f8a0e974a6065c6bbf9783a8cfa"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
