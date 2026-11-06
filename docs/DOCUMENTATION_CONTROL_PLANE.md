@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/c06-intel-dedicated-transport-port-20261106` at `754ef47b5a7897766bf034836228ace3aa538152`
+Implementation baseline: `session-b/c04-comprehensive-unknown-quarantine-20261106` at `973d91f39448bd1d4764b93640fc7bf6f1f898f2`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
