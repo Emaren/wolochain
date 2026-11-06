@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/c03-db-owner-boundary-hold-20261106` at `81605b5aee761135869520d74125942173be11d4`
+Implementation baseline: `fix/c03-physical-writer-universe-audit-20261106` at `ce7504355b0ab01cdd9008f4ea489a14e970673b`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 

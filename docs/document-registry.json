@@ -82,7 +82,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "067a65fea6257d0d73bf5d5013812061d3529d5db32aa04ea9354f561646f9ae",
+      "sha256": "3071edf4a4f4db4d36842873d6f0f193952c07f969fdf4a05f021445e10f3f73",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1159,8 +1159,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/c03-db-owner-boundary-hold-20261106",
-    "commit": "81605b5aee761135869520d74125942173be11d4"
+    "branch": "fix/c03-physical-writer-universe-audit-20261106",
+    "commit": "ce7504355b0ab01cdd9008f4ea489a14e970673b"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
