@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/c03-postgres-effective-grants-20261106` at `f50f2af8a280686a6a8d8fec28df575085d75990`
+Implementation baseline: `fix/c03-db-owner-boundary-hold-20261106` at `81605b5aee761135869520d74125942173be11d4`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 

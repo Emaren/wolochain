@@ -82,7 +82,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "b4466a190274cc7374dc8ea80c52bbaa3378c01a54934b56b717b1bb110946a9",
+      "sha256": "067a65fea6257d0d73bf5d5013812061d3529d5db32aa04ea9354f561646f9ae",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1159,8 +1159,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/c03-postgres-effective-grants-20261106",
-    "commit": "f50f2af8a280686a6a8d8fec28df575085d75990"
+    "branch": "fix/c03-db-owner-boundary-hold-20261106",
+    "commit": "81605b5aee761135869520d74125942173be11d4"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
