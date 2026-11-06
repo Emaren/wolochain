@@ -144,6 +144,29 @@
         "operators",
         "ai-agents"
       ],
+      "authority": "source-only-nologin-permission-rehearsal-not-live-ddl-approval",
+      "id": "aoe2war.wolochain.c03-synthetic-nologin-owner-rehearsal",
+      "owner": "wolochain-ops",
+      "path": "docs/C03_SYNTHETIC_NOLOGIN_OWNER_REHEARSAL.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-06",
+      "sensitivity": "restricted",
+      "sha256": "ad34fbcea2aa1bac1f6d8e50fda4f6ebcb2ece30ecdafd0e95891eb1b7367098",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C03 Synthetic NOLOGIN Owner Partition Rehearsal",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
       "authority": "source-only-intel-recovery-transport-not-a-financial-permit",
       "id": "aoe2war.wolochain.c06-intel-recovery-tunnel-supervisor",
       "owner": "wolochain-ops",
@@ -151,7 +174,7 @@
       "review_interval_days": 7,
       "reviewed_at": "2026-11-06",
       "sensitivity": "restricted",
-      "sha256": "49acaa26b2766de52e6618a31376f4a7e4d44f70c1858f69fa9ce1b86c68bb42",
+      "sha256": "46814f3073df73e8bc7c4a2de2608fd355245f2d392f4bd9a018e4b460d78082",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -174,7 +197,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "2ff5dbc8ffb6daa6d15de75d8035603f6deeeb24ab4310e3d8e8a3c45f9640e5",
+      "sha256": "e28f778111df21ebdea7f645f5fd9b2998f06b83f74bdaf0b94ff9e64b108704",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1251,8 +1274,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/c06-intel-dedicated-transport-port-20261106",
-    "commit": "ef11f6243a2cfb18f896b3f750fe7b8182deccfc"
+    "branch": "session-b/c08-intel-dedicated-witness-transport-20261106",
+    "commit": "82567c72f23eac98831eabc55cd8d2d16b774e18"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
