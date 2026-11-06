@@ -16,7 +16,11 @@ class SupervisorTests(unittest.TestCase):
     def test_fixed_loopback_only_and_host_key_pinning(self):
         args=m.ssh_command(Path("/Users/tester"))
         s=" ".join(args)
-        self.assertIn("127.0.0.1:22995:127.0.0.1:22",s)
+        self.assertIn("127.0.0.1:22996:127.0.0.1:22",s)
+        self.assertEqual(m.PORT,22996)
+        self.assertEqual(m.public_plan(Path("/Users/tester"))["reverseForward"],
+                         "127.0.0.1:22996:127.0.0.1:22")
+        self.assertNotIn("22995",s)
         self.assertIn("StrictHostKeyChecking=yes",s)
         self.assertIn("HostKeyAlias=hel1-c06-intel",s)
         self.assertNotIn("root@hel1",s)
@@ -26,7 +30,7 @@ class SupervisorTests(unittest.TestCase):
         self.assertIn("ServerAliveInterval=30",s)
         self.assertIn("-N",args)
         self.assertIn("-T",args)
-        self.assertNotIn("0.0.0.0:22995",s)
+        self.assertNotIn("0.0.0.0:22996",s)
         self.assertNotIn("StrictHostKeyChecking=no",s)
         self.assertNotIn("UserKnownHostsFile=/dev/null",s)
 
