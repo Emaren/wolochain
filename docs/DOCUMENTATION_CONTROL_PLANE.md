@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/c06-intel-offhost-tunnel-supervisor-20261106` at `3109d3b1a80c132001e1fce8bca8a4cb3c08ce3f`
+Implementation baseline: `session-b/c05-post153-20261106` at `1994c87d597ddd1e4ad06a72c8b6dc64f7057b73`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
