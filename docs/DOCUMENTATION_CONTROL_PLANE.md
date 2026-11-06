@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/c03-isolated-lock-counterexample-20261106` at `70da6f3bff579ccd83b5b09a503186967057ab18`
+Implementation baseline: `session-b/c04-comprehensive-unknown-quarantine-20261106` at `973d91f39448bd1d4764b93640fc7bf6f1f898f2`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
