@@ -82,7 +82,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "279be863cecc9dcdc1a32217114ba790665d6ab81c3a78b4db148807825d924c",
+      "sha256": "16a716a1fae140900d869fe3c5c28fd3a547967e83b376da7b30c643b30f2e63",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -483,6 +483,30 @@
       ],
       "title": "HD and DE Financial Producer Owner Review",
       "type": "runbook"
+    },
+    {
+      "audience": [
+        "operators",
+        "developers",
+        "ai-agents",
+        "financial-reviewers"
+      ],
+      "authority": "proposed-policy-no-mainnet-financial-authorization",
+      "id": "aoe2war.wolochain.solo-owner-centralized-financial-governance-proposal",
+      "owner": "wolochain-ops",
+      "path": "docs/solo-owner-centralized-financial-governance.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-06",
+      "sensitivity": "internal",
+      "sha256": "520f7ce660a9d0f1286a47610019ccc0be24510ee1737143257ef47367efdcea",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "WOLO Centralized Solo-Owner Financial Governance \u2014 C08 Proposal",
+      "type": "reference"
     },
     {
       "audience": [
@@ -1135,8 +1159,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/c06-capture-storage-preflight-20261106",
-    "commit": "2bd16428d1529d4eca95f68faaa92b2032f889f5"
+    "branch": "proposal/c08-solo-owner-centralized-release-20261106",
+    "commit": "d5c1faad76ef26901ac556d2d9af0cff8dac444a"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
