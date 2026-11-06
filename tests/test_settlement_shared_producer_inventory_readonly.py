@@ -269,5 +269,61 @@ class SharedHdDeProducerInventoryTests(unittest.TestCase):
                 self.inv.discover_units()
 
 
+    def test_cross_project_signers_and_traffic_discovered_without_legacy_eligibility(self):
+        for unit in (
+            "wolo-satchel-c01.service", "wolo-reviewer-c01.service",
+            "traffic-v2-forward-ledger-aoe2hdbets.timer",
+            "traffic-v2-forward-ledger-aoe2hdbets.service",
+            "traffic-v2-ingest.timer",
+        ):
+            self.assertTrue(self.inv.cross_project(unit), unit)
+            self.assertTrue(self.inv.relevant(unit), unit)
+        # The validator and incumbent 8092/8093 services are intentionally
+        # excluded from this APP/ADJACENT census and are never stop targets.
+        for unit in self.inv.PROTECTED_WOLO:
+            self.assertFalse(self.inv.cross_project(unit))
+            self.assertFalse(self.inv.relevant(unit))
+
+    def test_inactive_financial_signer_still_requires_review(self):
+        with patch.object(self.inv, "run_systemctl", return_value=(
+            "MainPID=0\nActiveState=inactive\nLoadState=loaded\nUnitFileState=static\n"
+        )), patch.object(self.inv, "process_keys", return_value=(False, [])):
+            for unit in ("wolo-satchel-c01.service", "wolo-reviewer-c01.service",
+                         "traffic-v2-forward-ledger-aoe2hdbets.service"):
+                with self.subTest(unit=unit):
+                    observed = self.inv.info(unit)
+                    self.assertFalse(observed["active"])
+                    self.assertFalse(observed["mainPidPresent"])
+                    self.assertEqual(observed["configuredFinancialKeyNames"], [])
+                    self.assertTrue(observed["isCandidateForExplicitMaintenanceReview"])
+
+    def test_cross_project_templates_and_unknown_units_preserve_fail_closed(self):
+        def fake(args):
+            if args[0] == "list-units":
+                return ("wolo-satchel-c01.service loaded inactive dead -\n"
+                        "traffic-v2-forward-ledger-aoe2hdbets.timer loaded active waiting -\n")
+            if args[0] == "list-unit-files":
+                return ("wolo-reviewer-c01.service static -\n"
+                        "traffic-v2-rollup@.service disabled -\n"
+                        "traffic-v2-rollup@20261106.service enabled -\n")
+            raise AssertionError(args)
+        with patch.object(self.inv, "run_systemctl", side_effect=fake):
+            names, templates = self.inv.discover_inventory()
+        self.assertEqual(templates, ["traffic-v2-rollup@.service"])
+        self.assertIn("wolo-reviewer-c01.service", names)
+        self.assertIn("traffic-v2-rollup@20261106.service", names)
+        with patch.object(self.inv, "discover_inventory", return_value=(names, templates)), \
+             patch.object(self.inv, "info", side_effect=lambda unit: {
+                 "unit": unit, "isCandidateForExplicitMaintenanceReview": True,
+             }):
+            report = self.inv.inspect()
+        self.assertEqual(report["crossProjectUnitsRequiringReview"], names)
+        self.assertIn("traffic-v2-forward-ledger-aoe2hdbets.service",
+                      report["expectedCrossProjectUnitsNotFound"])
+        self.assertFalse(report["financialProducersFenced"])
+        self.assertFalse(report["productionCutoverAuthorized"])
+        self.assertFalse(report["commandsMutatedServices"])
+
+
 if __name__ == "__main__":
     unittest.main()

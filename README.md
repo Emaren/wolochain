@@ -8,12 +8,17 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "chain-repository-entrypoint"
-reviewed_at: "2026-10-22"
+reviewed_at: "2026-11-06"
 review_interval_days: 14
 sensitivity: "public"
 ---
 
 # WoloChain
+
+## November 6, 2026 — Chain source and live-boundary technical review (non-authorizing)
+
+Rechecked the current WoloChain source paths for `wolo-1`, `uwolo`, the frozen named-profile build policy in `scripts/settlement-artifact.py`, and the live HEL1 chain operating boundary. The incumbent validator and legacy 8092/8093 settlement services remain active, while new 8094 Satchel and 8095 reviewer services are inactive. This editorial and source verification **does not** certify current total supply, historical payout finality, independently controlled custody keys, solvency, quiesced backups, or funded mainnet transactions. C01–C09 remain HARD HOLD under issue #5; historical operating observations below retain their original timestamps. The independent chain checkpoint is still unresolved, and `/net_info` observed zero peers on November 6; that observation does not establish there are no external copies. Do not restart the validator or substitute the legacy 8092 rail for new returns.
+
 
 ## Source documentation review — 2026-10-22
 
