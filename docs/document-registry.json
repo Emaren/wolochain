@@ -82,7 +82,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "25681d2a6cf9b709d3a69aa85cd1acb71c6b3b2b324062524e7ef1c0403c53cc",
+      "sha256": "bce4b1157441a673602a90871eeb3bf9037614879de6da53f6f9b51ac08572a6",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1135,8 +1135,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/c05-disjoint-liability-proof-guard-20261105",
-    "commit": "aa8f7a35f75d8b4d967424010bf903970b88517a"
+    "branch": "fix/c03-external-unit-census-20261106",
+    "commit": "46090ec3252283478103675b17c6acfc3e229f66"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

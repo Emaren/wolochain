@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/c05-disjoint-liability-proof-guard-20261105` at `aa8f7a35f75d8b4d967424010bf903970b88517a`
+Implementation baseline: `fix/c03-external-unit-census-20261106` at `46090ec3252283478103675b17c6acfc3e229f66`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
