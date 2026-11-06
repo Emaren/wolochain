@@ -128,7 +128,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "8cbfc70b49dcdd707b5fbea70857d9bff259e5dfd1f1c4fb75657ed52792f2e5",
+      "sha256": "fda47ed8777c2388ba08d12c0d5d7b78b7b4d1f787dc85997dd76b1181a88621",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1205,8 +1205,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/c06-intel-offhost-tunnel-supervisor-20261106",
-    "commit": "3109d3b1a80c132001e1fce8bca8a4cb3c08ce3f"
+    "branch": "session-b/c05-post153-20261106",
+    "commit": "1994c87d597ddd1e4ad06a72c8b6dc64f7057b73"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
