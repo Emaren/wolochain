@@ -17,7 +17,7 @@ sensitivity: "restricted"
 
 ## Purpose and limits
 
-Source-only root-local `scripts/settlement_c03_observer_watchdog.py` and `deploy/systemd/wolo-c03-observer.{service,timer}` turn the previously merged read-only C03 systemd/DB-owner observer into a scheduled, **fail-closed** detection mechanism. It is *not* an automatic financial writer fence, a backup, a restore, a source-promotion controller, a reserve proof, a chain finality proof or a replacement for the owner's transaction-specific signing permit.
+Source-only root-local `scripts/settlement_c03_observer_watchdog.py` and `deploy/c03-observer-systemd/wolo-c03-observer.{service,timer}` turn the previously merged read-only C03 systemd/DB-owner observer into a scheduled, **fail-closed** detection mechanism. It is *not* an automatic financial writer fence, a backup, a restore, a source-promotion controller, a reserve proof, a chain finality proof or a replacement for the owner's transaction-specific signing permit.
 
 The latest physically observed C03 universe comprised 55 installed/loaded project units, 31 outside the old 18-unit maintenance controller and 11 active outside the old scope. Both legacy HD and DE runtime roles still own finance-related tables and their databases. The observer's proper state while those conditions remain true is **HOLD**, never PASS to move WOLO.
 

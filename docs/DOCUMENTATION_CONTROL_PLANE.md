@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/c03-financial-observer-watchdog-20261106` at `b4e43cc0ebc8ffca0db034850dcda311005a8682`
+Implementation baseline: `fix/c03-financial-observer-watchdog-20261106` at `325e641209e5320ee225d61e2639b8a997f8bd0c`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 

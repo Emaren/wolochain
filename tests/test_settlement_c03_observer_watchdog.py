@@ -115,8 +115,8 @@ class MonitorTests(unittest.TestCase):
             self.assertTrue(all(json.loads(f.read_text())["status"]=="HOLD_UNENROLLED" for f in files))
 
     def test_systemd_unit_is_read_only_and_never_stops_services(self):
-        service=(BASE/"deploy/systemd/wolo-c03-observer.service").read_text()
-        timer=(BASE/"deploy/systemd/wolo-c03-observer.timer").read_text()
+        service=(BASE/"deploy/c03-observer-systemd/wolo-c03-observer.service").read_text()
+        timer=(BASE/"deploy/c03-observer-systemd/wolo-c03-observer.timer").read_text()
         self.assertIn("NoNewPrivileges=yes",service)
         self.assertIn("ProtectSystem=strict",service)
         self.assertIn("RestrictAddressFamilies=AF_UNIX",service)
