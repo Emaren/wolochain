@@ -41,7 +41,10 @@ UNITS = APPS + ONESHOTS + TIMERS
 # These prefixes are a *discovery* scope, never permission to stop such units.
 FINANCIAL_SYSTEMD_PREFIXES = (
     "aoe2hdbets-", "aoe2dewarwagers-", "aoe2war-", "aoe2-wolo-",
-    "wolo-satchel-c01.", "wolo-reviewer-c01.",
+    # Traffic has a separately owned forward-ledger timer capable of
+    # reactivating during an HD/DE financial freeze. Discovery MUST include
+    # it, but does not give this controller authority to stop Traffic.
+    "traffic-v2-", "wolo-satchel-c01.", "wolo-reviewer-c01.",
 )
 FINANCIAL_SYSTEMD_UNIT = re.compile(r"[a-zA-Z0-9_.@:-]{1,120}\.(?:service|timer)\Z")
 MAX_FINANCIAL_SYSTEMD_LISTING = 96_000
