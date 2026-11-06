@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `session-b/c08-intel-dedicated-witness-transport-20261106` at `82567c72f23eac98831eabc55cd8d2d16b774e18`
+Implementation baseline: `session-b/c08-hel1-hostkey-pin-repair-20261106` at `2e47cdb3cdeaa2839db2f1e3ad1524cfd9ad73d2`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
