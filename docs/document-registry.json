@@ -174,7 +174,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "fc141d9d33d9515f79eb037acd14f6a43bff78b33a4dc093f2cc430eda23e4b2",
+      "sha256": "ebf02fb70d56e2a76fe3a0651505136482b906d81b17c46faf977af735e46f29",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1251,8 +1251,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "session-b/c04-comprehensive-unknown-quarantine-20261106",
-    "commit": "973d91f39448bd1d4764b93640fc7bf6f1f898f2"
+    "branch": "session-b/c01-native-denial-matrix-20261106",
+    "commit": "f2ee29b51c8a047490fdeb17a12e0a3f4f2720a1"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

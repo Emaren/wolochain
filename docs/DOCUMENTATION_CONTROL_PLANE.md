@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `session-b/c04-comprehensive-unknown-quarantine-20261106` at `973d91f39448bd1d4764b93640fc7bf6f1f898f2`
+Implementation baseline: `session-b/c01-native-denial-matrix-20261106` at `f2ee29b51c8a047490fdeb17a12e0a3f4f2720a1`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
