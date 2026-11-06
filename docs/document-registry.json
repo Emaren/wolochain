@@ -144,6 +144,29 @@
         "operators",
         "ai-agents"
       ],
+      "authority": "source-only-isolated-nologin-counterexample-not-live-financial-fence",
+      "id": "aoe2war.wolochain.c03-nologin-existing-backend-counterexample",
+      "owner": "wolochain-ops",
+      "path": "docs/C03_NOLOGIN_EXISTING_BACKEND_COUNTEREXAMPLE.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-06",
+      "sensitivity": "restricted",
+      "sha256": "514422672804109a3d109fbfba23d6275bff2ad011fbd974b5378e4d88fc1995",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C03 NOLOGIN Existing Backend Counterexample",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
       "authority": "source-only-nologin-permission-rehearsal-not-live-ddl-approval",
       "id": "aoe2war.wolochain.c03-synthetic-nologin-owner-rehearsal",
       "owner": "wolochain-ops",
@@ -197,7 +220,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "16cc57edb364fa2a4153120331b1b4d48940589e863bcb55a0d46e2d78f9d65a",
+      "sha256": "202c970b24ad461a2b24ca18581d4f22f29df5e45bcd4eb9b5137d101beb8f82",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1274,8 +1297,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/c03-isolated-nologin-owner-rehearsal-20261106",
-    "commit": "b30edb4d6420bbe4f0c6f0ab43231e9f7c4e15ca"
+    "branch": "fix/c03-nologin-existing-backend-proof-20261106",
+    "commit": "e02bea900b91fd09fc50ce5ba2789327ff60d154"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
