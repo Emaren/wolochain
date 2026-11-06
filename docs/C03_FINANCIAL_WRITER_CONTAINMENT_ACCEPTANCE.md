@@ -1,3 +1,18 @@
+---
+id: "aoe2war.wolochain.c03-financial-writer-containment-acceptance"
+title: "C03 Financial Writer Containment Physical Acceptance"
+type: "reference"
+status: "draft"
+owner: "wolochain-ops"
+systems: ["wolochain", "aoe2war"]
+audience: ["developers", "operators", "ai-agents"]
+source_of_truth: "git"
+authority: "source-only-c03-global-containment-plan-not-a-financial-permit"
+reviewed_at: "2026-11-06"
+review_interval_days: 7
+sensitivity: "restricted"
+---
+
 # C03 Financial Writer Containment — Physical Release Acceptance Protocol
 
 Status: **HARD HOLD — design and acceptance contract, not a migration permit**. Last observed: 2026-11-06 UTC. Scope: legacy HD/DE PostgreSQL and all wallet/settlement/Traffic writer paths. This document must not be used to bypass the signed financial maintenance controller.
