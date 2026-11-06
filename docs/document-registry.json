@@ -82,7 +82,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "3071edf4a4f4db4d36842873d6f0f193952c07f969fdf4a05f021445e10f3f73",
+      "sha256": "718a4337a4cbb21089b5e70680c7357fcd04838c621f7763b56f3ae7cae9001f",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1159,8 +1159,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/c03-physical-writer-universe-audit-20261106",
-    "commit": "ce7504355b0ab01cdd9008f4ea489a14e970673b"
+    "branch": "fix/c03-relation-dependency-audit-20261106",
+    "commit": "f319bd221332dd41739954572dd28c01481bd625"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

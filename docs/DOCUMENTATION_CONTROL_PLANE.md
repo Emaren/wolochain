@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/c03-physical-writer-universe-audit-20261106` at `ce7504355b0ab01cdd9008f4ea489a14e970673b`
+Implementation baseline: `fix/c03-relation-dependency-audit-20261106` at `f319bd221332dd41739954572dd28c01481bd625`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
