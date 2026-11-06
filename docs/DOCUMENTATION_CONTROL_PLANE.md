@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/c03-external-unit-census-20261106` at `46090ec3252283478103675b17c6acfc3e229f66`
+Implementation baseline: `fix/c04-legacy-preflight-correlation-20261106` at `2fbb911ac08fa1f141cb465a8924b25485b8cc84`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
