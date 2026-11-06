@@ -197,7 +197,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "16cc57edb364fa2a4153120331b1b4d48940589e863bcb55a0d46e2d78f9d65a",
+      "sha256": "9d82d847ec813606df2f28c77855fef11b87fa27d2cc71ff975d99433126c0af",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1275,7 +1275,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "fix/c03-isolated-nologin-owner-rehearsal-20261106",
-    "commit": "b30edb4d6420bbe4f0c6f0ab43231e9f7c4e15ca"
+    "commit": "43b19703bc3aed20b0035d9aab97fecdc4370938"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
