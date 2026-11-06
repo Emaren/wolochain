@@ -21,7 +21,7 @@ SCHEMA = "wolo.c03.physical-writer-universe-hold.v1"
 UNIT = re.compile(r"[A-Za-z0-9_.@:-]{1,120}\.(?:service|timer)\Z")
 PREFIXES = (
     "aoe2hdbets-", "aoe2dewarwagers-", "aoe2war-", "aoe2-wolo-",
-    "traffic-", "wolochain-", "wolo-",
+    "traffic-", "wolochain-", "wolochaind-", "wolo-",
 )
 MAX_LIST = 131072
 MAX_UNITS = 500
@@ -109,15 +109,24 @@ def parse_properties(raw: str, name: str) -> dict:
         require(k not in out, "DUPLICATE_SYSTEMD_PROPERTY")
         out[k] = v
     expected = {"Id", "LoadState", "ActiveState", "UnitFileState",
-                "MainPID", "FragmentPath", "Triggers", "TriggeredBy"}
+                "FragmentPath", "Triggers", "TriggeredBy"}
+    # systemd timers do not expose the service-only MainPID property. An
+    # absent timer MainPID is NOT evidence that the timer cannot fire.
+    if name.endswith(".service"):
+        require("MainPID" in out and out["MainPID"].isdigit(),
+                "SERVICE_PID_PROPERTY_UNAVAILABLE")
+    else:
+        require("MainPID" not in out or out["MainPID"].isdigit(),
+                "TIMER_PID_PROPERTY_INVALID")
     require(expected.issubset(out) and out["Id"] == name and
             out["LoadState"] in ("loaded", "masked") and
             out["ActiveState"] in ("active", "inactive", "failed", "activating",
                                     "deactivating", "reloading") and
-            out["MainPID"].isdigit() and
             len(out["FragmentPath"]) < 512,
             "UNQUALIFIED_EFFECTIVE_UNIT_PROPERTIES")
-    return {k: out[k] for k in sorted(expected)}
+    result = {k: out[k] for k in sorted(expected)}
+    result["MainPID"] = out.get("MainPID", "NOT_APPLICABLE_TIMER")
+    return result
 
 def classify(name: str, props: dict) -> dict:
     require(UNIT.fullmatch(name), "UNIT_IDENTITY_INVALID")
@@ -145,6 +154,17 @@ def observe() -> dict:
     require(len(names) <= MAX_UNITS, "TOO_MANY_FINANCIAL_UNITS")
     rows = []
     for name in sorted(names):
+        # An uninstantiated @.service is a real installed activation surface,
+        # but systemctl show <template> has no instance state. Keep the
+        # template visible, unscoped, and not automatically stoppable.
+        if name.endswith("@.service"):
+            rows.append({"unit": name,
+                         "category": "UNSCOPED_REVIEW_REQUIRED",
+                         "active": False, "timer": False,
+                         "properties": {"LoadState": "UNINSTANTIATED_TEMPLATE",
+                                        "MainPID": "UNKNOWN",
+                                        "InstanceReviewRequired": True}})
+            continue
         raw = run(["systemctl", "--no-pager", "show",
                    "--property=Id,LoadState,ActiveState,UnitFileState,MainPID,"
                    "FragmentPath,Triggers,TriggeredBy", "--", name])
