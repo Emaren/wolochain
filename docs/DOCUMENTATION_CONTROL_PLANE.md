@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/c03-isolated-nologin-owner-rehearsal-20261106` at `4c06ca5bf3fa13ff93e8c186c1ec03910b6695a6`
+Implementation baseline: `session-b/c01-canonical-native-denial-20261106` at `3008f525a00c9a03f5b907500b4af8934fecf919`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
