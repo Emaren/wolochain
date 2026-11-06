@@ -174,7 +174,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "bad65cc8a848a116789975e85c5faa0bd3dd197d41499e5866e0a427ab5b639e",
+      "sha256": "fc141d9d33d9515f79eb037acd14f6a43bff78b33a4dc093f2cc430eda23e4b2",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1251,8 +1251,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/c03-isolated-lock-counterexample-20261106",
-    "commit": "70da6f3bff579ccd83b5b09a503186967057ab18"
+    "branch": "session-b/c04-comprehensive-unknown-quarantine-20261106",
+    "commit": "973d91f39448bd1d4764b93640fc7bf6f1f898f2"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
