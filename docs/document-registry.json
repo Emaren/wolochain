@@ -98,21 +98,21 @@
         "operators",
         "ai-agents"
       ],
-      "authority": "source-only-negative-lock-rehearsal-not-a-financial-fence",
-      "id": "aoe2war.wolochain.c03-isolated-table-lock-counterexample",
+      "authority": "read-only-finance-hold-monitor-not-a-fence-or-funded-permit",
+      "id": "aoe2war.wolochain.c03-financial-writer-drift-observer",
       "owner": "wolochain-ops",
-      "path": "docs/C03_ISOLATED_TABLE_LOCK_COUNTEREXAMPLE.md",
+      "path": "docs/C03_FINANCIAL_WRITER_DRIFT_WATCHDOG.md",
       "review_interval_days": 7,
       "reviewed_at": "2026-11-06",
       "sensitivity": "restricted",
-      "sha256": "0921db6ac095eb56d3d803d4a4756594cbdca90df3638ce3a980aae7a37bd0e1",
+      "sha256": "2764933c4a7efa07eaf0992658fb6f1a5a80aae4674ee07b4af1e2969a7166e0",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
         "wolochain",
         "aoe2war"
       ],
-      "title": "C03 Isolated PostgreSQL Table Lock Counterexample",
+      "title": "C03 Financial Writer Drift Watchdog",
       "type": "reference"
     },
     {
@@ -151,7 +151,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "efe3463ace3de8f9edfb108e15806bebd07edd79ec271c09e4180b802b9d51c9",
+      "sha256": "6cb7f9c4c69dafcd6a167277486f7f05081719707ac3a4398d447c354f424c5d",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1228,8 +1228,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/c03-isolated-lock-counterexample-20261106",
-    "commit": "c27192c152a7ad1757559f12c2e0f6fcc839f90b"
+    "branch": "fix/c03-watchdog-systemd-userroot-no-new-privileges-20261106",
+    "commit": "36f1ce8b0f2f07f7124e0a51988c37040a1fd8ca"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
