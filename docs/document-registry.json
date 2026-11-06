@@ -144,6 +144,29 @@
         "operators",
         "ai-agents"
       ],
+      "authority": "source-only-nologin-permission-rehearsal-not-live-ddl-approval",
+      "id": "aoe2war.wolochain.c03-synthetic-nologin-owner-rehearsal",
+      "owner": "wolochain-ops",
+      "path": "docs/C03_SYNTHETIC_NOLOGIN_OWNER_REHEARSAL.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-06",
+      "sensitivity": "restricted",
+      "sha256": "ad34fbcea2aa1bac1f6d8e50fda4f6ebcb2ece30ecdafd0e95891eb1b7367098",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C03 Synthetic NOLOGIN Owner Partition Rehearsal",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
       "authority": "source-only-intel-recovery-transport-not-a-financial-permit",
       "id": "aoe2war.wolochain.c06-intel-recovery-tunnel-supervisor",
       "owner": "wolochain-ops",
@@ -174,7 +197,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "fc141d9d33d9515f79eb037acd14f6a43bff78b33a4dc093f2cc430eda23e4b2",
+      "sha256": "1007b69caee16cc4bf5746b5ed95f0aa4a3a21f3e0b6de13add60c58fff9f016",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1251,8 +1274,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "session-b/c04-comprehensive-unknown-quarantine-20261106",
-    "commit": "973d91f39448bd1d4764b93640fc7bf6f1f898f2"
+    "branch": "fix/c03-isolated-nologin-owner-rehearsal-20261106",
+    "commit": "4c06ca5bf3fa13ff93e8c186c1ec03910b6695a6"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
