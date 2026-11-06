@@ -98,6 +98,29 @@
         "operators",
         "ai-agents"
       ],
+      "authority": "source-only-intel-recovery-transport-not-a-financial-permit",
+      "id": "aoe2war.wolochain.c06-intel-recovery-tunnel-supervisor",
+      "owner": "wolochain-ops",
+      "path": "docs/C06_INTEL_RECOVERY_TUNNEL_SUPERVISOR.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-06",
+      "sensitivity": "restricted",
+      "sha256": "46814f3073df73e8bc7c4a2de2608fd355245f2d392f4bd9a018e4b460d78082",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C06 Intel Recovery Tunnel Supervisor",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
       "authority": "repository-documentation-index",
       "id": "aoe2war.wolochain.documentation-control-plane",
       "owner": "wolochain-ops",
@@ -105,7 +128,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "12be8e9513236d9ccf676990e30383989dec80a30aa28e1960b4590a59b10c97",
+      "sha256": "8cbfc70b49dcdd707b5fbea70857d9bff259e5dfd1f1c4fb75657ed52792f2e5",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1182,8 +1205,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/c03-relation-dependency-audit-20261106",
-    "commit": "0f791531bafd995700951e9e21ef83b3e50c79f5"
+    "branch": "fix/c06-intel-offhost-tunnel-supervisor-20261106",
+    "commit": "3109d3b1a80c132001e1fce8bca8a4cb3c08ce3f"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
