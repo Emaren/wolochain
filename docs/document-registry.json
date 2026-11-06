@@ -151,7 +151,7 @@
       "review_interval_days": 7,
       "reviewed_at": "2026-11-06",
       "sensitivity": "restricted",
-      "sha256": "46814f3073df73e8bc7c4a2de2608fd355245f2d392f4bd9a018e4b460d78082",
+      "sha256": "49acaa26b2766de52e6618a31376f4a7e4d44f70c1858f69fa9ce1b86c68bb42",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -174,7 +174,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "fc141d9d33d9515f79eb037acd14f6a43bff78b33a4dc093f2cc430eda23e4b2",
+      "sha256": "2ff5dbc8ffb6daa6d15de75d8035603f6deeeb24ab4310e3d8e8a3c45f9640e5",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1251,8 +1251,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "session-b/c04-comprehensive-unknown-quarantine-20261106",
-    "commit": "973d91f39448bd1d4764b93640fc7bf6f1f898f2"
+    "branch": "fix/c06-intel-dedicated-transport-port-20261106",
+    "commit": "ef11f6243a2cfb18f896b3f750fe7b8182deccfc"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
