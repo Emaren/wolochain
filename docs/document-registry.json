@@ -82,7 +82,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "067a65fea6257d0d73bf5d5013812061d3529d5db32aa04ea9354f561646f9ae",
+      "sha256": "904851f3df820069f1dbce13138cd1b4ef5ebe01ae5849f0ca18078fe1bf44ee",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1159,8 +1159,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/c03-db-owner-boundary-hold-20261106",
-    "commit": "81605b5aee761135869520d74125942173be11d4"
+    "branch": "session-b/c01-unfunded-host-boundary-20261106",
+    "commit": "ee91ad173d1fd295829ae8083b1f1c8458caf182"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
