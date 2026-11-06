@@ -144,6 +144,29 @@
         "operators",
         "ai-agents"
       ],
+      "authority": "source-only-isolated-negative-proof-never-a-production-DDL-permit",
+      "id": "aoe2war.wolochain.c03-real-production-schema-owner-rehearsal",
+      "owner": "wolochain-ops",
+      "path": "docs/C03_REAL_PRODUCTION_SCHEMA_OWNER_REHEARSAL.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-06",
+      "sensitivity": "restricted",
+      "sha256": "76b288cd0a087141f60c0a425142fadc9fc6fae96ddb744df639361cd5eed33c",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C03 Real Production Schema Isolated NOLOGIN Ownership Rehearsal",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
       "authority": "source-only-nologin-permission-rehearsal-not-live-ddl-approval",
       "id": "aoe2war.wolochain.c03-synthetic-nologin-owner-rehearsal",
       "owner": "wolochain-ops",
@@ -197,7 +220,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "a4dc9700f36d86149aaad9ee80c8806664dfb6ca7e83b267a46f5cc9d8ba0b44",
+      "sha256": "8f4c0f8d722b904818fa568bd3d7c80e40d02f3c7574e9c3e8f6a259476a4fe6",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1274,8 +1297,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "session-b/c08-hel1-hostkey-pin-repair-20261106",
-    "commit": "2e47cdb3cdeaa2839db2f1e3ad1524cfd9ad73d2"
+    "branch": "fix/c03-real-schema-no-login-isolation-proof-20261106",
+    "commit": "d777e3174bb5f160b1118bafca1aaa23ddda31a1"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
