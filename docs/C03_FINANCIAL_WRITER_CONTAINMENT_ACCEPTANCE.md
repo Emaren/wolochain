@@ -1,6 +1,6 @@
 ---
 id: "aoe2war.wolochain.c03-financial-writer-containment-acceptance"
-title: "C03 Financial Writer Containment Physical Acceptance"
+title: "C03 Financial Writer Containment — Physical Release Acceptance Protocol"
 type: "reference"
 status: "draft"
 owner: "wolochain-ops"
