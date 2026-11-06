@@ -136,6 +136,44 @@ class TopologyTests(unittest.TestCase):
             and not u["sourceRuntimeParityProven"]
             for u in report["units"]))
 
+    def test_live_traffic_and_source_relay_timer_paths_are_never_ignored(self):
+        units = sorted([
+            "traffic-v2-forward-ledger-aoe2hdbets.timer",
+            "traffic-v2-forward-ledger-aoe2hdbets.service",
+            "aoe2war-public-priority-relay.timer",
+            "aoe2war-public-priority-relay.service",
+        ])
+        raw = "".join(f"{u} loaded active waiting cross-project\n" for u in units)
+        self.assertEqual(MOD.discover(raw), units)
+        installed = MOD.discover_installed(
+            "".join(f"{u} enabled enabled\n" for u in units))
+        self.assertEqual(installed, units)
+        observed = [MOD.parse_show(show(u, ActiveState="active" if
+                   u.endswith(".timer") else "inactive", MainPID="0"), u)
+                   for u in units]
+        report = MOD.topology(units, observed, installed=installed)
+        self.assertEqual(report["status"], "HOLD")
+        self.assertEqual(report["newOrUnmappedUnits"], [])
+        self.assertEqual(report["activeTimerUnits"],
+                         sorted(x for x in units if x.endswith(".timer")))
+        self.assertIs(report["financialIngressFenced"], False)
+        self.assertIs(report["satchelActivationAuthorized"], False)
+        self.assertTrue(all(
+            u["sourceRuntimeParityProven"] is False
+            and u["paymentCapabilityExcluded"] is False
+            and u["safeToStop"] is False
+            for u in report["units"]))
+
+    def test_unknown_traffic_writer_stays_visible_but_not_approved(self):
+        future = "traffic-v2-unreviewed-escrow.timer"
+        names = MOD.discover(f"{future} loaded active waiting\n")
+        self.assertEqual(names, [future])
+        obs = [MOD.parse_show(show(future, ActiveState="active"), future)]
+        report = MOD.topology(names, obs, installed=names)
+        self.assertIn(future, report["newOrUnmappedUnits"])
+        self.assertIn(future, report["activeTimerUnits"])
+        self.assertFalse(report["financialIngressFenced"])
+
     def test_unloaded_native_successor_is_not_silently_excluded(self):
         report=MOD.topology([TIMER],[MOD.parse_show(show(TIMER),TIMER)],
                             installed=sorted([TIMER,"wolo-reviewer-c01.service"]))

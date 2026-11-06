@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `proposal/c08-solo-owner-centralized-release-20261106` at `d5c1faad76ef26901ac556d2d9af0cff8dac444a`
+Implementation baseline: `fix/c03-traffic-activation-scope-20261106` at `48f5f70862a94f8a0e974a6065c6bbf9783a8cfa`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 

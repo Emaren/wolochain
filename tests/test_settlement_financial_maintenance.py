@@ -291,6 +291,22 @@ class FenceTests(unittest.TestCase):
             self.do_fence()
         self.assertFalse(MOD.HOLD.exists())
 
+    def test_active_traffic_timer_rejected_before_financial_hold_or_stop(self):
+        self.runner.extra_systemd_units.add("traffic-v2-forward-ledger-aoe2hdbets.timer")
+        with self.assertRaisesRegex(MOD.MaintenanceError,
+                                    "FINANCIAL_SYSTEMD_UNIT_OUTSIDE_SIGNED_FENCE_SCOPE"):
+            self.do_fence()
+        self.assertFalse(MOD.HOLD.exists())
+        self.assertFalse(any(c[:2] == ["systemctl", "stop"] for c in self.runner.calls))
+
+    def test_dormant_traffic_service_file_also_blocks_before_stop(self):
+        self.runner.extra_systemd_installed.add("traffic-v2-forward-ledger-aoe2hdbets.service")
+        with self.assertRaisesRegex(MOD.MaintenanceError,
+                                    "FINANCIAL_SYSTEMD_UNIT_OUTSIDE_SIGNED_FENCE_SCOPE"):
+            self.do_fence()
+        self.assertFalse(MOD.HOLD.exists())
+        self.assertFalse(any(c[:2] == ["systemctl", "stop"] for c in self.runner.calls))
+
     def test_new_unit_after_a_valid_fence_invalidates_receipt(self):
         self.do_fence()
         self.runner.extra_systemd_units.add("aoe2hdbets-web-r24.service")

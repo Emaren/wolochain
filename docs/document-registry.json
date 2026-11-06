@@ -82,7 +82,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "16a716a1fae140900d869fe3c5c28fd3a547967e83b376da7b30c643b30f2e63",
+      "sha256": "dbdb38abae024b5b43c90152dac6e47517a747a99b9c95b29a1b1ecab99452fa",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1159,8 +1159,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "proposal/c08-solo-owner-centralized-release-20261106",
-    "commit": "d5c1faad76ef26901ac556d2d9af0cff8dac444a"
+    "branch": "fix/c03-traffic-activation-scope-20261106",
+    "commit": "48f5f70862a94f8a0e974a6065c6bbf9783a8cfa"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
