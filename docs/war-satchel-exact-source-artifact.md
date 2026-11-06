@@ -8,12 +8,17 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "source-artifact-proof-not-runtime-or-financial-approval"
-reviewed_at: "2026-10-22"
+reviewed_at: "2026-11-06"
 review_interval_days: 14
 sensitivity: "restricted"
 ---
 
 # War Satchel Exact Source Artifact Contract
+
+## November 6, 2026 — Named-profile source review (non-authorizing)
+
+Compared the documented artifact profiles and source identity rules with `scripts/settlement-artifact.py`, `scripts/build-settlement-artifact.sh`, the isolated `wolosatcheld` versus `woloreviewerd` package policies, and the current held C01/C02 release records. Profile names, pinned implementation revisions, package/purpose separation and expected artifact authenticity remain *source contracts*; this review has **not** independently re-downloaded, reproduced, or verified the latest GitHub binary archive, nor installed the dedicated signer/reviewer on HEL1. Native 8094-only transport regressions have merged into the App finance integration, but live 8094/8095 remain inactive. The product-limit migration also proposes 10,000-to-50,000 WOLO aggregate-limit changes and requires separate economic authorization. Independent custody, authoritative bank proof, C03 fencing, C04/C05 finality/solvency, C06/C07 restoration and C08/C09 scoped approvals remain HARD HOLD. No artifact or documentation review is authority to move funds.
+
 
 The shared [builder](../scripts/build-settlement-artifact.sh) and
 [offline verifier](../scripts/settlement-artifact.py) implement named profiles
