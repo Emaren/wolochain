@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `session-b/c08-hel1-hostkey-pin-repair-20261106` at `2e47cdb3cdeaa2839db2f1e3ad1524cfd9ad73d2`
+Implementation baseline: `session-b/c01-native-denial-clean-scan-20261106` at `14026e0f43c652a95fb56adf78257922ea1f2d92`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
