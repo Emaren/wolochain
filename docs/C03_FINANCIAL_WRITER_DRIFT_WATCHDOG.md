@@ -48,6 +48,14 @@ Protected records go only to `/var/lib/wolo-c03-observer/receipts`, both root-ow
 
 There is **no automatic financial remediation**. An exit 2 is suitable for the existing host monitoring/escalation pipeline; source must separately review a real alert integration before claiming that notifications are delivered. Repeated read-only observations are idempotent, but no generated HOLD can be interpreted as a financial clearance.
 
+## HEL1 native systemd identity regression (2026-11-06)
+
+The first exact-source permanent HEL1 observer installation returned a safe `STOP` before issuing a receipt; the timer was **not enabled** and public/validator/legacy settlement PIDs remained unchanged. An ephemeral root-local systemd run using the **same** observer source, hardening, source SHA pins, root-private receipt directory, and absent enrollment passed as `HOLD_UNENROLLED`.
+
+Controlled native systemd property isolation proved the cause: setting `User=root` explicitly under `NoNewPrivileges=yes` causes the nested root-to-postgres read-only observer to return `STOP/OBSERVATION_UNAVAILABLE`. The otherwise identical native test using only explicit `Group=root` succeeded, as did the test using only `UMask=0077`. Removing the redundant `User=root` property retains systemd's **default root identity**, `Group=root`, restrictive umask, `NoNewPrivileges=yes`, `ProtectSystem=strict`, `ProtectHome=yes`, `PrivateDevices=yes` and AF_UNIX-only network. This is a narrowly scoped runtime compatibility repair; it does **not** relax the finance HOLD, make the monitoring service a writer fence, or authorize Satchel/payment.
+
+The failed service journal and protected staging have been retained as counterevidence. Source must be merged and verified before any permanent unit file is updated. After the exact source-bound replacement, require one successful permanent service run returning `HOLD_UNENROLLED` with 0600 receipt, then separately validate an hourly timer and public/chain service-PID invariants. Do not auto-enroll a unit baseline.
+
 ## Source-reviewed deployment sequence (not yet performed)
 
 1. Merge the exact source after full CI, tests and code review. Inspect static unit/timer files and binary hashes; do not install from an unmerged worktree or deploy a changed HEAD.

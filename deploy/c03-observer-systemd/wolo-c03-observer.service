@@ -8,7 +8,10 @@ ConditionPathIsDirectory=/var/lib/wolo-c03-observer/receipts
 
 [Service]
 Type=oneshot
-User=root
+# Intentionally omit User=root: systemd's default is root. On HEL1,
+# explicitly setting User=root + NoNewPrivileges=yes prevents the nested
+# root-to-postgres read-only auditor from switching identities. Keep all
+# NoNewPrivileges and filesystem/network restrictions unchanged.
 Group=root
 UMask=0077
 ExecStart=/usr/bin/python3 -B /usr/local/libexec/wolo-c03-observer/settlement_c03_observer_watchdog.py --mode once
