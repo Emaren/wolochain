@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/c03-financial-observer-watchdog-20261106` at `ffc1cb4bf26fbe823b4a720d9446617c3bbc57df`
+Implementation baseline: `fix/c03-nologin-existing-backend-proof-20261106` at `de3f802d2e6a91b88477fce11d3d81dc0b25aff8`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
@@ -27,21 +27,21 @@ This page is generated from the validated front matter in this repository. Cross
 
 ## Documentation health
 
-- Authoritative repository documents: **53**
+- Authoritative repository documents: **54**
 - Path moves in this migration: **0**
 - Every listed document has an explicit owner, lifecycle, authority, and review interval.
 
 ### Types
 
 - `historical`: 14
-- `reference`: 30
+- `reference`: 31
 - `runbook`: 7
 - `working`: 2
 
 ### Lifecycle
 
 - `active`: 16
-- `draft`: 23
+- `draft`: 24
 - `historical`: 14
 
 ## Documents
@@ -53,6 +53,7 @@ This page is generated from the validated front matter in this repository. Cross
 | [WoloChain Branch Authority](BRANCH_AUTHORITY.md) | `reference` | `active` | `git-branch-authority-contract` |
 | [C03 Financial Writer Containment — Physical Release Acceptance Protocol](C03_FINANCIAL_WRITER_CONTAINMENT_ACCEPTANCE.md) | `reference` | `draft` | `source-only-c03-global-containment-plan-not-a-financial-permit` |
 | [C03 Financial Writer Drift Watchdog](C03_FINANCIAL_WRITER_DRIFT_WATCHDOG.md) | `reference` | `draft` | `read-only-finance-hold-monitor-not-a-fence-or-funded-permit` |
+| [C03 NOLOGIN Existing Backend Counterexample](C03_NOLOGIN_EXISTING_BACKEND_COUNTEREXAMPLE.md) | `reference` | `draft` | `source-only-isolated-nologin-counterexample-not-live-financial-fence` |
 | [C06 Intel Recovery Tunnel Supervisor](C06_INTEL_RECOVERY_TUNNEL_SUPERVISOR.md) | `reference` | `draft` | `source-only-intel-recovery-transport-not-a-financial-permit` |
 | [Native epoch-v3 wire-v1 trust mismatch and held handoff](epoch-v3-wire-v1-hold.md) | `reference` | `draft` | `source-only-verifier-mismatch-not-financial-authority` |
 | [Exact Settlement Confirmation C4](exact-settlement-confirmation-c4.md) | `reference` | `draft` | `source-only-exact-settlement-confirmation` |
