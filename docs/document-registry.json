@@ -167,6 +167,29 @@
         "operators",
         "ai-agents"
       ],
+      "authority": "topology-only-no-financial-writer-fence-or-financial-permit",
+      "id": "aoe2war.wolochain.c03-topology-only-baseline-review",
+      "owner": "wolochain-ops",
+      "path": "docs/C03_TOPOLOGY_ONLY_WATCHDOG_ENROLLMENT.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-06",
+      "sensitivity": "restricted",
+      "sha256": "b8ec8c2123aceae344f471252834be588778253a434557c226ee4b7f518ed464",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C03 Topology-Only Watchdog Baseline Enrollment",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
       "authority": "source-only-intel-recovery-transport-not-a-financial-permit",
       "id": "aoe2war.wolochain.c06-intel-recovery-tunnel-supervisor",
       "owner": "wolochain-ops",
@@ -197,7 +220,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "e28f778111df21ebdea7f645f5fd9b2998f06b83f74bdaf0b94ff9e64b108704",
+      "sha256": "69d875e686f3707b1a3fc21309fe17752d748933ba8f53bc3ea6f32627277705",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1274,8 +1297,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "session-b/c08-intel-dedicated-witness-transport-20261106",
-    "commit": "82567c72f23eac98831eabc55cd8d2d16b774e18"
+    "branch": "fix/c03-reviewed-topology-baseline-20261106",
+    "commit": "3c036cf39f94eaabf3a062de24c09554c8da8262"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
