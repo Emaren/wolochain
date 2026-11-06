@@ -144,6 +144,29 @@
         "operators",
         "ai-agents"
       ],
+      "authority": "source-only-isolated-negative-proof-never-a-production-DDL-permit",
+      "id": "aoe2war.wolochain.c03-real-production-schema-owner-rehearsal",
+      "owner": "wolochain-ops",
+      "path": "docs/C03_REAL_PRODUCTION_SCHEMA_OWNER_REHEARSAL.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-06",
+      "sensitivity": "restricted",
+      "sha256": "76b288cd0a087141f60c0a425142fadc9fc6fae96ddb744df639361cd5eed33c",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C03 Real Production Schema Isolated NOLOGIN Ownership Rehearsal",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
       "authority": "source-only-nologin-permission-rehearsal-not-live-ddl-approval",
       "id": "aoe2war.wolochain.c03-synthetic-nologin-owner-rehearsal",
       "owner": "wolochain-ops",
@@ -197,7 +220,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "e28f778111df21ebdea7f645f5fd9b2998f06b83f74bdaf0b94ff9e64b108704",
+      "sha256": "1f3abf4354598fe401e4095fb760f50c2771c890f6ca1d097c03c342c62f13e1",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1274,8 +1297,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "session-b/c08-intel-dedicated-witness-transport-20261106",
-    "commit": "82567c72f23eac98831eabc55cd8d2d16b774e18"
+    "branch": "fix/c03-real-schema-no-login-isolation-proof-20261106",
+    "commit": "c877aa422168e5456c56a8f680cd13ff932042e9"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
