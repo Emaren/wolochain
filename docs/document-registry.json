@@ -105,7 +105,7 @@
       "review_interval_days": 7,
       "reviewed_at": "2026-11-06",
       "sensitivity": "restricted",
-      "sha256": "621ed496ee1d61f0b1800cb739cdcc1e62efead1c5cee9256a3f93beff7ad866",
+      "sha256": "2764933c4a7efa07eaf0992658fb6f1a5a80aae4674ee07b4af1e2969a7166e0",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -151,7 +151,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "a4d10bbc4a2d2a220d9ad36b76e19218efd83e5ac3ee5648cbdb5c9c2504aa2e",
+      "sha256": "6cb7f9c4c69dafcd6a167277486f7f05081719707ac3a4398d447c354f424c5d",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1228,8 +1228,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/c03-financial-observer-watchdog-20261106",
-    "commit": "ffc1cb4bf26fbe823b4a720d9446617c3bbc57df"
+    "branch": "fix/c03-watchdog-systemd-userroot-no-new-privileges-20261106",
+    "commit": "36f1ce8b0f2f07f7124e0a51988c37040a1fd8ca"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
