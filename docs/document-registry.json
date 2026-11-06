@@ -82,7 +82,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "dbdb38abae024b5b43c90152dac6e47517a747a99b9c95b29a1b1ecab99452fa",
+      "sha256": "b4466a190274cc7374dc8ea80c52bbaa3378c01a54934b56b717b1bb110946a9",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1159,8 +1159,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/c03-traffic-activation-scope-20261106",
-    "commit": "48f5f70862a94f8a0e974a6065c6bbf9783a8cfa"
+    "branch": "fix/c03-postgres-effective-grants-20261106",
+    "commit": "f50f2af8a280686a6a8d8fec28df575085d75990"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

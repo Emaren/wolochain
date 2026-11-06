@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/c03-traffic-activation-scope-20261106` at `48f5f70862a94f8a0e974a6065c6bbf9783a8cfa`
+Implementation baseline: `fix/c03-postgres-effective-grants-20261106` at `f50f2af8a280686a6a8d8fec28df575085d75990`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
