@@ -144,21 +144,21 @@
         "operators",
         "ai-agents"
       ],
-      "authority": "topology-only-no-financial-writer-fence-or-financial-permit",
-      "id": "aoe2war.wolochain.c03-topology-only-baseline-review",
+      "authority": "source-only-nologin-permission-rehearsal-not-live-ddl-approval",
+      "id": "aoe2war.wolochain.c03-synthetic-nologin-owner-rehearsal",
       "owner": "wolochain-ops",
-      "path": "docs/C03_TOPOLOGY_ONLY_WATCHDOG_ENROLLMENT.md",
+      "path": "docs/C03_SYNTHETIC_NOLOGIN_OWNER_REHEARSAL.md",
       "review_interval_days": 7,
       "reviewed_at": "2026-11-06",
       "sensitivity": "restricted",
-      "sha256": "b8ec8c2123aceae344f471252834be588778253a434557c226ee4b7f518ed464",
+      "sha256": "ad34fbcea2aa1bac1f6d8e50fda4f6ebcb2ece30ecdafd0e95891eb1b7367098",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
         "wolochain",
         "aoe2war"
       ],
-      "title": "C03 Topology-Only Watchdog Baseline Enrollment",
+      "title": "C03 Synthetic NOLOGIN Owner Partition Rehearsal",
       "type": "reference"
     },
     {
@@ -197,7 +197,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "1a6dda3bdb87bc7231cac926bf3af52319cf31f849da72d102d58ce504e3186d",
+      "sha256": "e28f778111df21ebdea7f645f5fd9b2998f06b83f74bdaf0b94ff9e64b108704",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1274,8 +1274,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/c03-reviewed-topology-baseline-20261106",
-    "commit": "874d719a9bec176bf1016de499c509e0888972fe"
+    "branch": "session-b/c08-intel-dedicated-witness-transport-20261106",
+    "commit": "82567c72f23eac98831eabc55cd8d2d16b774e18"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
