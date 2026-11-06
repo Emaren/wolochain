@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/c03-watchdog-systemd-userroot-no-new-privileges-20261106` at `36f1ce8b0f2f07f7124e0a51988c37040a1fd8ca`
+Implementation baseline: `session-b/c04-claim9645-attribution-20261106` at `9b4dcbbd85c7cff9aec0ef87182ff2d5c9fe68fd`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 

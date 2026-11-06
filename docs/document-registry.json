@@ -151,7 +151,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "6cb7f9c4c69dafcd6a167277486f7f05081719707ac3a4398d447c354f424c5d",
+      "sha256": "810a99782358ec6ece15e7323ff1b3660b90d1eb0b86c9124bd47d54e96f05bb",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1228,8 +1228,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/c03-watchdog-systemd-userroot-no-new-privileges-20261106",
-    "commit": "36f1ce8b0f2f07f7124e0a51988c37040a1fd8ca"
+    "branch": "session-b/c04-claim9645-attribution-20261106",
+    "commit": "9b4dcbbd85c7cff9aec0ef87182ff2d5c9fe68fd"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
