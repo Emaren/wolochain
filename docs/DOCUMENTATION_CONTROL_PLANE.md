@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/c06-intel-dedicated-transport-port-20261106` at `2c840c00ced0e4c7c6b6a2c579982e05521dbd7f`
+Implementation baseline: `session-b/c08-hel1-hostkey-pin-repair-20261106` at `2e47cdb3cdeaa2839db2f1e3ad1524cfd9ad73d2`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
