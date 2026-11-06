@@ -75,6 +75,29 @@
         "operators",
         "ai-agents"
       ],
+      "authority": "source-only-c03-global-containment-plan-not-a-financial-permit",
+      "id": "aoe2war.wolochain.c03-financial-writer-containment-acceptance",
+      "owner": "wolochain-ops",
+      "path": "docs/C03_FINANCIAL_WRITER_CONTAINMENT_ACCEPTANCE.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-06",
+      "sensitivity": "restricted",
+      "sha256": "7484247818da33b143442afb1a0addfd2212f05b9fbc12a63176dac3c4237ff1",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C03 Financial Writer Containment \u2014 Physical Release Acceptance Protocol",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
       "authority": "repository-documentation-index",
       "id": "aoe2war.wolochain.documentation-control-plane",
       "owner": "wolochain-ops",
@@ -82,7 +105,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "3071edf4a4f4db4d36842873d6f0f193952c07f969fdf4a05f021445e10f3f73",
+      "sha256": "12be8e9513236d9ccf676990e30383989dec80a30aa28e1960b4590a59b10c97",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1159,8 +1182,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/c03-physical-writer-universe-audit-20261106",
-    "commit": "ce7504355b0ab01cdd9008f4ea489a14e970673b"
+    "branch": "fix/c03-relation-dependency-audit-20261106",
+    "commit": "0f791531bafd995700951e9e21ef83b3e50c79f5"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
