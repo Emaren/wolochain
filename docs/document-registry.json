@@ -98,6 +98,29 @@
         "operators",
         "ai-agents"
       ],
+      "authority": "read-only-finance-hold-monitor-not-a-fence-or-funded-permit",
+      "id": "aoe2war.wolochain.c03-financial-writer-drift-observer",
+      "owner": "wolochain-ops",
+      "path": "docs/C03_FINANCIAL_WRITER_DRIFT_WATCHDOG.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-06",
+      "sensitivity": "restricted",
+      "sha256": "15110410bf995e13cac0e03da66b35257570252585f718e7a6f78929632776df",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C03 Financial Writer Drift Watchdog",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
       "authority": "source-only-intel-recovery-transport-not-a-financial-permit",
       "id": "aoe2war.wolochain.c06-intel-recovery-tunnel-supervisor",
       "owner": "wolochain-ops",
@@ -128,7 +151,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "88977a39afb5b38eefce04256eb4cfea5f51156bd420307b7bfb041c39c36ca0",
+      "sha256": "f61075ad3744d3322cb5d80b1a533e8f6c84f46cb63d6c430455ed6bb8905a11",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1205,8 +1228,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "session-b/c01-stacked-c05-20261106",
-    "commit": "4f960bfa29cbad0efa5b7971b43d5e46e4e77b9b"
+    "branch": "fix/c03-financial-observer-watchdog-20261106",
+    "commit": "b4e43cc0ebc8ffca0db034850dcda311005a8682"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
