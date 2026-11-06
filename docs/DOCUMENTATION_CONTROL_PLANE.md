@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `session-b/c01-stacked-c05-20261106` at `4f960bfa29cbad0efa5b7971b43d5e46e4e77b9b`
+Implementation baseline: `session-b/c04-market-quarantine-20261106` at `e14a42a57ae3e6cdcf3d3f7ca78bc921a0ba9a96`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
