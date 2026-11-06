@@ -197,7 +197,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "1007b69caee16cc4bf5746b5ed95f0aa4a3a21f3e0b6de13add60c58fff9f016",
+      "sha256": "e28f778111df21ebdea7f645f5fd9b2998f06b83f74bdaf0b94ff9e64b108704",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1274,8 +1274,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/c03-isolated-nologin-owner-rehearsal-20261106",
-    "commit": "4c06ca5bf3fa13ff93e8c186c1ec03910b6695a6"
+    "branch": "session-b/c08-intel-dedicated-witness-transport-20261106",
+    "commit": "82567c72f23eac98831eabc55cd8d2d16b774e18"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
