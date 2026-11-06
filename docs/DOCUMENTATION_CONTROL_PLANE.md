@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `session-b/c08-intel-dedicated-witness-transport-20261106` at `82567c72f23eac98831eabc55cd8d2d16b774e18`
+Implementation baseline: `fix/c06-intel-dedicated-transport-port-20261106` at `2c840c00ced0e4c7c6b6a2c579982e05521dbd7f`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
