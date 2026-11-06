@@ -144,6 +144,22 @@ class GapTests(unittest.TestCase):
         self.data[2]["records"][0]["local_comet_tx_code"] = 7
         self.denied("WINNER_INDEXED_STAKE_NOT_EXECUTED")
 
+    def test_false_not_a_successful_comet_code(self):
+        self.data[2]["records"][0]["local_comet_tx_code"] = False
+        self.denied("WINNER_INDEXED_STAKE_NOT_EXECUTED")
+
+    def test_false_not_a_successful_active_comet_code(self):
+        self.data[3]["entries"][0]["local_comet_execution_code"] = False
+        self.denied("ACTIVE_STAKE_NOT_LOCALLY_EXECUTED")
+
+    def test_cross_family_wager_collision_is_not_disjoint(self):
+        self.data[3]["entries"][0]["wager_id"] = 1
+        self.denied("CROSS_FAMILY_WAGER_ID_REUSED")
+
+    def test_cross_family_tx_collision_is_not_disjoint(self):
+        self.data[3]["entries"][0]["tx_hash"] = "a" * 64
+        self.denied("CROSS_FAMILY_STAKE_TX_HASH_REUSED")
+
     def test_winner_nonadditive_summary_consistent(self):
         self.data[2]["recorded_expected_payout_wolo"] = 229
         self.denied("WINNER_SUMMARY_DRIFT")

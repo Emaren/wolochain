@@ -210,7 +210,9 @@ def classify_winners(doc, overlap, payout_markets):
         if index not in (0, 1):
             fail("WINNER_INDEX_NOT_UNIQUE")
         if index == 1:
-            if row.get("local_comet_receipt_state") != "LOCAL_EXECUTION_CODE_ZERO" or row.get("local_comet_tx_code") != 0:
+            if (row.get("local_comet_receipt_state") != "LOCAL_EXECUTION_CODE_ZERO"
+                or type(row.get("local_comet_tx_code")) is not int
+                or row["local_comet_tx_code"] != 0):
                 fail("WINNER_INDEXED_STAKE_NOT_EXECUTED")
             index_count += 1
             index_payout += value
@@ -263,7 +265,7 @@ def classify_active(doc):
                     "indexed_amount_matches_original_stake", "local_comet_proof_present"):
             if row.get(key) is not True:
                 fail("ACTIVE_STAKE_EVIDENCE_INVALID")
-        if row.get("local_comet_execution_code") != 0:
+        if type(row.get("local_comet_execution_code")) is not int or row["local_comet_execution_code"] != 0:
             fail("ACTIVE_STAKE_NOT_LOCALLY_EXECUTED")
     if len(entries) != nonnegative(doc.get("wager_count")) or str(principal) != doc.get("original_principal_uwolo"):
         fail("ACTIVE_PRINCIPAL_OR_COUNT_DRIFT")
@@ -276,6 +278,17 @@ def verify(claims, overlap, winners, active, hashes):
     win_index, win_unindexed, indexed_payout, unindexed_payout = classify_winners(
         winners, claim_tally, payout_markets)
     active_count, principal = classify_active(active)
+    # A hashless winner and an under-review wager may be observed at different
+    # times. Reusing either original stake identity across these two families
+    # is evidence of mixed-grain/mixed-epoch input, not two disjoint debts.
+    winner_wagers = {row["wager_id"] for row in winners["records"]}
+    active_wagers = {row["wager_id"] for row in active["entries"]}
+    if winner_wagers & active_wagers:
+        fail("CROSS_FAMILY_WAGER_ID_REUSED")
+    winner_stakes = {row["stake_tx_hash"] for row in winners["records"]}
+    active_stakes = {row["tx_hash"] for row in active["entries"]}
+    if winner_stakes & active_stakes:
+        fail("CROSS_FAMILY_STAKE_TX_HASH_REUSED")
     if set(hashes) != {"claims", "overlap", "winners", "active"} or any(
         type(v) is not str or not DIGEST.fullmatch(v) for v in hashes.values()
     ):
@@ -285,6 +298,9 @@ def verify(claims, overlap, winners, active, hashes):
         "financial_release_authorized": False, "retry_authorized": False,
         "full_global_solvency_certified": False, "bank_consensus_authenticated": False,
         "observations_atomic_together": False, "production_mutated": False,
+        "winner_vs_active_wager_identity_collision_count": 0,
+        "winner_vs_active_stake_tx_collision_count": 0,
+        "cross_family_scope_limited_to_supplied_packets": True,
         "input_sha256": hashes,
         "NON_ADDITIVE": {
             "hashless_mainnet_claims": len(main),
