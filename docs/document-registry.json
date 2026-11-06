@@ -82,7 +82,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "883186bef7ccf7176acfab9bb09147090aadd542fd6fe9f0399845c3f90350b8",
+      "sha256": "885cf302f9752f5ec23594bb07107d357138240580be14c0835866fd1d2782dc",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1136,7 +1136,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "fix/c04-legacy-preflight-correlation-20261106",
-    "commit": "3b78eed8f7517289ee6dc72ae7f44a58202f424f"
+    "commit": "2fbb911ac08fa1f141cb465a8924b25485b8cc84"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
