@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/c04-legacy-preflight-correlation-20261106` at `2fbb911ac08fa1f141cb465a8924b25485b8cc84`
+Implementation baseline: `fix/c06-capture-storage-preflight-20261106` at `2bd16428d1529d4eca95f68faaa92b2032f889f5`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
