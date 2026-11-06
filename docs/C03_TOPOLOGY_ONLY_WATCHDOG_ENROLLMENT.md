@@ -1,6 +1,6 @@
 ---
 id: "aoe2war.wolochain.c03-topology-only-baseline-review"
-title: "C03 Topology-Only Watchdog Enrollment — One-Use Physical Admission"
+title: "C03 Topology-Only Watchdog Baseline Enrollment"
 type: "reference"
 status: "draft"
 owner: "wolochain-ops"
