@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `session-b/c04-market-quarantine-20261106` at `e14a42a57ae3e6cdcf3d3f7ca78bc921a0ba9a96`
+Implementation baseline: `session-b/c08-c09-exact-owner-canary-intent-20261106` at `14190db7f2ba3b2f2a6ba535e6f7341ed48e71c1`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 

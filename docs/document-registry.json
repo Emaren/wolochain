@@ -128,7 +128,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "f543531c0eb5b46e84a3b527fedce6d0c9f2704e503be11ac3d6bfb9a631eba3",
+      "sha256": "dc9b9d993999a0ad91878353b3927afb0d0568b76ca3b4deda595854a12e9a3a",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1205,8 +1205,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "session-b/c04-market-quarantine-20261106",
-    "commit": "e14a42a57ae3e6cdcf3d3f7ca78bc921a0ba9a96"
+    "branch": "session-b/c08-c09-exact-owner-canary-intent-20261106",
+    "commit": "14190db7f2ba3b2f2a6ba535e6f7341ed48e71c1"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
