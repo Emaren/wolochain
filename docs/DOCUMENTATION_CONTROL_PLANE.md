@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `session-b/c01-native-denial-clean-scan-20261106` at `14026e0f43c652a95fb56adf78257922ea1f2d92`
+Implementation baseline: `session-b/c08-intel-launchd-reverse-witness-20261106` at `6af886d2eec32388755a95465d40e8614b150ee0`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 

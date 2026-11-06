@@ -197,7 +197,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "aa287bf993ba78e548ea156e10cef7e5cb33871b1bce104587a350c1fe5952fa",
+      "sha256": "6a74d01a0b80c7d5bb045f3fb83739c010d2e5c5d401fe9c9365817292310b90",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1274,8 +1274,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "session-b/c01-native-denial-clean-scan-20261106",
-    "commit": "14026e0f43c652a95fb56adf78257922ea1f2d92"
+    "branch": "session-b/c08-intel-launchd-reverse-witness-20261106",
+    "commit": "6af886d2eec32388755a95465d40e8614b150ee0"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
