@@ -167,6 +167,29 @@
         "operators",
         "ai-agents"
       ],
+      "authority": "topology-only-no-financial-writer-fence-or-financial-permit",
+      "id": "aoe2war.wolochain.c03-topology-only-baseline-review",
+      "owner": "wolochain-ops",
+      "path": "docs/C03_TOPOLOGY_ONLY_WATCHDOG_ENROLLMENT.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-06",
+      "sensitivity": "restricted",
+      "sha256": "b8ec8c2123aceae344f471252834be588778253a434557c226ee4b7f518ed464",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C03 Topology-Only Watchdog Baseline Enrollment",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
       "authority": "source-only-intel-recovery-transport-not-a-financial-permit",
       "id": "aoe2war.wolochain.c06-intel-recovery-tunnel-supervisor",
       "owner": "wolochain-ops",
@@ -197,7 +220,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "a4dc9700f36d86149aaad9ee80c8806664dfb6ca7e83b267a46f5cc9d8ba0b44",
+      "sha256": "c6772ae5a95aca1603a2cfc57b0fb1243ba9df7cbfa1e57d628fad9f1bb267ed",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1274,8 +1297,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "session-b/c08-hel1-hostkey-pin-repair-20261106",
-    "commit": "2e47cdb3cdeaa2839db2f1e3ad1524cfd9ad73d2"
+    "branch": "fix/c03-reviewed-topology-baseline-20261106",
+    "commit": "2ab7c8c7d7e8c6ebb9a8942ef0f978ad5d3ffbb5"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
