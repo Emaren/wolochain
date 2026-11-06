@@ -16,7 +16,7 @@ import sys
 
 SCHEMA = "wolo.financial.producer-activation-topology.v1"
 PREFIXES = ("aoe2hdbets-", "aoe2dewarwagers-", "aoe2war-", "aoe2-wolo-",
-            "wolo-satchel-c01.", "wolo-reviewer-c01.")
+            "traffic-v2-", "wolo-satchel-c01.", "wolo-reviewer-c01.")
 PROTECTED = (
     "wolochaind-mainnet.service",
     "wolochain-mainnet-settlement.service",
@@ -71,6 +71,13 @@ EXPECTED = frozenset({
     "aoe2war-steam-egress-refresh.timer",
     "aoe2war-prewarm.service",
     "aoe2war-prewarm.timer",
+    # Observed live on HEL1: source-only relay and the separately owned
+    # Traffic forward ledger are still timer activation candidates for
+    # financial producer containment, never automatically safe-to-stop.
+    "aoe2war-public-priority-relay.service",
+    "aoe2war-public-priority-relay.timer",
+    "traffic-v2-forward-ledger-aoe2hdbets.service",
+    "traffic-v2-forward-ledger-aoe2hdbets.timer",
     "wolo-satchel-c01.service",
     "wolo-reviewer-c01.service",
 })
