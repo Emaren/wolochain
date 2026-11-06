@@ -98,6 +98,29 @@
         "operators",
         "ai-agents"
       ],
+      "authority": "source-only-negative-lock-rehearsal-not-a-financial-fence",
+      "id": "aoe2war.wolochain.c03-isolated-table-lock-counterexample",
+      "owner": "wolochain-ops",
+      "path": "docs/C03_ISOLATED_TABLE_LOCK_COUNTEREXAMPLE.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-06",
+      "sensitivity": "restricted",
+      "sha256": "0921db6ac095eb56d3d803d4a4756594cbdca90df3638ce3a980aae7a37bd0e1",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C03 Isolated PostgreSQL Table Lock Counterexample",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
       "authority": "source-only-intel-recovery-transport-not-a-financial-permit",
       "id": "aoe2war.wolochain.c06-intel-recovery-tunnel-supervisor",
       "owner": "wolochain-ops",
@@ -128,7 +151,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "f543531c0eb5b46e84a3b527fedce6d0c9f2704e503be11ac3d6bfb9a631eba3",
+      "sha256": "839014278cfacc85c92fcca75eb3497e942d5eabbc1613e8005d6234240086e3",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1205,8 +1228,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "session-b/c04-market-quarantine-20261106",
-    "commit": "e14a42a57ae3e6cdcf3d3f7ca78bc921a0ba9a96"
+    "branch": "fix/c03-isolated-lock-counterexample-20261106",
+    "commit": "437e2ea11f0bfc6a2aaa31224e0a6ce1e3a3d0de"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
