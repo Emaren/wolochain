@@ -1,7 +1,7 @@
 ---
-id: "wolochain.solo-owner-centralized-financial-governance-proposal"
+id: "aoe2war.wolochain.solo-owner-centralized-financial-governance-proposal"
 title: "WOLO Centralized Solo-Owner Financial Governance — C08 Proposal"
-type: "policy"
+type: "reference"
 status: "draft"
 owner: "wolochain-ops"
 systems: ["wolochain", "aoe2war"]
@@ -13,7 +13,7 @@ review_interval_days: 7
 sensitivity: "internal"
 ---
 
-# WOLO centralized solo-owner financial governance (PROPOSED)
+# WOLO Centralized Solo-Owner Financial Governance — C08 Proposal
 
 ## Decision and disclosure
 
