@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/c03-isolated-nologin-owner-rehearsal-20261106` at `4c06ca5bf3fa13ff93e8c186c1ec03910b6695a6`
+Implementation baseline: `session-b/c08-intel-dedicated-witness-transport-20261106` at `82567c72f23eac98831eabc55cd8d2d16b774e18`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
