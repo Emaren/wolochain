@@ -65,6 +65,23 @@ recover a preexisting exact historical error; plans are read-only and
 nonauthorizing. This change does not admit the dedicated SSHD or consume any
 cryptographic witness nonce. No live SSH file is altered by this retirement.
 
+**C05 source-bound one-height evidence hardening — November 7 (HOLD):**
+The offline `scripts/settlement_financial_one_height_arithmetic.py`
+controller now requires `--expected-input-sha256 <reviewed-SHA256>`
+alongside the absolute `--input` path. It refuses absent or substituted
+digests, a symlink, multiply linked file, non-0600 evidence, a non-0700
+or non-owner evidence parent, and file replacement during the read.
+Prior loose source files were *not* eligible for financial admission
+even before this patch; the new controls stop misleading analytic
+output from unprotected or quietly substituted candidate evidence.
+A digest supplied by the same operator is **not independent source
+authentication**. Even with a syntactically valid, matching input,
+the controller returns HOLD/exit3; matching balance and obligation
+arithmetic does not make a consensus-authenticated solvency claim.
+Same-height authenticated bank assets, all external writer families,
+uncertain execution upper bounds and true disjoint liability evidence
+remain unproven.
+
 For C02, the App finance track must prove effective financial ownership,
 role membership, table/sequence/index DML and schema CREATE **after** the
 29 new Satchel tables are created, not merely before migration. Session A
