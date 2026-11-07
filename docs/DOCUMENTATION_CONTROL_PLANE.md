@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `session-b/c08-retire-obsolete-ssh-mutation-20261107` at `35b9f34c0b07d0fdccb9ecb205793273182667c1`
+Implementation baseline: `fix/central-c08-ssh-options-exact-20261107` at `3367c9305edac310dcd17ac27d2df5e682432170`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 

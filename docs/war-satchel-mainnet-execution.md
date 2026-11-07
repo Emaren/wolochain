@@ -754,3 +754,36 @@ The exact Go approval bytes are supplied by exported
 `WagerReservationMessage`, not an app-invented canonicalizer. HD's existing
 1,000 WOLO combined game and 10,000 daily policy remain app authority; this
 handoff changes neither cap. No app files were read locally or modified.
+
+## C08 dedicated SSHD exact-config admission hardening — November 7, 2026 UTC
+
+The source-only Central C08 follow-up corrects the witness tunnel's SSH
+admission parser after independent negative tests exposed two ambiguities in
+the earlier merged source. It is **not** a production authorization.
+
+- A required `PasswordAuthentication no` line did not exclude a preceding
+  `PasswordAuthentication yes`, extra non-loopback `ListenAddress`, broadened
+  `AllowUsers`, `AllowTcpForwarding yes`, or `Include` in the same config.
+  Dedicated sshd configuration is now checked against an exact reviewed
+  directive allowlist, with no unknown/duplicate active directives. Approved
+  optional lines are sourced from the Intel's real rootless deny-only
+  `sshd_config`, including `AddressFamily inet`, `PermitRootLogin no`,
+  `AuthenticationMethods publickey`, and the explicit forwarding/PTY denials.
+- An authorized_keys command containing the words
+  `settlement_solo_runtime.py` and `--witness-stdin` formerly counted as a
+  forced witness protocol even when it actually executed a different command.
+  It is now parsed as one exact command+key, with no shell substitutions.
+  The only presently approved command is `/usr/bin/false`; the active witness
+  command remains deliberately **unreviewed** at the source boundary.
+  `REVIEWED_WITNESS_EXEC_COMMAND=None` means no source or changed Intel
+  configuration can accidentally activate the backend. A separately reviewed,
+  exact-byte source change is required before enabling a real witness command.
+
+Independent source tests 27/27, SSH enrollment 17/17, single-owner governance
+15/15 and hostkey rollback 17/17 all passed. A read-only execution of the
+exact revised parser against the real Intel's protected configuration returned
+`deny=true`, `protocol_forced=false`, `admitted=false` with host-key
+identity verified. No persistent LaunchAgent or dedicated SSHD was installed
+or started. HEL1 port 22995 (C08) and 22996 (C06) remained closed during the
+review. All payment permissions, independent owner nonce and C09 funded
+release remain HOLD.
