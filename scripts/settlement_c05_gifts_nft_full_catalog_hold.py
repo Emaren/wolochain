@@ -40,6 +40,8 @@ SELECT json_build_object(
  else:
   pieces=[
   "'gifts',coalesce((SELECT json_agg(row_to_json(x) ORDER BY x.kind,x.status,x.display_on_profile,x.bounty_ref) FROM (SELECT kind,status,display_on_profile,(lower(coalesce(note,'')) LIKE '%bounty #%') AS bounty_ref,count(*)::text AS rows,coalesce(sum(amount::numeric),0)::text AS nominal_amount,count(accepted_at)::text AS accepted_rows FROM public.user_gifts GROUP BY kind,status,display_on_profile,(lower(coalesce(note,'')) LIKE '%bounty #%')) x),'[]'::json)",
+  "'bounty_gift_provenance',(WITH pending_bounty AS (SELECT g.amount AS nominal,substring(lower(coalesce(g.note,'')) from 'bounty #[[:space:]]*([0-9]+)') AS ref FROM public.user_gifts g WHERE g.kind='WOLO' AND g.status='pending' AND lower(coalesce(g.note,'')) LIKE '%bounty #%'), joined AS (SELECT g.nominal,g.ref,b.id AS linked_id,b.reward_wolo,b.status AS bounty_status FROM pending_bounty g LEFT JOIN public.bounty_opportunities b ON b.id::text=g.ref) SELECT json_build_object('rows',count(*)::text,'nominal_wolo',coalesce(sum(nominal::numeric),0)::text,'linked_to_bounty_rows',count(linked_id)::text,'source_reward_matches',count(*) FILTER(WHERE linked_id IS NOT NULL AND reward_wolo=nominal)::text,'source_status_available_rows',count(*) FILTER(WHERE linked_id IS NOT NULL AND bounty_status='available')::text) FROM joined)",
+  "'bounty_event_hash_census',(SELECT json_build_object('rows',count(*)::text,'nominal_wolo',coalesce(sum(amount_wolo::numeric),0)::text,'hash_present',count(*) FILTER(WHERE NULLIF(btrim(coalesce(tx_hash,'')),'') IS NOT NULL)::text) FROM public.bounty_events)",
   "'oracle_bonds',coalesce((SELECT json_agg(row_to_json(x) ORDER BY x.status,x.bond_status) FROM (SELECT status,bond_status,count(*)::text AS rows,coalesce(sum(bond_wolo::numeric),0)::text AS nominal_bond_wolo,coalesce(sum(max_pool_wolo::numeric),0)::text AS nominal_max_pool_wolo FROM public.oracle_market_proposals GROUP BY status,bond_status) x),'[]'::json)",
   "'custody_seats',(SELECT json_build_object('rows',count(*)::text,'nft_id_present',count(*) FILTER(WHERE NULLIF(btrim(coalesce(nft_id,'')),'') IS NOT NULL)::text,'class_id_present',count(*) FILTER(WHERE NULLIF(btrim(coalesce(nft_class_id,'')),'') IS NOT NULL)::text) FROM public.championship_custody_seats)",
   "'funding_participants',(SELECT json_build_object('rows',count(*)::text,'funding_linked',count(funding_scheduled_match_id)::text) FROM public.championship_challenge_participants)",
@@ -56,7 +58,7 @@ ROLLBACK;
 def validate(doc,db):
  need(type(doc) is dict and db in EXPECTED,"DOC_INVALID")
  fields={"schema","database","catalog","gifts","chain_finality_authenticated","financial_release_authorized"}
- if db=="hd":fields|={"oracle_bonds","custody_seats","funding_participants","watcher_provenance","paper_positions"}
+ if db=="hd":fields|={"oracle_bonds","custody_seats","funding_participants","watcher_provenance","paper_positions","bounty_gift_provenance","bounty_event_hash_census"}
  need(set(doc)==fields and doc["schema"]==VERSION and
   doc["database"]==("aoe2hd_db" if db=="hd" else "aoe2de_db") and
   doc["chain_finality_authenticated"] is False and
@@ -68,7 +70,7 @@ def validate(doc,db):
  need((HD_RISK if db=="hd" else DE_RISK).issubset(names),"CRITICAL_MONEY_NFT_TABLE_MISSING")
  gifts=doc["gifts"]
  need(type(gifts) is list and len(gifts)<=16,"GIFT_BUCKETS_DRIFT")
- gift_seen=set();pending_wolo=0;pending_rows=0;pending_bounty=0;pending_other=0
+ gift_seen=set();pending_wolo=0;pending_rows=0;pending_bounty=0;pending_bounty_rows=0;pending_other=0
  for r in gifts:
   need(type(r) is dict and set(r)=={"kind","status","display_on_profile","bounty_ref","rows","nominal_amount","accepted_rows"},
        "GIFT_BUCKET_INVALID")
@@ -80,7 +82,8 @@ def validate(doc,db):
   n=number(r["rows"]);amount=number(r["nominal_amount"]);accepted=number(r["accepted_rows"])
   need(0< n and accepted<=n,"GIFT_BUCKET_COUNTER_DRIFT")
   if key[:2]==("WOLO","pending"):
-   if r["bounty_ref"]:pending_bounty+=amount
+   if r["bounty_ref"]:
+    pending_bounty+=amount;pending_bounty_rows+=n
    else:pending_other+=amount
    pending_wolo+=amount;pending_rows+=n
  result={"database":db,"public_base_table_count":len(names),
@@ -113,12 +116,27 @@ def validate(doc,db):
     type(row["finality_status"]) is str and row["finality_status"] not in names_seen,"WATCHER_GROUP_INVALID")
    names_seen.add(row["finality_status"])
    need(number(row["trusted_labeled_rows"])<=number(row["rows"]),"WATCHER_TRUST_COUNTER_INVALID")
+  provenance=pair("bounty_gift_provenance",("rows","nominal_wolo","linked_to_bounty_rows","source_reward_matches","source_status_available_rows"))
+  events=pair("bounty_event_hash_census",("rows","nominal_wolo","hash_present"))
+  need(provenance["rows"]==pending_bounty_rows and provenance["nominal_wolo"]==pending_bounty and
+       provenance["linked_to_bounty_rows"]<=provenance["rows"] and
+       provenance["source_reward_matches"]<=provenance["linked_to_bounty_rows"] and
+       provenance["source_status_available_rows"]<=provenance["linked_to_bounty_rows"] and
+       events["hash_present"]<=events["rows"],"BOUNTY_GIFT_REFERENCE_COUNTER_INCONSISTENT")
   result.update({"oracle_bond_status_groups":len(bonds),
    "nft_custody_seats_recorded":seats["rows"],
    "nft_ids_recorded":seats["nft_id_present"],
    "funding_participant_links_recorded":participants["funding_linked"],
    "oracle_paper_marks_not_wolo":str(paper["nominal_paper_marks"]),
    "watcher_provenance_groups":len(watcher),
+   "bounty_gift_reference_rows":provenance["rows"],
+   "bounty_gift_reference_nominal_wolo":str(provenance["nominal_wolo"]),
+   "bounty_gift_linked_reference_rows":provenance["linked_to_bounty_rows"],
+   "bounty_gift_reward_amount_matches":provenance["source_reward_matches"],
+   "bounty_gift_source_available_rows":provenance["source_status_available_rows"],
+   "bounty_events_recorded":events["rows"],
+   "bounty_events_hash_present":events["hash_present"],
+   "bounty_gift_economic_id_overlap_authenticated":False,
    "nft_chain_ownership_authenticated":False})
  return result
 def main(argv=None):
