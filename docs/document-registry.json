@@ -197,7 +197,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "aa287bf993ba78e548ea156e10cef7e5cb33871b1bce104587a350c1fe5952fa",
+      "sha256": "5231607a33e75fb4706c3c1970a0d2e4b1407783333c634d4d941b575dd3d0b4",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -795,9 +795,9 @@
       "owner": "wolochain-ops",
       "path": "docs/war-satchel-mainnet-execution.md",
       "review_interval_days": 7,
-      "reviewed_at": "2026-10-30",
+      "reviewed_at": "2026-11-07",
       "sensitivity": "restricted",
-      "sha256": "3bc667355e25b78f8cb43e950d5d099ce02b8f78419abc615380ad3648f5574c",
+      "sha256": "eda94aea538098587946691d1403f08dd636668c596df0405ed301ccd81f1690",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -1274,8 +1274,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "session-b/c01-native-denial-clean-scan-20261106",
-    "commit": "14026e0f43c652a95fb56adf78257922ea1f2d92"
+    "branch": "session-b/c08-intel-launchd-reverse-witness-20261106",
+    "commit": "5303ee5618eb824f50fb8d6321da3f48a3a9c7ca"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
