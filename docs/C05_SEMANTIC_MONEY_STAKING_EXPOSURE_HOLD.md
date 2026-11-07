@@ -21,7 +21,7 @@ sensitivity: "restricted"
 
 Session A's November 7 live metadata scan found **24 HD and nine DE legacy-owner-writable tables** with money or chain-related columns that the 30 HD / 11 DE name-based C03 list missed. Some are configuration, analytics or event-history; others carry staking positions, funding proofs and recorded payments. All are candidate *write-risk* surfaces, but not necessarily separate monetary debts.
 
-The C05 offline one-height arithmetic now has exactly **52 mandatory `scope_coverage` entries**: ten original source categories, seven newly discovered explicit payout/NFT tables, two semantic money-column catalog domains, and **33 per-table named classification requirements**. Omission or incompleteness of a single per-table entry stops even a *conditional* margin. A nominal table-count, synthetic source hash or complete flag is not independent source attestation, live chain finality or release authority. The arithmetic's output remains financial HOLD.
+The C05 offline one-height arithmetic now has exactly **61 mandatory `scope_coverage` entries**: ten original source categories, seven newly discovered explicit payout/NFT tables, two semantic money-column catalog domains, **33 per-table named classification requirements**, and **nine additional gift/bond/NFT/provenance or full-public-schema classification requirements**. Omission or incompleteness of a single per-table entry stops even a *conditional* margin. A nominal table-count, synthetic source hash or complete flag is not independent source attestation, live chain finality or release authority. The arithmetic's output remains financial HOLD.
 
 `scripts/settlement_c05_semantic33_readonly_hold.py` has a fixed 24-HD/9-DE allowlist linked to the exact one-height accounting source. It emits bounded PostgreSQL `REPEATABLE READ READ ONLY` table-count queries, no user fields, credentials or writes. Its classifier only accepts pinned SHA256 owner-0600 JSON from private 0700 directories and returns **HOLD/exit3**. The exact SQL emitted by reviewed source matched the already-run live HD/DE count SQL bytes.
 
@@ -39,6 +39,18 @@ Real live HD position snapshot:
 - 228 `CONFIRMED`-labeled staking events carry hashes, but `CONFIRMED` is an App database label, not independent authenticated native chain finality. Historical STAKE/UNSTAKE/COMPOUND/CLAIM events are flows; do **not** add them to current position principal again.
 
 Independent M1 owner-private physical staking receipt SHA256 **`8a4458741bcaa5ae8855e21f4ff8a4eee3955891bbd87f24e738b85ad589ae4e`**, under `~/.cache/aoe2war/session-b-c05-staking-live-20261107/receipt.json`. Staking source SHA256 `3eacbd4179611949861e30c601bd30f5d0af0ff95a3bbc166b79703c26ed76c0`, input packet SHA256 `301a9eeb0619b5e137cfb0519f08c88c9fdf72de2715ff3fdc1ebbf1f4ccb461`; classification intentionally exit3/HOLD.
+
+## Secondary whole-schema audit: WOLO gifts, NFT and oracle records
+
+Session A's post-merge catalog check found further money or integrity objects outside even the conservative 54-HD / 20-DE regex candidate. This source now separately requires: **HD and DE user_gifts**, HD oracle_market_proposals, championship_custody_seats, championship_challenge_participants, war_graph_watcher_attestations, oracle_paper_positions (paper marks, NOT WOLO), plus **full 190-HD and 52-DE public-base-schema catalog evidence**. These nine source classifications are distinct from 33 semantic money-column tables.
+
+`scripts/settlement_c05_gifts_nft_full_catalog_hold.py` emits fixed privacy-minimal read-only SQL, validates both entire sorted schema-name inventories, gift amounts/statuses, NFT seat and funding link counts, oracle bond buckets, watcher trust-label counts, and paper marks. No recipient/user/wallet identifiers are fetched. Source accepts exact owner-private SHA-pinned M1 JSON and **always returns HOLD (exit3)**.
+
+**Actual bounded read-only physical observations, November 7:** HD two `WOLO` kind `pending` gifts, combined **100,100 nominal WOLO**, neither accepted. DE gifts zero. HD oracle proposal rows zero; nine championship custody seats all have NFT IDs, fourteen challenge participants have funding-match links, and four oracle paper positions total 2,000 **paper marks**, not WOLO. War Graph watcher source has many ingestion/replay records, including rows labeled `trusted_final`, but their trust labels do not prove native WOLO payment finality.
+
+A real owner-0600 authenticated HD/DE observation and strict source-HOLD classification were sealed under `~/.cache/aoe2war/session-b-c05-gifts-custody-fullcatalog-20261107/receipt.json`, SHA256 **`0b37236440778875bb159d431ce6286ca82c6772ffbff4ab2313cea94568601e`**, source SHA256 `4ed964c87de24122eebd927d59aaf0162a7d5451f08cd8f560a378abc867f0e6`. These two SQL transactions were not jointly atomic; no financial release or source-classification completion has been certified.
+
+**Pending gift records are not automatically separate unpaid transfers**: reconcile gift origin and acceptance, authenticated finality, other pending-claim economic IDs and custody before counting or excluding 100,100 WOLO. NFT seats are not priced in WOLO. Oracle paper marks are never added to WOLO liabilities.
 
 ## Residual release dependencies
 

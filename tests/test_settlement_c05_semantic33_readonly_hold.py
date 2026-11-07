@@ -13,7 +13,7 @@ class SemanticCensusTests(unittest.TestCase):
   self.assertEqual(len(s.EXPECTED["de"]),9)
   self.assertEqual(set(s.EXPECTED["hd"]),set(s.accounting.SEMANTIC_C05_TABLES["hd"]))
   self.assertEqual(set(s.EXPECTED["de"]),set(s.accounting.SEMANTIC_C05_TABLES["de"]))
-  self.assertEqual(len(s.accounting.COVERAGE),52)
+  self.assertEqual(len(s.accounting.COVERAGE),61)
  def test_source_sql_is_read_only(self):
   for db in ("hd","de"):
    query=s.sql(db)
