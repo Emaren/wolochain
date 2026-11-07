@@ -14,11 +14,11 @@ import re
 import subprocess
 import sys
 
-SCHEMA = "wolo.c03.legacy-db-owner-boundary-hold.v1"
+SCHEMA = "wolo.c03.legacy-db-owner-expanded-payout-boundary-hold.v2"
 TARGETS = {"aoe2hd_db": "aoe2hd_user", "aoe2de_db": "aoe2de_user"}
 INT = re.compile(r"[0-9]{1,10}\Z")
 MAX_STDOUT = 4096
-FINANCE = r"(wolo|bet|wager|settle|claim|escrow|refund|reward|stake|treasury|wallet|founder|bonus)"
+FINANCE = r"(wolo|bet|wager|settle|claim|escrow|refund|reward|stake|treasury|wallet|founder|bonus|payout|transfer)"
 FIELDS = (
     "role_exists", "finance_named_relations", "finance_relations_owned",
     "finance_relations_dml_capable", "nonpublic_finance_relations",
