@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/c03-full-schema-default-deny-20261107` at `5ceeac9c3a2a3c60f3a82dd005b15baf29fa0346`
+Implementation baseline: `fix/c03-asset-fence-owner-parity-20261107` at `2ef71600ea2e10436c4cf835e1e089fb5b90ddc5`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
