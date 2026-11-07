@@ -236,6 +236,29 @@
         "operators",
         "ai-agents"
       ],
+      "authority": "read-only-physical-observer-no-solvency-or-funding-authority",
+      "id": "aoe2war.wolochain.c05-semantic-money-staking-exposure-hold",
+      "owner": "wolochain-ops",
+      "path": "docs/C05_SEMANTIC_MONEY_STAKING_EXPOSURE_HOLD.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-07",
+      "sensitivity": "restricted",
+      "sha256": "3df75efb7eb763144b8e2b686cbaeaba05b490afaddc33d3d06e1e58750e9dd5",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C05 Semantic Money Columns and Staking Exposure \u2014 Independent HOLD",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
       "authority": "read-only-source-and-physical-financial-hold-not-c03-maintenance-or-funded-permit",
       "id": "aoe2war.wolochain.c05-seven-surface-readonly-census-hold",
       "owner": "wolochain-ops",
@@ -312,7 +335,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "e795a9f85a0f653a412bdedf683f767885c6e65f4be1d4adfbed2f20426961b8",
+      "sha256": "37db336b39e46a801eddb12202d00bc6b31981db7f332fe56fbcae9804dc28f7",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1389,8 +1412,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/session-b-c05-seven-surface-census-20261107",
-    "commit": "c4e408f08b5d1b186f06dfe520503a4e5500e5a9"
+    "branch": "fix/session-b-c05-staking-exposure-20261107",
+    "commit": "dc1e383d45ae4c2b03b39e682da2c6257eca08d0"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
