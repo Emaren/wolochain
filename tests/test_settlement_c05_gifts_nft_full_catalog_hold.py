@@ -18,7 +18,9 @@ def fixture(db):
    "custody_seats":{"rows":"9","nft_id_present":"9","class_id_present":"9"},
    "funding_participants":{"rows":"14","funding_linked":"14"},
    "watcher_provenance":[{"finality_status":"trusted_final","rows":"450","trusted_labeled_rows":"450"}],
-   "paper_positions":{"rows":"4","nominal_paper_marks":"2000"}})
+   "paper_positions":{"rows":"4","nominal_paper_marks":"2000"},
+   "bounty_gift_provenance":{"rows":"1","nominal_wolo":"100000","linked_to_bounty_rows":"1","source_reward_matches":"0","source_status_available_rows":"1"},
+   "bounty_event_hash_census":{"rows":"31","nominal_wolo":"718003","hash_present":"0"}})
  return doc
 class SourceTests(unittest.TestCase):
  def setUp(self):
@@ -41,6 +43,12 @@ class SourceTests(unittest.TestCase):
   self.assertEqual(out["nft_ids_recorded"],9)
   self.assertEqual(out["funding_participant_links_recorded"],14)
   self.assertEqual(out["oracle_paper_marks_not_wolo"],"2000")
+  self.assertEqual(out["bounty_gift_linked_reference_rows"],1)
+  self.assertEqual(out["bounty_gift_reward_amount_matches"],0)
+  self.assertEqual(out["bounty_gift_source_available_rows"],1)
+  self.assertEqual(out["bounty_events_recorded"],31)
+  self.assertEqual(out["bounty_events_hash_present"],0)
+  self.assertFalse(out["bounty_gift_economic_id_overlap_authenticated"])
   self.assertFalse(out["nft_chain_ownership_authenticated"])
   self.assertEqual(g.validate(self.d,"de")["public_base_table_count"],52)
  def test_exact_source_read_only(self):
@@ -88,6 +96,22 @@ class SourceTests(unittest.TestCase):
   self.h["paper_positions"]["nominal_paper_marks"]="-2000";self.held()
  def test_oracle_bond_missing_field(self):
   self.h["oracle_bonds"]=[{"rows":"1","status":"pending"}];self.held()
+ def test_bounty_reference_counter_overrun_denied(self):
+  self.h["bounty_gift_provenance"]["rows"]="2";self.held()
+ def test_bounty_reference_amount_overrun_denied(self):
+  self.h["bounty_gift_provenance"]["nominal_wolo"]="100101";self.held()
+ def test_bounty_linked_count_exceeds_group_denied(self):
+  self.h["bounty_gift_provenance"]["linked_to_bounty_rows"]="2";self.held()
+ def test_bounty_reward_match_exceeds_links_denied(self):
+  self.h["bounty_gift_provenance"]["source_reward_matches"]="2";self.held()
+ def test_bounty_event_hash_count_overflow_denied(self):
+  self.h["bounty_event_hash_census"]["hash_present"]="32";self.held()
+ def test_missing_bounty_reference_census_denied(self):
+  self.h.pop("bounty_gift_provenance");self.held()
+ def test_reward_matching_is_never_native_finality(self):
+  self.h["bounty_gift_provenance"]["source_reward_matches"]="1"
+  out=g.validate(self.h,"hd")
+  self.assertFalse(out["bounty_gift_economic_id_overlap_authenticated"])
  def test_wrong_database(self):
   with self.assertRaises(g.Hold):g.validate(self.d,"hd")
  def test_unauthorized_extra_key(self):
