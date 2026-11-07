@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/central-c05-active-winner-census-20261107` at `8d303cf3c384f66f8deb89e02f5e9e6d607f15e5`
+Implementation baseline: `fix/central-c05-active-winner-census-20261107` at `29fa50fa708070147369cc0355740c21a1d88d52`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 

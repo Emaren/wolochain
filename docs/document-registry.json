@@ -197,7 +197,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "2cef295b87c255582b760c8cf42f1484acfe8d3dd3a524831c2515388aff873e",
+      "sha256": "6be0081fc377489dc1a3cd0b4c231d66872e6670cef566e3d62efed1d1a1b11c",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1275,7 +1275,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "fix/central-c05-active-winner-census-20261107",
-    "commit": "8d303cf3c384f66f8deb89e02f5e9e6d607f15e5"
+    "commit": "29fa50fa708070147369cc0355740c21a1d88d52"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
