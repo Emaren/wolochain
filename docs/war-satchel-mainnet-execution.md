@@ -101,11 +101,28 @@ claimed/hashless 800, and pending founder bonuses #8218/#8219/#8226/#8227.
 Void wagers #394/#396 had stake hashes but no payout hashes. This does
 not determine whether any transfer actually happened.
 
+The v2 observer requires a **full 69-claim read-only identity set**
+with claim ID, original kind, recorded amount, original market/source
+identity, founder bonus source and legacy/mainnet era. It separately
+checks the four era/kind groups (five legacy payouts / 10 mainnet
+payouts / three refunds / 51 founder bonuses) and compares the
+canonical set SHA256 against an operator-supplied, source-reviewed
+baseline. This rejects offsetting edits to two claims even if all
+aggregate counts and nominal sums remain identical. The first live
+source-scoped HD/DE read at 01:46:10–01:46:12 UTC returned 69 identities,
+all expected era/kind amounts and candidate claim-set fingerprint
+`eec442d8ea865fd41be47f89a2578fb807851b37e1d426c8f657341c895e9323`.
+A second protected full-claim physical capture was blocked by desktop
+safety controls; **no repeatability receipt is asserted** until it is
+obtained through an approved source-bound path. Even a matching
+operator-supplied digest is **not** independently signed evidence.
+
 The observer deliberately emits `HOLD_C04_UNRESOLVED_PAYMENT_FINALITY`
 (exit3) for matching local data and STOP for source drift, a newly
-writable or missing case, incomplete snapshot, altered counts, expired
-time window or unsafe local evidence. It asserts no automatic payout
-retry, no proof of independent finality, and no additive liability sum.
+writable or missing case, incomplete snapshot, altered claim identity,
+changed amount with unchanged totals, expired time window or unsafe
+local evidence. It asserts no automatic payout retry, no proof of
+independent finality, and no additive liability sum.
 It neither edits C03 financial writers nor starts C01/8094 services.
 The second exact-source physical read-only rehearsal at
 01:34:43–01:34:46 UTC returned its deliberate C04/HOLD with both
