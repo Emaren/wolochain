@@ -1,0 +1,22 @@
+name: C03 Intel PG16 60/21 asset scope source contract
+
+on:
+  pull_request:
+  push:
+    branches:
+      - fix/c03-asset-fence-owner-parity-20261107
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  c03-intel-asset60-21-owner-parity:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Review HD60/DE21 source and fail-closed adversarial tests
+        run: python3 -B -m unittest discover -s tests -p 'test_settlement_c03_intel_full_public_explicit_asset_owner_rehearsal.py' -v
