@@ -243,7 +243,7 @@
       "review_interval_days": 7,
       "reviewed_at": "2026-11-07",
       "sensitivity": "restricted",
-      "sha256": "0e5ad9e29db52db3ed011d66f684f7b5d93e6e889ac5e5c65915a8e293dd2b05",
+      "sha256": "8a961e712a854c33baf5deed5b1edfeb0bc3d75a639014c65dd4390e788df340",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -335,7 +335,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "dcff19ea4143618edac2f83e62fdd9dfacb4f78d536c4bdd330f835c7b9a2abc",
+      "sha256": "8acbfc421aac946e147ade8ac9ec6a9c4f8327832b2c1c8e48122b6330923275",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1413,7 +1413,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "fix/session-b-c05-staking-exposure-20261107",
-    "commit": "c5e16f6ff0863a2e1a3e92d7fb76538cad969464"
+    "commit": "544aabd4e6de8ca08fd4a830a3399efe81f2919e"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
