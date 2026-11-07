@@ -41,6 +41,10 @@ Additional separately executed **HD-only READ ONLY** hash-overlap check: all 340
 
 These nominal amounts are not summed into prior C04 claims or active wager totals without an independently proved economic-ID overlap map. Distinct `amount_uwolo`, `amount_wolo`, NFT-seat state and event counts are not interchangeable.
 
+## Source-level C05 arithmetic hard gate
+
+The existing offline one-height arithmetic was **also corrected**, not just supplemented with an observer. Its exact `scope_coverage` contract now requires **17** individually identified complete source scopes (the original ten plus all seven newly identified payout/NFT/transfer surfaces). Old ten-scope candidate evidence receives `UNSCOPED_FINANCIAL_OWNERS`; a single missing, incomplete, or unhashed new surface prevents a conditional recorded reserve or margin. Synthetic tests deliberately verify all seven omission denials and the negative-margin condition. The engine still always exits HOLD and never authenticates a balance, finality, global liability ceiling, independent reviewer, custody or owner permit.
+
 ## Authentic independent capture (November 7, 2026 UTC)
 
 Two separate live HD/DE transactions were executed through source-emitted SQL and saved in private owner 0700/0600 M1 files. The source exact HEAD `a90499e100e0227d4c5134d53cccf593b857a015`, source script SHA256 `7bf33af9d2c9c0d52fd7b9fb3af590fc1ce0331ec4c1e8fa546af82c4e92876f`, authentic HD source-input SHA256 `c7a4518fdc418f6d936bd175e1c1886173a9e6fd22a77f43b7fe484962a1a552`, and DE input SHA256 `72c02998b11fe427783be72b85b920c8526186e5aa6927609339c3c43ab73535` were independently reclassified with intentional `HOLD`/exit 3.
