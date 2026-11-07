@@ -23,8 +23,11 @@ def fixture(db):
 class SourceTests(unittest.TestCase):
  def setUp(self):
   self.h=fixture("hd");self.d=fixture("de")
-  self.h["gifts"]=[{"kind":"WOLO","status":"pending","rows":"2",
-    "nominal_amount":"100100","accepted_rows":"0"}]
+  self.h["gifts"]=[
+   {"kind":"WOLO","status":"pending","display_on_profile":True,
+    "bounty_ref":True,"rows":"1","nominal_amount":"100000","accepted_rows":"0"},
+   {"kind":"WOLO","status":"pending","display_on_profile":False,
+    "bounty_ref":False,"rows":"1","nominal_amount":"100","accepted_rows":"0"}]
  def held(self):
   with self.assertRaises(g.Hold):g.validate(self.h,"hd")
  def test_provenance_flags_never_authorize(self):
@@ -32,6 +35,9 @@ class SourceTests(unittest.TestCase):
   self.assertEqual(out["public_base_table_count"],190)
   self.assertEqual(out["gift_pending_wolo_rows"],2)
   self.assertEqual(out["gift_pending_nominal_wolo"],"100100")
+  self.assertEqual(out["gift_pending_bounty_reference_wolo"],"100000")
+  self.assertEqual(out["gift_pending_other_wolo"],"100")
+  self.assertFalse(out["bounty_reference_already_counted_in_other_liabilities_proven"])
   self.assertEqual(out["nft_ids_recorded"],9)
   self.assertEqual(out["funding_participant_links_recorded"],14)
   self.assertEqual(out["oracle_paper_marks_not_wolo"],"2000")

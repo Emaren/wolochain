@@ -36,10 +36,10 @@ SELECT json_build_object(
  WHERE n.nspname='public' AND c.relkind IN ('r','p')),'[]'::json),
 """
  if db=="de":
-  pieces=["'gifts',coalesce((SELECT json_agg(row_to_json(x) ORDER BY x.kind,x.status) FROM (SELECT kind,status,count(*)::text AS rows,coalesce(sum(amount::numeric),0)::text AS nominal_amount,count(accepted_at)::text AS accepted_rows FROM public.user_gifts GROUP BY kind,status) x),'[]'::json)"]
+  pieces=["'gifts',coalesce((SELECT json_agg(row_to_json(x) ORDER BY x.kind,x.status,x.display_on_profile,x.bounty_ref) FROM (SELECT kind,status,display_on_profile,(lower(coalesce(note,'')) LIKE '%bounty #%') AS bounty_ref,count(*)::text AS rows,coalesce(sum(amount::numeric),0)::text AS nominal_amount,count(accepted_at)::text AS accepted_rows FROM public.user_gifts GROUP BY kind,status,display_on_profile,(lower(coalesce(note,'')) LIKE '%bounty #%')) x),'[]'::json)"]
  else:
   pieces=[
-  "'gifts',coalesce((SELECT json_agg(row_to_json(x) ORDER BY x.kind,x.status) FROM (SELECT kind,status,count(*)::text AS rows,coalesce(sum(amount::numeric),0)::text AS nominal_amount,count(accepted_at)::text AS accepted_rows FROM public.user_gifts GROUP BY kind,status) x),'[]'::json)",
+  "'gifts',coalesce((SELECT json_agg(row_to_json(x) ORDER BY x.kind,x.status,x.display_on_profile,x.bounty_ref) FROM (SELECT kind,status,display_on_profile,(lower(coalesce(note,'')) LIKE '%bounty #%') AS bounty_ref,count(*)::text AS rows,coalesce(sum(amount::numeric),0)::text AS nominal_amount,count(accepted_at)::text AS accepted_rows FROM public.user_gifts GROUP BY kind,status,display_on_profile,(lower(coalesce(note,'')) LIKE '%bounty #%')) x),'[]'::json)",
   "'oracle_bonds',coalesce((SELECT json_agg(row_to_json(x) ORDER BY x.status,x.bond_status) FROM (SELECT status,bond_status,count(*)::text AS rows,coalesce(sum(bond_wolo::numeric),0)::text AS nominal_bond_wolo,coalesce(sum(max_pool_wolo::numeric),0)::text AS nominal_max_pool_wolo FROM public.oracle_market_proposals GROUP BY status,bond_status) x),'[]'::json)",
   "'custody_seats',(SELECT json_build_object('rows',count(*)::text,'nft_id_present',count(*) FILTER(WHERE NULLIF(btrim(coalesce(nft_id,'')),'') IS NOT NULL)::text,'class_id_present',count(*) FILTER(WHERE NULLIF(btrim(coalesce(nft_class_id,'')),'') IS NOT NULL)::text) FROM public.championship_custody_seats)",
   "'funding_participants',(SELECT json_build_object('rows',count(*)::text,'funding_linked',count(funding_scheduled_match_id)::text) FROM public.championship_challenge_participants)",
@@ -68,21 +68,28 @@ def validate(doc,db):
  need((HD_RISK if db=="hd" else DE_RISK).issubset(names),"CRITICAL_MONEY_NFT_TABLE_MISSING")
  gifts=doc["gifts"]
  need(type(gifts) is list and len(gifts)<=16,"GIFT_BUCKETS_DRIFT")
- gift_seen=set();pending_wolo=0;pending_rows=0
+ gift_seen=set();pending_wolo=0;pending_rows=0;pending_bounty=0;pending_other=0
  for r in gifts:
-  need(type(r) is dict and set(r)=={"kind","status","rows","nominal_amount","accepted_rows"},
+  need(type(r) is dict and set(r)=={"kind","status","display_on_profile","bounty_ref","rows","nominal_amount","accepted_rows"},
        "GIFT_BUCKET_INVALID")
-  key=(r["kind"],r["status"])
-  need(all(type(x) is str and 1<=len(x)<=60 for x in key) and key not in gift_seen,"GIFT_BUCKET_DUPLICATE")
+  need(type(r["display_on_profile"]) is bool and type(r["bounty_ref"]) is bool,
+       "GIFT_GROUP_FLAGS_INVALID")
+  key=(r["kind"],r["status"],r["display_on_profile"],r["bounty_ref"])
+  need(all(type(x) is str and 1<=len(x)<=60 for x in key[:2]) and key not in gift_seen,"GIFT_BUCKET_DUPLICATE")
   gift_seen.add(key)
   n=number(r["rows"]);amount=number(r["nominal_amount"]);accepted=number(r["accepted_rows"])
   need(0< n and accepted<=n,"GIFT_BUCKET_COUNTER_DRIFT")
-  if key==("WOLO","pending"):
+  if key[:2]==("WOLO","pending"):
+   if r["bounty_ref"]:pending_bounty+=amount
+   else:pending_other+=amount
    pending_wolo+=amount;pending_rows+=n
  result={"database":db,"public_base_table_count":len(names),
          "catalog_names_sha256":hashlib.sha256(json.dumps(names,separators=(",",":")).encode()).hexdigest(),
          "gift_pending_wolo_rows":pending_rows,
          "gift_pending_nominal_wolo":str(pending_wolo),
+         "gift_pending_bounty_reference_wolo":str(pending_bounty),
+         "gift_pending_other_wolo":str(pending_other),
+         "bounty_reference_already_counted_in_other_liabilities_proven":False,
          "all_gift_fates_resolved":False}
  if db=="hd":
   bonds=doc["oracle_bonds"]
