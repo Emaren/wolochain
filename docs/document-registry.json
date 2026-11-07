@@ -197,7 +197,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "5231607a33e75fb4706c3c1970a0d2e4b1407783333c634d4d941b575dd3d0b4",
+      "sha256": "75dbccac38311f1ca526ea07c100b4e409522de6a0011fece8f7077a17826475",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -797,7 +797,7 @@
       "review_interval_days": 7,
       "reviewed_at": "2026-11-07",
       "sensitivity": "restricted",
-      "sha256": "eda94aea538098587946691d1403f08dd636668c596df0405ed301ccd81f1690",
+      "sha256": "02913abec474dc8b464572ba1a8f15af6df87937a0076bb260f297e24de8c0cd",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -1274,8 +1274,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "session-b/c08-intel-launchd-reverse-witness-20261106",
-    "commit": "5303ee5618eb824f50fb8d6321da3f48a3a9c7ca"
+    "branch": "session-b/c08-retire-obsolete-ssh-mutation-20261107",
+    "commit": "35b9f34c0b07d0fdccb9ecb205793273182667c1"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

@@ -54,6 +54,17 @@ StrictHostKeyChecking, replace dedicated witness credentials, or activate a
 forced command without independent source/host admission and exact nonce
 recovery evidence.
 
+**Retired C08 mutation entrypoints (November 7 source hardening):**
+`settlement_c08_intel_witness_ssh_enrollment_hold.py --mode apply` and
+`settlement_c08_hel1_witness_hostkey_rotation_hold.py --mode apply`
+now STOP before modifying normal macOS SSH or HEL1 trust. The first old
+controller could append a witness key to regular authorized_keys; the second
+could repin HEL1's dedicated-witness SSH endpoint to the wrong macOS server.
+Their strictly compared revert/rollback paths remain available solely to
+recover a preexisting exact historical error; plans are read-only and
+nonauthorizing. This change does not admit the dedicated SSHD or consume any
+cryptographic witness nonce. No live SSH file is altered by this retirement.
+
 For C02, the App finance track must prove effective financial ownership,
 role membership, table/sequence/index DML and schema CREATE **after** the
 29 new Satchel tables are created, not merely before migration. Session A
