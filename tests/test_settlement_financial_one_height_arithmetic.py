@@ -76,7 +76,7 @@ class OneHeightArithmeticTests(unittest.TestCase):
             "de_trophy_payouts",
         }
         self.assertTrue(names.issubset(finance.COVERAGE))
-        self.assertEqual(len(finance.COVERAGE), 19)
+        self.assertEqual(len(finance.COVERAGE), 52)
         # Legacy pre-Nov-7 "complete" ten-surface certificates cannot pass.
         for name in sorted(names):
             candidate = fixture()
@@ -102,6 +102,31 @@ class OneHeightArithmeticTests(unittest.TestCase):
             self.assertIsNone(r["conditional_recorded_reserve_uwolo"])
             self.assertIsNone(r["conditional_margin_uwolo"])
             self.assertFalse(r["financial_release_authorized"])
+
+    def test_each_of_33_semantic_money_tables_requires_a_separate_classification(self):
+        self.assertEqual(len(finance.SEMANTIC_C05_TABLES["hd"]),24)
+        self.assertEqual(len(finance.SEMANTIC_C05_TABLES["de"]),9)
+        seen=set()
+        for db,tables in finance.SEMANTIC_C05_TABLES.items():
+            for table in tables:
+                scope=f"{db}_semantic_{table}"
+                self.assertIn(scope,finance.COVERAGE)
+                self.assertNotIn(scope,seen)
+                seen.add(scope)
+                packet=fixture()
+                packet["scope_coverage"].pop(scope)
+                with self.subTest(omitted=scope):
+                    with self.assertRaisesRegex(finance.InvalidEvidence,"^UNSCOPED_FINANCIAL_OWNERS$"):
+                        finance.arithmetic(packet,SHA("f"))
+                packet=fixture()
+                packet["obligations"].pop(1)
+                packet["scope_coverage"][scope]["complete"]=False
+                report=finance.arithmetic(packet,SHA("f"))
+                self.assertIn(scope,report["coverage_gaps"])
+                self.assertFalse(report["arithmetic_complete_for_claimed_scope"])
+                self.assertIsNone(report["conditional_margin_uwolo"])
+                self.assertFalse(report["financial_release_authorized"])
+        self.assertEqual(len(seen),33)
 
     def test_new_financial_surface_incomplete_blocks_conditional_margin(self):
         # Even an empty payout table must have independently authenticated
