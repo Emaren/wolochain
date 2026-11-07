@@ -298,5 +298,66 @@ class TunnelTests(unittest.TestCase):
         self.assertFalse(self.paths["plist"].exists())
 
 
+    def test_additional_contradictory_sshd_directives_are_denied(self):
+        path=self.paths["dedicated_config"]
+        for extra in (b"PasswordAuthentication yes\n",
+                      b"ListenAddress 0.0.0.0\n",
+                      b"AllowTcpForwarding yes\n",
+                      b"AllowUsers unreviewed\n",
+                      b"PermitTTY yes\n",
+                      b"PubkeyAuthentication no\n",
+                      b"Include /tmp/unchecked.conf\n",
+                      b"passwordauthentication yes\n"):
+            with self.subTest(extra=extra):
+                path.write_bytes(extra+self.dedicated_config)
+                with self.assertRaisesRegex(
+                        c08.Hold,"C08_DEDICATED_WITNESS_SSHD_CONFIG_DRIFT"):
+                    self.preflight()
+        path.write_bytes(self.dedicated_config)
+
+    def test_duplicate_directive_and_additive_allowlist_rejected(self):
+        p=self.paths["dedicated_config"]
+        for extra in (b"AllowUsers second-user\n",
+                      b"Port 22996\n",
+                      b"ListenAddress 127.0.0.1\n",
+                      b"HostKey /tmp/unreviewed-hostkey\n"):
+            with self.subTest(extra=extra):
+                p.write_bytes(self.dedicated_config+extra)
+                with self.assertRaisesRegex(
+                        c08.Hold,"C08_DEDICATED_WITNESS_SSHD_CONFIG_DRIFT"):
+                    self.preflight()
+        p.write_bytes(self.dedicated_config)
+
+    def test_active_witness_substrings_are_not_forced_command_authority(self):
+        cfg=self.paths["dedicated_config"]
+        auth=self.paths["dedicated_authorized"]
+        cfg.write_bytes(self.dedicated_config.replace(
+            b"ForceCommand /usr/bin/false\n",b""))
+        for command in (
+            b"/bin/echo settlement_solo_runtime.py --witness-stdin",
+            b"/bin/sh -c echo_settlement_solo_runtime.py--witness-stdin",
+            b"settlement_solo_runtime.py --witness-stdin"):
+            with self.subTest(command=command):
+                auth.write_bytes(b'restrict,command="'+command+
+                                 b'" ssh-ed25519 '+b"E"*60+b"\n")
+                with self.assertRaisesRegex(
+                        c08.Hold,"C08_DEDICATED_WITNESS_COMMAND_NOT_REVIEWED"):
+                    self.preflight()
+
+    def test_actual_intel_deny_only_hardened_config_remains_valid_hold(self):
+        p=self.paths["dedicated_config"]
+        optional=(b"AddressFamily inet\nPermitRootLogin no\n"
+                  b"AuthenticationMethods publickey\n"
+                  b"ChallengeResponseAuthentication no\n"
+                  b"AllowAgentForwarding no\nX11Forwarding no\n"
+                  b"PermitTunnel no\nPermitUserEnvironment no\n"
+                  b"MaxSessions 1\n")
+        p.write_bytes(self.dedicated_config+optional)
+        pre=self.preflight()
+        self.assertTrue(pre["dedicated_witness_deny_profile_active"])
+        self.assertFalse(pre["dedicated_witness_protocol_forced"])
+        self.assertFalse(pre["dedicated_backend_admitted"])
+
+
 if __name__=="__main__":
     unittest.main()
