@@ -50,6 +50,10 @@ EXPECTED_DEDICATED_SSHD_HOST_BLOB_SHA="45c6153f1a67b5585662aa072e03dde6b09ad607e
 EXPECTED_DEDICATED_C08_CLIENT_BLOB_SHA="ce07e3593fc557cafbbeabe05f1a7c6a1200c01984595a75a726b8f414180fe6"
 MAX_SOURCE=65536
 MAX_FILE=131072
+# No active witness executable is currently source-approved. An explicit,
+# reviewed exact command must replace None before the dedicated backend can
+# ever be admitted; string-substring matches are NEVER authorization.
+REVIEWED_WITNESS_EXEC_COMMAND:bytes|None=None
 
 
 class Hold(ValueError):
@@ -143,22 +147,44 @@ def dedicated_backend_status(paths:dict[str,Path])->dict:
               b"PubkeyAuthentication yes",b"PasswordAuthentication no",
               b"UsePAM no",b"StrictModes yes",b"PermitTTY no",
               b"AllowTcpForwarding no")
-    require(all(lines.count(x)==1 for x in required)
-            and not any(x.startswith(b"Match ") for x in lines)
-            and sum(x.startswith(b"HostKey ") for x in lines)==1,
+    # OpenSSH accepts many case-insensitive/first-value or additive directives.
+    # Merely including the expected safe lines does NOT reject earlier unsafe
+    # options, e.g. PasswordAuthentication yes before the reviewed no.
+    # This exact allowlist is source-bound to the current *deny-only* Intel host.
+    optional_safe=(b"AddressFamily inet",b"PermitRootLogin no",
+                   b"AuthenticationMethods publickey",
+                   b"ChallengeResponseAuthentication no",
+                   b"AllowAgentForwarding no",b"X11Forwarding no",
+                   b"PermitTunnel no",b"PermitUserEnvironment no",
+                   b"MaxSessions 1")
+    deny_force=b"ForceCommand /usr/bin/false"
+    permitted=set(required)|set(optional_safe)|{deny_force}
+    require(len(lines)==len(set(lines))
+            and all(line in permitted for line in lines)
+            and all(lines.count(line)==1 for line in required),
             "C08_DEDICATED_WITNESS_SSHD_CONFIG_DRIFT")
     auth_lines=[x.strip() for x in auth.splitlines() if x.strip()]
-    require(len(auth_lines)==1
-            and auth_lines[0].startswith(b"restrict,command="),
+    require(len(auth_lines)==1,
             "C08_DEDICATED_WITNESS_CLIENT_AUTH_SCOPE_DRIFT")
-    parts=auth_lines[0].split()
-    require(len(parts)>=3 and parts[1]==b"ssh-ed25519"
-            and digest(parts[2])==EXPECTED_DEDICATED_C08_CLIENT_BLOB_SHA,
+    option,sep,key_and_comment=auth_lines[0].partition(b" ssh-ed25519 ")
+    command_match=re.fullmatch(rb'restrict,command="([^"\\\\\r\n]{1,240})"',option)
+    require(bool(sep) and command_match is not None,
+            "C08_DEDICATED_WITNESS_CLIENT_AUTH_SCOPE_DRIFT")
+    pub_fields=key_and_comment.split(None,1)
+    require(len(pub_fields) in (1,2) and
+            digest(pub_fields[0])==EXPECTED_DEDICATED_C08_CLIENT_BLOB_SHA,
             "C08_DEDICATED_ROOT_WITNESS_KEY_NOT_PINNED")
-    denied=(any(x.startswith(b"ForceCommand ") for x in lines)
-            or b'command="/usr/bin/false"' in auth)
-    protocol_forced=(b"settlement_solo_runtime.py" in auth
-                     and b"--witness-stdin" in auth)
+    forced_command=command_match.group(1)
+    # The present host is deny-only. No real witness executable is approved
+    # merely because its name/flags appear somewhere in an SSH option line.
+    require(forced_command==b"/usr/bin/false" or
+            (REVIEWED_WITNESS_EXEC_COMMAND is not None and
+             forced_command==REVIEWED_WITNESS_EXEC_COMMAND),
+            "C08_DEDICATED_WITNESS_COMMAND_NOT_REVIEWED")
+    denied=(deny_force in lines or forced_command==b"/usr/bin/false")
+    protocol_forced=(REVIEWED_WITNESS_EXEC_COMMAND is not None and
+                     forced_command==REVIEWED_WITNESS_EXEC_COMMAND and
+                     not denied)
     listening=False
     if not denied and protocol_forced:
         with socket.socket(socket.AF_INET,socket.SOCK_STREAM) as sock:
