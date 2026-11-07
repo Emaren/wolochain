@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/session-b-c05-seven-surface-census-20261107` at `7b442aea906f472578e0b4314a41df66932a6ada`
+Implementation baseline: `fix/c03-finance-payout-scope-20261107` at `04722694070c161899c0a1dc5c025c30afe20828`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
@@ -27,21 +27,21 @@ This page is generated from the validated front matter in this repository. Cross
 
 ## Documentation health
 
-- Authoritative repository documents: **60**
+- Authoritative repository documents: **59**
 - Path moves in this migration: **0**
 - Every listed document has an explicit owner, lifecycle, authority, and review interval.
 
 ### Types
 
 - `historical`: 14
-- `reference`: 37
+- `reference`: 36
 - `runbook`: 7
 - `working`: 2
 
 ### Lifecycle
 
 - `active`: 16
-- `draft`: 30
+- `draft`: 29
 - `historical`: 14
 
 ## Documents
@@ -58,7 +58,6 @@ This page is generated from the validated front matter in this repository. Cross
 | [C03 Real Production Schema Isolated NOLOGIN Ownership Rehearsal](C03_REAL_PRODUCTION_SCHEMA_OWNER_REHEARSAL.md) | `reference` | `draft` | `source-only-isolated-negative-proof-never-a-production-DDL-permit` |
 | [C03 Synthetic NOLOGIN Owner Partition Rehearsal](C03_SYNTHETIC_NOLOGIN_OWNER_REHEARSAL.md) | `reference` | `draft` | `source-only-nologin-permission-rehearsal-not-live-ddl-approval` |
 | [C03 Topology-Only Watchdog Baseline Enrollment](C03_TOPOLOGY_ONLY_WATCHDOG_ENROLLMENT.md) | `reference` | `draft` | `topology-only-no-financial-writer-fence-or-financial-permit` |
-| [C05 Expanded Payout and NFT-Transfer Surface Census — Read-Only HOLD](C05_SEVEN_SURFACE_READONLY_CENSUS_HOLD.md) | `reference` | `draft` | `read-only-source-and-physical-financial-hold-not-c03-maintenance-or-funded-permit` |
 | [C06 Intel Recovery Tunnel Supervisor](C06_INTEL_RECOVERY_TUNNEL_SUPERVISOR.md) | `reference` | `draft` | `source-only-intel-recovery-transport-not-a-financial-permit` |
 | [C08 Single-Owner Public Notice — Pinned 24-Hour Financial HOLD](C08_SINGLE_OWNER_PUBLIC_NOTICE_HOLD.md) | `reference` | `draft` | `public-notice-source-integrity-only-no-financial-permit` |
 | [Native epoch-v3 wire-v1 trust mismatch and held handoff](epoch-v3-wire-v1-hold.md) | `reference` | `draft` | `source-only-verifier-mismatch-not-financial-authority` |

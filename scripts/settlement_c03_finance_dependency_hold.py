@@ -16,9 +16,9 @@ import re
 import subprocess
 import sys
 
-SCHEMA = "wolo.c03.finance-dependency-observation-hold.v1"
-PATTERN = "(wolo|bet|wager|settle|claim|escrow|refund|reward|stake|treasury|wallet|founder|bonus)"
-DATABASES = {"aoe2hd_db": ("aoe2hd_user", 24), "aoe2de_db": ("aoe2de_user", 10)}
+SCHEMA = "wolo.c03.expanded-payout-finance-dependency-observation-hold.v2"
+PATTERN = "(wolo|bet|wager|settle|claim|escrow|refund|reward|stake|treasury|wallet|founder|bonus|payout|transfer)"
+DATABASES = {"aoe2hd_db": ("aoe2hd_user", 30), "aoe2de_db": ("aoe2de_user", 11)}
 ID = re.compile(r"[a-z_][a-z0-9_]{0,62}\Z")
 MAX_OUTPUT = 160000
 MAX_OBJECTS = 3000

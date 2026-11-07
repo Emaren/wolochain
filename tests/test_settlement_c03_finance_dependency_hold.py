@@ -35,14 +35,14 @@ class DependencyTests(unittest.TestCase):
 
     def test_legacy_owner_and_dependency_counts(self):
         r=m.parse(fixture(),"aoe2hd_db")
-        self.assertEqual(len(r["tables"]),24)
+        self.assertEqual(len(r["tables"]),30)
         self.assertEqual(len(r["sequences"]),1)
         self.assertEqual(len(r["triggers"]),1)
         self.assertEqual(len(r["views"]),1)
         self.assertEqual(r["nonfinanceOwnerCount"],[323])
 
     def test_de_expected_census(self):
-        self.assertEqual(len(m.parse(fixture("aoe2de_db"),"aoe2de_db")["tables"]),10)
+        self.assertEqual(len(m.parse(fixture("aoe2de_db"),"aoe2de_db")["tables"]),11)
 
     def test_duplicate_and_fake_census_refused(self):
         x=fixture()
@@ -74,7 +74,7 @@ class DependencyTests(unittest.TestCase):
             stdout=fixture()
         with patch.object(m.os,"geteuid",return_value=0),\
              patch.object(m.subprocess,"run",return_value=P()) as run:
-            self.assertEqual(len(m.inspect("aoe2hd_db")["tables"]),24)
+            self.assertEqual(len(m.inspect("aoe2hd_db")["tables"]),30)
             self.assertEqual(run.call_args.args[0][:4],
                              ["runuser","-u","postgres","--"])
 
