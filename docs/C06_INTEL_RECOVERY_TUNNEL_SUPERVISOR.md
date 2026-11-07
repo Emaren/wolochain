@@ -17,22 +17,28 @@ sensitivity: "restricted"
 
 ## Actual trigger and threat boundary
 
-On November 6, 2026 at 19:24 UTC the previously working HEL1 loopback-only Intel receiver reverse tunnel on TCP 22995 was **not listening**. This is a C06 off-host transport HOLD, not evidence that encrypted recovery keys or prior backups were lost. Do not assume the Intel Mac is powered or reachable because the past restore rehearsals succeeded.
+On November 6, 2026 at 19:24 UTC the previously working HEL1 loopback-only Intel receiver reverse tunnel on TCP 22996 was **not listening**. This is a C06 off-host transport HOLD, not evidence that encrypted recovery keys or prior backups were lost. Do not assume the Intel Mac is powered or reachable because the past restore rehearsals succeeded.
 
 The new source-only `scripts/c06_intel_reverse_tunnel_supervisor.py` is an **installer and explicit HOLD preflight**, not a financial agent. It is designed to run only as a nonroot user on the Intel (x86_64) macOS receiver. It does not read wallet keys, transmit database content, create an SSH key, change HEL1 configuration, authorize payouts or claim C06 completion.
 
 ## One-time receiver enrollment (when Intel is available)
 
-1. Establish a dedicated low-privilege `aoe2war-c06-reverse` SSH endpoint on HEL1. The account must be restricted to the exact **remote loopback listener** `127.0.0.1:22995`, with no remote shell, PTY, agent/X11 forwarding, password authentication, general network forwarding, or wildcard bind. A root/admin should separately review and test the key's authorized_keys options and sshd `Match User` configuration before any enrollment. This source does not provision the account automatically.
+1. Establish a dedicated low-privilege `aoe2war-c06-reverse` SSH endpoint on HEL1. The account must be restricted to the exact **remote loopback listener** `127.0.0.1:22996`, with no remote shell, PTY, agent/X11 forwarding, password authentication, general network forwarding, or wildcard bind. A root/admin should separately review and test the key's authorized_keys options and sshd `Match User` configuration before any enrollment. This source does not provision the account automatically.
 2. On the Intel, create **one dedicated transport-only SSH key**, separate from the WOLO custody, founder, reserve, signing and recovery-decryption keys. Its private path must be `~/.ssh/aoe2war_c06_intel_to_hel1`, an owner-owned non-symlink 0600 regular file. Never upload the private key to GitHub, an artifact or ChatGPT.
 3. Pin the actual HEL1 SSH host key in `~/.ssh/known_hosts` under the exact alias `hel1-c06-intel`; configure the SSH alias to use **user `aoe2war-c06-reverse` and port 22**, without host-key bypass. The installer checks `ssh-keygen -F hel1-c06-intel` and `ssh -G` effective user and port before staging.
 4. A nonroot owner on **the actual Intel** runs `python3 -B scripts/c06_intel_reverse_tunnel_supervisor.py --mode plan` (always returns HOLD/exit3) and only after approved enrollment `--mode install`. It refuses the M1, root, missing/too-broad key modes, symlinks, missing host pin or user mismatch.
 5. Installation writes only new files: owner-private `~/.local/libexec/aoe2war-c06-intel-recovery-tunnel.sh` and `~/Library/LaunchAgents/com.aoe2war.c06.intel-recovery-tunnel.plist` (both 0600). Existing paths are NOT overwritten. The installation receipt is **STAGED_NOT_STARTED**, not PASS.
 6. After independently verifying configuration and HEL1's listen restriction, use a separately reviewed user LaunchAgent bootstrap. launchd's `RunAtLoad=true`, `KeepAlive=true` and throttle 45s then supervise the outbound `ssh -N -T` command and automatically reconnect after ordinary networking failures **while the Intel is awake and logged in**. No financial content is moved by the tunnel alone.
 
+## Explicit C08 witness transport separation (2026-11-06)
+
+HEL1's `wolo-witness-tunnel` account currently reserves loopback reverse port **22995** for the independent C08 off-host witness. Its remote-forward ACL is `localhost:22995`; that account is **not** an Intel C06 backup receiver. C06 must use the separate **22996** loopback listener, independent `aoe2war-c06-reverse` nonroot account, transport-only private SSH key and its own host-key pin. Never reuse the C08 witness SSH account, port, authorized key or one-use nonce witness as C06 backup transport. Never silently repoint the existing C08 port.
+
+The original C06 transport prototype also used 22995. This source change fixes the shared-port collision **before** enrolling the Intel. It does not configure the missing HEL1 C06 account; a separately reviewed exact-match server configuration and restricted key enrollment are still required. The already verified temporary HEL1→M1→Intel age-encrypted relay offers a separate bounded backup transport path without changing either SSH account, but the synthetic transfer is not a coordinated C06 backup or C07 restore.
+
 ## Fixed SSH safety properties
 
-The exact generated SSH command uses identity-only authentication, `StrictHostKeyChecking=yes`, explicit `HostKeyAlias=hel1-c06-intel`, fixed known_hosts, `BatchMode=yes`, `ExitOnForwardFailure=yes`, bounded keepalives/timeouts and **only** `-R 127.0.0.1:22995:127.0.0.1:22`. It has no shell execution or wildcard 0.0.0.0 forwarding. On host-key mismatch it must fail closed rather than auto-accept new keys.
+The exact generated SSH command uses identity-only authentication, `StrictHostKeyChecking=yes`, explicit `HostKeyAlias=hel1-c06-intel`, fixed known_hosts, `BatchMode=yes`, `ExitOnForwardFailure=yes`, bounded keepalives/timeouts and **only** `-R 127.0.0.1:22996:127.0.0.1:22`. It has no shell execution or wildcard 0.0.0.0 forwarding. On host-key mismatch it must fail closed rather than auto-accept new keys.
 
 Automatic retries cannot wake an unpowered receiver, establish a missing trust anchor, replace a revoked key, certify encryption/decryption or initiate a funded WOLO transfer. Those remain independent admissions. Do not install or activate this agent on M1/HEL1; it is Intel-only.
 

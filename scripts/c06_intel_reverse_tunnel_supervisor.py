@@ -19,7 +19,7 @@ import sys
 
 SCHEMA = "wolo.c06.intel-receiver-tunnel-supervision.v1"
 LABEL = "com.aoe2war.c06.intel-recovery-tunnel"
-PORT = 22995
+PORT = 22996
 KEY_NAME = "aoe2war_c06_intel_to_hel1"
 SSH_HOST = "hel1-c06-intel"
 EXPECTED_USER = "aoe2war-c06-reverse"
@@ -37,7 +37,7 @@ def public_plan(home: Path) -> dict:
         "state": "HOLD_UNENROLLED",
         "requiresIntelMacAndExistingRestrictedKey": True,
         "remoteHostAlias": SSH_HOST,
-        "reverseForward": "127.0.0.1:22995:127.0.0.1:22",
+        "reverseForward": f"127.0.0.1:{PORT}:127.0.0.1:22",
         "requiresPinnedKnownHost": True,
         "sshRemoteExecution": False,
         "automatedReconnectWhileMacAwake": True,
@@ -62,7 +62,7 @@ def ssh_command(home: Path) -> list[str]:
         "-o", "ControlMaster=no",
         "-o", "PermitLocalCommand=no",
         "-o", "RequestTTY=no",
-        "-R", "127.0.0.1:22995:127.0.0.1:22",
+        "-R", f"127.0.0.1:{PORT}:127.0.0.1:22",
         SSH_HOST,
     ]
 
