@@ -236,29 +236,6 @@
         "operators",
         "ai-agents"
       ],
-      "authority": "read-only-source-and-physical-financial-hold-not-c03-maintenance-or-funded-permit",
-      "id": "aoe2war.wolochain.c05-seven-surface-readonly-census-hold",
-      "owner": "wolochain-ops",
-      "path": "docs/C05_SEVEN_SURFACE_READONLY_CENSUS_HOLD.md",
-      "review_interval_days": 7,
-      "reviewed_at": "2026-11-07",
-      "sensitivity": "restricted",
-      "sha256": "3b227e84085d0e5fe559b1276413fe3ec45de6d6d858f5bb496b2e7e78acfff9",
-      "source_of_truth": "git",
-      "status": "draft",
-      "systems": [
-        "wolochain",
-        "aoe2war"
-      ],
-      "title": "C05 Expanded Payout and NFT-Transfer Surface Census \u2014 Read-Only HOLD",
-      "type": "reference"
-    },
-    {
-      "audience": [
-        "developers",
-        "operators",
-        "ai-agents"
-      ],
       "authority": "source-only-intel-recovery-transport-not-a-financial-permit",
       "id": "aoe2war.wolochain.c06-intel-recovery-tunnel-supervisor",
       "owner": "wolochain-ops",
@@ -312,7 +289,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "14d2917bc83bec18ff2680336f2879114492b7fbd2219cdea58d85eb5c506703",
+      "sha256": "667b7afe8ef6d15062aaf277c5bae36c9ad066c6119a09fc7a5e787a42a32b89",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1389,8 +1366,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/session-b-c05-seven-surface-census-20261107",
-    "commit": "880f3062f4b9ce79f2d1bce54511078919f1a058"
+    "branch": "fix/c03-asset-fence-owner-parity-20261107",
+    "commit": "2ef71600ea2e10436c4cf835e1e089fb5b90ddc5"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

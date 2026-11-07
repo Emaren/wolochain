@@ -1,0 +1,36 @@
+name: C03 whole-schema default-deny inventory tests
+
+on:
+  pull_request:
+  push:
+    branches:
+      - fix/c03-full-schema-default-deny-20261107
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  c03-full-schema-negative-coverage:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Whole-schema default-deny catalog adversarial tests
+        run: python3 -B -m unittest discover -s tests -p 'test_settlement_c03_full_schema_default_deny_hold.py' -v
+      - name: Verify no source-induced accidental release or financial DDL
+        run: |
+          python3 -B - <<'PY'
+          from pathlib import Path
+          s=Path('scripts/settlement_c03_full_schema_default_deny_hold.py').read_text()
+          assert "READ ONLY;" in s
+          assert "ROLLBACK;" in s
+          assert '"funded_wolo_release_authorized":False' in s
+          assert '"finance_table_ownership_fence_proven":False' in s
+          assert '"financial_scope_complete":False' in s
+          assert '"all_nonfinance_tables_classified":False' in s
+          assert "pg_terminate_backend" not in s
+          print('PASS_C03_FULL_SCHEMA_SOURCE_MAINTAINS_HARD_HOLD')
+          PY
