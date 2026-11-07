@@ -95,13 +95,23 @@ def pairs_no_duplicates(pairs):
     return result
 
 
-def read_input(filename: Path):
+def read_input(filename: Path, expected_sha256: str):
     fd = None
     try:
-        require(filename.is_absolute(), "ABSOLUTE_INPUT_REQUIRED")
+        require(type(expected_sha256) is str and digest(expected_sha256),
+                "EXPECTED_EVIDENCE_SHA256_REQUIRED")
+        require(filename.is_absolute() and ".." not in filename.parts
+                and not filename.is_symlink(), "ABSOLUTE_INPUT_REQUIRED")
+        parent = filename.parent
+        require(not parent.is_symlink()
+                and parent.stat().st_uid == os.geteuid()
+                and stat.S_IMODE(parent.stat().st_mode) == 0o700,
+                "PRIVATE_PARENT_OWNER_OR_MODE_INVALID")
         fd = os.open(filename, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
         before = os.fstat(fd)
         require(stat.S_ISREG(before.st_mode) and before.st_nlink == 1
+                and before.st_uid == os.geteuid()
+                and stat.S_IMODE(before.st_mode) == 0o600
                 and 1 <= before.st_size <= MAX_BYTES, "UNSAFE_EVIDENCE_FILE")
         raw = bytearray()
         while len(raw) <= MAX_BYTES:
@@ -114,9 +124,12 @@ def read_input(filename: Path):
             getattr(before, key) == getattr(after, key)
             for key in ("st_dev", "st_ino", "st_size", "st_mtime_ns", "st_ctime_ns")
         ), "EVIDENCE_CHANGED_DURING_READ")
+        actual_sha256 = hashlib.sha256(raw).hexdigest()
+        require(actual_sha256 == expected_sha256,
+                "SOURCE_EVIDENCE_SHA256_MISMATCH")
         packet = json.loads(raw.decode("utf-8"), object_pairs_hook=pairs_no_duplicates,
                             parse_constant=lambda _: require(False, "INVALID_NUMBER"))
-        return packet, hashlib.sha256(raw).hexdigest()
+        return packet, actual_sha256
     except InvalidEvidence:
         raise
     except (OSError, ValueError, UnicodeError, RecursionError) as exc:
@@ -276,9 +289,11 @@ def arithmetic(packet, input_sha256):
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--input", type=Path, required=True)
+    ap.add_argument("--expected-input-sha256", required=True,
+                    help="independently reviewed exact 0600 candidate packet hash")
     args = ap.parse_args(argv)
     try:
-        doc, sha = read_input(args.input)
+        doc, sha = read_input(args.input, args.expected_input_sha256)
         output = arithmetic(doc, sha)
     except InvalidEvidence as exc:
         print(json.dumps({"status": "STOP", "reason": str(exc),

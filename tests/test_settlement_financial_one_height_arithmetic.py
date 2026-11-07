@@ -1,6 +1,7 @@
 """Synthetic, side-effect-free one-height solvency arithmetic regression tests."""
 import copy
 import importlib.util
+import hashlib
 import json
 from pathlib import Path
 import tempfile
@@ -240,19 +241,103 @@ class OneHeightArithmeticTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             p = Path(d) / "candidate.json"
             p.write_text('{"a":1,"a":2}')
+            p.chmod(0o600)
+            sha = hashlib.sha256(p.read_bytes()).hexdigest()
             with self.assertRaisesRegex(finance.InvalidEvidence, "^DUPLICATE_JSON_KEY$"):
-                finance.read_input(p)
+                finance.read_input(p, sha)
             p.unlink()
             p.symlink_to("/etc/hosts")
             with self.assertRaises(finance.InvalidEvidence):
-                finance.read_input(p)
+                finance.read_input(p, sha)
+
+    def test_missing_or_substituted_sha256_refused_before_arithmetic(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / "one-height.json"
+            p.write_text(json.dumps(self.packet), encoding="utf8")
+            p.chmod(0o600)
+            good = hashlib.sha256(p.read_bytes()).hexdigest()
+            with self.assertRaisesRegex(finance.InvalidEvidence, "EXPECTED_EVIDENCE_SHA256_REQUIRED"):
+                finance.read_input(p, None)
+            with self.assertRaisesRegex(finance.InvalidEvidence, "SOURCE_EVIDENCE_SHA256_MISMATCH"):
+                finance.read_input(p, "f"*64 if good != "f"*64 else "e"*64)
+            packet, sha = finance.read_input(p, good)
+            self.assertEqual(packet["height"], HEIGHT)
+            self.assertEqual(sha, good)
+
+    def test_world_readable_or_unauthorized_file_mode_stop(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / "one-height.json"
+            p.write_text(json.dumps(self.packet), encoding="utf8")
+            good = hashlib.sha256(p.read_bytes()).hexdigest()
+            for mode in (0o644, 0o640, 0o666, 0o400):
+                with self.subTest(mode=oct(mode)):
+                    p.chmod(mode)
+                    with self.assertRaisesRegex(finance.InvalidEvidence, "UNSAFE_EVIDENCE_FILE"):
+                        finance.read_input(p, good)
+            p.chmod(0o600)
+            finance.read_input(p, good)
+
+    def test_parent_directory_must_be_private_and_owned(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            p = root / "packet.json"
+            p.write_text(json.dumps(self.packet), encoding="utf8")
+            p.chmod(0o600)
+            sha = hashlib.sha256(p.read_bytes()).hexdigest()
+            root.chmod(0o755)
+            with self.assertRaisesRegex(finance.InvalidEvidence,
+                                        "PRIVATE_PARENT_OWNER_OR_MODE_INVALID"):
+                finance.read_input(p, sha)
+            root.chmod(0o700)
+            finance.read_input(p, sha)
+
+    def test_duplicate_hardlink_rejected_even_when_0600(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d)
+            p=root/"packet.json"
+            p.write_text(json.dumps(self.packet), encoding="utf8")
+            p.chmod(0o600)
+            clone=root/"another-reference.json"
+            clone.hardlink_to(p)
+            sha=hashlib.sha256(p.read_bytes()).hexdigest()
+            with self.assertRaisesRegex(finance.InvalidEvidence,"UNSAFE_EVIDENCE_FILE"):
+                finance.read_input(p, sha)
+
+    def test_content_changed_after_reviewed_hash_is_stopped(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d)
+            p=root/"packet.json"
+            p.write_text(json.dumps(self.packet), encoding="utf8")
+            p.chmod(0o600)
+            sha=hashlib.sha256(p.read_bytes()).hexdigest()
+            p.write_text(json.dumps({"changed":True}),encoding="utf8")
+            with self.assertRaisesRegex(finance.InvalidEvidence,
+                                        "SOURCE_EVIDENCE_SHA256_MISMATCH"):
+                finance.read_input(p, sha)
+
+    def test_cli_stops_if_supplied_digest_is_not_actual_private_packet(self):
+        with tempfile.TemporaryDirectory() as d:
+            p=Path(d)/"packet.json"
+            p.write_text(json.dumps(self.packet),encoding="utf8")
+            p.chmod(0o600)
+            actual=hashlib.sha256(p.read_bytes()).hexdigest()
+            other="f"*64 if actual!="f"*64 else "e"*64
+            with patch.object(finance,"print",create=True) as printer:
+                self.assertEqual(finance.main([
+                    "--input",str(p),"--expected-input-sha256",other]),2)
+            report=json.loads(printer.call_args.args[0])
+            self.assertEqual(report["reason"],"SOURCE_EVIDENCE_SHA256_MISMATCH")
+            self.assertFalse(report["financial_release_authorized"])
 
     def test_actual_cli_has_held_exit_and_no_private_identity(self):
         with tempfile.TemporaryDirectory() as d:
             p = Path(d) / "packet.json"
             p.write_text(json.dumps(self.packet), encoding="utf8")
+            p.chmod(0o600)
+            sha = hashlib.sha256(p.read_bytes()).hexdigest()
             with patch.object(finance, "print", create=True) as printer:
-                self.assertEqual(finance.main(["--input", str(p)]), 3)
+                self.assertEqual(finance.main(["--input", str(p),
+                    "--expected-input-sha256", sha]), 3)
             result = json.loads(printer.call_args.args[0])
             self.assertFalse(result["financial_release_authorized"])
             self.assertNotIn("wallet", json.dumps(result).lower())
