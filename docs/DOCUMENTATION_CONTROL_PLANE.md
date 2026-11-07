@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/session-b-c05-seven-surface-census-20261107` at `252e7fa77c4c3b640daa99deacf203d84fd5d774`
+Implementation baseline: `fix/session-b-c05-seven-surface-census-20261107` at `7b442aea906f472578e0b4314a41df66932a6ada`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
