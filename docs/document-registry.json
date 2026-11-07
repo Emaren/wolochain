@@ -289,7 +289,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "d9fa691f7c023a1bd229fc2c4661e5706b0e38b8702efa6431cebc8444c05c62",
+      "sha256": "ab2a087b44b6fad879400c577e41e5d1f385a465907f6b69798ee1831e563e97",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1367,7 +1367,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "fix/c03-existing-pg-client-origin-admission-20261107",
-    "commit": "f88dd91c2b6c90eeff185b273f881ecd1d110bfb"
+    "commit": "aa86545093dc1f647651107f0933c66843bf747a"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

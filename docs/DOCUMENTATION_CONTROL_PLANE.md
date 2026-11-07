@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/c03-existing-pg-client-origin-admission-20261107` at `f88dd91c2b6c90eeff185b273f881ecd1d110bfb`
+Implementation baseline: `fix/c03-existing-pg-client-origin-admission-20261107` at `aa86545093dc1f647651107f0933c66843bf747a`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
