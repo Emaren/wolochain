@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/c03-preconnected-acl-proof-20261107` at `4f38e65c00842d35e8ee0168137688c33abcb692`
+Implementation baseline: `fix/c03-legacy-3030-transport-deny-20261107` at `eb32e6696be5d6c72c23afad8591074d0dbc8f36`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
