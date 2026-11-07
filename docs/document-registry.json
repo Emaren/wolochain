@@ -289,7 +289,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "dfddafbd756200b15d7fdd8774ad7613111bd711e32802609afa584cc3175bc9",
+      "sha256": "667b7afe8ef6d15062aaf277c5bae36c9ad066c6119a09fc7a5e787a42a32b89",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1366,8 +1366,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/c03-full-schema-default-deny-20261107",
-    "commit": "5ceeac9c3a2a3c60f3a82dd005b15baf29fa0346"
+    "branch": "fix/c03-asset-fence-owner-parity-20261107",
+    "commit": "2ef71600ea2e10436c4cf835e1e089fb5b90ddc5"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
