@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `session-b/c04-dual-db-freshness-quarantine-20261107` at `be232e4b0b6b49909154c32b4c726830d0223842`
+Implementation baseline: `session-b/c05-private-one-height-evidence-20261107` at `d32b2671462853ce2bb5b8e3b9bfa59e71afdd2c`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 

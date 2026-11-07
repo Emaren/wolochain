@@ -197,7 +197,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "891518b48118d00f4ec54fb86ff3c6dd4a4c4ba91208de5a5a2e76fb647fe1a5",
+      "sha256": "f09862b477befcd8d83a04aa0bc5c428ee085c124cdbe6cd14aef8c0ff34d33c",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -797,7 +797,7 @@
       "review_interval_days": 7,
       "reviewed_at": "2026-11-07",
       "sensitivity": "restricted",
-      "sha256": "d7c47db4049f60749cf8e769ffa0bea98055a018ba56a2584a02187c450c2b6c",
+      "sha256": "689ede78032a6dfaaf6fe19e7907af90891c51f222c4b1ef62a28b7997f2e795",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -1274,8 +1274,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "session-b/c04-dual-db-freshness-quarantine-20261107",
-    "commit": "be232e4b0b6b49909154c32b4c726830d0223842"
+    "branch": "session-b/c05-private-one-height-evidence-20261107",
+    "commit": "d32b2671462853ce2bb5b8e3b9bfa59e71afdd2c"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
