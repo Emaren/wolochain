@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/central-c03-c06-physical-readiness-20261107` at `ad770aec6194d0390345046ee604b572e7e7c1a7`
+Implementation baseline: `fix/central-c03-c06-physical-readiness-20261107` at `030cca0c5e2365993f9991e1a3857eb031ad9cb9`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 

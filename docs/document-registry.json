@@ -266,7 +266,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "f437ec8ec21412a8491ae225a7fb084d39e6ca5745215c14504ab4b8c06b1812",
+      "sha256": "979e199c8417aed28df58871bee687581bea62b406c84f793d365ba081b82b0e",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1344,7 +1344,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "fix/central-c03-c06-physical-readiness-20261107",
-    "commit": "ad770aec6194d0390345046ee604b572e7e7c1a7"
+    "commit": "030cca0c5e2365993f9991e1a3857eb031ad9cb9"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
