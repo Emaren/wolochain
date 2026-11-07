@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/c03-asset-fence-owner-parity-20261107` at `2ef71600ea2e10436c4cf835e1e089fb5b90ddc5`
+Implementation baseline: `fix/c03-preconnected-acl-proof-20261107` at `4f38e65c00842d35e8ee0168137688c33abcb692`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
