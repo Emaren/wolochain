@@ -30,6 +30,23 @@ COVERAGE = frozenset({
     "hd_claims", "de_claims", "primary_settlement_journals",
     "founder_settlement_journals", "war_satchel", "mecha_auto_bets",
     "founder_rewards", "staking", "refunds", "offhost_signers",
+    # Nov 7 C03 owner-scope discovery: genuine money or NFT-transfer tables
+    # omitted from the earlier 24 HD / 10 DE financial owner migration.
+    # Even empty tables need authenticated completeness in a source-sealed
+    # liability inventory. No value is automatically assigned to NFT seats,
+    # dry-run amounts, or hash-labeled paid records here.
+    "hd_bounty_payouts", "hd_championship_transfer_groups",
+    "hd_championship_transfer_seats", "hd_trophy_payout_allocations",
+    "hd_trophy_payouts", "hd_war_graph_payout_events",
+    "de_trophy_payouts",
+    # Session A's Nov 7 semantic-column inspection discovered 24 HD + 9 DE
+    # *additional* owner-writable monetary-schema relations, beyond the
+    # name-based 30 HD + 11 DE set. A finance claim cannot certify completeness
+    # while those uncategorized catalog surfaces lack source-backed coverage.
+    # These two domains are catalog/classification evidence, NOT invented debt
+    # amounts or proof all 33 records are outstanding liabilities.
+    "hd_semantic_money_column_catalog",
+    "de_semantic_money_column_catalog",
 })
 SOURCES = frozenset({
     "hd", "de", "primary_journal", "founder_journal", "war_satchel",
