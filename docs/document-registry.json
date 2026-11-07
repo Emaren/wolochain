@@ -312,7 +312,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "6bddacb50ef7d1ba1e5275f7235b4390fc9e185c84262b7adc80fe43c8d18532",
+      "sha256": "54cd065462a14be7faaf3772850457da5d46f80cf668edee3cc15f95ba38d426",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1390,7 +1390,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "fix/c05-pr188-rebased-after-c03-20261107",
-    "commit": "ee44116638779966ba711450ef0b2e74a6a09f1f"
+    "commit": "50e2b7a67fcfeead177b1958bdefc9dba1aa2f49"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

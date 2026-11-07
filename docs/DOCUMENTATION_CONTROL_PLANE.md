@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/c05-pr188-rebased-after-c03-20261107` at `ee44116638779966ba711450ef0b2e74a6a09f1f`
+Implementation baseline: `fix/c05-pr188-rebased-after-c03-20261107` at `50e2b7a67fcfeead177b1958bdefc9dba1aa2f49`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
