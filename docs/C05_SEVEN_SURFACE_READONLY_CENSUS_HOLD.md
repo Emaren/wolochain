@@ -41,6 +41,12 @@ Additional separately executed **HD-only READ ONLY** hash-overlap check: all 340
 
 These nominal amounts are not summed into prior C04 claims or active wager totals without an independently proved economic-ID overlap map. Distinct `amount_uwolo`, `amount_wolo`, NFT-seat state and event counts are not interchangeable.
 
+## Authentic independent capture (November 7, 2026 UTC)
+
+Two separate live HD/DE transactions were executed through source-emitted SQL and saved in private owner 0700/0600 M1 files. The source exact HEAD `a90499e100e0227d4c5134d53cccf593b857a015`, source script SHA256 `7bf33af9d2c9c0d52fd7b9fb3af590fc1ce0331ec4c1e8fa546af82c4e92876f`, authentic HD source-input SHA256 `c7a4518fdc418f6d936bd175e1c1886173a9e6fd22a77f43b7fe484962a1a552`, and DE input SHA256 `72c02998b11fe427783be72b85b920c8526186e5aa6927609339c3c43ab73535` were independently reclassified with intentional `HOLD`/exit 3.
+
+Source-bound M1 mode 0600 receipt: `~/.cache/aoe2war/session-b-c05-seven-surface-live-20261107/independent-physical-receipt-sourcebound-v2.json`; SHA256 **`22f07db80df542dea704fe55789c76c2f6ba0c5c9be669e4e7d9521dae0e5382`**. Zero live SQL writes; no services, funds, custody or financial gates changed. These source observations do not establish a cross-database atomic snapshot.
+
 ## Qualification and dependencies
 
 Run isolated tests with `python3 -B -m unittest discover -s tests -p 'test_settlement_c05_seven_surface_readonly_hold.py' -q`. Emit read-only fixed HD and DE SQL separately, execute against live PostgreSQL only through an operator's bounded `psql -X -qAt -v ON_ERROR_STOP=1` read-only transaction, store JSON separately under owner-private 0700 / 0600 on the M1, and classify using their exact SHA256. These two reads are **not** a C06 coordinated backup nor a C07 restore.
