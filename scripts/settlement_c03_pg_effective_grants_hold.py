@@ -15,14 +15,14 @@ import re
 import subprocess
 import sys
 
-SCHEMA = "wolo.c03.effective-postgres-finance-capability-hold.v1"
+SCHEMA = "wolo.c03.effective-postgres-expanded-payout-capability-hold.v2"
 DATABASES = ("aoe2hd_db", "aoe2de_db")
 ROLES = ("aoe2hd_user", "aoe2de_user", "aoe2war_web_prod",
          "aoe2war_auth_owner")
 REQUIRED_LEGACY = {"aoe2hd_db": "aoe2hd_user", "aoe2de_db": "aoe2de_user"}
 INT = re.compile(r"\d{1,12}\Z")
 MAX_RESPONSE = 32_768
-FINANCE_PATTERN = "(wolo|bet|wager|settle|claim|escrow|refund|reward|stake|treasury|wallet|founder|bonus)"
+FINANCE_PATTERN = "(wolo|bet|wager|settle|claim|escrow|refund|reward|stake|treasury|wallet|founder|bonus|payout|transfer)"
 SQL = """BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY;
 WITH roles(name) AS (
  VALUES ('aoe2hd_user'), ('aoe2de_user'), ('aoe2war_web_prod'),

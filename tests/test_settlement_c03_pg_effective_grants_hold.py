@@ -24,12 +24,12 @@ class EffectiveGrantsCensusTests(unittest.TestCase):
     def setUpClass(cls):
         cls.m=load()
 
-    def rows(self, database="aoe2hd_db", hd_writes=24, de_writes=10):
+    def rows(self, database="aoe2hd_db", hd_writes=30, de_writes=11):
         result=[]
         for name in sorted(self.m.ROLES):
             exists=1
             total=190 if database=="aoe2hd_db" else 52
-            ftotal=24 if database=="aoe2hd_db" else 10
+            ftotal=30 if database=="aoe2hd_db" else 11
             writes=total if name==(self.m.REQUIRED_LEGACY[database]) else 0
             fw=hd_writes if name=="aoe2hd_user" and database=="aoe2hd_db" else (
                 de_writes if name=="aoe2de_user" and database=="aoe2de_db" else 0)
@@ -40,12 +40,12 @@ class EffectiveGrantsCensusTests(unittest.TestCase):
 
     def test_hd_realistic_legacy_finance_writable(self):
         x=self.m.parse_rows(self.rows(),"aoe2hd_db")
-        self.assertEqual(x["aoe2hd_user"]["finance_write_capable_relations"],24)
+        self.assertEqual(x["aoe2hd_user"]["finance_write_capable_relations"],30)
         self.assertEqual(x["aoe2war_web_prod"]["selected_security_definer_functions_executable"],3)
 
     def test_de_realistic_legacy_finance_writable(self):
         x=self.m.parse_rows(self.rows("aoe2de_db"),"aoe2de_db")
-        self.assertEqual(x["aoe2de_user"]["finance_write_capable_relations"],10)
+        self.assertEqual(x["aoe2de_user"]["finance_write_capable_relations"],11)
 
     def test_valid_observations_still_held(self):
         x=self.m.classify(self.m.parse_rows(self.rows(),"aoe2hd_db"),
@@ -68,7 +68,7 @@ class EffectiveGrantsCensusTests(unittest.TestCase):
         self.assertIs(x["funded_release_authorized"],False)
 
     def test_duplicate_role_rejected(self):
-        s=self.rows()+"aoe2hd_user|1|190|24|190|24|0|0|0\n"
+        s=self.rows()+"aoe2hd_user|1|190|30|190|30|0|0|0\n"
         with self.assertRaises(self.m.Hold):
             self.m.parse_rows(s,"aoe2hd_db")
 
@@ -84,7 +84,7 @@ class EffectiveGrantsCensusTests(unittest.TestCase):
 
     def test_unexpected_role_rejected(self):
         with self.assertRaises(self.m.Hold):
-            self.m.parse_rows(self.rows()+"postgres|1|190|24|190|24|0|1|1\n","aoe2hd_db")
+            self.m.parse_rows(self.rows()+"postgres|1|190|30|190|30|0|1|1\n","aoe2hd_db")
 
     def test_negative_and_noninteger_denied(self):
         for val in ("-1","1.2","true","", "0x10"):
@@ -97,8 +97,8 @@ class EffectiveGrantsCensusTests(unittest.TestCase):
             s=self.rows().replace("aoe2hd_user|1|190|",f"aoe2hd_user|1|{bad}|")
             with self.assertRaises(self.m.Hold):
                 self.m.parse_rows(s,"aoe2hd_db")
-        s=self.rows().replace("aoe2hd_user|1|190|24|190|24",
-                              "aoe2hd_user|1|190|24|190|25")
+        s=self.rows().replace("aoe2hd_user|1|190|30|190|30",
+                              "aoe2hd_user|1|190|30|190|31")
         with self.assertRaises(self.m.Hold):
             self.m.parse_rows(s,"aoe2hd_db")
 
@@ -119,7 +119,7 @@ class EffectiveGrantsCensusTests(unittest.TestCase):
         with patch.object(m.os,"geteuid",return_value=0),patch.object(m.subprocess,"run",side_effect=fake_run):
             data=m.inspect("aoe2hd_db")
         self.assertEqual(len(calls),1)
-        self.assertEqual(data["aoe2hd_user"]["finance_write_capable_relations"],24)
+        self.assertEqual(data["aoe2hd_user"]["finance_write_capable_relations"],30)
 
     def test_nonroot_never_runs_psql(self):
         with patch.object(self.m.os,"geteuid",return_value=501),patch.object(
