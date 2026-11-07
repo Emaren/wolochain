@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/session-b-c05-staking-exposure-20261107` at `ac57806a4e340bc1093431e94f5a700c8cc195fd`
+Implementation baseline: `fix/c05-pr190-merged-after-c03-20261107` at `1501d0cdc1eae84bd460cdc10ca2be4472ba2cff`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
