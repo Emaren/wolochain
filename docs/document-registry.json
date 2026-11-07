@@ -312,7 +312,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "fb0b608023786ccd3d9d0fc51f944f6127c6e4a43f2bd2b35bc9a12c5c6c3a7d",
+      "sha256": "6bddacb50ef7d1ba1e5275f7235b4390fc9e185c84262b7adc80fe43c8d18532",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1389,8 +1389,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/session-b-c05-seven-surface-census-20261107",
-    "commit": "f93f9c2f9a81323aa73470cd323ef91e6152cf30"
+    "branch": "fix/c05-pr188-rebased-after-c03-20261107",
+    "commit": "ee44116638779966ba711450ef0b2e74a6a09f1f"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

@@ -1,0 +1,43 @@
+name: C03 old rollback 3030 legacy transport denial source contract
+
+on:
+  pull_request:
+  push:
+    branches:
+      - fix/c03-legacy-3030-transport-deny-20261107
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  c03-legacy-3030-finance-egress-negative:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Explicit rollback-only transport-denial adversarial regression
+        run: python3 -B -m unittest discover -s tests -p 'test_settlement_c03_legacy_web_transport_deny.py' -v
+      - name: Guard rendered nft rule and source-finance hard HOLD
+        run: |
+          python3 -B - <<'PY'
+          from pathlib import Path
+          import importlib.util
+          p=Path('scripts/settlement_c03_legacy_web_transport_deny.py')
+          s=p.read_text()
+          sp=importlib.util.spec_from_file_location('c03_nft_source_review',p)
+          m=importlib.util.module_from_spec(sp)
+          sp.loader.exec_module(m)
+          assert '"funded_release_authorized":False' in s
+          assert '"live_c03_gate_accepted":False' in s
+          assert '"direct_chain_rpc_cli_and_signer_fenced":False' in s
+          assert 'counter reject with tcp reset' in m.NFT
+          assert 'meta skuid 1000' in m.NFT
+          assert 'ip daddr 127.0.0.1' in m.NFT
+          assert 'tcp dport { 8092, 8093 }' in m.NFT
+          assert "ALTER TABLE" not in s
+          assert "pg_terminate_backend" not in s
+          print('PASS_C03_RENDERED_NFT_FINANCE_OUTPUT_DENY_SOURCE_HARD_HOLD')
+          PY
