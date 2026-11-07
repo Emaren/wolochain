@@ -76,7 +76,7 @@ class OneHeightArithmeticTests(unittest.TestCase):
             "de_trophy_payouts",
         }
         self.assertTrue(names.issubset(finance.COVERAGE))
-        self.assertEqual(len(finance.COVERAGE), 17)
+        self.assertEqual(len(finance.COVERAGE), 19)
         # Legacy pre-Nov-7 "complete" ten-surface certificates cannot pass.
         for name in sorted(names):
             candidate = fixture()
@@ -84,6 +84,24 @@ class OneHeightArithmeticTests(unittest.TestCase):
             with self.subTest(omitted=name):
                 with self.assertRaisesRegex(finance.InvalidEvidence, "^UNSCOPED_FINANCIAL_OWNERS$"):
                     finance.arithmetic(candidate, SHA("f"))
+
+    def test_two_unclassified_money_column_domains_require_independent_coverage(self):
+        domains = {"hd_semantic_money_column_catalog", "de_semantic_money_column_catalog"}
+        self.assertTrue(domains.issubset(finance.COVERAGE))
+        for domain in sorted(domains):
+            packet = fixture()
+            packet["scope_coverage"].pop(domain)
+            with self.subTest(omitted=domain):
+                with self.assertRaisesRegex(finance.InvalidEvidence,"^UNSCOPED_FINANCIAL_OWNERS$"):
+                    finance.arithmetic(packet,SHA("f"))
+            packet = fixture()
+            packet["obligations"].pop(1)
+            packet["scope_coverage"][domain]["complete"] = False
+            r=finance.arithmetic(packet,SHA("f"))
+            self.assertIn(domain,r["coverage_gaps"])
+            self.assertIsNone(r["conditional_recorded_reserve_uwolo"])
+            self.assertIsNone(r["conditional_margin_uwolo"])
+            self.assertFalse(r["financial_release_authorized"])
 
     def test_new_financial_surface_incomplete_blocks_conditional_margin(self):
         # Even an empty payout table must have independently authenticated

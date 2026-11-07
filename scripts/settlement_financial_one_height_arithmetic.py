@@ -39,6 +39,14 @@ COVERAGE = frozenset({
     "hd_championship_transfer_seats", "hd_trophy_payout_allocations",
     "hd_trophy_payouts", "hd_war_graph_payout_events",
     "de_trophy_payouts",
+    # Session A's Nov 7 semantic-column inspection discovered 24 HD + 9 DE
+    # *additional* owner-writable monetary-schema relations, beyond the
+    # name-based 30 HD + 11 DE set. A finance claim cannot certify completeness
+    # while those uncategorized catalog surfaces lack source-backed coverage.
+    # These two domains are catalog/classification evidence, NOT invented debt
+    # amounts or proof all 33 records are outstanding liabilities.
+    "hd_semantic_money_column_catalog",
+    "de_semantic_money_column_catalog",
 })
 SOURCES = frozenset({
     "hd", "de", "primary_journal", "founder_journal", "war_satchel",
