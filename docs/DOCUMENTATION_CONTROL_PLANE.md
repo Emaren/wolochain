@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/central-solo-notice-clock-20261107` at `b326a02be5e5b6575c31f34dbf6a0f30b5940ee0`
+Implementation baseline: `fix/c03-existing-pg-client-origin-admission-20261107` at `aa86545093dc1f647651107f0933c66843bf747a`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 

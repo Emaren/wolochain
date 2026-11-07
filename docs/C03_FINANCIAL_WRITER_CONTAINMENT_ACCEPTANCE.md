@@ -68,3 +68,44 @@ Status: **HARD HOLD — design and acceptance contract, not a migration permit**
 A protocol-level observer should detect drift automatically and emit a protected, source-bound HOLD reason; suspend *new Satchel admission* on unexplained writer permission, new unit or backup hash drift, while preserving legacy operating services. It may retry only idempotent read-only observations and bounded nonfinancial transport with strong identity. It must not auto-rebroadcast uncertain money, self-sign an owner's funded permit or silently mutate another application's roles.
 
 Formal C03 acceptance requires **physical denial** of all unauthorized finance write paths, not just source merge. Formal C06 acceptance requires an actual coordinated, encrypted, validated offhost snapshot. Formal C07 acceptance requires restored equality of that exact snapshot plus recovery proof. All three are OPEN until independently recorded in the canonical WoloChain #5 register.
+
+
+### Existing HD/DE client-to-service binding (central evidence, Nov 7)
+
+The controller `scripts/settlement_c03_existing_pg_client_origin_hold.py`
+is a **read-only source-origination guard**, not a PID-killer, maintenance
+permit, database-role migration, or C03 acceptance. At root on HEL1 it
+queries the exact HD/DE PostgreSQL client-backend snapshot with `READ ONLY`,
+uses `host(pg_stat_activity.client_addr)` (not `inet_client_addr()` of the
+observer and not a CIDR string), matches each local PG client source
+IP/port to an established OS TCP socket, and verifies exact source OS PID,
+stable `/proc` start ticks and a single systemd cgroup service. It repeats
+the PG snapshot to veto session population changes during inspection.
+
+Allowed existing combinations are limited to legacy HD `aoe2hd_user`
+from `aoe2hdbets-api.service` or preserved 3030
+`aoe2hdbets-web.service`, HD `aoe2war_web_prod` from 3032
+`aoe2hdbets-web-prod.service`, and DE `aoe2de_user` from
+`aoe2dewarwagers-api.service`. Unknown roles/services, non-loopback PG
+clients, missing/ambiguous PIDs, missing legacy pools, changed session
+populations, missing 3030 rollback connection, or PID reuse return STOP.
+Even a valid source-to-service binding always returns **HOLD** (exit 3),
+`safe_to_terminate=false`, `global_c03_gate_accepted=false`,
+`funded_release_authorized=false`. This is a time-of-observation
+identity preflight; it is **not** future reconnection exclusion, finance
+DML denial, or production-role containment.
+
+An earlier Central observation mistakenly used observer
+`inet_client_addr()` instead of `pg_stat_activity.client_addr`, and
+another observation compared `client_addr::text` including `/32`
+against bare IPv4 strings. Those two records were invalidated; neither
+may be used as maintenance authority. The reviewed source regression
+suite covers malformed SQL output, untrusted network origins,
+duplicate or changing backend identities, wrong service-to-role binds,
+absent rollback, ambiguous OS sockets, cgroup ambiguity and PID reuse.
+
+Live maintenance must **separately** show all real writers contained,
+including root/user cron, containers, Traffic, 3030 and 3032 Next.js
+pools, post-authorization reconnect, trigger/SECURITY DEFINER paths,
+settlement journals and WOLO custody. No command or receipt in this
+subsection authorizes closing C03 or starting funded 8094/8095.

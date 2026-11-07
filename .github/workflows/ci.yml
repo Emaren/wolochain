@@ -131,6 +131,7 @@ jobs:
       - name: C03/C06 existing-backend, real-schema and dedicated recovery topology HOLD contracts
         run: |
           python3 -m unittest discover -s tests -p 'test_settlement_c03_nologin_existing_backend_rehearsal.py' -v
+          python3 -m unittest discover -s tests -p 'test_settlement_c03_existing_pg_client_origin_hold.py' -v
           python3 -m unittest discover -s tests -p 'test_settlement_c03_reviewed_topology_baseline_enrollment.py' -v
           python3 -m unittest discover -s tests -p 'test_settlement_c03_intel_real_schema_nologin_owner_rehearsal.py' -v
           python3 -m unittest discover -s tests -p 'test_c06_intel_reverse_tunnel_supervisor.py' -v

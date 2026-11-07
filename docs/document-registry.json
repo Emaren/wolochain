@@ -82,7 +82,7 @@
       "review_interval_days": 7,
       "reviewed_at": "2026-11-06",
       "sensitivity": "restricted",
-      "sha256": "7484247818da33b143442afb1a0addfd2212f05b9fbc12a63176dac3c4237ff1",
+      "sha256": "ca52afc477ae0680659e0b9682dc893e6d6576952ad203a50616b672a43534f7",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -289,7 +289,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "7493de7388397e47261db5020517f3e11e646ffdefc08bcd4d5d6810fe50c38c",
+      "sha256": "ab2a087b44b6fad879400c577e41e5d1f385a465907f6b69798ee1831e563e97",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1366,8 +1366,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/central-solo-notice-clock-20261107",
-    "commit": "b326a02be5e5b6575c31f34dbf6a0f30b5940ee0"
+    "branch": "fix/c03-existing-pg-client-origin-admission-20261107",
+    "commit": "aa86545093dc1f647651107f0933c66843bf747a"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
