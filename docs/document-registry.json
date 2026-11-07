@@ -335,7 +335,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "9fb009f37c6d7db78157389e9f751a550cd40a884f049e567d7fba978aa330db",
+      "sha256": "264ef25dc697aabc966d272b9fb8a1349bd14d13d3a3ff8f5b12d332f97b9ecc",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1413,7 +1413,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "fix/c05-pr193-after-pr190-merge-20261107",
-    "commit": "dfa91fdf1b863f99d7185deea1384320954e6cc2"
+    "commit": "fdf8c134b5d4dd9b5c8fcbce21a7d202fdfa97c8"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
