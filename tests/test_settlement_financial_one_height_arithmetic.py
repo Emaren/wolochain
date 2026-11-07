@@ -68,6 +68,52 @@ class OneHeightArithmeticTests(unittest.TestCase):
         with self.assertRaisesRegex(finance.InvalidEvidence, "^" + message + "$"):
             self.report()
 
+    def test_seven_additional_financial_surfaces_are_mandatory(self):
+        names = {
+            "hd_bounty_payouts", "hd_championship_transfer_groups",
+            "hd_championship_transfer_seats", "hd_trophy_payout_allocations",
+            "hd_trophy_payouts", "hd_war_graph_payout_events",
+            "de_trophy_payouts",
+        }
+        self.assertTrue(names.issubset(finance.COVERAGE))
+        self.assertEqual(len(finance.COVERAGE), 19)
+        # Legacy pre-Nov-7 "complete" ten-surface certificates cannot pass.
+        for name in sorted(names):
+            candidate = fixture()
+            candidate["scope_coverage"].pop(name)
+            with self.subTest(omitted=name):
+                with self.assertRaisesRegex(finance.InvalidEvidence, "^UNSCOPED_FINANCIAL_OWNERS$"):
+                    finance.arithmetic(candidate, SHA("f"))
+
+    def test_two_unclassified_money_column_domains_require_independent_coverage(self):
+        domains = {"hd_semantic_money_column_catalog", "de_semantic_money_column_catalog"}
+        self.assertTrue(domains.issubset(finance.COVERAGE))
+        for domain in sorted(domains):
+            packet = fixture()
+            packet["scope_coverage"].pop(domain)
+            with self.subTest(omitted=domain):
+                with self.assertRaisesRegex(finance.InvalidEvidence,"^UNSCOPED_FINANCIAL_OWNERS$"):
+                    finance.arithmetic(packet,SHA("f"))
+            packet = fixture()
+            packet["obligations"].pop(1)
+            packet["scope_coverage"][domain]["complete"] = False
+            r=finance.arithmetic(packet,SHA("f"))
+            self.assertIn(domain,r["coverage_gaps"])
+            self.assertIsNone(r["conditional_recorded_reserve_uwolo"])
+            self.assertIsNone(r["conditional_margin_uwolo"])
+            self.assertFalse(r["financial_release_authorized"])
+
+    def test_new_financial_surface_incomplete_blocks_conditional_margin(self):
+        # Even an empty payout table must have independently authenticated
+        # coverage; unknown NFT liabilities cannot be silently excluded.
+        self.packet["obligations"].pop(1)
+        self.packet["scope_coverage"]["hd_championship_transfer_seats"]["complete"] = False
+        r = self.report()
+        self.assertIn("hd_championship_transfer_seats", r["coverage_gaps"])
+        self.assertFalse(r["arithmetic_complete_for_claimed_scope"])
+        self.assertIsNone(r["conditional_margin_uwolo"])
+        self.assertFalse(r["financial_release_authorized"])
+
     def test_claimed_same_height_arithmetic_never_authorizes_bank(self):
         r = self.report()
         self.assertEqual(r["bank_accounts_unique"], 2)
