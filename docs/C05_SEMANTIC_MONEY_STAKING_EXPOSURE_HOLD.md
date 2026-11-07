@@ -56,6 +56,14 @@ Independent source-executed HD/DE classification with more specific gift flags i
 
 **Pending gift records are not automatically separate unpaid transfers**: reconcile gift origin and acceptance, authenticated finality, other pending-claim economic IDs and custody before counting or excluding 100,100 WOLO. NFT seats are not priced in WOLO. Oracle paper marks are never added to WOLO liabilities.
 
+## Source-joined pending bounty gift proof — 2026-11-07
+
+Independent follow-on bounty-reference source joins `user_gifts` to `bounty_opportunities` **inside one actual HD REPEATABLE READ READ ONLY transaction** using only a parsed numeric bounty reference. It returns aggregate counts and amounts, never gift notes, wallet addresses or recipient identities. The same query counts bounty-event records and populated transaction-hash fields. DE remains a separate read-only catalog/gift observation and is **not jointly atomic** with HD.
+
+Live result: the one **100,000 WOLO pending gift** with a bounty-reference note links to one existing bounty whose current status is `available`; **zero** of those links has a matching source reward amount (the recorded bounty reward is not a matching numeric amount). Across the HD `bounty_events` table, 31 event rows have **zero populated tx hashes**. This narrows the identity search without establishing that the pending gift represents the same or a different debt, that no payout occurred, or that any native chain payment is final. The remaining 100-WOLO pending gift has no bounty-reference note match.
+
+The strengthened `scripts/settlement_c05_gifts_nft_full_catalog_hold.py` checks the bounty-reference population against the original source gift buckets, rejects forged linkage/matched-reward/event hash totals and always returns **financial HOLD/exit 3**. Private source-bound owner0700/file0600 physical evidence: `~/.cache/aoe2war/session-b-c05-gift-bounty-join-20261107-1820/receipt.json` SHA256 **`4d7c30e758ee7265019b9a5ba41c6876c65647429ed063baea661991bf4b766d`**; observer source SHA256 **`09caf26d6dc3f9b6a56bd087e6f42385a8f641eb4ca4105f7502b61cb5b45120`**. C04/C05 still require the authenticated claim economic-ID overlap and independent chain histories before either credit or exclusion.
+
 ## Residual release dependencies
 
 - C03 global writer fences remain exclusively Session A, including all 54 HD / 20 DE finance-risk tables, surrounding service and owner-role paths.
