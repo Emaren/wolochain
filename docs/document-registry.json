@@ -289,7 +289,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "58207c93797623db2756b8a1570ef106a2a34487f9ab5b34e562b943400ca01a",
+      "sha256": "c079d9e491cf460407be2356015f99151c5cf1034259399742ce3afcaa13bb4d",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1367,7 +1367,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "fix/c03-legacy-3030-transport-deny-20261107",
-    "commit": "570528042a9a2bc2c998d2bbcc09b1b28f7cb5cf"
+    "commit": "eb32e6696be5d6c72c23afad8591074d0dbc8f36"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

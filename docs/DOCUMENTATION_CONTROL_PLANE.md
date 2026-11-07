@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/c03-legacy-3030-transport-deny-20261107` at `570528042a9a2bc2c998d2bbcc09b1b28f7cb5cf`
+Implementation baseline: `fix/c03-legacy-3030-transport-deny-20261107` at `eb32e6696be5d6c72c23afad8591074d0dbc8f36`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
