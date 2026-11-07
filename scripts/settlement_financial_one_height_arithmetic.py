@@ -26,6 +26,64 @@ AMOUNT = re.compile(r"(?:0|[1-9][0-9]{0,38})\Z")
 LIMIT = (1 << 128) - 1
 MAX_BYTES = 524288
 MAX_ROWS = 2000
+# Read-only C03 semantic owner-risk catalog names, as reviewed 2026-11-07.
+# Each is an INDEPENDENT C05 source-classification completeness prerequisite,
+# not a claim that every row contains an outstanding WOLO debt. Do not sum
+# config, event, history and staking snapshots without proved economic IDs.
+SEMANTIC_C05_TABLES = {
+    "hd": (
+        "bounty_events",
+        "bounty_opportunities",
+        "bounty_valuations",
+        "event_tiles",
+        "feature_requests",
+        "forge_commitments",
+        "forge_events",
+        "leagues",
+        "marketplace_inquiries",
+        "marketplace_invoices",
+        "marketplace_payments",
+        "marketplace_shops",
+        "marketplace_tax_payments",
+        "scheduled_match_funding_proofs",
+        "scheduled_matches",
+        "staking_daily_stats",
+        "staking_events",
+        "staking_events_repair_backup_20260622",
+        "staking_positions",
+        "trophies",
+        "trophy_challenges",
+        "trophy_economics_versions",
+        "trophy_events",
+        "war_graph_rulesets",
+    ),
+    "de": (
+        "event_tiles",
+        "scheduled_matches",
+        "staking_daily_stats",
+        "staking_events",
+        "staking_positions",
+        "trophies",
+        "trophy_challenges",
+        "trophy_economics_versions",
+        "trophy_events",
+    ),
+}
+# Additional Session A Nov 7 full-schema gap beyond 54 HD / 20 DE regex
+# candidates. The public table universe is currently 190 HD / 52 DE.
+# These are CLASSIFICATION scopes, not inferred debts or payer authorities.
+# 'oracle_paper_positions' uses paper marks, never a WOLO amount.
+SECONDARY_C05_SCOPE = frozenset((
+    "hd_user_gifts",
+    "de_user_gifts",
+    "hd_oracle_market_proposals",
+    "hd_championship_custody_seats",
+    "hd_championship_challenge_participants",
+    "hd_war_graph_watcher_attestations",
+    "hd_oracle_paper_positions",
+    "hd_full_public_base_table_catalog",
+    "de_full_public_base_table_catalog",
+))
 COVERAGE = frozenset({
     "hd_claims", "de_claims", "primary_settlement_journals",
     "founder_settlement_journals", "war_satchel", "mecha_auto_bets",
@@ -47,7 +105,11 @@ COVERAGE = frozenset({
     # amounts or proof all 33 records are outstanding liabilities.
     "hd_semantic_money_column_catalog",
     "de_semantic_money_column_catalog",
-})
+}) | frozenset(
+    f"{db}_semantic_{table}"
+    for db,tables in SEMANTIC_C05_TABLES.items()
+    for table in tables
+) | SECONDARY_C05_SCOPE
 SOURCES = frozenset({
     "hd", "de", "primary_journal", "founder_journal", "war_satchel",
     "mecha", "founder", "staking", "refund", "external",
