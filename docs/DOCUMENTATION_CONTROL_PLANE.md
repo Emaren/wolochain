@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `session-b/c08-intel-launchd-reverse-witness-20261106` at `6af886d2eec32388755a95465d40e8614b150ee0`
+Implementation baseline: `session-b/c08-intel-launchd-reverse-witness-20261106` at `e0a76e14da191920c8adb8732acb9eed5e77a002`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
