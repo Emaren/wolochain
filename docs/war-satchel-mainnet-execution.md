@@ -8,11 +8,68 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "restricted-satchel-execution-and-provisioning-contract"
-reviewed_at: "2026-10-30"
+reviewed_at: "2026-11-07"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
 
+
+## Independent operator review — November 7, 2026 UTC (still financial HOLD)
+
+This scheduled source review is limited to the operator boundaries documented
+here and the new C01/C08 nonfinancial protections; it is **not** financial
+approval. The held source reports all nine Chain gates C01–C09 open. Public
+R25 remains accepted, while new custody/reviewer 8094/8095 are inactive.
+The validator and legacy settlement 8092/8093 must not be altered or reused
+as a fallback. The C04 historical UNKNOWN records remain quarantined;
+C05's independently complete, disjoint same-height liabilities, consensus
+trust and reserve coverage have not been physically attested.
+
+[C01 PR #174](https://github.com/Emaren/wolochain/pull/174) merged a
+real-binary nonroot **negative startup** verifier with a clean security scan.
+It proved refusal while the protected C01 custody/reviewer profiles were
+absent; it did not enroll either authority or permit a transaction.
+
+**C08 off-host witness architecture reviewed and corrected.** The Intel's
+ordinary macOS SSH server on port 22 is not the C08 witness. The dedicated
+witness SSHD has its own Ed25519 host identity and Intel-only loopback port
+22996. HEL1's original loopback:22995 known-hosts pin matches that *dedicated*
+host identity. An earlier source-reviewed host-key rotation that pointed to
+the ordinary macOS SSHD was reversed using the exact protected C08 rollback
+controller, restoring the original HEL1 C08 runtime and host-key files.
+The extra C08 public key previously enrolled on ordinary macOS SSH was also
+reverted, preserving unrelated management and recovery entries. These
+reversals **do not** establish an admitted remote witness.
+
+The correct restricted C08 tunnel connects HEL1 localhost port **22995**
+to the Intel's dedicated localhost port **22996**. This is distinct from
+Session A's C06 recovery forward on HEL1 localhost port 22996. The Intel
+dedicated witness SSHD is presently not listening and its protected
+configuration and authorized-key command intentionally deny execution
+(`/usr/bin/false`). The [C08 PR #177](https://github.com/Emaren/wolochain/pull/177)
+source now refuses its rootless LaunchAgent installation under those
+conditions; it is a monitored **HOLD**, not a failure to be bypassed.
+Do not switch the tunnel destination back to the normal port 22, turn off
+StrictHostKeyChecking, replace dedicated witness credentials, or activate a
+forced command without independent source/host admission and exact nonce
+recovery evidence.
+
+For C02, the App finance track must prove effective financial ownership,
+role membership, table/sequence/index DML and schema CREATE **after** the
+29 new Satchel tables are created, not merely before migration. Session A
+owns the temporary financial writer fence, the fresh coordinated encrypted
+C06 off-host backup and the exact C07 restored-state rollback proof.
+App C02 post-DDL source checks and synthetic PostgreSQL 16 rehearsals
+cannot substitute for that same-epoch physical sequence.
+
+A future C09 canary still requires ALL C01–C08 gates physically accepted
+plus a new, narrowly scoped, transaction-specific signed owner permit.
+No monitoring timer, source merge, operator login, test key, reviewer alias,
+or technical witness packet is a financial signing authority. Never retry,
+rebroadcast or reinterpret an UNKNOWN transfer; preserve its original
+identity and evidence. This November 7 review grants **zero funded
+allowance**, performs no deployment and does not certify the historic
+contracts in later sections as current independent external evidence.
 
 ## Source review — October 30, 2026 UTC
 
