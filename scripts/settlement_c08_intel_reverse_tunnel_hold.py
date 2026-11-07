@@ -2,7 +2,8 @@
 """C08 HOLD: independent Intel -> HEL1 restricted witness tunnel supervisor.
 
 The only remote permission held by the enrolled tunnel key is listening on
-HEL1 loopback 22995, forwarding to the Intel's local SSH service. The purpose
+HEL1 loopback 22995, forwarding to the Intel's dedicated witness
+SSHD on Intel loopback 22996 (NOT the normal macOS port 22). The purpose
 is to let HEL1 contact the real offhost C08 nonce witness over SSH. It does
 NOT submit a witness packet, consume a nonce, authorize funds, touch C06's
 separate 22996 recovery tunnel, or alter production validator/settlement.
@@ -23,11 +24,12 @@ import os
 from pathlib import Path
 import plistlib
 import re
+import socket
 import stat
 import subprocess
 import sys
 
-SCHEMA="wolo.c08.intel-22995-launchd-tunnel-no-financial-authority.v1"
+SCHEMA="wolo.c08.intel-22995-launchd-dedicated-witness-sshd.v2"
 LABEL="com.aoe2war.c08-witness-reverse"
 EXPECTED_HOME=Path("/Users/tonyblum")
 REL_TUNNEL=Path(".wolo-owner-authority/tunnel")
@@ -36,7 +38,7 @@ LAUNCH_FILE=LABEL+".plist"
 PYTHON=Path("/usr/local/bin/python3.13")
 SSH=Path("/usr/bin/ssh")
 REMOTE="wolo-witness-tunnel@157.180.114.124"
-PORT_FORWARD="localhost:22995:127.0.0.1:22"
+PORT_FORWARD="localhost:22995:127.0.0.1:22996"
 KEY_FILE="intel-to-hel1-ed25519"
 PUB_FILE=KEY_FILE+".pub"
 HOST_FILE="hel1-known-hosts"
@@ -44,6 +46,8 @@ EXPECTED_PUB_BLOB_SHA="32dc6e004b2bc6a810a9dfcde27b5fd7179aaa4a17a41f8c2dc68fb2e
 EXPECTED_KNOWN_SHA="7cfec59a6ea6346add5366c8d40e0ffd5e57e0244c598445272543ba06509e5f"
 EXPECTED_HEL1_HOST_BLOB_SHA="6b7d9a5d2902d25084a59c96f6494bba79571b1999cd606e16f7098463397b86"
 EXPECTED_WITNESS_CONFIG_SHA="5fae8033a2c3d5e38e5e0a59369c9567d9c71caa09b8b92e5ad20add29b45299"
+EXPECTED_DEDICATED_SSHD_HOST_BLOB_SHA="45c6153f1a67b5585662aa072e03dde6b09ad607e030b40834262aa436687194"
+EXPECTED_DEDICATED_C08_CLIENT_BLOB_SHA="ce07e3593fc557cafbbeabe05f1a7c6a1200c01984595a75a726b8f414180fe6"
 MAX_SOURCE=65536
 MAX_FILE=131072
 
@@ -106,9 +110,67 @@ def tunnel_paths(home:Path):
         "root":root, "private":root/KEY_FILE,"pub":root/PUB_FILE,
         "known":root/HOST_FILE,
         "witness":home/".wolo-owner-authority/witness-runtime/authority/solo-witness.json",
+        "dedicated":home/".wolo-owner-authority/witness-sshd",
+        "dedicated_config":home/".wolo-owner-authority/witness-sshd/sshd_config",
+        "dedicated_authorized":home/".wolo-owner-authority/witness-sshd/authorized_keys",
+        "dedicated_host_pub":home/".wolo-owner-authority/witness-sshd/ssh_host_ed25519_key.pub",
         "installed":root/SOURCE_FILE,
         "agents":home/"Library/LaunchAgents",
         "plist":home/"Library/LaunchAgents"/LAUNCH_FILE,
+    }
+
+
+def dedicated_backend_status(paths:dict[str,Path])->dict:
+    """Check Intel-local dedicated sshd, never substitute the normal port 22."""
+    dir_mode(paths["dedicated"],0o700)
+    pub=secure_regular(paths["dedicated_host_pub"],0o600,read=True)
+    cfg=secure_regular(paths["dedicated_config"],0o600,read=True)
+    auth=secure_regular(paths["dedicated_authorized"],0o600,read=True)
+    require(pub is not None and cfg is not None and auth is not None,
+            "C08_DEDICATED_WITNESS_SSHD_UNREADABLE")
+    pk=pub.split()
+    require(len(pk)>=2 and pk[0]==b"ssh-ed25519"
+            and digest(pk[1])==EXPECTED_DEDICATED_SSHD_HOST_BLOB_SHA,
+            "C08_DEDICATED_WITNESS_HOST_KEY_MISMATCH")
+    lines=[line.strip() for line in cfg.splitlines()
+           if line.strip() and not line.lstrip().startswith(b"#")]
+    expected_dir=str(paths["dedicated"]).encode("ascii")
+    required=(b"Port 22996",b"ListenAddress 127.0.0.1",
+              b"HostKey "+expected_dir+b"/ssh_host_ed25519_key",
+              b"AuthorizedKeysFile "+expected_dir+b"/authorized_keys",
+              b"PidFile "+expected_dir+b"/sshd.pid",
+              b"AllowUsers tonyblum",
+              b"PubkeyAuthentication yes",b"PasswordAuthentication no",
+              b"UsePAM no",b"StrictModes yes",b"PermitTTY no",
+              b"AllowTcpForwarding no")
+    require(all(lines.count(x)==1 for x in required)
+            and not any(x.startswith(b"Match ") for x in lines)
+            and sum(x.startswith(b"HostKey ") for x in lines)==1,
+            "C08_DEDICATED_WITNESS_SSHD_CONFIG_DRIFT")
+    auth_lines=[x.strip() for x in auth.splitlines() if x.strip()]
+    require(len(auth_lines)==1
+            and auth_lines[0].startswith(b"restrict,command="),
+            "C08_DEDICATED_WITNESS_CLIENT_AUTH_SCOPE_DRIFT")
+    parts=auth_lines[0].split()
+    require(len(parts)>=3 and parts[1]==b"ssh-ed25519"
+            and digest(parts[2])==EXPECTED_DEDICATED_C08_CLIENT_BLOB_SHA,
+            "C08_DEDICATED_ROOT_WITNESS_KEY_NOT_PINNED")
+    denied=(any(x.startswith(b"ForceCommand ") for x in lines)
+            or b'command="/usr/bin/false"' in auth)
+    protocol_forced=(b"settlement_solo_runtime.py" in auth
+                     and b"--witness-stdin" in auth)
+    listening=False
+    if not denied and protocol_forced:
+        with socket.socket(socket.AF_INET,socket.SOCK_STREAM) as sock:
+            sock.settimeout(0.35)
+            listening=sock.connect_ex(("127.0.0.1",22996))==0
+    return {
+        "intel_dedicated_witness_sshd_host_key_pinned":True,
+        "intel_dedicated_witness_sshd_port":22996,
+        "dedicated_witness_deny_profile_active":bool(denied),
+        "dedicated_witness_protocol_forced":bool(protocol_forced),
+        "dedicated_witness_sshd_listening":bool(listening),
+        "dedicated_backend_admitted":bool(not denied and protocol_forced and listening),
     }
 
 
@@ -182,13 +244,15 @@ def account_preflight(paths:dict[str,Path]):
             and not (st.st_mode&0o022) and not SSH.is_symlink(),
             "C08_OS_SSH_CLIENT_UNTRUSTED")
     require(PYTHON.exists(),"C08_PINNED_PYTHON_UNAVAILABLE")
+    backend=dedicated_backend_status(paths)
     return {"schema":SCHEMA,"status":"HOLD_ONLY",
             "intel_tunnel_identity_pinned":True,
             "HEL1_host_key_pinned":True,
             "reverse_scope":"HEL1_LOOPBACK_22995_ONLY",
             "c06_recovery_port_22996_untouched":True,
             "offhost_witness_nonce_consumed":False,
-            "financial_release_authorized":False}
+            "financial_release_authorized":False,
+            **backend}
 
 
 def atomic_new(path:Path,data:bytes,mode:int):
@@ -224,7 +288,9 @@ def plan(paths:dict[str,Path],source_bytes:bytes)->dict:
     require(label_state.returncode!=0 and not paths["installed"].exists()
             and not paths["plist"].exists(),
             "C08_EXISTING_LAUNCHD_OR_SOURCE_NOT_PRISTINE")
-    info.update({"status":"HOLD_SOURCE_PINNED_TUNNEL_INSTALL_PLAN",
+    info.update({"status":"HOLD_SOURCE_PINNED_TUNNEL_INSTALL_PLAN" if
+                 info["dedicated_backend_admitted"] else
+                 "HOLD_DEDICATED_WITNESS_SSHD_NOT_ADMITTED",
                  "code_sha256":digest(source_bytes),
                  "launch_plist_sha256":digest(launch_plist(paths,digest(source_bytes))),
                  "launchd_loaded":False})
@@ -233,6 +299,8 @@ def plan(paths:dict[str,Path],source_bytes:bytes)->dict:
 
 def install(paths:dict[str,Path],source_bytes:bytes,expected_sha:str):
     pre=plan(paths,source_bytes)
+    require(pre["dedicated_backend_admitted"] is True,
+            "C08_DEDICATED_WITNESS_SSHD_NOT_ADMITTED")
     require(expected_sha==pre["code_sha256"],
             "C08_UNREVIEWED_TUNNEL_SOURCE")
     xml=launch_plist(paths,expected_sha)
@@ -243,7 +311,18 @@ def install(paths:dict[str,Path],source_bytes:bytes,expected_sha:str):
 
 
 def rollback(paths:dict[str,Path],source_sha:str):
-    info=account_preflight(paths)
+    # Recovery must remain possible when the witness backend or its trust
+    # material is unavailable. Only our byte-exact installed files can go.
+    require(os.geteuid()!=0 and os.getuid()==os.geteuid()
+            and Path.home()==EXPECTED_HOME
+            and paths["home"]==EXPECTED_HOME,
+            "C08_INTEL_ROLLBACK_ACCOUNT_NOT_PINNED")
+    for name,mode in (("authority",0o700),("root",0o700),("agents",0o755)):
+        dir_mode(paths[name],mode)
+    info={"schema":SCHEMA,"status":"HOLD_ONLY",
+          "financial_release_authorized":False,
+          "offhost_witness_nonce_consumed":False,
+          "c06_recovery_port_22996_untouched":True}
     require(re.fullmatch(r"[a-f0-9]{64}",source_sha) is not None,
             "C08_UNREVIEWED_ROLLBACK_SOURCE")
     source=secure_regular(paths["installed"],0o500,read=True)
@@ -275,7 +354,9 @@ def main(argv=None):
     paths=tunnel_paths(Path.home())
     try:
         if args.mode=="run":
-            account_preflight(paths)
+            pre=account_preflight(paths)
+            require(pre["dedicated_backend_admitted"] is True,
+                    "C08_DEDICATED_WITNESS_SSHD_NOT_ADMITTED")
             self_source=secure_regular(Path(__file__).resolve(),0o500,read=True)
             require(self_source is not None and digest(self_source)==args.source_sha256,
                     "C08_INSTALLED_TUNNEL_SOURCE_SHA_CHANGED")
