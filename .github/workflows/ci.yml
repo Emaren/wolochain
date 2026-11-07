@@ -195,6 +195,7 @@ jobs:
           python3 -m unittest discover -s tests -p 'test_settlement_c04_live_dual_db_drift_hold.py' -v
           python3 -m unittest discover -s tests -p 'test_settlement_financial_claim_overlap_hold.py' -v
           python3 -m unittest discover -s tests -p 'test_settlement_c05_active_winner_live_hold.py' -v
+          python3 -m unittest discover -s tests -p 'test_settlement_c05_seven_surface_readonly_hold.py' -v
 
       - name: Real single-owner phase signature review, NONAUTHORIZING (synthetic keys)
         run: python3 -m unittest discover -s tests -p 'test_settlement_solo_owner_intent_review.py' -v
