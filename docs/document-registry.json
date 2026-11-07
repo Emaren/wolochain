@@ -197,7 +197,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "5d87dfe866559f593e448115e4edf39a4ef8681456e1bc524b529bab9dcaba81",
+      "sha256": "891518b48118d00f4ec54fb86ff3c6dd4a4c4ba91208de5a5a2e76fb647fe1a5",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -797,7 +797,7 @@
       "review_interval_days": 7,
       "reviewed_at": "2026-11-07",
       "sensitivity": "restricted",
-      "sha256": "f821099a88678641fa58cfc73738e0150e61e18d5d9095e10ea0540f68d61655",
+      "sha256": "d7c47db4049f60749cf8e769ffa0bea98055a018ba56a2584a02187c450c2b6c",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -1274,8 +1274,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/central-c08-ssh-options-exact-20261107",
-    "commit": "3367c9305edac310dcd17ac27d2df5e682432170"
+    "branch": "session-b/c04-dual-db-freshness-quarantine-20261107",
+    "commit": "be232e4b0b6b49909154c32b4c726830d0223842"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

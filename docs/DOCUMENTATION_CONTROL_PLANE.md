@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/central-c08-ssh-options-exact-20261107` at `3367c9305edac310dcd17ac27d2df5e682432170`
+Implementation baseline: `session-b/c04-dual-db-freshness-quarantine-20261107` at `be232e4b0b6b49909154c32b4c726830d0223842`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
