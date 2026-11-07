@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/c05-pr193-bounty-merged-20261107` at `b0b8c63af59b0408d9b715832a32994e8849596c`
+Implementation baseline: `fix/c05-pr193-after-pr190-merge-20261107` at `dfa91fdf1b863f99d7185deea1384320954e6cc2`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
