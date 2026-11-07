@@ -289,7 +289,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "3a1f7c0f3dc419faca73ecfd0d50c7c4800fba3fe711f69a63603519e0564cff",
+      "sha256": "a8bfb254853d7f88eec1923f9a6195e93ebd435c8001c45ed5277fd2be26e551",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1367,7 +1367,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "fix/c03-finance-payout-scope-20261107",
-    "commit": "321b3e9c06105285f0d8178b36c3ac37067134e2"
+    "commit": "988b04ad66d60cb2ffe6807112ecb45ac4cd6fd5"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
