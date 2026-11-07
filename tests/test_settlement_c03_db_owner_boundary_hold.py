@@ -10,7 +10,7 @@ audit=importlib.util.module_from_spec(S)
 S.loader.exec_module(audit)
 
 def values(**changes):
-    v=dict(zip(audit.FIELDS,[1,24,24,24,0,1,1,1,0,1,0,4,0]))
+    v=dict(zip(audit.FIELDS,[1,35,30,30,0,1,1,1,0,1,0,4,0]))
     v.update(changes)
     return '|'.join(map(str,[v[k] for k in audit.FIELDS]))+'\n'
 
@@ -27,7 +27,7 @@ class C03OwnerBoundaryTests(unittest.TestCase):
 
     def test_live_owner_is_implicit_bypass(self):
         z=audit.parse(values(),'aoe2hd_db')
-        self.assertEqual(z['finance_relations_owned'],24)
+        self.assertEqual(z['finance_relations_owned'],30)
         self.assertTrue(z['implicit_owner_or_schema_bypass'])
         self.assertTrue(z['finance_writer_capability'])
 
@@ -45,8 +45,8 @@ class C03OwnerBoundaryTests(unittest.TestCase):
 
     def test_malformed_missing_and_duplicate_hold(self):
         for bad in ('','1|2', values().strip()+'\n'+values(),
-                    values().replace('24|24','NaN|24'),
-                    values().replace('1|24','2|24'),
+                    values().replace('30|30','NaN|30'),
+                    values().replace('1|35','2|35'),
                     values().replace('0|4|0','0|10000|0'), '3'*4097):
             with self.subTest(bad=bad[:20]):
                 with self.assertRaises(audit.AuditHold):
@@ -78,7 +78,7 @@ class C03OwnerBoundaryTests(unittest.TestCase):
             stdout=values()
         with patch.object(audit.os,'geteuid',return_value=0),\
              patch.object(audit.subprocess,'run',return_value=Result()) as run:
-            self.assertEqual(audit.inspect('aoe2hd_db')['finance_relations_owned'],24)
+            self.assertEqual(audit.inspect('aoe2hd_db')['finance_relations_owned'],30)
             self.assertEqual(run.call_args.args[0][:4],['runuser','-u','postgres','--'])
         with patch.object(audit.os,'geteuid',return_value=0),\
              patch.object(audit.subprocess,'run',side_effect=OSError()):
