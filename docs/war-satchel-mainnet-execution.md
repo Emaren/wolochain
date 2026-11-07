@@ -858,3 +858,35 @@ identity verified. No persistent LaunchAgent or dedicated SSHD was installed
 or started. HEL1 port 22995 (C08) and 22996 (C06) remained closed during the
 review. All payment permissions, independent owner nonce and C09 funded
 release remain HOLD.
+
+## C05 active-wager source identity drift observer (held source only, Nov 7, 2026)
+
+The Central C05 source-only guard `scripts/settlement_c05_active_winner_live_hold.py`
+pins two protected historical HEL1 observations from November 5 (41 active
+wagers and 25 separately observed historical winning wagers). Its built-in
+`--emit-hd-sql` prints a bounded `REPEATABLE READ READ ONLY` SQL statement
+for `aoe2hd_db`; the operator separately saves one private 0600 JSON result.
+`--classify` only reads three exactly SHA-pinned private files, with no
+database driver, network connection, signer, wallet, grant or mutation.
+
+Admission requires all 41 actual live HD stake identities and original
+principal amounts to match the historical source-bound 41-record commitment
+exactly, including wager ID, market ID, original amount in uwolo and stake
+transaction hash. A one-WOLO swap between records, changed market, duplicate
+or reused hash, omitted wager, wrong historical pin, cross-family collision
+with any of 25 historical winning wagers, and stale/future observation each
+STOP. The literal historic active tuple SHA256 is
+`fb1a6afb429f0d501377f07fe2f70434196d23668292e53de47300cd98e9dbbc`.
+The 41 actual stakes sum to 53,728 nominal WOLO, but that amount is not a
+new debt to add to the 69 unknown claim nominal amounts.
+
+Independent source-stream execution against real HEL1 PostgreSQL and
+historical protected observations on Nov 7 returned only
+`HOLD_C05_ACTIVE_SOURCE_IDENTITIES_MATCH_NO_SOLVENCY`. The root-private
+receipt `/root/aoe2war-central-c05-active-collision-hold/20261107-c05-new-guard-native-hold.json`
+is SHA256 `ae8848d33eecedb7c3d7ecc061678b8eaf53b7c41918e0fcc3b9f17f5a12caec`.
+No raw wallet, recipient or transaction hashes are printed by the guard.
+It explicitly sets independent bank proof, full solvency, payout retry, funds
+and all financial release authority to false. Exact source-match DOES NOT
+provide independently verified Comet finality, a trusted reserve balance,
+atomic HD+DE+chain snapshot, complete liability enumeration, or C05 closure.

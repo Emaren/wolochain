@@ -197,7 +197,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "f09862b477befcd8d83a04aa0bc5c428ee085c124cdbe6cd14aef8c0ff34d33c",
+      "sha256": "6be0081fc377489dc1a3cd0b4c231d66872e6670cef566e3d62efed1d1a1b11c",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -797,7 +797,7 @@
       "review_interval_days": 7,
       "reviewed_at": "2026-11-07",
       "sensitivity": "restricted",
-      "sha256": "689ede78032a6dfaaf6fe19e7907af90891c51f222c4b1ef62a28b7997f2e795",
+      "sha256": "fb567ba64c2c63f3a062c0f1841492ac3a994cf024ab8b2d295532df69dee225",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -1274,8 +1274,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "session-b/c05-private-one-height-evidence-20261107",
-    "commit": "d32b2671462853ce2bb5b8e3b9bfa59e71afdd2c"
+    "branch": "fix/central-c05-active-winner-census-20261107",
+    "commit": "29fa50fa708070147369cc0355740c21a1d88d52"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
