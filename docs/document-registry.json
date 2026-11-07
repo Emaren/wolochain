@@ -243,7 +243,7 @@
       "review_interval_days": 7,
       "reviewed_at": "2026-11-07",
       "sensitivity": "restricted",
-      "sha256": "3df75efb7eb763144b8e2b686cbaeaba05b490afaddc33d3d06e1e58750e9dd5",
+      "sha256": "a41c274cd49c949c58504f2cfd8f5e43cc773b722e82fdbd26c7923c7757963b",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -335,7 +335,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "2f5674fbe9e197a4dc017440102fdee041fb318c17e58eb2b3ed3a3ccf47d943",
+      "sha256": "e45a13205039be22ccd72802cf1f585345d76030cb95f8806f78a4f4a6a5b900",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1412,8 +1412,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/session-b-c05-staking-exposure-20261107",
-    "commit": "ac57806a4e340bc1093431e94f5a700c8cc195fd"
+    "branch": "fix/session-b-gift-bounty-provenance-20261107",
+    "commit": "1d94ca138b9ceb5df2e53493f1857d16ac8efe67"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
