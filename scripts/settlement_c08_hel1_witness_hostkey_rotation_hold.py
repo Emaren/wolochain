@@ -1,19 +1,14 @@
 #!/usr/bin/env python3
 """C08 HOLD: exact Intel SSH host-key pin repair, never maintenance authority.
 
-Root-local operator-only controller. Replaces ONLY the C08 witness SSH
-known_hosts file and its corresponding digest in the C08 private enrollment.
-Never edits C03 fences, C06 tunnel, sshd, C01 services, signer keys, bank
-records, nonce ledgers, owner enrollment, or real WOLO balances.
-
-First independently verify current Intel Ed25519 host key against the M1
-long-pinned LAN host and the separately enrolled Intel hardware identity.
-A key from an unauthenticated scan alone is NOT sufficient.
-
---plan is read-only; --apply is explicitly gated, atomic per file with root
-private preimages; --rollback recovers only an unchanged, exact postimage or
-the identified partial state. An interrupted update remains FAIL CLOSED.
-All successful results return exit 3/HOLD, never payment authorization.
+SUPERSEDED wrong-host-key rotation. The earlier source target matched the
+Intel's ORDINARY macOS SSH daemon (port22), not its dedicated witness SSHD
+(localhost22996). That rotation was physically rolled back on HEL1.
+This controller's --mode apply path is permanently disabled before live file
+or service checks. --mode plan remains historical/read-only and does not
+authorize rotation. --mode rollback remains strict exact-preimage recovery.
+Never edits C03/C06, changes the validator, signs, or authorizes WOLO.
+Successful plans/recoveries return 3/HOLD; unsafe attempts return 2/STOP.
 """
 from __future__ import annotations
 
@@ -250,6 +245,11 @@ def result(status,oldcfg,oldhost,newcfg,newhost):
 
 def operation(root, new_pub, mode):
     require(mode in ("plan","apply","rollback"),"C08_OPERATION_NOT_ALLOWED")
+    # The NEW pin targets ordinary macOS SSH port22, not the separately
+    # enrolled Intel witness SSHD port22996. A prior production rotation had
+    # to be rolled back. Preserve ONLY read-only plan and exact recovery.
+    require(mode!="apply",
+            "C08_OBSOLETE_MACOS_HOSTPIN_ROTATION_DISABLED")
     financial_ports_absent()
     if mode=="rollback":
         folder=root/BACKUP_NAME
