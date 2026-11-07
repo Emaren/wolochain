@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/c03-finance-payout-scope-20261107` at `04722694070c161899c0a1dc5c025c30afe20828`
+Implementation baseline: `fix/c03-full-schema-default-deny-20261107` at `5ceeac9c3a2a3c60f3a82dd005b15baf29fa0346`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
