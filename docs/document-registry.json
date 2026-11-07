@@ -335,7 +335,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "b28eb8fda84c3b52a22550b2708957c7f7a01abc7d5d1e73f9ecfdda6a0101d7",
+      "sha256": "cd36b556f87ff6570c13762267df463c19f4b96b78fc7a8f1be7ce58920da274",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1413,7 +1413,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "fix/c05-pr193-bounty-merged-20261107",
-    "commit": "c582ded7e75630870f0a9701ac3d980a9366129c"
+    "commit": "b0b8c63af59b0408d9b715832a32994e8849596c"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
