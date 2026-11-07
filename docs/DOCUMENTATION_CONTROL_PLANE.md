@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `session-b/c05-private-one-height-evidence-20261107` at `d32b2671462853ce2bb5b8e3b9bfa59e71afdd2c`
+Implementation baseline: `fix/central-c05-active-winner-census-20261107` at `8d303cf3c384f66f8deb89e02f5e9e6d607f15e5`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
