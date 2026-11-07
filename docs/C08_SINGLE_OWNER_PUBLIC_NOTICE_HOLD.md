@@ -13,7 +13,7 @@ review_interval_days: 7
 sensitivity: "internal"
 ---
 
-# C08 Single-Owner Public Notice Source Guard — Financial HOLD
+# C08 Single-Owner Public Notice — Pinned 24-Hour Financial HOLD
 
 WOLO has **one human financial owner**. That person controls custody,
 reserve assessment and activation approvals; this is centralized oversight,

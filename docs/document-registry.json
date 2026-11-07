@@ -255,6 +255,29 @@
     },
     {
       "audience": [
+        "operators",
+        "developers",
+        "financial-reviewers"
+      ],
+      "authority": "public-notice-source-integrity-only-no-financial-permit",
+      "id": "aoe2war.wolochain.c08.single-owner-public-notice-hold",
+      "owner": "wolochain-ops",
+      "path": "docs/C08_SINGLE_OWNER_PUBLIC_NOTICE_HOLD.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-07",
+      "sensitivity": "internal",
+      "sha256": "d59916896dbecd15df1a7eb4977e7c47a20b471de2d77d70b2e80fc07afb871b",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C08 Single-Owner Public Notice \u2014 Pinned 24-Hour Financial HOLD",
+      "type": "reference"
+    },
+    {
+      "audience": [
         "developers",
         "operators",
         "ai-agents"
@@ -266,7 +289,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "979e199c8417aed28df58871bee687581bea62b406c84f793d365ba081b82b0e",
+      "sha256": "7493de7388397e47261db5020517f3e11e646ffdefc08bcd4d5d6810fe50c38c",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1343,8 +1366,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/central-c03-c06-physical-readiness-20261107",
-    "commit": "030cca0c5e2365993f9991e1a3857eb031ad9cb9"
+    "branch": "fix/central-solo-notice-clock-20261107",
+    "commit": "b326a02be5e5b6575c31f34dbf6a0f30b5940ee0"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
