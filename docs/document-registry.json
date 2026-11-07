@@ -335,7 +335,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "e45a13205039be22ccd72802cf1f585345d76030cb95f8806f78a4f4a6a5b900",
+      "sha256": "b28eb8fda84c3b52a22550b2708957c7f7a01abc7d5d1e73f9ecfdda6a0101d7",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1412,8 +1412,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/session-b-gift-bounty-provenance-20261107",
-    "commit": "1d94ca138b9ceb5df2e53493f1857d16ac8efe67"
+    "branch": "fix/c05-pr193-bounty-merged-20261107",
+    "commit": "c582ded7e75630870f0a9701ac3d980a9366129c"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
