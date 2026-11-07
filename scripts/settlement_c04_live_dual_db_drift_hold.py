@@ -22,8 +22,8 @@ import re
 import stat
 import sys
 
-SCHEMA="wolo.c04.dual-db-claim-census-observation.v1"
-REPORT="wolo.c04.dual-db-finance-drift-hold.v1"
+SCHEMA="wolo.c04.dual-db-claim-census-observation.v2"
+REPORT="wolo.c04.dual-db-finance-drift-hold.v2"
 MAX_BYTES=32768
 DIGEST=re.compile(r"[a-f0-9]{64}\Z")
 HD="aoe2hd_db"
@@ -53,6 +53,15 @@ HD_GROUPS={
 }
 DE_COUNTS={"claimed_hashless":0,"claimed_hashless_wolo":0,
            "pending":0,"pending_wolo":0,"claimed_with_hash":0}
+ERA_GROUPS={
+ ("legacy","bet_payout"):(5,600),
+ ("mainnet","bet_payout"):(10,108904),
+ ("mainnet","bet_refund"):(3,6801),
+ ("mainnet","founders_bonus"):(51,4138),
+}
+CLAIMSET_ROW_FIELDS=frozenset({
+ "id","kind","wolo","era","market_id","founder_bonus_id","attempted",
+})
 
 class Hold(ValueError):
     pass
@@ -82,7 +91,7 @@ def observe_sql(db):
 BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY;
 SET LOCAL statement_timeout='8s';
 SELECT pg_catalog.json_build_object(
-'schema','wolo.c04.dual-db-claim-census-observation.v1',
+'schema','wolo.c04.dual-db-claim-census-observation.v2',
 'database',current_database(),
 'captured_utc',to_char(transaction_timestamp() AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS"Z"'),
 'counts',(SELECT pg_catalog.json_build_object(
@@ -101,6 +110,14 @@ SELECT pg_catalog.json_build_object(
  FROM public.pending_wolo_claims WHERE status='claimed'
  AND NULLIF(BTRIM(COALESCE(payout_tx_hash,'')),'') IS NULL
  GROUP BY claim_kind) z),'[]'::json),
+'claimset',coalesce((SELECT pg_catalog.json_agg(pg_catalog.json_build_object(
+ 'id',id,'kind',claim_kind,'wolo',amount_wolo,
+ 'era',CASE WHEN created_at < TIMESTAMP '2026-05-25 00:00:00'
+   THEN 'legacy' ELSE 'mainnet' END,
+ 'market_id',source_market_id,'founder_bonus_id',source_founder_bonus_id,
+ 'attempted',payout_attempted_at IS NOT NULL) ORDER BY id)
+ FROM public.pending_wolo_claims WHERE status='claimed'
+ AND NULLIF(BTRIM(COALESCE(payout_tx_hash,'')),'') IS NULL),'[]'::json),
 'critical_claims',coalesce((SELECT pg_catalog.json_agg(pg_catalog.json_build_object(
  'id',id,'status',status,'kind',claim_kind,'wolo',amount_wolo,
  'hash_present',NULLIF(BTRIM(COALESCE(payout_tx_hash,'')),'') IS NOT NULL,
@@ -163,7 +180,7 @@ def read_private(path,expected):
 
 def validate(packet,db):
     require(type(packet) is dict and set(packet)=={
-            "schema","database","captured_utc","counts","groups",
+            "schema","database","captured_utc","counts","groups","claimset",
             "critical_claims","critical_wagers","indexed",
             "financial_authorized","chain_finality_proven","cross_db_snapshot_atomic"},
             "C04_SCHEMA_DRIFT")
@@ -190,6 +207,37 @@ def validate(packet,db):
                 "C04_GROUP_IDENTITY_INVALID")
         actual[group["kind"]]=(group["count"],group["wolo"])
     require(actual==(HD_GROUPS if db==HD else {}),"C04_GROUP_AMOUNT_DRIFT")
+    claimset=packet["claimset"]
+    require(type(claimset) is list and
+            len(claimset)==(69 if db==HD else 0),
+            "C04_COMPLETE_HASHLESS_CLAIMSET_COUNT_DRIFT")
+    seen_ids=set()
+    era_groups={}
+    last_id=0
+    for claim in claimset:
+        require(type(claim) is dict and set(claim)==CLAIMSET_ROW_FIELDS,
+                "C04_CLAIMSET_ROW_SHAPE_INVALID")
+        ident=claim["id"]
+        require(type(ident) is int and ident>last_id and ident not in seen_ids,
+                "C04_CLAIMSET_NOT_CANONICALLY_ORDERED_OR_DUPLICATE")
+        last_id=ident
+        seen_ids.add(ident)
+        kind,era,amount=claim["kind"],claim["era"],claim["wolo"]
+        require((era,kind) in ERA_GROUPS
+                and type(amount) is int and 0<amount<=25000
+                and type(claim["market_id"]) is int
+                and claim["market_id"]>0
+                and type(claim["attempted"]) is bool,
+                "C04_CLAIMSET_KIND_AMOUNT_OR_SOURCE_INVALID")
+        bonus=claim["founder_bonus_id"]
+        require((type(bonus) is int and bonus>0) if kind=="founders_bonus"
+                else bonus is None,
+                "C04_CLAIMSET_FOUNDER_SOURCE_DRIFT")
+        key=(era,kind)
+        n,total=era_groups.get(key,(0,0))
+        era_groups[key]=(n+1,total+amount)
+    require(era_groups==(ERA_GROUPS if db==HD else {}),
+            "C04_CLAIMSET_ERA_GROUP_AMOUNT_DRIFT")
     claims=packet["critical_claims"]
     wagers=packet["critical_wagers"]
     require(type(claims) is list and type(wagers) is list,
@@ -230,8 +278,22 @@ def validate(packet,db):
                 "C04_DE_INDEX_SCOPE_CHANGED")
     return moment
 
-def compare(hd,de,now=None):
+def claimset_sha256(claims):
+    require(type(claims) is list,
+            "C04_HASHLESS_CLAIMSET_NOT_LIST")
+    raw=json.dumps(claims,sort_keys=True,separators=(",",":"),
+                   ensure_ascii=True).encode("ascii")
+    return hashlib.sha256(raw).hexdigest()
+
+
+def compare(hd,de,now=None,expected_hd_claimset_sha256=None):
     t1=validate(hd,HD);t2=validate(de,DE)
+    require(type(expected_hd_claimset_sha256) is str and
+            DIGEST.fullmatch(expected_hd_claimset_sha256) is not None,
+            "C04_SOURCE_REVIEWED_CLAIMSET_PIN_REQUIRED")
+    hd_sha=claimset_sha256(hd["claimset"])
+    require(hd_sha==expected_hd_claimset_sha256,
+            "C04_INDIVIDUAL_CLAIMSET_SOURCE_DRIFT")
     now=now or datetime.now(timezone.utc)
     require(-30<=(now-t1).total_seconds()<=900 and
             -30<=(now-t2).total_seconds()<=900,
@@ -247,6 +309,10 @@ def compare(hd,de,now=None):
         "hd_pending_claims":948,
         "hd_pending_nominal_wolo":993289,
         "historical_cases_preserved":True,
+        "all_69_claim_identifiers_and_amounts_match_operator_pin":True,
+        "claimset_commitment_sha256":hd_sha,
+        "operator_supplied_pin_independently_authenticated":False,
+        "claimset_operator_pin_is_not_independent_chain_proof":True,
         "cross_db_atomic":False,
         "independent_comet_finality":False,
         "independent_reserve_coverage":False,
@@ -265,6 +331,7 @@ def main(argv=None):
     p.add_argument("--de",type=Path)
     p.add_argument("--hd-sha256")
     p.add_argument("--de-sha256")
+    p.add_argument("--expected-hd-claimset-sha256")
     a=p.parse_args(argv)
     if a.emit_hd_sql:
         print(observe_sql(HD),end="")
@@ -276,7 +343,8 @@ def main(argv=None):
         require(all((a.hd,a.de,a.hd_sha256,a.de_sha256)),
                 "C04_DUAL_DB_FILES_AND_PINNED_SHA_REQUIRED")
         report=compare(read_private(a.hd,a.hd_sha256),
-                       read_private(a.de,a.de_sha256))
+                       read_private(a.de,a.de_sha256),
+                       expected_hd_claimset_sha256=a.expected_hd_claimset_sha256)
     except (Hold,OSError,ValueError,TypeError) as exc:
         print(json.dumps({"schema":REPORT,"status":"STOP",
                           "reason":str(exc) if type(exc) is Hold else type(exc).__name__,
