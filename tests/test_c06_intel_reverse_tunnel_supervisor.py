@@ -16,7 +16,11 @@ class SupervisorTests(unittest.TestCase):
     def test_fixed_loopback_only_and_host_key_pinning(self):
         args=m.ssh_command(Path("/Users/tester"))
         s=" ".join(args)
-        self.assertIn("127.0.0.1:22995:127.0.0.1:22",s)
+        self.assertIn("127.0.0.1:22996:127.0.0.1:22",s)
+        self.assertEqual(m.PORT,22996)
+        self.assertEqual(m.public_plan(Path("/Users/tester"))["reverseForward"],
+                         "127.0.0.1:22996:127.0.0.1:22")
+        self.assertNotIn("22995",s)
         self.assertIn("StrictHostKeyChecking=yes",s)
         self.assertIn("HostKeyAlias=hel1-c06-intel",s)
         self.assertNotIn("root@hel1",s)
@@ -26,7 +30,7 @@ class SupervisorTests(unittest.TestCase):
         self.assertIn("ServerAliveInterval=30",s)
         self.assertIn("-N",args)
         self.assertIn("-T",args)
-        self.assertNotIn("0.0.0.0:22995",s)
+        self.assertNotIn("0.0.0.0:22996",s)
         self.assertNotIn("StrictHostKeyChecking=no",s)
         self.assertNotIn("UserKnownHostsFile=/dev/null",s)
 
@@ -49,11 +53,17 @@ class SupervisorTests(unittest.TestCase):
 
     def test_install_refuses_arm64_or_root(self):
         with tempfile.TemporaryDirectory() as folder:
-            with patch.object(m.platform,"machine",return_value="arm64"):
+            with patch.object(m.sys,"platform","darwin"),\
+                 patch.object(m.platform,"machine",return_value="arm64"):
                 with self.assertRaisesRegex(m.Hold,"INTEL_MAC"):
                     m.check_local_enrollment(Path(folder))
-            with patch.object(m.platform,"machine",return_value="x86_64"),\
+            with patch.object(m.sys,"platform","darwin"),\
+                 patch.object(m.platform,"machine",return_value="x86_64"),\
                  patch.object(m.os,"geteuid",return_value=0):
+                with self.assertRaisesRegex(m.Hold,"INTEL_MAC"):
+                    m.check_local_enrollment(Path(folder))
+            with patch.object(m.sys,"platform","linux"),\
+                 patch.object(m.platform,"machine",return_value="x86_64"):
                 with self.assertRaisesRegex(m.Hold,"INTEL_MAC"):
                     m.check_local_enrollment(Path(folder))
 
@@ -101,14 +111,16 @@ class SupervisorTests(unittest.TestCase):
                 if args[0]=="/usr/bin/ssh-keygen":
                     return SimpleNamespace(returncode=0,stdout=b"pinned-host")
                 return SimpleNamespace(returncode=0,stdout="user aoe2war-c06-reverse\nport 22\n")
-            with patch.object(m.platform,"machine",return_value="x86_64"),\
+            with patch.object(m.sys,"platform","darwin"),\
+                 patch.object(m.platform,"machine",return_value="x86_64"),\
                  patch.object(m.subprocess,"run",side_effect=fake):
                 self.assertTrue(m.check_local_enrollment(home))
             def wrong(args,**kwargs):
                 if args[0]=="/usr/bin/ssh-keygen":
                     return SimpleNamespace(returncode=0,stdout=b"pinned-host")
                 return SimpleNamespace(returncode=0,stdout="user root\nport 22\n")
-            with patch.object(m.platform,"machine",return_value="x86_64"),\
+            with patch.object(m.sys,"platform","darwin"),\
+                 patch.object(m.platform,"machine",return_value="x86_64"),\
                  patch.object(m.subprocess,"run",side_effect=wrong):
                 with self.assertRaisesRegex(m.Hold,"DEDICATED_NONROOT"):
                     m.check_local_enrollment(home)
