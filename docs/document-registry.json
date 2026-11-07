@@ -289,7 +289,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "836b70eb5afea42407e837a7ab7d37b73e3bd0d6cdc4264ca1767660ec39e3f1",
+      "sha256": "58207c93797623db2756b8a1570ef106a2a34487f9ab5b34e562b943400ca01a",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1366,8 +1366,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/c03-preconnected-acl-proof-20261107",
-    "commit": "4f38e65c00842d35e8ee0168137688c33abcb692"
+    "branch": "fix/c03-legacy-3030-transport-deny-20261107",
+    "commit": "570528042a9a2bc2c998d2bbcc09b1b28f7cb5cf"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

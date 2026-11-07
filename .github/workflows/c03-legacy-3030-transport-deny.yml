@@ -1,0 +1,39 @@
+name: C03 old rollback 3030 legacy transport denial source contract
+
+on:
+  pull_request:
+  push:
+    branches:
+      - fix/c03-legacy-3030-transport-deny-20261107
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  c03-legacy-3030-finance-egress-negative:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Explicit rollback-only transport-denial adversarial regression
+        run: python3 -B -m unittest discover -s tests -p 'test_settlement_c03_legacy_web_transport_deny.py' -v
+      - name: Guard source release flags and no wallet execution
+        run: |
+          python3 -B - <<'PY'
+          from pathlib import Path
+          p=Path('scripts/settlement_c03_legacy_web_transport_deny.py')
+          s=p.read_text()
+          assert '"funded_release_authorized":False' in s
+          assert '"live_c03_gate_accepted":False' in s
+          assert '"direct_chain_rpc_cli_and_signer_fenced":False' in s
+          assert 'counter reject with tcp reset' in s
+          assert 'meta skuid 1000' in s
+          assert 'ip daddr 127.0.0.1' in s
+          assert 'tcp dport { 8092, 8093 }' in s
+          assert "ALTER TABLE" not in s
+          assert "pg_terminate_backend" not in s
+          print('PASS_C03_LEGACY_FINANCE_OUTPUT_DENY_SOURCE_HARD_HOLD')
+          PY
