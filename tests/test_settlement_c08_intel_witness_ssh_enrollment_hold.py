@@ -65,28 +65,24 @@ class C08TransportTests(unittest.TestCase):
         self.assertFalse(out["financial_release_authorized"])
         self.assertEqual(self.path.read_bytes(),BASELINE)
 
-    def test_apply_appends_exact_one_restricted_key_and_preserves_two_keys(self):
-        with patch.object(tool,"EXPECTED_OLD_KEYS_SHA",tool.sha(BASELINE)):
-            with patch.object(tool,"preflight",return_value=self.fixture()):
-                out=tool.action(self.home,PUB,"apply",tool.sha(BASELINE))
-        self.assertEqual(out["status"],"HOLD_SSH_KEY_ADMITTED_ONLY")
-        new=self.path.read_bytes()
-        self.assertEqual(new,BASELINE+self.line)
-        self.assertTrue(new.startswith(BASELINE))
-        self.assertEqual(new.count(b"aoe2war-receiver-20261102.py"),1)
-        self.assertEqual(new.count(PUB_BLOB.encode()),1)
-        self.assertEqual(stat.S_IMODE(self.path.stat().st_mode),0o600)
-        backup=self.base/"c08-ssh-enrollment-backup/authorized_keys.before"
-        self.assertEqual(backup.read_bytes(),BASELINE)
-        self.assertEqual(stat.S_IMODE(backup.stat().st_mode),0o600)
-        self.assertEqual(stat.S_IMODE(backup.parent.stat().st_mode),0o700)
-        self.assertFalse(out["financial_release_authorized"])
+    def test_obsolete_normal_mac_ssh_apply_fails_before_any_file_access(self):
+        with patch.object(tool,"preflight",side_effect=AssertionError(
+                "obsolete mutation must STOP before reading protected files")):
+            with self.assertRaisesRegex(tool.HoldError,
+                    "C08_SUPERSEDED_NORMAL_MACOS_SSH_KEY_ADMISSION_DISABLED"):
+                tool.action(self.home,PUB,"apply",tool.sha(BASELINE))
+        self.assertEqual(self.path.read_bytes(),BASELINE)
+        self.assertFalse((self.base/"c08-ssh-enrollment-backup").exists())
+
+    def seed_historical_exact_previous_appended_entry(self):
+        backup=self.base/"c08-ssh-enrollment-backup"
+        tool.save_backup(backup,BASELINE)
+        tool.atomic_replace(self.path,BASELINE,BASELINE+self.line)
+        return self.path.read_bytes()
 
     def test_revert_only_own_extra_entry_and_preserves_exact_original(self):
         with patch.object(tool,"EXPECTED_OLD_KEYS_SHA",tool.sha(BASELINE)):
-            with patch.object(tool,"preflight",return_value=self.fixture()):
-                tool.action(self.home,PUB,"apply",tool.sha(BASELINE))
-            new=self.path.read_bytes()
+            new=self.seed_historical_exact_previous_appended_entry()
             with patch.object(tool,"preflight",return_value=self.fixture("ALREADY_ENROLLED",new)):
                 out=tool.action(self.home,PUB,"revert",tool.sha(new))
         self.assertEqual(out["status"],"HOLD_OWN_ENTRY_ROLLED_BACK")
@@ -98,13 +94,15 @@ class C08TransportTests(unittest.TestCase):
         self.path.write_bytes(bad)
         with patch.object(tool,"EXPECTED_OLD_KEYS_SHA",tool.sha(BASELINE)):
             with patch.object(tool,"preflight",return_value=self.fixture("ABSENT",bad)):
-                with self.assertRaisesRegex(tool.HoldError,"C08_BASELINE_KEYS_OR_EXISTING_WITNESS_DRIFT"):
+                with self.assertRaisesRegex(tool.HoldError,
+                        "C08_SUPERSEDED_NORMAL_MACOS_SSH_KEY_ADMISSION_DISABLED"):
                     tool.action(self.home,PUB,"apply",tool.sha(bad))
         self.assertEqual(self.path.read_bytes(),bad)
 
     def test_compare_and_swap_prevents_unauthorized_addition(self):
         with patch.object(tool,"preflight",return_value=self.fixture()):
-            with self.assertRaisesRegex(tool.HoldError,"C08_AUTHORIZED_KEYS_COMPARE_AND_SWAP_FAILED"):
+            with self.assertRaisesRegex(tool.HoldError,
+                    "C08_SUPERSEDED_NORMAL_MACOS_SSH_KEY_ADMISSION_DISABLED"):
                 tool.action(self.home,PUB,"apply","0"*64)
         self.assertEqual(self.path.read_bytes(),BASELINE)
 
@@ -141,9 +139,8 @@ class C08TransportTests(unittest.TestCase):
 
     def test_rollback_cannot_erase_concurrent_authorized_key(self):
         with patch.object(tool,"EXPECTED_OLD_KEYS_SHA",tool.sha(BASELINE)):
-            with patch.object(tool,"preflight",return_value=self.fixture()):
-                tool.action(self.home,PUB,"apply",tool.sha(BASELINE))
-            appended=self.path.read_bytes()+b"# operator changed\n"
+            new=self.seed_historical_exact_previous_appended_entry()
+            appended=new+b"# operator changed\n"
             self.path.write_bytes(appended)
             with patch.object(tool,"preflight",return_value=self.fixture("ALREADY_ENROLLED",appended)):
                 with self.assertRaisesRegex(tool.HoldError,"C08_ROLLBACK_MUST_PRESERVE_C06_AND_ALL_OTHER_KEYS"):

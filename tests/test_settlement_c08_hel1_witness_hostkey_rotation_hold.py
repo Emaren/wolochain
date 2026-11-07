@@ -78,24 +78,26 @@ class HostkeyTests(unittest.TestCase):
         self.assertEqual((self.root/tool.HOST_NAME).read_bytes(),self.old_hosts)
         self.assertFalse((self.root/tool.BACKUP_NAME).exists())
 
-    def test_apply_binds_exact_pin_and_root_private_backups(self):
-        d=tool.operation(self.root,self.new_pub,"apply")
-        self.assertEqual(d["status"],"HOLD_HOST_KEY_ROTATED_NO_AUTHORITY")
-        self.assertFalse(d["financial_release_authorized"])
-        self.assertEqual((self.root/tool.HOST_NAME).read_bytes(),
-                         tool.key_from_pub(self.new_pub))
-        new_cfg=json.loads((self.root/tool.CONFIG_NAME).read_bytes())
-        self.assertEqual(new_cfg["witness"]["known_hosts_sha256"],d["new_host_sha256"])
+    def test_wrong_normal_mac_host_key_rotation_is_retired_before_port_checks(self):
+        with patch.object(tool,"financial_ports_absent",side_effect=AssertionError(
+                "obsolete forward mutation must STOP before probing live ports")):
+            with self.assertRaisesRegex(tool.Stop,
+                    "C08_OBSOLETE_MACOS_HOSTPIN_ROTATION_DISABLED"):
+                tool.operation(self.root,self.new_pub,"apply")
+        self.assertEqual((self.root/tool.HOST_NAME).read_bytes(),self.old_hosts)
+        self.assertEqual((self.root/tool.CONFIG_NAME).read_bytes(),self.raw)
         self.assertEqual((self.root/tool.OWNER_NAME).read_bytes(),self.owner)
-        backup=self.root/tool.BACKUP_NAME
-        self.assertEqual(stat.S_IMODE(backup.stat().st_mode),0o700)
-        self.assertEqual((backup/(tool.CONFIG_NAME+".before")).read_bytes(),self.raw)
-        self.assertEqual((backup/(tool.HOST_NAME+".before")).read_bytes(),self.old_hosts)
-        for name in (tool.CONFIG_NAME+".before",tool.HOST_NAME+".before"):
-            self.assertEqual(stat.S_IMODE((backup/name).stat().st_mode),0o600)
+        self.assertFalse((self.root/tool.BACKUP_NAME).exists())
+
+    def seed_historical_wrong_ssh_host_key_for_rollback(self):
+        old_cfg,old_host,new_cfg,new_host=tool.current_state(self.root,self.new_pub)
+        tool.create_backup(self.root,old_cfg,old_host)
+        tool.replace_if_exact(self.root/tool.HOST_NAME,old_host,new_host)
+        tool.replace_if_exact(self.root/tool.CONFIG_NAME,old_cfg,new_cfg)
+        return old_cfg,old_host,new_cfg,new_host
 
     def test_revert_restores_exact_original_c08_bytes(self):
-        tool.operation(self.root,self.new_pub,"apply")
+        self.seed_historical_wrong_ssh_host_key_for_rollback()
         d=tool.operation(self.root,self.new_pub,"rollback")
         self.assertEqual(d["status"],"HOLD_SOURCE_PIN_ROLLED_BACK")
         self.assertEqual((self.root/tool.CONFIG_NAME).read_bytes(),self.raw)
@@ -152,15 +154,16 @@ class HostkeyTests(unittest.TestCase):
             tool.private_read(symlink)
 
     def test_changed_or_added_operator_key_cannot_be_rolled_back(self):
-        tool.operation(self.root,self.new_pub,"apply")
+        self.seed_historical_wrong_ssh_host_key_for_rollback()
         p=self.root/tool.HOST_NAME
         p.write_bytes(p.read_bytes()+b"# unreviewed extra\n")
         self.denied("C08_CANNOT_ROLLBACK_CONCURRENT_OPERATOR_CHANGE",mode="rollback")
 
     def test_no_backup_overwrite(self):
-        tool.operation(self.root,self.new_pub,"apply")
-        with self.assertRaises(tool.Stop):
-            tool.operation(self.root,self.new_pub,"apply")
+        self.seed_historical_wrong_ssh_host_key_for_rollback()
+        with self.assertRaisesRegex(tool.Stop,"C08_PROTECTED_BACKUP_ALREADY_EXISTS"):
+            tool.create_backup(self.root,self.raw,self.old_hosts)
+        self.denied("C08_OBSOLETE_MACOS_HOSTPIN_ROTATION_DISABLED",mode="apply")
 
     def test_no_unsafe_root_directory(self):
         self.root.chmod(0o755)

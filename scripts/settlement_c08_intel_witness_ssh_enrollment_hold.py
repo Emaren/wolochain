@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 """C08 Intel witness transport: source-pinned, reversible SSH key admission.
 
-Unfunded SSH-only operation. NEVER consumes witness nonce, signs, broadcasts,
-edits protected C06 receiver code, starts services or authorizes WOLO.
-Existing C06 receiver authorized_keys bytes MUST survive unchanged as prefix.
-
-MUST be executed by the Intel account using the pinned Python >=3.11 binary.
-Install needs --mode apply, exact known baseline SHA and private backup.
-All successful states deliberately return 3/HOLD; hard failures return 2/STOP.
+SUPERSEDED normal-macOS-SSH witness enrollment. The correct C08 witness has
+its own Intel loopback-only SSHD on port 22996 and distinct host identity.
+This controller's old --mode apply path is permanently disabled; it must never
+append a witness key to normal ~/.ssh/authorized_keys or modify C06's receiver.
+The strictly compared --mode revert path survives solely to recover a prior
+exactly matching historical mistake. --mode plan is read-only, not authority.
+Never consumes witness nonce, signs, starts services or authorizes WOLO.
+Successful plans and exact recovery return 3/HOLD; errors return 2/STOP.
 """
 from __future__ import annotations
 
@@ -218,6 +219,11 @@ def save_backup(folder: Path, original: bytes):
 
 def action(home: Path, pub: bytes, mode: str, expected_keys_sha: str | None = None):
     require(mode in MODELS, "C08_MODE_INVALID")
+    # Superseded: this helper modifies NORMAL macOS ~/.ssh/authorized_keys,
+    # not the source-reviewed Intel dedicated witness SSHD at localhost:22996.
+    # Retain only read-only plan and exact rollback for a preexisting entry.
+    require(mode != "apply",
+            "C08_SUPERSEDED_NORMAL_MACOS_SSH_KEY_ADMISSION_DISABLED")
     data = preflight(home,pub)
     old, line = data["keys"], data["line"]
     path = home / ".ssh/authorized_keys"
