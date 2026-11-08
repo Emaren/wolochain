@@ -75,6 +75,30 @@
         "operators",
         "ai-agents"
       ],
+      "authority": "source-only-c03-catalog-audit-not-financial-release",
+      "id": "aoe2war.wolochain.c03-auth-definer-exact-body-reachability-hold",
+      "owner": "wolochain-ops",
+      "path": "docs/C03_AUTH_DEFINER_EXACT_BODY_REACHABILITY_HOLD.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-08",
+      "sensitivity": "restricted",
+      "sha256": "3f2df3158dbcada99e17a00f9dae6002430414d246088fb0e703489e09bb584b",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war",
+        "aoe2dewarwagers"
+      ],
+      "title": "C03 exact Steam auth-definer body and ownership capability \u2014 HOLD",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
       "authority": "source-only-c03-global-containment-plan-not-a-financial-permit",
       "id": "aoe2war.wolochain.c03-financial-writer-containment-acceptance",
       "owner": "wolochain-ops",
@@ -407,7 +431,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "d142c55cc78bf8e1b7b40df610f096d324f964e97844759fff3738bce7370eae",
+      "sha256": "013ff9c8ef42db355a8aaa9db3e72439821aa6e3a12273366c19364a880cacb9",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1484,8 +1508,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/c03-c04-c06-readonly-physical-evidence-integration-20261108",
-    "commit": "7163db30ec9af9549accc724c56c72f8ea44305c"
+    "branch": "fix/c03-auth-definer-exact-scope-cleanbase-20261108",
+    "commit": "6fc3f28de07a9de7d8ae6e0c8f27e85d0600dda2"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
