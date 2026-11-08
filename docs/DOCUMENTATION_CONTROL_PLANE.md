@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/c05-pr193-after-pr190-merge-20261107` at `fdf8c134b5d4dd9b5c8fcbce21a7d202fdfa97c8`
+Implementation baseline: `fix/c03-exact-auth-definer-capability-20261108` at `43c1f22e31b12dfa8bda84509ae25ebb1f8d52a9`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 

@@ -335,7 +335,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "264ef25dc697aabc966d272b9fb8a1349bd14d13d3a3ff8f5b12d332f97b9ecc",
+      "sha256": "e0d706ee30b71849c1b6bc0be10347826bcf360153bd34aa5db9433149bc9f3a",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1412,8 +1412,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/c05-pr193-after-pr190-merge-20261107",
-    "commit": "fdf8c134b5d4dd9b5c8fcbce21a7d202fdfa97c8"
+    "branch": "fix/c03-exact-auth-definer-capability-20261108",
+    "commit": "43c1f22e31b12dfa8bda84509ae25ebb1f8d52a9"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
