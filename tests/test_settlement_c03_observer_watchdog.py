@@ -85,9 +85,16 @@ class MonitorTests(unittest.TestCase):
         self.assertEqual(set(m.PINNED),{
            "settlement_c03_physical_writer_universe_hold.py",
            "settlement_c03_db_owner_boundary_hold.py"})
+        # The originally installed V1 watchdog must remain bound to its
+        # historic source files, NOT silently self-upgrade to later git.
+        # An independent V2 profile reviews the new 67-unit census.
         for name,expected in m.PINNED.items():
             actual=hashlib.sha256((BASE/"scripts"/name).read_bytes()).hexdigest()
-            self.assertEqual(actual,expected)
+            self.assertNotEqual(actual,expected)
+        self.assertEqual(m.PINNED["settlement_c03_physical_writer_universe_hold.py"],
+                         "339540b550219b592554bbd0898447c3bf5f206f758bc8d8dea4e7500661c35b")
+        self.assertEqual(m.PINNED["settlement_c03_db_owner_boundary_hold.py"],
+                         "294a4427702d6fd9ab7265ea5e7e0ec1e7816f1c5194c6f37781591b1337cd87")
 
     def test_nonroot_cannot_write_or_query_financial_host(self):
         with patch.object(m.os,"geteuid",return_value=501):
