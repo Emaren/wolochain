@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/c03-bound-owner-sessions-effective-grants-20261108` at `5bb29d74199e06d87e49b773332d1a4ed4da56df`
+Implementation baseline: `fix/c03-bound-owner-sessions-effective-grants-20261108` at `cc2f5f1797c9b0911685b3e1fe9eaec175028298`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
