@@ -291,7 +291,7 @@
       "review_interval_days": 7,
       "reviewed_at": "2026-11-08",
       "sensitivity": "restricted",
-      "sha256": "df75a703be3254a2639f97969b30c2dace7776f952ddad075887623323afba13",
+      "sha256": "7b63e6ced4fb7fdcfa981cdaaf3c4efae7f266cba8f7ec7344d59f06138b0799",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -431,7 +431,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "c8177f5431d92bbe9d7a2165213b5a39e16a3c39cd4b419653a66966feb57281",
+      "sha256": "2fdea0ab4659e5e3dc21bce4516b27c76958353372c7c72bf1dc4374a22a4fff",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1509,7 +1509,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "fix/c05-independent-gifts-null-valuation-20261108",
-    "commit": "e059c53e8ff5f58852835a5b23dd31b99e257a00"
+    "commit": "93b2907007298c48df7d9f53df056e280af9f31a"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

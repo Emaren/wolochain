@@ -114,3 +114,21 @@ recipient and approved reward, independently established
 bounty-completion/eligibility source, unique economic obligation
 identity, chain custody/finality and independently verified reserves.
 C05 remains HARD HOLD regardless of the available status.
+
+## Exact-head CI regression enrollment (November 8)
+
+The Finance Foundation workflow now runs the new
+C05 assignment/publication read-only adversarial test suite,
+as well as all five source-bound C03/C04/C06 HOLD observer
+suites incorporated by merged PR #200. This closes the source
+coverage gap in which new observer tests were previously
+run locally but were not all explicitly invoked in required
+GitHub CI. The tests use synthetic evidence, check only source
+parsers and negative cases, and do not connect to customer
+databases, wallet signers or funded services.
+
+The six additional suites passed 120 focused tests locally,
+in addition to the existing C05 gift catalog and other Chain
+tests. GitHub exact-head CI must re-run and independently pass
+before merging; the new workflow step is not a financial
+or physical source-proof gate acceptance.
