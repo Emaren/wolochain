@@ -190,6 +190,30 @@
         "operators",
         "ai-agents"
       ],
+      "authority": "source-only-physical-transport-audit-no-financial-fence",
+      "id": "aoe2war.wolochain.c03-root-legacy-rpc-reachability-hold",
+      "owner": "wolochain-ops",
+      "path": "docs/C03_ROOT_LEGACY_RPC_REACHABILITY_HOLD.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-08",
+      "sensitivity": "restricted",
+      "sha256": "6f8ae05f6f986adf7e4d26c07899c048f3e5590648d4d8c0458f32fa3488e5a9",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war",
+        "aoe2dewarwagers"
+      ],
+      "title": "C03 root legacy settlement and RPC transport admission gap",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
       "authority": "source-only-nologin-permission-rehearsal-not-live-ddl-approval",
       "id": "aoe2war.wolochain.c03-synthetic-nologin-owner-rehearsal",
       "owner": "wolochain-ops",
@@ -335,7 +359,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "264ef25dc697aabc966d272b9fb8a1349bd14d13d3a3ff8f5b12d332f97b9ecc",
+      "sha256": "793e0d8160e76d2bde5a4973be47771ca59aebd417f69518f55b88f49a649078",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1412,8 +1436,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/c05-pr193-after-pr190-merge-20261107",
-    "commit": "fdf8c134b5d4dd9b5c8fcbce21a7d202fdfa97c8"
+    "branch": "fix/c03-root-rpc-transport-coverage-20261108",
+    "commit": "356912293851641368b9678856e6e54deb760997"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
