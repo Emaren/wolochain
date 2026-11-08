@@ -26,13 +26,13 @@ func attackRevisionPlans(t *testing.T, p Policy, plan ReturnAllocation) (ReturnA
 	first := attackClonePlan(t, plan)
 	first.Legs[0].Entitlements = nil
 	first.Legs[1].Entitlements = []ReturnEntitlement{
-		{EntitlementID: "winner-a", ClaimID: "201", ClaimKind: "bet_payout", PrincipalUWolo: "500000", AmountUWolo: "1000000"},
-		{EntitlementID: "winner-b", ClaimID: "202", ClaimKind: "bet_payout", PrincipalUWolo: "500000", AmountUWolo: "1000000"},
+		{EntitlementID: "winner-a", ClaimID: "900000000201", ClaimKind: "bet_payout", PrincipalUWolo: "500000", AmountUWolo: "1000000"},
+		{EntitlementID: "winner-b", ClaimID: "900000000202", ClaimKind: "bet_payout", PrincipalUWolo: "500000", AmountUWolo: "1000000"},
 	}
 	testSignAllocation(&first, p)
 	later := attackClonePlan(t, first)
 	later.Revision = 3 // The intermediate signed plan need never be delivered.
-	later.Legs[0].Entitlements = []ReturnEntitlement{{EntitlementID: "desync-refund", ClaimID: "203", ClaimKind: "bet_refund", PrincipalUWolo: "1000000", AmountUWolo: "1000000"}}
+	later.Legs[0].Entitlements = []ReturnEntitlement{{EntitlementID: "desync-refund", ClaimID: "900000000203", ClaimKind: "bet_refund", PrincipalUWolo: "1000000", AmountUWolo: "1000000"}}
 	testSignAllocation(&later, p)
 	return first, later
 }
@@ -48,9 +48,9 @@ func TestAllocationOlderUndeliveredClaimSurvivesSkippedAppendOnlyRevision(t *tes
 			first, later := attackRevisionPlans(t, p, plan)
 			var order []ReturnApproval
 			if initialLatest {
-				order = []ReturnApproval{multiLegApproval(t, later, "203", p), multiLegApproval(t, first, "201", p), multiLegApproval(t, first, "202", p)}
+				order = []ReturnApproval{multiLegApproval(t, later, "900000000203", p), multiLegApproval(t, first, "900000000201", p), multiLegApproval(t, first, "900000000202", p)}
 			} else {
-				order = []ReturnApproval{multiLegApproval(t, first, "201", p), multiLegApproval(t, later, "203", p), multiLegApproval(t, first, "202", p)}
+				order = []ReturnApproval{multiLegApproval(t, first, "900000000201", p), multiLegApproval(t, later, "900000000203", p), multiLegApproval(t, first, "900000000202", p)}
 			}
 			for _, a := range order {
 				if _, err := e.PrepareReturnRun(t.Context(), a); err != nil {
@@ -86,15 +86,15 @@ func TestAllocationOlderUndeliveredClaimSurvivesSkippedAppendOnlyRevision(t *tes
 func TestAllocationOlderManifestCannotInjectAnotherEntitlement(t *testing.T) {
 	e, _, p, _, plan := multiLegFixture(t)
 	first, later := attackRevisionPlans(t, p, plan)
-	if _, err := e.PrepareReturnRun(t.Context(), multiLegApproval(t, later, "203", p)); err != nil {
+	if _, err := e.PrepareReturnRun(t.Context(), multiLegApproval(t, later, "900000000203", p)); err != nil {
 		t.Fatal(err)
 	}
 	// A newly signed older revision is not allowed to retroactively introduce
 	// an entitlement absent from the latest approved journal plan.
-	first.Legs[1].Entitlements[1].ClaimID = "204"
+	first.Legs[1].Entitlements[1].ClaimID = "900000000204"
 	first.Legs[1].Entitlements[1].EntitlementID = "winner-c"
 	testSignAllocation(&first, p)
-	if _, err := e.PrepareReturnRun(t.Context(), multiLegApproval(t, first, "204", p)); err == nil {
+	if _, err := e.PrepareReturnRun(t.Context(), multiLegApproval(t, first, "900000000204", p)); err == nil {
 		t.Fatal("older re-signed manifest introduced a new entitlement")
 	}
 	reserved, global := multiLegReserved(t, e, plan.OperationID)
@@ -114,7 +114,7 @@ func TestAllocationReSignedBankSnapshotCannotResetSharedFundsBudget(t *testing.T
 	} {
 		t.Run(name, func(t *testing.T) {
 			e, _, p, b, plan := multiLegFixture(t)
-			if _, err := e.PrepareReturnRun(t.Context(), multiLegApproval(t, plan, "102", p)); err != nil {
+			if _, err := e.PrepareReturnRun(t.Context(), multiLegApproval(t, plan, "900000000102", p)); err != nil {
 				t.Fatal(err)
 			}
 			request := engineTestWager(t, "2")
@@ -130,10 +130,10 @@ func TestAllocationReSignedBankSnapshotCannotResetSharedFundsBudget(t *testing.T
 			second.TicketID = "2"
 			second.AllocationID = "allocation:ticket:2"
 			second.FundingTxHash = engineTestSigned(request).Hash
-			second.Legs = []ReturnLeg{{LegID: "winner", MarketID: "503", StakeUWolo: "1000000", Entitlements: []ReturnEntitlement{{EntitlementID: "ticket-two-refund", ClaimID: "211", ClaimKind: "bet_refund", PrincipalUWolo: "1000000", AmountUWolo: "1000000"}}}}
+			second.Legs = []ReturnLeg{{LegID: "winner", MarketID: "503", StakeUWolo: "1000000", Entitlements: []ReturnEntitlement{{EntitlementID: "ticket-two-refund", ClaimID: "900000000211", ClaimKind: "bet_refund", PrincipalUWolo: "1000000", AmountUWolo: "1000000"}}}}
 			mutate(&second)
 			testSignAllocation(&second, p)
-			if _, err := e.PrepareReturnRun(t.Context(), multiLegApproval(t, second, "211", p)); err == nil {
+			if _, err := e.PrepareReturnRun(t.Context(), multiLegApproval(t, second, "900000000211", p)); err == nil {
 				t.Fatal("new signed bank metadata reset existing shared capacity")
 			}
 			_, global := multiLegReserved(t, e, plan.OperationID)
@@ -146,14 +146,14 @@ func TestAllocationReSignedBankSnapshotCannotResetSharedFundsBudget(t *testing.T
 
 func TestAllocationOldExpiryCannotCreateNewObligation(t *testing.T) {
 	e, _, p, _, plan := multiLegFixture(t)
-	if _, err := e.PrepareReturnRun(t.Context(), multiLegApproval(t, plan, "101", p)); err != nil {
+	if _, err := e.PrepareReturnRun(t.Context(), multiLegApproval(t, plan, "900000000101", p)); err != nil {
 		t.Fatal(err)
 	}
 	// A fresh claim signature cannot refresh its expired allocation authority.
 	plan.IssuedAt = 1799999699
 	plan.ExpiresAt = 1799999999
 	testSignAllocation(&plan, p)
-	a := multiLegApproval(t, plan, "102", p)
+	a := multiLegApproval(t, plan, "900000000102", p)
 	a.IssuedAt = 1799999990
 	a.ExpiresAt = 1800000100
 	testSignReturnApproval(&a, p)

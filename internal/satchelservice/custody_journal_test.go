@@ -129,7 +129,7 @@ func TestCustodyJournalFailedAndRefusedAreHistoryNotBankHeadroom(t *testing.T) {
 
 func TestCustodyJournalCountsExactOwnedReturnReceipts(t *testing.T) {
 	e, _, _, _, plan := multiLegFixture(t)
-	for i, claim := range []string{"101", "102"} {
+	for i, claim := range []string{"900000000101", "900000000102"} {
 		a := multiLegApproval(t, plan, claim, e.policy)
 		if _, err := e.PrepareReturnRun(t.Context(), a); err != nil {
 			t.Fatal(err)
@@ -176,7 +176,7 @@ func TestCustodyJournalRejectsCorruptStateWithoutPartialAuthority(t *testing.T) 
 	for _, mode := range []string{"fingerprint", "amount", "signed-bytes", "missing-effect", "policy", "return-receipt", "allocation-budget", "funds-budget"} {
 		t.Run(mode, func(t *testing.T) {
 			e, _, _, _, request := testOwnedReturnEngine(t)
-			a := testOwnedReturnApproval(t, request.OperationID, "101")
+			a := testOwnedReturnApproval(t, request.OperationID, "900000000101")
 			if mode == "return-receipt" || mode == "allocation-budget" || mode == "funds-budget" {
 				if _, err := e.PrepareReturnRun(t.Context(), a); err != nil {
 					t.Fatal(err)

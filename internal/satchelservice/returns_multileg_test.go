@@ -29,8 +29,8 @@ func multiLegFixture(t *testing.T) (*Engine, string, Policy, *engineTestBackend,
 	plan := ReturnAllocation{Version: 2, AllocationID: "allocation:ticket:1", Revision: 1, OperationID: r.OperationID, OwnerID: r.OwnerID, TicketID: "1", FundingTxHash: engineTestSigned(r).Hash,
 		ReturnCapUWolo: "3000000", FundsBudgetID: "bank-review-1", FundsAvailableUWolo: "50000000000", BankEvidenceDigest: strings.Repeat("E", 64), BankHeight: 200, BankBlockHash: strings.Repeat("B", 64), IssuedAt: 1799999990, ExpiresAt: 1800000100,
 		Legs: []ReturnLeg{
-			{LegID: "desync", MarketID: "502", StakeUWolo: "1000000", Entitlements: []ReturnEntitlement{{EntitlementID: "desync-refund", ClaimID: "102", ClaimKind: "bet_refund", PrincipalUWolo: "1000000", AmountUWolo: "1000000"}}},
-			{LegID: "winner", MarketID: "501", StakeUWolo: "1000000", Entitlements: []ReturnEntitlement{{EntitlementID: "winner-payout", ClaimID: "101", ClaimKind: "bet_payout", PrincipalUWolo: "1000000", AmountUWolo: "2000000"}}},
+			{LegID: "desync", MarketID: "502", StakeUWolo: "1000000", Entitlements: []ReturnEntitlement{{EntitlementID: "desync-refund", ClaimID: "900000000102", ClaimKind: "bet_refund", PrincipalUWolo: "1000000", AmountUWolo: "1000000"}}},
+			{LegID: "winner", MarketID: "501", StakeUWolo: "1000000", Entitlements: []ReturnEntitlement{{EntitlementID: "winner-payout", ClaimID: "900000000101", ClaimKind: "bet_payout", PrincipalUWolo: "1000000", AmountUWolo: "2000000"}}},
 		}}
 	testSignAllocation(&plan, policy)
 	return engine, path, policy, backend, plan
@@ -70,7 +70,7 @@ func multiLegReserved(t *testing.T, e *Engine, id string) (uint64, uint64) {
 }
 
 func TestMultiLegWinnerAndDesyncClaimsSettleInEitherOrder(t *testing.T) {
-	for _, order := range [][]string{{"101", "102"}, {"102", "101"}} {
+	for _, order := range [][]string{{"900000000101", "900000000102"}, {"900000000102", "900000000101"}} {
 		t.Run(strings.Join(order, "then"), func(t *testing.T) {
 			e, _, p, b, plan := multiLegFixture(t)
 			for _, claim := range order {
@@ -102,7 +102,7 @@ func TestMultiLegPartialUnmatchedPrincipalRefundsAllWithoutFee(t *testing.T) {
 	entry.PrincipalUWolo = "400000"
 	entry.AmountUWolo = "400000"
 	testSignAllocation(&plan, p)
-	a := multiLegApproval(t, plan, "102", p)
+	a := multiLegApproval(t, plan, "900000000102", p)
 	run, err := e.PrepareReturnRun(t.Context(), a)
 	if err != nil || len(run.Payouts) != 1 || run.Payouts[0].AmountUWolo != "400000" {
 		t.Fatalf("partial leg lost full unmatched principal: %+v %v", run, err)
@@ -120,7 +120,7 @@ func TestMultiLegUnmatchedPrincipalCompletesAcrossRevisionsAndRestart(t *testing
 	plan.Legs[0].Entitlements[0].AmountUWolo = "400000"
 	plan.Legs[1].Entitlements = nil
 	testSignAllocation(&plan, p)
-	first := multiLegApproval(t, plan, "102", p)
+	first := multiLegApproval(t, plan, "900000000102", p)
 	if _, err := e.PrepareReturnRun(t.Context(), first); err != nil {
 		t.Fatal(err)
 	}
@@ -140,17 +140,17 @@ func TestMultiLegUnmatchedPrincipalCompletesAcrossRevisionsAndRestart(t *testing
 	defer reopened.Close()
 	reopened.now = func() time.Time { return time.Unix(1800000000, 0) }
 	plan.Revision++
-	plan.Legs[0].Entitlements = append(plan.Legs[0].Entitlements, ReturnEntitlement{EntitlementID: "desync-refund-b", ClaimID: "103", ClaimKind: "bet_refund", PrincipalUWolo: "600000", AmountUWolo: "600000"})
-	plan.Legs[1].Entitlements = []ReturnEntitlement{{EntitlementID: "winner-refund", ClaimID: "101", ClaimKind: "bet_refund", PrincipalUWolo: "1000000", AmountUWolo: "1000000"}}
+	plan.Legs[0].Entitlements = append(plan.Legs[0].Entitlements, ReturnEntitlement{EntitlementID: "desync-refund-b", ClaimID: "900000000103", ClaimKind: "bet_refund", PrincipalUWolo: "600000", AmountUWolo: "600000"})
+	plan.Legs[1].Entitlements = []ReturnEntitlement{{EntitlementID: "winner-refund", ClaimID: "900000000101", ClaimKind: "bet_refund", PrincipalUWolo: "1000000", AmountUWolo: "1000000"}}
 	testSignAllocation(&plan, p)
-	for _, claim := range []string{"101", "103"} {
+	for _, claim := range []string{"900000000101", "900000000103"} {
 		a := multiLegApproval(t, plan, claim, p)
 		run, err := reopened.PrepareReturnRun(t.Context(), a)
 		if err != nil || len(run.Payouts) != 1 || run.Payouts[0].AmountUWolo != a.AmountUWolo {
 			t.Fatalf("complete unmatched principal changed: %+v %v", run, err)
 		}
 		hash := strings.Repeat("1", 64)
-		if claim == "103" {
+		if claim == "900000000103" {
 			hash = strings.Repeat("3", 64)
 		}
 		if err := reopened.recordReturn(testStoredReturn(t, reopened, claim), testFaultInjectedReturnReceipt(a, hash, 0)); err != nil {
@@ -159,7 +159,7 @@ func TestMultiLegUnmatchedPrincipalCompletesAcrossRevisionsAndRestart(t *testing
 	}
 	// The old partial claim can be delivered again after the newer complete
 	// plan. It must retain its original effect and consume no further capital.
-	for _, a := range []ReturnApproval{first, multiLegApproval(t, plan, "101", p), multiLegApproval(t, plan, "103", p)} {
+	for _, a := range []ReturnApproval{first, multiLegApproval(t, plan, "900000000101", p), multiLegApproval(t, plan, "900000000103", p)} {
 		if _, err := reopened.PrepareReturnRun(t.Context(), a); err != nil {
 			t.Fatal(err)
 		}
@@ -173,7 +173,7 @@ func TestMultiLegUnmatchedPrincipalCompletesAcrossRevisionsAndRestart(t *testing
 			return errors.New("duplicate_unmatched_refund_receipt")
 		}
 		var refunded uint64
-		for _, claim := range []string{"101", "102", "103"} {
+		for _, claim := range []string{"900000000101", "900000000102", "900000000103"} {
 			var r returnRecord
 			if err := json.Unmarshal(tx.Bucket(returns).Get([]byte(claim)), &r); err != nil {
 				return err
@@ -198,7 +198,7 @@ func TestMultiLegUnmatchedPrincipalCompletesAcrossRevisionsAndRestart(t *testing
 
 func TestMultiLegConcurrentDuplicateDeliveryChargesEntitlementOnce(t *testing.T) {
 	e, _, p, _, plan := multiLegFixture(t)
-	a := multiLegApproval(t, plan, "101", p)
+	a := multiLegApproval(t, plan, "900000000101", p)
 	var wg sync.WaitGroup
 	failures := make(chan error, 32)
 	for i := 0; i < 32; i++ {
@@ -208,7 +208,7 @@ func TestMultiLegConcurrentDuplicateDeliveryChargesEntitlementOnce(t *testing.T)
 			run, err := e.PrepareReturnRun(t.Context(), a)
 			if err != nil {
 				failures <- err
-			} else if run.SettlementRunID != "satchel:claim-return:101" {
+			} else if run.SettlementRunID != "satchel:claim-return:900000000101" {
 				failures <- errors.New("replay_identity_changed")
 			}
 		}()
@@ -235,7 +235,7 @@ func TestMultiLegCrossIdentityAndForgedClaimsFailClosed(t *testing.T) {
 		{"market impersonation", func(a *ReturnApproval) { a.MarketID = "502" }, true},
 		{"leg impersonation", func(a *ReturnApproval) { a.LegID = "desync" }, true},
 		{"entitlement impersonation", func(a *ReturnApproval) { a.EntitlementID = "desync-refund" }, true},
-		{"claim impersonation", func(a *ReturnApproval) { a.ClaimID = "103" }, true},
+		{"claim impersonation", func(a *ReturnApproval) { a.ClaimID = "900000000103" }, true},
 		{"changed payout amount", func(a *ReturnApproval) { a.AmountUWolo = "2000001" }, true},
 		{"expired claim", func(a *ReturnApproval) { a.ExpiresAt = 1800000000 }, true},
 		{"forged plan", func(a *ReturnApproval) { a.Allocation.FundsAvailableUWolo = "99999999999" }, true},
@@ -243,7 +243,7 @@ func TestMultiLegCrossIdentityAndForgedClaimsFailClosed(t *testing.T) {
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			e, _, p, _, plan := multiLegFixture(t)
-			a := multiLegApproval(t, plan, "101", p)
+			a := multiLegApproval(t, plan, "900000000101", p)
 			test.mutate(&a)
 			if test.resign {
 				testSignReturnApproval(&a, p)
@@ -271,13 +271,13 @@ func TestMultiLegPlanCannotAllocateMoreThanStakeOrReviewedBudget(t *testing.T) {
 		{"duplicate entitlement", func(p *ReturnAllocation) {
 			p.Legs[1].Entitlements[0].EntitlementID = p.Legs[0].Entitlements[0].EntitlementID
 		}},
-		{"duplicate claim", func(p *ReturnAllocation) { p.Legs[1].Entitlements[0].ClaimID = "102" }},
+		{"duplicate claim", func(p *ReturnAllocation) { p.Legs[1].Entitlements[0].ClaimID = "900000000102" }},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			e, _, p, _, plan := multiLegFixture(t)
 			test.mutate(&plan)
 			testSignAllocation(&plan, p)
-			a := multiLegApproval(t, plan, "102", p)
+			a := multiLegApproval(t, plan, "900000000102", p)
 			if _, err := e.PrepareReturnRun(t.Context(), a); err == nil {
 				t.Fatal("overallocated or fee-reduced plan accepted")
 			}
@@ -287,7 +287,7 @@ func TestMultiLegPlanCannotAllocateMoreThanStakeOrReviewedBudget(t *testing.T) {
 
 func TestMultiLegRestartAndExpiredReplayNeverReleaseReservation(t *testing.T) {
 	e, path, p, _, plan := multiLegFixture(t)
-	a := multiLegApproval(t, plan, "101", p)
+	a := multiLegApproval(t, plan, "900000000101", p)
 	if _, err := e.PrepareReturnRun(t.Context(), a); err != nil {
 		t.Fatal(err)
 	}
@@ -343,10 +343,10 @@ func TestMultiLegReviewedGlobalFundsCannotBeSpentByTwoTickets(t *testing.T) {
 	second.OperationID = r.OperationID
 	second.TicketID = "2"
 	second.FundingTxHash = engineTestSigned(r).Hash
-	second.Legs[0].Entitlements[0].ClaimID = "202"
-	second.Legs[1].Entitlements[0].ClaimID = "201"
+	second.Legs[0].Entitlements[0].ClaimID = "900000000202"
+	second.Legs[1].Entitlements[0].ClaimID = "900000000201"
 	testSignAllocation(&second, p)
-	claims := []ReturnApproval{multiLegApproval(t, first, "101", p), multiLegApproval(t, second, "201", p)}
+	claims := []ReturnApproval{multiLegApproval(t, first, "900000000101", p), multiLegApproval(t, second, "900000000201", p)}
 	var success atomic.Int32
 	var wg sync.WaitGroup
 	for _, a := range claims {
@@ -391,7 +391,7 @@ func TestMultiLegLegacyRecordsRemainHeldAndBytePreserved(t *testing.T) {
 	}); err != nil {
 		t.Fatal(err)
 	}
-	a := multiLegApproval(t, plan, "101", e.policy)
+	a := multiLegApproval(t, plan, "900000000101", e.policy)
 	if _, err := e.PrepareReturnRun(t.Context(), a); err == nil {
 		t.Fatal("legacy liabilities silently migrated into new allocations")
 	}

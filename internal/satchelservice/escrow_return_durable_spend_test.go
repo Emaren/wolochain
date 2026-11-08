@@ -52,11 +52,11 @@ func (b *durableEscrowFake) Confirm(context.Context, TransferRequest, SignedTran
 func newQualifiedPreparedEscrow(t *testing.T) (*escrowExecutionFixture, ReturnApproval, VerifiedEscrowReturnExecution) {
 	t.Helper()
 	f := newEscrowExecutionFixture(t)
-	a, _, _, _, _ := f.bundle(t, "101")
+	a, _, _, _, _ := f.bundle(t, "900000000101")
 	// Source runtime owns its original owner claim preparation before review.
 	_, err := f.engine.PrepareReturnRun(t.Context(), a)
 	require.NoError(t, err)
-	a, bank, proof, journal, bundle := f.bundle(t, "101")
+	a, bank, proof, journal, bundle := f.bundle(t, "900000000101")
 	verified, err := f.verifier.Verify(t.Context(), a, bank, proof, journal, f.sign(t, &bundle))
 	require.NoError(t, err)
 	require.True(t, verified.CurrentFor(t.Context(), a))

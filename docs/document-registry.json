@@ -378,6 +378,30 @@
     },
     {
       "audience": [
+        "operators",
+        "developers",
+        "financial-reviewers",
+        "ai-agents"
+      ],
+      "authority": "source-held-no-live-legacy-liability-release",
+      "id": "aoe2war.wolochain.c04-fresh-native-claim-noninterference",
+      "owner": "wolochain-ops",
+      "path": "docs/C04_FRESH_NATIVE_CLAIM_NONINTERFERENCE.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-08",
+      "sensitivity": "restricted",
+      "sha256": "48135b2f2991373c802450744f3fe326ceca9e572070da02c21c1185a599bc27",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C04 Forward-Only Native Return Claim Identity and Legacy Liability Non-Interference",
+      "type": "runbook"
+    },
+    {
+      "audience": [
         "developers",
         "operators",
         "ai-agents"
@@ -844,7 +868,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "085283e25f4764d50d961bb7d27659708838bdc2fcc9b93f6d39568960135bcc",
+      "sha256": "fca636f7b9ff37daa5f1c2e83ba4a0d2b5abfaba5f0c71be6736fd40364b2168",
       "source_of_truth": "git",
       "status": "active",
       "systems": [

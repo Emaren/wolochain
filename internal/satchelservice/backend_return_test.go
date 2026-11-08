@@ -35,14 +35,14 @@ func newBackendReturnFixture(t *testing.T) *backendReturnFixture {
 	plan := ReturnAllocation{Version: 2, AllocationID: "allocation:backend-return:7", Revision: 1, OperationID: "satchel:ticket:7", OwnerID: "owner-1", TicketID: "7",
 		FundingTxHash: strings.Repeat("A", 64), ReturnCapUWolo: "7000000", FundsBudgetID: "backend-return-budget", FundsAvailableUWolo: "9000000",
 		BankEvidenceDigest: strings.Repeat("B", 64), BankHeight: 99, BankBlockHash: strings.Repeat("C", 64), IssuedAt: at - 1, ExpiresAt: at + 120,
-		Legs: []ReturnLeg{{LegID: "refund", MarketID: "501", StakeUWolo: "7000000", Entitlements: []ReturnEntitlement{{EntitlementID: "refund:101", ClaimID: "101", ClaimKind: "bet_refund", PrincipalUWolo: "7000000", AmountUWolo: "7000000"}}}}}
+		Legs: []ReturnLeg{{LegID: "refund", MarketID: "501", StakeUWolo: "7000000", Entitlements: []ReturnEntitlement{{EntitlementID: "refund:900000000101", ClaimID: "900000000101", ClaimKind: "bet_refund", PrincipalUWolo: "7000000", AmountUWolo: "7000000"}}}}}
 	testSignAllocation(&plan, f.policy)
-	a := ReturnApproval{Version: 2, TicketID: "7", MarketID: "501", LegID: "refund", EntitlementID: "refund:101", Allocation: &plan,
-		OperationID: "satchel:ticket:7", ClaimID: "101", OwnerID: "owner-1", ClaimKind: "bet_refund", AmountUWolo: "7000000",
+	a := ReturnApproval{Version: 2, TicketID: "7", MarketID: "501", LegID: "refund", EntitlementID: "refund:900000000101", Allocation: &plan,
+		OperationID: "satchel:ticket:7", ClaimID: "900000000101", OwnerID: "owner-1", ClaimKind: "bet_refund", AmountUWolo: "7000000",
 		AllocationDigest: AllocationDigest(plan, f.policy), IssuedAt: at - 1, ExpiresAt: at + 120}
 	testSignReturnApproval(&a, f.policy)
-	f.request = TransferRequest{OperationID: "satchel:claim-return:101", Kind: "claim_return", ChainID: "wolo-1", Denom: "uwolo", Sender: sender,
-		Recipient: recipient, AmountUWolo: a.AmountUWolo, Memo: "aoe2war/satchel/claim-return/v1/101", OwnerID: a.OwnerID, ReturnApproval: &a}
+	f.request = TransferRequest{OperationID: "satchel:claim-return:900000000101", Kind: "claim_return", ChainID: "wolo-1", Denom: "uwolo", Sender: sender,
+		Recipient: recipient, AmountUWolo: a.AmountUWolo, Memo: "aoe2war/satchel/claim-return/v1/900000000101", OwnerID: a.OwnerID, ReturnApproval: &a}
 	original := hashJSON(a)
 	cfg := f.base.b.cfg
 	cfg.ReturnDestination = recipient
@@ -111,8 +111,8 @@ func TestBackendClaimReturnRejectsChangedIdentityAndConflictingAuthority(t *test
 		"amount":                     func(r *TransferRequest) { r.AmountUWolo = "6000000" },
 		"destination":                func(r *TransferRequest) { r.Recipient = engineTestPolicy(t).Vault },
 		"sender":                     func(r *TransferRequest) { r.Sender = r.Recipient },
-		"claim operation":            func(r *TransferRequest) { r.OperationID = "satchel:claim-return:102" },
-		"memo":                       func(r *TransferRequest) { r.Memo = "aoe2war/satchel/claim-return/v1/102" },
+		"claim operation":            func(r *TransferRequest) { r.OperationID = "satchel:claim-return:900000000102" },
+		"memo":                       func(r *TransferRequest) { r.Memo = "aoe2war/satchel/claim-return/v1/900000000102" },
 		"allocation":                 func(r *TransferRequest) { r.ReturnApproval.Allocation.Legs[0].StakeUWolo = "6000000" },
 		"allocation digest":          func(r *TransferRequest) { r.ReturnApproval.AllocationDigest = strings.Repeat("d", 64) },
 		"allocation owner":           func(r *TransferRequest) { r.ReturnApproval.Allocation.OwnerID = "owner-2" },
@@ -205,7 +205,7 @@ func TestBackendClaimReturnMetadataCannotEnterVaultIntentJournal(t *testing.T) {
 	b := &engineTestBackend{}
 	e, _, _ := engineTestOpen(t, b)
 	r := engineTestWager(t, "1")
-	r.ReturnApproval = &ReturnApproval{Version: 2, ClaimID: "101"}
+	r.ReturnApproval = &ReturnApproval{Version: 2, ClaimID: "900000000101"}
 	_, err := e.Submit(t.Context(), r)
 	require.Error(t, err)
 	require.NoError(t, e.db.View(func(tx *bolt.Tx) error {

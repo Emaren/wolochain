@@ -27,7 +27,7 @@ This page is generated from the validated front matter in this repository. Cross
 
 ## Documentation health
 
-- Authoritative repository documents: **82**
+- Authoritative repository documents: **83**
 - Path moves in this migration: **0**
 - Every listed document has an explicit owner, lifecycle, authority, and review interval.
 
@@ -35,13 +35,13 @@ This page is generated from the validated front matter in this repository. Cross
 
 - `historical`: 14
 - `reference`: 49
-- `runbook`: 17
+- `runbook`: 18
 - `working`: 2
 
 ### Lifecycle
 
 - `active`: 16
-- `draft`: 52
+- `draft`: 53
 - `historical`: 14
 
 ## Documents
@@ -64,6 +64,7 @@ This page is generated from the validated front matter in this repository. Cross
 | [C03 Synthetic NOLOGIN Owner Partition Rehearsal](C03_SYNTHETIC_NOLOGIN_OWNER_REHEARSAL.md) | `reference` | `draft` | `source-only-nologin-permission-rehearsal-not-live-ddl-approval` |
 | [C03 TokenChain Indexer: Previously Omitted Service Discovery and Financial Writer HOLD](C03_TOKENCHAIN_INDEXER_UNSCOPED_DISCOVERY_HOLD.md) | `reference` | `draft` | `read-only-discovery-only-no-maintenance-unit-change` |
 | [C03 Topology-Only Watchdog Baseline Enrollment](C03_TOPOLOGY_ONLY_WATCHDOG_ENROLLMENT.md) | `reference` | `draft` | `topology-only-no-financial-writer-fence-or-financial-permit` |
+| [C04 Forward-Only Native Return Claim Identity and Legacy Liability Non-Interference](C04_FRESH_NATIVE_CLAIM_NONINTERFERENCE.md) | `runbook` | `draft` | `source-held-no-live-legacy-liability-release` |
 | [C04 indexed WOLO transfer candidate ambiguity and hashless claim finality](C04_INDEXED_WOLO_TRANSFER_CANDIDATE_AMBIGUITY_HOLD.md) | `reference` | `draft` | `source-only-c04-reconciliation-evidence-no-payment-authorization` |
 | [C05 pending bounty gift — missing reward valuation](C05_BOUNTY_GIFT_NULL_VALUATION_HOLD.md) | `reference` | `draft` | `source-only-financial-hold-not-a-funding-or-replay-permit` |
 | [C04/C05 Read-Only HD Claim Nominal Versus Historical Escrow: Real Native Height and Economic HOLD](C05_HD_CLAIMS_VS_HISTORIC_ESCROW_NATIVE_HEIGHT_HOLD.md) | `reference` | `draft` | `physical-aggregate-reconciliation-observation-not-financial-solvency-or-release` |

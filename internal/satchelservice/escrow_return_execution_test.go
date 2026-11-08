@@ -160,8 +160,8 @@ func newEscrowExecutionFixture(t *testing.T) *escrowExecutionFixture {
 	f.plan = ReturnAllocation{Version: 2, AllocationID: "allocation:ticket:7", Revision: 1, OperationID: old.request.OperationID, OwnerID: old.request.OwnerID, TicketID: "7", FundingTxHash: confirmed.TxHash,
 		ReturnCapUWolo: "7000000", FundsBudgetID: "isolated-original-budget", FundsAvailableUWolo: "9000000", BankEvidenceDigest: strings.Repeat("E", 64), BankHeight: bank.Height(), BankBlockHash: bank.BlockHash(), IssuedAt: at - 1, ExpiresAt: at + 120,
 		Legs: []ReturnLeg{
-			{LegID: "desync", MarketID: "502", StakeUWolo: "2000000", Entitlements: []ReturnEntitlement{{EntitlementID: "desync-refund", ClaimID: "102", ClaimKind: "bet_refund", PrincipalUWolo: "2000000", AmountUWolo: "2000000"}}},
-			{LegID: "winner", MarketID: "501", StakeUWolo: "5000000", Entitlements: []ReturnEntitlement{{EntitlementID: "winner-payout", ClaimID: "101", ClaimKind: "bet_payout", PrincipalUWolo: "5000000", AmountUWolo: "5000000"}}},
+			{LegID: "desync", MarketID: "502", StakeUWolo: "2000000", Entitlements: []ReturnEntitlement{{EntitlementID: "desync-refund", ClaimID: "900000000102", ClaimKind: "bet_refund", PrincipalUWolo: "2000000", AmountUWolo: "2000000"}}},
+			{LegID: "winner", MarketID: "501", StakeUWolo: "5000000", Entitlements: []ReturnEntitlement{{EntitlementID: "winner-payout", ClaimID: "900000000101", ClaimKind: "bet_payout", PrincipalUWolo: "5000000", AmountUWolo: "5000000"}}},
 		}}
 	testSignAllocation(&f.plan, p)
 	f.accounting = ed25519.NewKeyFromSeed(bytes.Repeat([]byte{81}, ed25519.SeedSize))
@@ -253,7 +253,7 @@ func (f *escrowExecutionFixture) sign(t *testing.T, b *EscrowReturnExecutionBund
 
 func TestEscrowReturnExecutionRealSDKAssetsBookPrincipalOnceWithoutSigning(t *testing.T) {
 	f := newEscrowExecutionFixture(t)
-	a, bank, proof, journal, bundle := f.bundle(t, "101")
+	a, bank, proof, journal, bundle := f.bundle(t, "900000000101")
 	before := readTestCustodyJournal(t, f.engine)
 	signs, broadcasts := f.signer.calls.Load(), f.chain.broadcasts
 	qualified, err := f.verifier.Verify(t.Context(), a, bank, proof, journal, f.sign(t, &bundle))
@@ -279,7 +279,7 @@ func TestEscrowReturnExecutionRejectsSignedButIncompleteOrRetargetedInventory(t 
 	f := newEscrowExecutionFixture(t)
 	for _, name := range []string{"owner", "root", "height", "source_changed", "missing_producer", "missing_leg", "underreserve", "external_fee", "zero_unknown", "original_bank_redefined", "future", "stale", "role_signature", "build", "policy"} {
 		t.Run(name, func(t *testing.T) {
-			a, bank, proof, journal, b := f.bundle(t, "101")
+			a, bank, proof, journal, b := f.bundle(t, "900000000101")
 			switch name {
 			case "owner":
 				b.Body.OwnerID = "different-owner"
@@ -328,15 +328,15 @@ func TestEscrowReturnExecutionRejectsSignedButIncompleteOrRetargetedInventory(t 
 
 func TestEscrowReturnExecutionGenuinePaidLegDischargeKeepsOriginalAllocation(t *testing.T) {
 	f := newEscrowExecutionFixture(t)
-	winner := multiLegApproval(t, f.plan, "101", f.engine.policy)
+	winner := multiLegApproval(t, f.plan, "900000000101", f.engine.policy)
 	_, err := f.engine.PrepareReturnRun(t.Context(), winner)
 	require.NoError(t, err)
 	escrowKey := &sdksecp.PrivKey{Key: bytes.Repeat([]byte{9}, 32)}
-	hash := escrowExecutionSDKSend(t, f.chain, escrowKey, f.engine.policy.Vault, winner.AmountUWolo, "aoe2war/satchel/claim-return/v1/101")
+	hash := escrowExecutionSDKSend(t, f.chain, escrowKey, f.engine.policy.Vault, winner.AmountUWolo, "aoe2war/satchel/claim-return/v1/900000000101")
 	paid, err := f.engine.ReconcileReturn(t.Context(), winner, hash, f.reader)
 	require.NoError(t, err)
 	require.Equal(t, hash, paid.TxHash)
-	a, bank, proof, journal, b := f.bundle(t, "102")
+	a, bank, proof, journal, b := f.bundle(t, "900000000102")
 	require.Greater(t, bank.Height(), a.Allocation.BankHeight)
 	require.Equal(t, f.plan.BankEvidenceDigest, b.Body.OriginalBankEvidenceDigest)
 	require.Equal(t, "2000000", b.Review.ConfirmedLiabilitiesUWolo)
@@ -346,22 +346,22 @@ func TestEscrowReturnExecutionGenuinePaidLegDischargeKeepsOriginalAllocation(t *
 	require.True(t, qualified.CurrentFor(t.Context(), a))
 	require.Equal(t, before, readTestCustodyJournal(t, f.engine))
 	// A paid selected claim cannot acquire another execution qualification.
-	a, bank, proof, journal, b = f.bundle(t, "101")
+	a, bank, proof, journal, b = f.bundle(t, "900000000101")
 	_, err = f.verifier.Verify(t.Context(), a, bank, proof, journal, f.sign(t, &b))
 	require.ErrorIs(t, err, ErrEscrowReturnExecution)
 }
 
 func TestEscrowReturnExecutionPreparedUnknownFeeNeverDisappearsFromInventory(t *testing.T) {
 	f := newEscrowExecutionFixture(t)
-	refund := multiLegApproval(t, f.plan, "102", f.engine.policy)
+	refund := multiLegApproval(t, f.plan, "900000000102", f.engine.policy)
 	_, err := f.engine.PrepareReturnRun(t.Context(), refund)
 	require.NoError(t, err)
-	a, bank, proof, journal, b := f.bundle(t, "101")
+	a, bank, proof, journal, b := f.bundle(t, "900000000101")
 	_, err = f.verifier.Verify(t.Context(), a, bank, proof, journal, f.sign(t, &b))
 	require.ErrorIs(t, err, ErrEscrowReturnExecution, "an unsigned/UNKNOWN return still needs fee headroom")
 	for i := range b.Body.Producers {
 		if b.Body.Producers[i].ProducerID == reviewerPendingFeesProducer {
-			b.Body.Producers[i].PendingFees = []ReviewerPendingFee{{OperationID: escrowReturnClaimKey("102"), Stage: "uncertain", FeeUWolo: "1000000"}}
+			b.Body.Producers[i].PendingFees = []ReviewerPendingFee{{OperationID: escrowReturnClaimKey("900000000102"), Stage: "uncertain", FeeUWolo: "1000000"}}
 		}
 	}
 	b.Review.GasReserveUWolo = "1002500" // pending UNKNOWN + distinct new return fee
@@ -381,7 +381,7 @@ func TestEscrowReturnExecutionOpaqueResultCannotAdoptUnreviewedAllocationRevisio
 	f.plan.ReturnCapUWolo = "7000001"
 	f.plan.Legs[1].Entitlements[0].PrincipalUWolo = "4999999"
 	testSignAllocation(&f.plan, f.engine.policy)
-	a, bank, proof, journal, b := f.bundle(t, "101")
+	a, bank, proof, journal, b := f.bundle(t, "900000000101")
 	qualified, err := f.verifier.Verify(t.Context(), a, bank, proof, journal, f.sign(t, &b))
 	require.NoError(t, err)
 	raw, err := json.Marshal(f.plan)
@@ -389,9 +389,9 @@ func TestEscrowReturnExecutionOpaqueResultCannotAdoptUnreviewedAllocationRevisio
 	var next ReturnAllocation
 	require.NoError(t, json.Unmarshal(raw, &next))
 	next.Revision++
-	next.Legs[1].Entitlements = append(next.Legs[1].Entitlements, ReturnEntitlement{EntitlementID: "winner-payout-z", ClaimID: "103", ClaimKind: "bet_payout", PrincipalUWolo: "1", AmountUWolo: "1"})
+	next.Legs[1].Entitlements = append(next.Legs[1].Entitlements, ReturnEntitlement{EntitlementID: "winner-payout-z", ClaimID: "900000000103", ClaimKind: "bet_payout", PrincipalUWolo: "1", AmountUWolo: "1"})
 	testSignAllocation(&next, f.engine.policy)
-	changed := multiLegApproval(t, next, "101", f.engine.policy)
+	changed := multiLegApproval(t, next, "900000000101", f.engine.policy)
 	require.Equal(t, returnFingerprint(a), returnFingerprint(changed), "economic replay identity deliberately excludes plan revisions")
 	require.NotEqual(t, a.AllocationDigest, changed.AllocationDigest)
 	require.NoError(t, f.engine.db.View(func(tx *bolt.Tx) error { return f.engine.validateReturnAt(tx, changed, true) }))
@@ -408,7 +408,7 @@ func TestEscrowReturnExecutionForgedDurablePaidReceiptRequiresActualReturnProof(
 	f := newEscrowExecutionFixture(t)
 	_, donation, err := f.reader.ReadTransferProof(t.Context(), satchel.TransferIntent{Sender: f.engine.policy.Vault, Recipient: f.engine.policy.BettingEscrow, AmountUWolo: "2000000", Memo: "isolated external escrow assets"}, f.donationHash)
 	require.NoError(t, err)
-	refund := multiLegApproval(t, f.plan, "102", f.engine.policy)
+	refund := multiLegApproval(t, f.plan, "900000000102", f.engine.policy)
 	_, err = f.engine.PrepareReturnRun(t.Context(), refund)
 	require.NoError(t, err)
 	// Fault injection mimics valid-shaped unkeyed journal corruption. The real
@@ -416,16 +416,16 @@ func TestEscrowReturnExecutionForgedDurablePaidReceiptRequiresActualReturnProof(
 	receipt := testFaultInjectedReturnReceipt(refund, f.donationHash, 1)
 	receipt.Height = f.chain.transaction.Height
 	receipt.BlockHash = strings.ToUpper(hex.EncodeToString(f.chain.commits[receipt.Height].Header.Hash()))
-	require.NoError(t, f.engine.recordReturn(testStoredReturn(t, f.engine, "102"), receipt))
+	require.NoError(t, f.engine.recordReturn(testStoredReturn(t, f.engine, "900000000102"), receipt))
 	f.verifier.config.PaidReturnProofReader = escrowExecutionPaidTranscript{proof: donation}
-	a, bank, proof, journal, b := f.bundle(t, "101")
+	a, bank, proof, journal, b := f.bundle(t, "900000000101")
 	_, err = f.verifier.Verify(t.Context(), a, bank, proof, journal, f.sign(t, &b))
 	require.ErrorIs(t, err, ErrEscrowReturnExecution)
 }
 
 func TestEscrowReturnExecutionRejectsCrossRootStaleJournalExpiryAndDTO(t *testing.T) {
 	f := newEscrowExecutionFixture(t)
-	a, bank, proof, journal, b := f.bundle(t, "101")
+	a, bank, proof, journal, b := f.bundle(t, "900000000101")
 	raw := f.sign(t, &b)
 	wrong := f.config
 	wrong.TrustAnchor.Hash = strings.Repeat("F", 64)

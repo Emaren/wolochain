@@ -71,8 +71,8 @@ func newEscrowRuntimeFixtureWithConfig(t *testing.T, provision func(*Config)) *e
 	plan := ReturnAllocation{Version: 2, AllocationID: "allocation:ticket:7", Revision: 1, OperationID: c.request.OperationID, OwnerID: c.request.OwnerID, TicketID: "7", FundingTxHash: result.TxHash,
 		ReturnCapUWolo: "7000000", FundsBudgetID: "isolated-runtime-budget", FundsAvailableUWolo: "9000000", BankEvidenceDigest: strings.Repeat("E", 64), BankHeight: bank.Height(), BankBlockHash: bank.BlockHash(), IssuedAt: at - 1, ExpiresAt: at + 120,
 		Legs: []ReturnLeg{
-			{LegID: "desync", MarketID: "502", StakeUWolo: "2000000", Entitlements: []ReturnEntitlement{{EntitlementID: "desync-refund", ClaimID: "102", ClaimKind: "bet_refund", PrincipalUWolo: "2000000", AmountUWolo: "2000000"}}},
-			{LegID: "winner", MarketID: "501", StakeUWolo: "5000000", Entitlements: []ReturnEntitlement{{EntitlementID: "winner-payout", ClaimID: "101", ClaimKind: "bet_payout", PrincipalUWolo: "5000000", AmountUWolo: "5000000"}}},
+			{LegID: "desync", MarketID: "502", StakeUWolo: "2000000", Entitlements: []ReturnEntitlement{{EntitlementID: "desync-refund", ClaimID: "900000000102", ClaimKind: "bet_refund", PrincipalUWolo: "2000000", AmountUWolo: "2000000"}}},
+			{LegID: "winner", MarketID: "501", StakeUWolo: "5000000", Entitlements: []ReturnEntitlement{{EntitlementID: "winner-payout", ClaimID: "900000000101", ClaimKind: "bet_payout", PrincipalUWolo: "5000000", AmountUWolo: "5000000"}}},
 		}}
 	testSignAllocation(&plan, p)
 	accounting, _ := hex.DecodeString(c.config.AccountingReviewerKeyHex)
@@ -97,7 +97,7 @@ func newEscrowRuntimeFixtureWithConfig(t *testing.T, provision func(*Config)) *e
 
 func (f *escrowRuntimeFixture) refresh(t *testing.T) {
 	t.Helper()
-	a, _, _, _, bundle := f.reserve.bundle(t, "101")
+	a, _, _, _, bundle := f.reserve.bundle(t, "900000000101")
 	f.approval, f.bundle = a, bundle
 	require.NoError(t, os.WriteFile(f.reviewPath, f.reserve.sign(t, &f.bundle), 0600))
 }
@@ -109,7 +109,7 @@ func TestEscrowReturnRuntimeProtectedSDKPreparationAndStaleJournal(t *testing.T)
 	signs, broadcasts := c.SDKSigns.Load(), c.chain.broadcasts
 	run, err := c.engine.PrepareReturnRun(t.Context(), f.approval)
 	require.NoError(t, err)
-	require.Equal(t, "satchel:claim-return:101", run.SettlementRunID)
+	require.Equal(t, "satchel:claim-return:900000000101", run.SettlementRunID)
 	require.Equal(t, "5000000", run.Payouts[0].AmountUWolo)
 	require.Equal(t, c.config.Vault, run.Payouts[0].ToAddress)
 	prepared := readTestCustodyJournal(t, c.engine)

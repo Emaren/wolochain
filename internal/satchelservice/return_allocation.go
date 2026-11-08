@@ -181,7 +181,7 @@ func validateAllocationEconomics(a ReturnApproval, funded uint64) (ReturnEntitle
 		previousEntry := ""
 		for _, entry := range leg.Entitlements {
 			count++
-			if count > 128 || !ids.MatchString(entry.EntitlementID) || entry.EntitlementID <= previousEntry || seenEntitlements[entry.EntitlementID] || !claimIDs.MatchString(entry.ClaimID) || entry.ClaimID == "889" || seenClaims[entry.ClaimID] || (entry.ClaimKind != "bet_refund" && entry.ClaimKind != "bet_payout") {
+			if count > 128 || !ids.MatchString(entry.EntitlementID) || entry.EntitlementID <= previousEntry || seenEntitlements[entry.EntitlementID] || !validFreshNativeClaimID(entry.ClaimID) || seenClaims[entry.ClaimID] || (entry.ClaimKind != "bet_refund" && entry.ClaimKind != "bet_payout") {
 				return refuse()
 			}
 			previousEntry = entry.EntitlementID
