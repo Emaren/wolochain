@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/c03-67-unit-watchdog-20261108` at `1702489e5ede919a06ea9d116d89838f9978c52c`
+Implementation baseline: `feat/c08-actual-governance-adoption-20261108` at `40b31507d1f4385412366c0922c31457f4d99831`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
@@ -27,7 +27,7 @@ This page is generated from the validated front matter in this repository. Cross
 
 ## Documentation health
 
-- Authoritative repository documents: **77**
+- Authoritative repository documents: **78**
 - Path moves in this migration: **0**
 - Every listed document has an explicit owner, lifecycle, authority, and review interval.
 
@@ -35,13 +35,13 @@ This page is generated from the validated front matter in this repository. Cross
 
 - `historical`: 14
 - `reference`: 49
-- `runbook`: 12
+- `runbook`: 13
 - `working`: 2
 
 ### Lifecycle
 
 - `active`: 16
-- `draft`: 47
+- `draft`: 48
 - `historical`: 14
 
 ## Documents
@@ -76,6 +76,7 @@ This page is generated from the validated front matter in this repository. Cross
 | [C08 Dedicated Intel Witness: Exact Forced Command and Source-Pin Admission Review](C08_DEDICATED_WITNESS_EXACT_COMMAND_SOURCE_REVIEW_HOLD.md) | `reference` | `draft` | `source-only-offhost-nonce-witness-command-review-no-live-activation-or-finance-permit` |
 | [C08 Verified Owner Device Direction: Historical Ed25519 Signature Is Not Governance Ratification](C08_EXISTING_OWNER_DEVICE_DIRECTION_PHYSICAL_HOLD.md) | `reference` | `draft` | `historical-owner-device-signature-readonly-evidence-only-no-funding` |
 | [C08 Intel Dedicated Witness SSHD: Persistent Loopback Deny-Only Launchd Service](C08_INTEL_DENY_ONLY_WITNESS_SSHD_PHYSICAL.md) | `runbook` | `draft` | `reviewed-deny-only-ssh-transport-no-nonce-or-financial-authority` |
+| [C08 Genuine One-Owner Governance Adoption V2 — Signed Policy, Zero Financial Permission](C08_REAL_SOLO_GOVERNANCE_ADOPTION_V2.md) | `runbook` | `draft` | `versioned-nonfunded-owner-governance-adoption-only` |
 | [C08 Real Owner-Signed Ratification Intent: Public Notice and Policy-Bound HOLD](C08_SIGNED_SOLO_OWNER_RATIFICATION_INTENT_HOLD.md) | `reference` | `draft` | `source-only-cryptographic-ratification-intent-review-no-governance-adoption-or-woLo-funding` |
 | [C08 Single-Owner Public Notice — Pinned 24-Hour Financial HOLD](C08_SINGLE_OWNER_PUBLIC_NOTICE_HOLD.md) | `reference` | `draft` | `public-notice-source-integrity-only-no-financial-permit` |
 | [Native epoch-v3 wire-v1 trust mismatch and held handoff](epoch-v3-wire-v1-hold.md) | `reference` | `draft` | `source-only-verifier-mismatch-not-financial-authority` |
