@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/c08-exact-witness-forced-command-review-20261108` at `161cc4a60e23dd6e5281dfb1307f04c41c80d487`
+Implementation baseline: `fix/c03-prechange-encrypted-role-schema-offhost-20261108` at `ebb6d4f096569a1335741b62f1ad5152fb2cc214`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
@@ -27,7 +27,7 @@ This page is generated from the validated front matter in this repository. Cross
 
 ## Documentation health
 
-- Authoritative repository documents: **70**
+- Authoritative repository documents: **71**
 - Path moves in this migration: **0**
 - Every listed document has an explicit owner, lifecycle, authority, and review interval.
 
@@ -35,13 +35,13 @@ This page is generated from the validated front matter in this repository. Cross
 
 - `historical`: 14
 - `reference`: 47
-- `runbook`: 7
+- `runbook`: 8
 - `working`: 2
 
 ### Lifecycle
 
 - `active`: 16
-- `draft`: 40
+- `draft`: 41
 - `historical`: 14
 
 ## Documents
@@ -52,6 +52,7 @@ This page is generated from the validated front matter in this repository. Cross
 | [C04 — bounded original-request / chain-proof observation](../cmd/wolo-c04-verify/README.md) | `reference` | `draft` | `noncrediting-original-request-chain-evidence` |
 | [WoloChain Branch Authority](BRANCH_AUTHORITY.md) | `reference` | `active` | `git-branch-authority-contract` |
 | [C03 effective grants with paired live PostgreSQL sessions HOLD](C03_EFFECTIVE_GRANTS_PAIRED_LIVE_PG_SESSIONS_HOLD.md) | `reference` | `draft` | `source-only-read-only-c03-dual-evidence-bound-observer-never-a-finance-permit` |
+| [C03 Owner-Only Encrypted Off-Host Schema and Role Pre-Migration Rollback](C03_ENCRYPTED_PRECHANGE_SCHEMA_ROLLBACK_OFFHOST.md) | `runbook` | `draft` | `pre-migration-source-metadata-insurance-only-not-full-financial-backup-or-writer-fence` |
 | [C03 Financial Writer Containment — Physical Release Acceptance Protocol](C03_FINANCIAL_WRITER_CONTAINMENT_ACCEPTANCE.md) | `reference` | `draft` | `source-only-c03-global-containment-plan-not-a-financial-permit` |
 | [C03 Financial Writer Drift Watchdog](C03_FINANCIAL_WRITER_DRIFT_WATCHDOG.md) | `reference` | `draft` | `read-only-finance-hold-monitor-not-a-fence-or-funded-permit` |
 | [C03 Isolated PostgreSQL Table Lock Counterexample](C03_ISOLATED_TABLE_LOCK_COUNTEREXAMPLE.md) | `reference` | `draft` | `source-only-negative-lock-rehearsal-not-a-financial-fence` |
