@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `feat/c08-actual-governance-adoption-20261108` at `40b31507d1f4385412366c0922c31457f4d99831`
+Implementation baseline: `feat/c08-actual-governance-adoption-20261108` at `ca4327a085df9f4a4a59bb7b0bb1b8eed859c4bd`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 

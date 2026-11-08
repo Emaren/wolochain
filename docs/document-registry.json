@@ -677,7 +677,7 @@
       "review_interval_days": 7,
       "reviewed_at": "2026-11-08",
       "sensitivity": "restricted",
-      "sha256": "b54ffe9552fa24cee8d3f77218ceba2c162d3b352589ea704c7ea14d560f134f",
+      "sha256": "e6ce36bc82b54fd05a8fa002d589412b00c8ed9beb032d01809b492cd202c388",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -749,7 +749,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "ff3f2dda12d3bcdf1f13ca45672ad704e0c3ec408aec0a647d498e978143cced",
+      "sha256": "71d2c330c915f7f7a755e97dd65f4a2cee5e26456a14dd48653d914374410b53",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1827,7 +1827,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "feat/c08-actual-governance-adoption-20261108",
-    "commit": "40b31507d1f4385412366c0922c31457f4d99831"
+    "commit": "ca4327a085df9f4a4a59bb7b0bb1b8eed859c4bd"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
