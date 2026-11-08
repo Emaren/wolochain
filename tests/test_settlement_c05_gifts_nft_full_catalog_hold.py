@@ -19,7 +19,7 @@ def fixture(db):
    "funding_participants":{"rows":"14","funding_linked":"14"},
    "watcher_provenance":[{"finality_status":"trusted_final","rows":"450","trusted_labeled_rows":"450"}],
    "paper_positions":{"rows":"4","nominal_paper_marks":"2000"},
-   "bounty_gift_provenance":{"rows":"1","nominal_wolo":"100000","linked_to_bounty_rows":"1","source_reward_matches":"0","source_status_available_rows":"1"},
+   "bounty_gift_provenance":{"rows":"1","nominal_wolo":"100000","linked_to_bounty_rows":"1","source_reward_matches":"0","source_reward_null_rows":"1","source_reward_conflict_rows":"0","source_reward_null_nominal_wolo":"100000","source_status_available_rows":"1"},
    "bounty_event_hash_census":{"rows":"31","nominal_wolo":"718003","hash_present":"0"}})
  return doc
 class SourceTests(unittest.TestCase):
@@ -45,6 +45,10 @@ class SourceTests(unittest.TestCase):
   self.assertEqual(out["oracle_paper_marks_not_wolo"],"2000")
   self.assertEqual(out["bounty_gift_linked_reference_rows"],1)
   self.assertEqual(out["bounty_gift_reward_amount_matches"],0)
+  self.assertEqual(out["bounty_gift_null_reward_source_rows"],1)
+  self.assertEqual(out["bounty_gift_null_reward_nominal_wolo"],"100000")
+  self.assertEqual(out["bounty_gift_conflicting_reward_source_rows"],0)
+  self.assertFalse(out["bounty_gift_reward_identity_independently_verified"])
   self.assertEqual(out["bounty_gift_source_available_rows"],1)
   self.assertEqual(out["bounty_events_recorded"],31)
   self.assertEqual(out["bounty_events_hash_present"],0)
@@ -104,12 +108,43 @@ class SourceTests(unittest.TestCase):
   self.h["bounty_gift_provenance"]["linked_to_bounty_rows"]="2";self.held()
  def test_bounty_reward_match_exceeds_links_denied(self):
   self.h["bounty_gift_provenance"]["source_reward_matches"]="2";self.held()
+ def test_null_reward_missing_bucket_denied(self):
+  self.h["bounty_gift_provenance"].pop("source_reward_null_rows");self.held()
+ def test_null_reward_nominal_overflow_denied(self):
+  self.h["bounty_gift_provenance"]["source_reward_null_nominal_wolo"]="100001";self.held()
+ def test_null_reward_count_claim_exceeds_link_denied(self):
+  self.h["bounty_gift_provenance"]["source_reward_null_rows"]="2";self.held()
+ def test_contradictory_matched_and_null_reward_denied(self):
+  self.h["bounty_gift_provenance"]["source_reward_matches"]="1";self.held()
+ def test_false_null_with_nonzero_nominal_denied(self):
+  self.h["bounty_gift_provenance"]["source_reward_null_rows"]="0";self.held()
+ def test_real_nonnull_conflict_is_distinct_from_unpriced(self):
+  x=self.h["bounty_gift_provenance"]
+  x["source_reward_null_rows"]="0"
+  x["source_reward_null_nominal_wolo"]="0"
+  x["source_reward_conflict_rows"]="1"
+  out=g.validate(self.h,"hd")
+  self.assertEqual(out["bounty_gift_conflicting_reward_source_rows"],1)
+  self.assertEqual(out["bounty_gift_null_reward_source_rows"],0)
+  self.assertFalse(out["bounty_gift_economic_id_overlap_authenticated"])
+ def test_unlinked_missing_source_is_not_mistaken_for_null_priced_bounty(self):
+  x=self.h["bounty_gift_provenance"]
+  x["linked_to_bounty_rows"]="0"
+  x["source_reward_null_rows"]="0"
+  x["source_reward_null_nominal_wolo"]="0"
+  x["source_status_available_rows"]="0"
+  out=g.validate(self.h,"hd")
+  self.assertEqual(out["bounty_gift_linked_reference_rows"],0)
+  self.assertFalse(out["bounty_gift_reward_identity_independently_verified"])
  def test_bounty_event_hash_count_overflow_denied(self):
   self.h["bounty_event_hash_census"]["hash_present"]="32";self.held()
  def test_missing_bounty_reference_census_denied(self):
   self.h.pop("bounty_gift_provenance");self.held()
  def test_reward_matching_is_never_native_finality(self):
-  self.h["bounty_gift_provenance"]["source_reward_matches"]="1"
+  x=self.h["bounty_gift_provenance"]
+  x["source_reward_matches"]="1"
+  x["source_reward_null_rows"]="0"
+  x["source_reward_null_nominal_wolo"]="0"
   out=g.validate(self.h,"hd")
   self.assertFalse(out["bounty_gift_economic_id_overlap_authenticated"])
  def test_wrong_database(self):
