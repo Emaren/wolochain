@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `feat/c09-keychain-governance-receipt-v3-20261108` at `314cfdfbeb86c9519367d5be509e0465eb8fe977`
+Implementation baseline: `feat/c08-v3-native-custody-admission-20261108` at `5aa02b319e07d8a23a09e50c5579bfd6f32c2343`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 

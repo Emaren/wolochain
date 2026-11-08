@@ -844,7 +844,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "eb208fc4afc1d0d55cf2650920cae4cae19e0825cfd65f5cf9ad5cd7a19eb763",
+      "sha256": "b42ef6964b458c01b96aef155f63f3b0300cb08e6fa9884899cc69dbb85214d8",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1921,8 +1921,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "feat/c09-keychain-governance-receipt-v3-20261108",
-    "commit": "314cfdfbeb86c9519367d5be509e0465eb8fe977"
+    "branch": "feat/c08-v3-native-custody-admission-20261108",
+    "commit": "5aa02b319e07d8a23a09e50c5579bfd6f32c2343"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
