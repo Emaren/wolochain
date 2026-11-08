@@ -75,6 +75,17 @@ type returnRecord struct {
 var returns = []byte("owner-returns-v1")
 var claimIDs = regexp.MustCompile(`^[1-9][0-9]{0,11}$`)
 
+// C04 forward-only financial identity contract. Fresh C02 App native claims
+// live in a dedicated PostgreSQL BIGINT sequence 900000000001..999999999999.
+// Historic pending_wolo_claims INTEGER IDs, including 889 and 9645, must
+// NEVER enter a new v2 owner return or its escrow allocation. Do not change
+// claimIDs: that generic regex also validates ticket/market identities.
+var nativeClaimIDs = regexp.MustCompile(`^9[0-9]{11}$`)
+
+func validFreshNativeClaimID(claimID string) bool {
+	return nativeClaimIDs.MatchString(claimID) && claimID != "900000000000"
+}
+
 func ReturnApprovalMessage(a ReturnApproval, p Policy) []byte {
 	if a.Version != 2 {
 		b, _ := json.Marshal([]any{"aoe2war/satchel/claim-return-approval/v1", "wolo-1", "uwolo", p.BettingEscrow, p.Vault, a.OperationID, a.ClaimID, a.OwnerID, a.ClaimKind, a.AmountUWolo, a.AllocationDigest, a.IssuedAt, a.ExpiresAt})
@@ -102,7 +113,7 @@ func (e *Engine) validateReturn(tx *bolt.Tx, a ReturnApproval) error {
 	return e.validateReturnAt(tx, a, true)
 }
 func (e *Engine) validateReturnAt(tx *bolt.Tx, a ReturnApproval, fresh bool) error {
-	if a.Version != 2 || !ownerUIDPattern.MatchString(a.OwnerID) || !claimIDs.MatchString(a.ClaimID) || a.ClaimID == "889" || !validReviewTime(a.IssuedAt, a.ExpiresAt, e.now().Unix(), fresh) || !verifyReview(e.policy.WithdrawalApprovalKey, ReturnApprovalMessage(a, e.policy), a.Signature) {
+	if a.Version != 2 || !ownerUIDPattern.MatchString(a.OwnerID) || !validFreshNativeClaimID(a.ClaimID) || !validReviewTime(a.IssuedAt, a.ExpiresAt, e.now().Unix(), fresh) || !verifyReview(e.policy.WithdrawalApprovalKey, ReturnApprovalMessage(a, e.policy), a.Signature) {
 		return errors.New("owner_return_approval_refused")
 	}
 	_, err := e.validateAllocation(tx, a, fresh)

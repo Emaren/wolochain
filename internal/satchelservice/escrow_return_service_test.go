@@ -111,13 +111,13 @@ func TestEscrowServiceActualSDKHTTPExecutionAndNativeReconciliation(t *testing.T
 	require.Equal(t, before+1, c.chain.broadcasts)
 	require.Equal(t, signs+1, c.SDKSigns.Load())
 	inspection := httptest.NewRecorder()
-	h.ServeHTTP(inspection, testHTTPRequest(http.MethodGet, "/satchel/v1/returns/execution/101", ""))
+	h.ServeHTTP(inspection, testHTTPRequest(http.MethodGet, "/satchel/v1/returns/execution/900000000101", ""))
 	require.Equal(t, http.StatusOK, inspection.Code)
 	var inspected EscrowReturnSpendResult
 	require.NoError(t, json.Unmarshal(inspection.Body.Bytes(), &inspected))
 	require.Equal(t, result, inspected)
 	missing := httptest.NewRecorder()
-	h.ServeHTTP(missing, testHTTPRequest(http.MethodGet, "/satchel/v1/returns/execution/102", ""))
+	h.ServeHTTP(missing, testHTTPRequest(http.MethodGet, "/satchel/v1/returns/execution/900000000102", ""))
 	require.Equal(t, http.StatusNotFound, missing.Code, "absence remainsUNKNOWN; never permissiontoPOSTagain")
 	changed := f.approval
 	changed.AmountUWolo = "4000000"
@@ -288,12 +288,12 @@ func TestEscrowServiceFinalBroadcastBankRootRecheckRefusesChangedHead(t *testing
 func (f *escrowServiceFixture) prepareSecondLeg(t *testing.T, uncertainFirst bool) ReturnApproval {
 	t.Helper()
 	writeReview := func() ReturnApproval {
-		a, bank, proof, journal, bundle := f.reserve.bundle(t, "102")
+		a, bank, proof, journal, bundle := f.reserve.bundle(t, "900000000102")
 		if uncertainFirst {
 			bundle.Review.GasReserveUWolo = "1002500"
 			for i := range bundle.Body.Producers {
 				if bundle.Body.Producers[i].ProducerID == "all_signer_pending_uncertain_and_unmaterialized_fees" {
-					bundle.Body.Producers[i].PendingFees = []ReviewerPendingFee{{OperationID: escrowReturnClaimKey("101"), Stage: "uncertain", FeeUWolo: "1000000"}}
+					bundle.Body.Producers[i].PendingFees = []ReviewerPendingFee{{OperationID: escrowReturnClaimKey("900000000101"), Stage: "uncertain", FeeUWolo: "1000000"}}
 				}
 			}
 		}
@@ -332,7 +332,7 @@ func TestEscrowServiceUnknownSequenceFencesOtherFundedLeg(t *testing.T) {
 	require.Equal(t, before, c.chain.broadcasts)
 	require.Equal(t, signs, c.SDKSigns.Load())
 	require.NoError(t, c.engine.db.View(func(tx *bolt.Tx) error {
-		require.Nil(t, tx.Bucket(escrowReturnSpendBucket).Get([]byte("102")))
+		require.Nil(t, tx.Bucket(escrowReturnSpendBucket).Get([]byte("900000000102")))
 		return nil
 	}))
 }
@@ -454,7 +454,7 @@ func TestEscrowServiceCorruptRecoveryIdentityNeverEmitsCandidateOrResigns(t *tes
 			case "version":
 				state.Version = 0
 			case "request":
-				state.Request.OperationID = "satchel:claim-return:102"
+				state.Request.OperationID = "satchel:claim-return:900000000102"
 			case "result_hash":
 				state.Result.TxHash = strings.Repeat("A", 64)
 			case "signed_bytes":
