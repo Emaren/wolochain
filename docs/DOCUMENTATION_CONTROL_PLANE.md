@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/c05-gift-claim-nominal-overlap-hold-20261108` at `0c886081887b12d171b58b53d3d060ba9ed49783`
+Implementation baseline: `fix/c03-bound-owner-sessions-effective-grants-20261108` at `5bb29d74199e06d87e49b773332d1a4ed4da56df`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
@@ -27,21 +27,21 @@ This page is generated from the validated front matter in this repository. Cross
 
 ## Documentation health
 
-- Authoritative repository documents: **66**
+- Authoritative repository documents: **67**
 - Path moves in this migration: **0**
 - Every listed document has an explicit owner, lifecycle, authority, and review interval.
 
 ### Types
 
 - `historical`: 14
-- `reference`: 43
+- `reference`: 44
 - `runbook`: 7
 - `working`: 2
 
 ### Lifecycle
 
 - `active`: 16
-- `draft`: 36
+- `draft`: 37
 - `historical`: 14
 
 ## Documents
@@ -51,6 +51,7 @@ This page is generated from the validated front matter in this repository. Cross
 | [WoloChain](../README.md) | `reference` | `active` | `chain-repository-entrypoint` |
 | [C04 — bounded original-request / chain-proof observation](../cmd/wolo-c04-verify/README.md) | `reference` | `draft` | `noncrediting-original-request-chain-evidence` |
 | [WoloChain Branch Authority](BRANCH_AUTHORITY.md) | `reference` | `active` | `git-branch-authority-contract` |
+| [C03 effective grants with paired live PostgreSQL sessions HOLD](C03_EFFECTIVE_GRANTS_PAIRED_LIVE_PG_SESSIONS_HOLD.md) | `reference` | `draft` | `source-only-read-only-c03-dual-evidence-bound-observer-never-a-finance-permit` |
 | [C03 Financial Writer Containment — Physical Release Acceptance Protocol](C03_FINANCIAL_WRITER_CONTAINMENT_ACCEPTANCE.md) | `reference` | `draft` | `source-only-c03-global-containment-plan-not-a-financial-permit` |
 | [C03 Financial Writer Drift Watchdog](C03_FINANCIAL_WRITER_DRIFT_WATCHDOG.md) | `reference` | `draft` | `read-only-finance-hold-monitor-not-a-fence-or-funded-permit` |
 | [C03 Isolated PostgreSQL Table Lock Counterexample](C03_ISOLATED_TABLE_LOCK_COUNTEREXAMPLE.md) | `reference` | `draft` | `source-only-negative-lock-rehearsal-not-a-financial-fence` |

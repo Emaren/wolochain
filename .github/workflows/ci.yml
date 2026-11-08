@@ -204,6 +204,7 @@ jobs:
         if: ${{ always() && !cancelled() }}
         run: |
           python3 -B -m unittest discover -s tests -p 'test_settlement_c03_root_finance_transport_hold.py' -v
+          python3 -B -m unittest discover -s tests -p 'test_settlement_c03_effective_grants_bound_sessions_hold.py' -v
           python3 -B -m unittest discover -s tests -p 'test_settlement_c04_indexed_transfer_ambiguity_hold.py' -v
           python3 -B -m unittest discover -s tests -p 'test_settlement_c04_local_comet_inclusion_hold.py' -v
           python3 -B -m unittest discover -s tests -p 'test_settlement_c04_unique_candidate_refund_overlap_hold.py' -v
