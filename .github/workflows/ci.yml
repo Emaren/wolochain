@@ -145,6 +145,9 @@ jobs:
       - name: C08 real one-owner signed policy adoption, immutable registry and 34 adversarial tests
         run: python3 -B -m unittest discover -s tests -p 'test_settlement_c08_governance_adoption_v2.py' -v
 
+      - name: C08 macOS software-Keychain P256 public enrollment and owner adoption v3 26 tests
+        run: python3 -B -m unittest discover -s tests -p 'test_settlement_c08_keychain_policy_adoption_v3.py' -v
+
       - name: C09 exact signed canary bound to genuine C08 policy and 1-WOLO ceiling
         run: python3 -B -m unittest discover -s tests -p 'test_settlement_c09_adopted_governance_binding.py' -v
 
