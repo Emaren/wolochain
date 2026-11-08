@@ -104,7 +104,64 @@ echo "=== repo drift scan ==="
 scan_repo_pattern 'wolo-testnet-1' 'Legacy chain IDs are still present outside explicit mainnet planning docs.'
 scan_repo_pattern 'rpc[.]aoe2hdbets[.]com|rest[.]aoe2hdbets[.]com|explorer[.]testnet[.]aoe2hdbets[.]com' 'Stale public Wolo endpoint hosts are still present in tracked repo files.'
 scan_repo_pattern '\butoken\b|\bustake\b' 'Legacy scaffold denoms are still present in tracked repo files.'
-scan_repo_pattern 'tokenchain' 'Legacy scaffold chain naming is still present in tracked repo files.'
+# Real external Linux service names must remain visible to the C03 writer census.
+# A blanket chain-brand scan must not suppress those exact observed service
+# identities. Preserve the ban everywhere else, including executable sources.
+# The allowed documentary references are source-scoped and never chain metadata.
+python3 - "${TRACKED_FILES[@]}" <<'PY_C03_LIVE_SERVICE_ALLOWLIST'
+import re
+import sys
+from pathlib import Path
+
+source = "scripts/settlement_c03_physical_writer_universe_hold.py"
+doc = "docs/C03_TOKENCHAIN_INDEXER_UNSCOPED_DISCOVERY_HOLD.md"
+reg = "docs/document-registry.json"
+baseline = "docs/DOCUMENTATION_CONTROL_PLANE.md"
+required_source = {
+    '"tokenchain-",',
+    '"tokenchain_indexer_direct_and_indirect_database_writers",',
+}
+allowed_registry = {
+    '"id": "aoe2war.wolochain.c03-tokenchain-indexer-unscoped-discovery-hold",',
+    '"tokenchain"',
+    '"branch": "fix/c03-tokenchain-writer-universe-20261108",',
+}
+allowed_doc_prefixes = (
+    "id: ", "systems: ", "Live HEL1 runs ", "`scripts/", "The six hermetic ",
+)
+baseline_pattern = re.compile(
+    r"Implementation baseline: `fix/c03-tokenchain-writer-universe-20261108` at `[0-9a-f]{40}`\Z"
+)
+all_source_hits = set()
+errors = []
+for name in sys.argv[1:]:
+    path = Path(name)
+    try:
+        content = path.read_text(encoding="utf8")
+    except (OSError, UnicodeError):
+        errors.append(f"{name}: unavailable or invalid source")
+        continue
+    for number, raw_line in enumerate(content.splitlines(), 1):
+        if "tokenchain" not in raw_line:
+            continue
+        line = raw_line.strip()
+        if name == source and line in required_source:
+            all_source_hits.add(line)
+            continue
+        if name == doc and line.startswith(allowed_doc_prefixes):
+            continue
+        if name == reg and line in allowed_registry:
+            continue
+        if name == baseline and baseline_pattern.fullmatch(line):
+            continue
+        errors.append(f"{name}:{number}: unapproved legacy chain identity reference")
+if all_source_hits != required_source:
+    errors.append("C03 exact external-service names or unproven-domain markers were removed")
+if errors:
+    print("\n".join(errors), file=sys.stderr)
+    sys.exit(1)
+print("PASS: legacy scaffold chain branding barred; exact external C03 service references reviewed")
+PY_C03_LIVE_SERVICE_ALLOWLIST
 scan_repo_pattern '\bcosmos(valoper|valcons)?1[0-9a-z]{10,}\b' 'Legacy cosmos bech32 addresses are still present in tracked repo files.'
 scan_repo_pattern 'default_denom:[[:space:]]*stake' 'config-level stake defaults are still present in tracked repo files.'
 scan_repo_pattern 'bond_denom[^[:alnum:]]*stake|mint_denom[^[:alnum:]]*stake' 'Genesis or app denom defaults still drift to stake in tracked repo files.'
