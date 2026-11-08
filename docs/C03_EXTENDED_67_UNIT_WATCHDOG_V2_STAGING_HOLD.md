@@ -34,6 +34,12 @@ The proposed `scripts/settlement_c03_observer_watchdog_v2.py` uses a new schema,
 
 Eleven new hermetic adversarial tests prove the 67/43 source contract, old 57-unit refusal, source file SHAs, separate filesystem paths, baseline drift, no auto-enrollment, no finance permission, no external API, no non-root access and correct expected HOLD. The 11 original V1 tests now explicitly recognize that their pinned SHA refers to an **installed historical release**, not the newer source in Git.
 
+## First actual nonmutating HEL1 shadow run
+
+On November 8 the exact V2 source, source merged auditor and modern HD/DE owner auditor were copied through owner SSH to a **separate**, root0700 source directory and manually invoked in read-only `--mode once`. The observed result was `HOLD_UNENROLLED`, **67 total / 43 source-unscoped**, with explicit financial release false. New root0700/0600 private receipt SHA256 **`85ee4b1ec620c2aed98c77c887ab11db681c8876a713dd067e9dc1c57def6e6c`**. Source binary SHA256 **`793c58385c7895c2da8464a0b14ee4ea42ea13a5610cb57e3866ddd575fa558e`**. Original live V1 source hashes and old enrollment SHA256 `67ba18c7b32fb19a3a5f5a611bd60bd3e519519d5af4ff3e4a9224f2941b595c` were checked unchanged afterwards. The original V1 hourly timer remains active.
+
+This validates the **shadow observation**, not any production switch, re-enrollment, scoped writer-grant change, Satchel deployment or owner transaction signature.
+
 ## Deployment boundary
 
 The first physical stage should preserve V1's live hourly timer unchanged. Only after exact-head GitHub source qualification, a source-executable dry run, repeated stable name census and review of independently pinned unit-name hash may a separate owner-only V2 enrollment be considered. Do not replace V1 with a different source in place merely because it shares the same file name. For any eventual timer switch, a rollback that restores exact original systemd unit SHA, original V1 source pins and original V1 enrollment is essential. Public Steam, Traffic and website admission are Session B's separate responsibility.
