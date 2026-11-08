@@ -740,6 +740,30 @@
       "audience": [
         "developers",
         "operators",
+        "financial-reviewers",
+        "ai-agents"
+      ],
+      "authority": "authenticated-C08-governance-preflight-only-no-spending-permit",
+      "id": "aoe2war.wolochain.c09-ratified-c08-policy-bridge",
+      "owner": "wolochain-ops",
+      "path": "docs/C09_RATIFIED_C08_POLICY_BRIDGE.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-08",
+      "sensitivity": "restricted",
+      "sha256": "1e40e54ef57f08baebabd585c1eb04f6a4ced7e4388b1b94b79353aaa2f9f79a",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C09 Ratified C08 Governance Bridge \u2014 Signed Canary Ceiling and No Spending",
+      "type": "runbook"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
         "ai-agents"
       ],
       "authority": "repository-documentation-index",
@@ -749,7 +773,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "71d2c330c915f7f7a755e97dd65f4a2cee5e26456a14dd48653d914374410b53",
+      "sha256": "efd97edc0332264a38d006ccaa33428836464ef9c9530de4c2417d3e152801cf",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1826,8 +1850,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "feat/c08-actual-governance-adoption-20261108",
-    "commit": "ca4327a085df9f4a4a59bb7b0bb1b8eed859c4bd"
+    "branch": "feat/c09-binding-to-ratified-c08-20261108",
+    "commit": "828bcf53539b9e890063bd162f236146de295021"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
