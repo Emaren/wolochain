@@ -308,6 +308,30 @@
         "operators",
         "ai-agents"
       ],
+      "authority": "source-only-c05-historical-payment-ambiguity-no-payment-authority",
+      "id": "aoe2war.wolochain.c05-pending-gift-same-nominal-claim-collision-hold",
+      "owner": "wolochain-ops",
+      "path": "docs/C05_PENDING_GIFT_SAME_NOMINAL_CLAIM_COLLISION_HOLD.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-08",
+      "sensitivity": "restricted",
+      "sha256": "3870db53c0e94fba43f602e6db0c6d1bfa9b81599797ed2e04c9c40658042ced",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war",
+        "aoe2dewarwagers"
+      ],
+      "title": "C05 pending gift nominal collisions \u2014 not proof of payment",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
       "authority": "read-only-physical-observer-no-solvency-or-funding-authority",
       "id": "aoe2war.wolochain.c05-semantic-money-staking-exposure-hold",
       "owner": "wolochain-ops",
@@ -431,7 +455,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "2fdea0ab4659e5e3dc21bce4516b27c76958353372c7c72bf1dc4374a22a4fff",
+      "sha256": "311193502376cef746ff5a854b5f3f19698ee55c7bb2ce246bac8b2a6341b697",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1508,8 +1532,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/c05-independent-gifts-null-valuation-20261108",
-    "commit": "93b2907007298c48df7d9f53df056e280af9f31a"
+    "branch": "fix/c05-gift-claim-nominal-overlap-hold-20261108",
+    "commit": "0c886081887b12d171b58b53d3d060ba9ed49783"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
