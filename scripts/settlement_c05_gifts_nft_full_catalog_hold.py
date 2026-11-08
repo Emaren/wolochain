@@ -11,7 +11,7 @@ from pathlib import Path
 SCRIPTS=Path(__file__).resolve().parent
 spec=importlib.util.spec_from_file_location("c05_semantic_private_source",SCRIPTS/"settlement_c05_semantic33_readonly_hold.py")
 helper=importlib.util.module_from_spec(spec);spec.loader.exec_module(helper)
-VERSION="wolo.c05.gifts-nft-bonds-full-public-catalog.v1"
+VERSION="wolo.c05.gifts-nft-bonds-full-public-catalog.v2"
 EXPECTED={"hd":190,"de":52}
 HD_RISK=frozenset(("user_gifts","oracle_market_proposals",
  "championship_custody_seats","championship_challenge_participants",
@@ -29,7 +29,7 @@ def sql(db):
 SET LOCAL statement_timeout='9000ms';
 SET LOCAL lock_timeout='1000ms';
 SELECT json_build_object(
- 'schema','wolo.c05.gifts-nft-bonds-full-public-catalog.v1',
+ 'schema','wolo.c05.gifts-nft-bonds-full-public-catalog.v2',
  'database',current_database(),
  'catalog',coalesce((SELECT json_agg(c.relname ORDER BY c.relname)
  FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
@@ -40,7 +40,7 @@ SELECT json_build_object(
  else:
   pieces=[
   "'gifts',coalesce((SELECT json_agg(row_to_json(x) ORDER BY x.kind,x.status,x.display_on_profile,x.bounty_ref) FROM (SELECT kind,status,display_on_profile,(lower(coalesce(note,'')) LIKE '%bounty #%') AS bounty_ref,count(*)::text AS rows,coalesce(sum(amount::numeric),0)::text AS nominal_amount,count(accepted_at)::text AS accepted_rows FROM public.user_gifts GROUP BY kind,status,display_on_profile,(lower(coalesce(note,'')) LIKE '%bounty #%')) x),'[]'::json)",
-  "'bounty_gift_provenance',(WITH pending_bounty AS (SELECT g.amount AS nominal,substring(lower(coalesce(g.note,'')) from 'bounty #[[:space:]]*([0-9]+)') AS ref FROM public.user_gifts g WHERE g.kind='WOLO' AND g.status='pending' AND lower(coalesce(g.note,'')) LIKE '%bounty #%'), joined AS (SELECT g.nominal,g.ref,b.id AS linked_id,b.reward_wolo,b.status AS bounty_status FROM pending_bounty g LEFT JOIN public.bounty_opportunities b ON b.id::text=g.ref) SELECT json_build_object('rows',count(*)::text,'nominal_wolo',coalesce(sum(nominal::numeric),0)::text,'linked_to_bounty_rows',count(linked_id)::text,'source_reward_matches',count(*) FILTER(WHERE linked_id IS NOT NULL AND reward_wolo=nominal)::text,'source_status_available_rows',count(*) FILTER(WHERE linked_id IS NOT NULL AND bounty_status='available')::text) FROM joined)",
+  "'bounty_gift_provenance',(WITH pending_bounty AS (SELECT g.amount AS nominal,substring(lower(coalesce(g.note,'')) from 'bounty #[[:space:]]*([0-9]+)') AS ref FROM public.user_gifts g WHERE g.kind='WOLO' AND g.status='pending' AND lower(coalesce(g.note,'')) LIKE '%bounty #%'), joined AS (SELECT g.nominal,g.ref,b.id AS linked_id,b.reward_wolo,b.status AS bounty_status FROM pending_bounty g LEFT JOIN public.bounty_opportunities b ON b.id::text=g.ref) SELECT json_build_object('rows',count(*)::text,'nominal_wolo',coalesce(sum(nominal::numeric),0)::text,'linked_to_bounty_rows',count(linked_id)::text,'source_reward_matches',count(*) FILTER(WHERE linked_id IS NOT NULL AND reward_wolo=nominal)::text,'source_reward_null_rows',count(*) FILTER(WHERE linked_id IS NOT NULL AND reward_wolo IS NULL)::text,'source_reward_conflict_rows',count(*) FILTER(WHERE linked_id IS NOT NULL AND reward_wolo IS NOT NULL AND reward_wolo<>nominal)::text,'source_reward_null_nominal_wolo',coalesce(sum(nominal::numeric) FILTER(WHERE linked_id IS NOT NULL AND reward_wolo IS NULL),0)::text,'source_status_available_rows',count(*) FILTER(WHERE linked_id IS NOT NULL AND bounty_status='available')::text) FROM joined)",
   "'bounty_event_hash_census',(SELECT json_build_object('rows',count(*)::text,'nominal_wolo',coalesce(sum(amount_wolo::numeric),0)::text,'hash_present',count(*) FILTER(WHERE NULLIF(btrim(coalesce(tx_hash,'')),'') IS NOT NULL)::text) FROM public.bounty_events)",
   "'oracle_bonds',coalesce((SELECT json_agg(row_to_json(x) ORDER BY x.status,x.bond_status) FROM (SELECT status,bond_status,count(*)::text AS rows,coalesce(sum(bond_wolo::numeric),0)::text AS nominal_bond_wolo,coalesce(sum(max_pool_wolo::numeric),0)::text AS nominal_max_pool_wolo FROM public.oracle_market_proposals GROUP BY status,bond_status) x),'[]'::json)",
   "'custody_seats',(SELECT json_build_object('rows',count(*)::text,'nft_id_present',count(*) FILTER(WHERE NULLIF(btrim(coalesce(nft_id,'')),'') IS NOT NULL)::text,'class_id_present',count(*) FILTER(WHERE NULLIF(btrim(coalesce(nft_class_id,'')),'') IS NOT NULL)::text) FROM public.championship_custody_seats)",
@@ -116,11 +116,13 @@ def validate(doc,db):
     type(row["finality_status"]) is str and row["finality_status"] not in names_seen,"WATCHER_GROUP_INVALID")
    names_seen.add(row["finality_status"])
    need(number(row["trusted_labeled_rows"])<=number(row["rows"]),"WATCHER_TRUST_COUNTER_INVALID")
-  provenance=pair("bounty_gift_provenance",("rows","nominal_wolo","linked_to_bounty_rows","source_reward_matches","source_status_available_rows"))
+  provenance=pair("bounty_gift_provenance",("rows","nominal_wolo","linked_to_bounty_rows","source_reward_matches","source_reward_null_rows","source_reward_conflict_rows","source_reward_null_nominal_wolo","source_status_available_rows"))
   events=pair("bounty_event_hash_census",("rows","nominal_wolo","hash_present"))
   need(provenance["rows"]==pending_bounty_rows and provenance["nominal_wolo"]==pending_bounty and
        provenance["linked_to_bounty_rows"]<=provenance["rows"] and
-       provenance["source_reward_matches"]<=provenance["linked_to_bounty_rows"] and
+       provenance["source_reward_matches"]+provenance["source_reward_null_rows"]+provenance["source_reward_conflict_rows"]==provenance["linked_to_bounty_rows"] and
+       provenance["source_reward_null_nominal_wolo"]<=provenance["nominal_wolo"] and
+       (provenance["source_reward_null_rows"]>0 or provenance["source_reward_null_nominal_wolo"]==0) and
        provenance["source_status_available_rows"]<=provenance["linked_to_bounty_rows"] and
        events["hash_present"]<=events["rows"],"BOUNTY_GIFT_REFERENCE_COUNTER_INCONSISTENT")
   result.update({"oracle_bond_status_groups":len(bonds),
@@ -133,6 +135,10 @@ def validate(doc,db):
    "bounty_gift_reference_nominal_wolo":str(provenance["nominal_wolo"]),
    "bounty_gift_linked_reference_rows":provenance["linked_to_bounty_rows"],
    "bounty_gift_reward_amount_matches":provenance["source_reward_matches"],
+   "bounty_gift_null_reward_source_rows":provenance["source_reward_null_rows"],
+   "bounty_gift_null_reward_nominal_wolo":str(provenance["source_reward_null_nominal_wolo"]),
+   "bounty_gift_conflicting_reward_source_rows":provenance["source_reward_conflict_rows"],
+   "bounty_gift_reward_identity_independently_verified":False,
    "bounty_gift_source_available_rows":provenance["source_status_available_rows"],
    "bounty_events_recorded":events["rows"],
    "bounty_events_hash_present":events["hash_present"],
@@ -154,7 +160,7 @@ def main(argv=None):
  need(a.hd and a.de and a.hd_sha256 and a.de_sha256,"SOURCE_MISSING")
  hd=validate(helper.private_read(a.hd,a.hd_sha256),"hd")
  de=validate(helper.private_read(a.de,a.de_sha256),"de")
- print(json.dumps({"schema":"wolo.c05.secondary-custody-gift-full-catalog-hold.v1",
+ print(json.dumps({"schema":"wolo.c05.secondary-custody-gift-full-catalog-hold.v2",
    "status":"HOLD_GIFTS_BONDS_NFT_AND_FULL_PUBLIC_WRITER_SCOPE_UNRECONCILED",
    "hd":hd,"de":de,"hd_de_jointly_atomic":False,
    "gift_pending_additive_to_other_liabilities_proven":False,
