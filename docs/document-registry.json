@@ -317,7 +317,7 @@
       "review_interval_days": 7,
       "reviewed_at": "2026-11-08",
       "sensitivity": "internal",
-      "sha256": "d3d5894005ccc276804fb1c5488dc347ef381277dbaa9741b16f8ff389aacc41",
+      "sha256": "ad9996165ade1aa4c4516da961c1e0e9111d38abfc88d08670655eb87b2ba6e4",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -699,7 +699,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "053c603e67b296a8c5e93f4f2adb6f644e270360cf34830c00f642903d45daf8",
+      "sha256": "2630a2660bd6e5725a7dabfd8ba858803a15d32c3de129b7b4f02c09117bc9c3",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1777,7 +1777,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "fix/c03-tokenchain-writer-universe-20261108",
-    "commit": "ffa0255905dd2945121fee2d2443226c3faa87b7"
+    "commit": "932892a5761df4cd6cb91ea6e357b2ba56170427"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
