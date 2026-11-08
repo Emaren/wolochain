@@ -284,6 +284,30 @@
         "operators",
         "ai-agents"
       ],
+      "authority": "source-only-financial-hold-not-a-funding-or-replay-permit",
+      "id": "aoe2war.wolochain.c05-bounty-gift-null-valuation-hold",
+      "owner": "wolochain-ops",
+      "path": "docs/C05_BOUNTY_GIFT_NULL_VALUATION_HOLD.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-08",
+      "sensitivity": "restricted",
+      "sha256": "35c6e0744c5fc8a02f5ce2285962d88046b500afec8a1da41a0e68aa680823f4",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war",
+        "aoe2dewarwagers"
+      ],
+      "title": "C05 pending bounty gift \u2014 missing reward valuation",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
       "authority": "read-only-physical-observer-no-solvency-or-funding-authority",
       "id": "aoe2war.wolochain.c05-semantic-money-staking-exposure-hold",
       "owner": "wolochain-ops",
@@ -407,7 +431,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "d142c55cc78bf8e1b7b40df610f096d324f964e97844759fff3738bce7370eae",
+      "sha256": "d19e07f479683cc2dec1b340c7fd69740efb48f78e3b0ea53f3957367fcdbbe6",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1484,8 +1508,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/c03-c04-c06-readonly-physical-evidence-integration-20261108",
-    "commit": "7163db30ec9af9549accc724c56c72f8ea44305c"
+    "branch": "fix/c05-independent-gifts-null-valuation-20261108",
+    "commit": "d31c983f8b8f9e841f253a789d88cf98b2b4882a"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
