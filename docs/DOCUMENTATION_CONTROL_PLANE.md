@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/c06-live-mvcc-offhost-precapture-20261108` at `e8a926d250b3e29a72d3a80659ae026b5cf1ab91`
+Implementation baseline: `fix/c05-single-height-claims-nominal-escrow-20261108` at `ea27732277a3c876d2ce29f4302804ccc7a77412`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
@@ -27,21 +27,21 @@ This page is generated from the validated front matter in this repository. Cross
 
 ## Documentation health
 
-- Authoritative repository documents: **74**
+- Authoritative repository documents: **75**
 - Path moves in this migration: **0**
 - Every listed document has an explicit owner, lifecycle, authority, and review interval.
 
 ### Types
 
 - `historical`: 14
-- `reference`: 47
+- `reference`: 48
 - `runbook`: 11
 - `working`: 2
 
 ### Lifecycle
 
 - `active`: 16
-- `draft`: 44
+- `draft`: 45
 - `historical`: 14
 
 ## Documents
@@ -64,6 +64,7 @@ This page is generated from the validated front matter in this repository. Cross
 | [C03 Topology-Only Watchdog Baseline Enrollment](C03_TOPOLOGY_ONLY_WATCHDOG_ENROLLMENT.md) | `reference` | `draft` | `topology-only-no-financial-writer-fence-or-financial-permit` |
 | [C04 indexed WOLO transfer candidate ambiguity and hashless claim finality](C04_INDEXED_WOLO_TRANSFER_CANDIDATE_AMBIGUITY_HOLD.md) | `reference` | `draft` | `source-only-c04-reconciliation-evidence-no-payment-authorization` |
 | [C05 pending bounty gift — missing reward valuation](C05_BOUNTY_GIFT_NULL_VALUATION_HOLD.md) | `reference` | `draft` | `source-only-financial-hold-not-a-funding-or-replay-permit` |
+| [C04/C05 Read-Only HD Claim Nominal Versus Historical Escrow: Real Native Height and Economic HOLD](C05_HD_CLAIMS_VS_HISTORIC_ESCROW_NATIVE_HEIGHT_HOLD.md) | `reference` | `draft` | `physical-aggregate-reconciliation-observation-not-financial-solvency-or-release` |
 | [C05 pending gift nominal collisions — not proof of payment](C05_PENDING_GIFT_SAME_NOMINAL_CLAIM_COLLISION_HOLD.md) | `reference` | `draft` | `source-only-c05-historical-payment-ambiguity-no-payment-authority` |
 | [C05 Semantic Money Columns and Staking Exposure — Independent HOLD](C05_SEMANTIC_MONEY_STAKING_EXPOSURE_HOLD.md) | `reference` | `draft` | `read-only-physical-observer-no-solvency-or-funding-authority` |
 | [C05 Expanded Payout and NFT-Transfer Surface Census — Read-Only HOLD](C05_SEVEN_SURFACE_READONLY_CENSUS_HOLD.md) | `reference` | `draft` | `read-only-source-and-physical-financial-hold-not-c03-maintenance-or-funded-permit` |
