@@ -24,17 +24,17 @@ def fixture():
             {"kind":"bet_payout","claims":15,"nominal_wolo":"109504",
              "wallet_count":15,"attempted":13,
              "any_candidate_claims":9,"exactly_one_candidate_claims":1,
-             "multiple_candidate_claims":8,"near_attempt_claims":4,
+             "unique_near_attempt_claims":0,"unique_before_window_claims":0,"unique_after_window_claims":1,"unique_missing_time_claims":0,"multiple_candidate_claims":8,"near_attempt_claims":4,
              "thirty_day_claims":4,"all_candidate_rows":691},
             {"kind":"bet_refund","claims":3,"nominal_wolo":"6801",
              "wallet_count":3,"attempted":3,
              "any_candidate_claims":1,"exactly_one_candidate_claims":0,
-             "multiple_candidate_claims":1,"near_attempt_claims":1,
+             "unique_near_attempt_claims":0,"unique_before_window_claims":0,"unique_after_window_claims":0,"unique_missing_time_claims":0,"multiple_candidate_claims":1,"near_attempt_claims":1,
              "thirty_day_claims":1,"all_candidate_rows":43},
             {"kind":"founders_bonus","claims":51,"nominal_wolo":"4138",
              "wallet_count":51,"attempted":50,
              "any_candidate_claims":51,"exactly_one_candidate_claims":0,
-             "multiple_candidate_claims":51,"near_attempt_claims":49,
+             "unique_near_attempt_claims":0,"unique_before_window_claims":0,"unique_after_window_claims":0,"unique_missing_time_claims":0,"multiple_candidate_claims":51,"near_attempt_claims":49,
              "thirty_day_claims":49,"all_candidate_rows":5412},
         ]}
 
@@ -73,6 +73,36 @@ class TransferCandidatesTests(unittest.TestCase):
 
     def test_69_claim_amount_drift_denied(self):
         self.d["groups"][2]["nominal_wolo"]="4139";self.held()
+
+    def test_unique_candidate_after_window_is_not_near_proof(self):
+        out=c.validate(self.d)
+        self.assertEqual(out["groups"]["bet_payout"]["unique_candidate_after_attempt_window"],1)
+        self.assertEqual(out["groups"]["bet_payout"]["unique_candidate_near_attempt"],0)
+        self.assertFalse(out["candidate_transfer_is_payment_proof"])
+
+    def test_unique_window_partition_cannot_forge_near_match(self):
+        self.d["groups"][0]["unique_near_attempt_claims"]=1
+        self.held()
+
+    def test_unique_window_partition_must_cover_all_unique_matches(self):
+        self.d["groups"][0]["unique_after_window_claims"]=0
+        self.held()
+
+    def test_unavailable_attempt_time_cannot_be_forged(self):
+        self.d["groups"][0]["unique_missing_time_claims"]=1
+        self.held()
+
+    def test_unique_missing_timestamp_can_coexist_with_recorded_attempt(self):
+        self.d["groups"][0]["attempted"]=15
+        self.d["groups"][0]["unique_after_window_claims"]=0
+        self.d["groups"][0]["unique_missing_time_claims"]=1
+        out=c.validate(self.d)
+        self.assertEqual(out["groups"]["bet_payout"]["unique_candidate_time_unavailable"],1)
+        self.assertFalse(out["claim_discharge_authorized"])
+
+    def test_bad_source_version_is_stop(self):
+        self.d["schema"]="wolo.c04.indexed-transfer-candidate-readonly-census.v1"
+        self.held()
 
     def test_missing_wallet_denied(self):
         self.d["groups"][0]["wallet_count"]=14;self.held()

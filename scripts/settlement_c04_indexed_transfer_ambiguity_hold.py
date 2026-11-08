@@ -16,8 +16,8 @@ import re
 import stat
 import sys
 
-SCHEMA = "wolo.c04.indexed-transfer-candidate-ambiguity-hold.v1"
-SOURCE_SCHEMA = "wolo.c04.indexed-transfer-candidate-readonly-census.v1"
+SCHEMA = "wolo.c04.indexed-transfer-candidate-ambiguity-hold.v2"
+SOURCE_SCHEMA = "wolo.c04.indexed-transfer-candidate-readonly-census.v2"
 SHA = re.compile(r"[0-9a-f]{64}\Z")
 MAX = 100_000
 KIND = {
@@ -42,7 +42,8 @@ WITH claims AS (
                               AND c.payout_attempted_at+interval '7 days')::int AS near_hits,
         count(t.id) FILTER (WHERE c.payout_attempted_at IS NOT NULL
             AND t.timestamp BETWEEN c.payout_attempted_at-interval '1 day'
-                              AND c.payout_attempted_at+interval '30 days')::int AS thirty_day_hits
+                              AND c.payout_attempted_at+interval '30 days')::int AS thirty_day_hits,
+        max(t.timestamp) AS candidate_timestamp
  FROM claims c LEFT JOIN public.wolo_indexed_transfers t
       ON c.wallet IS NOT NULL AND c.wallet <> ''
      AND lower(btrim(t.recipient_address))=c.wallet
@@ -56,6 +57,18 @@ WITH claims AS (
         count(*) FILTER(WHERE payout_attempted_at IS NOT NULL)::int AS attempted,
         count(*) FILTER(WHERE any_hits > 0)::int AS any_candidate_claims,
         count(*) FILTER(WHERE any_hits = 1)::int AS exactly_one_candidate_claims,
+        count(*) FILTER(WHERE any_hits = 1 AND near_hits = 1)::int AS unique_near_attempt_claims,
+        count(*) FILTER(WHERE any_hits = 1 AND payout_attempted_at IS NOT NULL
+            AND candidate_timestamp IS NOT NULL
+            AND candidate_timestamp < payout_attempted_at-interval '1 day')::int
+            AS unique_before_window_claims,
+        count(*) FILTER(WHERE any_hits = 1 AND payout_attempted_at IS NOT NULL
+            AND candidate_timestamp IS NOT NULL
+            AND candidate_timestamp > payout_attempted_at+interval '7 days')::int
+            AS unique_after_window_claims,
+        count(*) FILTER(WHERE any_hits = 1 AND
+            (payout_attempted_at IS NULL OR candidate_timestamp IS NULL))::int
+            AS unique_missing_time_claims,
         count(*) FILTER(WHERE any_hits > 1)::int AS multiple_candidate_claims,
         count(*) FILTER(WHERE near_hits > 0)::int AS near_attempt_claims,
         count(*) FILTER(WHERE thirty_day_hits > 0)::int AS thirty_day_claims,
@@ -69,7 +82,7 @@ WITH claims AS (
  FROM public.wolo_indexed_transfers
 )
 SELECT jsonb_build_object(
- 'schema','wolo.c04.indexed-transfer-candidate-readonly-census.v1',
+ 'schema','wolo.c04.indexed-transfer-candidate-readonly-census.v2',
  'database','aoe2hd_db','financial_release_authorized',false,
  'index_not_independent_consensus_finality',true,
  'window_before_attempt_days',1,'near_after_attempt_days',7,
@@ -83,6 +96,10 @@ SELECT jsonb_build_object(
     'wallet_count',wallet_count,'attempted',attempted,
     'any_candidate_claims',any_candidate_claims,
     'exactly_one_candidate_claims',exactly_one_candidate_claims,
+    'unique_near_attempt_claims',unique_near_attempt_claims,
+    'unique_before_window_claims',unique_before_window_claims,
+    'unique_after_window_claims',unique_after_window_claims,
+    'unique_missing_time_claims',unique_missing_time_claims,
     'multiple_candidate_claims',multiple_candidate_claims,
     'near_attempt_claims',near_attempt_claims,
     'thirty_day_claims',thirty_day_claims,
@@ -132,6 +149,8 @@ def validate(data):
         need(type(item) is dict and set(item)=={
             "kind","claims","nominal_wolo","wallet_count","attempted",
             "any_candidate_claims","exactly_one_candidate_claims",
+            "unique_near_attempt_claims","unique_before_window_claims",
+            "unique_after_window_claims","unique_missing_time_claims",
             "multiple_candidate_claims","near_attempt_claims",
             "thirty_day_claims","all_candidate_rows"
         }, "CLAIM_GROUP_SCHEMA_DRIFT")
@@ -147,17 +166,27 @@ def validate(data):
         wallet=count(item["wallet_count"],n)
         any_hits=count(item["any_candidate_claims"],n)
         unique=count(item["exactly_one_candidate_claims"],n)
+        unique_near=count(item["unique_near_attempt_claims"],n)
+        unique_before=count(item["unique_before_window_claims"],n)
+        unique_after=count(item["unique_after_window_claims"],n)
+        unique_missing=count(item["unique_missing_time_claims"],n)
         multi=count(item["multiple_candidate_claims"],n)
         near=count(item["near_attempt_claims"],n)
         far=count(item["thirty_day_claims"],n)
         total=count(item["all_candidate_rows"],n*indexed)
         need(wallet==n and unique+multi==any_hits and near<=far<=any_hits
-             and near<=attempted and total>=unique+2*multi,
+             and near<=attempted and total>=unique+2*multi and
+             unique_near+unique_before+unique_after+unique_missing==unique and
+             unique_near<=near,
              "IMPOSSIBLE_TRANSFER_MATCH_COUNTS")
         safe[kind]={"claims":n,"nominal_wolo":str(expected_nominal),
             "wallet_identified":wallet,"recorded_attempts":attempted,
             "claim_with_any_candidates":any_hits,
             "claim_with_exactly_one_candidate":unique,
+            "unique_candidate_near_attempt":unique_near,
+            "unique_candidate_before_attempt_window":unique_before,
+            "unique_candidate_after_attempt_window":unique_after,
+            "unique_candidate_time_unavailable":unique_missing,
             "claim_with_many_candidates":multi,
             "claim_with_near_attempt_candidate":near,
             "claim_with_thirty_day_candidate":far,
