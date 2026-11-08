@@ -151,6 +151,9 @@ jobs:
       - name: C09 exact signed canary bound to genuine C08 policy and 1-WOLO ceiling
         run: python3 -B -m unittest discover -s tests -p 'test_settlement_c09_adopted_governance_binding.py' -v
 
+      - name: C09 strict new Keychain P256 C08 adoption SHA binding and 13 negative tests
+        run: python3 -B -m unittest discover -s tests -p 'test_settlement_c09_keychain_governance_v3.py' -v
+
       - name: C08 physical Nov7 owner-device direction evidence (nonfunded)
         run: python3 -B -m unittest discover -s tests -p 'test_settlement_c08_existing_owner_direction_hold.py' -v
 
