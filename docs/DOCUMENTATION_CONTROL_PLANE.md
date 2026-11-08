@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/c05-single-height-claims-nominal-escrow-20261108` at `ea27732277a3c876d2ce29f4302804ccc7a77412`
+Implementation baseline: `fix/c03-tokenchain-writer-universe-20261108` at `e6a6e9bf708e44f9aee313431790a5afa2da7e24`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
@@ -27,21 +27,21 @@ This page is generated from the validated front matter in this repository. Cross
 
 ## Documentation health
 
-- Authoritative repository documents: **75**
+- Authoritative repository documents: **76**
 - Path moves in this migration: **0**
 - Every listed document has an explicit owner, lifecycle, authority, and review interval.
 
 ### Types
 
 - `historical`: 14
-- `reference`: 48
+- `reference`: 49
 - `runbook`: 11
 - `working`: 2
 
 ### Lifecycle
 
 - `active`: 16
-- `draft`: 45
+- `draft`: 46
 - `historical`: 14
 
 ## Documents
@@ -61,6 +61,7 @@ This page is generated from the validated front matter in this repository. Cross
 | [C03 Real Production Schema Isolated NOLOGIN Ownership Rehearsal](C03_REAL_PRODUCTION_SCHEMA_OWNER_REHEARSAL.md) | `reference` | `draft` | `source-only-isolated-negative-proof-never-a-production-DDL-permit` |
 | [C03 root legacy settlement and RPC transport admission gap](C03_ROOT_LEGACY_RPC_REACHABILITY_HOLD.md) | `reference` | `draft` | `source-only-physical-transport-audit-no-financial-fence` |
 | [C03 Synthetic NOLOGIN Owner Partition Rehearsal](C03_SYNTHETIC_NOLOGIN_OWNER_REHEARSAL.md) | `reference` | `draft` | `source-only-nologin-permission-rehearsal-not-live-ddl-approval` |
+| [C03 TokenChain Indexer: Previously Omitted Service Discovery and Financial Writer HOLD](C03_TOKENCHAIN_INDEXER_UNSCOPED_DISCOVERY_HOLD.md) | `reference` | `draft` | `read-only-discovery-only-no-maintenance-unit-change` |
 | [C03 Topology-Only Watchdog Baseline Enrollment](C03_TOPOLOGY_ONLY_WATCHDOG_ENROLLMENT.md) | `reference` | `draft` | `topology-only-no-financial-writer-fence-or-financial-permit` |
 | [C04 indexed WOLO transfer candidate ambiguity and hashless claim finality](C04_INDEXED_WOLO_TRANSFER_CANDIDATE_AMBIGUITY_HOLD.md) | `reference` | `draft` | `source-only-c04-reconciliation-evidence-no-payment-authorization` |
 | [C05 pending bounty gift — missing reward valuation](C05_BOUNTY_GIFT_NULL_VALUATION_HOLD.md) | `reference` | `draft` | `source-only-financial-hold-not-a-funding-or-replay-permit` |
