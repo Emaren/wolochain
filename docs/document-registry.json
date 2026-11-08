@@ -670,6 +670,31 @@
         "financial-reviewers",
         "ai-agents"
       ],
+      "authority": "versioned-nonfunded-owner-governance-adoption-only",
+      "id": "aoe2war.wolochain.c08-real-solo-owner-governance-adoption-v2",
+      "owner": "wolochain-ops",
+      "path": "docs/C08_REAL_SOLO_GOVERNANCE_ADOPTION_V2.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-08",
+      "sensitivity": "restricted",
+      "sha256": "e6ce36bc82b54fd05a8fa002d589412b00c8ed9beb032d01809b492cd202c388",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2hdbets",
+        "aoe2dewarwagers"
+      ],
+      "title": "C08 Genuine One-Owner Governance Adoption V2 \u2014 Signed Policy, Zero Financial Permission",
+      "type": "runbook"
+    },
+    {
+      "audience": [
+        "operators",
+        "developers",
+        "financial-reviewers",
+        "ai-agents"
+      ],
       "authority": "source-only-cryptographic-ratification-intent-review-no-governance-adoption-or-woLo-funding",
       "id": "aoe2war.wolochain.c08-signed-solo-owner-ratification-intent-hold",
       "owner": "wolochain-ops",
@@ -724,7 +749,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "65dc5db0233a0f28429a0b2eb05638c680551e5acb186488ed6100709784356c",
+      "sha256": "71d2c330c915f7f7a755e97dd65f4a2cee5e26456a14dd48653d914374410b53",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1801,8 +1826,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/c03-67-unit-watchdog-20261108",
-    "commit": "1702489e5ede919a06ea9d116d89838f9978c52c"
+    "branch": "feat/c08-actual-governance-adoption-20261108",
+    "commit": "ca4327a085df9f4a4a59bb7b0bb1b8eed859c4bd"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
