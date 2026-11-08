@@ -197,7 +197,7 @@
       "review_interval_days": 7,
       "reviewed_at": "2026-11-08",
       "sensitivity": "restricted",
-      "sha256": "6f8ae05f6f986adf7e4d26c07899c048f3e5590648d4d8c0458f32fa3488e5a9",
+      "sha256": "7d8154b692400032b52dec811561f05b63ffe906ab9f2cc83dd0b3b138f47739",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -359,7 +359,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "0201f2c4bad449ac3049232e81528e52ca30402041bc60249d50ae9f8d185634",
+      "sha256": "d9d858d2f7ebbd10ba039f5bc129fd7e2714920559cbd674cd5eb504181ec97a",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1437,7 +1437,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "fix/c03-root-rpc-transport-coverage-20261108",
-    "commit": "7fc82eeadec4624decf8cacf49c313207a4ddcd7"
+    "commit": "72a7f088e12b263561389cf9b52f6004c9db2b8a"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

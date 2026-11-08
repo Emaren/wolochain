@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/c03-root-rpc-transport-coverage-20261108` at `7fc82eeadec4624decf8cacf49c313207a4ddcd7`
+Implementation baseline: `fix/c03-root-rpc-transport-coverage-20261108` at `72a7f088e12b263561389cf9b52f6004c9db2b8a`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 

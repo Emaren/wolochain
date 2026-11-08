@@ -89,3 +89,39 @@ Do NOT transfer WOLO, run a payout or label a software-only
 transport check as independent bank or custody proof.
 
 All financial C01-C09 acceptance gates remain HARD HOLD.
+
+## 2026-11-08 additional live confinement evidence (source v2)
+
+Separate root-local systemctl show inspections show that BOTH legacy
+root settlement units at 8092 and 8093 have NoNewPrivileges=no,
+ProtectSystem=no, PrivateTmp=no, no configured privilege-drop user,
+and default broad Linux capability bounding sets that include
+cap_sys_admin and cap_dac_override. The consensus validator also
+runs as root but has NoNewPrivileges=yes, ProtectSystem=full,
+PrivateTmp=yes and explicit writable paths.
+
+The revised v2 source-bound observer captures these confinement
+properties as booleans, not private unit environment variables, and
+never promotes them to financial PASS. This is permission-exposure
+evidence, not proof of malicious operation. Merely adding a unit
+drop-in while a process is running does NOT confine that process;
+changing running root financial producers requires a separate
+guarded stop/restart and rollback, gated on coherent backup/recovery
+and full upstream sign-off. No such live change was made.
+
+## Source v2 exact proof and provenance
+
+The revised HEL1 physical observer source SHA256 is
+c67ef049b9d515ee273a2d3691059bf889789537a6bcd1cc0c418a802ac8762a.
+The v2 source returned expected exit 3/HOLD on the actual HEL1 and
+proved both named legacy services lack NoNewPrivileges, ProtectSystem
+and PrivateTmp, while the consensus validator has all three enabled.
+The resulting private root0600 physical source-and-evidence receipt
+SHA256 is
+b07f51c0d34dc00ce9dffd96ff9bd9799c0f2f65b7ede1c92bf5c53d106cff9e
+at /root/aoe2war-session-a-c03-unit-confinement-v2-20261108/physical-v2-confinement-hold-20261108.json.
+
+All 21 new unit-confinement/transport-focused adversarial tests pass
+locally. These measurements are a capability inventory and admission
+gap, not a complete writer isolation, not an independent chain bank
+or custody proof, and not a financial permit. No unit mutation.
