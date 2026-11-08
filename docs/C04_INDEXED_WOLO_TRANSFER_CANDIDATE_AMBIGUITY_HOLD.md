@@ -150,3 +150,45 @@ checkpoint, claimed payout purpose, authorized custody signer, unique
 economic link, or recipient claim discharge is established**.
 The historical claim still has no recorded payout hash; do not write
 one or trigger payment based on this observation. C04 HARD HOLD.
+
+## November 8 — exact v2 temporal partition of the lone unique candidate
+
+The first indexed-transfer guard established one bet-payout
+claim with exactly one recipient-plus-amount local index candidate.
+That narrow uniqueness by itself has **no payment-finality value**.
+
+The revised C04 v2 aggregate SQL now independently partitions
+**every** exactly-one-candidate claim into mutually exclusive:
+inside the payout-attempt window (one day before through seven days
+after), before the window, after the window, and unavailable
+comparable timestamps. The validator rejects impossible or missing
+partitions, unknown claim kinds, changed 69-claim totals, falsified
+financial release assertions and incompatible time-window settings.
+
+The actual HEL1 PostgreSQL 16 REPEATABLE READ READ ONLY run returned
+exactly **one** unique indexed candidate, **zero** inside the
+near-attempt window and **one more than seven days after** the
+recorded attempt. It is a bet-payout claim. Separate private
+provenance checks found the local indexed transaction sender among
+senders associated with hash-bearing bet payouts, but the transfer
+memo contained no tested source-market reference or settlement/payout
+labels. Neither an address overlap nor the absence of a memo substring
+authenticates or disproves the economic purpose of that transaction.
+
+The new exact C04 time-partition source is
+scripts/settlement_c04_indexed_transfer_ambiguity_hold.py,
+SHA256:
+f824aa48b4c3509771f25d69d2872661078b22f814c8b41e63a911ed3de3877b.
+The first source v1 receipt remains historical evidence for
+its original snapshot and must not be silently relabelled v2.
+
+Real private source-bound time-partition evidence SHA256:
+17c890c014141c4bc392dfad8b9d529e1a1994737d82d7b141ea1998d6ba13d3.
+Private root0600 path:
+/root/aoe2war-session-a-c04-index-timing-v2-20261108/physical-v2-index-time-partition-hold-20261108.json.
+
+**Result: financial HARD HOLD**. The indexed recipient/amount
+candidate exists in local same-node chain data, but the claimed
+historical payout's source intent, independent finality, signer
+identity, ledger non-overlap and discharge are still unproven.
+No automatic retry, refund, credit, claim rewrite or payout.

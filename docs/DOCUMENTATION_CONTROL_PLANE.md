@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/c04-indexed-transfer-ambiguity-hold-20261108` at `1b720dfab1c054f0c1fe4f9308ae00e97c961e77`
+Implementation baseline: `fix/c04-indexed-transfer-ambiguity-hold-20261108` at `881247ed368c058016ad24e266899db2a5943d5a`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
