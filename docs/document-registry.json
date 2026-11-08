@@ -597,6 +597,30 @@
         "financial-reviewers",
         "ai-agents"
       ],
+      "authority": "one-human-nonfunded-governance-only",
+      "id": "aoe2war.wolochain.c08-automated-keychain-governance-v3",
+      "owner": "wolochain-ops",
+      "path": "docs/C08_AUTOMATED_KEYCHAIN_GOVERNANCE_V3.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-08",
+      "sensitivity": "restricted",
+      "sha256": "f8c1733c0ea6043bfc3dcbd2b225eba39458ff4e435cbfc119e6d35e83d31aa9",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C08 Keychain Software P-256 One-Human Governance \u2014 Real Passwordless Adoption",
+      "type": "runbook"
+    },
+    {
+      "audience": [
+        "operators",
+        "developers",
+        "financial-reviewers",
+        "ai-agents"
+      ],
       "authority": "source-only-offhost-nonce-witness-command-review-no-live-activation-or-finance-permit",
       "id": "aoe2war.wolochain.c08-dedicated-witness-command-source-review-hold",
       "owner": "wolochain-ops",
@@ -773,7 +797,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "efd97edc0332264a38d006ccaa33428836464ef9c9530de4c2417d3e152801cf",
+      "sha256": "c04d198919b6333ed3c8242f4603144913146d7e19a9291232ce1abff11bc083",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1850,8 +1874,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "feat/c09-binding-to-ratified-c08-20261108",
-    "commit": "828bcf53539b9e890063bd162f236146de295021"
+    "branch": "feat/c08-keychain-automated-governance-v3-20261108",
+    "commit": "fdd2f7046d995ab5d8587edcbe2b9247558ed80b"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
