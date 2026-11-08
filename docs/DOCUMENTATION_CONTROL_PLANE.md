@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/c03-67-unit-watchdog-20261108` at `e9fcb501f7d40dd4f67a44a31c988acf80d2dc46`
+Implementation baseline: `fix/c03-67-unit-watchdog-20261108` at `ec4b6af37b0dd26a8159011e124ecfca4df82775`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 

@@ -155,7 +155,7 @@
       "review_interval_days": 7,
       "reviewed_at": "2026-11-08",
       "sensitivity": "restricted",
-      "sha256": "3f8ded86ac02fb1bc5fb54cdaecb7c2c3ea30a4ae651ca3426fc39aaf77c79d2",
+      "sha256": "67d776d58f909f000dfcfd27c24edb41c395c42e87f94fb700422ef993a3e057",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -724,7 +724,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "9cfd3912aa695c6386debbce018559c7a9a962109360749d1a45e5924bb15cdf",
+      "sha256": "7e70bbd0e140eba2f2e49c34d0c84dd29bce45a8a38bad98ea23e1702bd2d7e3",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1802,7 +1802,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "fix/c03-67-unit-watchdog-20261108",
-    "commit": "e9fcb501f7d40dd4f67a44a31c988acf80d2dc46"
+    "commit": "ec4b6af37b0dd26a8159011e124ecfca4df82775"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
