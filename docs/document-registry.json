@@ -376,6 +376,30 @@
     },
     {
       "audience": [
+        "operators",
+        "developers",
+        "financial-reviewers",
+        "ai-agents"
+      ],
+      "authority": "physical-aggregate-reconciliation-observation-not-financial-solvency-or-release",
+      "id": "aoe2war.wolochain.c05-hd-claim-nominal-legacy-escrow-single-height-held",
+      "owner": "wolochain-ops",
+      "path": "docs/C05_HD_CLAIMS_VS_HISTORIC_ESCROW_NATIVE_HEIGHT_HOLD.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-08",
+      "sensitivity": "restricted",
+      "sha256": "b2d627d9f97c6c564320028fdc2db43c52b2ab0071cdc19a4f6ca09c376213af",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2hdbets"
+      ],
+      "title": "C04/C05 Read-Only HD Claim Nominal Versus Historical Escrow: Real Native Height and Economic HOLD",
+      "type": "reference"
+    },
+    {
+      "audience": [
         "developers",
         "operators",
         "ai-agents"
@@ -650,7 +674,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "0481424b9b650b9a9a771311071db6a83f040f1a7f3c22de795fb9b876af0b8e",
+      "sha256": "b9d45db4c39cdec42ee2ac872add67aec0e4e77cfb666c3c02637cf2ea3c4a7b",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1727,8 +1751,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/c06-live-mvcc-offhost-precapture-20261108",
-    "commit": "e8a926d250b3e29a72d3a80659ae026b5cf1ab91"
+    "branch": "fix/c05-single-height-claims-nominal-escrow-20261108",
+    "commit": "ea27732277a3c876d2ce29f4302804ccc7a77412"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

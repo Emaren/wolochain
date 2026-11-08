@@ -154,6 +154,9 @@ jobs:
       - name: C06 unquiesced full-data offhost encryption/readback rehearsal (nonfinancial fixtures)
         run: python3 -B -m unittest discover -s tests -p 'test_settlement_c06_unquiesced_offhost_mvcc_precapture.py' -v
 
+      - name: C05 source-pinned native escrow versus HD claim nominal (nonfinancial fixtures)
+        run: python3 -B -m unittest discover -s tests -p 'test_settlement_c05_claimed_pending_vs_legacy_escrow_hold.py' -v
+
       - name: C08 dedicated Intel deny-only SSHD launchd reversible contracts
         run: python3 -B -m unittest discover -s tests -p 'test_settlement_c08_intel_deny_only_sshd_launchd.py' -v
 
