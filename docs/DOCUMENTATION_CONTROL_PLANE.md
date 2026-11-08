@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `feat/c08-keychain-automated-governance-v3-20261108` at `fdd2f7046d995ab5d8587edcbe2b9247558ed80b`
+Implementation baseline: `feat/c08-keychain-automated-governance-v3-20261108` at `a5ca0ce1e1d04bc820966eab00732af9934ea4b0`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 

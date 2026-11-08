@@ -797,7 +797,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "c04d198919b6333ed3c8242f4603144913146d7e19a9291232ce1abff11bc083",
+      "sha256": "88aa5872cf953cce8123dea3ec2fb4212627a96fd6a6b9d4449aed5c28da9038",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1875,7 +1875,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "feat/c08-keychain-automated-governance-v3-20261108",
-    "commit": "fdd2f7046d995ab5d8587edcbe2b9247558ed80b"
+    "commit": "a5ca0ce1e1d04bc820966eab00732af9934ea4b0"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
