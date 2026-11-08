@@ -23,7 +23,7 @@
   "adoption_may_precede_other_financial_gates": true,
   "policy_adoption_is_not_permission_to_fund": true,
   "revocation_requires_distinct_owner_signed_policy_action": true,
-  "first_funded_canary_limit_uwolo": 0,
+  "separately_signed_future_c09_canary_ceiling_uwolo": 1000000,
   "human_owner_attestation_required": true,
   "public_notice_url": "https://github.com/Emaren/wolochain/issues/184",
   "public_notice_minimum_seconds": 86400

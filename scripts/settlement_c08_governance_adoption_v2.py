@@ -34,7 +34,7 @@ import settlement_solo_owner_public_notice_hold as notice
 
 CHAIN="wolo-1"
 POLICY_PATH="docs/settlement-contracts/solo-owner-governance-adoption-v2.json"
-POLICY_SHA="602f1078a2979d7f467e2ac4e055f6364bff8c4baf8d111fb1e10a227eb86e03"
+POLICY_SHA="50910864e6d24236ac3ea98cda1456bedee8d9bf2f9365a8441c6d1e29b41806"
 OWNER_DER_SHA="00d08c27271cf484f684059e83478d9522765c374101d5c4e8ed29e266e500ed"
 VERSION=2
 POLICY_SCHEMA="wolo.c08.solo-owner-financial-governance-policy.v2"
@@ -51,7 +51,8 @@ REQUEST_KEYS=frozenset({
     "policy_sha256","owner_der_sha256","notice_body_sha256",
     "notice_url","owner_human_count","independent_human_review_claimed",
     "legacy_8092_fallback_allowed","historical_claims_waived",
-    "initial_funded_allowance_uwolo","c09_transaction_signature_present",
+    "initial_funded_allowance_uwolo","future_c09_canary_ceiling_uwolo",
+    "c09_transaction_signature_present",
     "adoption_is_transaction_permit","nonce","not_before","expires_at"
 })
 PACKET_KEYS=frozenset({"schema","request","signature_b64"})
@@ -168,7 +169,7 @@ def load_policy(repo):
             and obj.get("old_unknown_claims_deleted_or_waived") is False
             and obj.get("unknown_transaction_rebroadcast_allowed") is False
             and obj.get("initial_funded_allowance_uwolo")==0
-            and obj.get("first_funded_canary_limit_uwolo")==0
+            and obj.get("separately_signed_future_c09_canary_ceiling_uwolo")==1000000
             and obj.get("policy_adoption_is_not_permission_to_fund") is True
             and obj.get("require_fresh_exact_c09_owner_transaction_signature") is True
             and obj.get("require_offhost_one_use_transaction_nonce") is True
@@ -219,6 +220,7 @@ def validate_request(q,now,commit):
         "legacy_8092_fallback_allowed":False,
         "historical_claims_waived":False,
         "initial_funded_allowance_uwolo":0,
+        "future_c09_canary_ceiling_uwolo":1000000,
         "c09_transaction_signature_present":False,
         "adoption_is_transaction_permit":False
     }
@@ -252,6 +254,7 @@ def prepare_request(*,repo,pem,now=None,nonce=None):
         "owner_human_count":1,"independent_human_review_claimed":False,
         "legacy_8092_fallback_allowed":False,"historical_claims_waived":False,
         "initial_funded_allowance_uwolo":0,
+        "future_c09_canary_ceiling_uwolo":1000000,
         "c09_transaction_signature_present":False,
         "adoption_is_transaction_permit":False,
         "nonce":nonce or os.urandom(16).hex(),

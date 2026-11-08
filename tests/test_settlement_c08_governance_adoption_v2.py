@@ -92,6 +92,7 @@ class TestRealAdoption(unittest.TestCase):
     def test_source_policy_has_zero_funds(self):
         data=json.loads(m.load_policy(ROOT))
         self.assertEqual(data["initial_funded_allowance_uwolo"],0)
+        self.assertEqual(data["separately_signed_future_c09_canary_ceiling_uwolo"],1000000)
         self.assertFalse(data["legacy_8092_fallback_allowed"])
         self.assertFalse(data["old_unknown_claims_deleted_or_waived"])
         self.assertEqual(data["human_operator_count"],1)
@@ -100,6 +101,7 @@ class TestRealAdoption(unittest.TestCase):
         self.assertEqual(self.request["policy_sha256"],m.POLICY_SHA)
         self.assertEqual(self.request["owner_der_sha256"],self.derhash)
         self.assertEqual(self.request["initial_funded_allowance_uwolo"],0)
+        self.assertEqual(self.request["future_c09_canary_ceiling_uwolo"],1000000)
         self.assertFalse(self.request["adoption_is_transaction_permit"])
         self.assertEqual(self.request["nonce"],"1"*32)
     def test_genuine_signature_and_public_notice_pass(self):
@@ -152,6 +154,12 @@ class TestRealAdoption(unittest.TestCase):
         self.stopped(p=self.packet(q))
     def test_funded_quota_denied_even_if_signed(self):
         q=dict(self.request);q["initial_funded_allowance_uwolo"]=1
+        self.stopped(p=self.packet(q))
+    def test_future_canary_ceiling_cannot_be_raised_by_signed_request(self):
+        q=dict(self.request);q["future_c09_canary_ceiling_uwolo"]=10000000
+        self.stopped(p=self.packet(q))
+    def test_future_canary_ceiling_cannot_be_removed(self):
+        q=dict(self.request);q.pop("future_c09_canary_ceiling_uwolo")
         self.stopped(p=self.packet(q))
     def test_c09_permit_smuggling_denied(self):
         q=dict(self.request);q["c09_transaction_signature_present"]=True
