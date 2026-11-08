@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/c03-tokenchain-writer-universe-20261108` at `e6a6e9bf708e44f9aee313431790a5afa2da7e24`
+Implementation baseline: `fix/c03-tokenchain-writer-universe-20261108` at `ffa0255905dd2945121fee2d2443226c3faa87b7`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
