@@ -139,6 +139,10 @@ jobs:
       - name: C08 centralized single-owner public notice 24h and mutation HOLD contracts
         run: python3 -m unittest discover -s tests -p 'test_settlement_solo_owner_public_notice_hold.py' -v
 
+      - name: C08 actual Ed25519 policy-intent notice binding (non-authorizing)
+        run: python3 -B -m unittest discover -s tests -p 'test_settlement_c08_signed_ratification_intent_hold.py' -v
+
+
       - name: C01 native confined held service-unit contracts (no activation)
         run: python3 -m unittest discover -s tests -p 'test_c01_held_systemd_units.py' -v
 
