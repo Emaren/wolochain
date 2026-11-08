@@ -450,6 +450,31 @@
         "financial-reviewers",
         "ai-agents"
       ],
+      "authority": "historical-owner-device-signature-readonly-evidence-only-no-funding",
+      "id": "aoe2war.wolochain.c08-existing-owner-device-direction-hold",
+      "owner": "wolochain-ops",
+      "path": "docs/C08_EXISTING_OWNER_DEVICE_DIRECTION_PHYSICAL_HOLD.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-08",
+      "sensitivity": "restricted",
+      "sha256": "576b1325b75dbd7f11412912fa562f7f0da04c33d8ca968b93208934a90047a5",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war",
+        "aoe2dewarwagers"
+      ],
+      "title": "C08 Verified Owner Device Direction: Historical Ed25519 Signature Is Not Governance Ratification",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "operators",
+        "developers",
+        "financial-reviewers",
+        "ai-agents"
+      ],
       "authority": "source-only-cryptographic-ratification-intent-review-no-governance-adoption-or-woLo-funding",
       "id": "aoe2war.wolochain.c08-signed-solo-owner-ratification-intent-hold",
       "owner": "wolochain-ops",
@@ -504,7 +529,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "1949bec3ee993094d09cf3cd083add55b3231a060581ac17e8594ae71f907dee",
+      "sha256": "18c5660cf4b76a59193608d393d5c943c16be00f41b474e8b22e657bc3d85bfd",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1581,8 +1606,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/c08-signed-ratification-intent-hardhold-20261108",
-    "commit": "2052fcaede133f1d492b58f75d2959ee93b83508"
+    "branch": "fix/c08-physical-owner-direction-proof-20261108",
+    "commit": "4ec91cc717ae246bffc5f9225dd290b7ab55d934"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
