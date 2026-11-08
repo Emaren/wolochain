@@ -524,6 +524,30 @@
         "financial-reviewers",
         "ai-agents"
       ],
+      "authority": "reviewed-deny-only-ssh-transport-no-nonce-or-financial-authority",
+      "id": "aoe2war.wolochain.c08-intel-dedicated-deny-only-sshd-physical-service",
+      "owner": "wolochain-ops",
+      "path": "docs/C08_INTEL_DENY_ONLY_WITNESS_SSHD_PHYSICAL.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-08",
+      "sensitivity": "restricted",
+      "sha256": "52d6936cffe314f59eaedb16c32972b62b62bd88c91323e0a4dc9f40667b3983",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C08 Intel Dedicated Witness SSHD: Persistent Loopback Deny-Only Launchd Service",
+      "type": "runbook"
+    },
+    {
+      "audience": [
+        "operators",
+        "developers",
+        "financial-reviewers",
+        "ai-agents"
+      ],
       "authority": "source-only-cryptographic-ratification-intent-review-no-governance-adoption-or-woLo-funding",
       "id": "aoe2war.wolochain.c08-signed-solo-owner-ratification-intent-hold",
       "owner": "wolochain-ops",
@@ -578,7 +602,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "1905bc0a81a3c3ea23ec3944341611c2af88f64e51e445d149eff9089d22ccaf",
+      "sha256": "6babbe1ab9cecdfcc788281e875ba3a6c85795f359e82ce6cb95945e02b206bd",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1655,8 +1679,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/c03-prechange-encrypted-role-schema-offhost-20261108",
-    "commit": "ebb6d4f096569a1335741b62f1ad5152fb2cc214"
+    "branch": "fix/c08-intel-deny-sshd-physical-20261108",
+    "commit": "07881ef7a91a2931272d1440d06b69c1d4e853ab"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
