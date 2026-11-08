@@ -17,6 +17,8 @@ import json
 import re
 import sys
 from datetime import timedelta
+from pathlib import Path
+import settlement_c08_governance_adoption_v2 as ratification
 
 import settlement_solo_owner_intent_review as owner
 
@@ -147,6 +149,64 @@ def review(enrollment_raw: bytes, packet_raw: bytes, *,
     }
 
 
+def review_with_adopted_governance(enrollment_raw: bytes, packet_raw: bytes, *,
+        pinned_enrollment_sha256: str, pinned_owner_der_sha256: str,
+        pinned_source_commit: str, ratification_root: Path,
+        governance_owner_public_pem: bytes, governance_source_repo: Path,
+        notice_issue=None, notice_repository=None, now=None) -> dict:
+    """Prove the original C08 adoption *and* signed C09 <= 1 WOLO.
+
+    This is still NOT a runtime operation permit: C01-C07 and offhost nonce
+    checks remain unproven. A missing/tampered adoption is a STOP, never an
+    optional signed-C09 review override.
+    """
+    held = review(enrollment_raw, packet_raw,
+        pinned_enrollment_sha256=pinned_enrollment_sha256,
+        pinned_owner_der_sha256=pinned_owner_der_sha256,
+        pinned_source_commit=pinned_source_commit, now=now)
+    owner.require(held["status"] == "CRYPTO_VALID_NONAUTHORIZING_HOLD"
+                  and held["financial_release_authorized"] is False,
+                  "C09_CRYPTOGRAPHIC_BASE_UNEXPECTED")
+    owner.require(pinned_owner_der_sha256 == ratification.OWNER_DER_SHA,
+                  "C09_DIFFERENT_OWNER_FROM_ADOPTED_GOVERNANCE")
+    try:
+        adopted = ratification.inspect_adoption(root=ratification_root,
+            public_pem=governance_owner_public_pem,
+            repo=governance_source_repo,
+            notice_issue=notice_issue,notice_repo=notice_repository)
+    except (ratification.Hold, ratification.notice.NoticeStop, OSError,
+            ValueError, TypeError, KeyError) as exc:
+        raise owner.AuthorityHold("C09_RATIFIED_GOVERNANCE_NOT_AUTHENTICATED") from exc
+    owner.require(adopted["status"] ==
+                  "PASS_C08_GOVERNANCE_ADOPTION_PROOF_VERIFIED"
+                  and adopted["financial_release_authorized"] is False
+                  and adopted["funded_allowance_uwolo"] == 0,
+                  "C09_GOVERNANCE_MUST_GRANT_NO_STANDING_SPEND")
+    policy = ratification.strict(ratification.load_policy(governance_source_repo))
+    limit = policy["separately_signed_future_c09_canary_ceiling_uwolo"]
+    owner.require(type(limit) is int and limit == 1000000,
+                  "C09_RATIFIED_MAXIMUM_NOT_ONE_WOLO")
+    packet = owner.parse(packet_raw)
+    request = packet["request"]
+    owner.require(request["governance_ratification_sha256"] ==
+                  adopted["receipt_sha256"],
+                  "C09_SIGNED_GOVERNANCE_RECEIPT_BINDING_CHANGED")
+    owner.require(amount(request["amount_uwolo"],zero_allowed=False) +
+                  amount(request["fee_uwolo"],zero_allowed=True) <= limit,
+                  "C09_SIGNED_CANARY_PLUS_FEE_EXCEEDS_ONE_WOLO")
+    return dict(held,
+        status="C09_SIGNED_INTENT_AND_C08_ADOPTION_VALID_FINANCIAL_RELEASE_HOLD",
+        economic_canary_limit_ratified=True,
+        new_governance_policy_ratified_and_notice_elapsed=True,
+        c08_signed_ratification_authenticated=True,
+        c08_ratification_receipt_sha256=adopted["receipt_sha256"],
+        maximum_signed_canary_including_fee_uwolo=limit,
+        physical_c01_c08_gates_accepted=False,
+        offhost_one_use_nonce_consumed=False,
+        funded_canary_permit_issued=False,
+        financial_release_authorized=False)
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--enrollment", required=True)
@@ -154,15 +214,30 @@ def main(argv=None) -> int:
     parser.add_argument("--pinned-enrollment-sha256", required=True)
     parser.add_argument("--pinned-owner-der-sha256", required=True)
     parser.add_argument("--pinned-source-commit", required=True)
+    parser.add_argument("--c08-adopted-owner-root",type=Path)
+    parser.add_argument("--c08-owner-public-key",type=Path)
+    parser.add_argument("--c08-governance-source-repo",type=Path,
+                        default=Path(__file__).resolve().parents[1])
     args = parser.parse_args(argv)
     try:
-        report = review(
-            owner.read_private(args.enrollment),
-            owner.read_private(args.signed_intent),
+        verified_inputs=dict(
             pinned_enrollment_sha256=args.pinned_enrollment_sha256,
             pinned_owner_der_sha256=args.pinned_owner_der_sha256,
-            pinned_source_commit=args.pinned_source_commit,
-        )
+            pinned_source_commit=args.pinned_source_commit)
+        enrollment=owner.read_private(args.enrollment)
+        packet=owner.read_private(args.signed_intent)
+        if (args.c08_adopted_owner_root is None) != (
+                args.c08_owner_public_key is None):
+            raise owner.AuthorityHold("C09_C08_RATIFICATION_ARGUMENTS_INCOMPLETE")
+        if args.c08_adopted_owner_root is None:
+            report=review(enrollment,packet,**verified_inputs)
+        else:
+            report=review_with_adopted_governance(enrollment,packet,
+                **verified_inputs,
+                ratification_root=args.c08_adopted_owner_root,
+                governance_owner_public_pem=owner.read_private(
+                    args.c08_owner_public_key),
+                governance_source_repo=args.c08_governance_source_repo)
     except (owner.AuthorityHold, OSError, UnicodeError, ValueError) as exc:
         reason = str(exc) if type(exc) is owner.AuthorityHold else "C09_EVIDENCE_UNAVAILABLE"
         print(json.dumps({"schema": OUT_SCHEMA, "status": "STOP",
