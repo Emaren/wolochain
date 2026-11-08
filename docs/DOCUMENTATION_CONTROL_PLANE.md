@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/c03-exact-auth-definer-capability-20261108` at `43c1f22e31b12dfa8bda84509ae25ebb1f8d52a9`
+Implementation baseline: `fix/c05-bounty-null-reward-attribution-20261108` at `a929b2945688b7b3459f24da2da50e73f3cd3d0e`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
@@ -27,21 +27,21 @@ This page is generated from the validated front matter in this repository. Cross
 
 ## Documentation health
 
-- Authoritative repository documents: **61**
+- Authoritative repository documents: **62**
 - Path moves in this migration: **0**
 - Every listed document has an explicit owner, lifecycle, authority, and review interval.
 
 ### Types
 
 - `historical`: 14
-- `reference`: 38
+- `reference`: 39
 - `runbook`: 7
 - `working`: 2
 
 ### Lifecycle
 
 - `active`: 16
-- `draft`: 31
+- `draft`: 32
 - `historical`: 14
 
 ## Documents
@@ -58,6 +58,7 @@ This page is generated from the validated front matter in this repository. Cross
 | [C03 Real Production Schema Isolated NOLOGIN Ownership Rehearsal](C03_REAL_PRODUCTION_SCHEMA_OWNER_REHEARSAL.md) | `reference` | `draft` | `source-only-isolated-negative-proof-never-a-production-DDL-permit` |
 | [C03 Synthetic NOLOGIN Owner Partition Rehearsal](C03_SYNTHETIC_NOLOGIN_OWNER_REHEARSAL.md) | `reference` | `draft` | `source-only-nologin-permission-rehearsal-not-live-ddl-approval` |
 | [C03 Topology-Only Watchdog Baseline Enrollment](C03_TOPOLOGY_ONLY_WATCHDOG_ENROLLMENT.md) | `reference` | `draft` | `topology-only-no-financial-writer-fence-or-financial-permit` |
+| [C05 pending bounty gift — missing reward valuation](C05_BOUNTY_GIFT_NULL_VALUATION_HOLD.md) | `reference` | `draft` | `source-only-financial-hold-not-a-funding-or-replay-permit` |
 | [C05 Semantic Money Columns and Staking Exposure — Independent HOLD](C05_SEMANTIC_MONEY_STAKING_EXPOSURE_HOLD.md) | `reference` | `draft` | `read-only-physical-observer-no-solvency-or-funding-authority` |
 | [C05 Expanded Payout and NFT-Transfer Surface Census — Read-Only HOLD](C05_SEVEN_SURFACE_READONLY_CENSUS_HOLD.md) | `reference` | `draft` | `read-only-source-and-physical-financial-hold-not-c03-maintenance-or-funded-permit` |
 | [C06 Intel Recovery Tunnel Supervisor](C06_INTEL_RECOVERY_TUNNEL_SUPERVISOR.md) | `reference` | `draft` | `source-only-intel-recovery-transport-not-a-financial-permit` |
