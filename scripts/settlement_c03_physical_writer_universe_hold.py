@@ -22,6 +22,7 @@ UNIT = re.compile(r"[A-Za-z0-9_.@:-]{1,120}\.(?:service|timer)\Z")
 PREFIXES = (
     "aoe2hdbets-", "aoe2dewarwagers-", "aoe2war-", "aoe2-wolo-",
     "traffic-", "wolochain-", "wolochaind-", "wolo-",
+    "tokenchain-",
 )
 MAX_LIST = 131072
 MAX_UNITS = 500
@@ -61,6 +62,7 @@ UNPROVEN_DOMAINS = (
     "traffic_api_and_external_writer_ingress", "postgres_database_schema_owner",
     "postgres_security_definer_and_triggers", "session_reconnect",
     "settlement_and_signer_file_journals",
+    "tokenchain_indexer_direct_and_indirect_database_writers",
 )
 
 class ObservationError(ValueError):

@@ -305,6 +305,31 @@
     },
     {
       "audience": [
+        "operators",
+        "developers",
+        "financial-reviewers",
+        "ai-agents"
+      ],
+      "authority": "read-only-discovery-only-no-maintenance-unit-change",
+      "id": "aoe2war.wolochain.c03-tokenchain-indexer-unscoped-discovery-hold",
+      "owner": "wolochain-ops",
+      "path": "docs/C03_TOKENCHAIN_INDEXER_UNSCOPED_DISCOVERY_HOLD.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-08",
+      "sensitivity": "internal",
+      "sha256": "ad9996165ade1aa4c4516da961c1e0e9111d38abfc88d08670655eb87b2ba6e4",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2hdbets",
+        "tokenchain"
+      ],
+      "title": "C03 TokenChain Indexer: Previously Omitted Service Discovery and Financial Writer HOLD",
+      "type": "reference"
+    },
+    {
+      "audience": [
         "developers",
         "operators",
         "ai-agents"
@@ -674,7 +699,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "b9d45db4c39cdec42ee2ac872add67aec0e4e77cfb666c3c02637cf2ea3c4a7b",
+      "sha256": "2630a2660bd6e5725a7dabfd8ba858803a15d32c3de129b7b4f02c09117bc9c3",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1751,8 +1776,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/c05-single-height-claims-nominal-escrow-20261108",
-    "commit": "ea27732277a3c876d2ce29f4302804ccc7a77412"
+    "branch": "fix/c03-tokenchain-writer-universe-20261108",
+    "commit": "932892a5761df4cd6cb91ea6e357b2ba56170427"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
