@@ -49,6 +49,35 @@ func TestCommandRefusesUnconfiguredExecutionWithoutLeakingInputs(t *testing.T) {
 		}
 	}
 }
+
+// No owner-private C08 receipt is ever added to CI. These negative tests use
+// disposable strings and prove the production probe cannot leak file paths
+// or start custody when its exact signed owner material is absent.
+func TestC08ProductionAdmissionProbeFailsClosedWithoutRealReceipt(t *testing.T) {
+	folder := t.TempDir()
+	receipt := filepath.Join(folder, "fake-owner-adoption.json")
+	public := filepath.Join(folder, "fake-public-key.bin")
+	if err := os.WriteFile(receipt, []byte("{}"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(public, []byte("not-a-public-key"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	cases := [][]string{
+		{"verify-c08-governance"},
+		{"verify-c08-governance", "--receipt", receipt},
+		{"verify-c08-governance", "--receipt", receipt, "--owner-public", public},
+		{"verify-c08-governance", "--owner-public", public, "--receipt", receipt},
+		{"verify-c08-governance", "--receipt", receipt, "--owner-public", public, "extra"},
+	}
+	for _, args := range cases {
+		var out, errout bytes.Buffer
+		if code := run(t.Context(), args, &out, &errout); code != 3 || out.Len() != 0 ||
+			strings.Contains(errout.String(), receipt) || strings.Contains(errout.String(), public) {
+			t.Fatalf("governance probe did not fail safely: code=%d, stdout=%s, stderr=%s", code, out.String(), errout.String())
+		}
+	}
+}
 func TestPermitCheckedBeforeEachSignAndBroadcastButRecoveryRemainsAvailable(t *testing.T) {
 	inner := &countedBackend{}
 	active := true

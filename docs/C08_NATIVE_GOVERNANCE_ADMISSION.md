@@ -65,6 +65,31 @@ re-checked at each backend authorization decision. Missing or
 mutated governance source fails closed. Synthetic tests prove valid
 legacy execution permits cannot substitute for owner governance.
 
+## Read-only physical admission on HEL1
+
+The exact *production* Go signer now has a separate
+`verify-c08-governance` action, which accepts only the owner-protected
+original signed C08 receipt and enrolled P-256 public bytes. It validates
+all the same compile-time production key, source, notice, policy, signature,
+zero-funding and receipt SHA constraints as the execution path; successful
+status is `PASS_C08_NATIVE_OWNER_GOVERNANCE_ADOPTED_ZERO_FINANCIAL_AUTHORIZATION`.
+The probe never loads an execution config, Cosmos keyring, vault passphrase,
+RPC/REST/bank connection, nonce backend or HTTP listener.
+
+Example after source-qualified native Linux build and root-only installation:
+
+```bash
+wolosatcheld verify-c08-governance --receipt /root/<protected-private-c08-original-receipt.json> --owner-public /root/<protected-private-c08-original-public.bin>
+```
+
+Do not expose full paths, original signed packet, nonce, signatures or public
+key material in GitHub, CI or website telemetry. These files must retain
+root ownership, mode0600, no symlinks and exact original SHA. A successful
+zero-money governance probe **does not** qualify C01 custody/reviewer
+enrollment, C03 financial writers, C05 solvency, C06/C07 recovery, or
+the separate C09 one-use transaction permit. The signer must still be
+inactive on HEL1 until those independent controls pass.
+
 ## Non-interference and remaining gates
 
 This is a **source-only candidate until exact-head CI, review, merge and

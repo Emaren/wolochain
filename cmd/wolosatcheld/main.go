@@ -33,6 +33,25 @@ func main() {
 // run returns only fixed public diagnostic labels. Sensitive configuration,
 // source responses, filesystem paths and keyring errors are never printed.
 func run(ctx context.Context, args []string, out, errout io.Writer) int {
+	// Exact-owner C08 policy admission probe: no config, keyring, RPC, HTTP
+	// listener, signer or bank access. The original owner receipt and public
+	// key are the only inputs; the runtime binary pins their expected hashes.
+	if len(args) > 0 && args[0] == "verify-c08-governance" {
+		if ctx == nil || ctx.Err() != nil || len(args) != 5 ||
+			args[1] != "--receipt" || args[3] != "--owner-public" {
+			fmt.Fprintln(errout, "satchel: C08 nonfunded admission arguments refused")
+			return 3
+		}
+		receipt, er := satchelservice.ReadPrivateFile(args[2], 16384)
+		public, ep := satchelservice.ReadPrivateFile(args[4], 256)
+		if er != nil || ep != nil ||
+			satchelservice.VerifyC08KeychainV3Receipt(public, receipt) != nil {
+			fmt.Fprintln(errout, "satchel: C08 signed owner governance unavailable")
+			return 3
+		}
+		fmt.Fprintln(out, "PASS_C08_NATIVE_OWNER_GOVERNANCE_ADOPTED_ZERO_FINANCIAL_AUTHORIZATION")
+		return 0
+	}
 	if len(args) > 0 && (args[0] == "read-bank-proof" || args[0] == "verify-bank-proof") {
 		return bankProofCommand(ctx, args[0], args[1:], out, errout)
 	}
