@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/c08-physical-owner-direction-proof-20261108` at `9b45bfd90e31179a0f8129a7a70c1ebafc9b8120`
+Implementation baseline: `fix/c08-physical-owner-direction-proof-20261108` at `4ec91cc717ae246bffc5f9225dd290b7ab55d934`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 

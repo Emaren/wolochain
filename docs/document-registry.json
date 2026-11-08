@@ -529,7 +529,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "3084188a0da8c04f399b2c478fa41b9d1caba23babcaf02bcdd163a37f032241",
+      "sha256": "18c5660cf4b76a59193608d393d5c943c16be00f41b474e8b22e657bc3d85bfd",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1607,7 +1607,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "fix/c08-physical-owner-direction-proof-20261108",
-    "commit": "9b45bfd90e31179a0f8129a7a70c1ebafc9b8120"
+    "commit": "4ec91cc717ae246bffc5f9225dd290b7ab55d934"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
