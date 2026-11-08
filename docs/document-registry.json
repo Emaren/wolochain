@@ -762,6 +762,29 @@
     },
     {
       "audience": [
+        "operators",
+        "developers",
+        "financial-reviewers"
+      ],
+      "authority": "nonfunding-C08-policy-preflight-only",
+      "id": "aoe2war.wolochain.c09-c08-keychain-v3-receipt-binding",
+      "owner": "wolochain-ops",
+      "path": "docs/C09_C08_KEYCHAIN_V3_RECEIPT_BINDING.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-08",
+      "sensitivity": "restricted",
+      "sha256": "df89ef7d405919dc3e7ea5410fb83dc5758b74cdbd3c6f6c017c5d3d13219122",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C09 Exact Canary Requires Genuine Keychain C08 V3 Receipt",
+      "type": "runbook"
+    },
+    {
+      "audience": [
         "developers",
         "operators",
         "financial-reviewers",
@@ -797,7 +820,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "88aa5872cf953cce8123dea3ec2fb4212627a96fd6a6b9d4449aed5c28da9038",
+      "sha256": "cc02db674f31a5cfdea2b95ff7020e14f00cc51c3b52e23a287d2e1aeb73ce7f",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1874,8 +1897,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "feat/c08-keychain-automated-governance-v3-20261108",
-    "commit": "a5ca0ce1e1d04bc820966eab00732af9934ea4b0"
+    "branch": "feat/c09-keychain-governance-receipt-v3-20261108",
+    "commit": "314cfdfbeb86c9519367d5be509e0465eb8fe977"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

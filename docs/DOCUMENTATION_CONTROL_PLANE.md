@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `feat/c08-keychain-automated-governance-v3-20261108` at `a5ca0ce1e1d04bc820966eab00732af9934ea4b0`
+Implementation baseline: `feat/c09-keychain-governance-receipt-v3-20261108` at `314cfdfbeb86c9519367d5be509e0465eb8fe977`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
@@ -27,7 +27,7 @@ This page is generated from the validated front matter in this repository. Cross
 
 ## Documentation health
 
-- Authoritative repository documents: **80**
+- Authoritative repository documents: **81**
 - Path moves in this migration: **0**
 - Every listed document has an explicit owner, lifecycle, authority, and review interval.
 
@@ -35,13 +35,13 @@ This page is generated from the validated front matter in this repository. Cross
 
 - `historical`: 14
 - `reference`: 49
-- `runbook`: 15
+- `runbook`: 16
 - `working`: 2
 
 ### Lifecycle
 
 - `active`: 16
-- `draft`: 50
+- `draft`: 51
 - `historical`: 14
 
 ## Documents
@@ -80,6 +80,7 @@ This page is generated from the validated front matter in this repository. Cross
 | [C08 Genuine One-Owner Governance Adoption V2 — Signed Policy, Zero Financial Permission](C08_REAL_SOLO_GOVERNANCE_ADOPTION_V2.md) | `runbook` | `draft` | `versioned-nonfunded-owner-governance-adoption-only` |
 | [C08 Real Owner-Signed Ratification Intent: Public Notice and Policy-Bound HOLD](C08_SIGNED_SOLO_OWNER_RATIFICATION_INTENT_HOLD.md) | `reference` | `draft` | `source-only-cryptographic-ratification-intent-review-no-governance-adoption-or-woLo-funding` |
 | [C08 Single-Owner Public Notice — Pinned 24-Hour Financial HOLD](C08_SINGLE_OWNER_PUBLIC_NOTICE_HOLD.md) | `reference` | `draft` | `public-notice-source-integrity-only-no-financial-permit` |
+| [C09 Exact Canary Requires Genuine Keychain C08 V3 Receipt](C09_C08_KEYCHAIN_V3_RECEIPT_BINDING.md) | `runbook` | `draft` | `nonfunding-C08-policy-preflight-only` |
 | [C09 Ratified C08 Governance Bridge — Signed Canary Ceiling and No Spending](C09_RATIFIED_C08_POLICY_BRIDGE.md) | `runbook` | `draft` | `authenticated-C08-governance-preflight-only-no-spending-permit` |
 | [Native epoch-v3 wire-v1 trust mismatch and held handoff](epoch-v3-wire-v1-hold.md) | `reference` | `draft` | `source-only-verifier-mismatch-not-financial-authority` |
 | [Exact Settlement Confirmation C4](exact-settlement-confirmation-c4.md) | `reference` | `draft` | `source-only-exact-settlement-confirmation` |
