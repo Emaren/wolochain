@@ -447,6 +447,31 @@
       "audience": [
         "operators",
         "developers",
+        "financial-reviewers",
+        "ai-agents"
+      ],
+      "authority": "source-only-cryptographic-ratification-intent-review-no-governance-adoption-or-woLo-funding",
+      "id": "aoe2war.wolochain.c08-signed-solo-owner-ratification-intent-hold",
+      "owner": "wolochain-ops",
+      "path": "docs/C08_SIGNED_SOLO_OWNER_RATIFICATION_INTENT_HOLD.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-08",
+      "sensitivity": "restricted",
+      "sha256": "9d4a38e30ef07b25b2555ef3bdcd2729f7622628dde454dd93d5fb9ed3164738",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war",
+        "aoe2dewarwagers"
+      ],
+      "title": "C08 Real Owner-Signed Ratification Intent: Public Notice and Policy-Bound HOLD",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "operators",
+        "developers",
         "financial-reviewers"
       ],
       "authority": "public-notice-source-integrity-only-no-financial-permit",
@@ -479,7 +504,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "5f2c1082ca8630cf15f096589d79423e2446ebb36a01614d7620f3c85ad99747",
+      "sha256": "43bbb7ba60ea199b2d6c7ef4ae20b5d34663227ed7d29786c7034fd12d48abe3",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1556,8 +1581,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/c03-bound-owner-sessions-effective-grants-20261108",
-    "commit": "cc2f5f1797c9b0911685b3e1fe9eaec175028298"
+    "branch": "fix/c08-signed-ratification-intent-hardhold-20261108",
+    "commit": "252a60d9f81262f8da8998aed582fef82a101754"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
