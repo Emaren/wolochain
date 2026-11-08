@@ -868,7 +868,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "fca636f7b9ff37daa5f1c2e83ba4a0d2b5abfaba5f0c71be6736fd40364b2168",
+      "sha256": "11de229595c15add3cd6d907fe052fb7645b6015e3de4e9c31bc6d7379cd8c5d",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1945,8 +1945,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "feat/c08-v3-native-custody-admission-20261108",
-    "commit": "27d1a18fe7c6754b28f4caff478125f5a15b71c3"
+    "branch": "feat/c04-native-claim-namespace-noninterference-20261108",
+    "commit": "3d16e8f5076f27d82dc772a85c85e4a56f95e293"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
