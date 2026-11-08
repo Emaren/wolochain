@@ -694,6 +694,30 @@
         "financial-reviewers",
         "ai-agents"
       ],
+      "authority": "zero-funded-governance-prerequisite-only",
+      "id": "aoe2war.wolochain.c08-native-keychain-governance-admission",
+      "owner": "wolochain-ops",
+      "path": "docs/C08_NATIVE_GOVERNANCE_ADMISSION.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-08",
+      "sensitivity": "restricted",
+      "sha256": "716bc7f01c81e8c4fee1b74b8ac041efc8e86973cb8cbd0aff39a0f3bff656f7",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C08 Native Custody Admission \u2014 Verified Owner P-256 Receipt",
+      "type": "runbook"
+    },
+    {
+      "audience": [
+        "operators",
+        "developers",
+        "financial-reviewers",
+        "ai-agents"
+      ],
       "authority": "versioned-nonfunded-owner-governance-adoption-only",
       "id": "aoe2war.wolochain.c08-real-solo-owner-governance-adoption-v2",
       "owner": "wolochain-ops",
@@ -820,7 +844,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "cc02db674f31a5cfdea2b95ff7020e14f00cc51c3b52e23a287d2e1aeb73ce7f",
+      "sha256": "eb208fc4afc1d0d55cf2650920cae4cae19e0825cfd65f5cf9ad5cd7a19eb763",
       "source_of_truth": "git",
       "status": "active",
       "systems": [

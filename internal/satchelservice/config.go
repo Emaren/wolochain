@@ -43,6 +43,9 @@ type Config struct {
 	WagerApprovalKeyHex          string              `json:"wager_approval_key_hex"`
 	ActivationAuthorityKeyHex    string              `json:"activation_authority_key_hex"`
 	PermitFile                   string              `json:"permit_file"`
+	C08GovernanceReceiptFile     string              `json:"c08_governance_receipt_file,omitempty"`
+	C08GovernanceOwnerPublicFile string              `json:"c08_governance_owner_public_file,omitempty"`
+	C08GovernanceReceiptSHA256   string              `json:"c08_governance_receipt_sha256,omitempty"`
 	AccountingReviewerKeyHex     string              `json:"accounting_reviewer_key_hex,omitempty"`
 	CustodyReviewerKeyHex        string              `json:"custody_reviewer_key_hex,omitempty"`
 	ReserveReviewFile            string              `json:"reserve_review_file,omitempty"`
@@ -158,6 +161,17 @@ func LoadConfig(path string) (Config, string, error) {
 	for _, p := range []string{c.KeyringDir, c.PassphraseFile, c.TokenFile, c.StatePath, c.PermitFile} {
 		if !filepath.IsAbs(p) || filepath.Clean(p) != p {
 			return c, "", errors.New("configuration_invalid")
+		}
+	}
+	// A legacy config may be inspected, but activating real custody requires
+	// all three new governance inputs. Reject misleading partial enrollments.
+	if c.C08GovernanceReceiptFile != "" || c.C08GovernanceOwnerPublicFile != "" || c.C08GovernanceReceiptSHA256 != "" {
+		if !filepath.IsAbs(c.C08GovernanceReceiptFile) ||
+			filepath.Clean(c.C08GovernanceReceiptFile) != c.C08GovernanceReceiptFile ||
+			!filepath.IsAbs(c.C08GovernanceOwnerPublicFile) ||
+			filepath.Clean(c.C08GovernanceOwnerPublicFile) != c.C08GovernanceOwnerPublicFile ||
+			!validReserveDigest(c.C08GovernanceReceiptSHA256) {
+			return c, "", errors.New("governance_receipt_configuration_required")
 		}
 	}
 	// Old configurations remain readable but cannot qualify live custody.

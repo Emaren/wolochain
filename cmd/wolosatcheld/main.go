@@ -60,7 +60,29 @@ func run(ctx context.Context, args []string, out, errout io.Writer) int {
 		fmt.Fprintln(errout, "satchel: executable attestation unavailable")
 		return 2
 	}
-	authorized := func(context.Context) bool { return satchelservice.VerifyPermit(cfg, configDigest, binaryDigest) }
+	// Verify an actual source-bound, owner-signed C08 policy receipt, not a
+	// claimed SHA, policy boolean, or independent execution permit. Recheck
+	// immutable receipt files before every funded authorization decision.
+	authorized := func(ctx context.Context) bool {
+		if ctx == nil || ctx.Err() != nil ||
+			cfg.C08GovernanceReceiptFile == "" ||
+			cfg.C08GovernanceOwnerPublicFile == "" ||
+			cfg.C08GovernanceReceiptSHA256 == "" {
+			return false
+		}
+		receipt, err := satchelservice.ReadPrivateFile(cfg.C08GovernanceReceiptFile, 16384)
+		if err != nil {
+			return false
+		}
+		sum := sha256.Sum256(receipt)
+		if hex.EncodeToString(sum[:]) != cfg.C08GovernanceReceiptSHA256 {
+			return false
+		}
+		public, err := satchelservice.ReadPrivateFile(cfg.C08GovernanceOwnerPublicFile, 256)
+		return err == nil &&
+			satchelservice.VerifyC08KeychainV3Receipt(public, receipt) == nil &&
+			satchelservice.VerifyPermit(cfg, configDigest, binaryDigest)
+	}
 	if !authorized(ctx) {
 		fmt.Fprintln(errout, "satchel: HELD independent activation permit unavailable")
 		return 2
