@@ -143,6 +143,31 @@
     },
     {
       "audience": [
+        "operators",
+        "developers",
+        "financial-reviewers",
+        "ai-agents"
+      ],
+      "authority": "separate-telemetry-only-no-financial-containment-or-execution",
+      "id": "aoe2war.wolochain.c03-extended-67-unit-observer-v2-stage",
+      "owner": "wolochain-ops",
+      "path": "docs/C03_EXTENDED_67_UNIT_WATCHDOG_V2_STAGING_HOLD.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-08",
+      "sensitivity": "restricted",
+      "sha256": "7c431e03b9a467b1dddac5e4512b13e912ad5b697e256af1f6c99eaf45e81906",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2hdbets",
+        "aoe2dewarwagers"
+      ],
+      "title": "C03 Separate 67-Unit Financial Writer Telemetry V2: Inert Stage and HOLD",
+      "type": "runbook"
+    },
+    {
+      "audience": [
         "developers",
         "operators",
         "ai-agents"
@@ -699,7 +724,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "2630a2660bd6e5725a7dabfd8ba858803a15d32c3de129b7b4f02c09117bc9c3",
+      "sha256": "65dc5db0233a0f28429a0b2eb05638c680551e5acb186488ed6100709784356c",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1776,8 +1801,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/c03-tokenchain-writer-universe-20261108",
-    "commit": "932892a5761df4cd6cb91ea6e357b2ba56170427"
+    "branch": "fix/c03-67-unit-watchdog-20261108",
+    "commit": "1702489e5ede919a06ea9d116d89838f9978c52c"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

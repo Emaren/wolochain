@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/c03-tokenchain-writer-universe-20261108` at `932892a5761df4cd6cb91ea6e357b2ba56170427`
+Implementation baseline: `fix/c03-67-unit-watchdog-20261108` at `1702489e5ede919a06ea9d116d89838f9978c52c`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
@@ -27,7 +27,7 @@ This page is generated from the validated front matter in this repository. Cross
 
 ## Documentation health
 
-- Authoritative repository documents: **76**
+- Authoritative repository documents: **77**
 - Path moves in this migration: **0**
 - Every listed document has an explicit owner, lifecycle, authority, and review interval.
 
@@ -35,13 +35,13 @@ This page is generated from the validated front matter in this repository. Cross
 
 - `historical`: 14
 - `reference`: 49
-- `runbook`: 11
+- `runbook`: 12
 - `working`: 2
 
 ### Lifecycle
 
 - `active`: 16
-- `draft`: 46
+- `draft`: 47
 - `historical`: 14
 
 ## Documents
@@ -54,6 +54,7 @@ This page is generated from the validated front matter in this repository. Cross
 | [C01 Immutable Source CI: Recovering Authenticated Merged Pull Request Provenance](C01_AUTHENTICATED_HISTORICAL_SOURCE_CI_PR124_MERGED.md) | `runbook` | `draft` | `c01-source-provenance-nonfunded-candidate-review-not-custody-approval` |
 | [C03 effective grants with paired live PostgreSQL sessions HOLD](C03_EFFECTIVE_GRANTS_PAIRED_LIVE_PG_SESSIONS_HOLD.md) | `reference` | `draft` | `source-only-read-only-c03-dual-evidence-bound-observer-never-a-finance-permit` |
 | [C03 Owner-Only Encrypted Off-Host Schema and Role Pre-Migration Rollback](C03_ENCRYPTED_PRECHANGE_SCHEMA_ROLLBACK_OFFHOST.md) | `runbook` | `draft` | `pre-migration-source-metadata-insurance-only-not-full-financial-backup-or-writer-fence` |
+| [C03 Separate 67-Unit Financial Writer Telemetry V2: Inert Stage and HOLD](C03_EXTENDED_67_UNIT_WATCHDOG_V2_STAGING_HOLD.md) | `runbook` | `draft` | `separate-telemetry-only-no-financial-containment-or-execution` |
 | [C03 Financial Writer Containment — Physical Release Acceptance Protocol](C03_FINANCIAL_WRITER_CONTAINMENT_ACCEPTANCE.md) | `reference` | `draft` | `source-only-c03-global-containment-plan-not-a-financial-permit` |
 | [C03 Financial Writer Drift Watchdog](C03_FINANCIAL_WRITER_DRIFT_WATCHDOG.md) | `reference` | `draft` | `read-only-finance-hold-monitor-not-a-fence-or-funded-permit` |
 | [C03 Isolated PostgreSQL Table Lock Counterexample](C03_ISOLATED_TABLE_LOCK_COUNTEREXAMPLE.md) | `reference` | `draft` | `source-only-negative-lock-rehearsal-not-a-financial-fence` |
