@@ -504,7 +504,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "43bbb7ba60ea199b2d6c7ef4ae20b5d34663227ed7d29786c7034fd12d48abe3",
+      "sha256": "1949bec3ee993094d09cf3cd083add55b3231a060581ac17e8594ae71f907dee",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1582,7 +1582,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "fix/c08-signed-ratification-intent-hardhold-20261108",
-    "commit": "252a60d9f81262f8da8998aed582fef82a101754"
+    "commit": "2052fcaede133f1d492b58f75d2959ee93b83508"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

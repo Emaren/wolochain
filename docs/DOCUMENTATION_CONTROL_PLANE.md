@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/c08-signed-ratification-intent-hardhold-20261108` at `252a60d9f81262f8da8998aed582fef82a101754`
+Implementation baseline: `fix/c08-signed-ratification-intent-hardhold-20261108` at `2052fcaede133f1d492b58f75d2959ee93b83508`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
