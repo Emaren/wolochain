@@ -208,6 +208,7 @@ jobs:
           python3 -B -m unittest discover -s tests -p 'test_settlement_c04_local_comet_inclusion_hold.py' -v
           python3 -B -m unittest discover -s tests -p 'test_settlement_c04_unique_candidate_refund_overlap_hold.py' -v
           python3 -B -m unittest discover -s tests -p 'test_settlement_c05_bounty_assignment_publication_hold.py' -v
+          python3 -B -m unittest discover -s tests -p 'test_settlement_c05_pending_gift_claim_nominal_collision_hold.py' -v
           python3 -B -m unittest discover -s tests -p 'test_settlement_c06_intel_offhost_transport_identity_hold.py' -v
 
       - name: Real single-owner phase signature review, NONAUTHORIZING (synthetic keys)
