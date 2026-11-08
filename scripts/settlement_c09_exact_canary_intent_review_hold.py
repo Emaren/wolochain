@@ -16,9 +16,10 @@ import hashlib
 import json
 import re
 import sys
-from datetime import timedelta
+from datetime import datetime,timedelta,timezone
 from pathlib import Path
 import settlement_c08_governance_adoption_v2 as ratification
+import settlement_c08_keychain_policy_adoption_v3 as keychain_v3
 
 import settlement_solo_owner_intent_review as owner
 
@@ -207,6 +208,93 @@ def review_with_adopted_governance(enrollment_raw: bytes, packet_raw: bytes, *,
         financial_release_authorized=False)
 
 
+def qualify_c09_request_against_keychain_governance_v3(request: dict, *,
+        governance_root: Path, governance_public_x963: bytes,
+        governance_source_repo: Path, now=None, comment=None,
+        notice_issue=None, notice_repo=None) -> dict:
+    """Strict actual C08 P-256 adoption prerequisite, NEVER a C09 permit.
+
+    The *caller* must separately authenticate a fresh transaction-specific
+    C09 owner signature. This proof alone is not signer/recipient/bank proof.
+    It does not equate the new Keychain C08 identity to the historical
+    Ed25519 direction-only key.
+    """
+    now=now or datetime.now(timezone.utc)
+    validate_request(request,now)
+    try:
+        state=keychain_v3.adopted(governance_root,governance_source_repo,
+            governance_public_x963,now=now,comment=comment,
+            issue=notice_issue,repo_info=notice_repo)
+    except (keychain_v3.Hold,keychain_v3.old.Hold,
+            keychain_v3.notice.NoticeStop,OSError,ValueError,
+            KeyError,TypeError) as exc:
+        raise owner.AuthorityHold("C09_C08_V3_SIGNED_ADOPTION_UNAVAILABLE") from exc
+    owner.require(state["status"]==
+                  "PASS_C08_KEYCHAIN_GOVERNANCE_OWNER_ADOPTION_VERIFIED"
+                  and state["financial_release_authorized"] is False
+                  and state["standing_funded_allowance_uwolo"]==0,
+                  "C09_C08_V3_ZERO_CURRENT_PERMISSION_REQUIRED")
+    owner.require(type(state["future_c09_canary_ceiling_uwolo"]) is int
+                  and state["future_c09_canary_ceiling_uwolo"]==1000000,
+                  "C09_C08_V3_MAXIMUM_ONE_WOLO_REQUIRED")
+    owner.require(request["governance_ratification_sha256"]==
+                  state["receipt_sha256"],
+                  "C09_C08_V3_SIGNED_RECEIPT_SHA_MISMATCH")
+    limit=state["future_c09_canary_ceiling_uwolo"]
+    owner.require(amount(request["amount_uwolo"],zero_allowed=False)+
+                  amount(request["fee_uwolo"],zero_allowed=True)<=limit,
+                  "C09_C08_V3_AMOUNT_PLUS_FEE_OVER_ONE_WOLO")
+    return {
+      "schema":"wolo.c09.c08-keychain-v3-policy-proof-only.v1",
+      "status":"C09_C08_V3_GOVERNANCE_PROOF_VALID_EXECUTION_HOLD",
+      "c08_adoption_receipt_sha256":state["receipt_sha256"],
+      "future_maximum_amount_including_fee_uwolo":limit,
+      "original_ed25519_key_falsely_reused":False,
+      "new_keychain_v3_c08_governance_authenticated":True,
+      "transaction_specific_owner_signature_proven_by_this_method":False,
+      "offhost_one_use_nonce_consumed":False,
+      "all_c01_c07_gates_accepted":False,
+      "financial_release_authorized":False
+    }
+
+
+def review_with_keychain_governance_v3(enrollment_raw: bytes,packet_raw: bytes, *,
+        pinned_enrollment_sha256: str,pinned_owner_der_sha256: str,
+        pinned_source_commit: str,governance_root: Path,
+        governance_public_x963: bytes,governance_source_repo: Path,
+        now=None,comment=None,notice_issue=None,notice_repo=None) -> dict:
+    """Real signed C09 request plus independently adopted C08 P-256 receipt.
+
+    The signing C09 key is verified under its *own* enrolled Ed25519
+    contract; no claim that it is the same as the distinct C08 P-256 key.
+    Still no permit to broadcast, retry, credit or debit.
+    """
+    held=review(enrollment_raw,packet_raw,
+        pinned_enrollment_sha256=pinned_enrollment_sha256,
+        pinned_owner_der_sha256=pinned_owner_der_sha256,
+        pinned_source_commit=pinned_source_commit,now=now)
+    owner.require(held["status"]=="CRYPTO_VALID_NONAUTHORIZING_HOLD"
+                  and held["financial_release_authorized"] is False,
+                  "C09_BASE_SIGNED_INTENT_NOT_QUALIFIED")
+    packet=owner.parse(packet_raw)
+    proof=qualify_c09_request_against_keychain_governance_v3(
+        packet["request"],governance_root=governance_root,
+        governance_public_x963=governance_public_x963,
+        governance_source_repo=governance_source_repo,
+        now=now,comment=comment,notice_issue=notice_issue,notice_repo=notice_repo)
+    return dict(held,
+        status="C09_SIGNED_INTENT_PLUS_C08_KEYCHAIN_V3_VALID_FINANCIAL_HOLD",
+        economic_canary_limit_ratified=True,
+        new_governance_policy_ratified_and_notice_elapsed=True,
+        c08_signed_ratification_authenticated=True,
+        c08_ratification_receipt_sha256=proof["c08_adoption_receipt_sha256"],
+        maximum_signed_canary_including_fee_uwolo=1000000,
+        owner_identity_migration_not_old_key_cross_signature=True,
+        physical_c01_c08_gates_accepted=False,
+        funded_canary_permit_issued=False,
+        financial_release_authorized=False)
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--enrollment", required=True)
@@ -218,6 +306,8 @@ def main(argv=None) -> int:
     parser.add_argument("--c08-owner-public-key",type=Path)
     parser.add_argument("--c08-governance-source-repo",type=Path,
                         default=Path(__file__).resolve().parents[1])
+    parser.add_argument("--c08-keychain-v3-owner-root",type=Path)
+    parser.add_argument("--c08-keychain-v3-owner-public-x963",type=Path)
     args = parser.parse_args(argv)
     try:
         verified_inputs=dict(
@@ -229,7 +319,21 @@ def main(argv=None) -> int:
         if (args.c08_adopted_owner_root is None) != (
                 args.c08_owner_public_key is None):
             raise owner.AuthorityHold("C09_C08_RATIFICATION_ARGUMENTS_INCOMPLETE")
-        if args.c08_adopted_owner_root is None:
+        if (args.c08_keychain_v3_owner_root is None) != (
+                args.c08_keychain_v3_owner_public_x963 is None):
+            raise owner.AuthorityHold("C09_C08_V3_SIGNER_POINTERS_INCOMPLETE")
+        if args.c08_keychain_v3_owner_root is not None and (
+                args.c08_adopted_owner_root is not None or
+                args.c08_owner_public_key is not None):
+            raise owner.AuthorityHold("C09_TWO_INCOMPATIBLE_GOVERNANCE_MODES")
+        if args.c08_keychain_v3_owner_root is not None:
+            report=review_with_keychain_governance_v3(enrollment,packet,
+                **verified_inputs,
+                governance_root=args.c08_keychain_v3_owner_root,
+                governance_public_x963=owner.read_private(
+                    args.c08_keychain_v3_owner_public_x963),
+                governance_source_repo=args.c08_governance_source_repo)
+        elif args.c08_adopted_owner_root is None:
             report=review(enrollment,packet,**verified_inputs)
         else:
             report=review_with_adopted_governance(enrollment,packet,
