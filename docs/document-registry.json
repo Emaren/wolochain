@@ -95,6 +95,31 @@
     },
     {
       "audience": [
+        "operators",
+        "developers",
+        "financial-reviewers",
+        "ai-agents"
+      ],
+      "authority": "pre-migration-source-metadata-insurance-only-not-full-financial-backup-or-writer-fence",
+      "id": "aoe2war.wolochain.c03-encrypted-prechange-schema-rollback-offhost",
+      "owner": "wolochain-ops",
+      "path": "docs/C03_ENCRYPTED_PRECHANGE_SCHEMA_ROLLBACK_OFFHOST.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-08",
+      "sensitivity": "restricted",
+      "sha256": "039adabde9e026a667a14c11a1bd3391784986f052ef111029bc173443234507",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war",
+        "aoe2dewarwagers"
+      ],
+      "title": "C03 Owner-Only Encrypted Off-Host Schema and Role Pre-Migration Rollback",
+      "type": "runbook"
+    },
+    {
+      "audience": [
         "developers",
         "operators",
         "ai-agents"
@@ -553,7 +578,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "5cc27a654f88c06c8edef7e39587bc4920e98d8a6b950333bc16236646ea1534",
+      "sha256": "1905bc0a81a3c3ea23ec3944341611c2af88f64e51e445d149eff9089d22ccaf",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1630,8 +1655,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/c08-exact-witness-forced-command-review-20261108",
-    "commit": "161cc4a60e23dd6e5281dfb1307f04c41c80d487"
+    "branch": "fix/c03-prechange-encrypted-role-schema-offhost-20261108",
+    "commit": "ebb6d4f096569a1335741b62f1ad5152fb2cc214"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
