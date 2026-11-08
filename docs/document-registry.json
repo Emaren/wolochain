@@ -71,6 +71,29 @@
     },
     {
       "audience": [
+        "operators",
+        "developers",
+        "financial-reviewers",
+        "ai-agents"
+      ],
+      "authority": "c01-source-provenance-nonfunded-candidate-review-not-custody-approval",
+      "id": "aoe2war.wolochain.c01-authenticated-historical-merged-pr-source-ci",
+      "owner": "wolochain-ops",
+      "path": "docs/C01_AUTHENTICATED_HISTORICAL_SOURCE_CI_PR124_MERGED.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-08",
+      "sensitivity": "restricted",
+      "sha256": "f2852d6830d6b990d2ebb8982876f9bf5c144f4becbcb920f4a7345e73bd3ef4",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain"
+      ],
+      "title": "C01 Immutable Source CI: Recovering Authenticated Merged Pull Request Provenance",
+      "type": "runbook"
+    },
+    {
+      "audience": [
         "developers",
         "operators",
         "ai-agents"
@@ -602,7 +625,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "6babbe1ab9cecdfcc788281e875ba3a6c85795f359e82ce6cb95945e02b206bd",
+      "sha256": "6971ddc60b2e6eb8197c9e77d4c03b03d50b7ca34d4996de0d44abda0a509972",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1679,8 +1702,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/c08-intel-deny-sshd-physical-20261108",
-    "commit": "07881ef7a91a2931272d1440d06b69c1d4e853ab"
+    "branch": "fix/c01-historical-merged-pr-ci-binding-20261108",
+    "commit": "ba52b343306c80d959f8e398840e64803b25985d"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

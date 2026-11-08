@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/c08-intel-deny-sshd-physical-20261108` at `07881ef7a91a2931272d1440d06b69c1d4e853ab`
+Implementation baseline: `fix/c01-historical-merged-pr-ci-binding-20261108` at `ba52b343306c80d959f8e398840e64803b25985d`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
@@ -27,7 +27,7 @@ This page is generated from the validated front matter in this repository. Cross
 
 ## Documentation health
 
-- Authoritative repository documents: **72**
+- Authoritative repository documents: **73**
 - Path moves in this migration: **0**
 - Every listed document has an explicit owner, lifecycle, authority, and review interval.
 
@@ -35,13 +35,13 @@ This page is generated from the validated front matter in this repository. Cross
 
 - `historical`: 14
 - `reference`: 47
-- `runbook`: 9
+- `runbook`: 10
 - `working`: 2
 
 ### Lifecycle
 
 - `active`: 16
-- `draft`: 42
+- `draft`: 43
 - `historical`: 14
 
 ## Documents
@@ -51,6 +51,7 @@ This page is generated from the validated front matter in this repository. Cross
 | [WoloChain](../README.md) | `reference` | `active` | `chain-repository-entrypoint` |
 | [C04 — bounded original-request / chain-proof observation](../cmd/wolo-c04-verify/README.md) | `reference` | `draft` | `noncrediting-original-request-chain-evidence` |
 | [WoloChain Branch Authority](BRANCH_AUTHORITY.md) | `reference` | `active` | `git-branch-authority-contract` |
+| [C01 Immutable Source CI: Recovering Authenticated Merged Pull Request Provenance](C01_AUTHENTICATED_HISTORICAL_SOURCE_CI_PR124_MERGED.md) | `runbook` | `draft` | `c01-source-provenance-nonfunded-candidate-review-not-custody-approval` |
 | [C03 effective grants with paired live PostgreSQL sessions HOLD](C03_EFFECTIVE_GRANTS_PAIRED_LIVE_PG_SESSIONS_HOLD.md) | `reference` | `draft` | `source-only-read-only-c03-dual-evidence-bound-observer-never-a-finance-permit` |
 | [C03 Owner-Only Encrypted Off-Host Schema and Role Pre-Migration Rollback](C03_ENCRYPTED_PRECHANGE_SCHEMA_ROLLBACK_OFFHOST.md) | `runbook` | `draft` | `pre-migration-source-metadata-insurance-only-not-full-financial-backup-or-writer-fence` |
 | [C03 Financial Writer Containment — Physical Release Acceptance Protocol](C03_FINANCIAL_WRITER_CONTAINMENT_ACCEPTANCE.md) | `reference` | `draft` | `source-only-c03-global-containment-plan-not-a-financial-permit` |

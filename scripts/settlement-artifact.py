@@ -223,6 +223,87 @@ def _c01_source_pull_request(run: dict, source: str) -> dict:
             "base_ref": C01_SOURCE_BASE_REF, "base_sha": C01_SOURCE_BASE_COMMIT}
 
 
+def _c01_authenticated_merged_pr(run: dict, source: str, read) -> dict:
+    """Recover exact merged PR association when historical GH run.pulls is [].
+
+    GitHub may omit pull_requests from post-merge historical run responses.
+    NEVER infer review from a matching branch name alone: independently read
+    the fixed owner PR identity, its complete bounded commit list and merge
+    commit. Subsequent caller checks both source and PR merge ancestry to its
+    exact builder head. There is no caller-chosen PR, URL, key or source.
+    """
+    _require(run.get("pull_requests") == [] and
+             run.get("head_branch") == C01_SOURCE_HEAD_REF,
+             "SOURCE_CI_HOLD historical empty PR context mismatch")
+    base = "https://api.github.com/repos/" + EXPECTED_REPOSITORY
+    pr = read(base + "/pulls/" + str(C01_SOURCE_PULL_REQUEST))
+    _require(pr.get("state") == "closed" and
+             type(pr.get("merged_at")) is str and
+             bool(pr["merged_at"]) and
+             type(pr.get("merge_commit_sha")) is str and
+             re.fullmatch(r"[a-f0-9]{40}", pr["merge_commit_sha"]) is not None,
+             "SOURCE_CI_HOLD original PR was not actually merged")
+    synthetic = dict(run, pull_requests=[pr])
+    identity = _c01_source_pull_request(synthetic, source)
+    commits = read(base + "/pulls/" + str(C01_SOURCE_PULL_REQUEST)
+                   + "/commits?per_page=100", expected_type=list)
+    expected_count = pr.get("commits")
+    _require(type(expected_count) is int and 1 <= expected_count <= 100 and
+             len(commits) == expected_count and
+             all(type(c) is dict and type(c.get("sha")) is str and
+                 re.fullmatch(r"[a-f0-9]{40}", c["sha"]) is not None for c in commits),
+             "SOURCE_CI_HOLD merged PR complete commit list unavailable")
+    sha_list = [c["sha"] for c in commits]
+    _require(len(set(sha_list)) == len(sha_list) and
+             sha_list[-1] == identity["head_sha"] and sha_list.count(source) == 1,
+             "SOURCE_CI_HOLD exact qualified source not in reviewed PR")
+    return {"identity": identity, "merge_sha": pr["merge_commit_sha"],
+            "commit_count": expected_count}
+
+
+def _c01_authenticated_ancestry(base_sha: str, builder_sha: str, read) -> dict:
+    """Bounded GitHub comparison with exact first/last page and ancestry root.
+
+    A 250-commit default response is truncated for this long-lived branch.
+    Fetch page1 metadata, then the page at total_commits to authenticate the
+    *actual builder commit*, rather than trusting truncated list[-1].
+    """
+    _require(type(base_sha) is str and type(builder_sha) is str and
+             re.fullmatch(r"[0-9a-f]{40}", base_sha) is not None and
+             re.fullmatch(r"[0-9a-f]{40}", builder_sha) is not None,
+             "SOURCE_CI_HOLD unpinned comparison SHA")
+    if base_sha == builder_sha:
+        return {"base_commit": base_sha, "builder_commit": builder_sha,
+                "ahead_by": 0, "merged_into_builder": True}
+    endpoint = ("https://api.github.com/repos/" + EXPECTED_REPOSITORY
+                + "/compare/" + base_sha + "..." + builder_sha)
+    first = read(endpoint + "?per_page=1&page=1")
+    count = first.get("total_commits")
+    _require(type(count) is int and 1 <= count <= 1000,
+             "SOURCE_CI_HOLD unbounded builder comparison")
+    last = read(endpoint + "?per_page=1&page=" + str(count))
+    for result in (first, last):
+        _require(result.get("status") == "ahead" and
+                 result.get("behind_by") == 0 and
+                 result.get("ahead_by") == count and
+                 result.get("total_commits") == count and
+                 type(result.get("base_commit")) is dict and
+                 result["base_commit"].get("sha") == base_sha and
+                 type(result.get("merge_base_commit")) is dict and
+                 result["merge_base_commit"].get("sha") == base_sha and
+                 type(result.get("commits")) is list and
+                 len(result["commits"]) == 1 and
+                 type(result["commits"][0]) is dict and
+                 type(result["commits"][0].get("sha")) is str and
+                 re.fullmatch(r"[a-f0-9]{40}",
+                              result["commits"][0]["sha"]) is not None,
+                 "SOURCE_CI_HOLD GitHub immutable ancestry comparison invalid")
+    _require(last["commits"][0]["sha"] == builder_sha,
+             "SOURCE_CI_HOLD builder is not comparison final commit")
+    return {"base_commit": base_sha, "builder_commit": builder_sha,
+            "ahead_by": count, "merged_into_builder": True}
+
+
 def source_ci_receipt(profile: str) -> dict:
     """Read the fixed GitHub source checks before building the named runtime candidate.
 
@@ -244,7 +325,7 @@ def source_ci_receipt(profile: str) -> dict:
     deadline = time.monotonic() + 25
     base = "https://api.github.com/repos/Emaren/wolochain/actions/workflows/"
 
-    def read(url: str) -> dict:
+    def read(url: str, *, expected_type=dict):
         remaining = deadline - time.monotonic()
         _require(remaining > 0, "SOURCE_CI_HOLD GitHub receipt deadline")
         request = urllib.request.Request(url, headers={
@@ -272,12 +353,14 @@ def source_ci_receipt(profile: str) -> dict:
         except (OSError, ValueError, urllib.error.URLError) as error:
             # Never echo private headers, network errors, redirects or bodies.
             raise ArtifactError("SOURCE_CI_HOLD GitHub receipt unavailable") from None
-        _require(type(result) is dict, "SOURCE_CI_HOLD invalid GitHub receipt")
+        _require(type(result) is expected_type, "SOURCE_CI_HOLD invalid GitHub receipt")
         return result
 
     receipts = []
     ancestry = None
     observed_pr_head = None
+    historical_mode = None
+    historical_pr = None
     for workflow in ("ci.yml", "epoch-escrow-v3.yml"):
         path = ".github/workflows/" + workflow
         metadata = read(base + workflow)
@@ -305,32 +388,66 @@ def source_ci_receipt(profile: str) -> dict:
                  and selected.get("path") == path and selected.get("status") == "completed"
                  and selected.get("conclusion") == "success" and type(attempt) is int and attempt > 0
                  and selected.get("html_url") == expected_url, "SOURCE_CI_HOLD exact-source CI not successful")
-        pull_request = _c01_source_pull_request(selected, source)
+        pulls = selected.get("pull_requests")
+        from_merged_pr = type(pulls) is list and len(pulls) == 0
+        if historical_mode is None:
+            historical_mode = from_merged_pr
+        _require(historical_mode == from_merged_pr,
+                 "SOURCE_CI_HOLD inconsistent historical source PR association")
+        if from_merged_pr:
+            if historical_pr is None:
+                historical_pr = _c01_authenticated_merged_pr(selected, source, read)
+            pull_request = historical_pr["identity"]
+        else:
+            pull_request = _c01_source_pull_request(selected, source)
         observed_head = pull_request["head_sha"]
         if observed_pr_head is None:
             observed_pr_head = observed_head
         _require(observed_head == observed_pr_head, "SOURCE_CI_HOLD changing PR context")
         if observed_head != source:
             builder = os.environ.get("BUILDER_COMMIT", "")
-            _require(type(builder) is str and re.fullmatch(r"[0-9a-f]{40}", builder) is not None
-                     and observed_head == builder, "SOURCE_CI_HOLD live PR/builder mismatch")
-            if ancestry is None:
-                comparison_url = "https://api.github.com/repos/" + EXPECTED_REPOSITORY + "/compare/" + source + "..." + builder
-                comparison = read(comparison_url)
-                commits = comparison.get("commits")
-                count = comparison.get("total_commits")
-                _require(comparison.get("status") == "ahead" and comparison.get("behind_by") == 0
-                         and type(count) is int and 1 <= count <= 250 and comparison.get("ahead_by") == count
-                         and type(comparison.get("base_commit")) is dict and comparison["base_commit"].get("sha") == source
-                         and type(comparison.get("merge_base_commit")) is dict and comparison["merge_base_commit"].get("sha") == source
-                         and type(commits) is list and len(commits) == count
-                         and all(type(c) is dict and type(c.get("sha")) is str and re.fullmatch(r"[0-9a-f]{40}", c["sha"]) for c in commits)
-                         and commits[-1]["sha"] == builder,
-                         "SOURCE_CI_HOLD builder is not an authenticated source descendant")
-                ancestry = {"source_commit": source, "builder_commit": builder,
-                            "comparison_api_url": comparison_url, "ahead_by": count,
-                            "merge_base_commit": source}
-            _require(ancestry["builder_commit"] == observed_head, "SOURCE_CI_HOLD changing PR context")
+            _require(type(builder) is str and re.fullmatch(r"[0-9a-f]{40}", builder) is not None,
+                     "SOURCE_CI_HOLD unreviewed builder identity")
+            if from_merged_pr:
+                _require(historical_pr is not None and builder != source,
+                         "SOURCE_CI_HOLD merged PR requires distinct builder")
+                if ancestry is None:
+                    source_ancestry = _c01_authenticated_ancestry(source, builder, read)
+                    merge_ancestry = _c01_authenticated_ancestry(
+                        historical_pr["merge_sha"], builder, read)
+                    ancestry = {
+                        "source_commit": source,
+                        "builder_commit": builder,
+                        "merge_commit": historical_pr["merge_sha"],
+                        "merged_pr_number": C01_SOURCE_PULL_REQUEST,
+                        "ahead_by": source_ancestry["ahead_by"],
+                        "merge_ahead_by": merge_ancestry["ahead_by"],
+                        "merged_pr_ancestry_authenticated": True,
+                    }
+                _require(ancestry["builder_commit"] == builder and
+                         ancestry["merged_pr_ancestry_authenticated"] is True,
+                         "SOURCE_CI_HOLD historical builder context changed")
+            else:
+                _require(observed_head == builder,
+                         "SOURCE_CI_HOLD live PR/builder mismatch")
+                if ancestry is None:
+                    comparison_url = "https://api.github.com/repos/" + EXPECTED_REPOSITORY + "/compare/" + source + "..." + builder
+                    comparison = read(comparison_url)
+                    commits = comparison.get("commits")
+                    count = comparison.get("total_commits")
+                    _require(comparison.get("status") == "ahead" and comparison.get("behind_by") == 0
+                             and type(count) is int and 1 <= count <= 250 and comparison.get("ahead_by") == count
+                             and type(comparison.get("base_commit")) is dict and comparison["base_commit"].get("sha") == source
+                             and type(comparison.get("merge_base_commit")) is dict and comparison["merge_base_commit"].get("sha") == source
+                             and type(commits) is list and len(commits) == count
+                             and all(type(c) is dict and type(c.get("sha")) is str and re.fullmatch(r"[0-9a-f]{40}", c["sha"]) for c in commits)
+                             and commits[-1]["sha"] == builder,
+                             "SOURCE_CI_HOLD builder is not an authenticated source descendant")
+                    ancestry = {"source_commit": source, "builder_commit": builder,
+                                "comparison_api_url": comparison_url, "ahead_by": count,
+                                "merge_base_commit": source}
+                _require(ancestry["builder_commit"] == observed_head,
+                         "SOURCE_CI_HOLD changing PR context")
         elif ancestry is not None:
             raise ArtifactError("SOURCE_CI_HOLD changing PR context")
         receipts.append({
