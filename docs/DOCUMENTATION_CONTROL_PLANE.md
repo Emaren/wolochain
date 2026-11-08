@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/c05-pr193-after-pr190-merge-20261107` at `fdf8c134b5d4dd9b5c8fcbce21a7d202fdfa97c8`
+Implementation baseline: `fix/c03-c04-c06-readonly-physical-evidence-integration-20261108` at `0b50a1b9038fcccdb2bf7008f686b6e63f6c3b1f`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
@@ -27,21 +27,21 @@ This page is generated from the validated front matter in this repository. Cross
 
 ## Documentation health
 
-- Authoritative repository documents: **61**
+- Authoritative repository documents: **64**
 - Path moves in this migration: **0**
 - Every listed document has an explicit owner, lifecycle, authority, and review interval.
 
 ### Types
 
 - `historical`: 14
-- `reference`: 38
+- `reference`: 41
 - `runbook`: 7
 - `working`: 2
 
 ### Lifecycle
 
 - `active`: 16
-- `draft`: 31
+- `draft`: 34
 - `historical`: 14
 
 ## Documents
@@ -56,10 +56,13 @@ This page is generated from the validated front matter in this repository. Cross
 | [C03 Isolated PostgreSQL Table Lock Counterexample](C03_ISOLATED_TABLE_LOCK_COUNTEREXAMPLE.md) | `reference` | `draft` | `source-only-negative-lock-rehearsal-not-a-financial-fence` |
 | [C03 NOLOGIN Existing Backend Counterexample](C03_NOLOGIN_EXISTING_BACKEND_COUNTEREXAMPLE.md) | `reference` | `draft` | `source-only-isolated-nologin-counterexample-not-live-financial-fence` |
 | [C03 Real Production Schema Isolated NOLOGIN Ownership Rehearsal](C03_REAL_PRODUCTION_SCHEMA_OWNER_REHEARSAL.md) | `reference` | `draft` | `source-only-isolated-negative-proof-never-a-production-DDL-permit` |
+| [C03 root legacy settlement and RPC transport admission gap](C03_ROOT_LEGACY_RPC_REACHABILITY_HOLD.md) | `reference` | `draft` | `source-only-physical-transport-audit-no-financial-fence` |
 | [C03 Synthetic NOLOGIN Owner Partition Rehearsal](C03_SYNTHETIC_NOLOGIN_OWNER_REHEARSAL.md) | `reference` | `draft` | `source-only-nologin-permission-rehearsal-not-live-ddl-approval` |
 | [C03 Topology-Only Watchdog Baseline Enrollment](C03_TOPOLOGY_ONLY_WATCHDOG_ENROLLMENT.md) | `reference` | `draft` | `topology-only-no-financial-writer-fence-or-financial-permit` |
+| [C04 indexed WOLO transfer candidate ambiguity and hashless claim finality](C04_INDEXED_WOLO_TRANSFER_CANDIDATE_AMBIGUITY_HOLD.md) | `reference` | `draft` | `source-only-c04-reconciliation-evidence-no-payment-authorization` |
 | [C05 Semantic Money Columns and Staking Exposure — Independent HOLD](C05_SEMANTIC_MONEY_STAKING_EXPOSURE_HOLD.md) | `reference` | `draft` | `read-only-physical-observer-no-solvency-or-funding-authority` |
 | [C05 Expanded Payout and NFT-Transfer Surface Census — Read-Only HOLD](C05_SEVEN_SURFACE_READONLY_CENSUS_HOLD.md) | `reference` | `draft` | `read-only-source-and-physical-financial-hold-not-c03-maintenance-or-funded-permit` |
+| [C06 Intel offhost receiver host identity — transport-only evidence](C06_INTEL_OFFHOST_RECOVERY_TUNNEL_HOSTKEY_HOLD.md) | `reference` | `draft` | `source-only-c06-hostkey-observation-no-backup-authority` |
 | [C06 Intel Recovery Tunnel Supervisor](C06_INTEL_RECOVERY_TUNNEL_SUPERVISOR.md) | `reference` | `draft` | `source-only-intel-recovery-transport-not-a-financial-permit` |
 | [C08 Single-Owner Public Notice — Pinned 24-Hour Financial HOLD](C08_SINGLE_OWNER_PUBLIC_NOTICE_HOLD.md) | `reference` | `draft` | `public-notice-source-integrity-only-no-financial-permit` |
 | [Native epoch-v3 wire-v1 trust mismatch and held handoff](epoch-v3-wire-v1-hold.md) | `reference` | `draft` | `source-only-verifier-mismatch-not-financial-authority` |
