@@ -192,3 +192,51 @@ candidate exists in local same-node chain data, but the claimed
 historical payout's source intent, independent finality, signer
 identity, ledger non-overlap and discharge are still unproven.
 No automatic retry, refund, credit, claim rewrite or payout.
+
+## November 8 — unique candidate linked to OTHER market's void refund
+
+Further read-only PostgreSQL correlation exposed an economic
+overlap that the original recipient+amount index scan could not
+distinguish. The only uniquely matched local transfer candidate
+for a historical hashless bet_payout is already referenced by:
+
+- **One claimed, hash-bearing bet_refund record**, and
+- **One void bet_wager payout record** with the same chain hash.
+
+The pre-existing refund claim and void wager agree on claimant,
+source market, and nominal amount. The original hashless bet_payout
+has the **same claimant and amount but a DIFFERENT source market
+and DIFFERENT claim kind**. The candidate transfer occurred more
+than seven days after its attempted payout timestamp.
+
+This is an unambiguous **database attribution conflict**.
+The existing transaction is already allocated to a different
+market's refund record. It **must not** be reused as automatic proof
+that the separate hashless payout was satisfied, or automatically
+replayed without independent finality, entitlement, custody signer
+and disjointness proof. The records could still require independent
+review to prove whether the existing refund was in fact final.
+
+The new source-only fail-closed guard
+scripts/settlement_c04_unique_candidate_refund_overlap_hold.py
+validates that exact cross-surface overlap using SHA-bound,
+root-private PostgreSQL REPEATABLE READ READ ONLY evidence. It
+requires explicit **different market** identity, same claimant
+and amount, previously hash-bearing claimed refund, void wager,
+and matching payout hash. The only external output is aggregate
+counts; no claim IDs, addresses, raw error text, wallet keys,
+transaction hashes or other customer data are published.
+
+Source SHA256:
+f26c10f0dbe6ba7db686310bc800c06f3ff45880dc795bcf846cf953695b7399.
+The physical HEL1 query and classification both passed as
+HOLD_C04_UNIQUE_TRANSFER_ALREADY_ATTRIBUTED_TO_OTHER_MARKET_REFUND.
+Owner-private root0600 physical receipt SHA256:
+b8b3f7708ba449828013c383b6b399de7fa6e76f7f71311887ab17aa07b5683a,
+stored at
+/root/aoe2war-session-a-c04-crossrefund-20261108/physical-c04-cross-market-refund-overlap-hold-20261108.json.
+
+Sixteen additional adversarial regression tests pass. This is
+a new economic-source disambiguation, **not** a bank payout,
+payment reversal, claim write, refund, credit, or financial
+gate acceptance. C04 remains HARD HOLD.

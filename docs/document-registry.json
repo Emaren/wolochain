@@ -267,7 +267,7 @@
       "review_interval_days": 7,
       "reviewed_at": "2026-11-08",
       "sensitivity": "restricted",
-      "sha256": "3abdd5dd301a2a247c47cb48637c23738463108d244661a78ffff009a1d56869",
+      "sha256": "8fb04abf4f2c4a1e44ccafa49b5fd05ca47055edff0fdaa0792699b0f6e34667",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -407,7 +407,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "08c142d9000864086c8aa9c55f8f1fa26f68e7bfde105852da40d278986c5959",
+      "sha256": "d142c55cc78bf8e1b7b40df610f096d324f964e97844759fff3738bce7370eae",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1485,7 +1485,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "fix/c03-c04-c06-readonly-physical-evidence-integration-20261108",
-    "commit": "0b50a1b9038fcccdb2bf7008f686b6e63f6c3b1f"
+    "commit": "7163db30ec9af9549accc724c56c72f8ea44305c"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

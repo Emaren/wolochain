@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/c03-c04-c06-readonly-physical-evidence-integration-20261108` at `0b50a1b9038fcccdb2bf7008f686b6e63f6c3b1f`
+Implementation baseline: `fix/c03-c04-c06-readonly-physical-evidence-integration-20261108` at `7163db30ec9af9549accc724c56c72f8ea44305c`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
