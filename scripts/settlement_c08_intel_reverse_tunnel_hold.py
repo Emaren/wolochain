@@ -50,10 +50,21 @@ EXPECTED_DEDICATED_SSHD_HOST_BLOB_SHA="45c6153f1a67b5585662aa072e03dde6b09ad607e
 EXPECTED_DEDICATED_C08_CLIENT_BLOB_SHA="ce07e3593fc557cafbbeabe05f1a7c6a1200c01984595a75a726b8f414180fe6"
 MAX_SOURCE=65536
 MAX_FILE=131072
-# No active witness executable is currently source-approved. An explicit,
-# reviewed exact command must replace None before the dedicated backend can
-# ever be admitted; string-substring matches are NEVER authorization.
-REVIEWED_WITNESS_EXEC_COMMAND:bytes|None=None
+# Source-reviewed candidate ONLY, not a live operator permit. The existing
+# Intel dedicated SSHD remains deny-only until its separately approved
+# forced-command/authorized_keys transition and rollback physically pass.
+# Exact equality is necessary; a substring/shell wrapper is never admission.
+REVIEWED_WITNESS_EXEC_COMMAND:bytes|None=(
+    b"/usr/local/bin/python3.13 -B "
+    b"/Users/tonyblum/.wolo-owner-authority/witness-runtime/source/"
+    b"settlement_solo_runtime.py --witness-stdin"
+)
+EXPECTED_WITNESS_RUNTIME_SOURCE_SHA=(
+    "b8cd22ab3df7a4b3385bd5ed0c9886638f737adf538e236875df3b807d1404fb"
+)
+EXPECTED_WITNESS_RUNTIME_SOURCE_COMMIT=(
+    "b35f294d619e6bf5d07b337cea46095f2eea9f76"
+)
 
 
 class Hold(ValueError):
@@ -114,6 +125,7 @@ def tunnel_paths(home:Path):
         "root":root, "private":root/KEY_FILE,"pub":root/PUB_FILE,
         "known":root/HOST_FILE,
         "witness":home/".wolo-owner-authority/witness-runtime/authority/solo-witness.json",
+        "witness_runtime_source":home/".wolo-owner-authority/witness-runtime/source/settlement_solo_runtime.py",
         "dedicated":home/".wolo-owner-authority/witness-sshd",
         "dedicated_config":home/".wolo-owner-authority/witness-sshd/sshd_config",
         "dedicated_authorized":home/".wolo-owner-authority/witness-sshd/authorized_keys",
@@ -187,6 +199,28 @@ def dedicated_backend_status(paths:dict[str,Path])->dict:
                      not denied)
     listening=False
     if not denied and protocol_forced:
+        # The dedicated SSH auth key alone is NOT enough: an attacker could
+        # substitute any Python file at the allowed path. Verify the actual
+        # owner-private byte-exact interpreter target and original witness
+        # enrollment's source commit before accepting an active listener.
+        source=secure_regular(paths["witness_runtime_source"],0o600,read=True)
+        require(source is not None and
+                digest(source)==EXPECTED_WITNESS_RUNTIME_SOURCE_SHA,
+                "C08_WITNESS_EXECUTABLE_SOURCE_DRIFT")
+        pinned=secure_regular(paths["witness"],0o600,read=True)
+        require(pinned is not None and digest(pinned)==EXPECTED_WITNESS_CONFIG_SHA,
+                "C08_ACTIVE_WITNESS_ENROLLMENT_DRIFT")
+        try:
+            witness_config=json.loads(pinned)
+        except (ValueError,UnicodeError):
+            raise Hold("C08_ACTIVE_WITNESS_ENROLLMENT_INVALID") from None
+        require(type(witness_config) is dict and
+                witness_config.get("schema")=="wolo.solo-maintenance-runtime-enrollment.v1" and
+                witness_config.get("source_commit")==EXPECTED_WITNESS_RUNTIME_SOURCE_COMMIT and
+                type(witness_config.get("controller_files")) is dict and
+                witness_config["controller_files"].get("settlement_solo_runtime.py")
+                  == EXPECTED_WITNESS_RUNTIME_SOURCE_SHA,
+                "C08_ACTIVE_WITNESS_ENROLLMENT_SOURCE_MISMATCH")
         with socket.socket(socket.AF_INET,socket.SOCK_STREAM) as sock:
             sock.settimeout(0.35)
             listening=sock.connect_ex(("127.0.0.1",22996))==0

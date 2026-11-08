@@ -359,5 +359,97 @@ class TunnelTests(unittest.TestCase):
         self.assertFalse(pre["dedicated_backend_admitted"])
 
 
+
+    def active_fixture(self):
+        """Review-only synthetic active profile: no SSHD or tunnel is started."""
+        runtime=self.paths["witness_runtime_source"]
+        runtime.parent.mkdir(parents=True,exist_ok=True,mode=0o700)
+        runtime.write_bytes(b"synthetic-reviewed-c08-nonce-witness-source")
+        runtime.chmod(0o600)
+        config={
+            "schema":"wolo.solo-maintenance-runtime-enrollment.v1",
+            "source_commit":c08.EXPECTED_WITNESS_RUNTIME_SOURCE_COMMIT,
+            "controller_files":{"settlement_solo_runtime.py":c08.digest(runtime.read_bytes())},
+        }
+        raw=c08.json.dumps(config,sort_keys=True).encode()
+        self.paths["witness"].write_bytes(raw)
+        self.paths["dedicated_config"].write_bytes(
+            self.dedicated_config.replace(b"ForceCommand /usr/bin/false\n",b""))
+        self.paths["dedicated_authorized"].write_bytes(
+            b'restrict,command="'+c08.REVIEWED_WITNESS_EXEC_COMMAND+
+            b'" ssh-ed25519 '+b"E"*60+b"\n")
+        return runtime, raw
+
+    def active_source_review(self, raw, runtime):
+        class LocalListeningStub:
+            def __enter__(self): return self
+            def __exit__(self,*args): return False
+            def settimeout(self,seconds): assert seconds == 0.35
+            def connect_ex(self,addr):
+                assert addr==("127.0.0.1",22996)
+                return 0
+        return (
+            patch.object(c08,"EXPECTED_WITNESS_CONFIG_SHA",c08.digest(raw)),
+            patch.object(c08,"EXPECTED_WITNESS_RUNTIME_SOURCE_SHA",c08.digest(runtime.read_bytes())),
+            patch.object(c08.socket,"socket",return_value=LocalListeningStub()),
+        )
+
+    def test_exact_forced_witness_command_requires_byte_pinned_source(self):
+        runtime,raw=self.active_fixture()
+        from contextlib import ExitStack
+        with ExitStack() as stack:
+            for p in self.active_source_review(raw,runtime):stack.enter_context(p)
+            result=self.preflight()
+        self.assertTrue(result["dedicated_witness_protocol_forced"])
+        self.assertTrue(result["dedicated_backend_admitted"])
+        self.assertFalse(result["dedicated_witness_deny_profile_active"])
+        self.assertFalse(result["financial_release_authorized"])
+        self.assertFalse(result["offhost_witness_nonce_consumed"])
+        self.assertFalse(self.paths["installed"].exists())
+
+    def test_changed_source_refused_even_with_exact_forced_command(self):
+        runtime,raw=self.active_fixture()
+        from contextlib import ExitStack
+        with ExitStack() as stack:
+            for p in self.active_source_review(raw,runtime):stack.enter_context(p)
+            runtime.write_bytes(b"malicious-owner-path-substitution")
+            with self.assertRaisesRegex(
+                    c08.Hold,"C08_WITNESS_EXECUTABLE_SOURCE_DRIFT"):
+                self.preflight()
+
+    def test_witness_source_group_readable_refused(self):
+        runtime,raw=self.active_fixture()
+        from contextlib import ExitStack
+        with ExitStack() as stack:
+            for p in self.active_source_review(raw,runtime):stack.enter_context(p)
+            runtime.chmod(0o644)
+            with self.assertRaisesRegex(
+                    c08.Hold,"C08_FILE_OWNER_MODE_TYPE_OR_SIZE_DRIFT"):
+                self.preflight()
+
+    def test_enrollment_source_commit_change_refused(self):
+        runtime,raw=self.active_fixture()
+        bad=c08.json.loads(raw)
+        bad["source_commit"]="b"*40
+        tampered=c08.json.dumps(bad,sort_keys=True).encode()
+        self.paths["witness"].write_bytes(tampered)
+        from contextlib import ExitStack
+        with ExitStack() as stack:
+            for p in self.active_source_review(tampered,runtime):stack.enter_context(p)
+            with self.assertRaisesRegex(
+                    c08.Hold,"C08_ACTIVE_WITNESS_ENROLLMENT_SOURCE_MISMATCH"):
+                self.preflight()
+
+    def test_existing_deny_force_stays_deny_even_with_reviewed_key(self):
+        runtime,raw=self.active_fixture()
+        self.paths["dedicated_config"].write_bytes(self.dedicated_config)
+        from contextlib import ExitStack
+        with ExitStack() as stack:
+            for p in self.active_source_review(raw,runtime):stack.enter_context(p)
+            result=self.preflight()
+        self.assertTrue(result["dedicated_witness_deny_profile_active"])
+        self.assertFalse(result["dedicated_backend_admitted"])
+        self.assertFalse(result["financial_release_authorized"])
+
 if __name__=="__main__":
     unittest.main()

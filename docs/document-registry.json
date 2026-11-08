@@ -450,6 +450,30 @@
         "financial-reviewers",
         "ai-agents"
       ],
+      "authority": "source-only-offhost-nonce-witness-command-review-no-live-activation-or-finance-permit",
+      "id": "aoe2war.wolochain.c08-dedicated-witness-command-source-review-hold",
+      "owner": "wolochain-ops",
+      "path": "docs/C08_DEDICATED_WITNESS_EXACT_COMMAND_SOURCE_REVIEW_HOLD.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-08",
+      "sensitivity": "restricted",
+      "sha256": "4b4ce203bdd2318fdaa9eb218c7d2976bbb5a6fb577fc41627defcff37ba4ebd",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C08 Dedicated Intel Witness: Exact Forced Command and Source-Pin Admission Review",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "operators",
+        "developers",
+        "financial-reviewers",
+        "ai-agents"
+      ],
       "authority": "historical-owner-device-signature-readonly-evidence-only-no-funding",
       "id": "aoe2war.wolochain.c08-existing-owner-device-direction-hold",
       "owner": "wolochain-ops",
@@ -529,7 +553,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "18c5660cf4b76a59193608d393d5c943c16be00f41b474e8b22e657bc3d85bfd",
+      "sha256": "5cc27a654f88c06c8edef7e39587bc4920e98d8a6b950333bc16236646ea1534",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1606,8 +1630,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/c08-physical-owner-direction-proof-20261108",
-    "commit": "4ec91cc717ae246bffc5f9225dd290b7ab55d934"
+    "branch": "fix/c08-exact-witness-forced-command-review-20261108",
+    "commit": "161cc4a60e23dd6e5281dfb1307f04c41c80d487"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
