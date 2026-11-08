@@ -8,7 +8,7 @@ systems: ["wolochain","aoe2war","aoe2dewarwagers"]
 audience: ["operators","developers","ai-agents"]
 source_of_truth: "git"
 authority: "non-authorizing-financial-human-signature-review"
-reviewed_at: "2026-10-24"
+reviewed_at: "2026-11-08"
 review_interval_days: 14
 sensitivity: "internal"
 ---
@@ -16,6 +16,13 @@ sensitivity: "internal"
 # Production P1 source integrity, writer evidence, five-person authority and bounded recovery proposal — 2026-10-24
 
 **NONAUTHORIZING.** This document is a draft evidence contract, NOT a maintenance permit, attestation, five-human signature, or approved financial-source change. Original Wolo #100 source and 8092/8093/consensus are untouched. Never merge this review branch into app production. Never ask an operator to format, mount, restart, fence, replay, sign, transfer or restore in order to test this document.
+
+
+### 2026-11-08 documented technical re-review — stale numerical proposal, no permit
+
+This owner-delegated documentation review preserves the October 24 evidence for provenance; it **does not renew** its 14 GiB estimate, five-human signatures or 18-unit scope as current production authority. A new SHA-pinned C06 read-only capacity inspector on HEL1 at 2026-11-08 00:00 UTC measured **18,700,017,664 bytes** available on the one Wolo capture volume, a strictly hypothetical ceiling **17,626,275,840 bytes after 1 GiB reserve**, HD physical database logical size **11,165,416,471 bytes** and DE **15,309,847 bytes**. Database sizes are *not* verified custom-dump sizes; actual WAL/journal/ciphertext overhead and C03 quiescence remain unproven. Intel receiver reachability and ample space, even when real, do **not** replace a complete consistent encrypted capture plus same-backup restore.
+
+The proposed owner-centralized governance [public notice #184](https://github.com/Emaren/wolochain/issues/184) remains **UNRATIFIED**; no five-person signer can be invented or replaced automatically. Current C03 audits show 81 conservative owner-writable finance candidates, 161 unclassified tables and previously 17 actual existing PG sessions; direct chain signing paths remain. **Keep C01–C09 HARD HOLD.** These are technical documentation checks, not independent-human approval, C06/C07 certification or financial authorization.
 
 ## 1. Independent P1 disposition: historical binary identity is known; historical signed build chain is not
 
