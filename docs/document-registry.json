@@ -75,6 +75,30 @@
         "operators",
         "ai-agents"
       ],
+      "authority": "source-only-read-only-c03-dual-evidence-bound-observer-never-a-finance-permit",
+      "id": "aoe2war.wolochain.c03-effective-grants-paired-live-pg-sessions-hold",
+      "owner": "wolochain-ops",
+      "path": "docs/C03_EFFECTIVE_GRANTS_PAIRED_LIVE_PG_SESSIONS_HOLD.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-08",
+      "sensitivity": "restricted",
+      "sha256": "52399bdcce1f7917bec951519a640d9513e51c6ab292a8f59e511239f9dc5168",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war",
+        "aoe2dewarwagers"
+      ],
+      "title": "C03 effective grants with paired live PostgreSQL sessions HOLD",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
       "authority": "source-only-c03-global-containment-plan-not-a-financial-permit",
       "id": "aoe2war.wolochain.c03-financial-writer-containment-acceptance",
       "owner": "wolochain-ops",
@@ -455,7 +479,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "311193502376cef746ff5a854b5f3f19698ee55c7bb2ce246bac8b2a6341b697",
+      "sha256": "5f2c1082ca8630cf15f096589d79423e2446ebb36a01614d7620f3c85ad99747",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1532,8 +1556,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/c05-gift-claim-nominal-overlap-hold-20261108",
-    "commit": "0c886081887b12d171b58b53d3d060ba9ed49783"
+    "branch": "fix/c03-bound-owner-sessions-effective-grants-20261108",
+    "commit": "cc2f5f1797c9b0911685b3e1fe9eaec175028298"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
