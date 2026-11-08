@@ -243,7 +243,7 @@
       "review_interval_days": 7,
       "reviewed_at": "2026-11-08",
       "sensitivity": "restricted",
-      "sha256": "0304ad724dd5e72abbf728cf13457da5cef3205abe2b6624367a80173b19ca48",
+      "sha256": "88ac654d3e7db693d37c70cca3c9969279826ac0050d968e1c7aeb8f60fbbe2a",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -359,7 +359,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "c1bb1bd195dbaee4e93092c396d3aa7da8e634cfe477607b9886732499ac0896",
+      "sha256": "3d1b0ff934947aeb54ec996451a1c88ce5c81cdb022bbecc1d9de75540a01b18",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1437,7 +1437,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "fix/c04-indexed-transfer-ambiguity-hold-20261108",
-    "commit": "9936985868190ed2bfa5c4b7fffa90bd19f68ab6"
+    "commit": "1b720dfab1c054f0c1fe4f9308ae00e97c961e77"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

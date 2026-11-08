@@ -101,3 +101,52 @@ This audit never transfers funds and never closes financial C04,
 C05, C03, C06, C07, C08 or C09 gates. The separate signed
 transaction-specific owner permit remains mandatory for actual
 funded activity after all physical prerequsites pass.
+
+## 2026-11-08 private local-Comet inclusion verification
+
+The **single** bet_payout record with exactly one local
+wallet/amount indexed candidate was reviewed without exposing
+its claim ID, wallet address or transaction hash publicly.
+
+The exact private transaction was fetched by its existing indexed
+hash through HEL1 loopback Comet RPC at /tx?hash with prove=true.
+A same-height /block was fetched separately from the same local node.
+The new offline verifier
+scripts/settlement_c04_local_comet_inclusion_hold.py:
+
+- Verifies SHA256 of the encoded transaction equals the private
+  indexed hash, and execution code is zero.
+- Recomputes the Tendermint Merkle *leaf over SHA256(tx bytes)*:
+  SHA256(0x00 concatenated with SHA256(tx bytes)), NOT over raw tx bytes.
+- Reconstructs any aunts with SHA256(0x01 + left + right),
+  matches the RPC proof root against local block header data_hash,
+  and checks the exact transaction position and block height.
+- Verifies at least one actual transfer event has the exact indexed
+  native uwolo amount and recipient. The local response may show
+  more than one event row for the same transfer (e.g. message
+  instrumentation); that does not imply multiple bank transfers.
+- Checks owner-private 0600 input file identities and SHA256 digests,
+  fails closed on malformed proof, mutated bytes, wrong block,
+  recipient, amount, execution status, or missing event.
+- Returns HOLD, never independent bank proof or customer
+  payment-finality acceptance.
+
+The source SHA256 is
+502789cf9ace1ef39724ff4bf9441a81c0a0fd958f640ebc4a586254444c5c47.
+Nineteen focused adversarial tests passed, including two-leaf
+Merkle proof positive/negative cases.
+
+A real HEL1 offline verification returned
+HOLD_C04_LOCAL_MERKLE_INCLUSION_NOT_INDEPENDENT_PAYMENT_FINALITY;
+its protected root0600 physical receipt SHA256 is
+67769cf8ead7d1476d70b9b28ae4af2b3a53286da5bcada6460d294eafcce8cb
+at
+/root/aoe2war-session-a-c04-indexed-transfer-20261108/local-comet-inclusion-hold-receipt-20261108.json.
+
+The cryptographic verification is only a link between the local
+node's RPC transaction, proof, events and block header. The same
+operator supplies all those inputs. **No independent validator
+checkpoint, claimed payout purpose, authorized custody signer, unique
+economic link, or recipient claim discharge is established**.
+The historical claim still has no recorded payout hash; do not write
+one or trigger payment based on this observation. C04 HARD HOLD.
