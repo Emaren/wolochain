@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `feat/c08-v3-native-custody-admission-20261108` at `ef9b9a951933b414055b44d124a112ad66b68935`
+Implementation baseline: `feat/c08-v3-native-custody-admission-20261108` at `27d1a18fe7c6754b28f4caff478125f5a15b71c3`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 

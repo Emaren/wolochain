@@ -844,7 +844,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "1686bcf3be85c6209744d66d75b53c09610e0dad304714d841875ae31463f40d",
+      "sha256": "085283e25f4764d50d961bb7d27659708838bdc2fcc9b93f6d39568960135bcc",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1922,7 +1922,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "feat/c08-v3-native-custody-admission-20261108",
-    "commit": "ef9b9a951933b414055b44d124a112ad66b68935"
+    "commit": "27d1a18fe7c6754b28f4caff478125f5a15b71c3"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
