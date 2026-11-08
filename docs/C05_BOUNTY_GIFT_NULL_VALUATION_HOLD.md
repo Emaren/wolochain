@@ -69,3 +69,48 @@ remain separate hard requirements.
 
 This source/document review is NOT an independent natural-human
 signature and did not modify production financial data or authority.
+
+## November 8 — separate assignment and publication boundary
+
+A further live HD REPEATABLE READ READ ONLY aggregate check of the
+historical pending 100,000-WOLO gift established:
+
+- Exactly one pending gift at that nominal value linked to exactly
+  one existing opportunity via the gift's bounty-reference note.
+- The opportunity's assigned_user_id is NULL; there is no assigned
+  bounty beneficiary in the source record.
+- The opportunity's reward_wolo is NULL; there is no approved
+  numeric reward valuation in the source record.
+- The opportunity's published_at is NULL; it lacks a recorded
+  publication timestamp and its status remains available.
+- There are zero matching bounty_events and no event payment hash.
+
+These counts are source-data observations, NOT positive or negative
+proof of a final offchain agreement, entitlement or bank payout.
+The gift row may represent a proposed obligation, a draft or another
+historical intention. Never infer cancellation, payment or retry.
+
+The second source-only observer
+scripts/settlement_c05_bounty_assignment_publication_hold.py,
+SHA256
+8d31a131c6e8b266c213666825dc608874020d88dca461e24fd346c57493d1b9,
+uses bounded READ ONLY HD SQL and private root0600 SHA-pinned evidence.
+It partitions linked source assignees, reward valuations, publication
+state, availability and bounty event hashes. It rejects forged source
+entitlement, fabricated finality, new or altered assignee, numeric
+reward, publication, changed source status or any newly linked event.
+It reports only aggregate counts; no gift, user, wallet, transaction,
+opportunity ID or private note is printed by the classifier.
+
+Twenty-one new adversarial tests passed, along with the 34 earlier
+C05 null-reward regression tests. This observer's exact source has
+not yet received a separate physical HEL1 acceptance receipt; the
+database aggregate check above was a separate read-only query.
+Even an exact future source match returns C05 HARD HOLD, never
+gift acceptance, a payout, a refund or a wallet transaction.
+
+Next evidence must include signed authority for the correct
+recipient and approved reward, independently established
+bounty-completion/eligibility source, unique economic obligation
+identity, chain custody/finality and independently verified reserves.
+C05 remains HARD HOLD regardless of the available status.

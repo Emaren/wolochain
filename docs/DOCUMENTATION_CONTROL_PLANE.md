@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/c05-independent-gifts-null-valuation-20261108` at `d31c983f8b8f9e841f253a789d88cf98b2b4882a`
+Implementation baseline: `fix/c05-independent-gifts-null-valuation-20261108` at `e059c53e8ff5f58852835a5b23dd31b99e257a00`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
