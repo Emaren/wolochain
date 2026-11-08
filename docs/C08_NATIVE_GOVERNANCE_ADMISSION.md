@@ -80,6 +80,26 @@ C09 transaction/nonce/amount/recipient/fee authorization must be
 wired before funded release. C08 cannot by itself imply C09 or a
 positive `CustodyCapability`.
 
+## Fully isolated real-executable regression
+
+The original C01 subprocess test executes an actual Go signer and SDK bank
+proof over a disposable 127.0.0.1-only chain. To preserve that test after
+C08 governance admission became mandatory, CI uses an **explicit build-tagged
+simulation-only signer**. It receives a freshly signed disposable P-256
+adoption receipt from the test fixture, verifies its ECDSA signature and
+schema, and requires the exact simulated source label and numeric loopback
+RPC, REST and witness endpoints. The separate reviewer and CLI remain their
+ordinary real binaries. The physical owner C08 signed receipt is never
+published to CI, and the synthetic identity cannot match the production
+SHA-256 trust pin.
+
+The **production signer is always built without**
+`satchel_c08_ci_simulation`. Its public source anchors are compile-time
+constants in `c08_governance_trust_prod.go`; runtime environment variables
+cannot replace owner identity or original receipt. The test-only source is
+excluded from production by Go build constraints. Never stage or deploy the
+isolated CI signer as a funded release candidate.
+
 ## Reproduction
 
 Run the synthetic negative suite in a disposable checkout:

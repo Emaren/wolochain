@@ -74,6 +74,28 @@ func testEscrowServiceProductionExecutable(t *testing.T, signerPath, clientPath,
 	binaryDigest := custodySHA(raw)
 	f := newEscrowServiceFixture(t)
 	c := f.custody
+
+	// Every isolated subprocess must present a REAL ECDSA-signed governance
+	// request, but under a disposable TEST identity confined by a compile-time
+	// simulation tag and numeric loopback-only SDK endpoints. The production
+	// binary never accepts these test public identities or env variables.
+	c08Pub, _, c08Request, c08Sign := c08V3Fixture(t)
+	c08Request["source_commit"] = "ecdeded047610119e57012b095ad8cb5f8019114"
+	c08Request["policy_sha256"] = "50910864e6d24236ac3ea98cda1456bedee8d9bf2f9365a8441c6d1e29b41806"
+	c08Request["public_notice_body_sha256"] = "b17206bc8b693b1777cd4a3ceef53f81f62f18668a6ebd2c2b8d793bd3146223"
+	c08Request["key_enrollment_comment_body_sha256"] = "bde91d30f97aaf53650122d33128790187a809b3760210a9e08822ece2395b48"
+	c08Policy := c08Sign(c08Request)
+	c08Policy["source_commit"] = c08Request["source_commit"]
+	c08Policy["policy_sha256"] = c08Request["policy_sha256"]
+	c08SignedBytes := c08V3Raw(t, c08Policy)
+	c08Dir := filepath.Dir(c.path)
+	c.config.C08GovernanceReceiptFile = filepath.Join(c08Dir, "ci-simulated-owner-adoption.json")
+	c.config.C08GovernanceOwnerPublicFile = filepath.Join(c08Dir, "ci-simulated-owner-public-x963.bin")
+	c.config.C08GovernanceReceiptSHA256 = custodySHA(c08SignedBytes)
+	require.NoError(t, os.WriteFile(c.config.C08GovernanceReceiptFile, c08SignedBytes, 0600))
+	require.NoError(t, os.WriteFile(c.config.C08GovernanceOwnerPublicFile, c08Pub, 0600))
+	c08SimulatedOwnerSHA := custodySHA(c08Pub)
+	c08SimulatedReceiptSHA := custodySHA(c08SignedBytes)
 	// Release both real keyring leases and the original DB handle. Only the
 	// child owns the genuine production engine/keyrings during execution.
 	f.service.Close()
@@ -127,6 +149,10 @@ func testEscrowServiceProductionExecutable(t *testing.T, signerPath, clientPath,
 	startDaemon := func(label string) *actualDaemon {
 		p := &actualDaemon{command: exec.CommandContext(ctx, signerPath, "--config", c.path), done: make(chan struct{}),
 			logPath: filepath.Join(filepath.Dir(c.path), "actual-executor-"+label+".log")}
+		p.command.Env = append(os.Environ(),
+			"SATCHEL_C08_CI_EXPLICIT_ISOLATED=disposable-c01-executable-sdk-ci-no-real-chain",
+			"SATCHEL_C08_CI_OWNER_SHA256="+c08SimulatedOwnerSHA,
+			"SATCHEL_C08_CI_RECEIPT_SHA256="+c08SimulatedReceiptSHA)
 		log, openErr := os.OpenFile(p.logPath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0600)
 		require.NoError(t, openErr)
 		p.command.Stdout, p.command.Stderr = log, log

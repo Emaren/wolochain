@@ -65,6 +65,7 @@ func run(ctx context.Context, args []string, out, errout io.Writer) int {
 	// immutable receipt files before every funded authorization decision.
 	authorized := func(ctx context.Context) bool {
 		if ctx == nil || ctx.Err() != nil ||
+			!satchelservice.C08TrustRuntimeEligible(cfg) ||
 			cfg.C08GovernanceReceiptFile == "" ||
 			cfg.C08GovernanceOwnerPublicFile == "" ||
 			cfg.C08GovernanceReceiptSHA256 == "" {

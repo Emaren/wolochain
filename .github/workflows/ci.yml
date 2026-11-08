@@ -295,7 +295,10 @@ jobs:
 
       - name: Build isolated Satchel signer and independent reviewer
         run: |
-          go build -o "$RUNNER_TEMP/wolosatcheld-c01" ./cmd/wolosatcheld
+          # This binary is EXCLUSIVELY for the isolated SDK process fixture.
+          # The production build is untagged and remains pinned to the real
+          # owner Keychain receipt; no runtime env can replace it.
+          go build -tags='go1.27,satchel_c08_ci_simulation' -o "$RUNNER_TEMP/wolosatcheld-c01" ./cmd/wolosatcheld
           go build -o "$RUNNER_TEMP/woloreviewerd-c01" ./cmd/woloreviewerd
           go build -o "$RUNNER_TEMP/woloescrowd-c01" ./cmd/woloescrowd
 
