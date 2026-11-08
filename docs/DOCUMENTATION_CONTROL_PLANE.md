@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/c05-independent-gifts-null-valuation-20261108` at `93b2907007298c48df7d9f53df056e280af9f31a`
+Implementation baseline: `fix/c05-gift-claim-nominal-overlap-hold-20261108` at `0c886081887b12d171b58b53d3d060ba9ed49783`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
@@ -27,21 +27,21 @@ This page is generated from the validated front matter in this repository. Cross
 
 ## Documentation health
 
-- Authoritative repository documents: **65**
+- Authoritative repository documents: **66**
 - Path moves in this migration: **0**
 - Every listed document has an explicit owner, lifecycle, authority, and review interval.
 
 ### Types
 
 - `historical`: 14
-- `reference`: 42
+- `reference`: 43
 - `runbook`: 7
 - `working`: 2
 
 ### Lifecycle
 
 - `active`: 16
-- `draft`: 35
+- `draft`: 36
 - `historical`: 14
 
 ## Documents
@@ -61,6 +61,7 @@ This page is generated from the validated front matter in this repository. Cross
 | [C03 Topology-Only Watchdog Baseline Enrollment](C03_TOPOLOGY_ONLY_WATCHDOG_ENROLLMENT.md) | `reference` | `draft` | `topology-only-no-financial-writer-fence-or-financial-permit` |
 | [C04 indexed WOLO transfer candidate ambiguity and hashless claim finality](C04_INDEXED_WOLO_TRANSFER_CANDIDATE_AMBIGUITY_HOLD.md) | `reference` | `draft` | `source-only-c04-reconciliation-evidence-no-payment-authorization` |
 | [C05 pending bounty gift — missing reward valuation](C05_BOUNTY_GIFT_NULL_VALUATION_HOLD.md) | `reference` | `draft` | `source-only-financial-hold-not-a-funding-or-replay-permit` |
+| [C05 pending gift nominal collisions — not proof of payment](C05_PENDING_GIFT_SAME_NOMINAL_CLAIM_COLLISION_HOLD.md) | `reference` | `draft` | `source-only-c05-historical-payment-ambiguity-no-payment-authority` |
 | [C05 Semantic Money Columns and Staking Exposure — Independent HOLD](C05_SEMANTIC_MONEY_STAKING_EXPOSURE_HOLD.md) | `reference` | `draft` | `read-only-physical-observer-no-solvency-or-funding-authority` |
 | [C05 Expanded Payout and NFT-Transfer Surface Census — Read-Only HOLD](C05_SEVEN_SURFACE_READONLY_CENSUS_HOLD.md) | `reference` | `draft` | `read-only-source-and-physical-financial-hold-not-c03-maintenance-or-funded-permit` |
 | [C06 Intel offhost receiver host identity — transport-only evidence](C06_INTEL_OFFHOST_RECOVERY_TUNNEL_HOSTKEY_HOLD.md) | `reference` | `draft` | `source-only-c06-hostkey-observation-no-backup-authority` |
