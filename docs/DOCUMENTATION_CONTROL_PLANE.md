@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/c01-historical-merged-pr-ci-binding-20261108` at `ba52b343306c80d959f8e398840e64803b25985d`
+Implementation baseline: `fix/c06-live-mvcc-offhost-precapture-20261108` at `e8a926d250b3e29a72d3a80659ae026b5cf1ab91`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
@@ -27,7 +27,7 @@ This page is generated from the validated front matter in this repository. Cross
 
 ## Documentation health
 
-- Authoritative repository documents: **73**
+- Authoritative repository documents: **74**
 - Path moves in this migration: **0**
 - Every listed document has an explicit owner, lifecycle, authority, and review interval.
 
@@ -35,13 +35,13 @@ This page is generated from the validated front matter in this repository. Cross
 
 - `historical`: 14
 - `reference`: 47
-- `runbook`: 10
+- `runbook`: 11
 - `working`: 2
 
 ### Lifecycle
 
 - `active`: 16
-- `draft`: 43
+- `draft`: 44
 - `historical`: 14
 
 ## Documents
@@ -69,6 +69,7 @@ This page is generated from the validated front matter in this repository. Cross
 | [C05 Expanded Payout and NFT-Transfer Surface Census — Read-Only HOLD](C05_SEVEN_SURFACE_READONLY_CENSUS_HOLD.md) | `reference` | `draft` | `read-only-source-and-physical-financial-hold-not-c03-maintenance-or-funded-permit` |
 | [C06 Intel offhost receiver host identity — transport-only evidence](C06_INTEL_OFFHOST_RECOVERY_TUNNEL_HOSTKEY_HOLD.md) | `reference` | `draft` | `source-only-c06-hostkey-observation-no-backup-authority` |
 | [C06 Intel Recovery Tunnel Supervisor](C06_INTEL_RECOVERY_TUNNEL_SUPERVISOR.md) | `reference` | `draft` | `source-only-intel-recovery-transport-not-a-financial-permit` |
+| [C06 Preparatory Live-MVCC Full-Data Exports: Dual-Recipient Encrypted Intel Retention](C06_UNQUIESCED_MVCC_DUAL_RECIPIENT_OFFHOST_PRECAPTURE.md) | `runbook` | `draft` | `prebackup-only-no-writer-fence-no-live-financial-release` |
 | [C08 Dedicated Intel Witness: Exact Forced Command and Source-Pin Admission Review](C08_DEDICATED_WITNESS_EXACT_COMMAND_SOURCE_REVIEW_HOLD.md) | `reference` | `draft` | `source-only-offhost-nonce-witness-command-review-no-live-activation-or-finance-permit` |
 | [C08 Verified Owner Device Direction: Historical Ed25519 Signature Is Not Governance Ratification](C08_EXISTING_OWNER_DEVICE_DIRECTION_PHYSICAL_HOLD.md) | `reference` | `draft` | `historical-owner-device-signature-readonly-evidence-only-no-funding` |
 | [C08 Intel Dedicated Witness SSHD: Persistent Loopback Deny-Only Launchd Service](C08_INTEL_DENY_ONLY_WITNESS_SSHD_PHYSICAL.md) | `runbook` | `draft` | `reviewed-deny-only-ssh-transport-no-nonce-or-financial-authority` |

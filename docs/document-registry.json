@@ -498,6 +498,31 @@
         "financial-reviewers",
         "ai-agents"
       ],
+      "authority": "prebackup-only-no-writer-fence-no-live-financial-release",
+      "id": "aoe2war.wolochain.c06-unquiesced-mvcc-dual-recipient-intel-precapture",
+      "owner": "wolochain-ops",
+      "path": "docs/C06_UNQUIESCED_MVCC_DUAL_RECIPIENT_OFFHOST_PRECAPTURE.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-08",
+      "sensitivity": "restricted",
+      "sha256": "f14cc7e135655ef1fc1add83562acd6eefb61787e74b3f852b34f181f75d4b72",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2hdbets",
+        "aoe2dewarwagers"
+      ],
+      "title": "C06 Preparatory Live-MVCC Full-Data Exports: Dual-Recipient Encrypted Intel Retention",
+      "type": "runbook"
+    },
+    {
+      "audience": [
+        "operators",
+        "developers",
+        "financial-reviewers",
+        "ai-agents"
+      ],
       "authority": "source-only-offhost-nonce-witness-command-review-no-live-activation-or-finance-permit",
       "id": "aoe2war.wolochain.c08-dedicated-witness-command-source-review-hold",
       "owner": "wolochain-ops",
@@ -625,7 +650,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "6971ddc60b2e6eb8197c9e77d4c03b03d50b7ca34d4996de0d44abda0a509972",
+      "sha256": "0481424b9b650b9a9a771311071db6a83f040f1a7f3c22de795fb9b876af0b8e",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1702,8 +1727,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "fix/c01-historical-merged-pr-ci-binding-20261108",
-    "commit": "ba52b343306c80d959f8e398840e64803b25985d"
+    "branch": "fix/c06-live-mvcc-offhost-precapture-20261108",
+    "commit": "e8a926d250b3e29a72d3a80659ae026b5cf1ab91"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
