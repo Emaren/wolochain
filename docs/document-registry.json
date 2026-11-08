@@ -359,7 +359,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "793e0d8160e76d2bde5a4973be47771ca59aebd417f69518f55b88f49a649078",
+      "sha256": "0201f2c4bad449ac3049232e81528e52ca30402041bc60249d50ae9f8d185634",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1348,9 +1348,9 @@
       "owner": "wolochain-ops",
       "path": "reviews/financial-maintenance/20261024-human-authority-and-writer-closeout.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-10-24",
+      "reviewed_at": "2026-11-08",
       "sensitivity": "internal",
-      "sha256": "dce539fce5972e89c9f67e272e8d43f26af641aad08405fd9571210b5fa1b7e2",
+      "sha256": "b40cb9ae5d8cc9e43b2c4e7bc813f298ee97efa34764e6eb26c51435c8a35053",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -1372,9 +1372,9 @@
       "owner": "wolochain-ops",
       "path": "reviews/financial-maintenance/20261024-p1-writer-evidence-and-budget-proposal.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-10-24",
+      "reviewed_at": "2026-11-08",
       "sensitivity": "internal",
-      "sha256": "8b5fe4dd65b13c381591c3219df7c2741a831791df8424d7cd22420cadc5421e",
+      "sha256": "b9115d156b106250c86a3efb82a231cb016a3dce188e6cf5b4a94f272483db8d",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -1396,9 +1396,9 @@
       "owner": "wolochain-ops",
       "path": "reviews/financial-maintenance/20261024-phase-integration-operator-runbook.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-10-24",
+      "reviewed_at": "2026-11-08",
       "sensitivity": "internal",
-      "sha256": "8d95d5cbdb47e1c6e5140433ee7f8556e9239bef5de0c9f5754e1477d201ba3f",
+      "sha256": "666889fcbe9cb6f066c0a20c327c1a3b84ad03860ccf0acd48a9544b2cb529a4",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -1420,9 +1420,9 @@
       "owner": "wolochain-ops",
       "path": "reviews/financial-maintenance/20261024-source-integrity-enrollment-and-restore-qualification.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-10-24",
+      "reviewed_at": "2026-11-08",
       "sensitivity": "internal",
-      "sha256": "d619b0dc33c2c4bd99be536988ea9df308940a213668fa65bcde6a7c1efe072f",
+      "sha256": "fe3453c955ae494709c5166a9438f37366119ec55f6e1e5555f3afae79e347e8",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -1437,7 +1437,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "fix/c03-root-rpc-transport-coverage-20261108",
-    "commit": "356912293851641368b9678856e6e54deb760997"
+    "commit": "7fc82eeadec4624decf8cacf49c313207a4ddcd7"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

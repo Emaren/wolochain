@@ -8,7 +8,7 @@ systems: ["wolochain","aoe2war","aoe2dewarwagers"]
 audience: ["operators","developers","ai-agents"]
 source_of_truth: "git"
 authority: "non-authorizing-financial-human-signature-review"
-reviewed_at: "2026-10-24"
+reviewed_at: "2026-11-08"
 review_interval_days: 14
 sensitivity: "internal"
 ---
@@ -16,6 +16,13 @@ sensitivity: "internal"
 # Financial controller source integrity and five-human enrollment — 2026-10-24
 
 **Status: HARD HOLD.** This is the independently reviewable ceremony/qualification specification for stacked maintenance review branch. No human has enrolled, no live financial writer was fenced, no production backup or restore attempted, and no source/binary switched.
+
+
+### 2026-11-08 documented technical re-review — source and recovery HOLD preserved
+
+This review refreshes the *documentation caveat*, not the old October 24 source/build receipts. The 171-commit P1 comparison and 9.947 GiB historical sizing below are immutable historical evidence, **not** current host parity or backup capacity. At Nov 8 00:00 UTC the independent C06 read-only capacity audit measured **11,165,416,471 bytes** HD physical database and **15,309,847 bytes** DE, Wolo volume free **18,700,017,664 bytes**, and hypothetical maximum separately approvable capture bytes **17,626,275,840** (after 1 GiB controller reserve). That neither predicts actual compressed archive size nor proves capture can fit.
+
+A physically restricted HEL1 Intel reverse tunnel on loopback 22996 matched a previously pinned Intel SSH host key; the actual Intel host separately reported approximately **296 GiB free, FileVault ON, PostgreSQL 16.15 native recovery tools and age v1.3.1**. These are **transport and receiver readiness only**; no source-consistent quiesced HD+DE+WAL/journal encrypted archive, authenticated off-host receipt or verified restore of that same archive has been produced. C03 81 owner-writable conservative finance candidates, 161 unclassified public tables and direct signer paths remain held. The one-human governance [notice #184](https://github.com/Emaren/wolochain/issues/184) remains unratified; the five-person protocol below is not silently replaced. Owner-delegated AI documentation review is not an independent release signature. **NO funded release.**
 
 ## P1 code drift — actual GitHub commit-graph proof and source-versus-runtime limits
 
