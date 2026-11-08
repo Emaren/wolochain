@@ -16,7 +16,7 @@ import subprocess
 import sys
 from datetime import datetime, timezone
 
-SCHEMA = "wolo.c03.root-finance-transport-connect-only-hold.v1"
+SCHEMA = "wolo.c03.root-finance-transport-and-unit-confinement-hold.v2"
 HOST = "ubuntu-4gb-hel1-11"
 PORT_UNIT = {
     8092: "wolochain-mainnet-settlement.service",
@@ -53,6 +53,39 @@ def parse_units(raw, unit):
             vals["Id"]==unit and vals["ActiveState"] in ("active","inactive","failed") and
             vals["MainPID"].isdigit(), "UNIT_IDENTITY_DRIFT")
     return vals
+
+def parse_confinement(raw, unit):
+    """Read exact systemd confinement flags; never expose unit secret material."""
+    keys=("Id","User","NoNewPrivileges","ProtectSystem","PrivateTmp","CapabilityBoundingSet")
+    vals={}
+    for line in raw.splitlines():
+        require("=" in line,"CONFINEMENT_PROPERTY_SHAPE")
+        k,v=line.split("=",1)
+        require(k in keys and k not in vals,
+                "CONFINEMENT_PROPERTY_UNKNOWN_OR_DUPLICATE")
+        vals[k]=v
+    require(set(vals)==set(keys) and vals["Id"]==unit,
+            "CONFINEMENT_UNIT_OR_REQUIRED_FIELDS_DRIFT")
+    require(vals["User"] in ("","root") and
+            vals["NoNewPrivileges"] in ("yes","no") and
+            vals["ProtectSystem"] in ("no","yes","full","strict") and
+            vals["PrivateTmp"] in ("yes","no") and
+            len(vals["CapabilityBoundingSet"]) <= 4096,
+            "CONFINEMENT_POLICY_SHAPE")
+    capabilities=vals["CapabilityBoundingSet"].split()
+    require(len(capabilities)==len(set(capabilities)) and
+            all(re.fullmatch(r"cap_[a-z0-9_]+",c) for c in capabilities),
+            "UNEXPECTED_CAPABILITY_TOKEN")
+    return {
+        "unit":unit,
+        "root_execution":True,
+        "no_new_privileges":vals["NoNewPrivileges"]=="yes",
+        "read_only_system_protection":vals["ProtectSystem"] in ("yes","full","strict"),
+        "private_tmp":vals["PrivateTmp"]=="yes",
+        "has_cap_sys_admin_in_bounding_set":"cap_sys_admin" in capabilities,
+        "has_cap_dac_override_in_bounding_set":"cap_dac_override" in capabilities,
+        "capability_bounding_set_entries":len(capabilities),
+    }
 
 def parse_ss(raw):
     listeners={}
@@ -108,6 +141,12 @@ def observe():
         vals=parse_units(run(["/usr/bin/systemctl","show","--no-pager",
                               "-p","Id,ActiveState,MainPID","--",unit]),unit)
         units[unit]=vals
+    confinement={}
+    for unit in unit_names:
+        confinement[unit]=parse_confinement(
+            run(["/usr/bin/systemctl","show","--no-pager","-p",
+                 "Id,User,NoNewPrivileges,ProtectSystem,PrivateTmp,CapabilityBoundingSet",
+                 "--",unit]),unit)
     identities={}
     for port,unit in sorted(PORT_UNIT.items()):
         pid=listener.get(port)
@@ -139,6 +178,11 @@ def observe():
         "funded_8094_8095_off":True,
         "uid1000_partial_8092_8093_kernel_deny":nft_partial,
         "listener_systemd_process_identity":identities,
+        "systemd_root_confinement":confinement,
+        "legacy_root_services_without_no_new_privileges":[
+            unit for unit in unit_names if unit!="wolochaind-mainnet.service"
+            and confinement[unit]["root_execution"]
+            and not confinement[unit]["no_new_privileges"]],
         "loopback_connect_reachability":reach,
         "root_owned_services_transferred_or_stopped":False,
         "complete_pg_financial_writer_fence_proven":False,

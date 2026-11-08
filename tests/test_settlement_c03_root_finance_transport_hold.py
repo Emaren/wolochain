@@ -62,6 +62,53 @@ class FinanceTransportHoldTests(unittest.TestCase):
     def test_duplicate_unit_properties_stop(self):
         self.assertHold(guard.parse_units,unit_line()+"MainPID=1010\n","wolochaind-mainnet.service")
 
+    def unit_policy(self, **overrides):
+        vals={"Id":"wolochain-mainnet-settlement.service","User":"",
+              "NoNewPrivileges":"no","ProtectSystem":"no","PrivateTmp":"no",
+              "CapabilityBoundingSet":"cap_sys_admin cap_dac_override cap_net_bind_service"}
+        vals.update(overrides)
+        return "\n".join(k+"="+v for k,v in vals.items())+"\n"
+
+    def test_confinement_exact_unrestricted_root_is_observed_not_accepted(self):
+        d=guard.parse_confinement(self.unit_policy(),"wolochain-mainnet-settlement.service")
+        self.assertTrue(d["root_execution"])
+        self.assertFalse(d["no_new_privileges"])
+        self.assertFalse(d["read_only_system_protection"])
+        self.assertFalse(d["private_tmp"])
+        self.assertTrue(d["has_cap_sys_admin_in_bounding_set"])
+        self.assertTrue(d["has_cap_dac_override_in_bounding_set"])
+        self.assertEqual(d["capability_bounding_set_entries"],3)
+
+    def test_validator_confinement_distinct_from_legacy(self):
+        raw=self.unit_policy(Id="wolochaind-mainnet.service",User="root",
+            NoNewPrivileges="yes",ProtectSystem="full",PrivateTmp="yes",
+            CapabilityBoundingSet="cap_net_bind_service")
+        d=guard.parse_confinement(raw,"wolochaind-mainnet.service")
+        self.assertTrue(d["no_new_privileges"])
+        self.assertTrue(d["read_only_system_protection"])
+        self.assertTrue(d["private_tmp"])
+        self.assertFalse(d["has_cap_sys_admin_in_bounding_set"])
+
+    def test_confinement_secret_field_stops(self):
+        self.assertHold(guard.parse_confinement,
+            self.unit_policy()+"Environment=SECRET\n",
+            "wolochain-mainnet-settlement.service")
+
+    def test_confinement_missing_and_duplicate_fields_stop(self):
+        raw=self.unit_policy()
+        self.assertHold(guard.parse_confinement,
+            raw.replace("NoNewPrivileges=no\n",""),
+            "wolochain-mainnet-settlement.service")
+        self.assertHold(guard.parse_confinement,raw+"User=tony\n",
+            "wolochain-mainnet-settlement.service")
+
+    def test_confinement_nonroot_and_forged_capability_tokens_stop(self):
+        self.assertHold(guard.parse_confinement,self.unit_policy(User="tony"),
+            "wolochain-mainnet-settlement.service")
+        self.assertHold(guard.parse_confinement,
+            self.unit_policy(CapabilityBoundingSet="cap_sys_admin BAD@CAP"),
+            "wolochain-mainnet-settlement.service")
+
     def test_uid0_is_determined_from_live_proc(self):
         self.assertEqual(guard.parse_uid("Name:\twolo\nUid:\t0\t0\t0\t0\n"),(0,0,0,0))
         self.assertEqual(guard.parse_uid("Uid:\t1000\t1000\t1000\t1000\n")[1],1000)
