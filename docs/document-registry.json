@@ -669,6 +669,30 @@
         "financial-reviewers",
         "ai-agents"
       ],
+      "authority": "nonfunded-real-offhost-recovery-rehearsal-not-gate-closure",
+      "id": "aoe2war.wolochain.c07-intel-source-pinned-unquiesced-database-recovery-hold",
+      "owner": "wolochain-ops",
+      "path": "docs/C07_INTEL_SOURCE_PINNED_UNQUIESCED_DATABASE_RECOVERY_HOLD.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-09",
+      "sensitivity": "restricted",
+      "sha256": "c66094b46bb0975b4d6c58a363dad81bfceb1cead1cf9c5d3bc20b8da3bf07a0",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C07 Intel Source-Pinned Unquiesced Database Recovery HOLD",
+      "type": "runbook"
+    },
+    {
+      "audience": [
+        "operators",
+        "developers",
+        "financial-reviewers",
+        "ai-agents"
+      ],
       "authority": "one-human-nonfunded-governance-only",
       "id": "aoe2war.wolochain.c08-automated-keychain-governance-v3",
       "owner": "wolochain-ops",
@@ -916,7 +940,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "c60757aba6cdae7520461a4d0ba576384a4da7528ffaa0c85e8a8698286b74bb",
+      "sha256": "390051147b50fffd62e2b6e8d4f0d50b97d994dae9fc8a1804978d0c2a701eee",
       "source_of_truth": "git",
       "status": "active",
       "systems": [

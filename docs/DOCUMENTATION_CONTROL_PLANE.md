@@ -27,7 +27,7 @@ This page is generated from the validated front matter in this repository. Cross
 
 ## Documentation health
 
-- Authoritative repository documents: **85**
+- Authoritative repository documents: **86**
 - Path moves in this migration: **0**
 - Every listed document has an explicit owner, lifecycle, authority, and review interval.
 
@@ -35,13 +35,13 @@ This page is generated from the validated front matter in this repository. Cross
 
 - `historical`: 14
 - `reference`: 49
-- `runbook`: 20
+- `runbook`: 21
 - `working`: 2
 
 ### Lifecycle
 
 - `active`: 16
-- `draft`: 55
+- `draft`: 56
 - `historical`: 14
 
 ## Documents
@@ -76,6 +76,7 @@ This page is generated from the validated front matter in this repository. Cross
 | [C06 Intel offhost receiver host identity — transport-only evidence](C06_INTEL_OFFHOST_RECOVERY_TUNNEL_HOSTKEY_HOLD.md) | `reference` | `draft` | `source-only-c06-hostkey-observation-no-backup-authority` |
 | [C06 Intel Recovery Tunnel Supervisor](C06_INTEL_RECOVERY_TUNNEL_SUPERVISOR.md) | `reference` | `draft` | `source-only-intel-recovery-transport-not-a-financial-permit` |
 | [C06 Preparatory Live-MVCC Full-Data Exports: Dual-Recipient Encrypted Intel Retention](C06_UNQUIESCED_MVCC_DUAL_RECIPIENT_OFFHOST_PRECAPTURE.md) | `runbook` | `draft` | `prebackup-only-no-writer-fence-no-live-financial-release` |
+| [C07 Intel Source-Pinned Unquiesced Database Recovery HOLD](C07_INTEL_SOURCE_PINNED_UNQUIESCED_DATABASE_RECOVERY_HOLD.md) | `runbook` | `draft` | `nonfunded-real-offhost-recovery-rehearsal-not-gate-closure` |
 | [C08 Keychain Software P-256 One-Human Governance — Real Passwordless Adoption](C08_AUTOMATED_KEYCHAIN_GOVERNANCE_V3.md) | `runbook` | `draft` | `one-human-nonfunded-governance-only` |
 | [C08 Dedicated Intel Witness: Exact Forced Command and Source-Pin Admission Review](C08_DEDICATED_WITNESS_EXACT_COMMAND_SOURCE_REVIEW_HOLD.md) | `reference` | `draft` | `source-only-offhost-nonce-witness-command-review-no-live-activation-or-finance-permit` |
 | [C08 Verified Owner Device Direction: Historical Ed25519 Signature Is Not Governance Ratification](C08_EXISTING_OWNER_DEVICE_DIRECTION_PHYSICAL_HOLD.md) | `reference` | `draft` | `historical-owner-device-signature-readonly-evidence-only-no-funding` |
