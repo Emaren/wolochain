@@ -1,3 +1,18 @@
+---
+id: "aoe2war.wolochain.c07-real-hd-de-owner-acl-restoration-20261109"
+title: "C07 Recovered HD/DE Role Ownership and ACL Rehearsal"
+type: "runbook"
+status: "draft"
+owner: "wolochain-ops"
+systems: ["wolochain", "aoe2war", "aoe2dewarwagers"]
+audience: ["developers", "operators", "ai-agents"]
+source_of_truth: "git"
+authority: "non-authorizing-c07-isolated-recovery-rehearsal"
+reviewed_at: "2026-11-09"
+review_interval_days: 7
+sensitivity: "restricted"
+---
+
 # C07 real HD/DE owner and ACL recovery: physical rehearsal and reusable comparator
 
 **Scope:** C07 recovery preparation only, zero new funded release authority.
