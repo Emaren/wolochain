@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `central/c05-offhost-fixed-height-commit-witness-20261109` at `0095e6835b4391871b8af9d794cdefa8f5c4aea4`
+Implementation baseline: `central/c05-offhost-fixed-height-commit-witness-20261109` at `742aaae976e20ababe61f5a594f619d839b72ec5`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
