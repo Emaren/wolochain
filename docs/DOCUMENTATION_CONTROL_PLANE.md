@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `feat/c03-intel-hd-de-db-schema-function-create-fence-20261109` at `649cb931bf786c6e93a62d7d2a3b8dc18a2ca65b`
+Implementation baseline: `feat/c07-intel-real-roles-owners-acl-restore-proof-20261109` at `ad45b2fd737644bd8b768b2d0060923e77d8df56`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
@@ -27,7 +27,7 @@ This page is generated from the validated front matter in this repository. Cross
 
 ## Documentation health
 
-- Authoritative repository documents: **92**
+- Authoritative repository documents: **93**
 - Path moves in this migration: **0**
 - Every listed document has an explicit owner, lifecycle, authority, and review interval.
 
@@ -35,13 +35,13 @@ This page is generated from the validated front matter in this repository. Cross
 
 - `historical`: 14
 - `reference`: 49
-- `runbook`: 27
+- `runbook`: 28
 - `working`: 2
 
 ### Lifecycle
 
 - `active`: 16
-- `draft`: 62
+- `draft`: 63
 - `historical`: 14
 
 ## Documents
@@ -108,6 +108,7 @@ This page is generated from the validated front matter in this repository. Cross
 | [WoloChain Mainnet Template Report](mainnet-template.md) | `historical` | `historical` | `mainnet-preparation-template-evidence` |
 | [WoloChain Mainnet Wallet And Key Plan](mainnet-wallets.md) | `reference` | `active` | `mainnet-wallet-role-and-custody-map` |
 | [Held native new-epoch escrow v3 decision boundary](new-epoch-escrow-v3-held.md) | `reference` | `draft` | `source-review-only-nonactivating-escrow-candidate` |
+| [C07 real HD/DE owner and ACL recovery: physical rehearsal and reusable comparator](settlement-contracts/C07_REAL_HD_DE_ROLE_OWNER_ACL_RECOVERY_20261109.md) | `runbook` | `draft` | `non-authorizing-c07-isolated-recovery-rehearsal` |
 | [Settlement Contracts](settlement-contracts/README.md) | `reference` | `active` | `machine-readable-settlement-contract-index` |
 | [HD and DE Financial Producer Owner Review](settlement-contracts/producer-owner-correlation.md) | `runbook` | `draft` | `non-authorizing-financial-producer-evidence-correlation` |
 | [WOLO Centralized Solo-Owner Financial Governance — C08 Proposal](solo-owner-centralized-financial-governance.md) | `reference` | `draft` | `proposed-policy-no-mainnet-financial-authorization` |
