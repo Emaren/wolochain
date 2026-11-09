@@ -147,15 +147,15 @@ func LoadConfig(path string) (Config, string, error) {
 		return c, "", errors.New("configuration_invalid")
 	}
 	a, e := hex.DecodeString(c.ActivationAuthorityKeyHex)
-	if e != nil || len(a) != ed25519.PublicKeySize {
+	if e != nil || !ValidAuthorityPublicKey(a) {
 		return c, "", errors.New("configuration_invalid")
 	}
 	w, e := hex.DecodeString(c.WithdrawalApprovalKeyHex)
-	if e != nil || len(w) != ed25519.PublicKeySize || bytes.Equal(a, w) {
+	if e != nil || !ValidAuthorityPublicKey(w) || bytes.Equal(a, w) {
 		return c, "", errors.New("independent_approval_keys_required")
 	}
 	g, e := hex.DecodeString(c.WagerApprovalKeyHex)
-	if e != nil || len(g) != ed25519.PublicKeySize || bytes.Equal(a, g) || bytes.Equal(w, g) {
+	if e != nil || !ValidAuthorityPublicKey(g) || bytes.Equal(a, g) || bytes.Equal(w, g) {
 		return c, "", errors.New("independent_approval_keys_required")
 	}
 	for _, p := range []string{c.KeyringDir, c.PassphraseFile, c.TokenFile, c.StatePath, c.PermitFile} {
@@ -178,7 +178,7 @@ func LoadConfig(path string) (Config, string, error) {
 	if c.AccountingReviewerKeyHex != "" || c.CustodyReviewerKeyHex != "" || c.ReserveReviewFile != "" {
 		accounting, ae := hex.DecodeString(c.AccountingReviewerKeyHex)
 		custody, ce := hex.DecodeString(c.CustodyReviewerKeyHex)
-		if ae != nil || ce != nil || len(accounting) != ed25519.PublicKeySize || len(custody) != ed25519.PublicKeySize ||
+		if ae != nil || ce != nil || !ValidAuthorityPublicKey(accounting) || !ValidAuthorityPublicKey(custody) ||
 			!filepath.IsAbs(c.ReserveReviewFile) || filepath.Clean(c.ReserveReviewFile) != c.ReserveReviewFile {
 			return c, "", errors.New("independent_reserve_review_configuration_required")
 		}

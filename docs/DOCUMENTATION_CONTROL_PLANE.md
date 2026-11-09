@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `feat/c07-real-role-owner-acl-proof-clean-20261109` at `48839a9bd6e48c4c407e088a1ffd5d452f9d13e1`
+Implementation baseline: `codex/c05-strict-review-authority` at `0ba9a0527078005af311c65d96bf7ca969d67da6`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 

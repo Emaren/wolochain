@@ -105,7 +105,7 @@ func digest(raw []byte) string  { h := sha256.Sum256(raw); return hex.EncodeToSt
 func validDigest(s string) bool { return digestPattern.MatchString(s) && strings.Trim(s, "0") != "" }
 func publicKey(s string) (ed25519.PublicKey, error) {
 	b, e := hex.DecodeString(s)
-	if e != nil || len(b) != ed25519.PublicKeySize || hex.EncodeToString(b) != s || bytes.Equal(b, make([]byte, 32)) {
+	if e != nil || hex.EncodeToString(b) != s || !satchelservice.ValidAuthorityPublicKey(b) {
 		return nil, errHeld
 	}
 	return ed25519.PublicKey(b), nil
