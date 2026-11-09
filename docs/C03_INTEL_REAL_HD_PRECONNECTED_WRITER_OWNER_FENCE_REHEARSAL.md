@@ -78,7 +78,7 @@ from HEL1's actual production catalog and is not jointly quiesced with
 the DE restore.
 
 A real C03 release still requires: classified HD/DE object and sequence
-coverage; exact active service/JWT/indexer/tokenchain and preconnected
+coverage; exact active service/JWT/indexer/legacy-chain pathways and preconnected
 session scope; fresh synchronized C06 backup and same exact C07 restore;
 reversible production-only finance writer freeze and application-safe
 ACL owner transfer; Session B **authenticated Steam** continuity and
