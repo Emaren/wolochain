@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `feat/c03-intel-preconnected-after-owner-migration-20261109` at `a681da51605bdc07f7b65f5931763ffde19c56aa`
+Implementation baseline: `feat/c03-intel-de-preconnected-after-owner-migration-20261109` at `038db56cb7b982abde27354bb380a0a2176953f0`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
@@ -27,7 +27,7 @@ This page is generated from the validated front matter in this repository. Cross
 
 ## Documentation health
 
-- Authoritative repository documents: **91**
+- Authoritative repository documents: **92**
 - Path moves in this migration: **0**
 - Every listed document has an explicit owner, lifecycle, authority, and review interval.
 
@@ -35,13 +35,13 @@ This page is generated from the validated front matter in this repository. Cross
 
 - `historical`: 14
 - `reference`: 49
-- `runbook`: 26
+- `runbook`: 27
 - `working`: 2
 
 ### Lifecycle
 
 - `active`: 16
-- `draft`: 61
+- `draft`: 62
 - `historical`: 14
 
 ## Documents
@@ -58,6 +58,7 @@ This page is generated from the validated front matter in this repository. Cross
 | [C03 Financial Writer Containment — Physical Release Acceptance Protocol](C03_FINANCIAL_WRITER_CONTAINMENT_ACCEPTANCE.md) | `reference` | `draft` | `source-only-c03-global-containment-plan-not-a-financial-permit` |
 | [C03 Financial Writer Drift Watchdog](C03_FINANCIAL_WRITER_DRIFT_WATCHDOG.md) | `reference` | `draft` | `read-only-finance-hold-monitor-not-a-fence-or-funded-permit` |
 | [C03 Intel COW Restored HD Owner Finance Denial Rehearsal](C03_INTEL_COW_RESTORED_HD_OWNER_FINANCE_DENIAL_REHEARSAL.md) | `runbook` | `draft` | `nonfunded-real-restored-hd-partial-owner-migration-not-c03-closure` |
+| [C03 Intel Real Restored DE: Preconnected Legacy Owner DML Denial Rehearsal](C03_INTEL_REAL_DE_PRECONNECTED_WRITER_OWNER_FENCE_REHEARSAL.md) | `runbook` | `draft` | `real-intel-pg16-de-restored-clone-only-not-production-writer-admission` |
 | [C03 Intel Real Restored HD: Preconnected Legacy Owner DML Denial Rehearsal](C03_INTEL_REAL_HD_PRECONNECTED_WRITER_OWNER_FENCE_REHEARSAL.md) | `runbook` | `draft` | `physical-intel-only-restored-hd-owner-rehearsal-not-production-writer-fence` |
 | [C03 Isolated PostgreSQL Table Lock Counterexample](C03_ISOLATED_TABLE_LOCK_COUNTEREXAMPLE.md) | `reference` | `draft` | `source-only-negative-lock-rehearsal-not-a-financial-fence` |
 | [C03 NOLOGIN Existing Backend Counterexample](C03_NOLOGIN_EXISTING_BACKEND_COUNTEREXAMPLE.md) | `reference` | `draft` | `source-only-isolated-nologin-counterexample-not-live-financial-fence` |

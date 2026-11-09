@@ -242,6 +242,29 @@
         "developers",
         "financial-reviewers"
       ],
+      "authority": "real-intel-pg16-de-restored-clone-only-not-production-writer-admission",
+      "id": "aoe2war.wolochain.c03-intel-real-preconnected-de-owner-migration-rehearsal",
+      "owner": "wolochain-ops",
+      "path": "docs/C03_INTEL_REAL_DE_PRECONNECTED_WRITER_OWNER_FENCE_REHEARSAL.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-09",
+      "sensitivity": "restricted",
+      "sha256": "b902ec5144c7295df94f32ff00760b1cf9be1466a74001c12ff3362ee372ce12",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C03 Intel Real Restored DE: Preconnected Legacy Owner DML Denial Rehearsal",
+      "type": "runbook"
+    },
+    {
+      "audience": [
+        "operators",
+        "developers",
+        "financial-reviewers"
+      ],
       "authority": "physical-intel-only-restored-hd-owner-rehearsal-not-production-writer-fence",
       "id": "aoe2war.wolochain.c03-intel-real-preconnected-hd-owner-migration-rehearsal",
       "owner": "wolochain-ops",
@@ -1059,7 +1082,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "52a8a40084d6357461ff154d723dbc934c3b30b6821c264c221b0d16255c80dc",
+      "sha256": "1738d9992bd627dab12722a446ce10e428143ebb8acf4a6d7f1331400703ca15",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -2136,8 +2159,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "feat/c03-intel-preconnected-after-owner-migration-20261109",
-    "commit": "a681da51605bdc07f7b65f5931763ffde19c56aa"
+    "branch": "feat/c03-intel-de-preconnected-after-owner-migration-20261109",
+    "commit": "038db56cb7b982abde27354bb380a0a2176953f0"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
