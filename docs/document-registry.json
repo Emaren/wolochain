@@ -238,6 +238,29 @@
     },
     {
       "audience": [
+        "operators",
+        "developers",
+        "financial-reviewers"
+      ],
+      "authority": "physical-intel-only-restored-hd-owner-rehearsal-not-production-writer-fence",
+      "id": "aoe2war.wolochain.c03-intel-real-preconnected-hd-owner-migration-rehearsal",
+      "owner": "wolochain-ops",
+      "path": "docs/C03_INTEL_REAL_HD_PRECONNECTED_WRITER_OWNER_FENCE_REHEARSAL.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-09",
+      "sensitivity": "restricted",
+      "sha256": "623bbb179bb910c24290b93f68eea6657ebf78cc8cc486acd8ddf9d37c35a4b2",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C03 Intel Real Restored HD: Preconnected Legacy Owner DML Denial Rehearsal",
+      "type": "runbook"
+    },
+    {
+      "audience": [
         "developers",
         "operators",
         "ai-agents"
@@ -1036,7 +1059,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "0431922dbf0eef896d4eee980be2608d0bae66270bb72008eaafa68d738c6575",
+      "sha256": "ae321d73ed5db2a362da342e2d77d1acc3df40e2fa94d14701596ad2803b1481",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
