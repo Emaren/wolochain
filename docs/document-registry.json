@@ -869,7 +869,7 @@
       "review_interval_days": 7,
       "reviewed_at": "2026-11-08",
       "sensitivity": "restricted",
-      "sha256": "df89ef7d405919dc3e7ea5410fb83dc5758b74cdbd3c6f6c017c5d3d13219122",
+      "sha256": "2b6477fd02adc08104235ee0e6dffd0aa23e99e119aff9427977136606b1f1e3",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -916,7 +916,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "7fca45cc124221a84120ae796c81494d029df6d2da4e8528be1a4e73f9e3c50e",
+      "sha256": "c60757aba6cdae7520461a4d0ba576384a4da7528ffaa0c85e8a8698286b74bb",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1993,8 +1993,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "feat/c06-hel1-local-age-hd-precapture-20261109",
-    "commit": "5dc3cd9435235ca301a0a5c2ffacb17ef92bd2c3"
+    "branch": "feat/c09-forward-only-native-claim-20261109",
+    "commit": "a3ab2e288ea33632d20cf53bc48a1f0cadf4642b"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

@@ -12,10 +12,14 @@ No transaction-specific operational permit is produced by this program.
 from __future__ import annotations
 
 import argparse
+import base64
+import binascii
 import hashlib
 import json
 import re
+import subprocess
 import sys
+import tempfile
 from datetime import datetime,timedelta,timezone
 from pathlib import Path
 import settlement_c08_governance_adoption_v2 as ratification
@@ -23,12 +27,18 @@ import settlement_c08_keychain_policy_adoption_v3 as keychain_v3
 
 import settlement_solo_owner_intent_review as owner
 
-SCHEMA = "wolo.c09.solo-owner-exact-canary-intent.v2"
-PACKET_SCHEMA = "wolo.c09.solo-owner-signed-exact-canary-intent.v2"
-DOMAIN = b"AOE2WAR-WOLO-EXACT-SOLO-CANARY-V2\x00"
-OUT_SCHEMA = "wolo.c09.single-owner-exact-canary-signature-held.v1"
+SCHEMA = "wolo.c09.solo-owner-exact-canary-intent.v3"
+PACKET_SCHEMA = "wolo.c09.solo-owner-signed-exact-canary-intent.v3"
+DOMAIN = b"AOE2WAR-WOLO-EXACT-SOLO-CANARY-V3\x00"
+OUT_SCHEMA = "wolo.c09.single-owner-exact-canary-signature-held.v2"
+# Separate transaction-specific P-256 *signature* version. Reuses the C08
+# owner's published public policy identity in this proof-only mode; it does
+# NOT assert an independently enrolled runtime transaction signing role.
+P256_C09_PACKET_SCHEMA = "wolo.c09.owner-keychain-p256-exact-intent.v1"
+P256_C09_DOMAIN = b"AOE2WAR-WOLO-C09-TRANSACTION-SPECIFIC-P256-V1\x00"
+P256_C09_PACKET_KEYS = frozenset({"schema", "request", "signature_der_b64"})
 SIGNED_KEYS = frozenset({
-    "schema", "chain_id", "operation", "fresh_claim_id", "request_id",
+    "schema", "chain_id", "operation", "fresh_claim_id", "native_claim_id", "request_id",
     "recipient", "amount_uwolo", "fee_uwolo", "bank_height",
     "source_commit", "satchel_binary_sha256", "reviewer_binary_sha256",
     "consensus_header_root_sha256", "bank_root_sha256",
@@ -41,6 +51,8 @@ SIGNED_KEYS = frozenset({
 })
 CANON_AMOUNT = re.compile(r"(?:0|[1-9][0-9]{0,18})\Z")
 NEW_CLAIM = re.compile(r"fresh-c09-[a-f0-9]{32}\Z")
+# App C02 new native claim sequence. Distinct from all historical INT claim IDs.
+NATIVE_CLAIM = re.compile(r"9[0-9]{11}\Z")
 REQUEST_ID = re.compile(r"c09-[a-f0-9]{32}\Z")
 # Syntax envelope only. Native chain checksum/address validation is NOT proven.
 RECIPIENT_ENVELOPE = re.compile(r"wolo1[023456789acdefghjklmnpqrstuvwxyz]{20,88}\Z")
@@ -67,6 +79,10 @@ def validate_request(q: dict, now) -> None:
                   and REQUEST_ID.fullmatch(q["request_id"]) is not None
                   and q["fresh_claim_id"][10:] != q["request_id"][4:],
                   "C09_FRESH_CANARY_IDENTITY_INVALID")
+    owner.require(type(q["native_claim_id"]) is str
+                  and NATIVE_CLAIM.fullmatch(q["native_claim_id"]) is not None
+                  and "900000000001" <= q["native_claim_id"] <= "999999999999",
+                  "C09_NATIVE_CLAIM_NOT_FORWARD_ONLY_APP_ID")
     owner.require(type(q["recipient"]) is str
                   and RECIPIENT_ENVELOPE.fullmatch(q["recipient"]) is not None,
                   "C09_RECIPIENT_SYNTAX_UNQUALIFIED")
@@ -126,6 +142,8 @@ def review(enrollment_raw: bytes, packet_raw: bytes, *,
         "request_commitment_sha256": hashlib.sha256(owner.canonical(request)).hexdigest(),
         "fresh_claim_commitment_sha256": hashlib.sha256(
             request["fresh_claim_id"].encode("ascii")).hexdigest(),
+        "native_claim_commitment_sha256": hashlib.sha256(
+            request["native_claim_id"].encode("ascii")).hexdigest(),
         "recipient_commitment_sha256": hashlib.sha256(
             request["recipient"].encode("ascii")).hexdigest(),
         "nonce_commitment_sha256": hashlib.sha256(
@@ -294,6 +312,80 @@ def review_with_keychain_governance_v3(enrollment_raw: bytes,packet_raw: bytes, 
         funded_canary_permit_issued=False,
         financial_release_authorized=False)
 
+
+
+def review_signed_c09_keychain_p256_policy_key_packet(
+        packet_raw: bytes, *, governance_root: Path,
+        governance_public_x963: bytes, governance_source_repo: Path,
+        now=None, comment=None, notice_issue=None, notice_repo=None) -> dict:
+    """Validate an EXACT fresh P-256 transaction signature, ALWAYS HOLD.
+
+    This is an independent transaction-specific signature/domain. It uses
+    the *same* published C08 policy key to prove a possible operator path,
+    NOT a separately enrolled transaction-signing KEY or runtime permit.
+    Never signs, unlocks Keychain, touches a nonce witness or executes WOLO.
+    """
+    now = now or datetime.now(timezone.utc)
+    try:
+        packet = keychain_v3.strict(packet_raw)
+    except (keychain_v3.Hold, ValueError, TypeError) as exc:
+        raise owner.AuthorityHold("C09_P256_PACKET_NONCANONICAL") from exc
+    owner.require(type(packet) is dict
+                  and set(packet) == P256_C09_PACKET_KEYS
+                  and packet.get("schema") == P256_C09_PACKET_SCHEMA
+                  and type(packet.get("request")) is dict,
+                  "C09_P256_PACKET_SCHEMA_OR_FIELDS_INVALID")
+    q = packet["request"]
+    # Review the exact C08 signed original receipt, policy and <=1 WOLO bound.
+    proof = qualify_c09_request_against_keychain_governance_v3(
+        q, governance_root=governance_root,
+        governance_public_x963=governance_public_x963,
+        governance_source_repo=governance_source_repo,
+        now=now, comment=comment, notice_issue=notice_issue,
+        notice_repo=notice_repo)
+    try:
+        sig = base64.b64decode(packet["signature_der_b64"],validate=True)
+    except (ValueError,TypeError,binascii.Error) as exc:
+        raise owner.AuthorityHold("C09_P256_TRANSACTION_SIGNATURE_ENCODING") from exc
+    owner.require(64 <= len(sig) <= 80 and sig[:1] == b"\x30",
+                  "C09_P256_TRANSACTION_SIGNATURE_ENCODING")
+    pub = keychain_v3.key_public(governance_public_x963)
+    message = P256_C09_DOMAIN + owner.canonical({
+        "schema":P256_C09_PACKET_SCHEMA,"request":q})
+    owner.require(160 <= len(message) <= 8192,
+                  "C09_P256_SIGNED_REQUEST_BOUNDS")
+    with tempfile.TemporaryDirectory(prefix="wolo-c09-p256-readonly-") as folder:
+        tmp = Path(folder)
+        for name,content in (("pub.der",keychain_v3.SPKI+pub),
+                             ("signed-request",message),("signature.der",sig)):
+            target=tmp/name
+            target.write_bytes(content)
+            target.chmod(0o600)
+        r=subprocess.run(["openssl","dgst","-sha256","-keyform","DER",
+                          "-verify",str(tmp/"pub.der"),
+                          "-signature",str(tmp/"signature.der"),
+                          str(tmp/"signed-request")],
+                         capture_output=True,timeout=8)
+        owner.require(r.returncode==0 and b"Verified OK" in r.stdout,
+                      "C09_P256_TRANSACTION_SIGNATURE_INVALID")
+    return {
+      "schema":"wolo.c09.p256-transaction-crypto-preflight-hold.v1",
+      "status":"C09_TRANSACTION_SPECIFIC_P256_SIGNATURE_VALID_EXECUTION_HOLD",
+      "request_commitment_sha256":hashlib.sha256(owner.canonical(q)).hexdigest(),
+      "native_claim_commitment_sha256":hashlib.sha256(
+          q["native_claim_id"].encode("ascii")).hexdigest(),
+      "nonce_commitment_sha256":hashlib.sha256(
+          q["nonce"].encode("ascii")).hexdigest(),
+      "c08_adoption_receipt_sha256":proof["c08_adoption_receipt_sha256"],
+      "transaction_specific_p256_signature_verified":True,
+      "original_c08_governance_authenticated":True,
+      "separately_enrolled_transaction_signer_proven":False,
+      "independent_one_use_nonce_consumed":False,
+      "all_c01_c07_gates_accepted":False,
+      "funded_canary_permit_issued":False,
+      "financial_release_authorized":False,
+      "production_mutated":False
+    }
 
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)

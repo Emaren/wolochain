@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `feat/c06-hel1-local-age-hd-precapture-20261109` at `5dc3cd9435235ca301a0a5c2ffacb17ef92bd2c3`
+Implementation baseline: `feat/c09-forward-only-native-claim-20261109` at `a3ab2e288ea33632d20cf53bc48a1f0cadf4642b`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 

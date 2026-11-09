@@ -33,6 +33,7 @@ def req():
         "chain_id": "wolo-1",
         "operation": "one-new-claim-canary-only",
         "fresh_claim_id": "fresh-c09-" + "a" * 32,
+        "native_claim_id": "900000000001",
         "request_id": "c09-" + "b" * 32,
         "recipient": "wolo1" + "q" * 39,
         "amount_uwolo": "700000",
@@ -151,6 +152,7 @@ class ExactCanaryReviewTests(unittest.TestCase):
             ("bank_height", 2845221),
             ("source_commit", "d" * 40),
             ("request_id", "c09-" + "e" * 32),
+            ("native_claim_id", "900000000002"),
         ):
             packet = self.signed()
             packet["request"][key] = altered
@@ -160,6 +162,36 @@ class ExactCanaryReviewTests(unittest.TestCase):
         packet = self.signed()
         packet["schema"] = owner.PACKET_SCHEMA
         self.refused("OWNER_PACKET_SCHEMA_OR_KEY_MISMATCH", packet=packet)
+
+    def test_old_v2_c09_domain_and_packet_schema_cannot_be_accepted(self):
+        p = self.signed()
+        p["schema"] = "wolo.c09.solo-owner-signed-exact-canary-intent.v2"
+        self.refused("OWNER_PACKET_SCHEMA_OR_KEY_MISMATCH", packet=p)
+        p = self.signed()
+        p["request"]["schema"] = "wolo.c09.solo-owner-exact-canary-intent.v2"
+        self.refused("C09_SIGNED_FIELDS_OR_OPERATION_INVALID", packet=p)
+
+    def test_signed_native_app_id_exact_forward_only_namespace(self):
+        original = req()
+        for good in ("900000000001", "900000000002", "999999999999"):
+            q = dict(original)
+            q["native_claim_id"] = good
+            reviewer.validate_request(q, NOW)
+        for bad in ("889", "9645", "101", "0", "900000000000",
+                    "99999999999", "1000000000000", "0900000000001",
+                    "900000000001 ", "-900000000001", "90000000000a"):
+            q = dict(original)
+            q["native_claim_id"] = bad
+            with self.subTest(native_claim_id=bad), self.assertRaises(owner.AuthorityHold) as caught:
+                reviewer.validate_request(q, NOW)
+            self.assertEqual(str(caught.exception),
+                             "C09_NATIVE_CLAIM_NOT_FORWARD_ONLY_APP_ID")
+        q = dict(original)
+        q.pop("native_claim_id")
+        with self.assertRaises(owner.AuthorityHold) as caught:
+            reviewer.validate_request(q, NOW)
+        self.assertEqual(str(caught.exception),
+                         "C09_SIGNED_FIELDS_OR_OPERATION_INVALID")
 
     def test_legacy_claim_or_forged_historical_liability_disallowed(self):
         self.req["fresh_claim_id"] = "889"
