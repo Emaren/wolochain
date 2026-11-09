@@ -72,3 +72,26 @@ Offline test command: python3 -m unittest discover -s tests -p 'test_settlement_
 **Physically PASS:** exact source-matched READ ONLY classifier, private sealed artifact, all-claim preservation, ten adversarial tests.
 
 **Still HOLD:** individual financial finality; signed complete liability manifest; admitted reserve collateral; C05 gate closure; funded transfers.
+
+## Companion physical cross-hash source-key manifest
+
+A separate, source-pinned classifier discovers *different* payout hashes assigned to the same apparent source economic tuple. It cannot prove economic-claim uniqueness or double payment. It uses exactly the same READ ONLY SQL input as the first classifier. Both independent HEL1 executions produced the identical full input SHA256 21078690c1ee88ba92cc197ae4cf29a1e7a9bd4fddf26a89837a3c6ee5ef9f96, establishing that both compare the same 2,453 claim records and 4,300 indexed transfers.
+
+New companion Python source scripts/settlement_c05_crosshash_economic_source_hold.py SHA256:
+3f0f98f16acc1e1c8ed933cb3f220e4fff868ecc3f240428d4b105b7a6c88f6a
+
+The script verifies the SHA256 of the original classifier before import. A changed original classifier causes the companion to fail closed.
+
+The actual second root-only HEL1 evidence directory (mode0700) is:
+/root/aoe2war-c05-crosshash-source-manifest-20261109
+
+Private per-source-key cross-hash manifest, mode0600, SHA256:
+0717b086aa8a80366c3aed386a0eeb1c9a21148cc74b952324e48ff40533215b
+
+Aggregate noncrediting receipt, mode0600, SHA256:
+6cf76d0b0b83000b0b9720a76cfaaca63c15cc2ca6c14cd82a34485173a01840
+
+**Actual results:** 1,793 source-based economic tuples across all claims; **58 cross-hash pairs / 116 claimed founder-bonus records**, nominal 13,456 WOLO, all 58 pairs have distinct transaction hashes and distinct claim-group keys. Exactly 25/58 pairs have both hashes locally indexed with matching individual amount, while 33/58 do not. **Zero** apparent keys mix pending and claimed state; **95** keys mix rescinded and active claims, and **38** keys mix claimed hash-present and claimed-hashless records. These are separate unresolved attribution investigations, not a mathematical permission to pay or write off.
+
+The private report retains claim IDs and hash-to-index links for review without publishing them. Source SHA pin and one-use O_EXCL protected output prevent silent replacement. Companion offline tests passed **7/7**; combined C05 regression tests **17/17**. The first same-hash and second cross-hash manifests must be used together when deriving a unique economic liability ledger. They still **do not** independently prove actual payment finality, signed reserve pledge, or full C05 acceptance.
+
