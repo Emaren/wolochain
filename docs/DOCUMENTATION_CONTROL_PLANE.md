@@ -27,7 +27,7 @@ This page is generated from the validated front matter in this repository. Cross
 
 ## Documentation health
 
-- Authoritative repository documents: **86**
+- Authoritative repository documents: **87**
 - Path moves in this migration: **0**
 - Every listed document has an explicit owner, lifecycle, authority, and review interval.
 
@@ -35,13 +35,13 @@ This page is generated from the validated front matter in this repository. Cross
 
 - `historical`: 14
 - `reference`: 49
-- `runbook`: 21
+- `runbook`: 22
 - `working`: 2
 
 ### Lifecycle
 
 - `active`: 16
-- `draft`: 56
+- `draft`: 57
 - `historical`: 14
 
 ## Documents
@@ -86,6 +86,7 @@ This page is generated from the validated front matter in this repository. Cross
 | [C08 Real Owner-Signed Ratification Intent: Public Notice and Policy-Bound HOLD](C08_SIGNED_SOLO_OWNER_RATIFICATION_INTENT_HOLD.md) | `reference` | `draft` | `source-only-cryptographic-ratification-intent-review-no-governance-adoption-or-woLo-funding` |
 | [C08 Single-Owner Public Notice — Pinned 24-Hour Financial HOLD](C08_SINGLE_OWNER_PUBLIC_NOTICE_HOLD.md) | `reference` | `draft` | `public-notice-source-integrity-only-no-financial-permit` |
 | [C09 Exact Canary Requires Genuine Keychain C08 V3 Receipt](C09_C08_KEYCHAIN_V3_RECEIPT_BINDING.md) | `runbook` | `draft` | `nonfunding-C08-policy-preflight-only` |
+| [C09 Distinct Intel FileVault P-256 Transaction Key: Physical Enrollment HOLD](C09_INTEL_FILEVAULT_TRANSACTION_KEY_ENROLLMENT_HOLD.md) | `runbook` | `draft` | `owner-only-unfunded-filevault-keychain-enrollment-not-a-payment-permit` |
 | [C09 Ratified C08 Governance Bridge — Signed Canary Ceiling and No Spending](C09_RATIFIED_C08_POLICY_BRIDGE.md) | `runbook` | `draft` | `authenticated-C08-governance-preflight-only-no-spending-permit` |
 | [Native epoch-v3 wire-v1 trust mismatch and held handoff](epoch-v3-wire-v1-hold.md) | `reference` | `draft` | `source-only-verifier-mismatch-not-financial-authority` |
 | [Exact Settlement Confirmation C4](exact-settlement-confirmation-c4.md) | `reference` | `draft` | `source-only-exact-settlement-confirmation` |
