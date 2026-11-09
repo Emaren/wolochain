@@ -246,6 +246,12 @@ jobs:
           python3 -m unittest discover -s tests -p 'test_settlement_c05_hd_staking_readonly_hold.py' -v
           python3 -m unittest discover -s tests -p 'test_settlement_c05_gifts_nft_full_catalog_hold.py' -v
 
+      - name: C05 exact historic claim-to-transfer ambiguity classifier (offline HOLD)
+        run: python3 -m unittest discover -s tests -p 'test_settlement_c05_claim_hash_collision_manifest_hold.py' -v
+
+      - name: C05 cross-hash economic source collision classifier (offline HOLD)
+        run: python3 -m unittest discover -s tests -p 'test_settlement_c05_crosshash_economic_source_hold.py' -v
+
       - name: C03 C04 C05 C06 source-bound financial HOLD observers (offline regressions)
         if: ${{ always() && !cancelled() }}
         run: |
