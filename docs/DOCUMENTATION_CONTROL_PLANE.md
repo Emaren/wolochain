@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `codex/c05-strict-review-authority` at `0ba9a0527078005af311c65d96bf7ca969d67da6`
+Implementation baseline: `codex/c03-reversible-pg16-owner-fence` at `4f7a7b0a9c0ca2233c5d67f88e7a30f9afec8874`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
