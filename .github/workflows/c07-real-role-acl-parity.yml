@@ -1,0 +1,18 @@
+name: C07 actual role and ACL recovery source plus fail-closed offline parity
+on:
+  pull_request:
+  push:
+    branches:
+      - feat/c07-intel-real-roles-owners-acl-restore-proof-20261109
+permissions:
+  contents: read
+jobs:
+  c07-offline-role-acl-recovery:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check physically executed sources and negative grant/role failures
+        run: python3 -B -m unittest discover -s tests -p 'test_settlement_c07_recovered_role_owner_acl_offline_parity.py' -v
