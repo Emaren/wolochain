@@ -1082,7 +1082,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "973932da305d183042ff19f50f5db8ff36130343d8a562e1acc36d63255b09ee",
+      "sha256": "0d50209debf9253519c5edece7fa3a03e2fb30882390b4cd3506b18afd149480",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -2183,8 +2183,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "codex/c03-reversible-pg16-owner-fence",
-    "commit": "35de6a0b6c886012bd201d86b8388bdaafb56677"
+    "branch": "codex/c05-strict-review-authority",
+    "commit": "0ba9a0527078005af311c65d96bf7ca969d67da6"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

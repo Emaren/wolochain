@@ -117,11 +117,6 @@ func NewReviewerReserveCensusSource(base *ReviewerFinanceSource, custody Reviewe
 		!validReserveDigest(cfg.FeeSources.CustodyPolicyDigest) || !validReserveDigest(cfg.FeeSources.IssuerPolicyDigest) || cfg.FeeUWolo != base.pg.fee {
 		return nil, ReviewerCensusUnconfigured
 	}
-	for _, key := range []ed25519.PublicKey{cfg.Authority.AccountingReviewerKey, cfg.Authority.CustodyReviewerKey, cfg.Authority.ExecutionAuthorityKey, cfg.Authority.WagerApprovalKey, cfg.Authority.WithdrawalApprovalKey} {
-		if bytesAllZero(key) {
-			return nil, ReviewerCensusUnconfigured
-		}
-	}
 	if _, err := reviewerAmount(cfg.FeeUWolo, reviewerMaxOperationFeeUWolo, true); err != nil {
 		return nil, ReviewerCensusUnconfigured
 	}

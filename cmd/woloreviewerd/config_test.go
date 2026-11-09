@@ -95,6 +95,8 @@ func TestConfigRequiresSeparatedPinnedReviewedInputs(t *testing.T) {
 		"role collision":           func(c *config) { c.Roles.CustodyPublicKeyHex = c.Roles.AccountingPublicKeyHex },
 		"watcher signer collision": func(c *config) { c.Watcher.WitnessPublicKeyHex = c.Roles.WagerPublicKeyHex },
 		"zero key":                 func(c *config) { c.Roles.AccountingPublicKeyHex = strings.Repeat("0", 64) },
+		"identity custody key":     func(c *config) { c.Roles.CustodyPublicKeyHex = "01" + strings.Repeat("00", 31) },
+		"identity execution key":   func(c *config) { c.Roles.ExecutionPublicKeyHex = "01" + strings.Repeat("00", 31) },
 		"placeholder root":         func(c *config) { c.Watcher.CA.SHA256 = strings.Repeat("0", 64) },
 		"file alias":               func(c *config) { c.Postgres.Password.Path = c.ReviewerPrivateKey.Path },
 		"state alias":              func(c *config) { c.JournalPath = c.PermitPath },
