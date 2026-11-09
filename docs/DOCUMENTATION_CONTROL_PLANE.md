@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `feat/c03-intel-real-hd-29-table-owner-denial-20261109` at `992b9d27bb65a0bd0c7c0849b66069659107a9f0`
+Implementation baseline: `feat/c04-physical-legacy-settlement-quarantine-20261109` at `a8accab8c71e241620df12586dfeb4b7ee2d149f`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 

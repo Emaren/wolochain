@@ -1012,7 +1012,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "b4a83b6105ef9d6631828bd54b602a6b37e9a7bbcdbb270d6a87498532e606e1",
+      "sha256": "2ab866cc9168c78f4ed502463e304d6c8eaf79fb88425200252e04115ec6e301",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -2089,8 +2089,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "feat/c03-intel-real-hd-29-table-owner-denial-20261109",
-    "commit": "992b9d27bb65a0bd0c7c0849b66069659107a9f0"
+    "branch": "feat/c04-physical-legacy-settlement-quarantine-20261109",
+    "commit": "a8accab8c71e241620df12586dfeb4b7ee2d149f"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
