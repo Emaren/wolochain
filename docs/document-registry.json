@@ -940,7 +940,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "390051147b50fffd62e2b6e8d4f0d50b97d994dae9fc8a1804978d0c2a701eee",
+      "sha256": "c8b621d1790e26540566dcb3fc374b79d4320787637960214667587f9db45b19",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -2017,8 +2017,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "feat/c09-forward-only-native-claim-20261109",
-    "commit": "a3ab2e288ea33632d20cf53bc48a1f0cadf4642b"
+    "branch": "feat/c07-intel-exact-unquiesced-recovery-20261109",
+    "commit": "5d17cab478e4d7c7b4a26df25aebbb0b651b323a"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
