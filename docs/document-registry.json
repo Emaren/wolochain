@@ -1082,7 +1082,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "4fe2f602bb085b298e903e219f0faf0e23fbfaa16d5ae999021c7af92a48e9da",
+      "sha256": "cdec655ea8f8d1b15bffbdc3bc5c69f4d63ef7a7a994be5e45a37f70a4c55995",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -2160,7 +2160,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "feat/c03-intel-fullpublic-preconnected-sequences-20261109",
-    "commit": "48055f977456db0c9d1398e8a7db9ce90b9edaf9"
+    "commit": "84b1ecd0588f00b8e53aa9ce38e86915d5abd160"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
