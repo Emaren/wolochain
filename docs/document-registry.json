@@ -592,6 +592,30 @@
     },
     {
       "audience": [
+        "operators",
+        "developers",
+        "financial-reviewers",
+        "ai-agents"
+      ],
+      "authority": "offhost-single-validator-historical-commit-consistency-no-funding",
+      "id": "aoe2war.wolochain.c05-offhost-fixed-bank-height-20261109",
+      "owner": "wolochain-ops",
+      "path": "docs/C05_OFFHOST_SINGLE_VALIDATOR_BANK_HEIGHT_WITNESS_20261109.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-09",
+      "sensitivity": "restricted",
+      "sha256": "2c3049bcad431276a68671f3f338ac8464dc765dbd3ee41027522d3b78b2e738",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C05 Offhost Fixed Bank Height: Single-Validator Source-Bound Witness",
+      "type": "runbook"
+    },
+    {
+      "audience": [
         "developers",
         "operators",
         "ai-agents"
@@ -1106,7 +1130,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "8b0a93cfdd9bfa06f7b984c46887ec2562a4859db9b646ee16d40c834e37e6f5",
+      "sha256": "0a6256a71ea66e129f0aa5ffe7a3a4947baaed46596748ff9d297379ef279f76",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -2207,8 +2231,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "central/c05-exact-claim-transfer-ambiguity-20261109",
-    "commit": "515535b4683d0d9c0bf7c85c01bc10a7ce9704ce"
+    "branch": "central/c05-offhost-fixed-height-commit-witness-20261109",
+    "commit": "b7c86c05a185f21feb96d590a6ddb935c34ca606"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
