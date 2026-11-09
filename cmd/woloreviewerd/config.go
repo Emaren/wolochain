@@ -229,7 +229,7 @@ func (c config) policy() (satchelservice.Policy, error) {
 func (c config) validate() error {
 	if c.Version != 1 || !revisionPattern.MatchString(c.SourceRevision) || strings.Trim(c.SourceRevision, "0") == "" ||
 		!validDigest(c.BinarySHA256) || !validDigest(c.IssuerPolicySHA256) || !validAddress(c.Vault) || satchel.IsKnownRoleAddress(c.Vault) ||
-		!validAddress(c.BettingEscrow) || c.Vault == c.BettingEscrow || c.MaxAmountUWolo == 0 || c.MaxAmountUWolo > 1_000_000 ||
+		!validAddress(c.BettingEscrow) || satchel.IsKnownRoleAddress(c.BettingEscrow) || c.Vault == c.BettingEscrow || c.MaxAmountUWolo == 0 || c.MaxAmountUWolo > 1_000_000 ||
 		!positive(c.FeeUWolo, 1_000_000) || !positive(c.MinimumGasReserveUWolo, 1<<63-1) || !positive(c.MinimumUnencumberedUWolo, 1<<63-1) ||
 		!validDigest(c.Custody.BuildSHA256) || !validDigest(c.Custody.ConfigSHA256) || !validDigest(c.Custody.PermitSHA256) || !validDigest(c.Custody.PolicySHA256) ||
 		!origin(c.Watcher.Origin, true) || !validDigest(c.Watcher.ServerSPKISHA256) || !origin(c.RPC, false) || !origin(c.REST, false) || !origin(c.WitnessRPC, false) || c.RPC == c.WitnessRPC ||

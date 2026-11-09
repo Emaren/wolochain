@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"regexp"
 	"runtime/debug"
 	"strings"
 	"testing"
@@ -207,5 +208,37 @@ func TestPinnedFileCannotChangeOrBecomePublic(t *testing.T) {
 	}
 	if _, e := readPinned(p); e == nil {
 		t.Fatal("public protected input admitted")
+	}
+}
+
+func TestReviewerConfigRefusesRegisteredLegacyEscrow(t *testing.T) {
+	wallets, err := os.ReadFile(filepath.Join("..", "..", "docs", "mainnet-wallets.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	escrows := regexp.MustCompile("(?m)^\\| (Legacy Bet Escrow|Bet Escrow Signer) \\| `([a-z0-9]+)`").FindAllStringSubmatch(string(wallets), -1)
+	if len(escrows) != 2 {
+		t.Fatal("expected both historical escrow roles in the published wallet catalog")
+	}
+	for _, escrow := range escrows {
+		t.Run(escrow[1], func(t *testing.T) {
+			c := testConfig(t)
+			c.BettingEscrow = escrow[2]
+			c.ProtectedAddresses = []string{escrow[2]}
+			// Match the policy digest to the altered destination so the test
+			// cannot pass merely because the original digest changed.
+			policy, err := c.policy()
+			if err != nil {
+				t.Fatal(err)
+			}
+			raw, err := json.Marshal(policy)
+			if err != nil {
+				t.Fatal(err)
+			}
+			c.IssuerPolicySHA256 = digest(raw)
+			if err := c.validate(); err == nil {
+				t.Fatal("legacy escrow accepted as a reviewer destination")
+			}
+		})
 	}
 }
