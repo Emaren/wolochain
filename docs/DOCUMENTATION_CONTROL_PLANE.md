@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `feat/c03-intel-real-hd-29-table-owner-denial-20261109` at `992b9d27bb65a0bd0c7c0849b66069659107a9f0`
+Implementation baseline: `feat/c04-physical-legacy-settlement-quarantine-20261109` at `a8accab8c71e241620df12586dfeb4b7ee2d149f`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
@@ -27,7 +27,7 @@ This page is generated from the validated front matter in this repository. Cross
 
 ## Documentation health
 
-- Authoritative repository documents: **88**
+- Authoritative repository documents: **89**
 - Path moves in this migration: **0**
 - Every listed document has an explicit owner, lifecycle, authority, and review interval.
 
@@ -35,13 +35,13 @@ This page is generated from the validated front matter in this repository. Cross
 
 - `historical`: 14
 - `reference`: 49
-- `runbook`: 23
+- `runbook`: 24
 - `working`: 2
 
 ### Lifecycle
 
 - `active`: 16
-- `draft`: 58
+- `draft`: 59
 - `historical`: 14
 
 ## Documents
@@ -66,6 +66,7 @@ This page is generated from the validated front matter in this repository. Cross
 | [C03 TokenChain Indexer: Previously Omitted Service Discovery and Financial Writer HOLD](C03_TOKENCHAIN_INDEXER_UNSCOPED_DISCOVERY_HOLD.md) | `reference` | `draft` | `read-only-discovery-only-no-maintenance-unit-change` |
 | [C03 Topology-Only Watchdog Baseline Enrollment](C03_TOPOLOGY_ONLY_WATCHDOG_ENROLLMENT.md) | `reference` | `draft` | `topology-only-no-financial-writer-fence-or-financial-permit` |
 | [C04 Forward-Only Native Return Claim Identity and Legacy Liability Non-Interference](C04_FRESH_NATIVE_CLAIM_NONINTERFERENCE.md) | `runbook` | `draft` | `source-held-no-live-legacy-liability-release` |
+| [C04 Historical Financial Quarantine: Physical Noninterference Acceptance](C04_HISTORICAL_FINANCIAL_ENCRYPTED_QUARANTINE_PHYSICAL_ACCEPTANCE.md) | `runbook` | `draft` | `nonfunded-legacy-liability-quarantine-no-adjudication-or-waiver` |
 | [C04 indexed WOLO transfer candidate ambiguity and hashless claim finality](C04_INDEXED_WOLO_TRANSFER_CANDIDATE_AMBIGUITY_HOLD.md) | `reference` | `draft` | `source-only-c04-reconciliation-evidence-no-payment-authorization` |
 | [C05 pending bounty gift — missing reward valuation](C05_BOUNTY_GIFT_NULL_VALUATION_HOLD.md) | `reference` | `draft` | `source-only-financial-hold-not-a-funding-or-replay-permit` |
 | [C04/C05 Read-Only HD Claim Nominal Versus Historical Escrow: Real Native Height and Economic HOLD](C05_HD_CLAIMS_VS_HISTORIC_ESCROW_NATIVE_HEIGHT_HOLD.md) | `reference` | `draft` | `physical-aggregate-reconciliation-observation-not-financial-solvency-or-release` |

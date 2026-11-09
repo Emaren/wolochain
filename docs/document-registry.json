@@ -426,6 +426,30 @@
     },
     {
       "audience": [
+        "operators",
+        "developers",
+        "financial-reviewers",
+        "ai-agents"
+      ],
+      "authority": "nonfunded-legacy-liability-quarantine-no-adjudication-or-waiver",
+      "id": "aoe2war.wolochain.c04-historical-finance-encrypted-quarantine-and-native-noninterference-acceptance",
+      "owner": "wolochain-ops",
+      "path": "docs/C04_HISTORICAL_FINANCIAL_ENCRYPTED_QUARANTINE_PHYSICAL_ACCEPTANCE.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-09",
+      "sensitivity": "restricted",
+      "sha256": "19d2e7ed5a19797b668029a1d075bd79940d6a9f95996f790b25e4f9e32b53b4",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C04 Historical Financial Quarantine: Physical Noninterference Acceptance",
+      "type": "runbook"
+    },
+    {
+      "audience": [
         "developers",
         "operators",
         "ai-agents"
@@ -988,7 +1012,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "2a6b7bad5c245d4f1103804d610728650606c5f2e23bae698260cc66259f3c6b",
+      "sha256": "2ab866cc9168c78f4ed502463e304d6c8eaf79fb88425200252e04115ec6e301",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -2065,8 +2089,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "feat/c03-intel-real-hd-29-table-owner-denial-20261109",
-    "commit": "992b9d27bb65a0bd0c7c0849b66069659107a9f0"
+    "branch": "feat/c04-physical-legacy-settlement-quarantine-20261109",
+    "commit": "a8accab8c71e241620df12586dfeb4b7ee2d149f"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
