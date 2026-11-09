@@ -905,6 +905,30 @@
     },
     {
       "audience": [
+        "operators",
+        "developers",
+        "financial-reviewers",
+        "ai-agents"
+      ],
+      "authority": "owner-only-unfunded-filevault-keychain-enrollment-not-a-payment-permit",
+      "id": "aoe2war.wolochain.c09-filevault-intel-transaction-key-enrollment-hold",
+      "owner": "wolochain-ops",
+      "path": "docs/C09_INTEL_FILEVAULT_TRANSACTION_KEY_ENROLLMENT_HOLD.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-09",
+      "sensitivity": "restricted",
+      "sha256": "668d6fe6acbde9e5d78449335d9f3e6320d16935f39048a1609c7c7407314e72",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C09 Distinct Intel FileVault P-256 Transaction Key: Physical Enrollment HOLD",
+      "type": "runbook"
+    },
+    {
+      "audience": [
         "developers",
         "operators",
         "financial-reviewers",
@@ -940,7 +964,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "c8b621d1790e26540566dcb3fc374b79d4320787637960214667587f9db45b19",
+      "sha256": "d8d67bd11f4afcc1d65e5ced4586f785daf4a5f388b47c54db8ca88f123f36e6",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -2017,8 +2041,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "feat/c07-intel-exact-unquiesced-recovery-20261109",
-    "commit": "5d17cab478e4d7c7b4a26df25aebbb0b651b323a"
+    "branch": "feat/c09-intel-filevault-transaction-key-20261109",
+    "commit": "dbb31687acf1a55d3c984e93e64260480d629546"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
