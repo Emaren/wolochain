@@ -568,6 +568,30 @@
     },
     {
       "audience": [
+        "operators",
+        "developers",
+        "financial-reviewers",
+        "ai-agents"
+      ],
+      "authority": "inert-readonly-unquiesced-capture-not-c06-release",
+      "id": "aoe2war.wolochain.c06-hel1-local-age-hd-unquiesced-precapture",
+      "owner": "wolochain-ops",
+      "path": "docs/C06_HEL1_LOCAL_AGE_ENCRYPTED_HD_UNQUIESCED_PRECAPTURE.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-09",
+      "sensitivity": "restricted",
+      "sha256": "1be79fcc7648cda5eccf9623ad3519c9c610e39d18bcb89400678a33bad09a6e",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C06 HEL1 Local Age Encrypted HD Unquiesced Precapture",
+      "type": "runbook"
+    },
+    {
+      "audience": [
         "developers",
         "operators",
         "ai-agents"
@@ -892,7 +916,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "89ba40c579a135ae8bdcf6f760eb1d5d24d0f92edd36905df767e6e669c9758b",
+      "sha256": "bfc3f0489e544ce246a5a2b2a63a74b7354a283ad28536a3f5e417a009988d98",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
