@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `feat/c04-physical-legacy-settlement-quarantine-20261109` at `a8accab8c71e241620df12586dfeb4b7ee2d149f`
+Implementation baseline: `feat/c05-physical-24wallet-single-height-bank-census-20261109` at `678f94476407892a3b99831440f941836eaf2b88`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
@@ -27,7 +27,7 @@ This page is generated from the validated front matter in this repository. Cross
 
 ## Documentation health
 
-- Authoritative repository documents: **89**
+- Authoritative repository documents: **90**
 - Path moves in this migration: **0**
 - Every listed document has an explicit owner, lifecycle, authority, and review interval.
 
@@ -35,13 +35,13 @@ This page is generated from the validated front matter in this repository. Cross
 
 - `historical`: 14
 - `reference`: 49
-- `runbook`: 24
+- `runbook`: 25
 - `working`: 2
 
 ### Lifecycle
 
 - `active`: 16
-- `draft`: 59
+- `draft`: 60
 - `historical`: 14
 
 ## Documents
@@ -71,6 +71,7 @@ This page is generated from the validated front matter in this repository. Cross
 | [C05 pending bounty gift — missing reward valuation](C05_BOUNTY_GIFT_NULL_VALUATION_HOLD.md) | `reference` | `draft` | `source-only-financial-hold-not-a-funding-or-replay-permit` |
 | [C04/C05 Read-Only HD Claim Nominal Versus Historical Escrow: Real Native Height and Economic HOLD](C05_HD_CLAIMS_VS_HISTORIC_ESCROW_NATIVE_HEIGHT_HOLD.md) | `reference` | `draft` | `physical-aggregate-reconciliation-observation-not-financial-solvency-or-release` |
 | [C05 pending gift nominal collisions — not proof of payment](C05_PENDING_GIFT_SAME_NOMINAL_CLAIM_COLLISION_HOLD.md) | `reference` | `draft` | `source-only-c05-historical-payment-ambiguity-no-payment-authority` |
+| [C05 Registered Wallets Native Same-Height Bank Evidence: Physical HOLD](C05_REGISTERED24_NATIVE_SAME_HEIGHT_PHYSICAL_BANK_HOLD.md) | `runbook` | `draft` | `source-bound-readonly-mainnet-bank-census-not-financial-reserve-acceptance` |
 | [C05 Semantic Money Columns and Staking Exposure — Independent HOLD](C05_SEMANTIC_MONEY_STAKING_EXPOSURE_HOLD.md) | `reference` | `draft` | `read-only-physical-observer-no-solvency-or-funding-authority` |
 | [C05 Expanded Payout and NFT-Transfer Surface Census — Read-Only HOLD](C05_SEVEN_SURFACE_READONLY_CENSUS_HOLD.md) | `reference` | `draft` | `read-only-source-and-physical-financial-hold-not-c03-maintenance-or-funded-permit` |
 | [C06 Direct HEL1 to Intel Encrypted Financial Precapture — Nonfunded Rehearsal](C06_DIRECT_INTEL_UNQUIESCED_ENCRYPTED_STREAM_PRECAPTURE.md) | `runbook` | `draft` | `read-only-unquiesced-backup-rehearsal-hold-not-c06-acceptance` |

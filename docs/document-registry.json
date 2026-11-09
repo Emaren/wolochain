@@ -546,6 +546,30 @@
     },
     {
       "audience": [
+        "operators",
+        "developers",
+        "financial-reviewers",
+        "ai-agents"
+      ],
+      "authority": "source-bound-readonly-mainnet-bank-census-not-financial-reserve-acceptance",
+      "id": "aoe2war.wolochain.c05-native-registered24-single-height-bank-physical-hold",
+      "owner": "wolochain-ops",
+      "path": "docs/C05_REGISTERED24_NATIVE_SAME_HEIGHT_PHYSICAL_BANK_HOLD.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-09",
+      "sensitivity": "restricted",
+      "sha256": "7059159d362ab69bfe56b68da96db1921a48cc0260ec9ad896c9a879374f1380",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C05 Registered Wallets Native Same-Height Bank Evidence: Physical HOLD",
+      "type": "runbook"
+    },
+    {
+      "audience": [
         "developers",
         "operators",
         "ai-agents"
@@ -1012,7 +1036,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "2ab866cc9168c78f4ed502463e304d6c8eaf79fb88425200252e04115ec6e301",
+      "sha256": "0431922dbf0eef896d4eee980be2608d0bae66270bb72008eaafa68d738c6575",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -2089,8 +2113,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "feat/c04-physical-legacy-settlement-quarantine-20261109",
-    "commit": "a8accab8c71e241620df12586dfeb4b7ee2d149f"
+    "branch": "feat/c05-physical-24wallet-single-height-bank-census-20261109",
+    "commit": "678f94476407892a3b99831440f941836eaf2b88"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
