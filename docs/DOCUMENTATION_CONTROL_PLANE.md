@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `feat/c03-intel-hd-auth-owner-function-continuity-20261109` at `ca070e6dacc6008f4b0d688d6267993c9ac7b55c`
+Implementation baseline: `feat/c03-intel-hd-de-db-schema-function-create-fence-20261109` at `649cb931bf786c6e93a62d7d2a3b8dc18a2ca65b`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
