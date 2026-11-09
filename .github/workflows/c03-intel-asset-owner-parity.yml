@@ -22,3 +22,5 @@ jobs:
         run: python3 -B -m unittest discover -s tests -p 'test_settlement_c03_intel_full_public_explicit_asset_owner_rehearsal.py' -v
       - name: HD190 DE52 fullpublic exact-source and wrong-host database isolation
         run: python3 -B -m unittest discover -s tests -p 'test_settlement_c03_intel_fullpublic_preconnected_sequence_rehearsal.py' -v
+      - name: C03 Intel HD exact-live auth function and role owner continuity after whole schema fence
+        run: python3 -B -m unittest discover -s tests -p 'test_settlement_c03_intel_hd_auth_preservation_owner_fence_rehearsal.py' -v
