@@ -1082,7 +1082,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "cdec655ea8f8d1b15bffbdc3bc5c69f4d63ef7a7a994be5e45a37f70a4c55995",
+      "sha256": "f98f6399d0594f9af4a2da9305861c92d79d66c96b9502ab3cec733360263ea3",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -2159,8 +2159,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "feat/c03-intel-fullpublic-preconnected-sequences-20261109",
-    "commit": "84b1ecd0588f00b8e53aa9ce38e86915d5abd160"
+    "branch": "feat/c03-intel-hd-auth-owner-function-continuity-20261109",
+    "commit": "ca070e6dacc6008f4b0d688d6267993c9ac7b55c"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
