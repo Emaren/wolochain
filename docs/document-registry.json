@@ -1082,7 +1082,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "f98f6399d0594f9af4a2da9305861c92d79d66c96b9502ab3cec733360263ea3",
+      "sha256": "ca0eb6e2dbe5aff9e08f5cab02c8e43d1859eed15876e87461cd6d9019979fba",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -2159,8 +2159,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "feat/c03-intel-hd-auth-owner-function-continuity-20261109",
-    "commit": "ca070e6dacc6008f4b0d688d6267993c9ac7b55c"
+    "branch": "feat/c03-intel-hd-de-db-schema-function-create-fence-20261109",
+    "commit": "649cb931bf786c6e93a62d7d2a3b8dc18a2ca65b"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
