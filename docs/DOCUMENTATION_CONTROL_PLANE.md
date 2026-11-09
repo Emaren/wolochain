@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `feat/c07-intel-exact-unquiesced-recovery-20261109` at `5d17cab478e4d7c7b4a26df25aebbb0b651b323a`
+Implementation baseline: `feat/c09-intel-filevault-transaction-key-20261109` at `dbb31687acf1a55d3c984e93e64260480d629546`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
