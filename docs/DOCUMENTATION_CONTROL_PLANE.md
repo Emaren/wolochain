@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `feat/c09-forward-only-native-claim-20261109` at `d3ff2052ddd9434dbad62a0b50e793d86b60b32e`
+Implementation baseline: `feat/c09-forward-only-native-claim-20261109` at `b3be4282b66914bd83c04ec3e1d7f4f981c2c40e`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 

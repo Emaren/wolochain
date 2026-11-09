@@ -916,7 +916,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "fe4c3ae1727f5c9b19bae5ee37cfeb4daf5289c11ec637e2178ac5439fd6ac39",
+      "sha256": "c5e953a09d1fd9892a58825bee4fe976d85cb369b1f52a7cbefe4983ad84be1c",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1994,7 +1994,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "feat/c09-forward-only-native-claim-20261109",
-    "commit": "d3ff2052ddd9434dbad62a0b50e793d86b60b32e"
+    "commit": "b3be4282b66914bd83c04ec3e1d7f4f981c2c40e"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
