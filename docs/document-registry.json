@@ -238,6 +238,29 @@
     },
     {
       "audience": [
+        "operators",
+        "developers",
+        "financial-reviewers"
+      ],
+      "authority": "physical-intel-only-restored-hd-owner-rehearsal-not-production-writer-fence",
+      "id": "aoe2war.wolochain.c03-intel-real-preconnected-hd-owner-migration-rehearsal",
+      "owner": "wolochain-ops",
+      "path": "docs/C03_INTEL_REAL_HD_PRECONNECTED_WRITER_OWNER_FENCE_REHEARSAL.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-09",
+      "sensitivity": "restricted",
+      "sha256": "4f7a85a108c4eab88fde7408aaaeb1fefaf35f8eb9a68002d0ba590d083c7aef",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C03 Intel Real Restored HD: Preconnected Legacy Owner DML Denial Rehearsal",
+      "type": "runbook"
+    },
+    {
+      "audience": [
         "developers",
         "operators",
         "ai-agents"
@@ -1036,7 +1059,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "0431922dbf0eef896d4eee980be2608d0bae66270bb72008eaafa68d738c6575",
+      "sha256": "52a8a40084d6357461ff154d723dbc934c3b30b6821c264c221b0d16255c80dc",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -2113,8 +2136,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "feat/c05-physical-24wallet-single-height-bank-census-20261109",
-    "commit": "678f94476407892a3b99831440f941836eaf2b88"
+    "branch": "feat/c03-intel-preconnected-after-owner-migration-20261109",
+    "commit": "a681da51605bdc07f7b65f5931763ffde19c56aa"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
