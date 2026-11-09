@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `codex/c03-reversible-pg16-owner-fence` at `4f7a7b0a9c0ca2233c5d67f88e7a30f9afec8874`
+Implementation baseline: `central/c05-exact-claim-transfer-ambiguity-20261109` at `afe990c546460a1d7919a47fef1f52d2272fbf68`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
@@ -27,7 +27,7 @@ This page is generated from the validated front matter in this repository. Cross
 
 ## Documentation health
 
-- Authoritative repository documents: **93**
+- Authoritative repository documents: **94**
 - Path moves in this migration: **0**
 - Every listed document has an explicit owner, lifecycle, authority, and review interval.
 
@@ -35,13 +35,13 @@ This page is generated from the validated front matter in this repository. Cross
 
 - `historical`: 14
 - `reference`: 49
-- `runbook`: 28
+- `runbook`: 29
 - `working`: 2
 
 ### Lifecycle
 
 - `active`: 16
-- `draft`: 63
+- `draft`: 64
 - `historical`: 14
 
 ## Documents
@@ -71,6 +71,7 @@ This page is generated from the validated front matter in this repository. Cross
 | [C04 Historical Financial Quarantine: Physical Noninterference Acceptance](C04_HISTORICAL_FINANCIAL_ENCRYPTED_QUARANTINE_PHYSICAL_ACCEPTANCE.md) | `runbook` | `draft` | `nonfunded-legacy-liability-quarantine-no-adjudication-or-waiver` |
 | [C04 indexed WOLO transfer candidate ambiguity and hashless claim finality](C04_INDEXED_WOLO_TRANSFER_CANDIDATE_AMBIGUITY_HOLD.md) | `reference` | `draft` | `source-only-c04-reconciliation-evidence-no-payment-authorization` |
 | [C05 pending bounty gift — missing reward valuation](C05_BOUNTY_GIFT_NULL_VALUATION_HOLD.md) | `reference` | `draft` | `source-only-financial-hold-not-a-funding-or-replay-permit` |
+| [C05 Exact Claim-to-Transfer Ambiguity Manifest: Private Physical HOLD](C05_CLAIM_HASH_TRANSFER_AMBIGUITY_PRIVATE_PHYSICAL_HOLD.md) | `runbook` | `draft` | `root-private-repeatable-read-historical-claim-attribution-never-payment-or-reserve-admission` |
 | [C04/C05 Read-Only HD Claim Nominal Versus Historical Escrow: Real Native Height and Economic HOLD](C05_HD_CLAIMS_VS_HISTORIC_ESCROW_NATIVE_HEIGHT_HOLD.md) | `reference` | `draft` | `physical-aggregate-reconciliation-observation-not-financial-solvency-or-release` |
 | [C05 pending gift nominal collisions — not proof of payment](C05_PENDING_GIFT_SAME_NOMINAL_CLAIM_COLLISION_HOLD.md) | `reference` | `draft` | `source-only-c05-historical-payment-ambiguity-no-payment-authority` |
 | [C05 Registered Wallets Native Same-Height Bank Evidence: Physical HOLD](C05_REGISTERED24_NATIVE_SAME_HEIGHT_PHYSICAL_BANK_HOLD.md) | `runbook` | `draft` | `source-bound-readonly-mainnet-bank-census-not-financial-reserve-acceptance` |

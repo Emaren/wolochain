@@ -13,7 +13,7 @@ review_interval_days: 7
 sensitivity: "restricted"
 ---
 
-# C05 Exact Claim-to-Transfer Ambiguity Manifest
+# C05 Exact Claim-to-Transfer Ambiguity Manifest: Private Physical HOLD
 
 **Formal C05 is OPEN.** This is an actual source-pinned historical database investigation, never a proof of signed chain inclusion, a waiver of liability, reserve admission, or authority to repay.
 
@@ -72,4 +72,3 @@ Offline test command: python3 -m unittest discover -s tests -p 'test_settlement_
 **Physically PASS:** exact source-matched READ ONLY classifier, private sealed artifact, all-claim preservation, ten adversarial tests.
 
 **Still HOLD:** individual financial finality; signed complete liability manifest; admitted reserve collateral; C05 gate closure; funded transfers.
-
