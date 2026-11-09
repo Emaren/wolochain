@@ -1082,7 +1082,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "4545793e7df58465f89a42341590c0a3bd05b2439c4cbf6b317285b418f02629",
+      "sha256": "1738d9992bd627dab12722a446ce10e428143ebb8acf4a6d7f1331400703ca15",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -2160,7 +2160,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "feat/c03-intel-de-preconnected-after-owner-migration-20261109",
-    "commit": "144f854b7aefb8eaeaa6b173c77bb68f2cf1c7c9"
+    "commit": "038db56cb7b982abde27354bb380a0a2176953f0"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
