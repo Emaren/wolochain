@@ -85,6 +85,7 @@ class RatifiedGovernanceCanaryContract(unittest.TestCase):
             "schema":c09.SCHEMA,"chain_id":"wolo-1",
             "operation":"one-new-claim-canary-only",
             "fresh_claim_id":"fresh-c09-"+"a"*32,
+            "native_claim_id":"900000000001",
             "request_id":"c09-"+"b"*32,
             "recipient":"wolo1"+"q"*39,
             "amount_uwolo":"700000","fee_uwolo":"1000",

@@ -73,3 +73,32 @@ A C09 funded executor must enforce this proof **and** a separate
 current exact owner transaction-signature enrollment, original
 trusted bank/consensus proof, accepted C01–C07 real physical receipts,
 and the off-host consumed nonce before any payment authorization.
+
+## C09 intent v3: binds the actual App native claim identity
+
+The pre-release v2 signed C09 intent included a unique cryptographic
+fresh-c09 identifier but **omitted the actual App C02 native claim ID**.
+That meant an otherwise valid signed intention did not cryptographically
+commit to the exact new database claim to be credited. The original
+synthetic offchain ID is preserved as a separate request identity.
+
+The read-only, ALWAYS-HOLD C09 packet is now versioned **v3** with
+a new domain-separated signed field named native_claim_id. The ID
+must be a canonical ASCII 12-digit decimal string within the exact
+App and Chain C02/C04 forward-only range **900000000001 through
+999999999999**, inclusive; old 889, 9645 and all pre-native IDs
+fail, as do extra fields, missing IDs, leading zeroes and overflow.
+The signed packet schema and signature domain are both version-bumped
+so a previous v2 signature cannot be promoted or replayed as a v3
+authorization. Changing the native_claim_id after signature creation
+fails the original Ed25519 reviewer signature check.
+
+An accepted read-only result now includes only SHA256 commitment to
+the new numeric claim ID rather than revealing it alongside recipient,
+nonce or historic claimant records. This is source-level cross-repository
+anti-collision evidence, **not** a new transaction-specific P-256 owner
+signature or a spend permit. The old transaction Ed25519 key is still
+unavailable and is not assumed to be adopted under C08 P-256 policy.
+A separate authentic current C09 signing ceremony, bank anchor,
+independently witnessed one-use nonce, and accepted C01-C07 gates
+remain strict prerequisites. No native custody service is activated.

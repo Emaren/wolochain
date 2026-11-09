@@ -23,12 +23,12 @@ import settlement_c08_keychain_policy_adoption_v3 as keychain_v3
 
 import settlement_solo_owner_intent_review as owner
 
-SCHEMA = "wolo.c09.solo-owner-exact-canary-intent.v2"
-PACKET_SCHEMA = "wolo.c09.solo-owner-signed-exact-canary-intent.v2"
-DOMAIN = b"AOE2WAR-WOLO-EXACT-SOLO-CANARY-V2\x00"
-OUT_SCHEMA = "wolo.c09.single-owner-exact-canary-signature-held.v1"
+SCHEMA = "wolo.c09.solo-owner-exact-canary-intent.v3"
+PACKET_SCHEMA = "wolo.c09.solo-owner-signed-exact-canary-intent.v3"
+DOMAIN = b"AOE2WAR-WOLO-EXACT-SOLO-CANARY-V3\x00"
+OUT_SCHEMA = "wolo.c09.single-owner-exact-canary-signature-held.v2"
 SIGNED_KEYS = frozenset({
-    "schema", "chain_id", "operation", "fresh_claim_id", "request_id",
+    "schema", "chain_id", "operation", "fresh_claim_id", "native_claim_id", "request_id",
     "recipient", "amount_uwolo", "fee_uwolo", "bank_height",
     "source_commit", "satchel_binary_sha256", "reviewer_binary_sha256",
     "consensus_header_root_sha256", "bank_root_sha256",
@@ -41,6 +41,8 @@ SIGNED_KEYS = frozenset({
 })
 CANON_AMOUNT = re.compile(r"(?:0|[1-9][0-9]{0,18})\Z")
 NEW_CLAIM = re.compile(r"fresh-c09-[a-f0-9]{32}\Z")
+# App C02 new native claim sequence. Distinct from all historical INT claim IDs.
+NATIVE_CLAIM = re.compile(r"9[0-9]{11}\Z")
 REQUEST_ID = re.compile(r"c09-[a-f0-9]{32}\Z")
 # Syntax envelope only. Native chain checksum/address validation is NOT proven.
 RECIPIENT_ENVELOPE = re.compile(r"wolo1[023456789acdefghjklmnpqrstuvwxyz]{20,88}\Z")
@@ -67,6 +69,10 @@ def validate_request(q: dict, now) -> None:
                   and REQUEST_ID.fullmatch(q["request_id"]) is not None
                   and q["fresh_claim_id"][10:] != q["request_id"][4:],
                   "C09_FRESH_CANARY_IDENTITY_INVALID")
+    owner.require(type(q["native_claim_id"]) is str
+                  and NATIVE_CLAIM.fullmatch(q["native_claim_id"]) is not None
+                  and "900000000001" <= q["native_claim_id"] <= "999999999999",
+                  "C09_NATIVE_CLAIM_NOT_FORWARD_ONLY_APP_ID")
     owner.require(type(q["recipient"]) is str
                   and RECIPIENT_ENVELOPE.fullmatch(q["recipient"]) is not None,
                   "C09_RECIPIENT_SYNTAX_UNQUALIFIED")
@@ -126,6 +132,8 @@ def review(enrollment_raw: bytes, packet_raw: bytes, *,
         "request_commitment_sha256": hashlib.sha256(owner.canonical(request)).hexdigest(),
         "fresh_claim_commitment_sha256": hashlib.sha256(
             request["fresh_claim_id"].encode("ascii")).hexdigest(),
+        "native_claim_commitment_sha256": hashlib.sha256(
+            request["native_claim_id"].encode("ascii")).hexdigest(),
         "recipient_commitment_sha256": hashlib.sha256(
             request["recipient"].encode("ascii")).hexdigest(),
         "nonce_commitment_sha256": hashlib.sha256(
