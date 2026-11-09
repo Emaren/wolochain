@@ -252,6 +252,9 @@ jobs:
       - name: C05 cross-hash economic source collision classifier (offline HOLD)
         run: python3 -m unittest discover -s tests -p 'test_settlement_c05_crosshash_economic_source_hold.py' -v
 
+      - name: C05 offhost fixed-height single-validator witness (offline negatives)
+        run: python3 -m unittest discover -s tests -p 'test_settlement_c05_single_validator_offhost_bank_height_witness.py' -v
+
       - name: C03 C04 C05 C06 source-bound financial HOLD observers (offline regressions)
         if: ${{ always() && !cancelled() }}
         run: |
