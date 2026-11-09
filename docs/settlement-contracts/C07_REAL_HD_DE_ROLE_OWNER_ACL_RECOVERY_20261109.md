@@ -1,6 +1,6 @@
 ---
 id: "aoe2war.wolochain.c07-real-hd-de-owner-acl-restoration-20261109"
-title: "C07 Recovered HD/DE Role Ownership and ACL Rehearsal"
+title: "C07 real HD/DE owner and ACL recovery: physical rehearsal and reusable comparator"
 type: "runbook"
 status: "draft"
 owner: "wolochain-ops"
