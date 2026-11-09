@@ -1059,7 +1059,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "ae321d73ed5db2a362da342e2d77d1acc3df40e2fa94d14701596ad2803b1481",
+      "sha256": "4aedf8cb89f924a00fff964f4899a9dbe4cfd97d73f2cfb54f3bd1b1ac75bba7",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -2136,8 +2136,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "feat/c05-physical-24wallet-single-height-bank-census-20261109",
-    "commit": "678f94476407892a3b99831440f941836eaf2b88"
+    "branch": "feat/c03-intel-preconnected-after-owner-migration-20261109",
+    "commit": "b4d488331b3d5ad50796b1c833d9262315825e74"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
