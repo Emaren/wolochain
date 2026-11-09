@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `feat/c03-intel-fullpublic-preconnected-sequences-20261109` at `84b1ecd0588f00b8e53aa9ce38e86915d5abd160`
+Implementation baseline: `feat/c03-intel-hd-auth-owner-function-continuity-20261109` at `ca070e6dacc6008f4b0d688d6267993c9ac7b55c`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
