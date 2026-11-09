@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `feat/c04-native-claim-namespace-noninterference-20261108` at `3d16e8f5076f27d82dc772a85c85e4a56f95e293`
+Implementation baseline: `feat/c06-direct-intel-unquiesced-restore-20261109` at `88767b47159afab5a8227d60a152662e24523d58`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
@@ -27,7 +27,7 @@ This page is generated from the validated front matter in this repository. Cross
 
 ## Documentation health
 
-- Authoritative repository documents: **83**
+- Authoritative repository documents: **84**
 - Path moves in this migration: **0**
 - Every listed document has an explicit owner, lifecycle, authority, and review interval.
 
@@ -35,13 +35,13 @@ This page is generated from the validated front matter in this repository. Cross
 
 - `historical`: 14
 - `reference`: 49
-- `runbook`: 18
+- `runbook`: 19
 - `working`: 2
 
 ### Lifecycle
 
 - `active`: 16
-- `draft`: 53
+- `draft`: 54
 - `historical`: 14
 
 ## Documents
@@ -71,6 +71,7 @@ This page is generated from the validated front matter in this repository. Cross
 | [C05 pending gift nominal collisions — not proof of payment](C05_PENDING_GIFT_SAME_NOMINAL_CLAIM_COLLISION_HOLD.md) | `reference` | `draft` | `source-only-c05-historical-payment-ambiguity-no-payment-authority` |
 | [C05 Semantic Money Columns and Staking Exposure — Independent HOLD](C05_SEMANTIC_MONEY_STAKING_EXPOSURE_HOLD.md) | `reference` | `draft` | `read-only-physical-observer-no-solvency-or-funding-authority` |
 | [C05 Expanded Payout and NFT-Transfer Surface Census — Read-Only HOLD](C05_SEVEN_SURFACE_READONLY_CENSUS_HOLD.md) | `reference` | `draft` | `read-only-source-and-physical-financial-hold-not-c03-maintenance-or-funded-permit` |
+| [C06 Direct HEL1 to Intel Encrypted Financial Precapture — Nonfunded Rehearsal](C06_DIRECT_INTEL_UNQUIESCED_ENCRYPTED_STREAM_PRECAPTURE.md) | `runbook` | `draft` | `read-only-unquiesced-backup-rehearsal-hold-not-c06-acceptance` |
 | [C06 Intel offhost receiver host identity — transport-only evidence](C06_INTEL_OFFHOST_RECOVERY_TUNNEL_HOSTKEY_HOLD.md) | `reference` | `draft` | `source-only-c06-hostkey-observation-no-backup-authority` |
 | [C06 Intel Recovery Tunnel Supervisor](C06_INTEL_RECOVERY_TUNNEL_SUPERVISOR.md) | `reference` | `draft` | `source-only-intel-recovery-transport-not-a-financial-permit` |
 | [C06 Preparatory Live-MVCC Full-Data Exports: Dual-Recipient Encrypted Intel Retention](C06_UNQUIESCED_MVCC_DUAL_RECIPIENT_OFFHOST_PRECAPTURE.md) | `runbook` | `draft` | `prebackup-only-no-writer-fence-no-live-financial-release` |

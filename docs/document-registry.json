@@ -544,6 +544,30 @@
     },
     {
       "audience": [
+        "operators",
+        "developers",
+        "financial-reviewers",
+        "ai-agents"
+      ],
+      "authority": "read-only-unquiesced-backup-rehearsal-hold-not-c06-acceptance",
+      "id": "aoe2war.wolochain.c06-direct-intel-unquiesced-precapture",
+      "owner": "wolochain-ops",
+      "path": "docs/C06_DIRECT_INTEL_UNQUIESCED_ENCRYPTED_STREAM_PRECAPTURE.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-09",
+      "sensitivity": "restricted",
+      "sha256": "669786c8a5834625f62d2749a2aad7f2ecae9f83e1c73bba4c2863bb2a6b6e02",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C06 Direct HEL1 to Intel Encrypted Financial Precapture \u2014 Nonfunded Rehearsal",
+      "type": "runbook"
+    },
+    {
+      "audience": [
         "developers",
         "operators",
         "ai-agents"
@@ -868,7 +892,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "11de229595c15add3cd6d907fe052fb7645b6015e3de4e9c31bc6d7379cd8c5d",
+      "sha256": "89ba40c579a135ae8bdcf6f760eb1d5d24d0f92edd36905df767e6e669c9758b",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1945,8 +1969,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "feat/c04-native-claim-namespace-noninterference-20261108",
-    "commit": "3d16e8f5076f27d82dc772a85c85e4a56f95e293"
+    "branch": "feat/c06-direct-intel-unquiesced-restore-20261109",
+    "commit": "88767b47159afab5a8227d60a152662e24523d58"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
