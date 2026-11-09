@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `feat/c05-physical-24wallet-single-height-bank-census-20261109` at `533c07fea8e03e3c99225bd12c631df2fa573be7`
+Implementation baseline: `feat/c05-physical-24wallet-single-height-bank-census-20261109` at `678f94476407892a3b99831440f941836eaf2b88`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 

@@ -1036,7 +1036,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "a759b7621946a5afd7e5041ff5c2a2d1f10a79d46bff60e39c8f728d3ac26028",
+      "sha256": "0431922dbf0eef896d4eee980be2608d0bae66270bb72008eaafa68d738c6575",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -2114,7 +2114,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "feat/c05-physical-24wallet-single-height-bank-census-20261109",
-    "commit": "533c07fea8e03e3c99225bd12c631df2fa573be7"
+    "commit": "678f94476407892a3b99831440f941836eaf2b88"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
