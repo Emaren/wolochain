@@ -5,6 +5,8 @@ signature): proof is ZERO SPENDING. No user Keychain, RPC, broadcast, or SQL.
 """
 from __future__ import annotations
 from datetime import datetime,timedelta,timezone
+import base64
+import copy
 import hashlib
 from pathlib import Path
 import subprocess
@@ -89,6 +91,70 @@ class CrossDomainRatification(unittest.TestCase):
         with self.assertRaises(c09.owner.AuthorityHold) as context:
             self.check(q)
         self.assertEqual(str(context.exception),code)
+    def c09_p256_packet(self, q=None, domain=None):
+        q = self.request if q is None else q
+        message = (c09.P256_C09_DOMAIN if domain is None else domain) + (
+            c09.owner.canonical({
+                "schema":c09.P256_C09_PACKET_SCHEMA,"request":q}))
+        signature = self.sign(message)
+        return {"schema":c09.P256_C09_PACKET_SCHEMA,
+                "request":copy.deepcopy(q),
+                "signature_der_b64":base64.b64encode(signature).decode("ascii")}
+
+    def review_c09_p256(self, packet=None):
+        p = self.c09_p256_packet() if packet is None else packet
+        return c09.review_signed_c09_keychain_p256_policy_key_packet(
+            c09.owner.canonical(p),
+            governance_root=self.root,
+            governance_public_x963=self.pub,
+            governance_source_repo=ROOT, now=NOW,
+            comment=self.comment,notice_issue=self.issue,notice_repo=self.repo_info)
+
+    def hold_c09_p256(self, expected, packet):
+        with self.assertRaises(c09.owner.AuthorityHold) as caught:
+            self.review_c09_p256(packet)
+        self.assertEqual(str(caught.exception),expected)
+
+    def test_fresh_p256_transaction_specific_signature_is_valid_but_always_hold(self):
+        p=self.c09_p256_packet()
+        result=self.review_c09_p256(p)
+        self.assertEqual(result["status"],
+           "C09_TRANSACTION_SPECIFIC_P256_SIGNATURE_VALID_EXECUTION_HOLD")
+        self.assertTrue(result["transaction_specific_p256_signature_verified"])
+        self.assertTrue(result["original_c08_governance_authenticated"])
+        for k in ("financial_release_authorized",
+                  "separately_enrolled_transaction_signer_proven",
+                  "funded_canary_permit_issued",
+                  "independent_one_use_nonce_consumed",
+                  "all_c01_c07_gates_accepted","production_mutated"):
+            self.assertIs(result[k],False)
+        self.assertNotIn(self.request["native_claim_id"],repr(result))
+        self.assertNotIn(self.request["recipient"],repr(result))
+
+    def test_signed_native_claim_tamper_invalidates_p256_signature(self):
+        p=self.c09_p256_packet()
+        p["request"]["native_claim_id"]="900000000002"
+        self.hold_c09_p256("C09_P256_TRANSACTION_SIGNATURE_INVALID",p)
+
+    def test_old_c09_packet_or_wrong_signature_domain_denied(self):
+        p=self.c09_p256_packet()
+        p["schema"]="wolo.c09.owner-keychain-p256-exact-intent.v0"
+        self.hold_c09_p256("C09_P256_PACKET_SCHEMA_OR_FIELDS_INVALID",p)
+        p=self.c09_p256_packet(domain=b"AOE2WAR-C09-OTHER-DOMAIN\x00")
+        self.hold_c09_p256("C09_P256_TRANSACTION_SIGNATURE_INVALID",p)
+
+    def test_p256_old_native_claim_and_excess_amount_denied(self):
+        q=dict(self.request);q["native_claim_id"]="9645"
+        p=self.c09_p256_packet(q)
+        self.hold_c09_p256("C09_NATIVE_CLAIM_NOT_FORWARD_ONLY_APP_ID",p)
+        q=dict(self.request);q["amount_uwolo"]="1000001"
+        p=self.c09_p256_packet(q)
+        self.hold_c09_p256("C09_C08_V3_AMOUNT_PLUS_FEE_OVER_ONE_WOLO",p)
+
+    def test_p256_encoding_corruption_denied(self):
+        p=self.c09_p256_packet()
+        p["signature_der_b64"]="not-base64!"
+        self.hold_c09_p256("C09_P256_TRANSACTION_SIGNATURE_ENCODING",p)
     def test_actual_signed_p256_c08_receipt_enforces_zero_spend(self):
         out=self.check()
         self.assertEqual(out["status"],

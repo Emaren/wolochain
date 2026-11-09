@@ -102,3 +102,37 @@ unavailable and is not assumed to be adopted under C08 P-256 policy.
 A separate authentic current C09 signing ceremony, bank anchor,
 independently witnessed one-use nonce, and accepted C01-C07 gates
 remain strict prerequisites. No native custody service is activated.
+
+## Disposable P-256 transaction-specific signature verification — execution HOLD
+
+The v3 preflight now includes a distinct read-only
+review_signed_c09_keychain_p256_policy_key_packet() function. It
+verifies a **fresh ECDSA P-256 signature** over a separately
+domain-separated canonical exact canary request. The signed content
+contains native_claim_id, the separately unique request identity, the
+exact recipient, amount, fee, current bank/consensus proof digests, the
+original C08 governance receipt digest, both physical backup/restore
+roots, current financial writer-fence and rollback roots, nonce,
+non-retry and no-8092 flags, and expiration limited to 120 seconds.
+It first validates actual original C08 signed adoption and the
+1,000,000 uwolo combined amount-and-fee ceiling.
+
+The disposable protocol verifier currently uses the published C08
+policy **public identity** as its synthetic transaction signature
+verification anchor. This is a distinct *transaction signature*,
+not a separately enrolled *transaction signing role*. The new
+software-keychain final transaction signer still needs its own
+authority acceptance and a fresh physical user-approved signature.
+The current preflight must NOT be interpreted as proof of such a
+separate transaction signer, off-host one-use nonce, an approved
+financial permit or new native custody capabilities.
+
+The synthetic P-256 owner signature tests use ephemeral disposable
+OpenSSL P-256 keys, never the real owner's macOS Keychain key. They
+prove successful exact signature verification and fail-closed
+denial of tampered native_claim_id, wrong signature domain, legacy
+packet schema, old claim 9645, amount beyond 1 WOLO including fee,
+and malformed DER/base64. The complete related C09 test suites
+currently run **53/53 PASS**. The result is always
+C09_TRANSACTION_SPECIFIC_P256_SIGNATURE_VALID_EXECUTION_HOLD with
+all funded authorization booleans false.
