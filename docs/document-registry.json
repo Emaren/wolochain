@@ -988,7 +988,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "41fcc40ffd8d828a3d70e955bc36e4412c59a33b44e10d18aeea6d344259ea72",
+      "sha256": "2a6b7bad5c245d4f1103804d610728650606c5f2e23bae698260cc66259f3c6b",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -2065,8 +2065,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "feat/c09-intel-filevault-transaction-key-20261109",
-    "commit": "dbb31687acf1a55d3c984e93e64260480d629546"
+    "branch": "feat/c03-intel-real-hd-29-table-owner-denial-20261109",
+    "commit": "992b9d27bb65a0bd0c7c0849b66069659107a9f0"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

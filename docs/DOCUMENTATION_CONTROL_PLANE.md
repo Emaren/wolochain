@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `feat/c09-intel-filevault-transaction-key-20261109` at `dbb31687acf1a55d3c984e93e64260480d629546`
+Implementation baseline: `feat/c03-intel-real-hd-29-table-owner-denial-20261109` at `992b9d27bb65a0bd0c7c0849b66069659107a9f0`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
