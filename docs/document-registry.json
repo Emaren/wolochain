@@ -214,6 +214,30 @@
     },
     {
       "audience": [
+        "operators",
+        "developers",
+        "financial-reviewers",
+        "ai-agents"
+      ],
+      "authority": "nonfunded-real-restored-hd-partial-owner-migration-not-c03-closure",
+      "id": "aoe2war.wolochain.c03-intel-cow-restored-hd-owner-finance-denial-rehearsal",
+      "owner": "wolochain-ops",
+      "path": "docs/C03_INTEL_COW_RESTORED_HD_OWNER_FINANCE_DENIAL_REHEARSAL.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-09",
+      "sensitivity": "restricted",
+      "sha256": "cc3930415e0fe2b644ab16d1f31630834eddd7a3e2107b136712528f1d0f3b2e",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C03 Intel COW Restored HD Owner Finance Denial Rehearsal",
+      "type": "runbook"
+    },
+    {
+      "audience": [
         "developers",
         "operators",
         "ai-agents"
@@ -964,7 +988,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "d8d67bd11f4afcc1d65e5ced4586f785daf4a5f388b47c54db8ca88f123f36e6",
+      "sha256": "41fcc40ffd8d828a3d70e955bc36e4412c59a33b44e10d18aeea6d344259ea72",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
