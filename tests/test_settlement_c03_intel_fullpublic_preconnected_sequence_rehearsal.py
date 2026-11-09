@@ -2,6 +2,9 @@
 from pathlib import Path
 import hashlib
 import unittest
+import platform
+import subprocess
+import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 CASES = (
@@ -51,6 +54,22 @@ class C03FullPublicSourceIntegrityTest(unittest.TestCase):
                 self.assertIn("has_sequence_privilege", t)
                 self.assertIn("REVOKE ALL ON SEQUENCE ", t)
                 self.assertIn("NOLOGIN", t)
+
+
+    def test_wrong_architecture_refuses_without_database_open(self):
+        # Never execute the physical test here on the authorized Intel x86_64 host.
+        if sys.platform == "darwin" and platform.machine() == "x86_64":
+            self.skipTest("Intel positive execution requires separate owner-controlled one-shot test")
+        for scope, tables, seqs, name, expected, restore in CASES:
+            with self.subTest(scope=scope):
+                path = ROOT / "scripts" / name
+                proc = subprocess.run(
+                    [sys.executable, str(path)],
+                    text=True, capture_output=True, timeout=12, check=False
+                )
+                self.assertEqual(proc.returncode, 3)
+                self.assertIn("HOLD_C03_ISOLATED_PRECONNECTED_REHEARSAL", proc.stdout)
+                self.assertIn("INTEL_ONLY_UNPRIVILEGED", proc.stdout)
 
 if __name__ == "__main__":
     unittest.main()
