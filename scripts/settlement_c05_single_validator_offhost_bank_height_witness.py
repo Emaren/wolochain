@@ -183,4 +183,3 @@ if __name__=="__main__":
     except (Hold,KeyError,TypeError,ValueError,OSError,subprocess.TimeoutExpired) as exc:
         print("HOLD_C05_FIXED_HEIGHT_WITNESS_"+type(exc).__name__,file=sys.stderr)
         sys.exit(3)
-

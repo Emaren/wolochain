@@ -29,13 +29,13 @@ Acceptance verifies source SHA, height, historical block ID, app hash, validator
 
 On November 9, 2026 the historical block 2886568 was still present on HEL1. Block hash 18CDE084F52EEFC9C7039B924B2B6239308409A3AECE3BA94382EB0B13F9815C matched the source census and recorded commit. Header app hash was 0AAF127DB766916F9A002A0095DFF8F500B45EB61DF3928F309A94E533A6ED77. The running validator was one validator on network wolo-1, non-catching-up, with block height increasing. The gross 24-wallet nominal was 87,639,451.200705 WOLO but the census admits ZERO spendable collateral.
 
-SHA256 of exact reviewed script: 383655650596a4248a0fa8a70d9c3c5d328eed4c814136f0dd74f306dd16c5b8. Eleven offline adversarial tests pass, including wrong chain, hash mismatch, mixed block height, missing commit signature, changed validator identity, absent reserve controls and unexpected census source bytes.
+SHA256 of exact reviewed script: 1e18cfe8aa60c7658e180c93613a7211bdc6ff6e2f1294a7d0b1147db9be1ab5. Eleven offline adversarial tests pass, including wrong chain, hash mismatch, mixed block height, missing commit signature, changed validator identity, absent reserve controls and unexpected census source bytes.
 
 Sealed private owner-Mac receipt:
 
-~/.local/share/aoe2war-c05-fixed-height-witness/c05-bank-height-2886568-sha-pinned-20261109T2135Z.json
+~/.local/share/aoe2war-c05-fixed-height-witness/c05-bank-height-2886568-final-reviewed-20261109.json
 
-Receipt mode 0600. SHA256 27683c12bdaac0225694204e2b4cfea4220415922bcb5eb4229e4dc34a3ad9e9. Machine classification PASS_SAME_NODE_HISTORICAL_BLOCK_COMMIT_CONSISTENCY; formal financial_gate_closed=false; funding_authorized=false; independent_consensus_verified=false; eligible_unencumbered_reserves_proven_uwolo=0.
+Receipt mode 0600. SHA256 e2aa1b1d07af3db59a6237db50c6e2530f2042aaae37f76e83101d55d662f4fd. Machine classification PASS_SAME_NODE_HISTORICAL_BLOCK_COMMIT_CONSISTENCY; formal financial_gate_closed=false; funding_authorized=false; independent_consensus_verified=false; eligible_unencumbered_reserves_proven_uwolo=0.
 
 Earlier unsigned-source-pinned observer receipt SHA e2d31705cfb57f3741e668e994841dca98ba19bc1879e7231e2873de59c2337d is superseded for source-constrained review; keep both private.
 
@@ -52,4 +52,3 @@ Choose a new filename for each new observation. The local output directory must 
 ## Critical consequence
 
 PASS: off-host source-bound historical same-node block/commit consistency and eleven adversarial tests. HOLD: genuinely independent bank/chain witness, cryptographic signature verification, signer-controlled pledged reserves, historical liability disjointness, C05 solvency admission, C06/C07 recovery and C09 funds. Session A must still prove actual eligible collateral and approved claim scope at an exact bank height. This tool does not permit funding or a financial gate closure.
-
