@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `central/c05-exact-claim-transfer-ambiguity-20261109` at `afe990c546460a1d7919a47fef1f52d2272fbf68`
+Implementation baseline: `central/c05-exact-claim-transfer-ambiguity-20261109` at `515535b4683d0d9c0bf7c85c01bc10a7ce9704ce`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 

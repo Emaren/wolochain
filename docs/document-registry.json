@@ -556,7 +556,7 @@
       "review_interval_days": 7,
       "reviewed_at": "2026-11-09",
       "sensitivity": "restricted",
-      "sha256": "8d96c947cee5bd9bc4a2066f13c8a76a58119dcb0d6f79845fd47cb6222ab708",
+      "sha256": "a302272f08759cac3c36b21c3aaaabacaff2efe44a800a344b63380741de2256",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -1106,7 +1106,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "72c29f98e80cc6fd4ce7fdeffb7efa72cdc09667d5a05e032ca708821b072f49",
+      "sha256": "8b0a93cfdd9bfa06f7b984c46887ec2562a4859db9b646ee16d40c834e37e6f5",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -2208,7 +2208,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "central/c05-exact-claim-transfer-ambiguity-20261109",
-    "commit": "afe990c546460a1d7919a47fef1f52d2272fbf68"
+    "commit": "515535b4683d0d9c0bf7c85c01bc10a7ce9704ce"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
