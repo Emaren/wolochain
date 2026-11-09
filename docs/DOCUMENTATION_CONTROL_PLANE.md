@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `feat/c07-real-role-owner-acl-proof-clean-20261109` at `48839a9bd6e48c4c407e088a1ffd5d452f9d13e1`
+Implementation baseline: `codex/c03-reversible-pg16-owner-fence` at `35de6a0b6c886012bd201d86b8388bdaafb56677`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 

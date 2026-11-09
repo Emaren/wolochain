@@ -1082,7 +1082,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "d1cbbeb5a35ab05809220f8c177953c6a995d6ee4d4be0ba108f50e10b8c5081",
+      "sha256": "973932da305d183042ff19f50f5db8ff36130343d8a562e1acc36d63255b09ee",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -2183,8 +2183,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "feat/c07-real-role-owner-acl-proof-clean-20261109",
-    "commit": "48839a9bd6e48c4c407e088a1ffd5d452f9d13e1"
+    "branch": "codex/c03-reversible-pg16-owner-fence",
+    "commit": "35de6a0b6c886012bd201d86b8388bdaafb56677"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
