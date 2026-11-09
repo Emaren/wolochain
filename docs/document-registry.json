@@ -892,7 +892,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "5a39bf0089f6d2d3e01ce8827c0ca9e39baa4d22d02bdeee4bae44a4b86c46b5",
+      "sha256": "89ba40c579a135ae8bdcf6f760eb1d5d24d0f92edd36905df767e6e669c9758b",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1969,8 +1969,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "feat/c04-native-claim-namespace-noninterference-20261108",
-    "commit": "3d16e8f5076f27d82dc772a85c85e4a56f95e293"
+    "branch": "feat/c06-direct-intel-unquiesced-restore-20261109",
+    "commit": "88767b47159afab5a8227d60a152662e24523d58"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

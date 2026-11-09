@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `feat/c04-native-claim-namespace-noninterference-20261108` at `3d16e8f5076f27d82dc772a85c85e4a56f95e293`
+Implementation baseline: `feat/c06-direct-intel-unquiesced-restore-20261109` at `88767b47159afab5a8227d60a152662e24523d58`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
