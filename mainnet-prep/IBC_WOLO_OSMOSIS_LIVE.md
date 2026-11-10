@@ -8,12 +8,16 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "runtime-evidence"
 authority: "live-ibc-path-receipt"
-reviewed_at: "2026-10-10"
+reviewed_at: "2026-11-10"
 review_interval_days: 30
 sensitivity: "internal"
 ---
 
 # WoloChain Mainnet Osmosis IBC Path Live
+
+## Live-read channel review — 2026-11-10 UTC
+
+Public REST requests independently confirmed WoloChain transfer/channel-0 STATE_OPEN, counterparty Osmosis transfer/channel-110224, unordered, ics20-1, connection hop connection-0; Osmosis transfer/channel-110224 is also STATE_OPEN and points back to channel-0. These are current endpoint responses, not assumptions from historical channel-creation commands. But HEL1's wolochain-mainnet-osmosis-relayer.service is INACTIVE. **An open channel does not certify actual packet forwarding, acknowledgments or transfers.** Earlier 1-WOLO transfer and pool-launch receipts remain historical and authorize no fresh transaction. No live balance or chain state was altered.
 
 ## Review Scope — 2026-10-10 UTC
 

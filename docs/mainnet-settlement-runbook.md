@@ -8,12 +8,20 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "runtime-evidence"
 authority: "mainnet-settlement-operations"
-reviewed_at: "2026-10-26"
+reviewed_at: "2026-11-10"
 review_interval_days: 14
 sensitivity: "restricted"
 ---
 
 # WoloChain Mainnet Settlement Runbook
+
+## CURRENT OPERATING PRECEDENCE — 2026-11-10 UTC (FINANCIALLY HELD)
+
+**This newer guardrail supersedes operational availability implied by historical commands or dated receipts below.** HEL1 read-only systemctl, ss and HTTP checks confirmed: wolochaind-mainnet.service active PID 1009, zero restarts; wolo-satchel-c01.service and wolo-reviewer-c01.service both INACTIVE, PID 0; financial listeners 8092/8093/8094/8095 ALL CLOSED; repaired R25 web 3032 active PID 465815, protected /api/bets HTTP 503; Steam V18 scheduled refresher FAILED, ExecMainStatus 3, pending separate App V19 retirement repair. The older November 5 observation of live 8092/8093 is historical, not a current-state statement or permission to restart them.
+
+Formal Chain scoreboard in Emaren/wolochain issue #239: C04 and C08 CLOSED; C01/C02/C03/C05/C06/C07/C09 OPEN. C01 source admission and C05 off-host reserve review code alone cannot certify live signer enrollment, exclusive unencumbered collateral, complete disjoint historical liabilities, actual same-checkpoint off-host C06/C07 restore, HD/DE financial writer fencing, or a separately signed funded C09 canary. There is one human owner, not an independent reviewer council; separate technical keys and one-use owner signing remain different controls.
+
+**No archived settlement, maintenance, SQL or transfer command below is a current executable permit.** This review covers the historical receipt classification and present protected runtime, **not** a line-by-line requalification of every archived command in this large runbook. Any action still requires current exact-source, authority, recovery and noninterference acceptance. No wallet, financial service, ledger, database grant or Chain state was changed.
 
 ## November 5, 2026 — C08 real protected-source size admission repair (HELD)
 

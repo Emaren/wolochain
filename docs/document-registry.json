@@ -94,6 +94,29 @@
     },
     {
       "audience": [
+        "operators",
+        "developers",
+        "ai-agents"
+      ],
+      "authority": "nonfunded-integration-handoff-only",
+      "id": "aoe2war.wolochain.c01-c05-integrated-source-acceptance-20261110",
+      "owner": "wolochain-ops",
+      "path": "docs/C01_C05_PRODUCTION_ACCEPTANCE_SOURCE_BOUNDARY_20261110.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-10",
+      "sensitivity": "restricted",
+      "sha256": "64b3ab35e8a71ec87d205c68b605368ce3c9c1a8cbc0aaf4ce0b0e7a6654be3f",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C01/C05 integrated source and physical acceptance boundary",
+      "type": "runbook"
+    },
+    {
+      "audience": [
         "developers",
         "operators",
         "ai-agents"
@@ -1128,9 +1151,9 @@
       "owner": "wolochain-ops",
       "path": "docs/DOCUMENTATION_CONTROL_PLANE.md",
       "review_interval_days": 30,
-      "reviewed_at": "2026-10-10",
+      "reviewed_at": "2026-11-10",
       "sensitivity": "internal",
-      "sha256": "ad0a2f3ed70cb4adf3c1c72b99d237205718c0059e1871fd1bd4c0b045794bb7",
+      "sha256": "551a74b544a6a67319589707bab1e4859b05fd453d881e796e7502cd2aee4b0f",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1266,9 +1289,9 @@
       "owner": "wolochain-ops",
       "path": "docs/mainnet-dns-nginx-tls.md",
       "review_interval_days": 30,
-      "reviewed_at": "2026-10-10",
+      "reviewed_at": "2026-11-10",
       "sensitivity": "internal",
-      "sha256": "b01ef9d03c23a0a67e7d509082d31d748b9ce73df726f331562aaec346740eda",
+      "sha256": "fde8249dc3515b85c312079f9cdc582b2478de230d5a3c94ebabae26b88c091a",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -1335,9 +1358,9 @@
       "owner": "wolochain-ops",
       "path": "docs/mainnet-keplr-explorer.md",
       "review_interval_days": 30,
-      "reviewed_at": "2026-10-10",
+      "reviewed_at": "2026-11-10",
       "sensitivity": "public",
-      "sha256": "2ebc2f010752dc4707fc9e15e2fc8a8b1adb4699f2f0ca959641b6add19907df",
+      "sha256": "1683ec8b4f3cf9277ac37edbbf7b27920c6afa91e5865275de1e7a994bd26265",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -1404,9 +1427,9 @@
       "owner": "wolochain-ops",
       "path": "docs/mainnet-settlement-runbook.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-10-26",
+      "reviewed_at": "2026-11-10",
       "sensitivity": "restricted",
-      "sha256": "9e03e8798975828f3d41e686dcf4b10ab769a289b2baf94b7d7c01515ce0b670",
+      "sha256": "2e2a716367709151723f08c221f38bc5fa486e42ad3388a1984bcc175f125a95",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -1775,9 +1798,9 @@
       "owner": "wolochain-ops",
       "path": "docs/warbound-trophies.md",
       "review_interval_days": 30,
-      "reviewed_at": "2026-10-10",
+      "reviewed_at": "2026-11-10",
       "sensitivity": "internal",
-      "sha256": "aa40b70d50bf100f73ab44720bdc79a297dc87622491389d04afa23f690641d1",
+      "sha256": "d71a1fb9320a1e3748324b3eafcdf7db0a3c0b24f4d9cfbf2b08a73dea0a0710",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -1821,9 +1844,9 @@
       "owner": "wolochain-ops",
       "path": "mainnet-prep/HERMES_OSMOSIS_RELAYER_STAGING.md",
       "review_interval_days": 30,
-      "reviewed_at": "2026-10-10",
+      "reviewed_at": "2026-11-10",
       "sensitivity": "restricted",
-      "sha256": "1d70a9871dfbacec7759a28fb58ef915ca270608d5c95a2b7b5411284c8ab8e9",
+      "sha256": "4d18c05a0c07925a0eef207b614209cfca20d39fa5639ced0cf6f011890ac8d4",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -1867,9 +1890,9 @@
       "owner": "wolochain-ops",
       "path": "mainnet-prep/IBC_WOLO_OSMOSIS_LIVE.md",
       "review_interval_days": 30,
-      "reviewed_at": "2026-10-10",
+      "reviewed_at": "2026-11-10",
       "sensitivity": "internal",
-      "sha256": "2197d62b16f37a3078f725539fb36e6701ddd9e26d8b4bb0a8c581b2499a51f2",
+      "sha256": "5fb12ac4cadfecd0ef174363fa85da846e512bfc5a9a153cb3f2887e0d8eba0f",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -1982,9 +2005,9 @@
       "owner": "wolochain-ops",
       "path": "mainnet-prep/WOLO_OSMOSIS_METADATA_PLAN.md",
       "review_interval_days": 30,
-      "reviewed_at": "2026-10-10",
+      "reviewed_at": "2026-11-10",
       "sensitivity": "public",
-      "sha256": "a5810707104558d32600c95232a3f5a4eff732386f2f5cacb3fea0b19c68333b",
+      "sha256": "ac9c19f450ab492113adbcaad2423f1cc4b7f091878e6a94b3efc5caa80b21e3",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -2051,9 +2074,9 @@
       "owner": "wolochain-ops",
       "path": "mainnet-prep/WOLO_USDC_OSMOSIS_POOL_LIVE.md",
       "review_interval_days": 30,
-      "reviewed_at": "2026-10-10",
+      "reviewed_at": "2026-11-10",
       "sensitivity": "public",
-      "sha256": "2d43e9017090edf1de9d68d53372f3b1503573c6059f8e6d72ce933b6c050842",
+      "sha256": "8be73779d82411bcee864397a678efd9e2d8ca8ab8d5f7b5523e6a1cd967f734",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -2120,9 +2143,9 @@
       "owner": "wolochain-ops",
       "path": "mainnet-prep/nginx/README.md",
       "review_interval_days": 30,
-      "reviewed_at": "2026-10-10",
+      "reviewed_at": "2026-11-10",
       "sensitivity": "internal",
-      "sha256": "89228ecc1ef02c8a0014f670c27ceebf388f9c2efac9a32d16db3bc74b0fa7ff",
+      "sha256": "31fb3a41e25474547b736cc2d4759bc13c3cbf7a2909e3bea966fa4de51fc123",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -2231,8 +2254,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "central/c05-offhost-fixed-height-commit-witness-20261109",
-    "commit": "742aaae976e20ababe61f5a594f619d839b72ec5"
+    "branch": "central/c01-c05-docs-reconcile-20261109",
+    "commit": "7525351b1300bbb60fd6df6eee6cf0b0dca1780b"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

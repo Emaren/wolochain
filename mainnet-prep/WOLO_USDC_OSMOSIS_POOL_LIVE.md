@@ -8,12 +8,16 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "runtime-evidence"
 authority: "live-osmosis-pool-receipt"
-reviewed_at: "2026-10-10"
+reviewed_at: "2026-11-10"
 review_interval_days: 30
 sensitivity: "public"
 ---
 
 # WOLO/USDC Osmosis Pool
+
+## Point-in-time public pool review — 2026-11-10 UTC
+
+A TLS-verified Osmosis LCD Gamm API read returned Pool 3461 with exact documented pool address, both WOLO/USDC IBC denoms, swap fee 0.002000000000000000 (0.2%) and exit fee zero. The observed reserves were **22007451 atomic USDC = 22.007451 USDC**, and **181872725700 atomic WOLO = 181,872.725700 WOLO**. Public remote-node observations can change; historical launch balances and prices below are not current reserves. This did not independently authenticate a full-node quorum, current trade execution or owner liquidity control. HEL1 Hermes relayer is inactive. No transfer, swap, deposit, withdrawal or financial gate admission occurred.
 
 ## Review Scope — 2026-10-10 UTC
 

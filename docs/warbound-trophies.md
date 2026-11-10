@@ -8,12 +8,16 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "undeployed-warbound-module-design"
-reviewed_at: "2026-10-10"
+reviewed_at: "2026-11-10"
 review_interval_days: 30
 sensitivity: "internal"
 ---
 
 # AoE2WAR Warbound Trophies
+
+## Draft design review — 2026-11-10 UTC
+
+This remains an undeployed source-only Warbound design, not proof of an enabled wolo-1 module, transferable payout entitlement or current upgrade permit. No new module version, store-loader, mainnet upgrade, transfer or NFT ownership state was verified in this review. Preserve the requirements for an explicit coordinated upgrade, immutable backup and post-upgrade tests. Old design suggestions to use legacy settlement rails **do not authorize** restarting 8092/8093, both physically closed at this observation. No Chain binary was replaced.
 
 ## Review Scope — 2026-10-10 UTC
 

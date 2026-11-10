@@ -139,7 +139,9 @@ func LoadConfig(path string) (Config, string, error) {
 	if err = decodePrivate(b, &c); err != nil {
 		return c, "", err
 	}
-	if c.Version != 1 || !validAddress(c.Vault) || satchel.IsKnownRoleAddress(c.Vault) || !validAddress(c.BettingEscrow) || c.Vault == c.BettingEscrow || c.MaxAmountUWolo == 0 || c.MaxAmountUWolo > 50000000000 || len(c.ProtectedAddresses) == 0 || len(c.ProtectedAddresses) > 128 {
+	if c.Version != 1 || !validAddress(c.Vault) || satchel.IsKnownRoleAddress(c.Vault) ||
+		!validAddress(c.BettingEscrow) || satchel.IsKnownRoleAddress(c.BettingEscrow) || c.Vault == c.BettingEscrow ||
+		c.MaxAmountUWolo == 0 || c.MaxAmountUWolo > 50000000000 || len(c.ProtectedAddresses) == 0 || len(c.ProtectedAddresses) > 128 {
 		return c, "", errors.New("configuration_invalid")
 	}
 	public, e := hex.DecodeString(c.PublicKeyHex)

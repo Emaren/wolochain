@@ -8,12 +8,18 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "runtime-evidence"
 authority: "mainnet-public-endpoint-routing"
-reviewed_at: "2026-10-10"
+reviewed_at: "2026-11-10"
 review_interval_days: 30
 sensitivity: "internal"
 ---
 
 # WoloChain Mainnet DNS, Nginx, And TLS
+
+## Read-only operating review — 2026-11-10 UTC
+
+HEL1 public HTTPS RPC /status returned HTTP 200 with valid TLS (ssl_verify_result=0), wolo-1, tx_index=on, height 2900892, catching_up=false. Public REST node_info also returned wolo-1. RPC and REST OPTIONS preflights returned HTTP 204 with Access-Control-Allow-Origin: https://aoe2war.com and *, respectively; the application path aliases returned HTTP 200 with valid TLS. A fresh read-only nginx -T confirmed the documented mainnet proxy targets 127.0.0.1:27657 and 127.0.0.1:1318; other older port references elsewhere in Nginx are not evidence that these mainnet selectors point at testnet endpoints. Nginx was active. No configuration or certificate was modified.
+
+This verifies routing and TLS acceptance only. It does not certify wallet signing, financial settlement, public availability from all networks or future certificate renewal. Earlier September/October observations below remain historical.
 
 ## Review Scope — 2026-10-10 UTC
 

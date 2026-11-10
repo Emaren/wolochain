@@ -10,6 +10,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"syscall"
 	"testing"
@@ -324,5 +325,32 @@ func TestLoadConfigBindsExactBytesWithoutOpeningExecutionResources(t *testing.T)
 	configTestWrite(t, path, data)
 	if _, _, err := LoadConfig(path); err == nil {
 		t.Fatal("shared activation/withdrawal approval authority accepted")
+	}
+}
+
+func TestLoadConfigRefusesRegisteredLegacyEscrow(t *testing.T) {
+	wallets, err := os.ReadFile(filepath.Join("..", "..", "docs", "mainnet-wallets.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	escrows := regexp.MustCompile("(?m)^\\| (Legacy Bet Escrow|Bet Escrow Signer) \\| `([a-z0-9]+)`").FindAllStringSubmatch(string(wallets), -1)
+	if len(escrows) != 2 {
+		t.Fatal("expected both historical escrow roles in the published wallet catalog")
+	}
+	for _, escrow := range escrows {
+		t.Run(escrow[1], func(t *testing.T) {
+			c, _, _, _ := configTestFixture(t)
+			c.BettingEscrow = escrow[2]
+			c.ProtectedAddresses = []string{escrow[2]}
+			path := filepath.Join(filepath.Dir(c.PermitFile), "config.json")
+			data, err := json.Marshal(c)
+			if err != nil {
+				t.Fatal(err)
+			}
+			configTestWrite(t, path, data)
+			if _, _, err := LoadConfig(path); err == nil {
+				t.Fatal("legacy escrow accepted as a Satchel destination")
+			}
+		})
 	}
 }
