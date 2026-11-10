@@ -12,13 +12,46 @@ import (
 	"time"
 )
 
-const c01StatusSocketName = "status.sock"
+const (
+	c01StatusSocketName    = "status.sock"
+	c01ServeFileSchema     = "wolo.c01.zero-funded-serve-config.v1"
+	c01CustodyConfigPath   = "/etc/wolo-financial-c01/custody.json"
+	c01ReviewerConfigPath  = "/etc/wolo-financial-c01/reviewer.json"
+	c01CustodyServePermit  = "/var/lib/wolo-financial-role-state/v1/custody/c01-admission/canonical-serve-permit.json"
+	c01ReviewerServePermit = "/var/lib/wolo-financial-role-state/v1/reviewer/c01-admission/canonical-serve-permit.json"
+)
+
+func c01ServePathsMatch(role, config, permit string) bool {
+	return (role == C01CustodyRole && config == c01CustodyConfigPath && permit == c01CustodyServePermit) ||
+		(role == C01ReviewerRole && config == c01ReviewerConfigPath && permit == c01ReviewerServePermit)
+}
+
+func readC01ServeConfig(path string) (c01File, C01StartupConfig, error) {
+	if path != c01CustodyConfigPath && path != c01ReviewerConfigPath {
+		return c01File{}, C01StartupConfig{}, ErrC01NonfundedAdmission
+	}
+	file, config, err := readC01KeyConfigSchema(path, c01ServeFileSchema)
+	if err != nil || !c01ServePathsMatch(config.Role, config.ConfigFile, config.PermitFile) {
+		return c01File{}, C01StartupConfig{}, ErrC01NonfundedAdmission
+	}
+	return file, config, nil
+}
+
+// PrepareC01ServeRequest prepares an owner challenge only for a canonical serve
+// config. The signed config hash distinguishes it from one-shot admission.
+func PrepareC01ServeRequest(ctx context.Context, path string) ([]byte, error) {
+	_, config, err := readC01ServeConfig(path)
+	if err != nil {
+		return nil, err
+	}
+	return PrepareC01NonfundedStartup(ctx, config)
+}
 
 // ServeC01AdmittedKey consumes a fresh C01 permit and proves possession before
 // serving only GET /status over the role's private Unix socket. The caller
 // must set umask 0177 before startup. Systemd owns RuntimeDirectory cleanup.
 func ServeC01AdmittedKey(ctx context.Context, configPath string) error {
-	file, config, err := readC01KeyConfig(configPath)
+	file, config, err := readC01ServeConfig(configPath)
 	if err != nil {
 		return err
 	}
@@ -30,7 +63,7 @@ func ServeC01AdmittedKey(ctx context.Context, configPath string) error {
 	if err != nil || !run.IsDir() || run.Mode().Perm()&0022 != 0 || !c01OwnedBy(run, 0, 0) {
 		return ErrC01NonfundedAdmission
 	}
-	// readC01KeyConfig and c01RoleIdentity allow only these two fixed roles.
+	// The serve config and Linux identity identify exactly one fixed role.
 	dir := "/run/" + file.Role + "-c01"
 	endpoint, err := newC01StatusEndpoint(dir, uid, gid)
 	if err != nil || !endpoint.available() {

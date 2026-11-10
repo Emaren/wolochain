@@ -227,3 +227,84 @@ func TestC01StatusStopsAtExpiry(t *testing.T) {
 		func(context.Context) bool { return true })
 	awaitC01TestStatusStop(t, done, nil)
 }
+
+func TestC01ServeProfilePinsRoleAndBothPaths(t *testing.T) {
+	for _, profile := range []struct {
+		role, config, permit string
+	}{
+		{C01CustodyRole, "/etc/wolo-financial-c01/custody.json",
+			"/var/lib/wolo-financial-role-state/v1/custody/c01-admission/canonical-serve-permit.json"},
+		{C01ReviewerRole, "/etc/wolo-financial-c01/reviewer.json",
+			"/var/lib/wolo-financial-role-state/v1/reviewer/c01-admission/canonical-serve-permit.json"},
+	} {
+		if !c01ServePathsMatch(profile.role, profile.config, profile.permit) {
+			t.Fatalf("canonical %s paths refused", profile.role)
+		}
+		if c01ServePathsMatch(profile.role, profile.config+".old", profile.permit) ||
+			c01ServePathsMatch(profile.role, profile.config, profile.permit+".old") ||
+			c01ServePathsMatch(profile.role, profile.config, strings.Replace(profile.permit, "/c01-admission/", "/c01-admission/./", 1)) ||
+			c01ServePathsMatch("other-role", profile.config, profile.permit) {
+			t.Fatalf("alternate %s scope accepted", profile.role)
+		}
+	}
+	if c01ServePathsMatch(C01ReviewerRole, c01CustodyConfigPath, c01ReviewerServePermit) ||
+		c01ServePathsMatch(C01CustodyRole, c01CustodyConfigPath, c01ReviewerServePermit) {
+		t.Fatal("cross-role config or permit accepted")
+	}
+}
+
+func TestC01ServeRejectsOneShotAuthorizationEvenOnSameBinary(t *testing.T) {
+	f := makeC01Fixture(t)
+	file := c01File{
+		Schema: c01FileSchema, Role: C01ReviewerRole,
+		KeyFingerprintSHA256: f.c.KeyFingerprintSHA256,
+		C08ReceiptFile:       f.c.C08ReceiptFile,
+		C08OwnerPublicFile:   f.c.C08OwnerPublicFile,
+		PermitFile:           f.c.PermitFile,
+	}
+	write := func() {
+		t.Helper()
+		raw, err := json.Marshal(file)
+		if err != nil {
+			t.Fatal(err)
+		}
+		c01WriteTestFile(t, f.c.ConfigFile, raw)
+	}
+	write()
+	_, oneShot, err := readC01KeyConfig(f.c.ConfigFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := readC01KeyConfigSchema(f.c.ConfigFile, c01ServeFileSchema); err == nil {
+		t.Fatal("one-shot config accepted by the serve schema")
+	}
+	f.request[0], f.request[4] = oneShot.Role, oneShot.ConfigSHA256
+	f.writePermit(t, f.owner, c01StartupDomain, f.request)
+	if _, _, _, err := verifyC01Startup(oneShot, f.revision, f.binary, f.trust, f.now); err != nil {
+		t.Fatalf("original one-shot signature refused: %v", err)
+	}
+
+	// Only the schema changes. The same role, source, executable, public key,
+	// policy and permit location cannot make the old signature reusable.
+	file.Schema = c01ServeFileSchema
+	write()
+	_, serve, err := readC01KeyConfigSchema(f.c.ConfigFile, c01ServeFileSchema)
+	if err != nil || oneShot.ConfigSHA256 == serve.ConfigSHA256 {
+		t.Fatalf("serve schema did not establish a distinct signed config: %v", err)
+	}
+	if _, _, err := readC01KeyConfig(f.c.ConfigFile); err == nil {
+		t.Fatal("serve config accepted by one-shot admission")
+	}
+	if _, _, err := readC01ServeConfig(f.c.ConfigFile); !errors.Is(err, ErrC01NonfundedAdmission) {
+		t.Fatal("serve accepted a noncanonical config path")
+	}
+	if _, _, _, err := verifyC01Startup(serve, f.revision, f.binary, f.trust, f.now); err == nil {
+		t.Fatal("one-shot signature admitted serve")
+	}
+
+	f.request[4] = serve.ConfigSHA256
+	f.writePermit(t, f.owner, c01StartupDomain, f.request)
+	if _, _, _, err := verifyC01Startup(serve, f.revision, f.binary, f.trust, f.now); err != nil {
+		t.Fatalf("new signature over exact serve config refused: %v", err)
+	}
+}

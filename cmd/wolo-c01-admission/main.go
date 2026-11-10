@@ -18,8 +18,12 @@ func main() {
 	defer stop()
 	if len(os.Args) == 3 {
 		switch os.Args[1] {
-		case "prepare":
-			request, err := satchelservice.PrepareC01KeyPossessionRequest(ctx, os.Args[2])
+		case "prepare", "prepare-serve":
+			prepare := satchelservice.PrepareC01KeyPossessionRequest
+			if os.Args[1] == "prepare-serve" {
+				prepare = satchelservice.PrepareC01ServeRequest
+			}
+			request, err := prepare(ctx, os.Args[2])
 			if err == nil {
 				// The owner signer requires exactly these bytes, with no newline.
 				if _, err = os.Stdout.Write(request); err == nil {
