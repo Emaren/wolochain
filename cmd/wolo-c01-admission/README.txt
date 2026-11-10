@@ -12,15 +12,16 @@ state directory must contain an owner-only 0700 c01-admission subdirectory for
 durable nonce tombstones. Never restore older tombstones over an active
 journal. Before admitting any restored state, expire all prior permits.
 
-The protected admission config is a single compact canonical JSON object, with
+The protected config is a single compact canonical JSON object, with
 fields in order: schema, role, key_fingerprint_sha256, c08_receipt_file,
-c08_owner_public_file, permit_file, and for Satchel only custody. Schema is
-wolo.c01.zero-funded-startup-config.v1. The fingerprint hashes the raw enrolled
-public key. The last custody object has vault, public_key_hex, and key_name in
-that order. The signer must be the original C01 dedicated vault. Reviewer key,
-Satchel keyring and Satchel unlock paths are fixed to the role's existing state.
-No placeholder configuration or credentials ship with this command.
+c08_owner_public_file, permit_file, and for Satchel only custody. The
+fingerprint hashes the raw enrolled public key. The last custody object has
+vault, public_key_hex, and key_name in that order. The signer must be the
+original C01 dedicated vault. Reviewer key, Satchel keyring and Satchel unlock
+paths are fixed to the role's existing state. No placeholder configuration or
+credentials ship with this command.
 
+For one-shot admission, use schema wolo.c01.zero-funded-startup-config.v1.
 Prepare writes only the canonical unsigned request to standard output:
 
     wolo-c01-admission prepare /absolute/protected/admission.json
@@ -40,10 +41,15 @@ signature or any key bytes. Revoked, replayed, wrong-role, altered-config,
 missing-key and expired attempts fail closed. Refusal after nonce consumption
 requires a new owner request. The receipt has no funding authority.
 
-Serve uses the same one-use owner scope and key check. It cannot reuse a permit
-already consumed by admit or a prior serve process.
+Serve requires a separate config with schema wolo.c01.zero-funded-serve-config.v1
+at /etc/wolo-financial-c01/custody.json or /etc/wolo-financial-c01/reviewer.json.
+Its permit_file is the matching role's c01-admission/canonical-serve-permit.json.
+Prepare-serve produces the unsigned request using this exact config. The
+signature binds the config bytes and binary, so a one-shot admission permit
+cannot authorize serve. A prior serve permit cannot be used again.
 
-    wolo-c01-admission serve /absolute/protected/admission.json
+    wolo-c01-admission prepare-serve /etc/wolo-financial-c01/custody.json
+    wolo-c01-admission serve /etc/wolo-financial-c01/custody.json
 
 Systemd must supply the fixed role-owned 0700 RuntimeDirectory, named
 wolo-satchel-c01 for custody or wolo-reviewer-c01 for the technical reviewer.
