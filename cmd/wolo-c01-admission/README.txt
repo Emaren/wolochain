@@ -1,9 +1,10 @@
 C01 zero-funds key admission
 
 This command checks possession of the existing Satchel custody or technical
-reviewer key. It has no listener, chain client, transaction entry point, or
-reviewer approval route. The canonical service unit and its normal production
-configuration are separate. Coordinate any change in their topology with App.
+reviewer key. Prepare and admit have no listener. Serve exposes a private
+Unix status socket only. The command has no chain client, TCP listener,
+transaction entry point, or reviewer approval route. The canonical funded
+service configuration is separate. Coordinate service topology with App.
 
 Build a clean Linux binary with Git VCS metadata. Run only as the selected
 wolo-satchel or wolo-reviewer Linux user and group. The role's existing private
@@ -38,3 +39,17 @@ a fixed-domain possession proof. The proof's hash is exposed, not its
 signature or any key bytes. Revoked, replayed, wrong-role, altered-config,
 missing-key and expired attempts fail closed. Refusal after nonce consumption
 requires a new owner request. The receipt has no funding authority.
+
+Serve uses the same one-use owner scope and key check. It cannot reuse a permit
+already consumed by admit or a prior serve process.
+
+    wolo-c01-admission serve /absolute/protected/admission.json
+
+Systemd must supply the fixed role-owned 0700 RuntimeDirectory, named
+wolo-satchel-c01 for custody or wolo-reviewer-c01 for the technical reviewer.
+The launcher creates status.sock as 0600. GET /status without query or body
+returns the nonfunded key receipt over that Unix socket. All other requests are
+refused. The process closes on expiry, observed revocation or socket identity
+change. It refuses any preexisting socket pathname and never unlinks one.
+Systemd removes its RuntimeDirectory after the service stops. Each restart
+requires a fresh exact owner permit.
