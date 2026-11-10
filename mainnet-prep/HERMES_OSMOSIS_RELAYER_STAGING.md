@@ -8,12 +8,18 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "runtime-evidence"
 authority: "ibc-relayer-operating-reference"
-reviewed_at: "2026-10-10"
+reviewed_at: "2026-11-10"
 review_interval_days: 30
 sensitivity: "restricted"
 ---
 
 # WoloChain Mainnet Osmosis Hermes Relayer Staging
+
+## Live-read reconciliation — 2026-11-10 UTC
+
+The documented wolo-1 ICS-20 transfer/channel-0 is STATE_OPEN, counterparty transfer/channel-110224, unordered, version ics20-1, connection-0; Osmosis LCD independently returned reciprocal channel-110224 STATE_OPEN. **Critical: HEL1 wolochain-mainnet-osmosis-relayer.service is INACTIVE (MainPID 0).** Its config and unit files exist, but no present Hermes config validate, signing-key availability, packet relay, health or time-bounded delivery acceptance was performed. Open channel state is not evidence of a running relayer. Neither a historical transfer nor this review authorizes starting that service or broadcasting.
+
+This remains a staging/reference document. Previous successful commands are dated receipts requiring current independent requalification; no relayer, service or wallet mutation occurred.
 
 ## Review Scope — 2026-10-10 UTC
 

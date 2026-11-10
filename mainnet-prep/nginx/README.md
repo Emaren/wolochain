@@ -8,12 +8,16 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "runtime-evidence"
 authority: "mainnet-nginx-routing-reference"
-reviewed_at: "2026-10-10"
+reviewed_at: "2026-11-10"
 review_interval_days: 30
 sensitivity: "internal"
 ---
 
 # WoloChain Mainnet Nginx Notes
+
+## Current read-only Nginx/API review — 2026-11-10 UTC
+
+HEL1 nginx.service was active; read-only nginx -T showed the mainnet hosts/path aliases forwarding to 127.0.0.1:27657 and 127.0.0.1:1318. HTTPS RPC/REST and both app aliases returned HTTP 200 with TLS verification result 0. RPC OPTIONS returned HTTP 204 and Access-Control-Allow-Origin https://aoe2war.com; REST OPTIONS returned HTTP 204 and origin *, with the documented HTTP methods. wolo-1 was confirmed on both API types. Older Nginx references to ports 26657/1317 do not by themselves identify a mainnet host route. No Nginx reload, proxy edit or signing transaction occurred; future releases still require verified rollback.
 
 ## Review Scope — 2026-10-10 UTC
 

@@ -8,7 +8,7 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "repository-documentation-index"
-reviewed_at: "2026-10-10"
+reviewed_at: "2026-11-10"
 review_interval_days: 30
 sensitivity: "internal"
 ---
@@ -27,7 +27,7 @@ This page is generated from the validated front matter in this repository. Cross
 
 ## Documentation health
 
-- Authoritative repository documents: **95**
+- Authoritative repository documents: **96**
 - Path moves in this migration: **0**
 - Every listed document has an explicit owner, lifecycle, authority, and review interval.
 
@@ -35,13 +35,13 @@ This page is generated from the validated front matter in this repository. Cross
 
 - `historical`: 14
 - `reference`: 49
-- `runbook`: 30
+- `runbook`: 31
 - `working`: 2
 
 ### Lifecycle
 
 - `active`: 16
-- `draft`: 65
+- `draft`: 66
 - `historical`: 14
 
 ## Documents
@@ -52,6 +52,7 @@ This page is generated from the validated front matter in this repository. Cross
 | [C04 — bounded original-request / chain-proof observation](../cmd/wolo-c04-verify/README.md) | `reference` | `draft` | `noncrediting-original-request-chain-evidence` |
 | [WoloChain Branch Authority](BRANCH_AUTHORITY.md) | `reference` | `active` | `git-branch-authority-contract` |
 | [C01 Immutable Source CI: Recovering Authenticated Merged Pull Request Provenance](C01_AUTHENTICATED_HISTORICAL_SOURCE_CI_PR124_MERGED.md) | `runbook` | `draft` | `c01-source-provenance-nonfunded-candidate-review-not-custody-approval` |
+| [C01/C05 integrated source and physical acceptance boundary](C01_C05_PRODUCTION_ACCEPTANCE_SOURCE_BOUNDARY_20261110.md) | `runbook` | `draft` | `nonfunded-integration-handoff-only` |
 | [C03 effective grants with paired live PostgreSQL sessions HOLD](C03_EFFECTIVE_GRANTS_PAIRED_LIVE_PG_SESSIONS_HOLD.md) | `reference` | `draft` | `source-only-read-only-c03-dual-evidence-bound-observer-never-a-finance-permit` |
 | [C03 Owner-Only Encrypted Off-Host Schema and Role Pre-Migration Rollback](C03_ENCRYPTED_PRECHANGE_SCHEMA_ROLLBACK_OFFHOST.md) | `runbook` | `draft` | `pre-migration-source-metadata-insurance-only-not-full-financial-backup-or-writer-fence` |
 | [C03 Separate 67-Unit Financial Writer Telemetry V2: Inert Stage and HOLD](C03_EXTENDED_67_UNIT_WATCHDOG_V2_STAGING_HOLD.md) | `runbook` | `draft` | `separate-telemetry-only-no-financial-containment-or-execution` |
