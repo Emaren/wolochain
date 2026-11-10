@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `central/c01-c05-docs-reconcile-20261109` at `7525351b1300bbb60fd6df6eee6cf0b0dca1780b`
+Implementation baseline: `codex/c01-canonical-zero-funds-20261110` at `74dc7fd15540a6dde0c56bbd73ffbccc1330e675`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 

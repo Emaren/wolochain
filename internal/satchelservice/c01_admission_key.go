@@ -33,8 +33,8 @@ type c01File struct {
 	Custody              *c01CustodyKey `json:"custody,omitempty"`
 }
 
-// C01NonfundedKeyReceipt records possession without emitting a signing oracle,
-// listener, or any financial permission.
+// C01NonfundedKeyReceipt records possession without emitting signature bytes
+// or granting financial permission.
 type C01NonfundedKeyReceipt struct {
 	Schema               string `json:"schema"`
 	Role                 string `json:"role"`
@@ -51,13 +51,17 @@ func c01Digest(raw []byte) string {
 }
 
 func readC01KeyConfig(path string) (c01File, C01StartupConfig, error) {
+	return readC01KeyConfigSchema(path, c01FileSchema)
+}
+
+func readC01KeyConfigSchema(path, schema string) (c01File, C01StartupConfig, error) {
 	var file c01File
 	raw, err := ReadPrivateFile(path, 8192)
 	if err != nil || json.Unmarshal(raw, &file) != nil {
 		return file, C01StartupConfig{}, ErrBackend
 	}
 	canonical, err := json.Marshal(file)
-	if err != nil || !bytes.Equal(canonical, raw) || file.Schema != c01FileSchema {
+	if err != nil || !bytes.Equal(canonical, raw) || file.Schema != schema {
 		return file, C01StartupConfig{}, ErrBackend
 	}
 	switch file.Role {
@@ -106,9 +110,14 @@ func CheckC01AdmittedKey(ctx context.Context, path string) (C01NonfundedKeyRecei
 	if err != nil {
 		return C01NonfundedKeyReceipt{}, err
 	}
+	receipt, _, err := checkC01AdmittedKey(ctx, file, config)
+	return receipt, err
+}
+
+func checkC01AdmittedKey(ctx context.Context, file c01File, config C01StartupConfig) (C01NonfundedKeyReceipt, *C01NonfundedAdmission, error) {
 	grant, err := AdmitC01NonfundedStartup(ctx, config)
 	if err != nil || !grant.Current(ctx) {
-		return C01NonfundedKeyReceipt{}, ErrBackend
+		return C01NonfundedKeyReceipt{}, nil, ErrBackend
 	}
 	message := []byte(c01KeyProofDomain + grant.RequestSHA256())
 	var signature []byte
@@ -118,13 +127,13 @@ func CheckC01AdmittedKey(ctx context.Context, path string) (C01NonfundedKeyRecei
 		signature, err = c01ProveReviewerKey(ctx, file.KeyFingerprintSHA256, message, grant.Current)
 	}
 	if err != nil || !grant.Current(ctx) {
-		return C01NonfundedKeyReceipt{}, ErrBackend
+		return C01NonfundedKeyReceipt{}, nil, ErrBackend
 	}
 	return C01NonfundedKeyReceipt{
 		Schema: "wolo.c01.zero-funded-key-possession-receipt.v1", Role: grant.Role(),
 		RequestSHA256: grant.RequestSHA256(), NonceSHA256: grant.NonceSHA256(),
 		KeyFingerprintSHA256: file.KeyFingerprintSHA256, ProofSHA256: c01Digest(signature),
-	}, nil
+	}, grant, nil
 }
 
 func c01ProveCustodyKey(ctx context.Context, cfg *c01CustodyKey, message []byte, current func(context.Context) bool) ([]byte, error) {

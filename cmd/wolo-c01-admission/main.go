@@ -1,4 +1,4 @@
-// wolo-c01-admission admits and proves one zero-funds key-possession check.
+// wolo-c01-admission proves zero-funds key possession and can serve private status.
 package main
 
 import (
@@ -18,8 +18,12 @@ func main() {
 	defer stop()
 	if len(os.Args) == 3 {
 		switch os.Args[1] {
-		case "prepare":
-			request, err := satchelservice.PrepareC01KeyPossessionRequest(ctx, os.Args[2])
+		case "prepare", "prepare-serve":
+			prepare := satchelservice.PrepareC01KeyPossessionRequest
+			if os.Args[1] == "prepare-serve" {
+				prepare = satchelservice.PrepareC01ServeRequest
+			}
+			request, err := prepare(ctx, os.Args[2])
 			if err == nil {
 				// The owner signer requires exactly these bytes, with no newline.
 				if _, err = os.Stdout.Write(request); err == nil {
@@ -32,6 +36,16 @@ func main() {
 			}
 			receipt, err := satchelservice.CheckC01AdmittedKey(ctx, os.Args[2])
 			if err == nil && json.NewEncoder(os.Stdout).Encode(receipt) == nil {
+				return
+			}
+		case "serve":
+			if unix.Setrlimit(unix.RLIMIT_CORE, &unix.Rlimit{}) != nil {
+				break
+			}
+			// The kernel must create the Unix socket as 0600. Do not
+			// loosen its mode after binding or mutate a preexisting path.
+			unix.Umask(0177)
+			if satchelservice.ServeC01AdmittedKey(ctx, os.Args[2]) == nil {
 				return
 			}
 		}
