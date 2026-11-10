@@ -1,6 +1,7 @@
 package satchelservice
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
 	"errors"
@@ -142,6 +143,23 @@ func TestC01StatusPrivateSocketAndRevocation(t *testing.T) {
 		}
 		_ = r.Body.Close()
 	}
+
+	conn, err := net.DialTimeout("unix", endpoint.socket, time.Second)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer conn.Close()
+	if err := conn.SetDeadline(time.Now().Add(time.Second)); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := io.WriteString(conn, "OPTIONS * HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n"); err != nil {
+		t.Fatal(err)
+	}
+	options, err := http.ReadResponse(bufio.NewReader(conn), &http.Request{Method: http.MethodOptions})
+	if err != nil || options.StatusCode != http.StatusNotFound {
+		t.Fatalf("general OPTIONS handler not refused: %v", err)
+	}
+	_ = options.Body.Close()
 
 	live.Store(false)
 	if response, err := client.Get("http://localhost/status"); err == nil {

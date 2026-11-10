@@ -138,7 +138,8 @@ func serveC01Status(ctx context.Context, endpoint c01StatusEndpoint, receipt C01
 		_, _ = w.Write(body)
 	})
 	server := &http.Server{
-		Handler: handler,
+		Handler:                      handler,
+		DisableGeneralOptionsHandler: true,
 		BaseContext: func(net.Listener) context.Context {
 			return ctx
 		},
