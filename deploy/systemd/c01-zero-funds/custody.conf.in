@@ -1,0 +1,11 @@
+# Apply only as the reviewed 50-c01-zero-funds.conf drop-in for the matching unit.
+# This inherits both original start conditions and the existing service identity.
+[Unit]
+ConditionPathExists=/var/lib/wolo-financial-role-state/v1/custody/c01-admission/canonical-serve-permit.json
+
+[Service]
+ExecStart=
+ExecStart=@C01_ADMISSION_BINARY@ serve /etc/wolo-financial-c01/custody.json
+PrivateNetwork=yes
+RuntimeDirectoryPreserve=no
+LimitCORE=0
