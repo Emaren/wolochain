@@ -1153,7 +1153,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-11-10",
       "sensitivity": "internal",
-      "sha256": "551a74b544a6a67319589707bab1e4859b05fd453d881e796e7502cd2aee4b0f",
+      "sha256": "4c62c51f69a7a831519f046cf9494ae4f17319abb876a5a1c5b1e7b57d99fe66",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -2254,8 +2254,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "central/c01-c05-docs-reconcile-20261109",
-    "commit": "7525351b1300bbb60fd6df6eee6cf0b0dca1780b"
+    "branch": "codex/c01-canonical-zero-funds-20261110",
+    "commit": "74dc7fd15540a6dde0c56bbd73ffbccc1330e675"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
