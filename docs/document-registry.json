@@ -1130,7 +1130,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-10-10",
       "sensitivity": "internal",
-      "sha256": "ad0a2f3ed70cb4adf3c1c72b99d237205718c0059e1871fd1bd4c0b045794bb7",
+      "sha256": "b2ece1ccf96b518e19f135e5e1421da962a9c8f0685679d099e755c942508244",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -2231,8 +2231,8 @@
   ],
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
-    "branch": "central/c05-offhost-fixed-height-commit-witness-20261109",
-    "commit": "742aaae976e20ababe61f5a594f619d839b72ec5"
+    "branch": "central/c01-c05-docs-reconcile-20261109",
+    "commit": "7525351b1300bbb60fd6df6eee6cf0b0dca1780b"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
