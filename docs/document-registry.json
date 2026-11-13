@@ -57,9 +57,9 @@
       "owner": "wolochain-ops",
       "path": "docs/BRANCH_AUTHORITY.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-10-29",
+      "reviewed_at": "2026-11-13",
       "sensitivity": "internal",
-      "sha256": "f59f74d5fae649716c43f81b06b22fd099ba9d47245fbb23c9f32d69f7f22993",
+      "sha256": "c38bccb2e672cbed79156dc298babddd1013ae1a62bbde342dcc5e27177ad33b",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1153,7 +1153,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-11-10",
       "sensitivity": "internal",
-      "sha256": "551a74b544a6a67319589707bab1e4859b05fd453d881e796e7502cd2aee4b0f",
+      "sha256": "57577dba3f07df7c61fa0dca0f084dbf883f8e718ff256ea492bc13aa41fcfa3",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1173,18 +1173,18 @@
       "id": "aoe2war.wolochain.epoch-v3-wire-v1-hold",
       "owner": "wolochain-ops",
       "path": "docs/epoch-v3-wire-v1-hold.md",
-      "review_interval_days": 7,
-      "reviewed_at": "2026-11-05",
+      "review_interval_days": 0,
+      "reviewed_at": "2026-11-13",
       "sensitivity": "internal",
-      "sha256": "875f09dff24cab7f74ee61eb1951e69bd3341b614687697d0a571ec5c5750f4a",
+      "sha256": "4955c2cddd2e08cea0477a6caf9b363e2551d2a120bd3b9b525f2365dcca225f",
       "source_of_truth": "git",
-      "status": "draft",
+      "status": "historical",
       "systems": [
         "wolochain",
         "aoe2war"
       ],
       "title": "Native epoch-v3 wire-v1 trust mismatch and held handoff",
-      "type": "reference"
+      "type": "historical"
     },
     {
       "audience": [
@@ -1496,9 +1496,9 @@
       "owner": "wolochain-ops",
       "path": "docs/new-epoch-escrow-v3-held.md",
       "review_interval_days": 7,
-      "reviewed_at": "2026-11-03",
+      "reviewed_at": "2026-11-13",
       "sensitivity": "internal",
-      "sha256": "301b915f8cf63c2644f37748b4398455b74314c08cfbf7805521752b2156e631",
+      "sha256": "fdc1c559144c8ba122befa0d335d191bb3664e90152c05dba0f65ceedc666558",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -2250,12 +2250,34 @@
       ],
       "title": "Financial controller source integrity and five-human enrollment \u2014 2026-10-24",
       "type": "runbook"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators"
+      ],
+      "authority": "non-authorizing-financial-source-qualification",
+      "id": "aoe2war.wolochain.c02-helper-enrollment",
+      "owner": "wolochain-ops",
+      "path": "scripts/C02_HELPER_ENROLLMENT.md",
+      "review_interval_days": 14,
+      "reviewed_at": "2026-11-13",
+      "sensitivity": "public",
+      "sha256": "02efad39e8badb16de2482f766d936922d98e9227f91eb5de153582984be0d29",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C02 private helper enrollment and exact inverse",
+      "type": "working"
     }
   ],
-  "generated_at": "2026-08-10T15:48:36.946892+00:00",
+  "generated_at": "2026-11-13T17:15:09.259881+00:00",
   "implementation_baseline": {
-    "branch": "central/c01-c05-docs-reconcile-20261109",
-    "commit": "7525351b1300bbb60fd6df6eee6cf0b0dca1780b"
+    "branch": "codex/c02-helper-enrollment",
+    "commit": "6ba98b49e32bdb9822205923a0ddefa94b6858e7"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

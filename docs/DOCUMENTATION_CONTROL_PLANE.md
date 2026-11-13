@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `central/c01-c05-docs-reconcile-20261109` at `7525351b1300bbb60fd6df6eee6cf0b0dca1780b`
+Implementation baseline: `codex/c02-helper-enrollment` at `6ba98b49e32bdb9822205923a0ddefa94b6858e7`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
@@ -27,22 +27,22 @@ This page is generated from the validated front matter in this repository. Cross
 
 ## Documentation health
 
-- Authoritative repository documents: **96**
+- Authoritative repository documents: **97**
 - Path moves in this migration: **0**
 - Every listed document has an explicit owner, lifecycle, authority, and review interval.
 
 ### Types
 
-- `historical`: 14
-- `reference`: 49
+- `historical`: 15
+- `reference`: 48
 - `runbook`: 31
-- `working`: 2
+- `working`: 3
 
 ### Lifecycle
 
 - `active`: 16
 - `draft`: 66
-- `historical`: 14
+- `historical`: 15
 
 ## Documents
 
@@ -96,7 +96,7 @@ This page is generated from the validated front matter in this repository. Cross
 | [C09 Exact Canary Requires Genuine Keychain C08 V3 Receipt](C09_C08_KEYCHAIN_V3_RECEIPT_BINDING.md) | `runbook` | `draft` | `nonfunding-C08-policy-preflight-only` |
 | [C09 Distinct Intel FileVault P-256 Transaction Key: Physical Enrollment HOLD](C09_INTEL_FILEVAULT_TRANSACTION_KEY_ENROLLMENT_HOLD.md) | `runbook` | `draft` | `owner-only-unfunded-filevault-keychain-enrollment-not-a-payment-permit` |
 | [C09 Ratified C08 Governance Bridge — Signed Canary Ceiling and No Spending](C09_RATIFIED_C08_POLICY_BRIDGE.md) | `runbook` | `draft` | `authenticated-C08-governance-preflight-only-no-spending-permit` |
-| [Native epoch-v3 wire-v1 trust mismatch and held handoff](epoch-v3-wire-v1-hold.md) | `reference` | `draft` | `source-only-verifier-mismatch-not-financial-authority` |
+| [Native epoch-v3 wire-v1 trust mismatch and held handoff](epoch-v3-wire-v1-hold.md) | `historical` | `historical` | `source-only-verifier-mismatch-not-financial-authority` |
 | [Exact Settlement Confirmation C4](exact-settlement-confirmation-c4.md) | `reference` | `draft` | `source-only-exact-settlement-confirmation` |
 | [Legacy Settlement Hardening and Protected Release Handoff](legacy-settlement-hardening.md) | `reference` | `draft` | `source-only-legacy-settlement-hardening` |
 | [WoloChain Mainnet Cutover Checklist](mainnet-cutover-checklist.md) | `historical` | `historical` | `mainnet-launch-cutover-evidence` |
@@ -143,6 +143,7 @@ This page is generated from the validated front matter in this repository. Cross
 | [Production P1 source integrity, writer evidence, five-person authority and bounded recovery proposal — 2026-10-24](../reviews/financial-maintenance/20261024-p1-writer-evidence-and-budget-proposal.md) | `runbook` | `draft` | `non-authorizing-financial-human-signature-review` |
 | [Financial maintenance phase integration operator runbook — 2026-10-24](../reviews/financial-maintenance/20261024-phase-integration-operator-runbook.md) | `runbook` | `draft` | `non-authorizing-financial-human-signature-review` |
 | [Financial controller source integrity and five-human enrollment — 2026-10-24](../reviews/financial-maintenance/20261024-source-integrity-enrollment-and-restore-qualification.md) | `runbook` | `draft` | `non-authorizing-financial-human-signature-review` |
+| [C02 private helper enrollment and exact inverse](../scripts/C02_HELPER_ENROLLMENT.md) | `working` | `draft` | `non-authorizing-financial-source-qualification` |
 
 ## Canonical commands
 

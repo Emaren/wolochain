@@ -8,12 +8,20 @@ systems: ["wolochain", "aoe2war"]
 audience: ["developers", "operators", "ai-agents"]
 source_of_truth: "git"
 authority: "source-review-only-nonactivating-escrow-candidate"
-reviewed_at: "2026-11-03"
+reviewed_at: "2026-11-13"
 review_interval_days: 7
 sensitivity: "internal"
 ---
 
 # Held native new-epoch escrow v3 decision boundary
+
+**November 13, 2026 bounded source re-review:** `policy.go` still has
+`ProductionEnabled=false`; `Journal.Execute` remains unavailable with
+`NEW_ESCROW_SIGNER_ABSENT`. Current `woloescrowd` additionally dispatches a
+protected portable verifier and a separate approved existing-return operation.
+Those interfaces do not activate this held new-epoch journal or provision its
+missing custody/nonce authority. The dated prior source and fixture receipts
+below remain historical; no runtime or financial admission was performed.
 
 **November 3, 2026 source review (nonactivating):** Verified that
 `internal/epochescrow/policy.go` still pins `ProductionEnabled = false` and
