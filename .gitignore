@@ -30,3 +30,5 @@ scripts/local-dev.env
 /wolochaind
 
 scripts/local-validator/
+
+__pycache__/

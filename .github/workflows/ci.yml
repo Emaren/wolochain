@@ -11,6 +11,16 @@ permissions:
   contents: read
 
 jobs:
+  financial_timer_source:
+    name: Financial timer source checks (no authority)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Synthetic crypto and isolated four-unit model
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: python3 -m unittest discover -s scripts -p test_financial_timer_quarantine.py -v
+
   foundation:
     name: Foundation checks
     runs-on: ubuntu-latest
