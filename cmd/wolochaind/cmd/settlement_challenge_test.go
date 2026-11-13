@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -406,6 +407,18 @@ func TestValidateSettlementChallengePlayedMatchPlan(t *testing.T) {
 	}
 	if response.Run == nil || !response.Run.OK {
 		t.Fatalf("expected nested payout run validation success, got %+v", response.Run)
+	}
+}
+
+func TestResolveEscrowAddressPreservesLaunchFailure(t *testing.T) {
+	t.Parallel()
+	cfg := settlementConfig{
+		EscrowKeyName:  "escrow",
+		ExecutablePath: filepath.Join(t.TempDir(), "missing-wolochaind"),
+	}
+	_, err := cfg.resolveEscrowAddress(t.Context())
+	if err == nil || !strings.Contains(err.Error(), cfg.ExecutablePath) {
+		t.Fatalf("expected executable launch cause, got %v", err)
 	}
 }
 

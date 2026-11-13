@@ -61,7 +61,7 @@ jobs:
       - name: Retain non-authorizing candidate
         uses: actions/upload-artifact@v4
         with:
-          name: quarantined-wolochaind-${{ github.sha }}
+          name: quarantined-wolochaind-${{ github.sha }}-${{ github.run_attempt }}
           path: |
             build/wolochaind
             build/financial-build-candidate.json
