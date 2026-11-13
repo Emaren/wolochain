@@ -1,0 +1,493 @@
+{
+  "historical_blobs": {
+    "20261017_012000_war_satchel_funded_ledger_foundation/migration.sql": "b2521d9d00f1c70e91255e9077e33b4c5dff1d9b",
+    "20261019_010000_war_satchel_wager_authority/migration.sql": "81bdb156f10469d42ad19644aa9ec5975e827f48",
+    "20261108_212700_c02_native_forward_only_returns/migration.sql": "6ee938f20b7332c17114690ff28900b1dc4fe3eb"
+  },
+  "owners": {
+    "war_satchel_funded_reservations": "reserve_owner",
+    "war_satchel_wager_authorizations": "auth_owner",
+    "war_satchel_wager_broadcasts": "broadcast_owner"
+  },
+  "schema": "wolo.c02.helper-historical-oracle.v1",
+  "shape": {
+    "columns": [
+      [
+        "war_satchel_funded_reservations",
+        1,
+        "id",
+        "character varying(128)",
+        true,
+        "",
+        "",
+        null
+      ],
+      [
+        "war_satchel_funded_reservations",
+        2,
+        "owner_user_id",
+        "integer",
+        true,
+        "",
+        "",
+        null
+      ],
+      [
+        "war_satchel_funded_reservations",
+        3,
+        "execution_id",
+        "integer",
+        true,
+        "",
+        "",
+        null
+      ],
+      [
+        "war_satchel_funded_reservations",
+        4,
+        "amount_uwolo",
+        "bigint",
+        true,
+        "",
+        "",
+        null
+      ],
+      [
+        "war_satchel_funded_reservations",
+        5,
+        "status",
+        "character varying(24)",
+        true,
+        "",
+        "",
+        "'reserved'::character varying"
+      ],
+      [
+        "war_satchel_funded_reservations",
+        6,
+        "ticket_request_id",
+        "character varying(128)",
+        true,
+        "",
+        "",
+        null
+      ],
+      [
+        "war_satchel_funded_reservations",
+        7,
+        "ticket_id",
+        "integer",
+        false,
+        "",
+        "",
+        null
+      ],
+      [
+        "war_satchel_funded_reservations",
+        8,
+        "tx_hash",
+        "character varying(64)",
+        false,
+        "",
+        "",
+        null
+      ],
+      [
+        "war_satchel_funded_reservations",
+        9,
+        "created_at",
+        "timestamp(6) without time zone",
+        true,
+        "",
+        "",
+        "CURRENT_TIMESTAMP"
+      ],
+      [
+        "war_satchel_funded_reservations",
+        10,
+        "updated_at",
+        "timestamp(6) without time zone",
+        true,
+        "",
+        "",
+        "CURRENT_TIMESTAMP"
+      ],
+      [
+        "war_satchel_wager_authorizations",
+        1,
+        "operation_id",
+        "character varying(128)",
+        true,
+        "",
+        "",
+        null
+      ],
+      [
+        "war_satchel_wager_authorizations",
+        2,
+        "reservation_id",
+        "character varying(128)",
+        true,
+        "",
+        "",
+        null
+      ],
+      [
+        "war_satchel_wager_authorizations",
+        3,
+        "owner_user_id",
+        "integer",
+        true,
+        "",
+        "",
+        null
+      ],
+      [
+        "war_satchel_wager_authorizations",
+        4,
+        "snapshot_json",
+        "jsonb",
+        true,
+        "",
+        "",
+        null
+      ],
+      [
+        "war_satchel_wager_authorizations",
+        5,
+        "reservation_digest",
+        "character varying(64)",
+        true,
+        "",
+        "",
+        null
+      ],
+      [
+        "war_satchel_wager_authorizations",
+        6,
+        "ledger_revision",
+        "character varying(64)",
+        true,
+        "",
+        "",
+        null
+      ],
+      [
+        "war_satchel_wager_authorizations",
+        7,
+        "consent_digest",
+        "character varying(64)",
+        true,
+        "",
+        "",
+        null
+      ],
+      [
+        "war_satchel_wager_authorizations",
+        8,
+        "created_at",
+        "timestamp(6) without time zone",
+        true,
+        "",
+        "",
+        "CURRENT_TIMESTAMP"
+      ],
+      [
+        "war_satchel_wager_broadcasts",
+        1,
+        "operation_id",
+        "character varying(128)",
+        true,
+        "",
+        "",
+        null
+      ],
+      [
+        "war_satchel_wager_broadcasts",
+        2,
+        "tx_hash",
+        "character varying(64)",
+        true,
+        "",
+        "",
+        null
+      ],
+      [
+        "war_satchel_wager_broadcasts",
+        3,
+        "created_at",
+        "timestamp(6) without time zone",
+        true,
+        "",
+        "",
+        "CURRENT_TIMESTAMP"
+      ]
+    ],
+    "constraints": [
+      [
+        "war_satchel_funded_reservations",
+        "ck_satchel_funded_reservation_amount",
+        "CHECK ((amount_uwolo > 0))",
+        true,
+        false,
+        false
+      ],
+      [
+        "war_satchel_funded_reservations",
+        "ck_satchel_funded_reservation_status",
+        "CHECK (((status)::text = ANY ((ARRAY['reserved'::character varying, 'unknown_hold'::character varying, 'committed'::character varying, 'released'::character varying])::text[])))",
+        true,
+        false,
+        false
+      ],
+      [
+        "war_satchel_funded_reservations",
+        "fk_satchel_funded_reservation_execution",
+        "FOREIGN KEY (execution_id) REFERENCES public.bet_auto_executions(id) ON DELETE RESTRICT",
+        true,
+        false,
+        false
+      ],
+      [
+        "war_satchel_funded_reservations",
+        "fk_satchel_funded_reservation_owner",
+        "FOREIGN KEY (owner_user_id) REFERENCES public.users(id) ON DELETE RESTRICT",
+        true,
+        false,
+        false
+      ],
+      [
+        "war_satchel_funded_reservations",
+        "uq_satchel_funded_reservation_execution",
+        "UNIQUE (execution_id)",
+        true,
+        false,
+        false
+      ],
+      [
+        "war_satchel_funded_reservations",
+        "uq_satchel_funded_reservation_ticket",
+        "UNIQUE (ticket_id)",
+        true,
+        false,
+        false
+      ],
+      [
+        "war_satchel_funded_reservations",
+        "uq_satchel_funded_reservation_ticket_request",
+        "UNIQUE (ticket_request_id)",
+        true,
+        false,
+        false
+      ],
+      [
+        "war_satchel_funded_reservations",
+        "war_satchel_funded_reservations_pkey",
+        "PRIMARY KEY (id)",
+        true,
+        false,
+        false
+      ],
+      [
+        "war_satchel_wager_authorizations",
+        "war_satchel_wager_authorizations_consent_digest_check",
+        "CHECK ((((consent_digest)::text ~ '^[a-f0-9]{64}$'::text) AND ((consent_digest)::text <> repeat('0'::text, 64))))",
+        true,
+        false,
+        false
+      ],
+      [
+        "war_satchel_wager_authorizations",
+        "war_satchel_wager_authorizations_ledger_revision_check",
+        "CHECK ((((ledger_revision)::text ~ '^[a-f0-9]{64}$'::text) AND ((ledger_revision)::text <> repeat('0'::text, 64))))",
+        true,
+        false,
+        false
+      ],
+      [
+        "war_satchel_wager_authorizations",
+        "war_satchel_wager_authorizations_owner_user_id_fkey",
+        "FOREIGN KEY (owner_user_id) REFERENCES public.users(id) ON DELETE RESTRICT",
+        true,
+        false,
+        false
+      ],
+      [
+        "war_satchel_wager_authorizations",
+        "war_satchel_wager_authorizations_pkey",
+        "PRIMARY KEY (operation_id)",
+        true,
+        false,
+        false
+      ],
+      [
+        "war_satchel_wager_authorizations",
+        "war_satchel_wager_authorizations_reservation_digest_check",
+        "CHECK ((((reservation_digest)::text ~ '^[a-f0-9]{64}$'::text) AND ((reservation_digest)::text <> repeat('0'::text, 64))))",
+        true,
+        false,
+        false
+      ],
+      [
+        "war_satchel_wager_authorizations",
+        "war_satchel_wager_authorizations_reservation_id_fkey",
+        "FOREIGN KEY (reservation_id) REFERENCES public.war_satchel_funded_reservations(id) ON DELETE RESTRICT",
+        true,
+        false,
+        false
+      ],
+      [
+        "war_satchel_wager_authorizations",
+        "war_satchel_wager_authorizations_reservation_id_key",
+        "UNIQUE (reservation_id)",
+        true,
+        false,
+        false
+      ],
+      [
+        "war_satchel_wager_authorizations",
+        "war_satchel_wager_authorizations_snapshot_json_check",
+        "CHECK ((jsonb_typeof(snapshot_json) = 'object'::text))",
+        true,
+        false,
+        false
+      ],
+      [
+        "war_satchel_wager_broadcasts",
+        "war_satchel_wager_broadcasts_operation_id_fkey",
+        "FOREIGN KEY (operation_id) REFERENCES public.war_satchel_wager_authorizations(operation_id) ON DELETE RESTRICT",
+        true,
+        false,
+        false
+      ],
+      [
+        "war_satchel_wager_broadcasts",
+        "war_satchel_wager_broadcasts_pkey",
+        "PRIMARY KEY (operation_id)",
+        true,
+        false,
+        false
+      ],
+      [
+        "war_satchel_wager_broadcasts",
+        "war_satchel_wager_broadcasts_tx_hash_check",
+        "CHECK ((((tx_hash)::text ~ '^[A-F0-9]{64}$'::text) AND ((tx_hash)::text <> repeat('0'::text, 64))))",
+        true,
+        false,
+        false
+      ],
+      [
+        "war_satchel_wager_broadcasts",
+        "war_satchel_wager_broadcasts_tx_hash_key",
+        "UNIQUE (tx_hash)",
+        true,
+        false,
+        false
+      ]
+    ],
+    "functions": [
+      "CREATE OR REPLACE FUNCTION public.war_satchel_funded_audit_immutable()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\nBEGIN\n  RAISE EXCEPTION 'funded War Satchel financial receipts and journals are immutable';\nEND;\n$function$\n",
+      "CREATE OR REPLACE FUNCTION public.war_satchel_funded_reservation_transition()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\nBEGIN\n  IF (NEW.id, NEW.owner_user_id, NEW.execution_id, NEW.amount_uwolo,\n      NEW.ticket_request_id, NEW.created_at)\n     IS DISTINCT FROM\n     (OLD.id, OLD.owner_user_id, OLD.execution_id, OLD.amount_uwolo,\n      OLD.ticket_request_id, OLD.created_at) THEN\n    RAISE EXCEPTION 'funded War Satchel reservation economic identity immutable';\n  END IF;\n  IF (OLD.status='reserved' AND NEW.status NOT IN ('reserved','unknown_hold','released'))\n     OR (OLD.status='unknown_hold' AND NEW.status NOT IN ('unknown_hold','committed'))\n     OR (OLD.status IN ('committed','released') AND NEW.status <> OLD.status) THEN\n    RAISE EXCEPTION 'illegal funded War Satchel reservation state transition';\n  END IF;\n  IF NEW.status <> 'committed' AND (NEW.ticket_id IS NOT NULL OR NEW.tx_hash IS NOT NULL) THEN\n    RAISE EXCEPTION 'uncommitted funded reservation cannot claim a settled ticket';\n  END IF;\n  IF OLD.status='committed' AND\n     (NEW.ticket_id, NEW.tx_hash) IS DISTINCT FROM (OLD.ticket_id, OLD.tx_hash) THEN\n    RAISE EXCEPTION 'settled funded ticket identity immutable';\n  END IF;\n  RETURN NEW;\nEND;\n$function$\n",
+      "CREATE OR REPLACE FUNCTION public.war_satchel_native_source_admission()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO 'pg_catalog', 'public'\nAS $function$\nDECLARE owner_id integer; linked_hash varchar(64); linked_ticket integer;\n  linked_status varchar(24);\nBEGIN\n SELECT a.owner_user_id, b.tx_hash, r.ticket_id, r.status\n INTO owner_id, linked_hash, linked_ticket, linked_status\n FROM public.war_satchel_wager_authorizations a\n JOIN public.war_satchel_wager_broadcasts b ON b.operation_id=a.operation_id\n JOIN public.war_satchel_funded_reservations r ON r.id=a.reservation_id\n WHERE a.operation_id=NEW.wager_operation_id FOR SHARE OF a,b,r;\n IF owner_id IS DISTINCT FROM NEW.owner_user_id\n    OR linked_hash IS DISTINCT FROM NEW.funding_tx_hash\n    OR linked_ticket IS DISTINCT FROM NEW.ticket_id\n    OR linked_status IS DISTINCT FROM 'committed'\n    OR NOT EXISTS (\n      SELECT 1 FROM public.war_satchel_funded_reservations\n      WHERE ticket_request_id=NEW.wager_operation_id\n        AND amount_uwolo=NEW.funded_amount_uwolo\n        AND tx_hash=NEW.funding_tx_hash\n    ) THEN\n   RAISE EXCEPTION 'C02_AUTHENTICATED_FRESH_WAGER_FUNDING_REQUIRED';\n END IF;\n RETURN NEW;\nEND;\n$function$\n",
+      "CREATE OR REPLACE FUNCTION public.war_satchel_wager_authority_admission()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO 'pg_catalog', 'public'\nAS $function$\nDECLARE r public.war_satchel_funded_reservations; a public.war_satchel_wager_authorizations;\nBEGIN\n IF TG_TABLE_NAME='war_satchel_wager_authorizations' THEN\n  SELECT * INTO STRICT r FROM public.war_satchel_funded_reservations WHERE id=NEW.reservation_id FOR UPDATE;\n  IF r.status<>'reserved' OR r.owner_user_id<>NEW.owner_user_id OR r.ticket_request_id<>NEW.operation_id\n    OR (NEW.snapshot_json->>'ownerUserId')::integer IS DISTINCT FROM r.owner_user_id\n    OR (NEW.snapshot_json->>'executionId')::integer IS DISTINCT FROM r.execution_id\n    OR NEW.snapshot_json->>'reservationId' IS DISTINCT FROM r.id\n    OR NEW.snapshot_json->>'operationId' IS DISTINCT FROM r.ticket_request_id\n    OR NEW.snapshot_json->>'amountUwolo' IS DISTINCT FROM r.amount_uwolo::text THEN\n   RAISE EXCEPTION 'wager authorization is not the durable owner reserve';\n  END IF;\n ELSE\n  SELECT * INTO STRICT a FROM public.war_satchel_wager_authorizations WHERE operation_id=NEW.operation_id;\n  SELECT * INTO STRICT r FROM public.war_satchel_funded_reservations WHERE id=a.reservation_id FOR UPDATE;\n  IF TG_TABLE_NAME='war_satchel_wager_approvals' AND r.status<>'reserved' THEN\n   RAISE EXCEPTION 'review cannot authorize an attempted or released wager';\n  END IF;\n  IF TG_TABLE_NAME='war_satchel_wager_broadcasts' AND\n    (r.status<>'unknown_hold' OR NOT EXISTS(SELECT 1 FROM public.war_satchel_wager_approvals WHERE operation_id=NEW.operation_id)) THEN\n   RAISE EXCEPTION 'broadcast candidate requires durable attempt fence and review';\n  END IF;\n END IF;\n RETURN NEW;\nEND $function$\n"
+    ],
+    "indexes": [
+      [
+        "war_satchel_funded_reservations",
+        "CREATE INDEX ix_satchel_funded_reservation_owner ON public.war_satchel_funded_reservations USING btree (owner_user_id, status, created_at)",
+        true,
+        true
+      ],
+      [
+        "war_satchel_funded_reservations",
+        "CREATE UNIQUE INDEX uq_satchel_funded_reservation_execution ON public.war_satchel_funded_reservations USING btree (execution_id)",
+        true,
+        true
+      ],
+      [
+        "war_satchel_funded_reservations",
+        "CREATE UNIQUE INDEX uq_satchel_funded_reservation_ticket ON public.war_satchel_funded_reservations USING btree (ticket_id)",
+        true,
+        true
+      ],
+      [
+        "war_satchel_funded_reservations",
+        "CREATE UNIQUE INDEX uq_satchel_funded_reservation_ticket_request ON public.war_satchel_funded_reservations USING btree (ticket_request_id)",
+        true,
+        true
+      ],
+      [
+        "war_satchel_funded_reservations",
+        "CREATE UNIQUE INDEX war_satchel_funded_reservations_pkey ON public.war_satchel_funded_reservations USING btree (id)",
+        true,
+        true
+      ],
+      [
+        "war_satchel_wager_authorizations",
+        "CREATE UNIQUE INDEX war_satchel_wager_authorizations_pkey ON public.war_satchel_wager_authorizations USING btree (operation_id)",
+        true,
+        true
+      ],
+      [
+        "war_satchel_wager_authorizations",
+        "CREATE UNIQUE INDEX war_satchel_wager_authorizations_reservation_id_key ON public.war_satchel_wager_authorizations USING btree (reservation_id)",
+        true,
+        true
+      ],
+      [
+        "war_satchel_wager_broadcasts",
+        "CREATE UNIQUE INDEX war_satchel_wager_broadcasts_pkey ON public.war_satchel_wager_broadcasts USING btree (operation_id)",
+        true,
+        true
+      ],
+      [
+        "war_satchel_wager_broadcasts",
+        "CREATE UNIQUE INDEX war_satchel_wager_broadcasts_tx_hash_key ON public.war_satchel_wager_broadcasts USING btree (tx_hash)",
+        true,
+        true
+      ]
+    ],
+    "triggers": [
+      [
+        "c02_original_funding_bound",
+        "CREATE TRIGGER c02_original_funding_bound BEFORE INSERT ON public.war_satchel_native_return_operations FOR EACH ROW EXECUTE FUNCTION public.war_satchel_native_source_admission()",
+        "O"
+      ],
+      [
+        "satchel_funded_reservation_guard",
+        "CREATE TRIGGER satchel_funded_reservation_guard BEFORE UPDATE ON public.war_satchel_funded_reservations FOR EACH ROW EXECUTE FUNCTION public.war_satchel_funded_reservation_transition()",
+        "O"
+      ],
+      [
+        "satchel_wager_authorization_admission",
+        "CREATE TRIGGER satchel_wager_authorization_admission BEFORE INSERT ON public.war_satchel_wager_authorizations FOR EACH ROW EXECUTE FUNCTION public.war_satchel_wager_authority_admission()",
+        "O"
+      ],
+      [
+        "satchel_wager_authorization_immutable",
+        "CREATE TRIGGER satchel_wager_authorization_immutable BEFORE DELETE OR UPDATE ON public.war_satchel_wager_authorizations FOR EACH ROW EXECUTE FUNCTION public.war_satchel_funded_audit_immutable()",
+        "O"
+      ],
+      [
+        "satchel_wager_authorization_no_truncate",
+        "CREATE TRIGGER satchel_wager_authorization_no_truncate BEFORE TRUNCATE ON public.war_satchel_wager_authorizations FOR EACH STATEMENT EXECUTE FUNCTION public.war_satchel_funded_audit_immutable()",
+        "O"
+      ],
+      [
+        "satchel_wager_broadcast_admission",
+        "CREATE TRIGGER satchel_wager_broadcast_admission BEFORE INSERT ON public.war_satchel_wager_broadcasts FOR EACH ROW EXECUTE FUNCTION public.war_satchel_wager_authority_admission()",
+        "O"
+      ],
+      [
+        "satchel_wager_broadcast_immutable",
+        "CREATE TRIGGER satchel_wager_broadcast_immutable BEFORE DELETE OR UPDATE ON public.war_satchel_wager_broadcasts FOR EACH ROW EXECUTE FUNCTION public.war_satchel_funded_audit_immutable()",
+        "O"
+      ],
+      [
+        "satchel_wager_broadcast_no_truncate",
+        "CREATE TRIGGER satchel_wager_broadcast_no_truncate BEFORE TRUNCATE ON public.war_satchel_wager_broadcasts FOR EACH STATEMENT EXECUTE FUNCTION public.war_satchel_funded_audit_immutable()",
+        "O"
+      ]
+    ]
+  }
+}

@@ -1,0 +1,53 @@
+name: C02 helper enrollment source qualification
+on:
+  pull_request:
+    paths:
+      - 'scripts/c02_helper*'
+      - 'scripts/c02_helper_inputs/**'
+      - 'scripts/test_c02_helper_enrollment.py'
+      - 'scripts/C02_HELPER_ENROLLMENT.md'
+      - '.github/workflows/c02-helper-enrollment.yml'
+  push:
+    branches: ['codex/c02-helper-enrollment']
+permissions:
+  contents: read
+jobs:
+  isolated-enrollment-inverse:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Require PostgreSQL16 fixture binaries
+        run: |
+          if [ ! -x /usr/lib/postgresql/16/bin/initdb ]; then
+            sudo apt-get update
+            sudo apt-get install -y postgresql-16
+          fi
+      - name: Fetch immutable original migration inputs
+        env:
+          APP_SOURCE: a070e0e70bad0f000f2aa24929265acb6f82e5b2
+        run: |
+          for migration in 20261017_012000_war_satchel_funded_ledger_foundation 20261019_010000_war_satchel_wager_authority 20261108_212700_c02_native_forward_only_returns; do
+            mkdir -p "$RUNNER_TEMP/c02-inputs/$migration"
+            curl --fail --silent --show-error --location --proto '=https' "https://raw.githubusercontent.com/Emaren/app-prodn/$APP_SOURCE/prisma/migrations/$migration/migration.sql" --output "$RUNNER_TEMP/c02-inputs/$migration/migration.sql"
+          done
+      - name: Qualify new enrollment and inverse only
+        run: |
+          python3 scripts/test_c02_helper_enrollment.py \
+            --migrations "$RUNNER_TEMP/c02-inputs" \
+            --matcher scripts/c02_helper_inputs/matcher.sql \
+            --v2-install scripts/c02_helper_inputs/wrapper-install.sql \
+            --v2-inverse scripts/c02_helper_inputs/wrapper-inverse.sql \
+            --pg-bin /usr/lib/postgresql/16/bin \
+            --out "$RUNNER_TEMP/c02-source-only-receipts"
+      - name: Retain nonauthorizing receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: C02-helper-SOURCE-ONLY-receipt
+          path: ${{ runner.temp }}/c02-source-only-receipts/receipt-*.json
+          if-no-files-found: warn
