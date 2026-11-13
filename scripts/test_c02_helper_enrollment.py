@@ -19,7 +19,9 @@ def main():
  base=Path(tempfile.mkdtemp(prefix='c02-enroll-',dir=a.tmp_root));cluster=base/'data';port='57741';checks={};failure=None;started=False;sources={};oracle=None
  def cmd(argv,**kw):return subprocess.run([str(x) for x in argv],env=ENV,capture_output=True,text=True,timeout=20,**kw)
  def sql(text,db='postgres',role='postgres',error=None):
-  r=cmd([a.pg_bin/'psql','-XqAt','-w','-h',base,'-p',port,'-U',role,'-d',db,'-v','ON_ERROR_STOP=1','-c',text])
+  # Captured metadata can exceed Linux's per-argument limit. Generated
+  # install/inverse and failure brackets carry their own BEGIN/COMMIT.
+  r=cmd([a.pg_bin/'psql','-XqAt','-w','-h',base,'-p',port,'-U',role,'-d',db,'-v','ON_ERROR_STOP=1','-f','-'],input=text)
   if error is None:assert r.returncode==0,r.stderr[-2500:]
   else:assert r.returncode!=0 and error in r.stderr,(error,r.returncode,r.stderr[-2500:])
   return r.stdout.strip()
