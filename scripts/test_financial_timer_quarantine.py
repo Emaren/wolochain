@@ -10,7 +10,7 @@ spec=importlib.util.spec_from_file_location('timer_controller',P);q=importlib.ut
 
 class Model(q.Host):
  def __init__(self,root):
-  super().__init__(root,os.getuid());self.calls=[];self.fail_once=None;self.hooks={};self.receipt_fail=False
+  super().__init__(root,os.getuid());self.calls=[];self.fail_once=None;self.hooks={};self.receipt_fail=False;self.failed_timer_reload=False
   self.states={u:('active' if u in q.TIMERS else 'inactive') for u in q.UNITS}
  def systemctl(self,*args,allow_failure=False):
   self.calls.append(args)
@@ -20,7 +20,11 @@ class Model(q.Host):
    assert set(args[1:])<=set(q.UNITS)
    for u in args[1:]:
     if args[0]=='start' and self.path(q.CONTROL+'/'+u).is_symlink():return SimpleNamespace(returncode=1,stdout='',stderr='Unit is masked')
-    self.states[u]='inactive' if args[0]=='stop' else 'active'
+    if not(args[0]=='stop' and self.failed_timer_reload and u in q.TIMERS and self.states[u]=='failed'):
+     self.states[u]='inactive' if args[0]=='stop' else 'active'
+  elif args[0]=='daemon-reload' and self.failed_timer_reload:
+   for u in q.TIMERS:
+    if self.path(q.CONTROL+'/'+u).is_symlink():self.states[u]='failed'
   else:assert args[0] in ['daemon-reload','show']
   return SimpleNamespace(returncode=0,stdout='',stderr='')
  def show(self,u,*props):
@@ -28,6 +32,8 @@ class Model(q.Host):
   mask=self.path(q.CONTROL+'/'+u).is_symlink()
   drop='/etc/systemd/system/'+u+'.d/secret.conf'
   d={'FragmentPath':'/etc/systemd/system/'+u,'DropInPaths':drop if self.path(drop).exists() else '','UnitFileState':'masked' if mask else ('enabled' if self.links(u) else ('disabled' if u in q.TIMERS else 'static')),'ActiveState':self.states[u],'SubState':'waiting' if self.states[u]=='active' else 'dead','MainPID':'0','ControlPID':'0','RefuseManualStop':'no','LoadState':'masked' if mask else 'loaded','NextElapseUSecRealtime':'0','NextElapseUSecMonotonic':'0','SuccessAction':'none','FailureAction':'none'}
+  if self.failed_timer_reload and u in q.TIMERS and self.states[u]=='failed':
+   d.update(Result='resources',NextElapseUSecRealtime='',NextElapseUSecMonotonic='infinity')
   d.update(self.hooks);return {p:d.get(p,'') for p in props}
  def protected(self):return {'aoe2hdbets-web.service':{'ActiveState':'active','MainPID':'101','StopWhenUnneeded':'no'},'wolochaind-mainnet.service':{'ActiveState':'active','MainPID':'103'},'listeners':{'3030':['101'],'3032':['102']}}
  def write(self,s,b):
@@ -69,6 +75,27 @@ class TimerTests(unittest.TestCase):
   self.h.mask(q.UNITS[0]);item=self.m['units'][q.TIMERS[0]]['enabled_links'][0];self.h.unlink_link(item)
   fields=q.request('RECOVER',self.m,self.raw,self.src);q.quarantine(self.h,self.m,self.journal,fields,{'mutation_started':False})
   q.masked(self.h);q.validate_manifest(self.m,self.h)
+ def test_real_masked_failed_timer_state_is_recorded_without_reset_or_resume(self):
+  self.h.failed_timer_reload=True
+  for u in q.UNITS:self.h.mask(u)
+  for info in self.m['units'].values():
+   for item in info['enabled_links']:self.h.unlink_link(item)
+  fields=q.request('RECOVER',self.m,self.raw,self.src)
+  q.quarantine(self.h,self.m,self.journal,fields,{'mutation_started':False})
+  receipt=q.decode(self.h.read(self.journal+'/QUARANTINED.json'))
+  for u in q.TIMERS:
+   self.assertEqual(receipt['masked_runtime_states'][u]['ActiveState'],'failed')
+   self.assertEqual(receipt['masked_runtime_states'][u]['Result'],'resources')
+   self.assertEqual(receipt['masked_runtime_states'][u]['NextElapseUSecMonotonic'],'infinity')
+  self.assertEqual(sum(c[0]=='start' for c in self.h.calls),4)
+  self.assertFalse(any(c[0]=='reset-failed' for c in self.h.calls))
+ def test_masked_timer_future_trigger_running_process_or_unknown_failure_denied(self):
+  self.pause()
+  for hooks in [{'NextElapseUSecMonotonic':'3w 6d'}, {'NextElapseUSecRealtime':'Sat 2026-11-14 00:10:00 UTC'}, {'ActiveState':'active'}, {'MainPID':'123'}, {'ControlPID':'123'}, {'ActiveState':'failed','Result':'unknown'}]:
+   self.h.hooks=hooks
+   with self.assertRaises(q.Hold):q.masked(self.h)
+  self.h.hooks={'ActiveState':'failed','Result':'resources'}
+  with self.assertRaises(q.Hold):q.masked(self.h) # failed service is not accepted
  def test_expired_first_mutation_does_not_trigger_recovery_mutation(self):
   self.fields[9]=q.timestamp(q.utc()-datetime.timedelta(seconds=1));phase={'mutation_started':False}
   with self.assertRaisesRegex(q.Hold,'EXPIRED'):

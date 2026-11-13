@@ -151,12 +151,19 @@ def verify_packet(packet,pub,m,manifest_raw,source_sha,now,expected_owner=OWNER_
  return a
 
 def masked(h):
+ runtime={}
  for u in UNITS:
   p=h.path(CONTROL+'/'+u);need(p.is_symlink() and os.readlink(p)=='/dev/null','MASK_FILE_MISSING')
-  s=h.show(u,'LoadState','ActiveState','MainPID','ControlPID','NextElapseUSecRealtime','NextElapseUSecMonotonic')
-  need(s['LoadState']=='masked' and s['ActiveState']=='inactive' and s.get('MainPID','0')=='0' and s.get('ControlPID','0')=='0','UNIT_NOT_MASKED_IDLE')
-  need(s.get('NextElapseUSecRealtime','') in ['', '0'] and s.get('NextElapseUSecMonotonic','') in ['', '0'],'TIMER_STILL_SCHEDULED')
+  s=h.show(u,'LoadState','ActiveState','Result','MainPID','ControlPID','NextElapseUSecRealtime','NextElapseUSecMonotonic')
+  # Reloading masks while a timer is active can leave it failed/resources:
+  # its target disappeared. This is nonrunning, not an inactive-state claim.
+  idle=s['ActiveState']=='inactive' or (u in TIMERS and s['ActiveState']=='failed' and s.get('Result')=='resources')
+  need(s['LoadState']=='masked' and idle and s.get('MainPID','0')=='0' and s.get('ControlPID','0')=='0','UNIT_NOT_MASKED_IDLE')
+  # systemd renders USEC_INFINITY as "infinity" for a disarmed timer.
+  need(s.get('NextElapseUSecRealtime','') in ['', '0', 'infinity'] and s.get('NextElapseUSecMonotonic','') in ['', '0', 'infinity'],'TIMER_STILL_SCHEDULED')
   need(not h.links(u),'ENABLE_LINK_REMAINS')
+  runtime[u]=s
+ return runtime
 
 def safe_quarantine(h,m):
  # Recovery only increases denial. It never unmasks, enables, or starts a unit.
@@ -198,9 +205,9 @@ def quarantine(h,m,journal,request_fields,phase):
  for u in UNITS:
   r=h.systemctl('start',u,allow_failure=True)
   need(r.returncode!=0 and 'masked' in (r.stderr+r.stdout).lower(),'MANUAL_START_NOT_DENIED')
- h.systemctl('daemon-reload');masked(h)
+ h.systemctl('daemon-reload');runtime=masked(h)
  validate_manifest(m,h);need(h.protected()==m['protected'],'PROTECTED_SERVICE_OR_LISTENER_CHANGED')
- h.write(journal+'/QUARANTINED.json',canonical({'utc':timestamp(utc()),'state':'QUARANTINED','manual_start_denied':list(UNITS),'original_files_unchanged':True,'financial_writer_fence':False,'funded_operations':'DENIED'}))
+ h.write(journal+'/QUARANTINED.json',canonical({'utc':timestamp(utc()),'state':'QUARANTINED','manual_start_denied':list(UNITS),'masked_runtime_states':runtime,'original_files_unchanged':True,'financial_writer_fence':False,'funded_operations':'DENIED'}))
 
 def restore(h,m,journal,admission_raw,request_fields,phase):
  # Independent root operator/Central admission is a separate input, NOT emitted
