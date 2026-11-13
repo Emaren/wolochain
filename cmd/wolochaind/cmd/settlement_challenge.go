@@ -1843,6 +1843,9 @@ func (cfg settlementConfig) resolveEscrowAddress(ctx context.Context) (string, e
 		if detail == "" {
 			detail = strings.TrimSpace(string(output))
 		}
+		if detail == "" {
+			detail = err.Error()
+		}
 		return "", fmt.Errorf("could not resolve escrow signer %q: %s", cfg.EscrowKeyName, detail)
 	}
 

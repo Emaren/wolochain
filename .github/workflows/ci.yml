@@ -33,7 +33,9 @@ jobs:
           version: 1.54.0
 
       - name: Build wolochaind
-        run: go build ./cmd/wolochaind
+        run: |
+          mkdir -p build
+          go build -o build/wolochaind ./cmd/wolochaind
 
       - name: Settlement tests
         run: go test ./cmd/wolochaind/cmd -count=1
@@ -49,3 +51,19 @@ jobs:
 
       - name: Generated proto drift
         run: ./scripts/check-generated-protos.sh
+
+      - name: Financial candidate receipt checks
+        run: python3 -m unittest discover -s scripts -p test_financial_build_receipt.py
+
+      - name: Record quarantined build identity
+        run: python3 scripts/financial-build-receipt.py --source-sha "$GITHUB_SHA"
+
+      - name: Retain non-authorizing candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: quarantined-wolochaind-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            build/wolochaind
+            build/financial-build-candidate.json
+          if-no-files-found: error
+          retention-days: 7
