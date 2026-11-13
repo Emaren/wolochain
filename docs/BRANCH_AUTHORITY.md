@@ -8,16 +8,32 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "git-branch-authority-contract"
-reviewed_at: "2026-10-29"
+reviewed_at: "2026-11-13"
 review_interval_days: 14
 sensitivity: "internal"
 ---
 
 # WoloChain Branch Authority
 
-Reviewed: 2026-10-29 (GitHub source only)
+## November 13, 2026 — bounded current financial source review
 
-## October 29, 2026 — current GitHub source-authority review
+Verified GitHub `main` at `9eb8eeb8be0baf4ffffc5db1555b2448e6cf6840`
+and the held FINANCIAL lineage `fix/c01-producer-review-20261104` at
+`f80872a05f511c79c7d425ad20c46d77bb149767`. C01 draft
+[#244](https://github.com/Emaren/wolochain/pull/244) remains
+`e8364be7f3bb4652c6cbd03d1dc7c263eb9adbd2`; separate C02 source-only draft
+[#247](https://github.com/Emaren/wolochain/pull/247) extends the held lineage.
+The source-bound index identifies this branch's implementation baseline.
+
+These source identities do not identify installed binaries. Canonical physical
+acceptance remains [Chain #239](https://github.com/Emaren/wolochain/issues/239):
+C04/C08 CLOSED; C01/C02/C03/C05/C06/C07/C09 OPEN; funding DENIED. Preserve
+the separately accepted four legacy financial unit masks. No listener,
+PostgreSQL outage, financial SQL or website release is admitted by this review.
+Session B owns PRODUCT release and rollback. Earlier source/runtime observations
+below are dated history, including their old listener and website identities.
+
+## Historical October 29, 2026 — GitHub source-authority review
 
 Scope: remote GitHub source, PR refs and verified source CI only. **No live
 Mac worktree, HEL1 runtime, signer, custody, bank, financial ledger or restore
@@ -237,9 +253,9 @@ Do not collapse these identities:
 Runtime and chain truth must still be verified from the owning runtime
 surfaces when an operation depends on current state.
 
-## Current branch roles
+## Historical October 29 branch roles
 
-`wolo-1-mainnet-prep` contains the current mainnet-oriented source and
+`wolo-1-mainnet-prep` contained the mainnet-oriented source and
 documentation corpus being federated, including settlement, IBC/Osmosis,
 mainnet service, wallet/custody, and Warbound Trophy implementation work.
 
@@ -248,7 +264,7 @@ central documentation until an intentional reconciliation changes that fact.
 
 ## Central documentation rule
 
-AoE2WAR-docs should ingest the WoloChain source registry from
-`wolo-1-mainnet-prep` until the branch authority is deliberately changed.
-Central documentation may index this truth; it must not silently promote
-`main` or invent a merge.
+Use the source-bound index and the owner's current held FINANCIAL lineage.
+The older `wolo-1-mainnet-prep` federation observations above do not override
+that instruction. Central documentation must not silently promote `main`,
+invent a merge or convert source qualification into physical acceptance.

@@ -1,17 +1,29 @@
 ---
 id: "aoe2war.wolochain.epoch-v3-wire-v1-hold"
 title: "Native epoch-v3 wire-v1 trust mismatch and held handoff"
-type: "reference"
-status: "draft"
+type: "historical"
+status: "historical"
 owner: "wolochain-ops"
 systems: ["wolochain", "aoe2war"]
 audience: ["developers", "operators", "ai-agents"]
 source_of_truth: "git"
 authority: "source-only-verifier-mismatch-not-financial-authority"
-reviewed_at: "2026-11-05"
-review_interval_days: 7
+reviewed_at: "2026-11-13"
+review_interval_days: 0
 sensitivity: "internal"
 ---
+
+## November 13, 2026 — historical record qualification
+
+The dated mismatch and exact old blob/artifact identities below are historical.
+Current held source now dispatches the exact portable-proof argv through
+`internal/epochescrow/nativeverifier` and fixed protected trust pins; absent
+enrollment returns `PRODUCTION_TRUST_ENROLLMENT_REQUIRED`. The command also
+has a separate `execute-enrolled-return` boundary. Therefore the old blanket
+CLI-absence/refusal descriptions below are not current implementation claims.
+Neither path is a production installation, custody, solvency or funding receipt.
+The new-epoch `ProductionEnabled=false` gate remains intact. No historical
+fixture, timestamp or missing external authority is upgraded by this review.
 
 ## November 5, 2026 — bounded documentation review
 

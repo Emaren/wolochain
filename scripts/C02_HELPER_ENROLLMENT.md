@@ -1,4 +1,19 @@
-C02 private helper enrollment and exact inverse
+---
+id: "aoe2war.wolochain.c02-helper-enrollment"
+title: "C02 private helper enrollment and exact inverse"
+type: "working"
+status: "draft"
+owner: "wolochain-ops"
+systems: ["wolochain", "aoe2war"]
+audience: ["developers", "operators"]
+source_of_truth: "git"
+authority: "non-authorizing-financial-source-qualification"
+reviewed_at: "2026-11-13"
+review_interval_days: 14
+sensitivity: "public"
+---
+
+# C02 private helper enrollment and exact inverse
 
 This source-only builder does not connect to PostgreSQL. Every emitted SQL file
 refuses before DDL. A generated file or passing fixture supplies no production,
