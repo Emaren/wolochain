@@ -202,50 +202,71 @@ class Journal:
         self.state, self.head, self.seq, self.bound_preimage = self._replay()
 
     def _replay(self, *, allow_incomplete: bool = False):
-        paths = sorted(self.directory.iterdir())
+        # Anchor every record open to one directory fd. A separate pathname
+        # lstat followed by Path.read_bytes can be swapped to a symlink after
+        # its metadata check and incorrectly attest FENCED.
         seq = 0; prev = '0'*64; state = 'HOLD'; bound_preimage = None
-        for p in paths:
-            if not re.fullmatch(r'[0-9]{8}\.json', p.name):
+        try:
+            dfd = os.open(self.directory, os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW)
+        except OSError:
+            return 'UNKNOWN', prev, seq, bound_preimage
+        try:
+            dst = os.fstat(dfd)
+            if (not stat.S_ISDIR(dst.st_mode) or dst.st_mode&0o077 or
+                dst.st_uid != os.geteuid()):
                 return 'UNKNOWN', prev, seq, bound_preimage
-            st=p.lstat()
-            if not stat.S_ISREG(st.st_mode) or st.st_mode & 0o077 or st.st_nlink!=1:
-                return 'UNKNOWN', prev, seq, bound_preimage
-            if st.st_size>8192:
-                return 'UNKNOWN', prev, seq, bound_preimage
-            try:
-                obj = json.loads(p.read_bytes()); number = obj['number']
-                if number != seq+1 or p.name != f'{number:08d}.json':
+            paths = sorted(os.listdir(dfd))
+            for name in paths:
+                if not re.fullmatch(r'[0-9]{8}\.json', name):
                     return 'UNKNOWN', prev, seq, bound_preimage
-                if obj['prev'] != prev or obj['state'] not in ALLOWED:
+                try:
+                    fd = os.open(name, os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK,
+                                 dir_fd=dfd)
+                    try:
+                        st = os.fstat(fd)
+                        if (not stat.S_ISREG(st.st_mode) or st.st_mode&0o077
+                            or st.st_nlink!=1 or st.st_uid!=os.geteuid()
+                            or not (0 < st.st_size <= 8192)):
+                            return 'UNKNOWN', prev, seq, bound_preimage
+                        raw = os.read(fd, 8193)
+                        if len(raw) != st.st_size:
+                            return 'UNKNOWN', prev, seq, bound_preimage
+                    finally:
+                        os.close(fd)
+                    obj = json.loads(raw); number = obj['number']
+                    if number != seq+1 or name != f'{number:08d}.json':
+                        return 'UNKNOWN', prev, seq, bound_preimage
+                    if obj['prev'] != prev or obj['state'] not in ALLOWED:
+                        return 'UNKNOWN', prev, seq, bound_preimage
+                    if (obj['schema'] != SCHEMA or not fixed_hex(obj['preimage_sha256'])
+                        or not fixed_hex(obj.get('proof_sha256','')) or
+                        set(obj) != {'schema','number','prev','state','event','preimage_sha256','proof_sha256','proof','hash'}):
+                        return 'UNKNOWN', prev, seq, bound_preimage
+                    if bound_preimage is None:bound_preimage=obj['preimage_sha256']
+                    if obj['preimage_sha256'] != bound_preimage:
+                        return 'UNKNOWN', prev, seq, bound_preimage
+                    permitted={
+                        'HOLD':('INTENT',), 'INTENT':('FENCED','UNKNOWN'),
+                        'FENCED':('RESTORE_INTENT',),
+                        'RESTORE_INTENT':('RESTORED','UNKNOWN'),
+                        'RESTORED':(), 'UNKNOWN':()
+                    }
+                    if obj['state'] not in permitted[state]:
+                        return 'UNKNOWN', prev, seq, bound_preimage
+                    canonical_raw = canonical({k:v for k,v in obj.items() if k!='hash'})
+                    if digest(canonical_raw) != obj['hash'] or canonical(obj) != raw:
+                        return 'UNKNOWN', prev, seq, bound_preimage
+                    if digest(canonical(obj['proof'])) != obj['proof_sha256']:
+                        return 'UNKNOWN', prev, seq, bound_preimage
+                    verify_transition_proof(obj['proof'], self.trust, state=obj['state'],
+                        preimage_hash=obj['preimage_sha256'], sequence=seq,
+                        previous_hash=prev, now=obj['proof']['body']['issued_at'],
+                        event=obj['event'], expected_original_hash=bound_preimage)
+                    seq = number; prev = obj['hash']; state = obj['state']
+                except (OSError, ValueError, KeyError, TypeError, Hold):
                     return 'UNKNOWN', prev, seq, bound_preimage
-                if (obj['schema'] != SCHEMA or not fixed_hex(obj['preimage_sha256'])
-                    or not fixed_hex(obj.get('proof_sha256','')) or
-                    set(obj) != {'schema','number','prev','state','event','preimage_sha256','proof_sha256','proof','hash'}):
-                    return 'UNKNOWN', prev, seq, bound_preimage
-                if bound_preimage is None:bound_preimage=obj['preimage_sha256']
-                if obj['preimage_sha256'] != bound_preimage:
-                    return 'UNKNOWN', prev, seq, bound_preimage
-                permitted={
-                    'HOLD':('INTENT',), 'INTENT':('FENCED','UNKNOWN'),
-                    'FENCED':('RESTORE_INTENT',),
-                    'RESTORE_INTENT':('RESTORED','UNKNOWN'),
-                    'RESTORED':(), 'UNKNOWN':()
-                }
-                if obj['state'] not in permitted[state]:
-                    return 'UNKNOWN', prev, seq, bound_preimage
-                raw = canonical({k:v for k,v in obj.items() if k!='hash'})
-                if digest(raw) != obj['hash'] or canonical(obj) != p.read_bytes():
-                    return 'UNKNOWN', prev, seq, bound_preimage
-                if digest(canonical(obj['proof'])) != obj['proof_sha256']:
-                    return 'UNKNOWN', prev, seq, bound_preimage
-                verify_transition_proof(obj['proof'], self.trust, state=obj['state'],
-                    preimage_hash=obj['preimage_sha256'], sequence=seq,
-                    previous_hash=prev, now=obj['proof']['body']['issued_at'],
-                    event=obj['event'],
-                    expected_original_hash=bound_preimage)
-                seq = number; prev = obj['hash']; state = obj['state']
-            except (OSError, ValueError, KeyError, TypeError, Hold):
-                return 'UNKNOWN', prev, seq, bound_preimage
+        finally:
+            os.close(dfd)
         if state in ('INTENT', 'RESTORE_INTENT') and not allow_incomplete:
             return 'UNKNOWN', prev, seq, bound_preimage
         return state, prev, seq, bound_preimage
@@ -286,13 +307,22 @@ class Journal:
                 'state':new_state, 'event':event, 'preimage_sha256':preimage_hash,
                 'proof_sha256':digest(canonical(proof)), 'proof':proof}
         record['hash']=digest(canonical(record))
-        path=self.directory / f'{self.seq+1:08d}.json'
-        fd=os.open(path, os.O_CREAT|os.O_EXCL|os.O_WRONLY|os.O_NOFOLLOW, 0o600)
-        with os.fdopen(fd,'wb') as f:
-            f.write(canonical(record));f.flush();os.fsync(f.fileno())
+        # The write and directory sync share an anchored, no-follow directory
+        # fd. Never re-resolve the parent path between validation and append.
         dirfd=os.open(self.directory, os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW)
-        try:os.fsync(dirfd)
-        finally:os.close(dirfd)
+        try:
+            dst=os.fstat(dirfd)
+            if (not stat.S_ISDIR(dst.st_mode) or dst.st_mode&0o077 or
+                dst.st_uid!=os.geteuid()):
+                raise Hold('C03_JOURNAL_DIRECTORY_DRIFT')
+            fd=os.open(f'{self.seq+1:08d}.json',
+                os.O_CREAT|os.O_EXCL|os.O_WRONLY|os.O_NOFOLLOW,
+                0o600, dir_fd=dirfd)
+            with os.fdopen(fd,'wb') as f:
+                f.write(canonical(record));f.flush();os.fsync(f.fileno())
+            os.fsync(dirfd)
+        finally:
+            os.close(dirfd)
         self.state,self.head,self.seq = new_state, record['hash'],self.seq+1
         if self.bound_preimage is None:self.bound_preimage=preimage_hash
 

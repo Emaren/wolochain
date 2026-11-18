@@ -214,3 +214,93 @@ def test_production_fence_refuses_on_forged_on_disk_record(tmp_path):
     assert b.state=='UNKNOWN'
     with pytest.raises(Hold,match='NO_INDEPENDENT_PRODUCTION_PHYSICAL_WITNESS'):
         b.require_production_fence()
+
+
+def test_journal_record_symlink_swap_after_lstat_must_be_unknown(tmp_path, monkeypatch):
+    """Adversary swaps trusted record after lstat before its read opens path."""
+    b=start(tmp_path);fence(b)
+    target=tmp_path/'journal'/'00000002.json'
+    external=tmp_path/'saved-00000002.json'
+    original_lstat=Path.lstat
+    original_open=os.open
+    done=[False]
+
+    def attack_once():
+        if not done[0]:
+            done[0]=True
+            target.rename(external)
+            target.symlink_to(external)
+
+    def swap_after_stat(path, *args, **kwargs):
+        info=original_lstat(path,*args,**kwargs)
+        if path == target:
+            attack_once()
+        return info
+
+    def swap_before_fd_open(path, flags, *args, **kwargs):
+        if path == '00000002.json' and kwargs.get('dir_fd') is not None:
+            attack_once()
+        return original_open(path,flags,*args,**kwargs)
+
+    with monkeypatch.context() as p:
+        p.setattr(Path,'lstat',swap_after_stat)
+        p.setattr(os,'open',swap_before_fd_open)
+        result=b.state
+    assert done[0], 'attack did not interleave with metadata check'
+    assert result=='UNKNOWN', f'FAIL OPEN: symlink record accepted as {result}'
+
+
+def test_signed_journal_directory_symlink_swap_after_replay_refuses_write(tmp_path, monkeypatch):
+    """Changing the journal parent path after replay must not redirect a write."""
+    b=start(tmp_path)
+    legitimate=tmp_path/'journal'
+    held=tmp_path/'journal-original'
+    original_replay=b.journal._replay
+    swapped=[False]
+
+    def swap_dir_after_replay(*args,**kwargs):
+        result=original_replay(*args,**kwargs)
+        if not swapped[0]:
+            swapped[0]=True
+            legitimate.rename(held)
+            legitimate.symlink_to(held,target_is_directory=True)
+        return result
+
+    proof=sign(b.journal,'FENCED',evidence=digest(RAW))
+    with monkeypatch.context() as p:
+        p.setattr(b.journal,'_replay',swap_dir_after_replay)
+        with pytest.raises((OSError,Hold)):
+            b.journal.write('FENCED','TEST_ONLY',H,proof=proof)
+    assert swapped[0]
+    assert not (held/'00000002.json').exists()
+
+
+def test_journal_parent_symlink_after_fenced_replay_yields_unknown(tmp_path):
+    b=start(tmp_path);fence(b)
+    src=tmp_path/'journal'; moved=tmp_path/'journal-original'
+    src.rename(moved)
+    src.symlink_to(moved,target_is_directory=True)
+    assert b.state=='UNKNOWN'
+
+
+def test_evidence_journal_head_record_swap_after_valid_replay_yields_unknown(tmp_path,monkeypatch):
+    """Even the second read of the verified FENCED head must not follow a link."""
+    b=start(tmp_path);fence(b)
+    rec=tmp_path/'journal'/'00000002.json'
+    saved=tmp_path/'saved-head.json'
+    replay=b.journal._replay
+    swapped=[False]
+
+    def swap_after_signed_replay(*args,**kwargs):
+        answer=replay(*args,**kwargs)
+        if not swapped[0]:
+            swapped[0]=True
+            rec.rename(saved)
+            rec.symlink_to(saved)
+        return answer
+
+    with monkeypatch.context() as p:
+        p.setattr(b.journal,'_replay',swap_after_signed_replay)
+        result=b.state
+    assert swapped[0]
+    assert result=='UNKNOWN'

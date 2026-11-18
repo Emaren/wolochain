@@ -110,7 +110,34 @@ class EvidenceBoundJournal:
             return self.journal.state
         receipt_hash=None
         try:
-            record=json.loads((self.journal.directory/f'{self.journal.seq:08d}.json').read_bytes())
+            # Read the verified head as an anchored, no-follow journal entry.
+            # The previous Path.read_bytes followed an attacker-swapped symlink.
+            jdfd=os.open(self.journal.directory,
+                os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW)
+            try:
+                dstat=os.fstat(jdfd)
+                if (not stat.S_ISDIR(dstat.st_mode) or dstat.st_mode&0o077 or
+                    dstat.st_uid!=os.geteuid()):
+                    return 'UNKNOWN'
+                jfd=os.open(f'{self.journal.seq:08d}.json',
+                    os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK, dir_fd=jdfd)
+                try:
+                    fst=os.fstat(jfd)
+                    if (not stat.S_ISREG(fst.st_mode) or fst.st_mode&0o077
+                        or fst.st_nlink!=1 or fst.st_uid!=os.geteuid()
+                        or not (0 < fst.st_size <= 8192)):
+                        return 'UNKNOWN'
+                    jraw=os.read(jfd,8193)
+                    if len(jraw)!=fst.st_size:
+                        return 'UNKNOWN'
+                finally:
+                    os.close(jfd)
+            finally:
+                os.close(jdfd)
+            record=json.loads(jraw)
+            if (record.get('hash')!=self.journal.head or
+                canonical(record)!=jraw or record.get('state')!='FENCED'):
+                return 'UNKNOWN'
             receipt_hash=record['proof']['body']['evidence_sha256']
             if not re.fullmatch('[0-9a-f]{64}',receipt_hash):
                 return 'UNKNOWN'
