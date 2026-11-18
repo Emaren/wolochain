@@ -1,0 +1,68 @@
+name: C03 signed evidence SOURCE ONLY - NOT FINANCIAL ADMISSION
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/c03_durable_admission.py'
+      - 'scripts/c03_pg16_evidence_bridge.py'
+      - 'scripts/c03_disposable_pg16_fence_rehearsal.py'
+      - 'tests/test_c03_durable_admission.py'
+      - 'tests/test_c03_pg16_evidence_bridge.py'
+      - 'tests/fixtures/c03_pg16_disposable_observation.json'
+      - '.github/workflows/c03-signed-evidence-source-only.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source-only-evidence:
+    name: C03 signed journal tests - SOURCE ONLY, production HOLD
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install isolated test dependencies
+        run: python -m pip install --disable-pip-version-check --no-cache-dir 'pytest==9.0.2' 'cryptography==46.0.4'
+      - name: Verify source candidate against pinned six-file review manifest
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib
+          expected = {
+            'README_INTEGRATION_C03.md': 'a8a8ee178470352a837b413da72e376319e6af026bfd5078b8ffe399b08deec0',
+            'scripts/c03_durable_admission.py': '3d256ca1bc2b39f07eeb69b1a89612d4e584076ce5fcb8edec07e5b15e54df68',
+            'scripts/c03_pg16_evidence_bridge.py': '7dd5b439c75932dfb153ab11366afa71581b564b57c3cd20d267703b153588ed',
+            'tests/fixtures/c03_pg16_disposable_observation.json': '300d19f126eaa42e48c75666ed52b3ea169f05903ef14840bf622486f9fa809c',
+            'tests/test_c03_durable_admission.py': 'c07e77a9fdf46d542c4a9eac48500fcd8158bf948e89373674b33d0adf01a782',
+            'tests/test_c03_pg16_evidence_bridge.py': '0113b68e7a5de08566f800c241fe1da08c6950dafe16dff9fa4eebd09dedd0ee',
+          }
+          for path, wanted in expected.items():
+            actual = hashlib.sha256(Path(path).read_bytes()).hexdigest()
+            assert actual == wanted, f'SOURCE DRIFT {path}: {actual}'
+          print(f'REVIEW_BUNDLE_SOURCE_HASH_MATCH {len(expected)}/{len(expected)}')
+          PY
+      - name: Run adversarial signed journal and evidence bridge tests
+        run: python -m pytest -q -p no:cacheprovider tests/test_c03_durable_admission.py tests/test_c03_pg16_evidence_bridge.py
+      - name: Prove both production entry points refuse execution
+        run: |
+          set -eu
+          if python -B scripts/c03_durable_admission.py > /tmp/c03-model.log 2>&1; then
+            echo 'FAIL source model unexpectedly executed'; exit 1
+          fi
+          grep -q 'C03_SOURCE_ONLY_NO_PRODUCTION_ACTUATOR' /tmp/c03-model.log
+          if python -B scripts/c03_pg16_evidence_bridge.py > /tmp/c03-bridge.log 2>&1; then
+            echo 'FAIL source bridge unexpectedly executed'; exit 1
+          fi
+          grep -q 'C03_SOURCE_ONLY_NO_FINANCIAL_PG_EXECUTOR' /tmp/c03-bridge.log
+          echo 'C03_SOURCE_ONLY_EXECUTION_DENIED'
+      - name: Not production acceptance
+        run: |
+          echo 'C03 OPEN, FUNDING DENIED. This job is not independent human source review, DocsV2 admission, an actual PostgreSQL/systemd controller or a HEL1 permit.'
