@@ -59,6 +59,24 @@ def main():
       initial=got("INSERT INTO public.c03_ledger(val) VALUES(1);")
       expect("ERROR" not in initial,"initial connected write denied unexpectedly: "+initial)
       expect(textsql("SELECT count(*) FROM public.c03_ledger WHERE val=1")=="1","initial preconnected writer insert not visible")
+      # A live HBA reload only affects NEW connections. Existing sessions are not evicted.
+      # Exercise the counterexample inside this fresh disposable cluster only.
+      deny_reload=b"\n".join((b"# C03 DISPOSABLE RELOAD TEST ONLY",
+                               b"local all all reject",
+                               b"local replication all reject",
+                               b"host all all 0.0.0.0/0 reject",
+                               b"host all all ::/0 reject"))+b"\n"
+      hba.write_bytes(deny_reload)
+      reload_result=ctl("reload")
+      expect(reload_result.returncode==0,"HBA reload refused "+reload_result.stderr)
+      new_conn=run([BIN/"psql","-X","-h",sock,"-p",str(port),"-U",actor,"-d","postgres","-c","SELECT 1"])
+      expect(new_conn.returncode!=0 and ("reject" in new_conn.stderr.lower() or "pg_hba" in new_conn.stderr.lower()),"HBA reload must deny fresh connection")
+      live_write=got("INSERT INTO public.c03_ledger(val) VALUES(99); SELECT count(*) FROM public.c03_ledger WHERE val=99;")
+      expect("ERROR" not in live_write and "1" in live_write.splitlines(),"already connected writer survives all-reject HBA reload: "+live_write)
+      hba.write_bytes(orig)
+      reload_result=ctl("reload")
+      expect(reload_result.returncode==0,"HBA reload inverse failed "+reload_result.stderr)
+      expect(textsql("SELECT count(*) FROM public.c03_ledger WHERE val=99")=="1","HBA counterexample write did not persist")
       textsql("ALTER ROLE c03_legacy_writer NOLOGIN;")
       expect(probe("SELECT 1;","c03_legacy_writer",False).returncode!=0,"NOLOGIN must deny new")
       still=got("INSERT INTO public.c03_ledger(val) VALUES(2);")
@@ -99,7 +117,7 @@ def main():
       after=textsql("SELECT rolcanlogin::text FROM pg_roles WHERE rolname='c03_legacy_writer'; SELECT relacl::text FROM pg_class WHERE oid='public.c03_ledger'::regclass; SELECT relacl::text FROM pg_class WHERE oid='public.c03_ledger_id_seq'::regclass; SELECT proacl::text FROM pg_proc WHERE oid='public.c03_definer_write()'::regprocedure")
       expect(before==after,"SQL raw ACL/role parity: "+repr((before,after)))
       expect(probe("INSERT INTO public.c03_ledger(val) VALUES(4);","c03_legacy_writer").returncode==0,"inverse restored writer only on isolated temp cluster")
-      print(json.dumps({"status":"PASS","postgres":"16","ephemeral_cluster":True,"tcp_listening":False,"case_count":13,"checks":["PG16 private initdb/version","existing writer persists after NOLOGIN","new writer denied NOLOGIN","definer bypass exists before revocation","synthetic ACL revocation denies preconnected writer","sequence bypass denied","SECURITY DEFINER denied","reader SELECT survives","all-client HBA persisted over two restarts","no auth release after restart","HBA byte-exact rollback","role+ACL preimage byte parity","isolated inverse returns initial writer rights"],"hba_original_sha256":origsha,"hba_deny_sha256":sha(deny)},sort_keys=True))
+      print(json.dumps({"status":"PASS","postgres":"16","ephemeral_cluster":True,"tcp_listening":False,"case_count":15,"checks":["PG16 private initdb/version","HBA live reload denies new clients","existing writer survives all-reject HBA reload","existing writer persists after NOLOGIN","new writer denied NOLOGIN","definer bypass exists before revocation","synthetic ACL revocation denies preconnected writer","sequence bypass denied","SECURITY DEFINER denied","reader SELECT survives","all-client HBA persisted over two restarts","no auth release after restart","HBA byte-exact rollback","role+ACL preimage byte parity","isolated inverse returns initial writer rights"],"hba_original_sha256":origsha,"hba_deny_sha256":sha(deny)},sort_keys=True))
      finally:
       if writer is not None:
        writer.terminate()
