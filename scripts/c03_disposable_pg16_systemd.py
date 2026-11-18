@@ -99,11 +99,20 @@ def main():
             check("PrivateNetwork=yes" in state and "RestrictAddressFamilies=AF_UNIX" in state
                   and "NoNewPrivileges=yes" in state and "ProtectSystem=strict" in state,
                   "kernel namespace/address family and read-write restrictions loaded", checks)
-            ctl("mask", "--runtime", unit)
+            # Stop BEFORE applying the runtime mask, then inspect both the
+            # on-disk /dev/null symlink and systemd's loaded unit state.
             ctl("stop", unit)
+            ctl("mask", "--runtime", unit)
             ctl("daemon-reload")
-            ctl("start", unit, ok=False)
             check(runtime_mask.is_symlink() and os.readlink(runtime_mask) == "/dev/null",
+                  "runtime systemd mask symlink is actual /dev/null", checks)
+            masked = command(["systemctl", "show", unit, "-p", "LoadState",
+                              "-p", "ActiveState", "-p", "UnitFileState"]).stdout
+            check("LoadState=masked" in masked and "ActiveState=inactive" in masked,
+                  "systemd effective loaded unit is masked and inactive: " + masked, checks)
+            denied_start = command(["sudo", "systemctl", "start", unit], ok=False)
+            check(denied_start.returncode != 0 and
+                  "ActiveState=inactive" in command(["systemctl", "show", unit, "-p", "ActiveState"]).stdout,
                   "runtime systemd mask denies startup across daemon reload", checks)
             ready(False)
             check(True, "masked unit does not leave postgres socket accepting clients", checks)
