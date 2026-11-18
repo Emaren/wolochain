@@ -1,0 +1,69 @@
+name: C03 real disposable Linux systemd PG16 startup denial SOURCE ONLY
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/c03_disposable_pg16_systemd.py'
+      - '.github/workflows/c03-disposable-pg16-systemd-physical.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  actual-systemd:
+    name: C03 actual ephemeral systemd mask PG16 and exact inverse - never HEL1
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Verify immutable candidate source and ephemeral runner identity
+        run: |
+          set -euo pipefail
+          test "$(git hash-object scripts/c03_disposable_pg16_systemd.py)" = '389943d90895c4e5693007a5a3edfe683492bd86'
+          test "$(id -u)" != '0'
+          test "$GITHUB_ACTIONS" = 'true'
+          test -d /run/systemd/system
+          systemctl --version
+      - name: Provision PostgreSQL16 only on disposable Ubuntu
+        run: |
+          set -euo pipefail
+          if test ! -x /usr/lib/postgresql/16/bin/initdb; then
+            sudo apt-get update -qq
+            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq postgresql-16
+          fi
+          /usr/lib/postgresql/16/bin/postgres --version | grep -E '^postgres \(PostgreSQL\) 16[.]'
+      - name: Real Linux systemd private-postmaster masking startup denial and exact inverse
+        env:
+          WE1_C03_DISPOSABLE_SYSTEMD_ONLY: '1'
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: |
+          set -euo pipefail
+          python3 -B scripts/c03_disposable_pg16_systemd.py | tee /tmp/c03-systemd-actual-receipt.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          x=json.loads(Path('/tmp/c03-systemd-actual-receipt.json').read_text())
+          assert x['status']=='PASS' and x['postgres']=='16'
+          assert x['real_systemd'] is True and x['ephemeral_cluster'] is True
+          assert x['tcp_listening'] is False and x['unit_absent_after'] is True
+          assert len(x['checks'])==x['case_count'] and x['case_count']>=8
+          assert 'runtime systemd mask denies startup across daemon reload' in x['checks']
+          assert 'original systemd unit absence restored exactly' in x['checks']
+          print('C03_REAL_EPHEMERAL_SYSTEMD_POSTGRESQL16_MASK_INVERSE_PASS')
+          PY
+      - name: Without explicit isolated opt-in refuse all work
+        run: |
+          set -euo pipefail
+          if env -u WE1_C03_DISPOSABLE_SYSTEMD_ONLY python3 -B scripts/c03_disposable_pg16_systemd.py >/tmp/c03-unopted-systemd.log 2>&1; then
+            echo 'FAIL source invoked systemd without opt-in'; exit 1
+          fi
+          grep -q 'C03_SYSTEMD_DISPOSABLE_EXPLICIT_OPTIN_REQUIRED' /tmp/c03-unopted-systemd.log
+          if find /tmp -maxdepth 1 -name 'we1-c03-systemd-pg16-*' -print | grep -q .; then
+            echo 'FAIL scratch PGDATA left behind'; exit 1
+          fi
+          echo 'C03_SYSTEMD_SCRATCH_CLEAN_AND_UNOPTED_DENIED'
+      - name: This workflow does not admit finance
+        run: echo 'C03 OPEN; FUNDING DENIED; machine-level real CI systemd check does not prove HEL1 trusted physical witness or authorize reboot/outage.'
