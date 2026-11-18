@@ -50,8 +50,11 @@ jobs:
           print(f'REVIEW_BUNDLE_SOURCE_HASH_MATCH {len(expected)}/{len(expected)}')
           PY
       - name: Run adversarial signed journal and evidence bridge tests
+        # Diagnostic only: keep the pinned-hash failure as a hard CI failure.
+        if: ${{ always() }}
         run: python -m pytest -q -p no:cacheprovider tests/test_c03_durable_admission.py tests/test_c03_pg16_evidence_bridge.py
       - name: Prove both production entry points refuse execution
+        if: ${{ always() }}
         run: |
           set -eu
           if python -B scripts/c03_durable_admission.py > /tmp/c03-model.log 2>&1; then
