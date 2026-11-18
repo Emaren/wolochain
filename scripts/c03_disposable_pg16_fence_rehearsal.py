@@ -56,7 +56,9 @@ def main():
       before=textsql("SELECT rolcanlogin::text FROM pg_roles WHERE rolname='c03_legacy_writer'; SELECT relacl::text FROM pg_class WHERE oid='public.c03_ledger'::regclass; SELECT relacl::text FROM pg_class WHERE oid='public.c03_ledger_id_seq'::regclass; SELECT proacl::text FROM pg_proc WHERE oid='public.c03_definer_write()'::regprocedure")
       writer=subprocess.Popen([str(BIN/"psql"),"-X","-q","-t","-A","-v","ON_ERROR_STOP=0","-h",sock,"-p",str(port),"-U","c03_legacy_writer","-d","postgres"],stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,bufsize=1)
       expect("1" in got("SELECT 1;"),"preconnected writer startup")
-      expect("INSERT" in got("INSERT INTO public.c03_ledger(val) VALUES(1);") or True,"initial connected write") # psql -q silent
+      initial=got("INSERT INTO public.c03_ledger(val) VALUES(1);")
+      expect("ERROR" not in initial,"initial connected write denied unexpectedly: "+initial)
+      expect(textsql("SELECT count(*) FROM public.c03_ledger WHERE val=1")=="1","initial preconnected writer insert not visible")
       textsql("ALTER ROLE c03_legacy_writer NOLOGIN;")
       expect(probe("SELECT 1;","c03_legacy_writer",False).returncode!=0,"NOLOGIN must deny new")
       still=got("INSERT INTO public.c03_ledger(val) VALUES(2);")
