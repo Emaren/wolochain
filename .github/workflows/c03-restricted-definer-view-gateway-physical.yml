@@ -1,0 +1,71 @@
+name: C03 real PG16 restricted NOLOGIN function owner via new updatable views
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/c03_restricted_definer_view_gateway_pg16.py'
+      - '.github/workflows/c03-restricted-definer-view-gateway-physical.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  restricted:
+    name: Real PG16 restricted executor, view DML/serial, finance FK and ACL inverse
+    runs-on: ubuntu-24.04
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Source pin, python syntax, no privileged runner
+        run: |
+          set -euo pipefail
+          test "$(id -u)" != 0
+          test "$(git hash-object scripts/c03_restricted_definer_view_gateway_pg16.py)" = 'f2709f8f4129dba0464dbef2aeb517fecc3cb7bc'
+          python3 -B -m py_compile scripts/c03_restricted_definer_view_gateway_pg16.py
+      - name: Install real PG16 only in isolated Actions runner
+        run: |
+          set -euo pipefail
+          if test ! -x /usr/lib/postgresql/16/bin/initdb; then
+            sudo apt-get update -qq
+            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq postgresql-16
+          fi
+          /usr/lib/postgresql/16/bin/postgres --version | grep -E '^postgres \(PostgreSQL\) 16[.]'
+      - name: Prove restricted NOLOGIN execution while broad legacy owner is financially dangerous
+        shell: bash
+        env:
+          C03_RESTRICTED_VIEW_GATEWAY_DISPOSABLE_ONLY: '1'
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: |
+          set -euo pipefail
+          python3 -B scripts/c03_restricted_definer_view_gateway_pg16.py | tee /tmp/c03-restricted-view.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          x=json.loads(Path('/tmp/c03-restricted-view.json').read_text())
+          assert x['status']=='PASS' and x['pg_major']==16
+          assert x['case_count']==len(x['checks']) and x['case_count']>=20
+          assert x['private_pgdata'] and x['no_tcp']
+          assert x['restricted_definer_owner'] and not x['finance_host_touched']
+          assert x['not_production_admission']
+          for name in (
+           'function executor has no inherited or SET ROLE membership',
+           'executor cannot DELETE users (financial cascade path)',
+           'restricted definer inserted via auto-updatable view and serial default',
+           'broad legacy owner CAN trigger financial ON DELETE CASCADE',
+           'exact inverse restores original raw social and finance ACLs',
+          ):
+            assert name in x['checks'],name
+          print('C03_RESTRICTED_VIEW_GATEWAY_REAL_POSTGRESQL16_PASS_SOURCE_ONLY')
+          PY
+      - name: Explicit opt-in and cleanup evidence
+        run: |
+          set -euo pipefail
+          if env -u C03_RESTRICTED_VIEW_GATEWAY_DISPOSABLE_ONLY python3 -B scripts/c03_restricted_definer_view_gateway_pg16.py >/tmp/c03-unopted.log 2>&1; then exit 1; fi
+          grep -q 'C03_RESTRICTED_GATEWAY_EXPLICIT_OPTIN_REQUIRED' /tmp/c03-unopted.log
+          if find /tmp -maxdepth 1 -name 'we1-c03-restricted-view-pg16-*' -print | grep -q .; then exit 1; fi
+          echo 'C03_RESTRICTED_VIEW_NO_UNOPTED_EXECUTION_NO_TEMP_LEFTOVERS'
+      - name: Production financial boundary unchanged
+        run: echo 'Source-only new-role/view experiment. Actual HEL1 authenticated owner/function graph, WE3 exact integrated source and separate root permit remain HOLD. C03 OPEN, FUNDING DENIED.'
