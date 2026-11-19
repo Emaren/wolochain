@@ -6,6 +6,38 @@
 -- WE3 sidecar MUST verify HS256 session and supply only its DB-derived signed UID.
 -- This separate caller->DB trust boundary is NOT resistant to stolen DB credentials.
 BEGIN;
+-- This is an exact schema-owner precondition, not a substitute for the
+-- independently authenticated financial ownership / PUBLIC-function census.
+DO $preflight$
+DECLARE v_owner oid := '__NONFINANCIAL_OWNER__'::regrole;
+BEGIN
+  IF EXISTS (
+    WITH names(name,kind) AS (VALUES
+      ('users','r'),('clans','r'),('clan_members','r'),
+      ('clan_messages','r'),('direct_conversations','r'),
+      ('direct_conversation_participants','r'),('direct_messages','r'),
+      ('direct_message_drafts','r'),('clan_messages_id_seq','S'),
+      ('direct_conversations_id_seq','S'),
+      ('direct_conversation_participants_id_seq','S'),
+      ('direct_messages_id_seq','S'))
+    SELECT 1 FROM names n LEFT JOIN pg_class c ON
+      c.oid=to_regclass(format('public.%I',n.name))
+    WHERE c.oid IS NULL OR c.relowner<>v_owner OR c.relkind::text<>n.kind
+  ) THEN
+    RAISE EXCEPTION 'C03_SOURCE_OWNER_OR_RELKIND_PREIMAGE_MISMATCH';
+  END IF;
+  IF EXISTS (
+    SELECT 1 FROM pg_trigger t
+    WHERE t.tgenabled IN ('O','A','R') AND NOT t.tgisinternal
+      AND t.tgrelid IN (SELECT to_regclass(format('public.%I',x))
+        FROM unnest(ARRAY['clan_messages','direct_conversations',
+          'direct_conversation_participants','direct_messages',
+          'direct_message_drafts']) AS x)
+  ) THEN
+    RAISE EXCEPTION 'C03_UNREVIEWED_ENABLED_TRIGGER_HOLD';
+  END IF;
+END
+$preflight$;
 CREATE ROLE aoe2war_social_writer LOGIN NOINHERIT NOSUPERUSER NOCREATEDB
   NOCREATEROLE NOREPLICATION NOBYPASSRLS CONNECTION LIMIT 2;
 CREATE SCHEMA aoe2war_social_gateway AUTHORIZATION __NONFINANCIAL_OWNER__;
