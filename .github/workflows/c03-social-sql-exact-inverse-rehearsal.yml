@@ -105,8 +105,8 @@ jobs:
           fi
           # Exactly the five previously observed original NULL ACL objects
           # must drift; no broader or missing drift may silently pass.
-          test "$(grep -c '^-' "$root/acl.diff")" = 5
-          test "$(grep -c '^+' "$root/acl.diff")" = 5
+          test "$(grep -c '^-[^-]' "$root/acl.diff")" = 5
+          test "$(grep -c '^+[^+]' "$root/acl.diff")" = 5
           for object in clan_messages_id_seq direct_conversations_id_seq direct_conversation_participants_id_seq direct_messages_id_seq direct_message_drafts; do
             grep -F -q "$object:<NULL>" "$root/acl.diff"
           done
