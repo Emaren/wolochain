@@ -49,9 +49,9 @@ def main():
                   "-p", port, "-d", "aoe2hd_db"]
             if role: args.extend(("-U",role))
             return run(args+["-c",query],success=success).stdout.strip()
-        def file_sql(source, success=True):
+        def file_sql(source, success=True, db="aoe2hd_db"):
             return run([PG / "psql", "-X", "-A", "-t", "-v", "ON_ERROR_STOP=1",
-                        "-h", sock, "-p", port, "-d", "aoe2hd_db", "-f",source],success=success)
+                        "-h", sock, "-p", port, "-d", db, "-f",source],success=success)
         try:
             run([PG / "pg_ctl", "-D", data, "-o",
                  "-c listen_addresses= -c unix_socket_directories=" + str(sock)
@@ -61,6 +61,9 @@ def main():
             run([PG / "psql", "-X", "-v", "ON_ERROR_STOP=1",
                  "-h", sock, "-p", port, "-d", "postgres",
                  "-c", "CREATE DATABASE aoe2hd_db"])
+            run([PG / "psql", "-X", "-v", "ON_ERROR_STOP=1",
+                 "-h", sock, "-p", port, "-d", "postgres",
+                 "-c", "CREATE DATABASE aoe2de_db"])
             check(sql("SHOW server_version_num").startswith("16"),
                   "fresh PostgreSQL16 private AF_UNIX HD-only cluster")
             sql("""
@@ -147,6 +150,11 @@ INSERT INTO public.direct_message_drafts VALUES(1,1),(1,2);
             assert "CREATE ROLE aoe2war_social_writer" in adapted
             source_path=root/"exact-candidate.sql"
             source_path.write_text(adapted)
+            # DE is not source-targeted: even an accidental executor/role leak
+            # must be rejected at the FIRST database identity check.
+            de_error=file_sql(source_path, success=False, db="aoe2de_db")
+            check("C03_HD_ONLY_DATABASE_MISMATCH" in de_error.stderr,
+                  "DE gateway installation rejected at exact database identity check")
             # Negative ownership preflight must stop before role is created.
             sql("ALTER TABLE public.clan_messages OWNER TO c03_finance_owner")
             err=file_sql(source_path,success=False)
