@@ -62,6 +62,7 @@ def main():
             sql("""
 CREATE ROLE c03_legacy_owner NOLOGIN NOINHERIT;
 CREATE ROLE c03_finance_owner NOLOGIN NOINHERIT;
+CREATE ROLE c03_public_probe LOGIN NOINHERIT;
 REVOKE CREATE ON SCHEMA public FROM PUBLIC;
 CREATE TABLE public.users(id serial PRIMARY KEY,uid text UNIQUE,is_admin boolean,
  verification_method text,in_game_name text,steam_persona_name text,created_at timestamptz,
@@ -150,7 +151,7 @@ INSERT INTO public.direct_message_drafts VALUES(1,1),(1,2);
                   "writer no direct private users/wallet read")
             check(sql("SELECT has_table_privilege('aoe2war_social_writer','public.financial_test_escrow','INSERT')")=="f",
                   "writer no direct finance INSERT")
-            check(sql("SELECT has_function_privilege('PUBLIC','aoe2war_social_gateway.clan_text(text,text,text,text)','EXECUTE')")=="f",
+            check(sql("SELECT has_function_privilege('c03_public_probe','aoe2war_social_gateway.clan_text(text,text,text,text)','EXECUTE')")=="f",
                   "PUBLIC cannot execute protected clan gateway")
             check(sql("SELECT has_function_privilege('aoe2war_social_writer','aoe2war_social_gateway.clan_text(text,text,text,text)','EXECUTE')")=="t",
                   "writer can execute only reviewed new gateway")
