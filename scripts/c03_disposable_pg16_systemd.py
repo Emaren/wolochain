@@ -42,9 +42,14 @@ def main():
     unit = "we1-c03-disposable-pg16-" + str(check_pid) + ".service"
     if not unit.startswith("we1-c03-disposable-pg16-"):
         raise AssertionError("bad synthetic unit")
-    unitfile = Path("/etc/systemd/system") / unit
+    # /etc overrides /run in systemd lookup order. Install this synthetic
+    # unit in lower-priority /usr/lib so the /run runtime mask can override it.
+    unitfile = Path("/usr/lib/systemd/system") / unit
+    higher_priority_unit = Path("/etc/systemd/system") / unit
     runtime_mask = Path("/run/systemd/system") / unit
-    if unitfile.exists() or unitfile.is_symlink() or runtime_mask.exists() or runtime_mask.is_symlink():
+    if (unitfile.exists() or unitfile.is_symlink() or
+        higher_priority_unit.exists() or higher_priority_unit.is_symlink() or
+        runtime_mask.exists() or runtime_mask.is_symlink()):
         raise RuntimeError("SOURCE_PREIMAGE_NOT_ABSENT")
     checks = []
     installed = False
@@ -146,6 +151,7 @@ def main():
                 command(["sudo", "rm", "--", unitfile])
                 ctl("daemon-reload")
         check(not unitfile.exists() and not unitfile.is_symlink()
+              and not higher_priority_unit.exists() and not higher_priority_unit.is_symlink()
               and not runtime_mask.exists() and not runtime_mask.is_symlink(),
               "original systemd unit absence restored exactly", checks)
         print(json.dumps({"status": "PASS", "case_count": len(checks), "checks": checks,
