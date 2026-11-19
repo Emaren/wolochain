@@ -95,11 +95,11 @@ def check_manifest(raw: dict[str, Any]) -> None:
            contracts[1].get("roles_no_new") is False and
            all(c.get("installed") is False for c in contracts), "NO_INSTALL_STATUS_DRIFT")
     for contract in contracts:
+        permit = ("approved_exact_source_maintenance_permit"
+                  if contract["id"] == EXPECTED_IDS[0] else
+                  "owner_purpose_signed_maintenance_permit")
         insist(isinstance(contract.get("prerequisite_physical"), list) and
-               "owner_purpose_signed_maintenance_permit" in
-               (contract["prerequisite_physical"] +
-                ["owner_purpose_signed_maintenance_permit"]
-                 if contract["id"] == EXPECTED_IDS[0] else contract["prerequisite_physical"]),
+               permit in contract["prerequisite_physical"],
                "MAINTENANCE_PERMIT_NOT_GATED")
         insist(set(contract) >= {"install", "inverse", "prerequisite_physical"},
                "CONTRACT_INCOMPLETE")
@@ -146,9 +146,13 @@ def verify(root: Path = ROOT, manifest: Path = MANIFEST) -> dict[str, Any]:
                 "GRANT INSERT ON public.users",
                 "GRANT CREATE ON DATABASE"):
         insist(old not in library, "BROAD_LIBRARY_GRANT_DETECTED")
-    insist("DROP SCHEMA aoe2war_library_activity_public RESTRICT" in library_inv and
-           "DROP SCHEMA aoe2war_library_watcher_public RESTRICT" in library_inv and
-           "CASCADE" not in library_inv.upper(), "LIBRARY_INVERSE_DRIFT")
+    library_inverse_sql = "\n".join(
+        line.split("--", 1)[0] for line in library_inv.splitlines())
+    social_inverse_sql = "\n".join(
+        line.split("--", 1)[0] for line in social_inv.splitlines())
+    insist("DROP SCHEMA aoe2war_library_activity_public RESTRICT" in library_inverse_sql and
+           "DROP SCHEMA aoe2war_library_watcher_public RESTRICT" in library_inverse_sql and
+           "CASCADE" not in library_inverse_sql.upper(), "LIBRARY_INVERSE_DRIFT")
     insist("aoe2war_social_exec_v2" in social and
            "aoe2war_social_writer" in social and
            "aoe2war_social_hd_v2.clan_text(text,text,text,text)" in social and
@@ -158,7 +162,7 @@ def verify(root: Path = ROOT, manifest: Path = MANIFEST) -> dict[str, Any]:
     insist("REVOKE ALL ON FUNCTION" in social and "FROM PUBLIC;" in social and
            "has_table_privilege('aoe2war_social_exec_v2','public.users','DELETE')" in social,
            "SOCIAL_PUBLIC_OR_USERS_FINANCE_DENIAL_DRIFT")
-    insist("CASCADE" not in social_inv.upper() and
+    insist("CASCADE" not in social_inverse_sql.upper() and
            "DROP ROLE aoe2war_social_writer" in social_inv and
            "DROP ROLE aoe2war_social_exec_v2" in social_inv,
            "SOCIAL_INVERSE_DRIFT")
