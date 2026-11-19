@@ -31,6 +31,10 @@ jobs:
           python-version: '3.13'
       - name: Install isolated test dependencies
         run: python -m pip install --disable-pip-version-check --no-cache-dir 'pytest==9.0.2' 'cryptography==46.0.4'
+      # SOLE-HUMAN OWNER: Delegated source-only technical review recorded at
+      # https://github.com/Emaren/wolochain/pull/248#issuecomment-6995391619
+      # 120/120 independent tests + explicit production-executor denial. This
+      # does NOT approve a financial gate, a live SQL/HBA change or DocsV2.
       - name: Verify source candidate against pinned six-file review manifest
         run: |
           python - <<'PY'
@@ -38,11 +42,11 @@ jobs:
           import hashlib
           expected = {
             'README_INTEGRATION_C03.md': 'a8a8ee178470352a837b413da72e376319e6af026bfd5078b8ffe399b08deec0',
-            'scripts/c03_durable_admission.py': '3d256ca1bc2b39f07eeb69b1a89612d4e584076ce5fcb8edec07e5b15e54df68',
-            'scripts/c03_pg16_evidence_bridge.py': '7dd5b439c75932dfb153ab11366afa71581b564b57c3cd20d267703b153588ed',
+            'scripts/c03_durable_admission.py': '3e292443e334ec73bc0e6daf5ccafeb9b1d9af6c52fa9d8f4510183067287207',
+            'scripts/c03_pg16_evidence_bridge.py': 'b90926a8e89814f2eecd4cda50ae7b8db40b10d9d73cb4b1b0d26fb476a7a2b0',
             'tests/fixtures/c03_pg16_disposable_observation.json': '300d19f126eaa42e48c75666ed52b3ea169f05903ef14840bf622486f9fa809c',
             'tests/test_c03_durable_admission.py': 'c07e77a9fdf46d542c4a9eac48500fcd8158bf948e89373674b33d0adf01a782',
-            'tests/test_c03_pg16_evidence_bridge.py': '0113b68e7a5de08566f800c241fe1da08c6950dafe16dff9fa4eebd09dedd0ee',
+            'tests/test_c03_pg16_evidence_bridge.py': '62fb557ff76904cfb90a862bfb6c6c9c16a462f2e48467cd5f541771c80ac6cc',
           }
           for path, wanted in expected.items():
             actual = hashlib.sha256(Path(path).read_bytes()).hexdigest()
