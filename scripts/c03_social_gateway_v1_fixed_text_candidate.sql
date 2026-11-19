@@ -156,6 +156,28 @@ BEGIN
   END IF;
   v_key := least(v_actor.id,v_target.id)::text||':'||greatest(v_actor.id,v_target.id)::text;
   PERFORM pg_catalog.pg_advisory_xact_lock(84913,v_actor.id::integer);
+  -- All business-rule failure decisions happen BEFORE DML; unlike returning
+  -- an error after creating participants, this preserves rollback semantics.
+  SELECT c.id INTO v_conversation FROM public.direct_conversations c WHERE c.pair_key=v_key;
+  IF p_reply_id IS NOT NULL AND
+     (v_conversation IS NULL OR NOT EXISTS(
+       SELECT 1 FROM public.direct_messages m WHERE m.id=p_reply_id
+         AND m.conversation_id=v_conversation)) THEN
+    RETURN jsonb_build_object('status',400,'body',jsonb_build_object('detail','REPLY_OUTSIDE_CONVERSATION'));
+  END IF;
+  IF v_conversation IS NOT NULL THEN
+    SELECT m.id,m.body,m.reply_to_message_id,m.created_at INTO v_recent
+      FROM public.direct_messages m
+      WHERE m.conversation_id=v_conversation AND m.sender_user_id=v_actor.id
+      ORDER BY m.created_at DESC,m.id DESC LIMIT 1;
+    IF FOUND AND clock_timestamp()-v_recent.created_at < interval '1 second' THEN
+      IF v_recent.body=v_body AND v_recent.reply_to_message_id IS NOT DISTINCT FROM p_reply_id THEN
+        RETURN jsonb_build_object('status',201,'body',jsonb_build_object(
+          'ok',true,'messageId',v_recent.id,'targetUid',v_target.uid,'replayed',true));
+      END IF;
+      RETURN jsonb_build_object('status',429,'body',jsonb_build_object('detail','DIRECT_SEND_COOLDOWN'));
+    END IF;
+  END IF;
   INSERT INTO public.direct_conversations(pair_key,created_at,updated_at)
     VALUES(v_key,clock_timestamp(),clock_timestamp()) ON CONFLICT(pair_key) DO NOTHING;
   SELECT c.id INTO v_conversation FROM public.direct_conversations c WHERE c.pair_key=v_key;
@@ -166,22 +188,6 @@ BEGIN
     VALUES(v_conversation,v_actor.id,clock_timestamp()),
           (v_conversation,v_target.id,clock_timestamp())
     ON CONFLICT(conversation_id,user_id) DO NOTHING;
-  IF p_reply_id IS NOT NULL AND NOT EXISTS(
-      SELECT 1 FROM public.direct_messages m WHERE m.id=p_reply_id
-      AND m.conversation_id=v_conversation) THEN
-    RETURN jsonb_build_object('status',400,'body',jsonb_build_object('detail','REPLY_OUTSIDE_CONVERSATION'));
-  END IF;
-  SELECT m.id,m.body,m.reply_to_message_id,m.created_at INTO v_recent
-    FROM public.direct_messages m
-    WHERE m.conversation_id=v_conversation AND m.sender_user_id=v_actor.id
-    ORDER BY m.created_at DESC,m.id DESC LIMIT 1;
-  IF FOUND AND clock_timestamp()-v_recent.created_at < interval '1 second' THEN
-    IF v_recent.body=v_body AND v_recent.reply_to_message_id IS NOT DISTINCT FROM p_reply_id THEN
-      RETURN jsonb_build_object('status',201,'body',jsonb_build_object(
-        'ok',true,'messageId',v_recent.id,'targetUid',v_target.uid,'replayed',true));
-    END IF;
-    RETURN jsonb_build_object('status',429,'body',jsonb_build_object('detail','DIRECT_SEND_COOLDOWN'));
-  END IF;
   INSERT INTO public.direct_messages(conversation_id,sender_user_id,body,
       reply_to_message_id,created_at)
     VALUES(v_conversation,v_actor.id,v_body,p_reply_id,clock_timestamp())
