@@ -1,0 +1,82 @@
+name: C03 HD-only v2 restricted fixed social gateway exact real PG16
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/c03_hd_gateway_v2_restricted_install_candidate.sql'
+      - 'scripts/c03_hd_gateway_v2_restricted_inverse_candidate.sql'
+      - 'scripts/c03_hd_gateway_v2_physical_rehearsal.py'
+      - '.github/workflows/c03-hd-v2-restricted-gateway-physical.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  hd-v2:
+    name: Real PG16 HD ACL preimage, two-tier Clan/Direct, denial and exact inverse
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Exact three source blob pins, nonroot and syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(id -u)" != 0
+          test "$(git hash-object scripts/c03_hd_gateway_v2_restricted_install_candidate.sql)" = 'f38636b7ea1b7efe178831e1a40a78dad5604749'
+          test "$(git hash-object scripts/c03_hd_gateway_v2_restricted_inverse_candidate.sql)" = '1c11073a44643e90bd59ae36118432001772b1da'
+          test "$(git hash-object scripts/c03_hd_gateway_v2_physical_rehearsal.py)" = '10761e678d4ccad7dac441d3b8efb326f9178d1b'
+          python3 -B -m py_compile scripts/c03_hd_gateway_v2_physical_rehearsal.py
+      - name: Install real isolated PostgreSQL 16 only
+        shell: bash
+        run: |
+          set -euo pipefail
+          if test ! -x /usr/lib/postgresql/16/bin/initdb; then
+            sudo apt-get update -qq
+            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq postgresql-16
+          fi
+          /usr/lib/postgresql/16/bin/postgres --version | grep -E '^postgres \(PostgreSQL\) 16[.]'
+      - name: Execute exact HD-only v2 source and all production-semantic test negatives in a disposable PG16
+        shell: bash
+        env:
+          C03_DISPOSABLE_FIXED_GATEWAY_ONLY: '1'
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: |
+          set -euo pipefail
+          python3 -B scripts/c03_hd_gateway_v2_physical_rehearsal.py | tee /tmp/c03-hd-v2.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          result=json.loads(Path('/tmp/c03-hd-v2.json').read_text())
+          assert result['status']=='PASS' and result['postgres']=='16'
+          assert result['real_pg'] and result['ephemeral'] and result['no_tcp']
+          assert result['all_legacy_raw_acl_exact'] and result['hd_preimage_explicit_8_null_4']
+          assert result['case_count']==len(result['checks']) and result['case_count']>=39
+          for label in (
+            'HD preimage exactly 4 raw NULL sequences and 8 explicit table ACLs',
+            'finance-owned social object aborts before role admission',
+            'enabled user trigger aborts before role admission',
+            'high-level gateway owned by NOLOGIN NOINHERIT nonsuperuser executor',
+            'narrow executor cannot delete user to cascade finance',
+            'web writer cannot execute privileged leaf',
+            'web writer cannot read unrestricted direct messages',
+            'clan sent with exact success response contract',
+            'direct text creates pair, participants and message',
+            'only author draft cleared; recipient draft untouched',
+          ):
+            assert label in result['checks'],label
+          assert any('inverse exactly restores' in x for x in result['checks'])
+          print('C03_HD_V2_RESTRICTED_REAL_PG16_SOURCE_CONTRACT_PASS')
+          PY
+      - name: Unopted execution must stop and scratch environment removed
+        shell: bash
+        run: |
+          set -euo pipefail
+          if env -u C03_DISPOSABLE_FIXED_GATEWAY_ONLY python3 -B scripts/c03_hd_gateway_v2_physical_rehearsal.py >/tmp/c03-no-opt.log 2>&1; then exit 1; fi
+          grep -q 'C03_FIXED_GATEWAY_EXPLICIT_TEST_OPTIN_REQUIRED' /tmp/c03-no-opt.log
+          if find /tmp -maxdepth 1 -name 'c03-fixed-gateway-pg16-*' -print | grep -q .; then exit 1; fi
+      - name: Physical authority separation
+        run: echo 'NOT A HEL1 INSTALL PERMIT. Owner supplementary financial role reachability, exact live HD preimage, source acceptance, root permit, and T10 remain pending. C03 OPEN and FUNDING DENIED.'
