@@ -1,0 +1,48 @@
+name: C03 private catalog offline classifier synthetic fail-closed tests
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/c03_owner_capture_offline_triage_20261119.py'
+      - '.github/workflows/c03-owner-catalog-offline-triage.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  triage:
+    name: C03 SHA-pinned offline classifier and synthetic privacy/authority denial
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Verify original tool blob and unprivileged identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(id -u)" != 0
+          test "$(git hash-object scripts/c03_owner_capture_offline_triage_20261119.py)" = '974ceab143f48a505058f2c8b037005f6d729877'
+          python3 -B -m py_compile scripts/c03_owner_capture_offline_triage_20261119.py
+      - name: Strict synthetic self-test (no real finance files or credentials)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -B scripts/c03_owner_capture_offline_triage_20261119.py --self-test > /tmp/c03-source-only-triage.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          x=json.loads(Path('/tmp/c03-source-only-triage.json').read_text())
+          assert x['status']=='PASS' and x['source_only'] and not x['production_access']
+          assert x['checks']>=8
+          print('C03_OFFLINE_CATALOG_CLASSIFIER_SYNTHETIC_TEST_PASS')
+          PY
+      - name: Never run against actual financial database
+        shell: bash
+        run: |
+          set -euo pipefail
+          if python3 -B scripts/c03_owner_capture_offline_triage_20261119.py > /tmp/c03-no-capture.log 2>&1; then exit 1; fi
+          grep -q 'HOLD: requires explicit private capture path' /tmp/c03-no-capture.log
+          echo 'C03_NO_LIVE_DATABASE_USAGE_AND_NO_ARTIFACT_UPLOAD'
