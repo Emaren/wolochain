@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war"]
 audience: ["developers", "operators", "ai-agents"]
 source_of_truth: "git"
 authority: "source-only-isolated-negative-proof-never-a-production-DDL-permit"
-reviewed_at: "2026-11-06"
+reviewed_at: "2026-11-19"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -63,3 +63,11 @@ Do not use this report to issue a permit or apply DDL to live HD/DE. The require
 ## Recovery evidence provenance
 
 Source-only GitHub PR and current HEL1/Intel source receipts are separate artifacts. Final acceptance is only through the WoloChain #5 register with exact source SHAs and physical receipts; a merged branch is not a physical financial gate closure.
+
+## November 19, 2026 — limited authority and dated evidence review
+
+An AI source examiner acting through the sole owner's existing connected source workspace checked this document's 51 original body lines for repository-source links, gate-authorization claims, older governance conditions and current-versus-historical language; 1 referenced local source paths were resolved. This is a **scope and safety review**, not an independent human signature or a fresh validation of each historical physical claim. Original observations remain dated and unmodified.
+
+**Topic-specific reconciliation (financial writer exclusion):** C03 is OPEN. HD/DE original owner roles retain financial write capabilities. Restricted social V2 and Library filtered views are separate additive nonfinancial application contracts, not a global writer fence.
+
+**Current controlling decision:** WoloChain issue #239 and reviewed code head `70a95e8f9cb0facbec314063e9deafe7e15aa550`. C04 and C08 CLOSED; C01/C02/C03/C05/C06/C07/C09 OPEN; funding DENIED. The original test/source facts remain evidence only and may not authorize live SQL, HBA, custody, funds, backups or a canary. Live acceptance requires exact source, legitimate protected owner authority and independent physical readback.

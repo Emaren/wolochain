@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2hdbets", "tokenchain"]
 audience: ["operators", "developers", "financial-reviewers", "ai-agents"]
 source_of_truth: "git"
 authority: "read-only-discovery-only-no-maintenance-unit-change"
-reviewed_at: "2026-11-08"
+reviewed_at: "2026-11-19"
 review_interval_days: 7
 sensitivity: "internal"
 ---
@@ -38,3 +38,13 @@ The canonical `scripts/check-chain-invariants.sh` guard originally barred every 
 Eight independent fixture tests execute the **actual invariant parser** against exact allowlisted labels and adversarial unexpected chain-source/registration/documentation references. The full canonical `WOLO_SKIP_RUNTIME_CHECKS=1 ./scripts/check-chain-invariants.sh` must still PASS with no widened admission.
 
 **C03 remains HARD HOLD:** 3031 restricted website fallback lacks Steam/session SECURITY DEFINER EXECUTE and non-equivalent auth cookies, as Session B is repairing; Traffic protected scope also requires review. No running indexer, heartbeat timer, website, validator, DB role, protected C01 unit, financial journal, or asset was modified by this source patch. No WOLO funding or C09 permit is authorized.
+
+## November 19, 2026 — limited authority and dated evidence review
+
+An AI source examiner acting through the sole owner's existing connected source workspace checked this document's 26 original body lines for repository-source links, gate-authorization claims, older governance conditions and current-versus-historical language; 3 referenced local source paths were resolved. This is a **scope and safety review**, not an independent human signature or a fresh validation of each historical physical claim. Original observations remain dated and unmodified.
+
+**Topic-specific reconciliation (financial writer exclusion):** C03 is OPEN. HD/DE original owner roles retain financial write capabilities. Restricted social V2 and Library filtered views are separate additive nonfinancial application contracts, not a global writer fence.
+
+**Current controlling decision:** WoloChain issue #239 and reviewed code head `70a95e8f9cb0facbec314063e9deafe7e15aa550`. C04 and C08 CLOSED; C01/C02/C03/C05/C06/C07/C09 OPEN; funding DENIED. The original test/source facts remain evidence only and may not authorize live SQL, HBA, custody, funds, backups or a canary. Live acceptance requires exact source, legitimate protected owner authority and independent physical readback.
+
+**References not resolved in this WoloChain checkout:** `scripts/backfill-wolo-mainnet-transfers.mjs`. They are not falsely asserted present; they may be other-repository or historical identifiers.

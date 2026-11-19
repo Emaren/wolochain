@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war", "aoe2dewarwagers"]
 audience: ["developers", "operators", "ai-agents"]
 source_of_truth: "git"
 authority: "non-authorizing-c07-isolated-recovery-rehearsal"
-reviewed_at: "2026-11-09"
+reviewed_at: "2026-11-19"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -59,3 +59,11 @@ A match produces a new exclusive mode0600 receipt and a **nonfunded rehearsal pa
 A finance-only production writer freeze is needed, coordinated with Session B's authenticated finance-safe website rollback. C06 must capture the same consistent financial checkpoint across HD+DE, global roles including secure password-verifier treatment, exact Wolo ledger, journals, nonce/permit and WAL, plus all large replay tables. Only C07 restoration of that **same C06 package**, genuine negative replay tests and new owner source-bound acceptance can close C07.
 
 No production financial services were started or modified by this rehearsal; no historical payout was released. C04+C08 remain closed; C01/C02/C03/C05/C06/C07/C09 remain formally OPEN.
+
+## November 19, 2026 — limited authority and dated evidence review
+
+An AI source examiner acting through the sole owner's existing connected source workspace checked this document's 47 original body lines for repository-source links, gate-authorization claims, older governance conditions and current-versus-historical language; 3 referenced local source paths were resolved. This is a **scope and safety review**, not an independent human signature or a fresh validation of each historical physical claim. Original observations remain dated and unmodified.
+
+**Topic-specific reconciliation (independent restore):** C07 is OPEN. Older Intel restored-clone tests are not an independent restoration of the identical accepted C06 ciphertext.
+
+**Current controlling decision:** WoloChain issue #239 and reviewed code head `70a95e8f9cb0facbec314063e9deafe7e15aa550`. C04 and C08 CLOSED; C01/C02/C03/C05/C06/C07/C09 OPEN; funding DENIED. The original test/source facts remain evidence only and may not authorize live SQL, HBA, custody, funds, backups or a canary. Live acceptance requires exact source, legitimate protected owner authority and independent physical readback.
