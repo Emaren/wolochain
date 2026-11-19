@@ -1,3 +1,18 @@
+---
+id: "aoe2war.wolochain.c03-signed-evidence-source-integration"
+title: "WE1 C03 — disposable PG16 + signed-evidence source integration"
+type: "working"
+status: "draft"
+owner: "wolochain-ops"
+systems: ["wolochain"]
+audience: ["developers","operators","ai-agents"]
+source_of_truth: "git"
+authority: "historical-test-receipts-source-only-not-production-admission"
+reviewed_at: "2026-11-19"
+review_interval_days: 14
+sensitivity: "restricted"
+---
+
 # WE1 C03 — disposable PG16 + signed-evidence source integration
 
 Status: **SOURCE-ONLY / DRAFT / FUNDING DENIED / C03 OPEN**.
@@ -47,3 +62,6 @@ readbacks, and separately commit/admit through its own FINANCIAL source
 procedure. Applying this patch is not automatically an independent approval.
 The existing DocsV2 review backlog remains outstanding; no historical
 `reviewed_at` field is changed by this patch.
+
+
+**November 19 source review:** The 15-check receipts above are historical integration checkpoints; they are not the latest C03 proof. Draft PR #248 separately includes an HD-only restricted social gateway (51/51 real PG16 source rehearsal), filtered Library views, and a later 19-check HD Library rehearsal. None represents a production writer-fence, an installed HEL1 SQL role, or a financial gate closure. The root-identity and DocsV2 backlog remain unresolved. This review was performed with the owner's connected source account and independent machine tests; it is not a second-human signature.
