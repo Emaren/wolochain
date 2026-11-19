@@ -18,7 +18,12 @@ EXPECTED = "{aoe2hd_user=arwdDxt/aoe2hd_user,aoe2war_r25_web_ro=r/aoe2hd_user}"
 
 
 def call(*args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
-    return subprocess.run([str(x) for x in args], capture_output=True, text=True, check=check)
+    result = subprocess.run([str(x) for x in args], capture_output=True, text=True, check=False)
+    if check and result.returncode != 0:
+        # All subprocesses target a fresh synthetic PGDATA, never a live catalog.
+        raise RuntimeError(f"DISPOSABLE_PG16_CMD_FAILED exit={result.returncode} "
+                           f"stderr={result.stderr[-1400:]} stdout={result.stdout[-400:]}")
+    return result
 
 
 def main() -> None:
