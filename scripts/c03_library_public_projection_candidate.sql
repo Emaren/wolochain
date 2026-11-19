@@ -68,12 +68,53 @@ WITH (security_barrier=true) AS
    'failedCount',CASE WHEN jsonb_typeof(e.metadata::jsonb->'failedCount')='number'
                     THEN e.metadata::jsonb->'failedCount' END,
    'gameIds',CASE WHEN jsonb_typeof(e.metadata::jsonb->'gameIds')='array'
-                      AND jsonb_array_length(e.metadata::jsonb->'gameIds')<=256
+                    THEN CASE WHEN jsonb_array_length(e.metadata::jsonb->'gameIds')<=256
                     THEN (SELECT coalesce(jsonb_agg(g.value ORDER BY g.ordinality),'[]'::jsonb)
                           FROM jsonb_array_elements(e.metadata::jsonb->'gameIds')
                             WITH ORDINALITY AS g(value,ordinality)
                           WHERE jsonb_typeof(g.value)='number'
-                            AND g.value::text ~ '^[1-9][0-9]{0,11}$') END
+                            AND g.value::text ~ '^[1-9][0-9]{0,11}
+ )) AS metadata
+ FROM public.user_activity_events e
+ WHERE e.type='replay_upload'
+   AND EXISTS (SELECT 1 FROM public.users u WHERE u.id=e.user_id
+     AND u.uid IS NOT NULL AND u.verification_method IS DISTINCT FROM 'system'
+     AND u.uid !~ '^aoe2hd_ai_');
+ALTER VIEW aoe2war_library_activity_public.replay_uploads
+ OWNER TO aoe2hd_user;
+
+CREATE VIEW aoe2war_library_watcher_public.batch_receipts
+WITH (security_barrier=true) AS
+ SELECT e.id,e.user_id,e.user_uid,e.event_type,e.created_at,
+   CASE WHEN e.watcher_id IS NULL THEN NULL
+        ELSE 'w-'||md5(coalesce(e.user_uid,e.user_id::text,'')||':'||e.watcher_id) END
+        AS watcher_id,
+   CASE WHEN e.session_id IS NULL THEN NULL
+        ELSE 's-'||md5(coalesce(e.user_uid,e.user_id::text,'')||':'||e.session_id) END
+        AS session_id,
+   e.replay_hash
+ FROM public.watcher_client_events e
+ WHERE e.event_type IN (
+   'batch_upload_started','batch_upload_scanned',
+   'batch_upload_file_started','batch_upload_file_stable',
+   'batch_upload_file_skipped','batch_upload_file_succeeded',
+   'batch_upload_file_failed','batch_upload_finished',
+   'batch_upload_failed')
+   AND (e.user_id IS NOT NULL OR e.user_uid IS NOT NULL)
+   AND EXISTS (SELECT 1 FROM public.users u
+     WHERE (e.user_id IS NULL OR u.id=e.user_id)
+       AND (e.user_uid IS NULL OR u.uid=e.user_uid)
+       AND u.uid IS NOT NULL
+       AND u.verification_method IS DISTINCT FROM 'system'
+       AND u.uid !~ '^aoe2hd_ai_');
+ALTER VIEW aoe2war_library_watcher_public.batch_receipts
+ OWNER TO aoe2hd_user;
+GRANT USAGE ON SCHEMA aoe2war_library_activity_public TO aoe2war_web_prod;
+GRANT USAGE ON SCHEMA aoe2war_library_watcher_public TO aoe2war_web_prod;
+GRANT SELECT ON aoe2war_library_activity_public.replay_uploads TO aoe2war_web_prod;
+GRANT SELECT ON aoe2war_library_watcher_public.batch_receipts TO aoe2war_web_prod;
+COMMIT;
+) END END
  )) AS metadata
  FROM public.user_activity_events e
  WHERE e.type='replay_upload'
