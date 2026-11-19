@@ -28,7 +28,7 @@ jobs:
           test "$(id -u)" != 0
           test "$(git hash-object scripts/c03_hd_gateway_v2_restricted_install_candidate.sql)" = 'f38636b7ea1b7efe178831e1a40a78dad5604749'
           test "$(git hash-object scripts/c03_hd_gateway_v2_restricted_inverse_candidate.sql)" = '1c11073a44643e90bd59ae36118432001772b1da'
-          test "$(git hash-object scripts/c03_hd_gateway_v2_physical_rehearsal.py)" = 'ad48d040a62c6731a1f47aa5ba3d06f9138dc14d'
+          test "$(git hash-object scripts/c03_hd_gateway_v2_physical_rehearsal.py)" = 'eca1fd003ca90129be6e6a5c4eb3f05bc2e0edfc'
           python3 -B -m py_compile scripts/c03_hd_gateway_v2_physical_rehearsal.py
       - name: Install real isolated PostgreSQL 16 only
         shell: bash
@@ -54,9 +54,10 @@ jobs:
           assert result['status']=='PASS' and result['postgres']=='16'
           assert result['real_pg'] and result['ephemeral'] and result['no_tcp']
           assert result['all_legacy_raw_acl_exact'] and result['hd_preimage_explicit_8_null_4']
-          assert result['case_count']==len(result['checks']) and result['case_count']>=49
+          assert result['case_count']==len(result['checks']) and result['case_count']>=50
           for label in (
             'HD preimage exactly 4 raw NULL sequences and 8 explicit table ACLs',
+            'DE gateway installation rejected at exact database identity check',
             'synthetic HD column-level attacl has non-NULL bytes',
             'all original column attacl bytes unchanged after installation',
             'all original column attacl bytes unchanged after Clan Direct sends',
