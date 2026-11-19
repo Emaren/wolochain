@@ -1,0 +1,106 @@
+name: C03 actual WE3 social SQL grant and inverse disposable physical review
+
+on:
+  pull_request:
+    paths:
+      - 'tests/fixtures/c03_social_writer_grants_review_only.sql'
+      - 'tests/fixtures/c03_social_writer_inverse_review_only.sql'
+      - '.github/workflows/c03-social-sql-exact-inverse-rehearsal.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  reviewed-sql:
+    name: C03 exact WE3 SQL on synthetic PG16 including raw ACL inverse and transitive trap
+    runs-on: ubuntu-24.04
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Pin literal WE3 reviewed SQL source fixtures and nonroot test
+        run: |
+          set -euo pipefail
+          test "$(git hash-object tests/fixtures/c03_social_writer_grants_review_only.sql)" = 'f6ea0e256c681c4f17ec78a843380bec00351c10'
+          test "$(git hash-object tests/fixtures/c03_social_writer_inverse_review_only.sql)" = '9a692a6cf674a588083cc7cc20ceeccb93d51c86'
+          test "$(id -u)" != 0
+      - name: Isolated PostgreSQL16 only
+        run: |
+          set -euo pipefail
+          if test ! -x /usr/lib/postgresql/16/bin/initdb; then
+            sudo apt-get update -qq
+            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq postgresql-16
+          fi
+      - name: Apply exact SQL, test permitted operations and finance negatives, compare raw inverse
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$(mktemp -d /tmp/we1-c03-social-exact-XXXXXX)"
+          trap 'set +e; /usr/lib/postgresql/16/bin/pg_ctl -D "$root/pgdata" -m immediate -w stop >/dev/null 2>&1; rm -rf -- "$root"' EXIT
+          chmod 700 "$root"
+          mkdir -m 700 "$root/socket"
+          port="$((44000 + $$ % 3000))"
+          /usr/lib/postgresql/16/bin/initdb -D "$root/pgdata" --no-sync --auth-local=trust --auth-host=reject >/dev/null
+          /usr/lib/postgresql/16/bin/pg_ctl -D "$root/pgdata" -o "-c listen_addresses= -c unix_socket_directories=$root/socket -c port=$port" -w -l "$root/pg.log" start >/dev/null
+          ps16() { /usr/lib/postgresql/16/bin/psql -X -A -t -v ON_ERROR_STOP=1 -h "$root/socket" -p "$port" -d postgres "$@"; }
+          cat > "$root/schema.sql" <<'SQL'
+          CREATE ROLE aoe2war_web_prod LOGIN NOINHERIT;
+          REVOKE CREATE ON SCHEMA public FROM PUBLIC;
+          CREATE TABLE public.users(id serial PRIMARY KEY,uid text,is_admin boolean,verification_method text,in_game_name text,steam_persona_name text,created_at timestamptz,wallet_balance numeric);
+          CREATE TABLE public.clans(id serial PRIMARY KEY,slug text,status text,chat_audience_policy text);
+          CREATE TABLE public.clan_members(clan_id integer,user_id integer,status text,role text);
+          CREATE TABLE public.clan_messages(id serial PRIMARY KEY,clan_id integer,author_user_id integer,body text,audience text,created_at timestamptz,updated_at timestamptz);
+          CREATE TABLE public.direct_conversations(id serial PRIMARY KEY,pair_key text UNIQUE,created_at timestamptz,updated_at timestamptz);
+          CREATE TABLE public.direct_conversation_participants(id serial PRIMARY KEY,conversation_id integer,user_id integer,joined_at timestamptz,last_read_at timestamptz,typing_updated_at timestamptz,UNIQUE(conversation_id,user_id));
+          CREATE TABLE public.direct_messages(id serial PRIMARY KEY,conversation_id integer,sender_user_id integer,body text,reply_to_message_id integer,created_at timestamptz);
+          CREATE TABLE public.direct_message_drafts(conversation_id integer,user_id integer);
+          CREATE TABLE public.financial_test_escrow(id serial PRIMARY KEY,amount integer);
+          CREATE FUNCTION public.c03_hidden_finance_trigger() RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,public AS $$ BEGIN INSERT INTO public.financial_test_escrow(amount) VALUES (888); RETURN NEW; END $$;
+          REVOKE EXECUTE ON FUNCTION public.c03_hidden_finance_trigger() FROM PUBLIC;
+          CREATE TRIGGER c03_hidden_finance_echo AFTER INSERT ON public.clan_messages FOR EACH ROW EXECUTE FUNCTION public.c03_hidden_finance_trigger();
+          CREATE FUNCTION public.c03_finance_public_definer() RETURNS void LANGUAGE sql SECURITY DEFINER AS $$ INSERT INTO public.financial_test_escrow(amount) VALUES (777); $$;
+          SQL
+          ps16 -f "$root/schema.sql" >/dev/null
+          cat > "$root/acl.sql" <<'SQL'
+          SELECT 'rel:'||c.relname||':'||COALESCE(c.relacl::text,'<NULL>')
+          FROM pg_class c WHERE c.relnamespace='public'::regnamespace AND c.relkind IN ('r','p','S')
+          UNION ALL
+          SELECT 'att:'||c.relname||'.'||a.attname||':'||COALESCE(a.attacl::text,'<NULL>')
+          FROM pg_class c JOIN pg_attribute a ON a.attrelid=c.oid
+          WHERE c.relnamespace='public'::regnamespace AND c.relkind IN ('r','p')
+            AND a.attnum>0 AND NOT a.attisdropped
+          ORDER BY 1;
+          SQL
+          ps16 -f "$root/acl.sql" > "$root/before.txt"
+          ps16 -f tests/fixtures/c03_social_writer_grants_review_only.sql > "$root/grant.log"
+          test "$(ps16 -c "SELECT rolcanlogin AND NOT rolinherit AND NOT rolsuper FROM pg_roles WHERE rolname='aoe2war_social_writer'")" = t
+          test "$(ps16 -c "SELECT has_sequence_privilege('aoe2war_social_writer','public.clan_messages_id_seq','USAGE')")" = t
+          test "$(ps16 -c "SELECT has_sequence_privilege('aoe2war_social_writer','public.users_id_seq','USAGE')")" = f
+          test "$(ps16 -c "SELECT has_table_privilege('aoe2war_social_writer','public.financial_test_escrow','INSERT')")" = f
+          ps16 -U aoe2war_social_writer -c "INSERT INTO public.clan_messages(clan_id,author_user_id,body,audience,created_at,updated_at) VALUES(1,1,'synthetic','public',now(),now()) RETURNING id" >/dev/null
+          test "$(ps16 -c 'SELECT count(*) FROM public.financial_test_escrow WHERE amount=888')" = 1
+          echo 'REAL_TRIGGER_COUNTEREXAMPLE: social INSERT reaches synthetic finance despite NO DIRECT role grants'
+          test "$(ps16 -c "SELECT has_function_privilege('aoe2war_social_writer','public.c03_hidden_finance_trigger()','EXECUTE')")" = f
+          ps16 -U aoe2war_social_writer -c 'SELECT public.c03_finance_public_definer();' >/dev/null
+          test "$(ps16 -c 'SELECT count(*) FROM public.financial_test_escrow WHERE amount=777')" = 1
+          echo 'REAL_PUBLIC_SECURITY_DEFINER_COUNTEREXAMPLE: eligible if original catalog contains such routine'
+          if ps16 -U aoe2war_social_writer -c "INSERT INTO public.financial_test_escrow(amount) VALUES(999)" > "$root/denied.out" 2>&1; then exit 1; fi
+          grep -q 'permission denied' "$root/denied.out"
+          ps16 -f scripts/c03_social_writer_catalog_readonly.sql > "$root/witness.out"
+          grep -q 'c03_hidden_finance_echo' "$root/witness.out"
+          grep -q 'c03_finance_public_definer' "$root/witness.out"
+          echo 'READONLY_CATALOG_DETECTED_TRIGGER_AND_PUBLIC_DEFINER'
+          ps16 -f tests/fixtures/c03_social_writer_inverse_review_only.sql > "$root/inverse.log"
+          test "$(ps16 -c "SELECT count(*) FROM pg_roles WHERE rolname='aoe2war_social_writer'")" = 0
+          ps16 -f "$root/acl.sql" > "$root/after.txt"
+          if diff -u "$root/before.txt" "$root/after.txt" > "$root/acl.diff"; then
+            echo 'WE3_SQL_INVERSE_RAW_ACL_EXACT_PASS'
+          else
+            echo 'WE3_SQL_INVERSE_RAW_ACL_DRIFT_HOLD'
+            cat "$root/acl.diff"
+            exit 1
+          fi
+      - name: Source-only never authorizes financial operations
+        run: echo 'Passing a synthetic test is not an accepted live HD+DE graph, audited owner decision, root permit or funding authority.'
