@@ -1,4 +1,4 @@
-name: C03 actual PG16 gateway SECURITY DEFINER owner and PUBLIC negative
+name: C03 actual PG16 gateway SECURITY DEFINER owner and PUBLIC semantics
 
 on:
   pull_request:
@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   negative:
-    name: real PG16 installer owner counterexample and PUBLIC pseudo-role refusal
+    name: real PG16 installer owner counterexample and PUBLIC privilege denial
     runs-on: ubuntu-24.04
     timeout-minutes: 12
     steps:
@@ -22,7 +22,7 @@ jobs:
       - name: Exact source and nonroot
         run: |
           set -euo pipefail
-          test "$(git hash-object scripts/c03_social_gateway_owner_public_counterexample.py)" = '848ed47b1d6f77be921c91e054716ec04d3ac106'
+          test "$(git hash-object scripts/c03_social_gateway_owner_public_counterexample.py)" = 'b9c72a5a3e9db5117e74067af6bd127ec0fef83f'
           test "$(id -u)" != '0'
           python3 -B -m py_compile scripts/c03_social_gateway_owner_public_counterexample.py
       - name: PostgreSQL16 ephemeral only
@@ -48,7 +48,7 @@ jobs:
           assert x['source_only'] and not x['finance_host_touched']
           assert x['case_count']==len(x['checks']) and x['case_count']>=7
           assert 'unqualified CREATE by cluster admin gives SECURITY DEFINER function schema and view superuser ownership' in x['checks']
-          assert 'has_function_privilege rejects PUBLIC pseudo-role as an actual role' in x['checks']
+          assert 'PUBLIC pseudo-role has no EXECUTE after exact revocation' in x['checks']
           print('C03_REAL_PG16_PRIVILEGED_OWNER_AND_PUBLIC_NEGATIVE_ACCEPTED')
           PY
       - name: Unopted refusal and scratch cleanup
