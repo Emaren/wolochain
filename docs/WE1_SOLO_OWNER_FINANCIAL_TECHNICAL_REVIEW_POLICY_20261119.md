@@ -1,3 +1,18 @@
+---
+id: "aoe2war.wolochain.we1-solo-owner-technical-review-policy-20261119"
+title: "WE1 solo-owner financial engineering — source review vs physical authority"
+type: "working"
+status: "draft"
+owner: "wolochain-ops"
+systems: ["wolochain"]
+audience: ["developers","operators","ai-agents"]
+source_of_truth: "git"
+authority: "single-human-source-review-policy-no-production-permit"
+reviewed_at: "2026-11-19"
+review_interval_days: 14
+sensitivity: "restricted"
+---
+
 # WE1 solo-owner financial engineering — source review vs physical authority
 
 **Effective 2026-11-18 owner directive; written 2026-11-19 UTC. SOURCE POLICY ONLY.**
@@ -47,3 +62,6 @@ Traffic PR #74's previously issued exact-scope technical ACCEPT remains unchange
 Always record: full source hash, CI IDs and conclusions, who authored and who *technically* reproduced the work, positive tests, negative counterexamples, unknowns, exact physical observations and time, reversible preimages, permitted next step and explicit owner-permit requirements.
 
 **C04 and C08 CLOSED (2/9). C01, C02, C03, C05, C06, C07, C09 OPEN (7/9). FUNDING DENIED.** Maintain these until a specific physical gate actually passes, with a separate owner authorization where needed.
+
+
+**2026-11-19 source-only review addendum:** The authenticated owner-present HD/DE supplemental read-only catalog is now available privately. It confirms HD and DE legacy event owners have financial authority; the HD Library projection may use their static owner-executed filtered read view only, never inherit the broad owner role. WE1 source tests include exact HD-only and original ACL inverse; the production service-secret, DB CONNECT/HBA, one-use root scope, full C03 writer fence and eligible C06/C07 snapshot remain HOLDS. Do not interpret this addendum as an independent human review or installation authority.
