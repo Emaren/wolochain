@@ -1,0 +1,87 @@
+name: C03 fixed-purpose Clan and Direct gateway real PostgreSQL16 source-only
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/c03_social_gateway_v1_fixed_text_candidate.sql'
+      - 'scripts/c03_social_gateway_v1_inverse_candidate.sql'
+      - 'scripts/c03_social_gateway_v1_rehearsal.py'
+      - '.github/workflows/c03-social-gateway-fixed-v1-physical.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fixed-contract-pg16:
+    name: WE1 exact Clan Direct source, semantic negatives and 12-ACL inverse
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Pin exact source identities and enforce nonroot
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(id -u)" != 0
+          test "$(git hash-object scripts/c03_social_gateway_v1_fixed_text_candidate.sql)" = 'c1ba544d02d0becbaa460791a48d0a16f7bef5c8'
+          test "$(git hash-object scripts/c03_social_gateway_v1_inverse_candidate.sql)" = '1f2d037873e7a5c0d62e7e0da46647520089baee'
+          test "$(git hash-object scripts/c03_social_gateway_v1_rehearsal.py)" = '6e4f93f7f2176fd46a2626cccd5bbe8911280001'
+          python3 -B -m py_compile scripts/c03_social_gateway_v1_rehearsal.py
+          echo 'C03_FIXED_GATEWAY_SOURCE_IDENTITIES_MATCH'
+      - name: Install PostgreSQL 16 only on isolated Linux Actions runner
+        shell: bash
+        run: |
+          set -euo pipefail
+          if test ! -x /usr/lib/postgresql/16/bin/initdb; then
+            sudo apt-get update -qq
+            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq postgresql-16
+          fi
+          /usr/lib/postgresql/16/bin/postgres --version | grep -E '^postgres \(PostgreSQL\) 16[.]'
+      - name: Real fixed-purpose Clan Direct SQL, owner/trigger negatives and inverse
+        shell: bash
+        env:
+          C03_DISPOSABLE_FIXED_GATEWAY_ONLY: '1'
+        run: |
+          set -euo pipefail
+          python3 -B scripts/c03_social_gateway_v1_rehearsal.py | tee /tmp/c03-fixed-gateway.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path('/tmp/c03-fixed-gateway.json').read_text())
+          assert r['status']=='PASS' and r['postgres']=='16'
+          assert r['real_pg'] and r['ephemeral'] and r['no_tcp']
+          assert r['all_legacy_raw_acl_exact'] and r['not_a_live_financial_witness']
+          assert r['case_count']==len(r['checks']) and r['case_count']>=30,r
+          for item in (
+            'finance-owned social object aborts before role admission',
+            'enabled user trigger aborts before role admission',
+            'clan sent with exact success response contract',
+            'same-message cooldown returns genuine idempotent replay',
+            'direct text creates pair, participants and message',
+            'cross-conversation reply denied',
+            'only author draft cleared; recipient draft untouched',
+            'inverse exactly restores all twelve raw NULL ACLs',
+            'finance fixture unchanged through install and inverse',
+          ):
+            assert item in r['checks'],item
+          print('C03_FIXED_CLAN_DIRECT_REAL_PG16_SOURCE_ONLY_ACCEPTED')
+          PY
+      - name: Absent explicit opt-in must never execute; no disposable leftovers
+        shell: bash
+        run: |
+          set -euo pipefail
+          if env -u C03_DISPOSABLE_FIXED_GATEWAY_ONLY python3 -B scripts/c03_social_gateway_v1_rehearsal.py >/tmp/c03-unopted.log 2>&1; then
+            echo 'FAIL source executed without isolated opt-in'; exit 1
+          fi
+          grep -q 'C03_FIXED_GATEWAY_EXPLICIT_TEST_OPTIN_REQUIRED' /tmp/c03-unopted.log
+          if find /tmp -maxdepth 1 -name 'c03-fixed-gateway-pg16-*' -print | grep -q .; then
+            echo 'FAIL synthetic cluster leaked'; exit 1
+          fi
+          echo 'C03_FIXED_GATEWAY_NO_OPTIONAL_ACCESS_AND_CLEAN'
+      - name: No production admission
+        run: echo 'This tests only synthetic nonfinancial-owner conditions. Exact real HD/DE role/catalog graph, one-use maintenance permit, WE3 adapter integration and independent root witness are still HOLD. Funding DENIED.'
