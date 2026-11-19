@@ -1,0 +1,105 @@
+name: C03 Library sanitized event provenance views actual PG16 source-only
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/c03_library_public_projection_candidate.sql'
+      - 'scripts/c03_library_public_projection_inverse_candidate.sql'
+      - '.github/workflows/c03-library-public-projections-physical.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  library-projections:
+    name: Real PG16 read-only projection privacy, direct denial and raw inverse
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Verify exact candidate blob and unprivileged runner
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(id -u)" != 0
+          test "$(git hash-object scripts/c03_library_public_projection_candidate.sql)" = 'a051c6ca688e4653a2a6423f420afc44020606ec'
+          test "$(git hash-object scripts/c03_library_public_projection_inverse_candidate.sql)" = 'a472c349acae55e21c48508e594dd5a946fcff86'
+      - name: Provision actual PostgreSQL16 in disposable Linux
+        shell: bash
+        run: |
+          set -euo pipefail
+          if test ! -x /usr/lib/postgresql/16/bin/initdb; then
+            sudo apt-get update -qq
+            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq postgresql-16
+          fi
+          /usr/lib/postgresql/16/bin/postgres --version | grep -E '^postgres \(PostgreSQL\) 16[.]'
+      - name: Verify narrow rows and metadata, web-role base denial, original ACL inverse
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$(mktemp -d /tmp/c03-library-views-pg16-XXXXXX)"
+          trap 'set +e; /usr/lib/postgresql/16/bin/pg_ctl -D "$root/data" -m immediate -w stop >/dev/null 2>&1; rm -rf -- "$root"' EXIT
+          chmod 700 "$root"
+          mkdir -m 700 "$root/socket"
+          port="$((41000+$$%5000))"
+          /usr/lib/postgresql/16/bin/initdb -D "$root/data" --no-sync --auth-local=trust --auth-host=reject >/dev/null
+          /usr/lib/postgresql/16/bin/pg_ctl -D "$root/data" -o "-c listen_addresses= -c unix_socket_directories=$root/socket -c port=$port" -w -l "$root/postgres.log" start >/dev/null
+          psql16(){ /usr/lib/postgresql/16/bin/psql -X -A -t -v ON_ERROR_STOP=1 -h "$root/socket" -p "$port" -d postgres "$@"; }
+          cat >"$root/schema.sql" <<'SQL'
+          CREATE ROLE aoe2war_web_prod LOGIN NOINHERIT;
+          CREATE ROLE c03_activity_owner NOLOGIN NOINHERIT;
+          CREATE ROLE c03_watcher_owner NOLOGIN NOINHERIT;
+          REVOKE CREATE ON SCHEMA public FROM PUBLIC;
+          CREATE TABLE public.user_activity_events (
+            id serial PRIMARY KEY,user_id integer,type text,label text,
+            metadata jsonb,created_at timestamptz);
+          CREATE TABLE public.watcher_client_events (
+            id serial PRIMARY KEY,user_id integer,user_uid text,event_type text,
+            created_at timestamptz,watcher_id text,session_id text,replay_hash text,
+            ip_address inet,user_agent text,metadata jsonb);
+          ALTER TABLE public.user_activity_events OWNER TO c03_activity_owner;
+          ALTER TABLE public.watcher_client_events OWNER TO c03_watcher_owner;
+          INSERT INTO public.user_activity_events(user_id,type,label,metadata,created_at) VALUES
+            (1,'replay_upload','one','{"packageUpload":true,"uploadedCount":3,"gameIds":[17,19],"filenames":["secret.zip"],"privateToken":"do-not-leak"}',now()),
+            (1,'private_auth_change','sensitive','{"privateToken":"secret"}',now());
+          INSERT INTO public.watcher_client_events
+            (user_id,user_uid,event_type,created_at,watcher_id,session_id,replay_hash,ip_address,user_agent,metadata)
+          VALUES
+            (1,'scribe','batch_upload_file_succeeded',now(),'wat','sess','hash','192.0.2.99','private-browser','{"privateToken":"secret"}'),
+            (1,'scribe','secret_login',now(),'wat','sess',null,'192.0.2.100','private-browser','{"privateToken":"secret"}');
+          SQL
+          psql16 -f "$root/schema.sql" >/dev/null
+          psql16 -c "SELECT c.relname||':'||coalesce(c.relacl::text,'<NULL>') FROM pg_class c WHERE c.relnamespace='public'::regnamespace AND c.relname IN ('user_activity_events','watcher_client_events') ORDER BY c.relname;" >"$root/before.txt"
+          test "$(grep -c '<NULL>' "$root/before.txt")" = 2
+          # Real nonfinancial owner / RLS mismatch negative must stop pre-admission.
+          sed -e 's/__ACTIVITY_NONFINANCIAL_OWNER__/c03_watcher_owner/g' -e 's/__WATCHER_NONFINANCIAL_OWNER__/c03_watcher_owner/g' scripts/c03_library_public_projection_candidate.sql >"$root/bad.sql"
+          if psql16 -f "$root/bad.sql" >"$root/bad.log" 2>&1; then echo 'FAIL owner mismatch installed'; exit 1; fi
+          grep -q 'LIBRARY_BASE_OWNER_OR_RLS_PREIMAGE_HOLD' "$root/bad.log"
+          test "$(psql16 -c "SELECT to_regnamespace('aoe2war_library_activity_public') IS NULL")" = t
+          sed -e 's/__ACTIVITY_NONFINANCIAL_OWNER__/c03_activity_owner/g' -e 's/__WATCHER_NONFINANCIAL_OWNER__/c03_watcher_owner/g' scripts/c03_library_public_projection_candidate.sql >"$root/good.sql"
+          psql16 -f "$root/good.sql" >"$root/good.log"
+          psql16 -c "SELECT c.relname||':'||coalesce(c.relacl::text,'<NULL>') FROM pg_class c WHERE c.relnamespace='public'::regnamespace AND c.relname IN ('user_activity_events','watcher_client_events') ORDER BY c.relname;" >"$root/during.txt"
+          diff -u "$root/before.txt" "$root/during.txt"
+          test "$(psql16 -U aoe2war_web_prod -c 'SELECT count(*) FROM aoe2war_library_activity_public.replay_uploads')" = 1
+          test "$(psql16 -U aoe2war_web_prod -c 'SELECT count(*) FROM aoe2war_library_watcher_public.batch_receipts')" = 1
+          test "$(psql16 -U aoe2war_web_prod -c "SELECT metadata?'privateToken' FROM aoe2war_library_activity_public.replay_uploads")" = f
+          test "$(psql16 -U aoe2war_web_prod -c "SELECT metadata?'filenames' FROM aoe2war_library_activity_public.replay_uploads")" = f
+          test "$(psql16 -U aoe2war_web_prod -c "SELECT metadata->'gameIds' FROM aoe2war_library_activity_public.replay_uploads")" = '[17, 19]'
+          if psql16 -U aoe2war_web_prod -c 'SELECT * FROM public.user_activity_events' >"$root/denied.log" 2>&1; then echo 'FAIL web has base SELECT'; exit 1; fi
+          grep -q 'permission denied' "$root/denied.log"
+          if psql16 -U aoe2war_web_prod -c 'SELECT ip_address FROM aoe2war_library_watcher_public.batch_receipts' >"$root/denied.log" 2>&1; then echo 'FAIL private IP revealed'; exit 1; fi
+          grep -q 'does not exist' "$root/denied.log"
+          if psql16 -U aoe2war_web_prod -c 'INSERT INTO aoe2war_library_activity_public.replay_uploads(id) VALUES (22)' >"$root/denied.log" 2>&1; then echo 'FAIL viewer can mutate'; exit 1; fi
+          grep -q 'permission denied' "$root/denied.log"
+          psql16 -f scripts/c03_library_public_projection_inverse_candidate.sql >/dev/null
+          psql16 -c "SELECT c.relname||':'||coalesce(c.relacl::text,'<NULL>') FROM pg_class c WHERE c.relnamespace='public'::regnamespace AND c.relname IN ('user_activity_events','watcher_client_events') ORDER BY c.relname;" >"$root/after.txt"
+          diff -u "$root/before.txt" "$root/after.txt"
+          test "$(psql16 -c "SELECT to_regnamespace('aoe2war_library_activity_public') IS NULL AND to_regnamespace('aoe2war_library_watcher_public') IS NULL")" = t
+          test "$(psql16 -c 'SELECT count(*) FROM public.user_activity_events')" = 2
+          test "$(psql16 -c 'SELECT count(*) FROM public.watcher_client_events')" = 2
+          echo 'C03_LIBRARY_REAL_PG16_FILTERED_VIEWS_PRIVACY_AND_EXACT_INVERSE_PASS'
+      - name: No live admission
+        run: echo 'Private metadata and filenames intentionally withheld; WE3 must adapt app queries. Exact HD/DE owners and root/SQL permit still HOLD.'
