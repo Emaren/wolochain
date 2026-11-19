@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `we1/c03-pg16-disposable-fence-20261118` at `649a79937b4d7a7e1b4d5e51581e6c38613f8fb9`
+Implementation baseline: `we1/library-hd-exact-maintenance-executor-20261119` at `b72fe6a8ee001da4b3f77a6e185ab48e77925b18`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
