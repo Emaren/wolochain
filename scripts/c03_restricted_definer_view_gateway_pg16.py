@@ -102,13 +102,32 @@ CREATE SCHEMA c03_gateway AUTHORIZATION c03_broad_legacy_owner;
 -- The legacy owner still backs simple updatable views.
 CREATE VIEW c03_gateway.user_identity WITH (security_barrier=true) AS
  SELECT id,uid FROM public.users;
-CREATE VIEW c03_gateway.message_insert WITH (security_barrier=true) AS
+CREATE VIEW c03_gateway.message_history WITH (security_barrier=true) AS
  SELECT id,author_user_id,body FROM public.clan_messages;
 ALTER VIEW c03_gateway.user_identity OWNER TO c03_broad_legacy_owner;
-ALTER VIEW c03_gateway.message_insert OWNER TO c03_broad_legacy_owner;
+ALTER VIEW c03_gateway.message_history OWNER TO c03_broad_legacy_owner;
 GRANT USAGE ON SCHEMA c03_gateway TO c03_narrow_executor,c03_social_writer;
 GRANT SELECT ON c03_gateway.user_identity TO c03_narrow_executor;
-GRANT INSERT,SELECT ON c03_gateway.message_insert TO c03_narrow_executor;
+GRANT SELECT ON c03_gateway.message_history TO c03_narrow_executor;
+-- The serial default on an updatable view still checks executor sequence USAGE.
+-- Keep all original sequence ACL bytes by limiting the broad owner to a single
+-- fixed insert-only leaf, callable ONLY by the restricted NOLOGIN executor.
+CREATE FUNCTION c03_gateway.leaf_append_clan(p_author integer,p_body text)
+RETURNS integer LANGUAGE plpgsql SECURITY DEFINER
+SET search_path=pg_catalog,pg_temp AS $leaf$
+DECLARE result_id integer;
+BEGIN
+ IF p_author IS NULL OR p_body IS NULL OR length(btrim(p_body))=0
+    OR length(p_body)>1200 THEN RAISE EXCEPTION 'DENIED_LEAF_REQUEST'; END IF;
+ INSERT INTO public.clan_messages(author_user_id,body)
+ VALUES(p_author,p_body) RETURNING id INTO result_id;
+ RETURN result_id;
+END $leaf$;
+ALTER FUNCTION c03_gateway.leaf_append_clan(integer,text)
+ OWNER TO c03_broad_legacy_owner;
+REVOKE ALL ON FUNCTION c03_gateway.leaf_append_clan(integer,text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION c03_gateway.leaf_append_clan(integer,text)
+ TO c03_narrow_executor;
 CREATE FUNCTION c03_gateway.send_clan(p_uid text,p_body text)
 RETURNS integer LANGUAGE plpgsql SECURITY DEFINER
 SET search_path=pg_catalog,pg_temp AS $fn$
@@ -118,8 +137,7 @@ BEGIN
     OR length(p_body)>1200 THEN RAISE EXCEPTION 'INVALID_SOCIAL_WRITE'; END IF;
  SELECT id INTO actor FROM c03_gateway.user_identity WHERE uid=p_uid;
  IF NOT FOUND THEN RAISE EXCEPTION 'INVALID_ACTOR'; END IF;
- INSERT INTO c03_gateway.message_insert(author_user_id,body)
-   VALUES (actor,p_body) RETURNING id INTO msg_id;
+ SELECT c03_gateway.leaf_append_clan(actor,p_body) INTO msg_id;
  RETURN msg_id;
 END $fn$;
 -- Installer may have elevated privileges, but MUST NOT own definer function.
@@ -137,7 +155,7 @@ GRANT EXECUTE ON FUNCTION c03_gateway.send_clan(text,text) TO c03_social_writer;
                   "SECURITY DEFINER owner is nonlogin nonsuperuser narrow executor")
             check(sql("""SELECT r.rolsuper::text FROM pg_roles r
                  JOIN pg_class c ON c.relowner=r.oid
-                 WHERE c.oid='c03_gateway.message_insert'::regclass""")=="false",
+                 WHERE c.oid='c03_gateway.message_history'::regclass""")=="false",
                   "new base-backed view owner is not superuser")
             check(sql("SELECT has_schema_privilege('c03_narrow_executor','c03_gateway','CREATE')")=="f",
                   "function executor cannot CREATE new gateway objects")
@@ -151,15 +169,21 @@ GRANT EXECUTE ON FUNCTION c03_gateway.send_clan(text,text) TO c03_social_writer;
                   "executor cannot direct INSERT original social table")
             check(sql("SELECT has_sequence_privilege('c03_narrow_executor','public.clan_messages_id_seq','USAGE')")=="f",
                   "executor has no direct original serial USAGE")
-            check(sql("SELECT has_table_privilege('c03_narrow_executor','c03_gateway.message_insert','INSERT')")=="t",
-                  "executor may INSERT only into new narrow social view")
-            check(sql("SELECT has_table_privilege('c03_social_writer','c03_gateway.message_insert','SELECT')")=="f",
+            check(sql("SELECT has_table_privilege('c03_narrow_executor','c03_gateway.message_history','SELECT')")=="t",
+                  "executor may SELECT only from new narrow social view")
+            check(sql("SELECT has_table_privilege('c03_narrow_executor','c03_gateway.message_history','INSERT')")=="f",
+                  "executor cannot directly INSERT social view")
+            check(sql("SELECT has_function_privilege('c03_narrow_executor','c03_gateway.leaf_append_clan(integer,text)','EXECUTE')")=="t",
+                  "narrow executor may invoke fixed insert-only privileged leaf")
+            check(sql("SELECT has_function_privilege('c03_social_writer','c03_gateway.leaf_append_clan(integer,text)','EXECUTE')")=="f",
+                  "raw social writer cannot invoke privileged leaf directly")
+            check(sql("SELECT has_table_privilege('c03_social_writer','c03_gateway.message_history','SELECT')")=="f",
                   "raw social writer cannot SELECT underlying social view")
             check(sql("SELECT has_function_privilege('public','c03_gateway.send_clan(text,text)','EXECUTE')")=="f",
                   "PUBLIC has no EXECUTE")
             check(sql("SELECT c03_gateway.send_clan('scribe','first restricted social text')",
                       role="c03_social_writer")=="1",
-                  "restricted definer inserted via auto-updatable view and serial default")
+                  "restricted definer inserted through insert-only privileged leaf without sequence grant")
             check(sql("SELECT body FROM public.clan_messages WHERE id=1")=="first restricted social text",
                   "original social message persisted")
             # This negative MUST NOT delete original users or financial bets.
@@ -184,9 +208,11 @@ GRANT EXECUTE ON FUNCTION c03_gateway.send_clan(text,text) TO c03_social_writer;
             sql("""
 REVOKE EXECUTE ON FUNCTION c03_gateway.send_clan(text,text) FROM c03_social_writer;
 DROP FUNCTION c03_gateway.send_clan(text,text) RESTRICT;
+REVOKE EXECUTE ON FUNCTION c03_gateway.leaf_append_clan(integer,text) FROM c03_narrow_executor;
+DROP FUNCTION c03_gateway.leaf_append_clan(integer,text) RESTRICT;
 REVOKE SELECT ON c03_gateway.user_identity FROM c03_narrow_executor;
-REVOKE INSERT,SELECT ON c03_gateway.message_insert FROM c03_narrow_executor;
-DROP VIEW c03_gateway.user_identity,c03_gateway.message_insert RESTRICT;
+REVOKE SELECT ON c03_gateway.message_history FROM c03_narrow_executor;
+DROP VIEW c03_gateway.user_identity,c03_gateway.message_history RESTRICT;
 REVOKE USAGE ON SCHEMA c03_gateway FROM c03_narrow_executor,c03_social_writer;
 DROP SCHEMA c03_gateway RESTRICT;
 DROP ROLE c03_social_writer;
