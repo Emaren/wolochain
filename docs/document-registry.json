@@ -1175,7 +1175,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-11-10",
       "sensitivity": "internal",
-      "sha256": "24ce4e0b377f2e44279388bbacbbf3d48bc6d5976e3f523d0623d2b4e1dfbed6",
+      "sha256": "8551dc7dc419c8b83ae92f84905bc7c9e955844d1e6dcac2230f0a30a06879e4",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -2319,10 +2319,10 @@
       "type": "runbook"
     }
   ],
-  "generated_at": "2026-11-19T17:15:00+00:00",
+  "generated_at": "2026-11-19T17:35:00+00:00",
   "implementation_baseline": {
     "branch": "we1/c03-pg16-disposable-fence-20261118",
-    "commit": "70a95e8f9cb0facbec314063e9deafe7e15aa550"
+    "commit": "649a79937b4d7a7e1b4d5e51581e6c38613f8fb9"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
