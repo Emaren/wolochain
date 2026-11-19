@@ -79,9 +79,13 @@ def main():
                   "unqualified CREATE by cluster admin gives SECURITY DEFINER function schema and view superuser ownership")
             check(psql("SELECT relacl::text FROM pg_class WHERE oid='public.c03_legacy_social'::regclass").stdout.strip()==original,
                   "elevated owner did not alter original raw ACL despite elevated capabilities")
-            failed=psql("SELECT has_function_privilege('public','social_gateway_v1.append_demo(text)','EXECUTE')",False)
-            check("role \"public\" does not exist" in failed.stderr.lower(),
-                  "has_function_privilege rejects PUBLIC pseudo-role as an actual role")
+            # PostgreSQL 16 can interpret PUBLIC in this privilege helper:
+            # observe the actual return rather than predicting a role error.
+            public_value=psql("SELECT has_function_privilege('public','social_gateway_v1.append_demo(text)','EXECUTE')").stdout.strip()
+            check(public_value in ("t","f"),
+                  "real PG16 has_function_privilege PUBLIC returns a boolean")
+            check(public_value=="f",
+                  "PUBLIC pseudo-role has no EXECUTE after exact revocation")
             correct=psql("SELECT has_function_privilege('c03_unprivileged','social_gateway_v1.append_demo(text)','EXECUTE')").stdout.strip()
             check(correct=="f","actual unprivileged role cannot EXECUTE protected function")
             allowed=psql("SELECT has_function_privilege('c03_writer','social_gateway_v1.append_demo(text)','EXECUTE')").stdout.strip()
