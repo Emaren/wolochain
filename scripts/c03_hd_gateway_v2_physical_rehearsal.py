@@ -70,13 +70,13 @@ CREATE ROLE aoe2war_web_prod LOGIN NOINHERIT;
 CREATE ROLE c03_finance_owner NOLOGIN NOINHERIT;
 CREATE ROLE c03_public_probe LOGIN NOINHERIT;
 REVOKE CREATE ON SCHEMA public FROM PUBLIC;
-CREATE TABLE public.users(id serial PRIMARY KEY,uid text UNIQUE,is_admin boolean,
+CREATE TABLE public.users(id serial PRIMARY KEY,uid varchar(100) UNIQUE,is_admin boolean,
  verification_method text,in_game_name text,steam_persona_name text,created_at timestamptz,
  wallet_balance numeric);
 CREATE TABLE public.clans(id integer PRIMARY KEY,slug text,status text,chat_audience_policy text);
 CREATE TABLE public.clan_members(clan_id integer,user_id integer,status text,role text);
 CREATE TABLE public.clan_messages(id serial PRIMARY KEY,clan_id integer,author_user_id integer,
- body text,audience text,created_at timestamptz,updated_at timestamptz);
+ body varchar(1200),audience varchar(20),created_at timestamp(6),updated_at timestamp(6));
 CREATE TABLE public.direct_conversations(id serial PRIMARY KEY,pair_key text UNIQUE,
  created_at timestamptz,updated_at timestamptz);
 CREATE TABLE public.direct_conversation_participants(id serial PRIMARY KEY,conversation_id integer,
@@ -105,6 +105,7 @@ SET ROLE aoe2hd_user;
 GRANT SELECT ON public.users,public.clans,public.clan_members,public.clan_messages,
  public.direct_conversations,public.direct_conversation_participants,
  public.direct_messages,public.direct_message_drafts TO aoe2war_r25_web_ro;
+GRANT SELECT(uid,verification_method) ON public.users TO aoe2war_r25_web_ro;
 RESET ROLE;
 INSERT INTO public.users(id,uid,is_admin,verification_method,in_game_name,steam_persona_name,created_at)
  VALUES(1,'scribe',false,'steam','Scribe','Scribe',now()),
@@ -125,6 +126,19 @@ INSERT INTO public.direct_message_drafts VALUES(1,1),(1,2);
             before=sql(acl)
             check(len(before.splitlines())==12 and sum(x.endswith("<NULL>") for x in before.splitlines())==4,
                   "HD preimage exactly 4 raw NULL sequences and 8 explicit table ACLs")
+            attacl = """SELECT c.relname||':'||a.attnum::text||':'||
+                coalesce(a.attacl::text,'<NULL>')
+             FROM pg_class c JOIN pg_attribute a ON a.attrelid=c.oid
+             WHERE c.relnamespace='public'::regnamespace
+               AND c.relname IN (
+                 'users','clans','clan_members','clan_messages',
+                 'direct_conversations','direct_conversation_participants',
+                 'direct_messages','direct_message_drafts')
+               AND a.attnum>0 AND NOT a.attisdropped
+             ORDER BY c.relname,a.attnum"""
+            before_columns=sql(attacl)
+            check(any(not x.endswith("<NULL>") for x in before_columns.splitlines()),
+                  "synthetic HD column-level attacl has non-NULL bytes")
             original_raw=hashlib.sha256(before.encode()).hexdigest()
             source=ADMIT.read_text()
             check("current_database()<>'aoe2hd_db'" in source and "aoe2hd_user" in source,
@@ -154,6 +168,8 @@ INSERT INTO public.direct_message_drafts VALUES(1,1),(1,2);
                   "trigger-negative preflight leaves writer absent")
             file_sql(source_path)
             check(before==sql(acl), "all twelve original table/sequence ACLs unchanged after installation")
+            check(before_columns==sql(attacl),
+                  "all original column attacl bytes unchanged after installation")
             check(sql("SELECT count(*) FROM pg_auth_members WHERE member='aoe2war_social_writer'::regrole")=="0",
                   "writer no inherited or SET ROLE membership")
             check(sql("SELECT rolcanlogin::text||'|'||rolsuper::text||'|'||rolinherit::text FROM pg_roles WHERE rolname='aoe2war_social_exec_v2'")=="false|false|false",
@@ -230,10 +246,14 @@ INSERT INTO public.direct_message_drafts VALUES(1,1),(1,2);
                   sql("SELECT count(*) FROM public.direct_message_drafts WHERE user_id=2")=="1",
                   "only author draft cleared; recipient draft untouched")
             check(before==sql(acl), "all twelve original ACLs unchanged after real sends and receipts")
+            check(before_columns==sql(attacl),
+                  "all original column attacl bytes unchanged after Clan Direct sends")
             check(sql("SELECT count(*) FROM public.financial_test_escrow")=="0",
                   "no synthetic financial writes in owner-verified trigger-free fixture")
             file_sql(INVERSE)
             check(before==sql(acl), "inverse exactly restores all twelve raw NULL ACLs")
+            check(before_columns==sql(attacl),
+                  "inverse restores the byte-exact original column attacl representation")
             check(sql("SELECT count(*) FROM pg_roles WHERE rolname='aoe2war_social_writer'")=="0",
                   "inverse dropped dedicated role without CASCADE")
             check(sql("SELECT to_regnamespace('aoe2war_social_hd_v2') IS NULL")=="t",
