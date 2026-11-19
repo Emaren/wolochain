@@ -1,0 +1,118 @@
+name: C03 exact WE3 3-function 5-view gateway on real PG16 negative source review
+
+on:
+  pull_request:
+    paths:
+      - 'tests/fixtures/c03_we3_gateway_v1_install_review_only.sql'
+      - 'tests/fixtures/c03_we3_gateway_v1_inverse_review_only.sql'
+      - '.github/workflows/c03-exact-we3-gateway-physical.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source-exact-negative:
+    name: Exact WE3 SQL PG16 writes inverse and privileged definer HOLD
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Source object pins and nonroot
+        run: |
+          set -euo pipefail
+          test "$(id -u)" != 0
+          test "$(git hash-object tests/fixtures/c03_we3_gateway_v1_install_review_only.sql)" = 'd22ce8ccc7ccb230459be556176202cf75648bc5'
+          test "$(git hash-object tests/fixtures/c03_we3_gateway_v1_inverse_review_only.sql)" = 'fac7b597c986e8e34f644aebecb8c7e8da8d7f21'
+      - name: Real temporary PG16 only
+        run: |
+          set -euo pipefail
+          if test ! -x /usr/lib/postgresql/16/bin/initdb; then
+            sudo apt-get update -qq
+            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq postgresql-16
+          fi
+          /usr/lib/postgresql/16/bin/postgres --version | grep -E '^postgres \(PostgreSQL\) 16[.]'
+      - name: Exact SQL, positive Clan Direct writes, DB-credential impersonation, inverse and owner HOLD
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$(mktemp -d /tmp/we1-c03-exact-we3-gateway-XXXXXXXX)"
+          trap 'set +e; /usr/lib/postgresql/16/bin/pg_ctl -D "$root/data" -m immediate -w stop >/dev/null 2>&1; rm -rf -- "$root"' EXIT
+          chmod 700 "$root"
+          mkdir -m 700 "$root/socket"
+          port="$((44000+$$%6000))"
+          /usr/lib/postgresql/16/bin/initdb -D "$root/data" --no-sync --auth-local=trust --auth-host=reject >/dev/null
+          /usr/lib/postgresql/16/bin/pg_ctl -D "$root/data" -o "-c listen_addresses= -c unix_socket_directories=$root/socket -c port=$port" -w -l "$root/pg.log" start >/dev/null
+          psql16(){ /usr/lib/postgresql/16/bin/psql -X -A -t -v ON_ERROR_STOP=1 -h "$root/socket" -p "$port" -d postgres "$@"; }
+          cat >"$root/base.sql" <<'SQL'
+          CREATE ROLE c03_nonfinancial_owner NOLOGIN NOSUPERUSER NOINHERIT;
+          REVOKE CREATE ON SCHEMA public FROM PUBLIC;
+          CREATE TABLE public.users(id serial PRIMARY KEY,uid text,is_admin boolean,
+            verification_method text,in_game_name text,steam_persona_name text,created_at timestamptz);
+          CREATE TABLE public.clans(id serial PRIMARY KEY,slug text,status text,chat_audience_policy text);
+          CREATE TABLE public.clan_members(clan_id integer,user_id integer,status text,role text);
+          CREATE TABLE public.clan_messages(id serial PRIMARY KEY,clan_id integer,
+            author_user_id integer,body text,audience text,created_at timestamptz,updated_at timestamptz);
+          CREATE TABLE public.direct_conversations(id serial PRIMARY KEY,pair_key text UNIQUE,
+            created_at timestamptz,updated_at timestamptz);
+          CREATE TABLE public.direct_conversation_participants(id serial PRIMARY KEY,
+            conversation_id integer,user_id integer,joined_at timestamptz,last_read_at timestamptz,
+            typing_updated_at timestamptz,UNIQUE(conversation_id,user_id));
+          CREATE TABLE public.direct_messages(id serial PRIMARY KEY,conversation_id integer,
+            sender_user_id integer,body text,reply_to_message_id integer,created_at timestamptz);
+          CREATE TABLE public.direct_message_drafts(conversation_id integer,user_id integer);
+          CREATE TABLE public.financial_test_escrow(id serial PRIMARY KEY,amount integer);
+          ALTER TABLE public.users OWNER TO c03_nonfinancial_owner;
+          ALTER TABLE public.clans OWNER TO c03_nonfinancial_owner;
+          ALTER TABLE public.clan_members OWNER TO c03_nonfinancial_owner;
+          ALTER TABLE public.clan_messages OWNER TO c03_nonfinancial_owner;
+          ALTER TABLE public.direct_conversations OWNER TO c03_nonfinancial_owner;
+          ALTER TABLE public.direct_conversation_participants OWNER TO c03_nonfinancial_owner;
+          ALTER TABLE public.direct_messages OWNER TO c03_nonfinancial_owner;
+          ALTER TABLE public.direct_message_drafts OWNER TO c03_nonfinancial_owner;
+          ALTER SEQUENCE public.clan_messages_id_seq OWNER TO c03_nonfinancial_owner;
+          ALTER SEQUENCE public.direct_conversations_id_seq OWNER TO c03_nonfinancial_owner;
+          ALTER SEQUENCE public.direct_conversation_participants_id_seq OWNER TO c03_nonfinancial_owner;
+          ALTER SEQUENCE public.direct_messages_id_seq OWNER TO c03_nonfinancial_owner;
+          INSERT INTO public.users(id,uid,is_admin,verification_method,in_game_name,created_at)
+            VALUES (1,'scribe',false,'steam','Scribe',now()),
+                   (2,'emaren',true,'steam','Emaren',now()),
+                   (3,'outsider',false,'steam','Outsider',now());
+          INSERT INTO public.clans(id,slug,status,chat_audience_policy) VALUES (7,'alpha','active','public');
+          INSERT INTO public.clan_members VALUES (7,1,'active','member');
+          SQL
+          psql16 -f "$root/base.sql" >/dev/null
+          acl="SELECT c.relname||':'||coalesce(c.relacl::text,'<NULL>') FROM pg_class c WHERE c.relnamespace='public'::regnamespace AND c.relname IN ('users','clans','clan_members','clan_messages','direct_conversations','direct_conversation_participants','direct_messages','direct_message_drafts','clan_messages_id_seq','direct_conversations_id_seq','direct_conversation_participants_id_seq','direct_messages_id_seq') ORDER BY c.relname"
+          psql16 -c "$acl" > "$root/before"
+          test "$(wc -l < "$root/before")" -eq 12
+          test "$(grep -c '<NULL>' "$root/before")" -eq 12
+          psql16 -f tests/fixtures/c03_we3_gateway_v1_install_review_only.sql >"$root/installed.log"
+          # This is the source defect. An administrator creates superuser-owned
+          # definer functions and views despite the old base owner being non-superuser.
+          test "$(psql16 -c "SELECT bool_and(r.rolsuper) FROM pg_proc p JOIN pg_roles r ON r.oid=p.proowner WHERE p.pronamespace='social_gateway_v1'::regnamespace AND p.prosecdef")" = t
+          test "$(psql16 -c "SELECT bool_and(r.rolsuper) FROM pg_class c JOIN pg_roles r ON r.oid=c.relowner WHERE c.relnamespace='social_gateway_v1'::regnamespace AND c.relkind='v'")" = t
+          test "$(psql16 -c "SELECT has_function_privilege('public','social_gateway_v1.append_clan_message(integer,integer,text,text)','EXECUTE')")" = f
+          test "$(psql16 -c "SELECT has_table_privilege('aoe2war_social_writer','public.clan_messages','INSERT')")" = f
+          test "$(psql16 -c "SELECT has_sequence_privilege('aoe2war_social_writer','public.clan_messages_id_seq','USAGE')")" = f
+          test "$(psql16 -c "SELECT has_table_privilege('aoe2war_social_writer','public.financial_test_escrow','INSERT')")" = f
+          test "$(psql16 -U aoe2war_social_writer -c "SELECT social_gateway_v1.append_clan_message(7,1,'hello','public')")" = 1
+          cid="$(psql16 -U aoe2war_social_writer -c "SELECT social_gateway_v1.ensure_direct_pair(1,2)")"
+          test "$cid" = 1
+          test "$(psql16 -U aoe2war_social_writer -c "SELECT social_gateway_v1.send_direct_text($cid,1,'hello',NULL)")" = 1
+          psql16 -c "$acl" > "$root/during"
+          diff -u "$root/before" "$root/during"
+          # Database credential alone can bypass signed-session actor binding.
+          test "$(psql16 -U aoe2war_social_writer -c "SELECT social_gateway_v1.append_clan_message(7,3,'spoof','public')")" = 2
+          echo 'SOURCE_HOLD: raw DB credential can supply actor ID unless exact AF_UNIX/JWT sidecar isolates secret'
+          psql16 -f tests/fixtures/c03_we3_gateway_v1_inverse_review_only.sql >"$root/inverse.log"
+          psql16 -c "$acl" > "$root/after"
+          diff -u "$root/before" "$root/after"
+          test "$(psql16 -c "SELECT count(*) FROM pg_roles WHERE rolname='aoe2war_social_writer'")" = 0
+          test "$(psql16 -c "SELECT to_regnamespace('social_gateway_v1') IS NULL")" = t
+          test "$(psql16 -c "SELECT count(*) FROM public.clan_messages")" = 2
+          test "$(psql16 -c "SELECT count(*) FROM public.direct_messages")" = 1
+          echo 'C03_WE3_SOURCE_EXACT_PG16_INSTALL_INVERSE_PASS_SUPERUSER_OWNER_PRODUCTION_HOLD'
+      - name: Source-only review, never production admission
+        run: echo 'No HEL1 SQL executed. New WE3 SQL passes synthetic writes/rollback but FAILS safe definer-owner source qualification; production installation HOLD.'

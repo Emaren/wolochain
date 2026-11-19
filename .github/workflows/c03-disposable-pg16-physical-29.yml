@@ -1,0 +1,83 @@
+name: C03 actual disposable PostgreSQL 16 writer negative 29 SOURCE ONLY
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/c03_disposable_pg16_fence_rehearsal.py'
+      - '.github/workflows/c03-disposable-pg16-physical-29.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  disposable-physical-negatives:
+    name: C03 real PG16 29 checks - synthetic ONLY, no financial admission
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      WE1_C03_PG16_BIN: /usr/lib/postgresql/16/bin
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Independently verify candidate source identity and runner safety
+        shell: bash
+        run: |
+          set -euo pipefail
+          actual="$(sha256sum scripts/c03_disposable_pg16_fence_rehearsal.py | cut -d' ' -f1)"
+          test "$actual" = 'a91e758189304ca6146ef25ca13991607fe2fcde5467c3c5f69d79b68e40c0fe'
+          test "$(id -u)" != '0'
+          test ! -e /etc/systemd/system/wolo-satchel-c01.service
+          echo "C03_TEST_CANDIDATE_SHA256=$actual"
+      - name: Provision PostgreSQL 16 on ephemeral Linux runner only
+        shell: bash
+        run: |
+          set -euo pipefail
+          if test ! -x /usr/lib/postgresql/16/bin/initdb; then
+            sudo apt-get update -qq
+            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq postgresql-16
+          fi
+          test -x /usr/lib/postgresql/16/bin/postgres
+          /usr/lib/postgresql/16/bin/postgres --version | grep -E '^postgres \(PostgreSQL\) 16[.]'
+          /usr/lib/postgresql/16/bin/initdb --version
+      - name: Real PostgreSQL 16 disposable two-writer, inherited, definer, trigger and inverse acceptance
+        shell: bash
+        env:
+          WE1_C03_DISPOSABLE_ONLY: '1'
+        run: |
+          set -euo pipefail
+          python3 -B scripts/c03_disposable_pg16_fence_rehearsal.py | tee /tmp/c03-disposable-physical-29.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          receipt=json.loads(Path('/tmp/c03-disposable-physical-29.json').read_text())
+          assert receipt['status']=='PASS'
+          assert receipt['postgres']=='16'
+          assert receipt['case_count']==29,receipt
+          assert len(receipt['checks'])==29,receipt
+          assert len(set(receipt['checks']))==29,receipt
+          assert receipt['ephemeral_cluster'] is True and receipt['tcp_listening'] is False
+          assert receipt['hba_original_sha256'] != receipt['hba_deny_sha256']
+          assert 'social INSERT activates financial SECURITY DEFINER trigger despite no direct EXECUTE' in receipt['checks']
+          assert 'revoke inherited-role privileges and membership denies all three write paths' in receipt['checks']
+          assert 'role+ACL preimage byte parity' in receipt['checks']
+          print('REAL_DISPOSABLE_PG16_29_29_PASS_NOT_FINANCIAL_ADMISSION')
+          PY
+      - name: Refuse nonopted test execution and any leftover private clusters
+        shell: bash
+        run: |
+          set -euo pipefail
+          if env -u WE1_C03_DISPOSABLE_ONLY python3 -B scripts/c03_disposable_pg16_fence_rehearsal.py >/tmp/c03-unopted.log 2>&1; then
+            echo 'FAIL test runner executed without opt-in'; exit 1
+          fi
+          grep -q 'C03_DISPOSABLE_EXPLICIT_OPT_IN_REQUIRED' /tmp/c03-unopted.log
+          if find /tmp -maxdepth 1 -name 'we1-c03-pg16-disposable-*' -print | grep -q .; then
+            echo 'FAIL disposable cluster directory not removed'; exit 1
+          fi
+          echo 'C03_DISPOSABLE_OPTIN_AND_CLEANUP_PASS'
+      - name: Financial production admission remains denied
+        run: |
+          echo '29/29 synthetic PG16 tests do not prove PgBouncer, independent systemd control, production signed witnesses, funding or actual HEL1 writer exclusion.'
+          echo 'C03 OPEN. Funding DENIED. Preserve original six-file reviewed-source manifest and DocsV2 holds.'

@@ -1,0 +1,72 @@
+name: C03 owner role reachability supplemental SQL real PostgreSQL16 syntax
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/c03_hd_de_owner_reachability_supplement_readonly.sql'
+      - '.github/workflows/c03-owner-reachability-supplement-pg16.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  read-only:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Source-pin one exact read-only SQL and nonroot
+        run: |
+          set -euo pipefail
+          test "$(id -u)" != 0
+          test "$(git hash-object scripts/c03_hd_de_owner_reachability_supplement_readonly.sql)" = 'c872ea157bb9f075527866b78f6b4bac36577589'
+      - name: Disposable actual PG16
+        run: |
+          set -euo pipefail
+          if test ! -x /usr/lib/postgresql/16/bin/initdb; then
+            sudo apt-get update -qq
+            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq postgresql-16
+          fi
+          root="$(mktemp -d /tmp/c03-owner-reachability-pg16-XXXXXXXX)"
+          echo "root=$root" >> "$GITHUB_ENV"
+          chmod 700 "$root"
+          mkdir -m 700 "$root/sock"
+          /usr/lib/postgresql/16/bin/initdb -D "$root/pgdata" --no-sync --auth-local=trust --auth-host=reject >/dev/null
+          /usr/lib/postgresql/16/bin/pg_ctl -D "$root/pgdata" -o "-c listen_addresses= -c unix_socket_directories=$root/sock -c port=45533" -w -l "$root/log" start >/dev/null
+          psql16(){ /usr/lib/postgresql/16/bin/psql -X -v ON_ERROR_STOP=1 -h "$root/sock" -p 45533 -d postgres "$@"; }
+          psql16 -c 'CREATE ROLE aoe2hd_user NOLOGIN NOINHERIT; CREATE ROLE aoe2de_user NOLOGIN NOINHERIT; CREATE ROLE aoe2war_web_prod LOGIN NOINHERIT;'
+          psql16 -c 'CREATE DATABASE aoe2hd_db'
+          psql16 -c 'CREATE DATABASE aoe2de_db'
+      - name: Execute source in synthetic HD and DE, enforce READ ONLY and object categories
+        run: |
+          set -euo pipefail
+          psql16(){ /usr/lib/postgresql/16/bin/psql -X -A -t -v ON_ERROR_STOP=1 -h "$root/sock" -p 45533 "$@"; }
+          psql16 -d aoe2hd_db -f scripts/c03_hd_de_owner_reachability_supplement_readonly.sql > "$root/hd.txt"
+          psql16 -d aoe2de_db -f scripts/c03_hd_de_owner_reachability_supplement_readonly.sql > "$root/de.txt"
+          for db in hd de; do
+            grep -q '^SUPPLEMENT_META|' "$root/$db.txt"
+            grep -q '^OWNER_ROLE_CLOSURE|' "$root/$db.txt"
+            grep -q '^SUPPLEMENT_FINAL|' "$root/$db.txt"
+            grep -q '"read_only": "on"' "$root/$db.txt"
+            grep -q '"live_sql_installer_authorized": false' "$root/$db.txt"
+          done
+          echo 'C03_SUPPLEMENTARY_OWNER_GRAPH_REAL_PG16_READ_ONLY_PASS'
+      - name: Prove failed write inside read-only transaction (separate test, no effects)
+        run: |
+          set -euo pipefail
+          if /usr/lib/postgresql/16/bin/psql -X -v ON_ERROR_STOP=1 -h "$root/sock" -p 45533 -d aoe2hd_db -c "BEGIN READ ONLY; CREATE TABLE public.forbidden_witness(x integer)" >"$root/denied" 2>&1; then exit 1; fi
+          grep -q 'read-only transaction' "$root/denied"
+          echo C03_SUPPLEMENT_READ_ONLY_HARD_DENIAL_PASS
+      - name: Cleanup synthetic cluster
+        if: always()
+        shell: bash
+        run: |
+          if test -n "${root:-}" && test -d "$root/pgdata"; then
+            /usr/lib/postgresql/16/bin/pg_ctl -D "$root/pgdata" -m immediate -w stop >/dev/null 2>&1 || :
+            rm -rf -- "$root"
+          fi
+      - name: No HEL1 admission
+        run: echo 'This validates SOURCE SQL syntax and readonly semantics, not actual owner rights. Real owner-presence private capture remains separately required. Funding denied.'

@@ -1,0 +1,74 @@
+name: C03 actual PgBouncer and PG16 physical exclusion SOURCE ONLY
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/c03_disposable_pg16_pgbouncer_rehearsal.py'
+      - '.github/workflows/c03-disposable-pgbouncer-physical.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  real-pooler:
+    name: C03 real PgBouncer/PG16 session and inverse - no production admission
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Check candidate source object and nonroot runner
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object scripts/c03_disposable_pg16_pgbouncer_rehearsal.py)" = 'c645f809748b8f756acb0381f9ccd3ee2d1825c9'
+          test "$(id -u)" != '0'
+          test ! -e /etc/systemd/system/wolo-satchel-c01.service
+          echo "POOLER_TEST_GIT_BLOB=c645f809748b8f756acb0381f9ccd3ee2d1825c9"
+      - name: Provision actual PG16 and PgBouncer only on disposable Ubuntu
+        shell: bash
+        run: |
+          set -euo pipefail
+          if test ! -x /usr/lib/postgresql/16/bin/initdb || test ! -x /usr/sbin/pgbouncer; then
+            sudo apt-get update -qq
+            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq postgresql-16 pgbouncer
+          fi
+          /usr/lib/postgresql/16/bin/postgres --version | grep -E '^postgres \(PostgreSQL\) 16[.]'
+          /usr/sbin/pgbouncer --version
+      - name: Real PgBouncer session pooling, HBA reload, table/sequence/definer exclusion and inverse
+        shell: bash
+        env:
+          WE1_C03_DISPOSABLE_POOL_ONLY: '1'
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: |
+          set -euo pipefail
+          python3 -B scripts/c03_disposable_pg16_pgbouncer_rehearsal.py | tee /tmp/c03-real-pooler.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          a=json.loads(Path('/tmp/c03-real-pooler.json').read_text())
+          assert a['status']=='PASS' and a['postgres']=='16',a
+          assert a['real_pgbouncer'] is True and a['pool_mode']=='session'
+          assert a['ephemeral_cluster'] is True and a['tcp_listening'] is False
+          assert len(a['checks'])==a['case_count'] and a['case_count']>=12
+          assert 'preconnected pooler loses table sequence and SECURITY DEFINER authority' in a['checks']
+          assert 'all-reject HBA startup denial survives full postmaster restart' in a['checks']
+          assert 'synthetic raw role table sequence and function ACL inverse matches exactly' in a['checks']
+          print('C03_REAL_PGBOUNCER_PG16_PASSED_SOURCE_ONLY')
+          PY
+      - name: Never execute without explicit ephemeral-only authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          if env -u WE1_C03_DISPOSABLE_POOL_ONLY python3 -B scripts/c03_disposable_pg16_pgbouncer_rehearsal.py >/tmp/c03-pool-unopted.log 2>&1; then
+            echo 'FAIL pool test ran without explicit opt-in'; exit 1
+          fi
+          grep -q 'EXPLICIT_DISPOSABLE_POOL_OPTIN_REQUIRED' /tmp/c03-pool-unopted.log
+          if find /tmp -maxdepth 1 -name 'we1-c03-pg16-pool-*' -print | grep -q .; then
+            echo 'FAIL leaked synthetic pool or PGDATA'; exit 1
+          fi
+          echo 'C03_POOL_OPTIN_AND_TEMP_CLUSTER_CLEAN'
+      - name: Not a financial admission
+        run: echo 'Pooler source-only test does not confer authenticated production evidence, systemd acceptance, funding, financial maintenance, or C03 gate closure.'

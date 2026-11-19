@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2hdbets", "aoe2dewarwagers"]
 audience: ["operators", "developers", "financial-reviewers", "ai-agents"]
 source_of_truth: "git"
 authority: "separate-telemetry-only-no-financial-containment-or-execution"
-reviewed_at: "2026-11-08"
+reviewed_at: "2026-11-19"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -55,3 +55,11 @@ Fourteen dedicated tests verify the exact unit-rewrite bytes, immutable V1 sourc
 The first physical stage should preserve V1's live hourly timer unchanged. Only after exact-head GitHub source qualification, a source-executable dry run, repeated stable name census and review of independently pinned unit-name hash may a separate owner-only V2 enrollment be considered. Do not replace V1 with a different source in place merely because it shares the same file name. For any eventual timer switch, a rollback that restores exact original systemd unit SHA, original V1 source pins and original V1 enrollment is essential. Public Steam, Traffic and website admission are Session B's separate responsibility.
 
 This is a **C03 operational observability improvement**, NOT C03 financial gate closure. Complete original and newly discovered financial writer containment, authenticated finance-safe web rollback, existing DB-owner permission migration, recovery and independent Chain custody/solvency requirements remain required. No funded production Satchel activation is authorized.
+
+## November 19, 2026 — limited authority and dated evidence review
+
+An AI source examiner acting through the sole owner's existing connected source workspace checked this document's 43 original body lines for repository-source links, gate-authorization claims, older governance conditions and current-versus-historical language; 2 referenced local source paths were resolved. This is a **scope and safety review**, not an independent human signature or a fresh validation of each historical physical claim. Original observations remain dated and unmodified.
+
+**Topic-specific reconciliation (financial writer exclusion):** C03 is OPEN. HD/DE original owner roles retain financial write capabilities. Restricted social V2 and Library filtered views are separate additive nonfinancial application contracts, not a global writer fence.
+
+**Current controlling decision:** WoloChain issue #239 and reviewed code head `70a95e8f9cb0facbec314063e9deafe7e15aa550`. C04 and C08 CLOSED; C01/C02/C03/C05/C06/C07/C09 OPEN; funding DENIED. The original test/source facts remain evidence only and may not authorize live SQL, HBA, custody, funds, backups or a canary. Live acceptance requires exact source, legitimate protected owner authority and independent physical readback.

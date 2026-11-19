@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `central/c01-c05-docs-reconcile-20261109` at `7525351b1300bbb60fd6df6eee6cf0b0dca1780b`
+Implementation baseline: `we1/c03-pg16-disposable-fence-20261118` at `649a79937b4d7a7e1b4d5e51581e6c38613f8fb9`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
@@ -27,7 +27,7 @@ This page is generated from the validated front matter in this repository. Cross
 
 ## Documentation health
 
-- Authoritative repository documents: **96**
+- Authoritative repository documents: **99**
 - Path moves in this migration: **0**
 - Every listed document has an explicit owner, lifecycle, authority, and review interval.
 
@@ -36,12 +36,12 @@ This page is generated from the validated front matter in this repository. Cross
 - `historical`: 14
 - `reference`: 49
 - `runbook`: 31
-- `working`: 2
+- `working`: 5
 
 ### Lifecycle
 
 - `active`: 16
-- `draft`: 66
+- `draft`: 69
 - `historical`: 14
 
 ## Documents
@@ -49,6 +49,7 @@ This page is generated from the validated front matter in this repository. Cross
 | Document | Type | Status | Authority |
 | --- | --- | --- | --- |
 | [WoloChain](../README.md) | `reference` | `active` | `chain-repository-entrypoint` |
+| [WE1 C03 — disposable PG16 + signed-evidence source integration](../README_INTEGRATION_C03.md) | `working` | `draft` | `historical-test-receipts-source-only-not-production-admission` |
 | [C04 — bounded original-request / chain-proof observation](../cmd/wolo-c04-verify/README.md) | `reference` | `draft` | `noncrediting-original-request-chain-evidence` |
 | [WoloChain Branch Authority](BRANCH_AUTHORITY.md) | `reference` | `active` | `git-branch-authority-contract` |
 | [C01 Immutable Source CI: Recovering Authenticated Merged Pull Request Provenance](C01_AUTHENTICATED_HISTORICAL_SOURCE_CI_PR124_MERGED.md) | `runbook` | `draft` | `c01-source-provenance-nonfunded-candidate-review-not-custody-approval` |
@@ -96,6 +97,8 @@ This page is generated from the validated front matter in this repository. Cross
 | [C09 Exact Canary Requires Genuine Keychain C08 V3 Receipt](C09_C08_KEYCHAIN_V3_RECEIPT_BINDING.md) | `runbook` | `draft` | `nonfunding-C08-policy-preflight-only` |
 | [C09 Distinct Intel FileVault P-256 Transaction Key: Physical Enrollment HOLD](C09_INTEL_FILEVAULT_TRANSACTION_KEY_ENROLLMENT_HOLD.md) | `runbook` | `draft` | `owner-only-unfunded-filevault-keychain-enrollment-not-a-payment-permit` |
 | [C09 Ratified C08 Governance Bridge — Signed Canary Ceiling and No Spending](C09_RATIFIED_C08_POLICY_BRIDGE.md) | `runbook` | `draft` | `authenticated-C08-governance-preflight-only-no-spending-permit` |
+| [WE1 solo-owner financial engineering — source review vs physical authority](WE1_SOLO_OWNER_FINANCIAL_TECHNICAL_REVIEW_POLICY_20261119.md) | `working` | `draft` | `single-human-source-review-policy-no-production-permit` |
+| [WE1 Source Authority and Dated Evidence Review — November 19, 2026](WE1_SOURCE_AUTHORITY_DATED_EVIDENCE_REVIEW_20261119.md) | `working` | `draft` | `AI-machine-assisted-review-nonfinancial-nonfunding` |
 | [Native epoch-v3 wire-v1 trust mismatch and held handoff](epoch-v3-wire-v1-hold.md) | `reference` | `draft` | `source-only-verifier-mismatch-not-financial-authority` |
 | [Exact Settlement Confirmation C4](exact-settlement-confirmation-c4.md) | `reference` | `draft` | `source-only-exact-settlement-confirmation` |
 | [Legacy Settlement Hardening and Protected Release Handoff](legacy-settlement-hardening.md) | `reference` | `draft` | `source-only-legacy-settlement-hardening` |

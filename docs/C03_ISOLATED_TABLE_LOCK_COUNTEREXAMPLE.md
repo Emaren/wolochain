@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war"]
 audience: ["developers", "operators", "ai-agents"]
 source_of_truth: "git"
 authority: "source-only-negative-lock-rehearsal-not-a-financial-fence"
-reviewed_at: "2026-11-06"
+reviewed_at: "2026-11-19"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -49,3 +49,11 @@ A genuine C06 encrypted offhost snapshot and C07 exact same-snapshot isolated re
 On the owner **Mac M1 only**, with Homebrew PostgreSQL 14 binaries at `/opt/homebrew/bin` and no root privileges, run `python3 -B scripts/settlement_c03_isolated_lock_counterexample.py`. The script refuses root and other platforms, creates a throwaway Unix-only cluster, records only boolean outcomes, and exits 0 only for the fully demonstrated **counterexample**. It cleans up the isolated cluster. Run `python3 -B -m unittest discover -s tests -p 'test_settlement_c03_isolated_lock_counterexample.py' -v` for hermetic tests.
 
 Running this command **does not fix C03, certify a freeze, establish a backup, or prove chain finality**.
+
+## November 19, 2026 — limited authority and dated evidence review
+
+An AI source examiner acting through the sole owner's existing connected source workspace checked this document's 37 original body lines for repository-source links, gate-authorization claims, older governance conditions and current-versus-historical language; 1 referenced local source paths were resolved. This is a **scope and safety review**, not an independent human signature or a fresh validation of each historical physical claim. Original observations remain dated and unmodified.
+
+**Topic-specific reconciliation (financial writer exclusion):** C03 is OPEN. HD/DE original owner roles retain financial write capabilities. Restricted social V2 and Library filtered views are separate additive nonfinancial application contracts, not a global writer fence.
+
+**Current controlling decision:** WoloChain issue #239 and reviewed code head `70a95e8f9cb0facbec314063e9deafe7e15aa550`. C04 and C08 CLOSED; C01/C02/C03/C05/C06/C07/C09 OPEN; funding DENIED. The original test/source facts remain evidence only and may not authorize live SQL, HBA, custody, funds, backups or a canary. Live acceptance requires exact source, legitimate protected owner authority and independent physical readback.

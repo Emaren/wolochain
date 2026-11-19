@@ -8,7 +8,7 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "source-integration-proof-not-production-approval"
-reviewed_at: "2026-11-02"
+reviewed_at: "2026-11-19"
 review_interval_days: 14
 sensitivity: "restricted"
 ---
@@ -466,3 +466,11 @@ controls remain binding. Neither it nor C01 may target the consensus service,
 executable, state or keys, or resume HD/DE producers without separate authority.
 Founder #889 and accepted legacy transactions retain their individual holds;
 a release permit is never payment evidence.
+
+## November 19, 2026 — limited authority and dated evidence review
+
+An AI source examiner acting through the sole owner's existing connected source workspace checked this document's 454 original body lines for repository-source links, gate-authorization claims, older governance conditions and current-versus-historical language; 12 referenced local source paths were resolved. This is a **scope and safety review**, not an independent human signature or a fresh validation of each historical physical claim. Original observations remain dated and unmodified.
+
+**Topic-specific reconciliation (Satchel custody and release):** Satchel proofs and held source are separate from live privileged custody. No 8094/8095 listener, new balance assertion or funding authorization is supplied.
+
+**Current controlling decision:** WoloChain issue #239 and reviewed code head `70a95e8f9cb0facbec314063e9deafe7e15aa550`. C04 and C08 CLOSED; C01/C02/C03/C05/C06/C07/C09 OPEN; funding DENIED. The original test/source facts remain evidence only and may not authorize live SQL, HBA, custody, funds, backups or a canary. Live acceptance requires exact source, legitimate protected owner authority and independent physical readback.

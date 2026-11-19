@@ -1,0 +1,107 @@
+{
+  "schema": "aoe2war.we1.web_database_admission_manifest.v1",
+  "authority": "source-only-handoff-no-root-authorization",
+  "target_database": "aoe2hd_db",
+  "target_host": "HEL1",
+  "finance_funding": "DENIED",
+  "production_install_authorized": false,
+  "source_reviewed_from": "1b755ff12f5214756ac8a4edd8ba123259c48a18",
+  "source_catalog_witness": {
+    "original_hd_sha256": "2da50447f5dcf53834f309b51f8f7ec1e5e61b6d9b4e5aff4e94b024a600e894",
+    "original_de_sha256": "76c5de13c1f1a6b35411454166ee5852dff30f5903c9f8f81349d951fc198bd5",
+    "supplement_hd_sha256": "cc3b8e7016497f0f4576d01999988a890249066ec703951d61e4ba2d2cff9c24",
+    "supplement_de_sha256": "a54e48bb94ae5d5f3b14607051cde5280e0d8c28f7e3b54d60f5185e2553da60"
+  },
+  "contracts": [
+    {
+      "id": "library_readonly_v1",
+      "scope": "only new filtered HD event views",
+      "priority": 1,
+      "install": {
+        "path": "scripts/c03_library_public_projection_candidate.sql",
+        "git_blob": "aba71d2bb67e0f4df21444df80707b5103547abf",
+        "sha256": "976fb62b8d7b13eb8c497686b3eaaa66e08ad168b4183a58b720069243b89dfd"
+      },
+      "inverse": {
+        "path": "scripts/c03_library_public_projection_inverse_candidate.sql",
+        "git_blob": "a472c349acae55e21c48508e594dd5a946fcff86",
+        "sha256": "3a25744c02dce756493652fcc1f16e184ff62c198cded6855e8aab284f38903c"
+      },
+      "caller": "aoe2war_web_prod NOINHERIT non-superuser; SELECT only two new security-barrier views; never original event tables",
+      "roles_no_new": true,
+      "prerequisite_physical": [
+        "original_hd_de_private_catalog_sha_match",
+        "target_is_aoe2hd_db",
+        "existing_event_owners_aoe2hd_user",
+        "original_event_relacl_exact",
+        "no_existing_target_view_or_schema",
+        "web_prod_no_raw_event_SELECT",
+        "approved_exact_source_maintenance_permit",
+        "tested_real_authenticated_Scribe_Emaren_readback",
+        "inverse_precise_without_CASCADE"
+      ],
+      "positive_tests": [
+        "ubuntu_pg16_view_privacy_acl_inverse_run_44566213767",
+        "owner_local_pg16_19_of_19"
+      ],
+      "installed": false
+    },
+    {
+      "id": "social_hd_restricted_v2",
+      "scope": "two exact high-level fixed Clan and Direct text calls, source-only",
+      "priority": 2,
+      "install": {
+        "path": "scripts/c03_hd_gateway_v2_restricted_install_candidate.sql",
+        "git_blob": "f38636b7ea1b7efe178831e1a40a78dad5604749",
+        "sha256": "78d6a9ea9cc953e38fc0c3e1aee3212fc5da42fe9b08c15b8da662d24d7ebe5c"
+      },
+      "inverse": {
+        "path": "scripts/c03_hd_gateway_v2_restricted_inverse_candidate.sql",
+        "git_blob": "1c11073a44643e90bd59ae36118432001772b1da",
+        "sha256": "84114bac7b3e15f4cadaf3a566f705440eeb9cf8ba63f3be97249652d5f25449"
+      },
+      "caller": "aoe2war_social_writer restricted LOGIN, no table/sequence grants; high-level NOLOGIN NOINHERIT executor with fixed privileged leaves",
+      "roles_no_new": false,
+      "prerequisite_physical": [
+        "original_hd_de_private_catalog_sha_match",
+        "target_is_aoe2hd_db",
+        "original_legacy_relacl_attacl_byte_exact",
+        "no_unapproved_trigger_or_finance_reachability",
+        "sealed_source_and_inverse",
+        "separate_systemd_OS_UID",
+        "AF_UNIX_peer_and_mode",
+        "sidecar_reverifies_signed_HS256_session",
+        "isolated_SCRAM_secret",
+        "HD_only_HBA_and_pg_auth",
+        "independent_production_finance_negative",
+        "owner_purpose_signed_maintenance_permit",
+        "real_member_recipient_privacy_retries",
+        "protected_service_and_SQL_inverse"
+      ],
+      "positive_tests": [
+        "ubuntu_pg16_HD_v2_51_of_51_run_44538479233",
+        "WE3_PG16_11_of_11"
+      ],
+      "installed": false
+    }
+  ],
+  "strictly_forbidden": [
+    "legacy_direct_GRANT_SQL_fixture",
+    "grant_web_to_aoe2hd_user",
+    "grant_web_raw_event_SELECT",
+    "grant_social_writer_legacy_table_or_sequence_DML",
+    "install_to_aoe2de_db",
+    "activate_financial_8092_to_8095",
+    "start_wallet_custody_or_transfer",
+    "copy_session_secrets_into_source_or_app"
+  ],
+  "required_results": [
+    "raw_acl_attacl_exact_install_inverse",
+    "denied_financial_DML_sequence_definer_PUBLIC",
+    "owner_scope_and_HBA_readback",
+    "WE2_maintainer_signed_root_receipt",
+    "WE3_app_interface_compatibility",
+    "real_live_two_user_UI_receipt",
+    "T10_rollback_preserves_financial_HOLD"
+  ]
+}

@@ -1,0 +1,43 @@
+name: C03 HD-only Library existing-human projection real PostgreSQL16
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/c03_library_public_projection_candidate.sql'
+      - 'scripts/c03_library_public_projection_inverse_candidate.sql'
+      - 'scripts/c03_library_hd_owner_pg16_rehearsal.py'
+      - '.github/workflows/c03-library-public-projections-physical.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  library-projections:
+    name: Real PG16 actual HD owner, privacy, ACL inverse source-only
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Pin source blobs, no root test runner
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(id -u)" != 0
+          test "$(git hash-object scripts/c03_library_public_projection_candidate.sql)" = 'aba71d2bb67e0f4df21444df80707b5103547abf'
+          test "$(git hash-object scripts/c03_library_public_projection_inverse_candidate.sql)" = 'a472c349acae55e21c48508e594dd5a946fcff86'
+          test "$(git hash-object scripts/c03_library_hd_owner_pg16_rehearsal.py)" = '2776a6ad20f8e7e7f9519d9bb61a5c36387ef087'
+      - name: Actual disposable Linux PostgreSQL16 (no production authority)
+        shell: bash
+        run: |
+          set -euo pipefail
+          if test ! -x /usr/lib/postgresql/16/bin/initdb; then
+            sudo apt-get update -qq
+            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq postgresql-16
+          fi
+          /usr/lib/postgresql/16/bin/postgres --version | grep -E '^postgres \(PostgreSQL\) 16[.]'
+          WE1_C03_DISPOSABLE_ONLY=1 PYTHONDONTWRITEBYTECODE=1 python3 -B scripts/c03_library_hd_owner_pg16_rehearsal.py
+      - name: Explicit no-live-admission
+        run: echo 'Real PG16 is disposable only; original HEL1 HD/DE captures remain private. Financial funding denied.'

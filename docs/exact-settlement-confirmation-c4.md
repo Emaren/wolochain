@@ -8,7 +8,7 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "source-only-exact-settlement-confirmation"
-reviewed_at: "2026-11-01"
+reviewed_at: "2026-11-19"
 review_interval_days: 14
 sensitivity: "restricted"
 ---
@@ -212,3 +212,13 @@ scripts/*.sh` treats later script paths as arguments to the first script and is
 not an all-script syntax check. The final-head hosted CI receipt and final source
 SHA belong in the draft PR; these local validation results do not imply hosted
 CI completion, mainnet payment or activation certification.
+
+## November 19, 2026 — limited authority and dated evidence review
+
+An AI source examiner acting through the sole owner's existing connected source workspace checked this document's 200 original body lines for repository-source links, gate-authorization claims, older governance conditions and current-versus-historical language; 13 referenced local source paths were resolved. This is a **scope and safety review**, not an independent human signature or a fresh validation of each historical physical claim. Original observations remain dated and unmodified.
+
+**Topic-specific reconciliation (historical quarantine):** C04 is now CLOSED as containment, not as payment finality. Earlier C04 HOLD passages are historical; 69 claimed/hashless outcomes remain unadjudicated.
+
+**Current controlling decision:** WoloChain issue #239 and reviewed code head `70a95e8f9cb0facbec314063e9deafe7e15aa550`. C04 and C08 CLOSED; C01/C02/C03/C05/C06/C07/C09 OPEN; funding DENIED. The original test/source facts remain evidence only and may not authorize live SQL, HBA, custody, funds, backups or a canary. Live acceptance requires exact source, legitimate protected owner authority and independent physical readback.
+
+**References not resolved in this WoloChain checkout:** `tests/subtests`. They are not falsely asserted present; they may be other-repository or historical identifiers.

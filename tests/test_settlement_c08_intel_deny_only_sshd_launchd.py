@@ -5,6 +5,7 @@ import hashlib
 import importlib.util
 import plistlib
 from pathlib import Path
+from types import SimpleNamespace
 import stat
 import sys
 import tempfile
@@ -45,6 +46,23 @@ class DenyOnlyLaunchD(unittest.TestCase):
                          ("ssh_host_ed25519_key",b"fixture-key-material-not-a-real-private-key")):
             p=self.base/name
             p.write_bytes(raw);p.chmod(0o600)
+        # Ubuntu CI is not macOS root. The *disposable test* supplies a fake
+        # root-owned OS binary identity without altering the production
+        # preflight requirement that the real sshd executable be owned by root.
+        # No fixture executable is ever launched: subprocess.run is mocked.
+        self.sshd=self.base/"synthetic-sshd-fixture"
+        self.sshd.write_bytes(b"synthetic inert executable; never run")
+        self.sshd.chmod(0o755)
+        self.os_sshd_trusted=True
+        self.original_path_stat=Path.stat
+        def synthetic_sshd_stat(path,*args,**kwargs):
+            result=self.original_path_stat(path,*args,**kwargs)
+            if path == self.sshd:
+                return SimpleNamespace(
+                    st_uid=0 if self.os_sshd_trusted else 65534,
+                    st_mode=result.st_mode,
+                )
+            return result
         self.patchers=[
             patch.object(m,"USER_HOME",self.home),
             patch.object(m,"DEDICATED",self.base),
@@ -57,7 +75,8 @@ class DenyOnlyLaunchD(unittest.TestCase):
             patch.object(m,"AUTHORIZED_SHA256",hashlib.sha256(self.auth).hexdigest()),
             patch.object(m,"HOST_BLOB_SHA256",hashlib.sha256(b"AAAATESTHOSTKEY").hexdigest()),
             patch.object(m,"assert_owner_host",return_value=None),
-            patch.object(m,"SSHD",Path("/usr/bin/false")),
+            patch.object(m,"SSHD",self.sshd),
+            patch.object(Path,"stat",new=synthetic_sshd_stat),
         ]
         for p in self.patchers:p.start()
         self.p2=patch.object(m.subprocess,"run",side_effect=self.fake_run)
@@ -117,6 +136,16 @@ class DenyOnlyLaunchD(unittest.TestCase):
         self.root.chmod(0o755)
         with self.assertRaisesRegex(m.Hold,"UNSAFE_OWNER_DIRECTORY"):
             m.preflight()
+    def test_os_sshd_wrong_owner_is_denied_before_fake_launch(self):
+        self.os_sshd_trusted=False
+        with self.assertRaisesRegex(m.Hold,"OS_SSHD_BINARY_NOT_TRUSTED"):
+            m.preflight()
+        self.assertFalse(m.PLIST.exists())
+    def test_os_sshd_group_writable_is_denied_before_fake_launch(self):
+        self.sshd.chmod(0o777)
+        with self.assertRaisesRegex(m.Hold,"OS_SSHD_BINARY_NOT_TRUSTED"):
+            m.preflight()
+        self.assertFalse(m.PLIST.exists())
     def test_active_denied_process_starts_via_exact_launchd_only(self):
         checks=iter([False,True])
         with patch.object(m,"listen_active",side_effect=lambda:next(checks)):

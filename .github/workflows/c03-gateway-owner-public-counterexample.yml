@@ -1,0 +1,65 @@
+name: C03 actual PG16 gateway SECURITY DEFINER owner and PUBLIC semantics
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/c03_social_gateway_owner_public_counterexample.py'
+      - '.github/workflows/c03-gateway-owner-public-counterexample.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  negative:
+    name: real PG16 installer owner counterexample and PUBLIC privilege denial
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Exact source and nonroot
+        run: |
+          set -euo pipefail
+          test "$(git hash-object scripts/c03_social_gateway_owner_public_counterexample.py)" = 'b9c72a5a3e9db5117e74067af6bd127ec0fef83f'
+          test "$(id -u)" != '0'
+          python3 -B -m py_compile scripts/c03_social_gateway_owner_public_counterexample.py
+      - name: PostgreSQL16 ephemeral only
+        run: |
+          set -euo pipefail
+          if test ! -x /usr/lib/postgresql/16/bin/initdb; then
+            sudo apt-get update -qq
+            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq postgresql-16
+          fi
+          /usr/lib/postgresql/16/bin/postgres --version | grep -E '^postgres \(PostgreSQL\) 16[.]'
+      - name: Real PG16 definer ownership and role-negative semantics
+        env:
+          C03_DISPOSABLE_OWNER_PUBLIC_ONLY: '1'
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: |
+          set -euo pipefail
+          python3 -B scripts/c03_social_gateway_owner_public_counterexample.py | tee /tmp/c03-owner-public.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          x=json.loads(Path('/tmp/c03-owner-public.json').read_text())
+          assert x['status']=='PASS' and x['postgres']=='16'
+          assert x['source_only'] and not x['finance_host_touched']
+          assert x['case_count']==len(x['checks']) and x['case_count']>=7
+          assert 'unqualified CREATE by cluster admin gives SECURITY DEFINER function schema and view superuser ownership' in x['checks']
+          assert 'PUBLIC pseudo-role has no EXECUTE after exact revocation' in x['checks']
+          print('C03_REAL_PG16_PRIVILEGED_OWNER_AND_PUBLIC_NEGATIVE_ACCEPTED')
+          PY
+      - name: Unopted refusal and scratch cleanup
+        run: |
+          set -euo pipefail
+          if env -u C03_DISPOSABLE_OWNER_PUBLIC_ONLY python3 -B scripts/c03_social_gateway_owner_public_counterexample.py >/tmp/c03-unopted.log 2>&1; then
+            echo 'FAIL unopted execution'; exit 1
+          fi
+          grep -q 'C03_DISPOSABLE_OWNER_PUBLIC_OPTIN_REQUIRED' /tmp/c03-unopted.log
+          if find /tmp -maxdepth 1 -name 'c03-owner-public-proof-*' -print | grep -q .; then
+            echo 'FAIL synthetic cluster left behind'; exit 1
+          fi
+      - name: No production admission
+        run: echo 'Only synthetic PG16 proved semantics. The actual WE3 installer SQL, physical owner census and one-use root permit remain HOLD.'

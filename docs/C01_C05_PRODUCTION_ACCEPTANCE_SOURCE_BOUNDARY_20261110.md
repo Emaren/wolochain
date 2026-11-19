@@ -8,7 +8,7 @@ systems: ["wolochain","aoe2war"]
 audience: ["operators","developers","ai-agents"]
 source_of_truth: "git"
 authority: "nonfunded-integration-handoff-only"
-reviewed_at: "2026-11-10"
+reviewed_at: "2026-11-19"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -43,3 +43,11 @@ C02 requires the actually restricted finance-owned durable operation journal and
 ## Release policy
 
 Keep PR #243 draft until its combined exact HEAD is green for Foundation, native Go, reviewer, C03/C07 negative controls and docs, with an independently reviewed nonfinancial runtime separation. Then an authorized merge is only SOURCE acceptance. For formal C01 or C05 closure, require exact installed hashes, real timestamped physical and adversarial receipts, reversible installation evidence, individually signed owner approvals where called for, and a gate-specific acceptance post to WoloChain issue #239. Never reset the chain, reactivate legacy 8092/8093, grant App raw finance tables, waive claims or broadcast funds to make a CI test green.
+
+## November 19, 2026 — limited authority and dated evidence review
+
+An AI source examiner acting through the sole owner's existing connected source workspace checked this document's 31 original body lines for repository-source links, gate-authorization claims, older governance conditions and current-versus-historical language; 2 referenced local source paths were resolved. This is a **scope and safety review**, not an independent human signature or a fresh validation of each historical physical claim. Original observations remain dated and unmodified.
+
+**Topic-specific reconciliation (custody):** C01 is OPEN. Isolated zero-funds tests, source approval and old service units do not establish currently permitted custody or reviewer activation.
+
+**Current controlling decision:** WoloChain issue #239 and reviewed code head `70a95e8f9cb0facbec314063e9deafe7e15aa550`. C04 and C08 CLOSED; C01/C02/C03/C05/C06/C07/C09 OPEN; funding DENIED. The original test/source facts remain evidence only and may not authorize live SQL, HBA, custody, funds, backups or a canary. Live acceptance requires exact source, legitimate protected owner authority and independent physical readback.

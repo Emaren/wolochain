@@ -8,7 +8,7 @@ systems: ["wolochain","aoe2war","aoe2dewarwagers"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "non-authorizing-financial-producer-evidence-correlation"
-reviewed_at: "2026-11-04"
+reviewed_at: "2026-11-19"
 review_interval_days: 14
 sensitivity: "internal"
 ---
@@ -549,3 +549,13 @@ remain historical. No fresh live HEL1 owner mapping, signer custody proof
 or independent solvency attestation was obtained by this review; none
 is asserted here. WoloChain C01–C09 remain physically open and financial
 release is held pending separate executable and custody controls.
+
+## November 19, 2026 — limited authority and dated evidence review
+
+An AI source examiner acting through the sole owner's existing connected source workspace checked this document's 537 original body lines for repository-source links, gate-authorization claims, older governance conditions and current-versus-historical language; 10 referenced local source paths were resolved. This is a **scope and safety review**, not an independent human signature or a fresh validation of each historical physical claim. Original observations remain dated and unmodified.
+
+**Topic-specific reconciliation (producer authority):** Producer catalog and source owner correlation remain an origin inventory, not physical C03 writer denial.
+
+**Current controlling decision:** WoloChain issue #239 and reviewed code head `70a95e8f9cb0facbec314063e9deafe7e15aa550`. C04 and C08 CLOSED; C01/C02/C03/C05/C06/C07/C09 OPEN; funding DENIED. The original test/source facts remain evidence only and may not authorize live SQL, HBA, custody, funds, backups or a canary. Live acceptance requires exact source, legitimate protected owner authority and independent physical readback.
+
+**References not resolved in this WoloChain checkout:** `docs/context`, `scripts/aoe2_financial_producer_source_census.py`. They are not falsely asserted present; they may be other-repository or historical identifiers.

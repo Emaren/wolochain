@@ -1,0 +1,68 @@
+name: C03 social writer READ ONLY catalog source and disposable PG16 syntax
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/c03_social_writer_catalog_readonly.sql'
+      - '.github/workflows/c03-social-writer-catalog-readonly.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  catalog-readonly:
+    name: C03 PostgreSQL catalog read-only witness source syntax - not live finance
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Pin exact source and disallow root actor
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object scripts/c03_social_writer_catalog_readonly.sql)" = '457e6ffec2c59840a3a13c7096d7c3ab33bd5296'
+          test "$(id -u)" != 0
+          echo 'C03_SQL_SOURCE_BLOB=457e6ffec2c59840a3a13c7096d7c3ab33bd5296'
+      - name: Prepare private disposable PostgreSQL 16 only
+        shell: bash
+        run: |
+          set -euo pipefail
+          if test ! -x /usr/lib/postgresql/16/bin/initdb; then
+            sudo apt-get update -qq
+            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq postgresql-16
+          fi
+          /usr/lib/postgresql/16/bin/postgres --version | grep -E '^postgres \(PostgreSQL\) 16[.]'
+      - name: Execute only the catalog SELECT transaction on a private fresh cluster
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$(mktemp -d /tmp/we1-c03-social-catalog-XXXXXXXX)"
+          trap 'set +e; /usr/lib/postgresql/16/bin/pg_ctl -D "$root/data" -m immediate -w stop >/dev/null 2>&1; rm -rf -- "$root"' EXIT
+          chmod 700 "$root"
+          mkdir -m 700 "$root/socket"
+          port="$((47000 + $$ % 4000))"
+          /usr/lib/postgresql/16/bin/initdb -D "$root/data" --no-sync --auth-local=trust --auth-host=reject >/dev/null
+          /usr/lib/postgresql/16/bin/pg_ctl -D "$root/data" -o "-c listen_addresses= -c unix_socket_directories=$root/socket -c port=$port" -w -l "$root/pg.log" start
+          /usr/lib/postgresql/16/bin/psql -X -A -t -v ON_ERROR_STOP=1 -h "$root/socket" -p "$port" -d postgres -f scripts/c03_social_writer_catalog_readonly.sql >"$root/readonly-witness.txt"
+          grep -F -q 'AUDIT_META|' "$root/readonly-witness.txt"
+          grep -F -q '"transaction_read_only": "on"' "$root/readonly-witness.txt"
+          grep -F -q 'ROLE_PRESENCE|' "$root/readonly-witness.txt"
+          grep -F -q '"social_writer_absent": true' "$root/readonly-witness.txt"
+          grep -F -q 'FINAL_NONAUTHORIZATION|' "$root/readonly-witness.txt"
+          grep -F -q '"admitted_financial_writer_exclusion": false' "$root/readonly-witness.txt"
+          echo "C03_READONLY_PG16_CATALOG_SYNTACTIC_PASS"
+          # Proof read-only transaction refuses an explicit attempted DDL:
+          printf 'BEGIN READ ONLY; CREATE TABLE public.c03_should_never_exist(id int);\n' |
+            /usr/lib/postgresql/16/bin/psql -X -v ON_ERROR_STOP=1 -h "$root/socket" -p "$port" -d postgres >/dev/null 2>"$root/negative.log" && exit 1 || :
+          grep -q 'read-only transaction' "$root/negative.log"
+          /usr/lib/postgresql/16/bin/psql -X -A -t -v ON_ERROR_STOP=1 -h "$root/socket" -p "$port" -d postgres -c "SELECT to_regclass('public.c03_should_never_exist') IS NULL;" | grep -q '^t$'
+          echo "C03_READONLY_TRANSACTION_REJECTED_DDL"
+      - name: Financial gates unchanged
+        run: |
+          echo 'C03 catalog syntax passed only on a disposable empty PG16 cluster. Real HD+DE witness, privilege graph, signed root readback, inverse and owner permit remain HOLD.'
+          echo 'No FINANCIAL database was connected. C03 OPEN, funding DENIED.'

@@ -1,0 +1,83 @@
+name: C03 social additive gateway legacy raw ACL parity - real PG16 source only
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/c03_social_gateway_additive_rehearsal.py'
+      - '.github/workflows/c03-social-additive-gateway-physical.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  additive-gateway:
+    name: C03 real PG16 additive social gateway and exact five-ACL inverse
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Verify reviewed candidate identity on a nonroot disposable runner
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(id -u)" != '0'
+          test "$(git hash-object scripts/c03_social_gateway_additive_rehearsal.py)" = '92122c090f98d548467bb74e200fc72aaf581fbf'
+          python3 -m py_compile scripts/c03_social_gateway_additive_rehearsal.py
+          echo "C03_GATEWAY_SOURCE_BLOB=92122c090f98d548467bb74e200fc72aaf581fbf"
+      - name: Install real PostgreSQL 16 only on disposable CI runner
+        shell: bash
+        run: |
+          set -euo pipefail
+          if test ! -x /usr/lib/postgresql/16/bin/initdb; then
+            sudo apt-get update -qq
+            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq postgresql-16
+          fi
+          /usr/lib/postgresql/16/bin/postgres --version | grep -E '^postgres \(PostgreSQL\) 16[.]'
+      - name: Check real additive schema gateway legacy raw-ACL preservation and exact inverse
+        shell: bash
+        env:
+          WE1_C03_DISPOSABLE_GATEWAY_ONLY: '1'
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: |
+          set -euo pipefail
+          python3 -B scripts/c03_social_gateway_additive_rehearsal.py | tee /tmp/c03-gateway.json
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          x=json.loads(Path('/tmp/c03-gateway.json').read_text())
+          assert x['status']=='PASS' and x['postgres']=='16'
+          assert x['source_only'] and x['raw_acl_exact'] and x['no_tcp']
+          assert x['case_count']==len(x['checks']) and x['case_count']>=23,x
+          for name in (
+            'five original legacy ACLs are genuinely raw NULL',
+            'additive gateway installation did not alter five legacy raw ACLs',
+            'finance trigger reachability drift forces HOLD preflight',
+            'legacy base table DML remains denied',
+            'legacy serial sequence access remains denied',
+            'financial table direct access denied',
+            'no synthetic financial side effects in trigger-free fixture',
+            'inverse restores exactly five raw NULL legacy ACLs',
+            'persisted communications preserved after gateway rollback',
+          ):
+            assert name in x['checks'],name
+          print('C03_ADDITIVE_REAL_PG16_GATEWAY_EXACT_RAW_ACL_PASS_SOURCE_ONLY')
+          PY
+      - name: Unopted execution must refuse; no temporary cluster leftovers
+        shell: bash
+        run: |
+          set -euo pipefail
+          if env -u WE1_C03_DISPOSABLE_GATEWAY_ONLY python3 -B scripts/c03_social_gateway_additive_rehearsal.py >/tmp/gw-unopted.log 2>&1; then
+            echo 'FAIL missing explicit opt-in'; exit 1
+          fi
+          grep -q 'EXPLICIT_DISPOSABLE_SOCIAL_GATEWAY_OPTIN_REQUIRED' /tmp/gw-unopted.log
+          if find /tmp -maxdepth 1 -name 'we1-c03-additive-gateway-*' -print | grep -q .; then
+            echo 'FAIL temporary synthetic cluster leaked'; exit 1
+          fi
+          echo 'C03_ADDITIVE_OPTIN_AND_CLUSTER_CLEAN'
+      - name: Never promote disposable design to financial deployment
+        run: |
+          echo 'This script is not WE3 integrated production source, authenticated HD/DE catalog proof, SQL install approval, or a C03 funding permit.'
+          echo 'C03 OPEN; funding DENIED.'
