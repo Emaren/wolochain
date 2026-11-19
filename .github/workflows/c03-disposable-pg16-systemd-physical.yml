@@ -22,7 +22,7 @@ jobs:
       - name: Verify immutable candidate source and ephemeral runner identity
         run: |
           set -euo pipefail
-          test "$(git hash-object scripts/c03_disposable_pg16_systemd.py)" = 'f62f2235a50d4dffb0ba3295148e9f650be2fef9'
+          test "$(git hash-object scripts/c03_disposable_pg16_systemd.py)" = '6aad49f7fda8e19e52e6e85b65950243371baf2e'
           test "$(id -u)" != '0'
           test "$GITHUB_ACTIONS" = 'true'
           test -d /run/systemd/system
