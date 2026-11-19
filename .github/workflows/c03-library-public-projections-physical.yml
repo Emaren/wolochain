@@ -28,7 +28,7 @@ jobs:
           test "$(id -u)" != 0
           test "$(git hash-object scripts/c03_library_public_projection_candidate.sql)" = '5a00acaa84a2d54b3dc065e94bdf670a815064c8'
           test "$(git hash-object scripts/c03_library_public_projection_inverse_candidate.sql)" = 'a472c349acae55e21c48508e594dd5a946fcff86'
-          test "$(git hash-object scripts/c03_library_hd_owner_pg16_rehearsal.py)" = 'd96b30e8171ffbf4f34cf1a8de89dd5808d27945'
+          test "$(git hash-object scripts/c03_library_hd_owner_pg16_rehearsal.py)" = '2776a6ad20f8e7e7f9519d9bb61a5c36387ef087'
       - name: Actual disposable Linux PostgreSQL16 (no production authority)
         shell: bash
         run: |
