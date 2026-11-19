@@ -1,4 +1,4 @@
-name: C03 real PG16 restricted NOLOGIN function owner via new updatable views
+name: C03 real PG16 restricted function owner and insert-only privileged leaf
 
 on:
   pull_request:
@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   restricted:
-    name: Real PG16 restricted executor, view DML/serial, finance FK and ACL inverse
+    name: Real PG16 restricted executor with leaf-serial, finance FK and ACL inverse
     runs-on: ubuntu-24.04
     timeout-minutes: 14
     steps:
@@ -23,7 +23,7 @@ jobs:
         run: |
           set -euo pipefail
           test "$(id -u)" != 0
-          test "$(git hash-object scripts/c03_restricted_definer_view_gateway_pg16.py)" = 'f2709f8f4129dba0464dbef2aeb517fecc3cb7bc'
+          test "$(git hash-object scripts/c03_restricted_definer_view_gateway_pg16.py)" = 'e4da14dc3bc4cc75361604a7cc8d536595abebe5'
           python3 -B -m py_compile scripts/c03_restricted_definer_view_gateway_pg16.py
       - name: Install real PG16 only in isolated Actions runner
         run: |
@@ -53,7 +53,7 @@ jobs:
           for name in (
            'function executor has no inherited or SET ROLE membership',
            'executor cannot DELETE users (financial cascade path)',
-           'restricted definer inserted via auto-updatable view and serial default',
+           'restricted definer inserted through insert-only privileged leaf without sequence grant',
            'broad legacy owner CAN trigger financial ON DELETE CASCADE',
            'exact inverse restores original raw social and finance ACLs',
           ):
