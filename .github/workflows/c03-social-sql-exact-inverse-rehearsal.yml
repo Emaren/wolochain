@@ -95,12 +95,22 @@ jobs:
           ps16 -f tests/fixtures/c03_social_writer_inverse_review_only.sql > "$root/inverse.log"
           test "$(ps16 -c "SELECT count(*) FROM pg_roles WHERE rolname='aoe2war_social_writer'")" = 0
           ps16 -f "$root/acl.sql" > "$root/after.txt"
+          # This is the deliberately REJECTED legacy direct-GRANT installer.
+          # A reproduced raw-NULL -> explicit-owner ACL drift is the expected
+          # NEGATIVE REGRESSION, not a successful production installation.
+          # Keep the source fixture unchanged and NEVER authorize this SQL.
           if diff -u "$root/before.txt" "$root/after.txt" > "$root/acl.diff"; then
-            echo 'WE3_SQL_INVERSE_RAW_ACL_EXACT_PASS'
-          else
-            echo 'WE3_SQL_INVERSE_RAW_ACL_DRIFT_HOLD'
-            cat "$root/acl.diff"
+            echo 'LEGACY_DIRECT_GRANT_NEGATIVE_REGRESSION_CHANGED_REVIEW_REQUIRED'
             exit 1
           fi
+          # Exactly the five previously observed original NULL ACL objects
+          # must drift; no broader or missing drift may silently pass.
+          test "$(grep -c '^-' "$root/acl.diff")" = 5
+          test "$(grep -c '^+' "$root/acl.diff")" = 5
+          for object in clan_messages_id_seq direct_conversations_id_seq direct_conversation_participants_id_seq direct_messages_id_seq direct_message_drafts; do
+            grep -F -q "$object:<NULL>" "$root/acl.diff"
+          done
+          echo 'EXPECTED_REJECTED_LEGACY_SQL_RAW_NULL_ACL_DRIFT_5_OF_5'
+          echo 'Legacy direct-GRANT SQL remains NOT INSTALLABLE; HD-only restricted V2 has its own independent real PG16 workflow.'
       - name: Source-only never authorizes financial operations
         run: echo 'Passing a synthetic test is not an accepted live HD+DE graph, audited owner decision, root permit or funding authority.'
