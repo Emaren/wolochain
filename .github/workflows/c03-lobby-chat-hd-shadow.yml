@@ -1,0 +1,45 @@
+name: WE1 Lobby Chat HD-only isolated PostgreSQL admission source
+on:
+  pull_request:
+    paths:
+      - 'scripts/c03_lobby_chat_hd_v1_*'
+      - 'tests/run_c03_lobby_hd_shadow.sh'
+      - 'tests/fixtures/c03_lobby_shadow_schema.sql'
+      - '.github/workflows/c03-lobby-chat-hd-shadow.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lobby-shadow:
+    name: Source-pinned restricted lobby writer and inverse PostgreSQL shadow
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Check exact SQL, contract and harness bytes
+        run: |
+          set -euo pipefail
+          echo '2bed587a85da8b14c4b9f8b085f88566e15476063e14f011d1d1aebfd4d4b20d  scripts/c03_lobby_chat_hd_v1_install_candidate.sql' | sha256sum -c -
+          echo '493ad5e875cd2fd737f55501f5e84068cc512b0b2de8f695bb2c9f11b83e908b  scripts/c03_lobby_chat_hd_v1_inverse_candidate.sql' | sha256sum -c -
+          echo '5b1aab0cc5381159dd4ae2a7dd0c0f43b3137483cfe79d538da44129b6fe7359  scripts/c03_lobby_chat_hd_v1_contract.json' | sha256sum -c -
+          echo 'eb7e48da07070e29cf8f29c04421b0a9b2142967332bbd21fd0b6fbb53a59c72  tests/run_c03_lobby_hd_shadow.sh' | sha256sum -c -
+          echo '3b0b8f5321544eac2510c7dc2253e29bd29135dec588e286427c6a628a22c7bb  tests/fixtures/c03_lobby_shadow_schema.sql' | sha256sum -c -
+          bash -n tests/run_c03_lobby_hd_shadow.sh
+      - name: Run local PostgreSQL 16 shadow; never HEL1 or real users
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ ! -x /usr/lib/postgresql/16/bin/initdb ]; then
+            sudo apt-get update -qq
+            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y postgresql-16
+          fi
+          test "$(id -u)" != 0
+          PG_BINDIR=/usr/lib/postgresql/16/bin bash tests/run_c03_lobby_hd_shadow.sh
+      - name: Source only, no admitted production DB authority
+        run: |
+          echo 'LOBBY_SHADOW_SOURCE_PASS_NOT_LOBBY_CHAT_DB_READY'
+          echo 'Requires separately signed WE1 SQL root permit and WE2 session-bound Unix gateway.'

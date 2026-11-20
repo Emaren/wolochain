@@ -1,0 +1,48 @@
+{
+  "schema": "aoe2war.we1.lobby-chat-hd-writer-contract.v1",
+  "authority": "SOURCE_ONLY_NOT_ADMITTED",
+  "depends_on": {
+    "social_v2_head": "c0ee56f69ba9c1b91bebe918c648d76051aa9639",
+    "installed_social_required": true,
+    "hd_database": "aoe2hd_db",
+    "finance_authorized": false
+  },
+  "writer": {
+    "database_role": "aoe2war_social_writer",
+    "login_source": "WE2 confined AF_UNIX signed-session sidecar only",
+    "function": "aoe2war_social_hd_v2.lobby_send(text,text,text)",
+    "arguments": [
+      "verified_uid_from_authenticated_Steam_session",
+      "normalized_text_max_280_chars",
+      "fresh_32_lowercase_hex_idempotency_key"
+    ],
+    "allowed_room": "main-lobby",
+    "browser_uid_trusted": false,
+    "raw_table_insert_allowed": false,
+    "anonymous_send_allowed": false
+  },
+  "reader": {
+    "function": "aoe2war_social_hd_v2.lobby_history(integer,integer,text)",
+    "max_page": 120,
+    "guest_session_id_exposed": false,
+    "anonymous_guest_reaction_counts": true,
+    "guest_viewer_reacted": false,
+    "history_preserved": true
+  },
+  "rollback": {
+    "sql_inverse_required": true,
+    "legacy_chat_messages_preserved": true,
+    "request_key_ledger_preserved": true
+  },
+  "production_acceptance": {
+    "source_postimage_verified": false,
+    "root_permit_verified": false,
+    "social_db_ready": false,
+    "lobby_db_ready": false,
+    "hd_scram_positive": false,
+    "de_denied": false,
+    "unix_peer_denied": false,
+    "session_binding_verified": false,
+    "player_persistence_verified": false
+  }
+}
