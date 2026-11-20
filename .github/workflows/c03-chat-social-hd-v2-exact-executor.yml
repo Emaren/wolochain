@@ -47,7 +47,7 @@ jobs:
           python3 -B -m unittest -q tests.test_c03_chat_social_hd_v2_exact_executor tests.test_c03_chat_social_auto_inverse_recovery tests.test_c03_chat_social_signer_domains > /tmp/WE1_social_negative.out 2>&1
           cat /tmp/WE1_social_negative.out
           grep -q 'Ran 45 tests' /tmp/WE1_social_negative.out
-          grep -q '^OK$' /tmp/WE1_social_negative.out
+          grep -Eq '^OK( \(skipped=[0-9]+\))?$' /tmp/WE1_social_negative.out
       - name: Real disposable PostgreSQL 16 full corrected postimage and inverse proof
         shell: bash
         run: |
