@@ -1,0 +1,48 @@
+name: WE1 Lobby HD V1 independent signed-root admission
+on:
+  push:
+    branches:
+      - we1/lobby-hd-v1-signed-root-20261120
+  pull_request:
+    paths:
+      - '.github/workflows/c03-lobby-hd-v1-signed-root.yml'
+      - 'scripts/c03_lobby_hd_v1_owner_keychain.swift'
+      - 'scripts/c03_lobby_hd_v1_owner_permit.py'
+      - 'scripts/c03_lobby_hd_v1_root_executor.py'
+      - 'tests/test_c03_lobby_hd_v1_root_signed.py'
+      - 'tests/test_c03_lobby_hd_v1_keychain_domain.py'
+jobs:
+  signed-root-negative:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check exact source, install/inverse, distinct owner signing key scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > /tmp/lobby-root-pins.sha256 <<'EOF'
+          41381fc3ab254549e7ca982d95cab4c44bd9f2782681152d73b9c468597ab434  scripts/c03_lobby_hd_v1_install_candidate.sql
+          cc18548000ef149b19352dc3dab23b49264c24f49e27b5b1619a37a0d0d26452  scripts/c03_lobby_hd_v1_inverse_candidate.sql
+          f571d8f3a0b1982a0189ea6e512d154bf6eca32ff4044a381e243a19d73faccb  scripts/c03_lobby_hd_v1_reconciliation_contract.json
+          c4cf4838ca3d72fe95ba97f60fdf1d239cd5fc47a6016eed5fb853b6e865d108  scripts/c03_lobby_hd_v1_owner_keychain.swift
+          f1c6cb3cd5ba999d7d016e9bcd3e8dc829256ad742c9b2532a7f866e9281b4de  scripts/c03_lobby_hd_v1_owner_permit.py
+          71838fa9a92fea121d9d20c3ddecce80f9da672092c3e1c707bbadd95e2e2b6a  scripts/c03_lobby_hd_v1_root_executor.py
+          8056a19de0d6eec584b885becf4a272521755f47e52785713b9f74cd61b5e05a  tests/test_c03_lobby_hd_v1_root_signed.py
+          5bab69c8d454f199a99002bef633dc2c6faef0bc7111a989d2ec65651a545a96  tests/test_c03_lobby_hd_v1_keychain_domain.py
+          EOF
+          sha256sum -c /tmp/lobby-root-pins.sha256
+          export PYTHONDONTWRITEBYTECODE=1
+          python3 -B -m unittest -q tests.test_c03_lobby_hd_v1_keychain_domain tests.test_c03_lobby_hd_v1_root_signed
+  native-keychain-domain:
+    runs-on: macos-15
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify native Swift Lobby-only signing domain with negatives
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf '%s  %s\n' c4cf4838ca3d72fe95ba97f60fdf1d239cd5fc47a6016eed5fb853b6e865d108 scripts/c03_lobby_hd_v1_owner_keychain.swift | shasum -a 256 -c -
+          export PYTHONDONTWRITEBYTECODE=1
+          python3 -B -m unittest -q tests.test_c03_lobby_hd_v1_keychain_domain
