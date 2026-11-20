@@ -1175,7 +1175,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-11-10",
       "sensitivity": "internal",
-      "sha256": "b9eca39f8f84541b6231e68b9bf36b151e3a21bf40de17b5df9ac012c24f66fe",
+      "sha256": "2b1ad56d68fcf1b6755daf9611cbfcf7626ec81d86fdc3c197ba78fa6da19130",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -2321,8 +2321,8 @@
   ],
   "generated_at": "2026-11-19T17:35:00+00:00",
   "implementation_baseline": {
-    "branch": "we1/chat-social-lifecycle-repair-central-20261120",
-    "commit": "06280371470f2d45bf974078f84aab58a3237943"
+    "branch": "we1/lobby-chat-hd-gateway-central-20261120",
+    "commit": "eac4473c356e505179dec4f0650acdb62faed9dd"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
