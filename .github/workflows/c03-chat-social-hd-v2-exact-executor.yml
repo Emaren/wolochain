@@ -5,6 +5,8 @@ on:
     paths:
       - 'scripts/c03_chat_social*'
       - 'tests/test_c03_chat_social_hd_v2_exact_executor.py'
+      - 'tests/test_c03_chat_social_auto_inverse_recovery.py'
+      - 'scripts/c03_hd_gateway_v2_physical_rehearsal.py'
       - '.github/workflows/c03-chat-social-hd-v2-exact-executor.yml'
   workflow_dispatch:
 
@@ -25,24 +27,38 @@ jobs:
         run: |
           set -euo pipefail
           test "$(id -u)" != 0
-          echo 'cab4b055e169d6544953611bc08a8132cd917f4a6500b19cd75b5576f99dc1b6  scripts/c03_chat_social_hd_v2_exact_executor.py' | sha256sum -c -
+          echo '01db41022c0a80031d4c882617d369096da0e578f26af791ff27570e4e584d30  scripts/c03_chat_social_hd_v2_exact_executor.py' | sha256sum -c -
           echo 'ad7473af0b8f4089cb5daf77b31a4c447499517d69253914c24f01159e6949c8  scripts/c03_chat_social_root_enroll_v1.py' | sha256sum -c -
+          echo 'f7ccffd384b780ea029a0b558a5460ac3fef07d4fa2d5822c3f2ae7cf1849526  scripts/c03_chat_social_auto_inverse_recovery_v1.py' | sha256sum -c -
+          echo '4af7da3979c4683f2b932dcd68351a776e32af26b0632a04d1408ad993689cac  scripts/c03_chat_social_recovery_owner_permit_builder_v1.py' | sha256sum -c -
           echo '6eadb5b560c7ceb3ecb8ca75116b79bdd04b50e544c3705718e1fe4e589f6a0f  scripts/c03_chat_social_owner_keychain_v1.swift' | sha256sum -c -
           echo '2b8f5de45462c80b0662ca3483b7dd792b9410869704c9b9ec87a2d1970d5708  scripts/c03_chat_social_owner_permit_builder_v1.py' | sha256sum -c -
           echo '9793ff39ca80d646a89041f0174f42bb717ae3e649e49f8d68d6f102792f5c51  scripts/c03_hd_gateway_v2_restricted_install_candidate.sql' | sha256sum -c -
           echo '84114bac7b3e15f4cadaf3a566f705440eeb9cf8ba63f3be97249652d5f25449  scripts/c03_hd_gateway_v2_restricted_inverse_candidate.sql' | sha256sum -c -
           echo '8f0e0f92859b5b0b01fde7552d95263409a1874c672665021a4ea3b5235a7da6  scripts/c03_chat_social_v2_preimage_readonly.sql' | sha256sum -c -
-          echo 'e14eb681cfd097209d05afff5d3ec34df29581643c2c6f5e2cb7918d2adbae6a  scripts/c03_chat_social_v2_postimage_readonly.sql' | sha256sum -c -
+          echo 'e2509411bff373116f936dd378b8eea9dd1fa2e5da766711babce9a5bd5d8360  scripts/c03_chat_social_v2_postimage_readonly.sql' | sha256sum -c -
           echo 'd0829593727b8b156ac07f5fc9a8d4477dd5f8e24696ffa2703fa7a802f07faa  scripts/c03_chat_social_v2_acl_witness_readonly.sql' | sha256sum -c -
-          python3 -B -m py_compile scripts/c03_chat_social_hd_v2_exact_executor.py scripts/c03_chat_social_root_enroll_v1.py scripts/c03_chat_social_owner_permit_builder_v1.py
+          python3 -B -m py_compile scripts/c03_chat_social_hd_v2_exact_executor.py scripts/c03_chat_social_root_enroll_v1.py scripts/c03_chat_social_owner_permit_builder_v1.py scripts/c03_chat_social_auto_inverse_recovery_v1.py scripts/c03_chat_social_recovery_owner_permit_builder_v1.py
       - name: Exact Social-specific permit, scope, failed-postimage and inverse negatives
         shell: bash
         run: |
           set -euo pipefail
-          python3 -B -m unittest -q tests.test_c03_chat_social_hd_v2_exact_executor > /tmp/WE1_social_negative.out 2>&1
+          python3 -B -m unittest -q tests.test_c03_chat_social_hd_v2_exact_executor tests.test_c03_chat_social_auto_inverse_recovery > /tmp/WE1_social_negative.out 2>&1
           cat /tmp/WE1_social_negative.out
-          grep -q 'Ran 34 tests' /tmp/WE1_social_negative.out
+          grep -q 'Ran 43 tests' /tmp/WE1_social_negative.out
           grep -q '^OK$' /tmp/WE1_social_negative.out
+      - name: Real disposable PostgreSQL 16 full corrected postimage and inverse proof
+        shell: bash
+        run: |
+          set -euo pipefail
+          C03_DISPOSABLE_FIXED_GATEWAY_ONLY=1 python3 -B scripts/c03_hd_gateway_v2_physical_rehearsal.py > /tmp/WE1_social_pg16.out
+          python3 - <<'PY_GH'
+          import json
+          x=json.load(open('/tmp/WE1_social_pg16.out'))
+          assert x['status']=='PASS' and x['postgres']=='16' and x['case_count']==54
+          assert x['real_pg'] and x['all_legacy_raw_acl_exact']
+          print('PASS_REAL_PG16_54_FULL_POSTIMAGE_AND_INVERSE')
+          PY_GH
       - name: Fail closed when invoked without root/permit
         shell: bash
         run: |
@@ -53,5 +69,11 @@ jobs:
           set -e
           test "$rc" -eq 3
           grep -q 'ROOT_EXECUTOR_REQUIRED' /tmp/WE1_social_deny.out
+          set +e
+          python3 -B scripts/c03_chat_social_auto_inverse_recovery_v1.py recover > /tmp/WE1_recovery_deny.out 2>&1
+          rc=$?
+          set -e
+          test "$rc" -eq 3
+          grep -q 'PROTECTED_ROOT_REQUIRED' /tmp/WE1_recovery_deny.out
       - name: No production authority implicit in CI
-        run: echo "SOURCE ONLY — WE2 separate root enrollment and owner signed one-use Chat-only permit required. C03 financial OPEN; funding DENIED."
+        run: echo "Existing Social root trust preserved; AUTO_INVERSE recovery requires distinct independent WE2 root approval, fresh owner Keychain signature and real HD proof. CI is NOT CHAT_DB_READY; funding DENIED."
