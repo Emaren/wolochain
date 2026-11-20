@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `we1/c03-pg16-disposable-fence-20261118` at `649a79937b4d7a7e1b4d5e51581e6c38613f8fb9`
+Implementation baseline: `we1/chat-v2-live-owner-login-postcheck-20261119` at `178ef3fb209105ad8e333b5d5e20f796f99cbefc`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
