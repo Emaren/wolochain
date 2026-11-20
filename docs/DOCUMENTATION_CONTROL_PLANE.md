@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `we1/chat-social-hd-v2-exact-executor-20261120` at `5499572e869c93e68acfb934c037f5b67ee8812e`
+Implementation baseline: `we1/chat-social-lifecycle-repair-central-20261120` at `06280371470f2d45bf974078f84aab58a3237943`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
