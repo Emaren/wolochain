@@ -28,7 +28,7 @@ jobs:
           test "$(id -u)" != 0
           test "$(git hash-object scripts/c03_hd_gateway_v2_restricted_install_candidate.sql)" = 'd1bf060aae236f5a7c0012573307d457406f7a1a'
           test "$(git hash-object scripts/c03_hd_gateway_v2_restricted_inverse_candidate.sql)" = '1c11073a44643e90bd59ae36118432001772b1da'
-          test "$(git hash-object scripts/c03_hd_gateway_v2_physical_rehearsal.py)" = 'b4724b71b7fee25ac51dd2d89101d2123ef55b2d'
+          test "$(git hash-object scripts/c03_hd_gateway_v2_physical_rehearsal.py)" = '97ba7b9820f677800e2c462185feaf878a698918'
           python3 -B -m py_compile scripts/c03_hd_gateway_v2_physical_rehearsal.py
       - name: Install real isolated PostgreSQL 16 only
         shell: bash

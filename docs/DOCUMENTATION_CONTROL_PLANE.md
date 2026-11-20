@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `we1/chat-v2-live-owner-login-postcheck-20261119` at `178ef3fb209105ad8e333b5d5e20f796f99cbefc`
+Implementation baseline: `we1/chat-social-lifecycle-repair-central-20261120` at `f027effedb5d60cf3e67c6489ca942e322dc4714`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
