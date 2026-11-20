@@ -2,7 +2,7 @@
 -- and every surviving original column ACL. Run before/after fixed SQL.
 BEGIN READ ONLY;
 SET LOCAL statement_timeout='10000ms';
-SELECT 'rel|'||c.relname||'|'||c.relkind||'|'||
+SELECT 'rel|'||c.relname||'|'||c.relkind::text||'|'||
        pg_get_userbyid(c.relowner)||'|'||
        COALESCE(c.relacl::text,'<NULL>')||'|'||
        c.relrowsecurity::text||'|'||c.relforcerowsecurity::text
