@@ -26,9 +26,9 @@ jobs:
         run: |
           set -euo pipefail
           test "$(id -u)" != 0
-          test "$(git hash-object scripts/c03_hd_gateway_v2_restricted_install_candidate.sql)" = 'f38636b7ea1b7efe178831e1a40a78dad5604749'
+          test "$(git hash-object scripts/c03_hd_gateway_v2_restricted_install_candidate.sql)" = 'd1bf060aae236f5a7c0012573307d457406f7a1a'
           test "$(git hash-object scripts/c03_hd_gateway_v2_restricted_inverse_candidate.sql)" = '1c11073a44643e90bd59ae36118432001772b1da'
-          test "$(git hash-object scripts/c03_hd_gateway_v2_physical_rehearsal.py)" = 'eca1fd003ca90129be6e6a5c4eb3f05bc2e0edfc'
+          test "$(git hash-object scripts/c03_hd_gateway_v2_physical_rehearsal.py)" = 'b4724b71b7fee25ac51dd2d89101d2123ef55b2d'
           python3 -B -m py_compile scripts/c03_hd_gateway_v2_physical_rehearsal.py
       - name: Install real isolated PostgreSQL 16 only
         shell: bash
@@ -59,6 +59,7 @@ jobs:
             'HD preimage exactly 4 raw NULL sequences and 8 explicit table ACLs',
             'DE gateway installation rejected at exact database identity check',
             'synthetic HD column-level attacl has non-NULL bytes',
+            'fixture replicates real HEL1 original legacy owner LOGIN capability',
             'all original column attacl bytes unchanged after installation',
             'all original column attacl bytes unchanged after Clan Direct sends',
             'inverse restores the byte-exact original column attacl representation',

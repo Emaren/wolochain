@@ -23,7 +23,7 @@ EXPECTED_SHA256 = {
     "scripts/c03_library_public_projection_inverse_candidate.sql":
     "3a25744c02dce756493652fcc1f16e184ff62c198cded6855e8aab284f38903c",
     "scripts/c03_hd_gateway_v2_restricted_install_candidate.sql":
-    "78d6a9ea9cc953e38fc0c3e1aee3212fc5da42fe9b08c15b8da662d24d7ebe5c",
+    "9793ff39ca80d646a89041f0174f42bb717ae3e649e49f8d68d6f102792f5c51",
     "scripts/c03_hd_gateway_v2_restricted_inverse_candidate.sql":
     "84114bac7b3e15f4cadaf3a566f705440eeb9cf8ba63f3be97249652d5f25449",
 }
@@ -33,7 +33,7 @@ EXPECTED_GIT_BLOBS = {
     "scripts/c03_library_public_projection_inverse_candidate.sql":
     "a472c349acae55e21c48508e594dd5a946fcff86",
     "scripts/c03_hd_gateway_v2_restricted_install_candidate.sql":
-    "f38636b7ea1b7efe178831e1a40a78dad5604749",
+    "d1bf060aae236f5a7c0012573307d457406f7a1a",
     "scripts/c03_hd_gateway_v2_restricted_inverse_candidate.sql":
     "1c11073a44643e90bd59ae36118432001772b1da",
 }

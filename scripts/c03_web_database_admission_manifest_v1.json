@@ -52,8 +52,8 @@
       "priority": 2,
       "install": {
         "path": "scripts/c03_hd_gateway_v2_restricted_install_candidate.sql",
-        "git_blob": "f38636b7ea1b7efe178831e1a40a78dad5604749",
-        "sha256": "78d6a9ea9cc953e38fc0c3e1aee3212fc5da42fe9b08c15b8da662d24d7ebe5c"
+        "git_blob": "d1bf060aae236f5a7c0012573307d457406f7a1a",
+        "sha256": "9793ff39ca80d646a89041f0174f42bb717ae3e649e49f8d68d6f102792f5c51"
       },
       "inverse": {
         "path": "scripts/c03_hd_gateway_v2_restricted_inverse_candidate.sql",
