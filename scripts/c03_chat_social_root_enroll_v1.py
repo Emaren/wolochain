@@ -30,14 +30,14 @@ HBA=Path('/etc/postgresql/16/main/pg_hba.conf')
 HBA_SHA='3fecbffb683bf2bc21e8bd880b9be982d14cbe3bbf67aae08f801159d6b76789'
 SOURCE='5cf4f223a7b187f6596b6a9caac26aec7afd6e94'
 PUBLIC_SHA='032e9bf17d6b6f71d672d2728aad2c41f6c061893e8dc9cbc2616353a5e10bc3'
-EXEC_SHA='abdf19968227e41a6c5f7e003408f9e7a55cc1cb4cdf0d1cb833cf3306adaa25'
+EXEC_SHA='9b5ec495946517b253a0c1dfdd86dd5a487bc55a3791eaddcaea9d7456f02323'
 NAMES={
 'c03_chat_social_hd_v2_exact_executor.py':EXEC_SHA,
 'c03_hd_gateway_v2_restricted_install_candidate.sql':'9793ff39ca80d646a89041f0174f42bb717ae3e649e49f8d68d6f102792f5c51',
 'c03_hd_gateway_v2_restricted_inverse_candidate.sql':'84114bac7b3e15f4cadaf3a566f705440eeb9cf8ba63f3be97249652d5f25449',
 'c03_chat_social_v2_preimage_readonly.sql':'8f0e0f92859b5b0b01fde7552d95263409a1874c672665021a4ea3b5235a7da6',
 'c03_chat_social_v2_postimage_readonly.sql':'e14eb681cfd097209d05afff5d3ec34df29581643c2c6f5e2cb7918d2adbae6a',
-'c03_chat_social_v2_acl_witness_readonly.sql':'e5262f05dacbe6b108aa1807f3fff702e2019b16041bc0a3d60aca6449a07527'
+'c03_chat_social_v2_acl_witness_readonly.sql':'d0829593727b8b156ac07f5fc9a8d4477dd5f8e24696ffa2703fa7a802f07faa'
 }
 DOMAIN=b'AOE2WAR-WE1-CHAT-SOCIAL-HD-V2-SQL-ONLY-V1\x00ROOT_TRUST_ENROLL_ONLY_V1\x00'
 SCHEMA='wolo.we1.chat-social-v2-root-enrollment.v1'
