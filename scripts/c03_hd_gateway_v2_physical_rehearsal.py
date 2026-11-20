@@ -67,7 +67,7 @@ def main():
             check(sql("SHOW server_version_num").startswith("16"),
                   "fresh PostgreSQL16 private AF_UNIX HD-only cluster")
             sql("""
-CREATE ROLE aoe2hd_user NOLOGIN NOINHERIT;
+CREATE ROLE aoe2hd_user LOGIN NOINHERIT;
 CREATE ROLE aoe2war_r25_web_ro NOLOGIN NOINHERIT;
 CREATE ROLE aoe2war_web_prod LOGIN NOINHERIT;
 CREATE ROLE c03_finance_owner NOLOGIN NOINHERIT;
@@ -143,6 +143,8 @@ INSERT INTO public.direct_message_drafts VALUES(1,1),(1,2);
             check(any(not x.endswith("<NULL>") for x in before_columns.splitlines()),
                   "synthetic HD column-level attacl has non-NULL bytes")
             original_raw=hashlib.sha256(before.encode()).hexdigest()
+            check(sql("SELECT rolcanlogin::text FROM pg_roles WHERE rolname='aoe2hd_user'")=="true",
+                  "fixture replicates real HEL1 original legacy owner LOGIN capability")
             source=ADMIT.read_text()
             check("current_database()<>'aoe2hd_db'" in source and "aoe2hd_user" in source,
                   "source enforces actual HD-only database and owner")
