@@ -350,7 +350,7 @@ BEGIN
     AND (
       (p.proname IN ('clan_text','direct_text') AND r.rolname<>'aoe2war_social_exec_v2')
       OR (p.proname LIKE 'leaf_%' AND r.rolname<>'aoe2hd_user')
-      OR r.rolsuper OR r.rolcanlogin
+      OR r.rolsuper OR (r.rolcanlogin AND p.proname NOT LIKE 'leaf_%')
     ))
   OR EXISTS (SELECT 1 FROM pg_auth_members WHERE member='aoe2war_social_exec_v2'::regrole)
   OR has_schema_privilege('aoe2war_social_exec_v2','aoe2war_social_hd_v2','CREATE')
