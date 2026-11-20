@@ -6,7 +6,15 @@ import CryptoKit
 import Darwin
 
 let tag=Data("aoe2war-WE1-chat-social-HD-v2-P256-v1-20261120".utf8)
-let domain=Data("AOE2WAR-WE1-CHAT-SOCIAL-HD-V2-SQL-ONLY-V1\0".utf8)
+let sqlDomain=Data("AOE2WAR-WE1-CHAT-SOCIAL-HD-V2-SQL-ONLY-V1\0".utf8)
+let recoveryDomain=Data("AOE2WAR-WE1-CHAT-SOCIAL-HD-V2-AUTO-INVERSE-RECOVERY-ONLY-V1\0".utf8)
+// Only the original SQL/root-enrollment domain and the exact independent
+// auto-inverse recovery domain may use this already-enrolled Keychain identity.
+func acceptedPurpose(_ msg:Data)->Bool {
+ let original=msg.starts(with:sqlDomain) && msg.count>sqlDomain.count
+ let recovery=msg.starts(with:recoveryDomain) && msg.count>recoveryDomain.count
+ return msg.count<8192 && (original != recovery)
+}
 func stop(_ s:String)->Never { print("HOLD_CHAT_SOCIAL_OWNER_KEYCHAIN_\(s)");exit(3) }
 func hex(_ d:Data)->String { d.map{String(format:"%02x",$0)}.joined() }
 func request()->[String:Any] {
@@ -83,7 +91,7 @@ if mode=="enroll" {
 } else if mode=="sign" {
  guard CommandLine.arguments.count==4 else {stop("SIGN_ARGS")}
  let msg=read0600(CommandLine.arguments[2])
- guard msg.starts(with:domain) && msg.count<8192 else {stop("WRONG_SIGNING_PURPOSE")}
+ guard acceptedPurpose(msg) else {stop("WRONG_SIGNING_PURPOSE")}
  // Executor, NOT signer, enforces exact JSON fields, dates and SQL hashes.
  let key=getKey(create:false)
  var err:Unmanaged<CFError>?
