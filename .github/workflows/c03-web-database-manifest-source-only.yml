@@ -31,7 +31,7 @@ jobs:
           set -euo pipefail
           test "$(id -u)" != 0
           test "$(git hash-object scripts/c03_web_database_admission_manifest_v1.json)" = 'cc93e7a926d185cfb7cbddff038cef40c835150f'
-          test "$(git hash-object scripts/c03_web_database_admission_manifest_check.py)" = '65e44ac952327317a84a6e5e8fd5017940feda67'
+          test "$(git hash-object scripts/c03_web_database_admission_manifest_check.py)" = 'b15dcaa3211dc5430fe828e42a2e98ce46efb901'
           test "$(git hash-object tests/test_c03_web_database_manifest_source_only.py)" = '4ab483be3c89948e98639f8963c0ff8be561b9c1'
       - name: Run 12 adversarial manifest tests
         env:
