@@ -1,0 +1,61 @@
+name: WE1 Chat-only SCRAM credential enrollment source and real PostgreSQL 16 negatives
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/c03_social_writer_scram_only_v1.py'
+      - 'tests/test_c03_social_writer_scram_auth_pg16.py'
+      - '.github/workflows/c03-chat-social-writer-scram-only.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  social-writer-scram:
+    name: One-role SCRAM verifier, HD positive, DE/Unix denial; no production mutation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Independently pin exact scope-limited implementation bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(id -u)" != 0
+          echo '3751e2e59bee9707e49eed66a21414e665f1889b2cb118d94cc33f9ccc03a25c  scripts/c03_social_writer_scram_only_v1.py' | sha256sum -c -
+          echo '5e9420b74dab9a299e94c54fe66521d48b4782cc85dcab1bc4b927b6771015d1  tests/test_c03_social_writer_scram_auth_pg16.py' | sha256sum -c -
+          python3 -B -m py_compile scripts/c03_social_writer_scram_only_v1.py tests/test_c03_social_writer_scram_auth_pg16.py
+      - name: Actual isolated PG16 SCRAM positive, wrong secret and DE/Unix negative proof
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -x /usr/lib/postgresql/16/bin/postgres
+          PG16_BIN=/usr/lib/postgresql/16/bin python3 -B tests/test_c03_social_writer_scram_auth_pg16.py > /tmp/WE1_chat_scram_test.out
+          python3 - <<'PY'
+          import json
+          d=json.load(open('/tmp/WE1_chat_scram_test.out'))
+          assert d['status']=='PASS_ISOLATED_PG16_CHAT_AUTH_SCRAM'
+          assert all(d['checks'].values())
+          assert d['production_executed'] is False
+          assert d['secret_material_output'] is False
+          print('PASS_REAL_PG16_CHAT_ONLY_SCRAM_HD_POSITIVE_DE_UNIX_NEGATIVE')
+          PY
+      - name: Uninstalled and nonroot mutation path must fail closed
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +e
+          python3 -B scripts/c03_social_writer_scram_only_v1.py >/tmp/WE1_chat_auth_hold.out 2>&1
+          rc=$?
+          set -e
+          test "$rc" -eq 2
+          grep -Fxq 'HOLD_CHAT_SOCIAL_WRITER_AUTH_ROOT_REQUIRED' /tmp/WE1_chat_auth_hold.out
+      - name: CI conveys no production credential enrollment authority
+        shell: bash
+        run: |
+          echo 'Source-only. Installed Social and Lobby migrations remain untouched.'
+          echo 'WE2 must independently review exact source SHA, install root-only and obtain owner Chat-only admission.'
+          echo 'No real credential may appear in logs, GitHub or website; signed-session writer and Factory remain HOLD until actual receipts.'
