@@ -102,3 +102,32 @@ Independent review must verify credential compromise, sign-window,
 unknown/crash, on-host shadow paths and no root-invocation substitution
 before operator execution. The executors cannot prove a whole-financial
 writer fence merely from targeted negative privilege checks.
+
+INVERSE AND REPEAT-INSTALL CONTRACT (C03 CHAT SOCIAL V2)
+----------------------------------------------------------
+Each signed SQL phase is separately signed with unique nonce and expiry.
+Root permit delivery accepts either install or inverse ONLY when the durable
+root-only transition journal expects that phase. Root does not replace,
+delete, or overwrite any earlier signed permit. Immutable root paths are:
+  /etc/wolo-financial-chat-social-v2/signed-one-use-chat-social-v2-<phase>-<nonce>.json
+  /var/lib/wolo-financial-role-state/v1/chat-social-hd-v2-exact/permit-delivery-<nonce>.json
+  /var/lib/wolo-financial-role-state/v1/chat-social-hd-v2-exact/transition-<sequence>-<nonce>.json
+  /var/lib/wolo-financial-role-state/v1/chat-social-hd-v2-exact/nonce-<nonce>.consumed
+  /var/lib/wolo-financial-role-state/v1/chat-social-hd-v2-exact/receipt-<nonce>.json
+
+Expected first phase install; after INSTALLED_POSTIMAGE_PASS only inverse;
+after INVERSE_PREIMAGE_PASS only fresh install. Each execution requires
+matching phase+nonce positional args, validated signed packet, root-owned
+permit-delivery receipt, and exact previous receipt hash/sequence. An orphan,
+failed, uncertain, altered or partial transition blocks further SQL without
+a separately reviewed manual recovery. The nonce/intent are fsynced BEFORE
+SQL; no re-execution of an uncertain nonce. Root delivery is separately
+flock-serialized, rejects unconsumed permits, and preserves all earlier
+permits and receipts. Stage name remains signed-one-use-chat-social-v2-permit.json,
+with fresh owner-signed bytes per operation; stage transport remains subject
+to WE2 protected operator admission. Example post-admission invocation:
+  .../c03_chat_social_hd_v2_exact_executor.py install <64hex-signed-nonce>
+  .../c03_chat_social_hd_v2_exact_executor.py inverse <different-signed-nonce>
+Never execute these examples until authorized root and SQL permits exist.
+The isolated 34-test rehearsal uses a mock SQL runner and does NOT claim
+production SQL, real HBA admission, or live HD/DE authentication.

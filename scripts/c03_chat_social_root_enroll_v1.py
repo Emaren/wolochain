@@ -6,6 +6,7 @@ independently approve and invoke it through the protected root pathway.
 """
 from __future__ import annotations
 import base64
+import fcntl
 from datetime import datetime,timezone,timedelta
 import hashlib
 import importlib.util
@@ -25,12 +26,12 @@ LIB=Path('/usr/local/libexec/wolo-financial-chat-social-v2')
 SQL=LIB/'sql'
 STATE=Path('/var/lib/wolo-financial-role-state/v1/chat-social-hd-v2-exact')
 PUBLIC=ROOT/'owner-chat-social-p256-public-x963.bin'
-PERMIT=ROOT/'signed-one-use-chat-social-v2-permit.json'
+STAGED_PERMIT='signed-one-use-chat-social-v2-permit.json'
 HBA=Path('/etc/postgresql/16/main/pg_hba.conf')
 HBA_SHA='3fecbffb683bf2bc21e8bd880b9be982d14cbe3bbf67aae08f801159d6b76789'
 SOURCE='5cf4f223a7b187f6596b6a9caac26aec7afd6e94'
 PUBLIC_SHA='032e9bf17d6b6f71d672d2728aad2c41f6c061893e8dc9cbc2616353a5e10bc3'
-EXEC_SHA='9b5ec495946517b253a0c1dfdd86dd5a487bc55a3791eaddcaea9d7456f02323'
+EXEC_SHA='cab4b055e169d6544953611bc08a8132cd917f4a6500b19cd75b5576f99dc1b6'
 NAMES={
 'c03_chat_social_hd_v2_exact_executor.py':EXEC_SHA,
 'c03_hd_gateway_v2_restricted_install_candidate.sql':'9793ff39ca80d646a89041f0174f42bb717ae3e649e49f8d68d6f102792f5c51',
@@ -196,22 +197,39 @@ def install_permit():
           'EXECUTOR_UNTRUSTED')
     for name,digest in NAMES.items():
         if name.endswith('.sql'):check(sha(root_file(SQL/name))==digest,'ROOT_SQL_DRIFT')
-    data=stage_file('signed-one-use-chat-social-v2-permit.json',8192)
+    data=stage_file(STAGED_PERMIT,8192)
     spec=importlib.util.spec_from_file_location('we1_social_exact',LIB/'c03_chat_social_hd_v2_exact_executor.py')
     module=importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     check(module.verify_hba()==HBA_SHA,'HBA_POSTIMAGE_CHANGED')
-    req=module.verify_signed_packet(data,root_file(PUBLIC,128),datetime.now(timezone.utc),'install')
-    check(not PERMIT.exists() and not PERMIT.is_symlink(),'SIGNED_PERMIT_ALREADY_INSTALLED')
-    newfile(PERMIT,data)
-    receipt={'schema':'wolo.we1.chat-social-v2-permit-delivery-receipt.v1',
-       'status':'PASS_SIGNED_CHAT_SOCIAL_PERMIT_ROOT_DELIVERED_NO_SQL',
-       'nonce':req['nonce'],'permit_sha256':sha(data),
-       'source_commit':SOURCE,'database_sql_executed':False,
-       'utc':datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')}
-    raw=canonical(receipt)+b'\n'
-    newfile(STATE/('permit-delivery-'+req['nonce']+'.json'),raw)
-    return {'status':receipt['status'],'receipt_sha256':sha(raw)}
+    packet=module.strict_json(data)
+    check(type(packet) is dict and type(packet.get('request')) is dict,'INVALID_SIGNED_PACKET')
+    phase=packet['request'].get('phase')
+    check(phase in ('install','inverse'),'UNSUPPORTED_SIGNED_SQL_PHASE')
+    req=module.verify_signed_packet(data,root_file(PUBLIC,128),datetime.now(timezone.utc),phase)
+    nonce=req['nonce']
+    lock=os.open(STATE/'controller.lock',os.O_RDWR|os.O_CREAT|os.O_NOFOLLOW,0o600)
+    try:
+        fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
+        expected,sequence,_=module.next_transition(STATE,reader=root_file)
+        check(phase==expected,'SQL_PHASE_OUT_OF_ORDER')
+        module.no_pending_permit(ROOT,STATE)
+        target=module.permit_path(phase,nonce)
+        check(not target.exists() and not target.is_symlink(),'SIGNED_NONCE_ALREADY_ADMITTED')
+        newfile(target,data)
+        # Durable post-delivery receipt; crash after file creation leaves an
+        # unconsumed immutable packet and blocks further delivery/replay.
+        receipt={'schema':'wolo.we1.chat-social-v2-permit-delivery-receipt.v2',
+           'status':'PASS_SIGNED_CHAT_SOCIAL_PERMIT_ROOT_DELIVERED_NO_SQL',
+           'phase':phase,'sequence':sequence,'nonce':nonce,'permit_sha256':sha(data),
+           'permit_file':target.name,
+           'source_commit':SOURCE,'database_sql_executed':False,
+           'utc':datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')}
+        raw=canonical(receipt)+b'\n'
+        newfile(STATE/('permit-delivery-'+nonce+'.json'),raw)
+        return {'status':receipt['status'],'phase':phase,'sequence':sequence,
+                'nonce':nonce,'receipt_sha256':sha(raw)}
+    finally:os.close(lock)
 
 def main():
     try:

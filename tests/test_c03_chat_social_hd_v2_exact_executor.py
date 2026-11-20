@@ -198,4 +198,126 @@ class SocialExactExecutorTests(unittest.TestCase):
         self.assertNotIn('shell=True',SOURCE.read_text())
         self.assertNotIn('os.system(',SOURCE.read_text())
 
+
+class SocialDurablePermitLifecycleTests(unittest.TestCase):
+    @staticmethod
+    def reader(path):
+        return path.read_bytes()
+
+    def test_signed_delivery_contract_is_phase_dynamic_and_immutable(self):
+        bootstrap=(SOURCE.parent/'c03_chat_social_root_enroll_v1.py').read_text()
+        self.assertIn("phase=packet['request'].get('phase')",bootstrap)
+        self.assertIn("module.verify_signed_packet(data,root_file(PUBLIC,128),datetime.now(timezone.utc),phase)",bootstrap)
+        self.assertIn('module.next_transition(STATE,reader=root_file)',bootstrap)
+        self.assertIn('module.no_pending_permit(ROOT,STATE)',bootstrap)
+        self.assertIn('module.permit_path(phase,nonce)',bootstrap)
+        self.assertNotIn("verify_signed_packet(data,root_file(PUBLIC,128),datetime.now(timezone.utc),'install')",bootstrap)
+        self.assertIn('newfile(target,data)',bootstrap)
+
+    def test_actual_journal_install_inverse_repeat_install_rehearsal(self):
+        import tempfile
+        from unittest.mock import patch
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp)/'root'
+            state=Path(tmp)/'state'
+            root.mkdir();state.mkdir()
+            db={'installed':False}
+            initial,number,prior=m.next_transition(state,reader=self.reader)
+            self.assertEqual((initial,number,prior),('install',1,'0'*64))
+            sql={name:name.encode() for name in m.FILES}
+            def postgres_shadow(sql_bytes,readonly=False):
+                name=sql_bytes.decode()
+                if name=='pre':
+                    if db['installed']:raise m.Hold('PREIMAGE_MISMATCH')
+                elif name=='post':
+                    if not db['installed']:raise m.Hold('POSTIMAGE_MISMATCH')
+                elif name=='install':
+                    if db['installed']:raise m.Hold('DOUBLE_INSTALL')
+                    db['installed']=True
+                elif name=='inverse':
+                    if not db['installed']:raise m.Hold('DOUBLE_INVERSE')
+                    db['installed']=False
+                return 'unchanged-legacy-acl' if name=='acl' else name
+            with patch.object(m,'ROOT',root):
+                for expected_number,(phase,nonce) in enumerate([
+                        ('install','11'*32),('inverse','22'*32),
+                        ('install','33'*32)],1):
+                    expected,sequence,previous=m.next_transition(state,reader=self.reader)
+                    self.assertEqual((expected,sequence),(phase,expected_number))
+                    permit=m.permit_path(phase,nonce)
+                    permit.write_bytes(('SIGNED_PACKET_'+phase+'_'+nonce).encode())
+                    with self.assertRaisesRegex(m.Hold,'UNCONSUMED_PERMIT'):
+                        m.no_pending_permit(root,state,reader=self.reader)
+                    permit_hash=m.digest(permit.read_bytes())
+                    m.write_once(state,f'transition-{sequence:08d}-{nonce}.json',
+                        m.canonical({'sequence':sequence,'nonce':nonce,
+                                     'phase':phase,'previous_receipt_sha256':previous,
+                                     'permit_sha256':permit_hash})+b'\n')
+                    with self.assertRaises((m.Hold,OSError)):
+                        m.next_transition(state,reader=self.reader)
+                    m.write_once(state,'nonce-'+nonce+'.consumed',
+                        m.canonical({'nonce':nonce,'phase':phase,
+                                     'permit_sha256':permit_hash,
+                                     'status':'CONSUMED_BEFORE_SQL'})+b'\n')
+                    evidence=m.run_transaction(sql,phase,postgres_shadow)
+                    wanted='INSTALLED_POSTIMAGE_PASS' if phase=='install' else 'INVERSE_PREIMAGE_PASS'
+                    self.assertEqual(evidence['status'],wanted)
+                    receipt={'status':wanted,'phase':phase,'nonce':nonce,
+                             'sequence':sequence,'previous_receipt_sha256':previous,
+                             'permit_sha256':permit_hash,'source_commit':m.SOURCE}
+                    m.write_once(state,f'receipt-{nonce}.json',m.canonical(receipt)+b'\n')
+                    m.no_pending_permit(root,state,reader=self.reader)
+                    expected_next='inverse' if phase=='install' else 'install'
+                    self.assertEqual(m.next_transition(state,reader=self.reader)[0],expected_next)
+                self.assertTrue(db['installed'])
+                self.assertEqual(len(list(state.glob('receipt-*.json'))),3)
+                self.assertEqual(len(list(root.glob(m.PERMIT_PREFIX+'-*.json'))),3)
+
+    def test_nonce_reuse_and_unconsumed_permit_denied(self):
+        import tempfile
+        from unittest.mock import patch
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp)/'root';state=Path(tmp)/'state'
+            root.mkdir();state.mkdir()
+            with patch.object(m,'ROOT',root):
+                path=m.permit_path('install','ad'*32)
+                path.write_bytes(b'fake-packet')
+                with self.assertRaises(m.Hold):
+                    m.no_pending_permit(root,state,reader=self.reader)
+                self.assertEqual(m.permit_path('install','ad'*32),path)
+                with self.assertRaises(m.Hold):m.permit_path('inverse','0'*64)
+                with self.assertRaises(m.Hold):m.permit_path('install','AD'*32)
+                with self.assertRaises(m.Hold):m.permit_path('library','ad'*32)
+
+    def test_orphan_and_unknown_durable_evidence_denied(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            state=Path(tmp)
+            (state/('nonce-'+'aa'*32+'.consumed')).write_text('{}')
+            with self.assertRaises(m.Hold):
+                m.next_transition(state,reader=self.reader)
+            (state/('nonce-'+'aa'*32+'.consumed')).unlink()
+            (state/'transition-forged.json').write_text('{}')
+            with self.assertRaises(m.Hold):
+                m.next_transition(state,reader=self.reader)
+
+    def test_bad_receipt_blocks_next_action(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            state=Path(tmp);nonce='cd'*32
+            h='ef'*32
+            m.write_once(state,f'transition-00000001-{nonce}.json',
+                m.canonical({'sequence':1,'nonce':nonce,'phase':'install',
+                             'previous_receipt_sha256':'0'*64,'permit_sha256':h})+b'\n')
+            m.write_once(state,f'nonce-{nonce}.consumed',
+                m.canonical({'nonce':nonce,'phase':'install',
+                             'status':'CONSUMED_BEFORE_SQL','permit_sha256':h})+b'\n')
+            m.write_once(state,f'receipt-{nonce}.json',
+                m.canonical({'sequence':1,'nonce':nonce,'phase':'install',
+                             'status':'CRITICAL_MANUAL_RECOVERY_REQUIRED',
+                             'previous_receipt_sha256':'0'*64,
+                             'permit_sha256':h,'source_commit':m.SOURCE})+b'\n')
+            with self.assertRaisesRegex(m.Hold,'INCOMPLETE_OR_FAILED_SQL_TRANSITION'):
+                m.next_transition(state,reader=self.reader)
+
 if __name__=='__main__':unittest.main()

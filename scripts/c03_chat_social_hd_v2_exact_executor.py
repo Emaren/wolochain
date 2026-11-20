@@ -40,7 +40,7 @@ ROOT = Path('/etc/wolo-financial-chat-social-v2')
 SQL = Path('/usr/local/libexec/wolo-financial-chat-social-v2/sql')
 STATE = Path('/var/lib/wolo-financial-role-state/v1/chat-social-hd-v2-exact')
 PUBLIC = ROOT / 'owner-chat-social-p256-public-x963.bin'
-PERMIT = ROOT / 'signed-one-use-chat-social-v2-permit.json'
+PERMIT_PREFIX = 'signed-one-use-chat-social-v2'
 SPKI = bytes.fromhex('3059301306072a8648ce3d020106082a8648ce3d030107034200')
 HEX64 = re.compile(r'[0-9a-f]{64}\Z')
 KEYS = {'schema','action','phase','host','database','source_commit',
@@ -52,6 +52,79 @@ class Hold(RuntimeError): pass
 
 def need(condition, why):
     if not condition: raise Hold(why)
+
+def permit_path(phase, nonce):
+    need(phase in ('install','inverse') and type(nonce) is str
+         and HEX64.fullmatch(nonce) and nonce != '0'*64,'INVALID_PHASE_OR_NONCE')
+    return ROOT / f'{PERMIT_PREFIX}-{phase}-{nonce}.json'
+
+def next_transition(state, reader=None):
+    # Root-owned append-only journal: any partial SQL phase blocks all future SQL.
+    if reader is None:reader=secure_file
+    intents=[]
+    for path in state.glob('transition-*.json'):
+        match=re.fullmatch(r'transition-(\d{8})-([0-9a-f]{64})\.json',path.name)
+        need(match is not None,'UNKNOWN_TRANSITION_FILE')
+        intents.append((int(match.group(1)),match.group(2),path))
+    intents.sort()
+    intent_nonces={nonce for _,nonce,_ in intents}
+    need(len(intent_nonces)==len(intents),'REUSED_SQL_NONCE')
+    for prefix in ('nonce-','receipt-'):
+        found=set()
+        pattern=(r'nonce-([0-9a-f]{64})\.consumed' if prefix=='nonce-'
+                 else r'receipt-([0-9a-f]{64})\.json')
+        for p in state.glob(prefix+'*'):
+            match=re.fullmatch(pattern,p.name)
+            need(match is not None,'UNKNOWN_SQL_EVIDENCE')
+            found.add(match.group(1))
+        need(found==intent_nonces,'ORPHAN_OR_MISSING_SQL_EVIDENCE')
+    previous='0'*64
+    for expected_index,(index,nonce,path) in enumerate(intents,1):
+        need(index==expected_index,'TRANSITION_SEQUENCE_GAP')
+        intent=strict_json(reader(path))
+        phase='install' if index%2 else 'inverse'
+        need(type(intent) is dict and intent=={
+            'sequence':index,'nonce':nonce,'phase':phase,
+            'previous_receipt_sha256':previous,
+            'permit_sha256':intent.get('permit_sha256')},'TRANSITION_RECORD_DRIFT')
+        need(type(intent['permit_sha256']) is str and HEX64.fullmatch(intent['permit_sha256']),
+             'TRANSITION_PERMIT_HASH_INVALID')
+        consumed=strict_json(reader(state/f'nonce-{nonce}.consumed'))
+        need(consumed=={'nonce':nonce,'phase':phase,
+                        'permit_sha256':intent['permit_sha256'],
+                        'status':'CONSUMED_BEFORE_SQL'},'CONSUMPTION_RECORD_DRIFT')
+        raw=reader(state/f'receipt-{nonce}.json')
+        receipt=strict_json(raw)
+        expected_status='INSTALLED_POSTIMAGE_PASS' if phase=='install' else 'INVERSE_PREIMAGE_PASS'
+        need(receipt.get('status')==expected_status and receipt.get('phase')==phase
+             and receipt.get('nonce')==nonce and receipt.get('sequence')==index
+             and receipt.get('previous_receipt_sha256')==previous
+             and receipt.get('permit_sha256')==intent['permit_sha256']
+             and receipt.get('source_commit')==SOURCE,'INCOMPLETE_OR_FAILED_SQL_TRANSITION')
+        previous=digest(raw)
+    expected_phase='install' if len(intents)%2==0 else 'inverse'
+    return expected_phase,len(intents)+1,previous
+
+def no_pending_permit(root, state, reader=None):
+    # All older immutable permit files remain for audit; only consumed ones are past.
+    if reader is None:reader=secure_file
+    permit_nonces=set()
+    for path in root.glob(PERMIT_PREFIX+'-*.json'):
+        match=re.fullmatch(re.escape(PERMIT_PREFIX)+r'-(install|inverse)-([0-9a-f]{64})\.json',path.name)
+        need(match is not None,'UNKNOWN_PERMIT_FILE')
+        phase,nonce=match.groups()
+        need(nonce not in permit_nonces,'REUSED_DELIVERY_NONCE')
+        permit_nonces.add(nonce)
+        record=state/f'nonce-{nonce}.consumed'
+        need(record.is_file(),'UNCONSUMED_PERMIT_REQUIRES_REVIEW')
+        consumed=strict_json(reader(record))
+        need(consumed.get('phase')==phase and consumed.get('nonce')==nonce
+             and consumed.get('permit_sha256')==digest(reader(path)),
+             'PERMIT_CONSUMPTION_DRIFT')
+    for receipt in state.glob('permit-delivery-*.json'):
+        match=re.fullmatch(r'permit-delivery-([0-9a-f]{64})\.json',receipt.name)
+        need(match is not None and match.group(1) in permit_nonces,
+             'ORPHAN_PERMIT_DELIVERY_RECEIPT')
 
 def digest(b:bytes)->str: return hashlib.sha256(b).hexdigest()
 
@@ -231,44 +304,61 @@ def run_transaction(data,phase,runner):
         evidence['status']='CRITICAL_PHASE_UNCERTAIN_NO_RETRY'
     return evidence
 
-def execute(phase):
+def execute(phase, nonce):
     need(os.geteuid()==0 and os.getuid()==0,'ROOT_EXECUTOR_REQUIRED')
-    need(phase in ('install','inverse'),'UNSUPPORTED_PHASE')
+    permit_file=permit_path(phase,nonce)
     for ancestor in (Path('/etc'),Path('/usr'),Path('/usr/local'),Path('/usr/local/libexec'),Path('/usr/local/libexec/wolo-financial-chat-social-v2'),Path('/var'),Path('/var/lib'),Path('/var/lib/wolo-financial-role-state'),Path('/var/lib/wolo-financial-role-state/v1')):secure_dir(ancestor)
     hba=verify_hba()
     code=secure_file(Path(__file__).resolve(),limit=32768)
     data=verify_files()
     public=secure_file(PUBLIC,limit=128)
-    permit=secure_file(PERMIT,limit=8192)
-    now=datetime.now(timezone.utc)
-    req=verify_signed_packet(permit,public,now,phase)
-    nonce=req['nonce'];lockp=STATE/'controller.lock'
+    lockp=STATE/'controller.lock'
     lock=os.open(lockp,os.O_RDWR|os.O_CREAT|os.O_NOFOLLOW,0o600)
     try:
         fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
-        write_once(STATE,'nonce-'+nonce+'.consumed',canonical({'nonce':nonce,'phase':phase,'permit_sha256':digest(permit),'status':'CONSUMED_BEFORE_SQL'})+b'\n')
+        expected,sequence,previous=next_transition(STATE)
+        need(phase==expected,'UNAUTHORIZED_PHASE_ORDER')
+        permit=secure_file(permit_file,limit=8192)
+        req=verify_signed_packet(permit,public,datetime.now(timezone.utc),phase)
+        need(req['nonce']==nonce,'PERMIT_NONCE_FILENAME_MISMATCH')
+        recorded=strict_json(secure_file(STATE/f'permit-delivery-{nonce}.json',limit=8192))
+        need(recorded.get('nonce')==nonce and recorded.get('phase')==phase
+             and recorded.get('permit_sha256')==digest(permit)
+             and recorded.get('sequence')==sequence
+             and recorded.get('status')=='PASS_SIGNED_CHAT_SOCIAL_PERMIT_ROOT_DELIVERED_NO_SQL',
+             'ROOT_PERMIT_DELIVERY_RECEIPT_MISSING_OR_DRIFT')
+        write_once(STATE,f'transition-{sequence:08d}-{nonce}.json',
+            canonical({'sequence':sequence,'nonce':nonce,'phase':phase,
+                       'previous_receipt_sha256':previous,'permit_sha256':digest(permit)})+b'\n')
+        write_once(STATE,'nonce-'+nonce+'.consumed',
+                   canonical({'nonce':nonce,'phase':phase,'permit_sha256':digest(permit),
+                              'status':'CONSUMED_BEFORE_SQL'})+b'\n')
         receipt={'schema':'wolo.we1.chat-social-hd-v2-root-execution-receipt.v1','nonce':nonce,
+                 'sequence':sequence,'previous_receipt_sha256':previous,
                  'phase':phase,'permit_sha256':digest(permit),'source_commit':SOURCE,
                  'db':'aoe2hd_db','owner_public_sha256':digest(public),'financial_authorized':False,
                  'hba_sha256':hba,'executor_sha256':digest(code),
-                 'time':now.strftime('%Y-%m-%dT%H:%M:%SZ'),'status':'UNKNOWN_AFTER_NONCE_CONSUMPTION'}
+                 'time':datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),
+                 'status':'UNKNOWN_AFTER_NONCE_CONSUMPTION'}
         receipt.update(run_transaction(data,phase,psql))
-        if receipt['status']=='INSTALLED_POSTIMAGE_PASS':
+        if receipt['status'] in ('INSTALLED_POSTIMAGE_PASS','INVERSE_PREIMAGE_PASS'):
             try:verify_hba()
             except Exception:receipt['status']='CRITICAL_HBA_CHANGED_POST_SQL_NO_RETRY'
         raw=canonical(receipt)+b'\n'
         write_once(STATE,'receipt-'+nonce+'.json',raw)
         need(receipt['status'] in ('INSTALLED_POSTIMAGE_PASS','INVERSE_PREIMAGE_PASS'),receipt['status'])
-        return {'status':receipt['status'],'receipt_sha256':digest(raw),'nonce':nonce}
+        return {'status':receipt['status'],'receipt_sha256':digest(raw),
+                'nonce':nonce,'sequence':sequence}
     finally:
         os.close(lock)
 
 def main(argv=None):
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('phase',choices=('install','inverse'))
+    p.add_argument('nonce',nargs='?',default='0'*64,help='fresh signed permit nonce, 64 lowercase hex')
     a=p.parse_args(argv)
     try:
-        print(json.dumps(execute(a.phase),sort_keys=True));return 0
+        print(json.dumps(execute(a.phase,a.nonce),sort_keys=True));return 0
     except (Hold,OSError,ValueError,subprocess.SubprocessError) as exc:
         print(json.dumps({'status':'HOLD_CHAT_SOCIAL_HD_V2_EXACT_EXECUTOR','reason':str(exc)[:110],
                           'financial_authorized':False},sort_keys=True));return 3
