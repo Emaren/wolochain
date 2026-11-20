@@ -31,13 +31,13 @@ FILES = {
     'install': ('c03_hd_gateway_v2_restricted_install_candidate.sql','9793ff39ca80d646a89041f0174f42bb717ae3e649e49f8d68d6f102792f5c51'),
     'inverse': ('c03_hd_gateway_v2_restricted_inverse_candidate.sql','84114bac7b3e15f4cadaf3a566f705440eeb9cf8ba63f3be97249652d5f25449'),
     'pre': ('c03_chat_social_v2_preimage_readonly.sql','8f0e0f92859b5b0b01fde7552d95263409a1874c672665021a4ea3b5235a7da6'),
-    'post': ('c03_chat_social_v2_postimage_readonly.sql','e14eb681cfd097209d05afff5d3ec34df29581643c2c6f5e2cb7918d2adbae6a'),
+    'post': ('c03_chat_social_v2_postimage_readonly.sql','e2509411bff373116f936dd378b8eea9dd1fa2e5da766711babce9a5bd5d8360'),
     'acl': ('c03_chat_social_v2_acl_witness_readonly.sql','d0829593727b8b156ac07f5fc9a8d4477dd5f8e24696ffa2703fa7a802f07faa'),
 }
 HBA = Path('/etc/postgresql/16/main/pg_hba.conf')
 HBA_SHA256 = '3fecbffb683bf2bc21e8bd880b9be982d14cbe3bbf67aae08f801159d6b76789'
 ROOT = Path('/etc/wolo-financial-chat-social-v2')
-SQL = Path('/usr/local/libexec/wolo-financial-chat-social-v2/sql')
+SQL = Path('/usr/local/libexec/wolo-financial-chat-social-v2/recovery-v1/sql')
 STATE = Path('/var/lib/wolo-financial-role-state/v1/chat-social-hd-v2-exact')
 PUBLIC = ROOT / 'owner-chat-social-p256-public-x963.bin'
 PERMIT_PREFIX = 'signed-one-use-chat-social-v2'
@@ -59,51 +59,135 @@ def permit_path(phase, nonce):
     return ROOT / f'{PERMIT_PREFIX}-{phase}-{nonce}.json'
 
 def next_transition(state, reader=None):
-    # Root-owned append-only journal: any partial SQL phase blocks all future SQL.
-    if reader is None:reader=secure_file
-    intents=[]
-    for path in state.glob('transition-*.json'):
-        match=re.fullmatch(r'transition-(\d{8})-([0-9a-f]{64})\.json',path.name)
-        need(match is not None,'UNKNOWN_TRANSITION_FILE')
-        intents.append((int(match.group(1)),match.group(2),path))
-    intents.sort()
-    intent_nonces={nonce for _,nonce,_ in intents}
-    need(len(intent_nonces)==len(intents),'REUSED_SQL_NONCE')
-    for prefix in ('nonce-','receipt-'):
-        found=set()
-        pattern=(r'nonce-([0-9a-f]{64})\.consumed' if prefix=='nonce-'
-                 else r'receipt-([0-9a-f]{64})\.json')
-        for p in state.glob(prefix+'*'):
-            match=re.fullmatch(pattern,p.name)
-            need(match is not None,'UNKNOWN_SQL_EVIDENCE')
-            found.add(match.group(1))
-        need(found==intent_nonces,'ORPHAN_OR_MISSING_SQL_EVIDENCE')
+    """Strict append-only SQL and signed auto-inverse recovery sequence.
+
+    Successful install/inverse alternates normally. A failed install can be
+    followed ONLY by a separately signed recovery certificate after the exact
+    restored live preimage is independently witnessed. No failed/partial SQL
+    receipt is ever amended, ignored, or retried.
+    """
+    if reader is None: reader=secure_file
+    events=[]
+    for kind,prefix,pattern in (
+        ('sql','transition-',r'transition-(\d{8})-([0-9a-f]{64})\.json'),
+        ('recovery','recovery-transition-',r'recovery-transition-(\d{8})-([0-9a-f]{64})\.json')):
+        for path in state.glob(prefix+'*'):
+            match=re.fullmatch(pattern,path.name)
+            need(match is not None,'UNKNOWN_TRANSITION_FILE')
+            events.append((int(match.group(1)),match.group(2),kind,path))
+    # Unrecognized or partial root recovery evidence always blocks further SQL.
+    for item in state.glob('recovery-*'):
+        need(re.fullmatch(
+            r'recovery-(?:transition-\d{8}-[0-9a-f]{64}\.json|'
+            r'nonce-[0-9a-f]{64}\.consumed|receipt-[0-9a-f]{64}\.json)',
+            item.name) is not None,'UNKNOWN_RECOVERY_EVIDENCE')
+    events.sort()
+    need(len({nonce for _,nonce,_,_ in events})==len(events),'REUSED_SQL_OR_RECOVERY_NONCE')
+    for kind,nonce_prefix,receipt_prefix in (
+        ('sql','nonce-','receipt-'),
+        ('recovery','recovery-nonce-','recovery-receipt-')):
+        required={nonce for _,nonce,k,_ in events if k==kind}
+        for prefix,suffix in ((nonce_prefix,'.consumed'),(receipt_prefix,'.json')):
+            found=set()
+            for p in state.glob(prefix+'*'):
+                match=re.fullmatch(re.escape(prefix)+r'([0-9a-f]{64})'+re.escape(suffix),p.name)
+                need(match is not None,'UNKNOWN_SQL_OR_RECOVERY_EVIDENCE')
+                found.add(match.group(1))
+            need(found==required,'ORPHAN_OR_MISSING_SQL_OR_RECOVERY_EVIDENCE')
     previous='0'*64
-    for expected_index,(index,nonce,path) in enumerate(intents,1):
-        need(index==expected_index,'TRANSITION_SEQUENCE_GAP')
+    expected='install'
+    failed=None
+    for seq,(index,nonce,kind,path) in enumerate(events,1):
+        need(index==seq,'TRANSITION_SEQUENCE_GAP_OR_DUPLICATE')
         intent=strict_json(reader(path))
-        phase='install' if index%2 else 'inverse'
-        need(type(intent) is dict and intent=={
-            'sequence':index,'nonce':nonce,'phase':phase,
-            'previous_receipt_sha256':previous,
-            'permit_sha256':intent.get('permit_sha256')},'TRANSITION_RECORD_DRIFT')
-        need(type(intent['permit_sha256']) is str and HEX64.fullmatch(intent['permit_sha256']),
-             'TRANSITION_PERMIT_HASH_INVALID')
-        consumed=strict_json(reader(state/f'nonce-{nonce}.consumed'))
-        need(consumed=={'nonce':nonce,'phase':phase,
-                        'permit_sha256':intent['permit_sha256'],
-                        'status':'CONSUMED_BEFORE_SQL'},'CONSUMPTION_RECORD_DRIFT')
-        raw=reader(state/f'receipt-{nonce}.json')
-        receipt=strict_json(raw)
-        expected_status='INSTALLED_POSTIMAGE_PASS' if phase=='install' else 'INVERSE_PREIMAGE_PASS'
-        need(receipt.get('status')==expected_status and receipt.get('phase')==phase
-             and receipt.get('nonce')==nonce and receipt.get('sequence')==index
-             and receipt.get('previous_receipt_sha256')==previous
-             and receipt.get('permit_sha256')==intent['permit_sha256']
-             and receipt.get('source_commit')==SOURCE,'INCOMPLETE_OR_FAILED_SQL_TRANSITION')
+        if kind=='sql':
+            need(expected in ('install','inverse'),'SIGNED_RECOVERY_REQUIRED')
+            phase=expected
+            need(type(intent) is dict and intent=={
+                'sequence':seq,'nonce':nonce,'phase':phase,
+                'previous_receipt_sha256':previous,
+                'permit_sha256':intent.get('permit_sha256')},'TRANSITION_RECORD_DRIFT')
+            need(type(intent['permit_sha256']) is str and HEX64.fullmatch(intent['permit_sha256']),
+                 'TRANSITION_PERMIT_HASH_INVALID')
+            consumed=strict_json(reader(state/f'nonce-{nonce}.consumed'))
+            need(consumed=={'nonce':nonce,'phase':phase,
+                            'permit_sha256':intent['permit_sha256'],
+                            'status':'CONSUMED_BEFORE_SQL'},'CONSUMPTION_RECORD_DRIFT')
+            raw=reader(state/f'receipt-{nonce}.json')
+            receipt=strict_json(raw)
+            need(type(receipt) is dict and receipt.get('phase')==phase
+                 and receipt.get('nonce')==nonce and receipt.get('sequence')==seq
+                 and receipt.get('previous_receipt_sha256')==previous
+                 and receipt.get('permit_sha256')==intent['permit_sha256']
+                 and receipt.get('source_commit')==SOURCE
+                 and receipt.get('db') in (None,'aoe2hd_db')
+                 and receipt.get('financial_authorized') in (None,False),
+                 'SQL_RECEIPT_IDENTITY_DRIFT')
+            status=receipt.get('status')
+            successful='INSTALLED_POSTIMAGE_PASS' if phase=='install' else 'INVERSE_PREIMAGE_PASS'
+            if status==successful:
+                expected='inverse' if phase=='install' else 'install'
+                failed=None
+            elif phase=='install' and status=='AUTO_INVERSE_PASS_AFTER_POSTIMAGE_HOLD':
+                need(receipt.get('acl_before_sha256')==receipt.get('after_inverse_acl_sha256')
+                     and type(receipt.get('acl_before_sha256')) is str
+                     and HEX64.fullmatch(receipt['acl_before_sha256'])
+                     and receipt.get('preimage_stdout_sha256')==receipt.get('after_inverse_preimage_stdout_sha256')
+                     and type(receipt.get('preimage_stdout_sha256')) is str
+                     and HEX64.fullmatch(receipt['preimage_stdout_sha256'])
+                     and receipt.get('hba_sha256')==HBA_SHA256,
+                     'AUTO_INVERSE_RESTORATION_UNPROVEN')
+                expected='recovery'
+                failed=(nonce,seq,digest(raw),receipt['acl_before_sha256'],
+                        receipt['preimage_stdout_sha256'])
+            else:
+                raise Hold('INCOMPLETE_OR_FAILED_SQL_TRANSITION')
+        else:
+            need(expected=='recovery' and failed is not None,
+                 'RECOVERY_WITHOUT_EXACT_AUTO_INVERSE')
+            fn,fs,fh,fa,fp=failed
+            need(type(intent) is dict and intent=={
+                'sequence':seq,'nonce':nonce,'phase':'recovery',
+                'previous_receipt_sha256':previous,
+                'failed_nonce':fn,'failed_sequence':fs,
+                'failed_receipt_sha256':fh,
+                'permit_sha256':intent.get('permit_sha256')},'RECOVERY_TRANSITION_RECORD_DRIFT')
+            need(type(intent['permit_sha256']) is str
+                 and HEX64.fullmatch(intent['permit_sha256']),'RECOVERY_PERMIT_HASH_INVALID')
+            signed_recovery=rooted_recovery_permit=reader(
+                ROOT/f'signed-one-use-chat-social-auto-inverse-recovery-{nonce}.json')
+            need(digest(signed_recovery)==intent['permit_sha256'],
+                 'SIGNED_RECOVERY_PERMIT_HASH_DRIFT')
+            consumed=strict_json(reader(state/f'recovery-nonce-{nonce}.consumed'))
+            need(consumed=={'nonce':nonce,'phase':'recovery',
+                            'permit_sha256':intent['permit_sha256'],
+                            'status':'CONSUMED_BEFORE_RECOVERY'},'RECOVERY_CONSUMPTION_DRIFT')
+            raw=reader(state/f'recovery-receipt-{nonce}.json')
+            rec=strict_json(raw)
+            need(type(rec) is dict
+                 and rec.get('status')=='AUTO_INVERSE_RECOVERY_EPOCH_PASS'
+                 and rec.get('phase')=='recovery'
+                 and rec.get('nonce')==nonce and rec.get('sequence')==seq
+                 and rec.get('previous_receipt_sha256')==previous
+                 and rec.get('failed_receipt_sha256')==fh
+                 and rec.get('failed_sequence')==fs and rec.get('failed_nonce')==fn
+                 and rec.get('permit_sha256')==intent['permit_sha256']
+                 and rec.get('live_preimage_stdout_sha256')==fp
+                 and rec.get('live_acl_sha256')==fa
+                 and rec.get('hba_sha256')==HBA_SHA256
+                 and rec.get('financial_authorized') is False
+                 and rec.get('funding_authorized') is False
+                 and rec.get('de_database_authorized') is False
+                 and rec.get('source_commit')==SOURCE
+                 and rec.get('new_postimage_sha256')==FILES['post'][1]
+                 and rec.get('old_executor_sha256')==
+                      'cab4b055e169d6544953611bc08a8132cd917f4a6500b19cd75b5576f99dc1b6'
+                 and rec.get('new_executor_sha256')==digest(Path(__file__).read_bytes()),
+                 'RECOVERY_RECEIPT_OR_LIVE_PREIMAGE_DRIFT')
+            expected='install'
+            failed=None
         previous=digest(raw)
-    expected_phase='install' if len(intents)%2==0 else 'inverse'
-    return expected_phase,len(intents)+1,previous
+    return expected,len(events)+1,previous
 
 def no_pending_permit(root, state, reader=None):
     # All older immutable permit files remain for audit; only consumed ones are past.

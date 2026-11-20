@@ -12,7 +12,7 @@ import tempfile
 import time
 
 ROOT = Path(__file__).resolve().parents[1]
-PG = Path("/usr/lib/postgresql/16/bin")
+PG = Path(os.environ.get("PG16_BIN", "/usr/lib/postgresql/16/bin"))
 ADMIT = ROOT / "scripts/c03_hd_gateway_v2_restricted_install_candidate.sql"
 INVERSE = ROOT / "scripts/c03_hd_gateway_v2_restricted_inverse_candidate.sql"
 
@@ -177,6 +177,9 @@ INSERT INTO public.direct_message_drafts VALUES(1,1),(1,2);
             check(sql("SELECT count(*) FROM pg_roles WHERE rolname='aoe2war_social_writer'")=="0",
                   "trigger-negative preflight leaves writer absent")
             file_sql(source_path)
+            witness = file_sql(ROOT / "scripts/c03_chat_social_v2_postimage_readonly.sql")
+            check("PASS_WE1_SOCIAL_HD_POSTIMAGE" in witness.stdout,
+                  "complete corrected postimage catalog, owner, ACL and finance-negative witness passes on installed PG16")
             check(before==sql(acl), "all twelve original table/sequence ACLs unchanged after installation")
             check(before_columns==sql(attacl),
                   "all original column attacl bytes unchanged after installation")
@@ -261,6 +264,9 @@ INSERT INTO public.direct_message_drafts VALUES(1,1),(1,2);
             check(sql("SELECT count(*) FROM public.financial_test_escrow")=="0",
                   "no synthetic financial writes in owner-verified trigger-free fixture")
             file_sql(INVERSE)
+            restored = file_sql(ROOT / "scripts/c03_chat_social_v2_preimage_readonly.sql")
+            check("PASS_WE1_SOCIAL_HD_PREIMAGE" in restored.stdout,
+                  "actual PostgreSQL16 inverse restores exact Social preimage witness")
             check(before==sql(acl), "inverse exactly restores all twelve raw NULL ACLs")
             check(before_columns==sql(attacl),
                   "inverse restores the byte-exact original column attacl representation")

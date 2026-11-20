@@ -15,20 +15,20 @@ BEGIN
   EXISTS(SELECT 1 FROM pg_auth_members WHERE member IN (
    'aoe2war_social_writer'::regrole,'aoe2war_social_exec_v2'::regrole))
  THEN RAISE EXCEPTION 'WE1_SOCIAL_POST_ROLE_OR_SCHEMA_DENIED'; END IF;
- IF (SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
-     WHERE n.nspname='aoe2war_social_hd_v2')<>7 OR
-  (SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
-   WHERE n.nspname='aoe2war_social_hd_v2' AND c.relkind='v' AND
+ IF (SELECT count(*) FROM pg_class c JOIN pg_namespace ns ON ns.oid=c.relnamespace
+     WHERE ns.nspname='aoe2war_social_hd_v2')<>7 OR
+  (SELECT count(*) FROM pg_class c JOIN pg_namespace ns ON ns.oid=c.relnamespace
+   WHERE ns.nspname='aoe2war_social_hd_v2' AND c.relkind='v' AND
       c.relowner='aoe2hd_user'::regrole AND c.reloptions @> ARRAY['security_barrier=true'])<>7 OR
-  (SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
-   WHERE n.nspname='aoe2war_social_hd_v2' AND c.relname IN
+  (SELECT count(*) FROM pg_class c JOIN pg_namespace ns ON ns.oid=c.relnamespace
+   WHERE ns.nspname='aoe2war_social_hd_v2' AND c.relname IN
     ('v_users','v_clans','v_clan_members','v_clan_messages',
      'v_direct_conversations','v_direct_messages','v_direct_participants'))<>7
  THEN RAISE EXCEPTION 'WE1_SOCIAL_POST_EXACT_VIEW_SET_DENIED'; END IF;
- IF (SELECT count(*) FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
-     WHERE n.nspname='aoe2war_social_hd_v2')<>5 OR
-  (SELECT count(*) FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
-   WHERE n.nspname='aoe2war_social_hd_v2' AND p.prosecdef AND
+ IF (SELECT count(*) FROM pg_proc p JOIN pg_namespace ns ON ns.oid=p.pronamespace
+     WHERE ns.nspname='aoe2war_social_hd_v2')<>5 OR
+  (SELECT count(*) FROM pg_proc p JOIN pg_namespace ns ON ns.oid=p.pronamespace
+   WHERE ns.nspname='aoe2war_social_hd_v2' AND p.prosecdef AND
     ((p.proname IN ('clan_text','direct_text') AND p.proowner='aoe2war_social_exec_v2'::regrole)
      OR (p.proname IN ('leaf_append_clan','leaf_ensure_direct_pair','leaf_send_direct')
          AND p.proowner='aoe2hd_user'::regrole)))<>5
