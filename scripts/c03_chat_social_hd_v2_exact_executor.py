@@ -32,7 +32,7 @@ FILES = {
     'inverse': ('c03_hd_gateway_v2_restricted_inverse_candidate.sql','84114bac7b3e15f4cadaf3a566f705440eeb9cf8ba63f3be97249652d5f25449'),
     'pre': ('c03_chat_social_v2_preimage_readonly.sql','8f0e0f92859b5b0b01fde7552d95263409a1874c672665021a4ea3b5235a7da6'),
     'post': ('c03_chat_social_v2_postimage_readonly.sql','e14eb681cfd097209d05afff5d3ec34df29581643c2c6f5e2cb7918d2adbae6a'),
-    'acl': ('c03_chat_social_v2_acl_witness_readonly.sql','e5262f05dacbe6b108aa1807f3fff702e2019b16041bc0a3d60aca6449a07527'),
+    'acl': ('c03_chat_social_v2_acl_witness_readonly.sql','d0829593727b8b156ac07f5fc9a8d4477dd5f8e24696ffa2703fa7a802f07faa'),
 }
 HBA = Path('/etc/postgresql/16/main/pg_hba.conf')
 HBA_SHA256 = '3fecbffb683bf2bc21e8bd880b9be982d14cbe3bbf67aae08f801159d6b76789'
