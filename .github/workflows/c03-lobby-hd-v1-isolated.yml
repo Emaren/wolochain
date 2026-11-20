@@ -1,0 +1,53 @@
+name: WE1 Lobby HD-only signed-session gateway isolated PG16 contract
+on:
+  pull_request:
+    paths:
+      - 'scripts/c03_lobby_hd_v1_*'
+      - 'tests/test_c03_lobby_hd_pg16_isolated.py'
+      - '.github/workflows/c03-lobby-hd-v1-isolated.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  lobby-pg16-contract:
+    name: Isolated PG16 install / signed-writer / inverse / deny probes
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Exact source SHA pins and no production authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo '41381fc3ab254549e7ca982d95cab4c44bd9f2782681152d73b9c468597ab434  scripts/c03_lobby_hd_v1_install_candidate.sql' | sha256sum -c -
+          echo 'cc18548000ef149b19352dc3dab23b49264c24f49e27b5b1619a37a0d0d26452  scripts/c03_lobby_hd_v1_inverse_candidate.sql' | sha256sum -c -
+          echo '5e6f694daffe844ae0f689c9e3a06760ecc863450de514541d4db85766d85235  tests/test_c03_lobby_hd_pg16_isolated.py' | sha256sum -c -
+          echo 'f571d8f3a0b1982a0189ea6e512d154bf6eca32ff4044a381e243a19d73faccb  scripts/c03_lobby_hd_v1_reconciliation_contract.json' | sha256sum -c -
+          python3 - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          d=json.loads(Path('scripts/c03_lobby_hd_v1_reconciliation_contract.json').read_text())
+          for f,expected in d['source_file_sha256'].items():
+              assert hashlib.sha256(Path(f).read_bytes()).hexdigest()==expected
+          assert d['production_evidence']['LOBBY_CHAT_DB_READY'] is False
+          assert d['operation']['financial_authorized'] is False
+          assert d['public_read_boundary']['guest_session_id_raw_select'] is False
+          print('PASS_SOURCE_PINS_AND_NO_LIVE_CLAIMS')
+          PY
+      - name: Isolated PG16 real SQL shadow
+        shell: bash
+        run: |
+          set -euo pipefail
+          PG16_BIN=/usr/lib/postgresql/16/bin
+          if test ! -x "$PG16_BIN/initdb"; then
+            sudo apt-get update -qq
+            sudo apt-get install -y postgresql-16
+          fi
+          test "$(id -u)" -ne 0
+          PG16_BIN="$PG16_BIN" python3 -B tests/test_c03_lobby_hd_pg16_isolated.py | tee /tmp/we1-lobby-pg16-proof.json
+          grep -q '"status": "PASS_ISOLATED_PG16_LOBBY_WRITER_TESTS"' /tmp/we1-lobby-pg16-proof.json
+          grep -q '"guest_session_select_denied": true' /tmp/we1-lobby-pg16-proof.json
+      - name: Production admission remains independent
+        run: echo 'SOURCE ONLY; no signed production SQL permit, WE2 root grant, CHAT_DB_READY or LOBBY_CHAT_DB_READY implied.'

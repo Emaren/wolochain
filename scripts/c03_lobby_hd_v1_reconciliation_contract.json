@@ -1,0 +1,67 @@
+{
+  "dependencies": [
+    "WoloChain Social V2 SQL installed",
+    "WE2 separately reviewed and signed lobby-only SQL permit",
+    "WE2 AF_UNIX trusted session writer",
+    "WE3 public history/reaction aggregate non-secret read path"
+  ],
+  "operation": {
+    "creates_role": [
+      "aoe2war_lobby_exec_v1"
+    ],
+    "creates_schema": [
+      "aoe2war_lobby_hd_v1"
+    ],
+    "financial_authorized": false,
+    "funding_authorized": false,
+    "updates_existing_raw_table_acl": false,
+    "uses_existing_login_role": "aoe2war_social_writer"
+  },
+  "production_evidence": {
+    "LOBBY_CHAT_DB_READY": false,
+    "de_and_uds_denied": null,
+    "hba_hd_auth_positive": null,
+    "installed_sql_receipt": null,
+    "real_two_account_message_visibility": null,
+    "root_admission_receipt": null,
+    "signed_session_uid_binding": null,
+    "source_head": null
+  },
+  "public_read_boundary": {
+    "guest_session_id_raw_select": false,
+    "raw_guest_reactions_select_for_web": false,
+    "reconciliation_required": "WE2/WE3 must implement sanitized historical read and reaction aggregates; never raw guestSessionId to website"
+  },
+  "schema": "aoe2war.we1.lobby-chat-db-contract.v1",
+  "source_evidence": {
+    "guest_denial": true,
+    "guest_session_id_select_denial": true,
+    "idempotent_retry": true,
+    "inverse_then_reinstall": true,
+    "legacy_acl_preserved": true,
+    "offline_pg16_isolated_test": "PASS",
+    "original_message_history_preserved": true,
+    "unauthorized_raw_insert_denial": true
+  },
+  "source_file_sha256": {
+    "scripts/c03_lobby_hd_v1_install_candidate.sql": "41381fc3ab254549e7ca982d95cab4c44bd9f2782681152d73b9c468597ab434",
+    "scripts/c03_lobby_hd_v1_inverse_candidate.sql": "cc18548000ef149b19352dc3dab23b49264c24f49e27b5b1619a37a0d0d26452",
+    "tests/test_c03_lobby_hd_pg16_isolated.py": "5e6f694daffe844ae0f689c9e3a06760ecc863450de514541d4db85766d85235"
+  },
+  "target": {
+    "database": "aoe2hd_db",
+    "database_writer_role": "aoe2war_social_writer",
+    "db_function": "aoe2war_lobby_hd_v1.post_text(text,text,text)",
+    "host": "HEL1",
+    "room_slug": "main-lobby"
+  },
+  "trusted_web_to_db_boundary": {
+    "client_supplies_idempotency_key": true,
+    "client_supplies_uid": false,
+    "key_format": "32 lowercase hex characters",
+    "max_body_characters": 280,
+    "transport": "WE2 signed-session AF_UNIX only",
+    "verified_uid_is_derived_server_side": true,
+    "web_holds_raw_writer_password": false
+  }
+}
