@@ -1175,7 +1175,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-11-10",
       "sensitivity": "internal",
-      "sha256": "ac18b53ee1fcb97062fb8e9d222bdc6543dd73f937fe86e21cef72c2769c7bea",
+      "sha256": "ffc0a72a237ce65ea7c9b8d2c2028f0891f414120088c3e1349ccafa8ed07082",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -2321,8 +2321,8 @@
   ],
   "generated_at": "2026-11-19T17:35:00+00:00",
   "implementation_baseline": {
-    "branch": "we1/chat-v2-live-owner-login-postcheck-20261119",
-    "commit": "178ef3fb209105ad8e333b5d5e20f796f99cbefc"
+    "branch": "we1/chat-social-hd-v2-exact-executor-20261120",
+    "commit": "5499572e869c93e68acfb934c037f5b67ee8812e"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
