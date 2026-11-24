@@ -488,3 +488,49 @@ must not be circumvented; WE2 exclusive financial window not admitted.
 Preserve original image and six dirs, legacy dependency and historical
 HD. No financial production effect, native enrollment, image IO, new
 retirement or physical gate closure in this increment.
+
+### Nov24 16:16Z exact barrier subeffect authority seam
+
+New BarrierEffectJournal reuses the existing locked private directory
+and durable record conventions, binds exact signed plan/scope, phase
+intent tip, admitted receipt digest, ordered action and previous
+record. Exact schedule derives from NativeBarrier capture and resume
+orders, no caller command strings. Witness-side anchor checks
+independently held phase journal, admitted receipt and real owner
+signature/expiry before and after durable intent append. Replay,
+foreign action, changed receipt and wrong sequence denied. Separate
+source/witness fixture journals with disposable Ed25519 PASS.
+
+Source BarrierEffectBinding composes the existing admit/anchor hooks
+and new completion callback. It checks phase and lease before and
+after the exact external ACK and after successful function return;
+a failed effect, uncertain ACK or failed check leaves the in-memory
+run poisoned, and a pre-existing source journal cannot automatically
+restart. New focused crash/ambiguity fixture PASS. An effect return
+is not physical poststate proof; outer intent remains until the
+barrier verifies physical state. No production dispatcher, installed
+enrollment, native external transport or real lease provider added.
+Existing coordinator fixture-only guard retained. The native witness
+must independently check its installed host/plan and external lease,
+provide the reviewed protected route, and link complete effect
+journal tips into the outer phase record. Privileged/direct producer
+exclusion and complete checkpoint/capture/recovery/resume driver
+still outstanding. No C08 rerun.
+
+WE4 #192 397d6451 new advance_financial_prefix requires the complete
+raw source SHA in initial identity, while WE1 initial pin deliberately
+does not assume that digest before first encryption. Do not silently
+alias the formats. A single prehash under admitted immutable IO
+would cost one extra 40GiB read but not staging; alternatively use
+an explicitly reviewed versioned initial identity with unknown raw
+SHA and authenticated final seal, consistent with WE1. Prefer latter
+to avoid unnecessary image reread. Final exact #192 whole-image
+manifest compatibility previously proven; new incremental wire
+alignment and native verifier/CAS/transport still required. No
+physical image IO or extra allocation.
+
+Latest WE2 guided candidates are live dependencies/protected evidence;
+new APT exact pair needs fresh supported approval, sidecar execution
+block remains unresolved, no exclusive financial IO. Historical HD,
+original 40GiB image and six directories preserved. No new workspace
+retirement or physical closure.
