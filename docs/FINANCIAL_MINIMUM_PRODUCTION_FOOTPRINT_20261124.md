@@ -256,3 +256,55 @@ financial-purpose route, exact byte/time capacity, authenticated progress
 and failure/reconciliation semantics within a compatible exclusive
 window, without weakening current constraints. No route claim, image
 archive or actual retirement admission from the new primitives.
+
+### Exact-head CI, coordinator witness seam and historical M1 evidence
+
+Foundation run45420617318 job138538782741 at 826f43c failed three
+C08 fixture cases because they depended on actual /usr/bin/false
+metadata on the Ubuntu runner. Test-only explicit simulated OS
+metadata and socket state now exercise the unchanged production trust
+predicate, including missing/symlink/non-root/group-writable/world-
+writable refusal before subprocess execution. 13/13 local PASS;
+native OS trust and deny-only runtime unchanged. Full fresh CI required.
+
+Native coordinator witness binding now loads only pre-existing
+root-private exact-plan phase packets from the protected authority
+directory, uses the existing pinned NativeWitnessClient, checks the
+locked local journal against phase and previous tip, and anchors the
+actual durable journal record rather than caller-supplied record bytes.
+An uncertain consume/anchor is not retried. Native witness tests 4/4
+local PASS, not physical enrollment. The coordinator still refuses
+live execution; remaining external per-effect anchoring, genuine WE2
+lease, full producer/reconnect exclusion, native chain/checkpoint and
+capture/restore/restart composition are required. No owner packet or
+trust setting created, no old protocol replaced.
+
+Historical M1 exact path metadata at Nov24 15:12-15:15Z:
+owner-private c06-full-precapture-20261108 HD unquiesced ciphertext
+872018705 logical B, 872022016 allocated B, nlink1; existing source
+receipt records expected SHA b011a0a7949199a8b124650f9d16e3280264cca70380a789438fbe4221e504a4
+(see C06_HEL1_LOCAL_AGE_ENCRYPTED_HD_UNQUIESCED_PRECAPTURE.md).
+Adjacent historical LAN transfer log final line records 872018705
+bytes, 100%, 6.46MB/s, 00:02:08. That is a historical sender-side
+display, not authenticated destination readback or same-campaign
+independent restore evidence. C07_INTEL_SOURCE_PINNED_UNQUIESCED_DATABASE_RECOVERY_HOLD.md
+proves DE only; do not infer HD independent recovery. The separate
+encrypted global-roles file is 2441 logical/4096 allocated B. Keep both,
+and original logs, pending WE4 exact existing Intel receipt match.
+No new full hash, transfer, decryption, deletion or capacity credit.
+Candidate is distinct from the 40GiB image and from the new
+whole-cluster C06/C07 archive.
+
+WE4 passive receiver-window samples 449446 and 513050 B/s, median
+481248 B/s, imply about 24.8h for 40GiB before extra phases; 4h
+requires about 2.98MB/s before overhead. These are different scope
+and boundary from the historic LAN rsync display and C089 operator
+wall. No controlled optimization claim. For the existing WE4
+resumable design, bind the owner-approved financial purpose, original
+exact image identity/length, ordered immutable ciphertext chunk
+digests and lengths, authenticated durable checkpoint, continuation
+scope and final exact original raw SHA. Preserve encrypted-only
+staging, independent Intel verification and full restoration,
+legacy rehydration requirement, 60GiB reserve, all six historical
+directories, one-use authority and no retirement from partial ACK.
+WE2 controls exclusive IO; WE4 owns route/policy engineering.
