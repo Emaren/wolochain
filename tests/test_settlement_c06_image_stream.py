@@ -258,4 +258,26 @@ class ImageStream(unittest.TestCase):
                 f.fileno(),initial,receipts,dict(manifest,chunks=list(reversed(chunks))),seal,**kw)
             self.assertEqual(os.fstat(f.fileno()).st_size,0)
         self.assertEqual(opened,[0,1])
+        from unittest.mock import patch
+        with tempfile.NamedTemporaryFile() as f:
+            def mutate(raw,fd):
+                os.ftruncate(fd,1)
+                return True
+            with self.assertRaises(Hold):im.reconstruct_sealed_financial_image(
+                f.fileno(),initial,receipts,manifest,seal,
+                **(kw|{"verify_reconstruction_admission":mutate}))
+            self.assertEqual(os.fstat(f.fileno()).st_size,1)
+            self.assertEqual(opened,[0,1])
+        # Lease disappears during independent readback, after all writes.
+        # Must refuse proof even when the bytes would otherwise match.
+        with tempfile.NamedTemporaryFile() as f:
+            active=[True];pread=os.pread
+            def lose(fd,n,off):
+                result=pread(fd,n,off);active[0]=False;return result
+            with patch.object(im.os,"pread",side_effect=lose):
+                with self.assertRaises(Hold):im.reconstruct_sealed_financial_image(
+                    f.fileno(),initial,receipts,manifest,seal,
+                    **(kw|{"verify_lease":lambda:active[0]}))
+            self.assertEqual(os.fstat(f.fileno()).st_size,6)
+            self.assertFalse(active[0])
 if __name__=="__main__":unittest.main()

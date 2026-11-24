@@ -136,8 +136,14 @@ def financial_manifest(manifest, *, expected_plan, expected_source,
             "resume_authorized":False,"retirement_authorized":False}
 
 
+def _image_lease(verify_lease):
+    if verify_lease is not None:
+        require(callable(verify_lease) and verify_lease() is True,
+                "IMAGE_RECOVERY_LEASE_NOT_VERIFIED")
+
+
 def verify_financial_reconstruction(fd, manifest, *, expected_plan,
-        expected_source, expected_manifest_sha, max_chunk_bytes):
+        expected_source, expected_manifest_sha, max_chunk_bytes, verify_lease=None):
     """Read back every original logical byte AND every ordered chunk digest.
 
     Native independent recovery must supply a privately reconstructed raw
@@ -147,6 +153,7 @@ def verify_financial_reconstruction(fd, manifest, *, expected_plan,
     bound=financial_manifest(manifest,expected_plan=expected_plan,
         expected_source=expected_source,expected_manifest_sha=expected_manifest_sha,
         max_chunk_bytes=max_chunk_bytes)
+    _image_lease(verify_lease)
     pre=identity(fd)
     require(pre["bytes"]==bound["source_bytes"],"IMAGE_RESTORE_SIZE")
     total=hashlib.sha256();offset=0;start=time.monotonic_ns()
@@ -154,13 +161,16 @@ def verify_financial_reconstruction(fd, manifest, *, expected_plan,
         chunk=hashlib.sha256()
         remaining=c["plain_bytes"]
         while remaining:
+            _image_lease(verify_lease)
             data=os.pread(fd,min(BLOCK,remaining),offset)
+            _image_lease(verify_lease)
             require(0<len(data)<=remaining,"IMAGE_RESTORE_SHORT_READ")
             total.update(data);chunk.update(data)
             offset+=len(data);remaining-=len(data)
         require(chunk.hexdigest()==c["plain_sha256"],"IMAGE_RESTORE_CHUNK_MISMATCH")
     require(identity(fd)==pre and total.hexdigest()==bound["source_sha256"],
             "IMAGE_RESTORE_MISMATCH")
+    _image_lease(verify_lease)
     return {"schema":"wolo.financial.image-continuation-readback.v1",
             "manifest_sha256":expected_manifest_sha,"plan_sha256":expected_plan,
             "sha256":total.hexdigest(),"bytes":offset,
@@ -320,7 +330,8 @@ def seal_transfer_manifest(initial, receipts, *, expected_initial_sha,
 
 
 def reconstruct_financial_image(fd, manifest, *, expected_plan, expected_source,
-        expected_manifest_sha, max_chunk_bytes, open_verified_plaintext):
+        expected_manifest_sha, max_chunk_bytes, open_verified_plaintext,
+        verify_lease=None):
     """Single destination, bounded plaintext reconstruction and full readback.
 
     The native Intel Linux driver owns isolated target admission, immutable
@@ -333,6 +344,7 @@ def reconstruct_financial_image(fd, manifest, *, expected_plan, expected_source,
     bound=financial_manifest(manifest,expected_plan=expected_plan,
         expected_source=expected_source,expected_manifest_sha=expected_manifest_sha,
         max_chunk_bytes=max_chunk_bytes)
+    _image_lease(verify_lease)
     st=os.fstat(fd)
     require(stat.S_ISREG(st.st_mode) and st.st_nlink==1 and st.st_size==0
             and st.st_uid==os.geteuid() and stat.S_IMODE(st.st_mode)==0o600
@@ -345,27 +357,35 @@ def reconstruct_financial_image(fd, manifest, *, expected_plan, expected_source,
         h=hashlib.sha256();remaining=c["plain_bytes"]
         # Context exit must verify native decryptor success, even if the
         # expected bytes were already delivered. Never accept a truncated tag.
+        _image_lease(verify_lease)
         with open_verified_plaintext(dict(c)) as stream:
             while remaining:
+                _image_lease(verify_lease)
                 data=stream.read(min(BLOCK,remaining))
+                _image_lease(verify_lease)
                 require(type(data) is bytes and 0<len(data)<=min(BLOCK,remaining),
                         "IMAGE_RECONSTRUCTION_SHORT_OR_OVERSIZE")
                 h.update(data);total.update(data)
                 n=os.pwrite(fd,data,offset)
+                _image_lease(verify_lease)
                 require(n==len(data),"IMAGE_RECONSTRUCTION_SHORT_WRITE")
                 offset+=n;remaining-=n
+            _image_lease(verify_lease)
             require(stream.read(1)==b"","IMAGE_RECONSTRUCTION_TRAILING_PLAINTEXT")
+        _image_lease(verify_lease)
         require(h.hexdigest()==c["plain_sha256"],"IMAGE_RECONSTRUCTION_CHUNK_HASH")
     require(offset==bound["source_bytes"] and total.hexdigest()==bound["source_sha256"],
             "IMAGE_RECONSTRUCTION_WHOLE_HASH")
+    _image_lease(verify_lease)
     os.fsync(fd)
+    _image_lease(verify_lease)
     end=os.fstat(fd)
     require((end.st_dev,end.st_ino,end.st_uid,end.st_mode,end.st_nlink)==
             (st.st_dev,st.st_ino,st.st_uid,st.st_mode,st.st_nlink)
             and end.st_size==offset,"IMAGE_RECONSTRUCTION_TARGET_DRIFT")
     proof=verify_financial_reconstruction(fd,manifest,expected_plan=expected_plan,
         expected_source=expected_source,expected_manifest_sha=expected_manifest_sha,
-        max_chunk_bytes=max_chunk_bytes)
+        max_chunk_bytes=max_chunk_bytes,verify_lease=verify_lease)
     return {**proof,"schema":"wolo.financial.image-single-target-reconstruction.v1",
             "single_target":True,"reconstruction_wall_ns":time.monotonic_ns()-start,
             "independent_host_authenticated":False,"retirement_authorized":False}
@@ -408,32 +428,34 @@ def reconstruct_sealed_financial_image(fd, initial, receipts, manifest, seal, *,
            "source_sha256":checked["seal"]["source_sha256"],
            "chunks":[dict(c) for c in checked["manifest"]["chunks"]]}
     local_sha=digest(canonical(local))
+    target=os.fstat(fd)
+    def target_identity(st):
+        return {"device":st.st_dev,"inode":st.st_ino,"uid":st.st_uid,
+                "gid":st.st_gid,"mode":stat.S_IMODE(st.st_mode),
+                "nlink":st.st_nlink,"bytes":st.st_size,
+                "mtime_ns":st.st_mtime_ns,"ctime_ns":st.st_ctime_ns}
+    require(stat.S_ISREG(target.st_mode) and target.st_nlink==1
+            and target.st_size==0 and target.st_uid==os.geteuid()
+            and stat.S_IMODE(target.st_mode)==0o600
+            and (target.st_dev,target.st_ino)!=(expected_source["device"],expected_source["inode"]),
+            "SEALED_RECOVERY_NEW_TARGET_REQUIRED")
     binding={"schema":"wolo.financial.sealed-reconstruction-binding.v1",
              "initial_sha256":expected_initial_sha,"seal_sha256":expected_seal_sha,
              "wire_manifest_sha256":checked["seal"]["manifest_sha256"],
              "local_manifest_sha256":local_sha,"plan_sha256":expected_plan,
-             "receiver_identity_sha256":expected_receiver}
+             "receiver_identity_sha256":expected_receiver,
+             "target":target_identity(target)}
     # Target identity and capacity are admitted by the actual native driver.
     # The verifier must consume a genuine one-use permit; no default verifier.
     require(verify_lease() is True and
             verify_reconstruction_admission(canonical(binding),fd) is True
             and verify_lease() is True,"SEALED_RECOVERY_NATIVE_ADMISSION_REQUIRED")
-    from contextlib import contextmanager
-    @contextmanager
-    def guarded(chunk):
-        require(verify_lease() is True,"SEALED_RECOVERY_LEASE_LOST")
-        with open_verified_plaintext(chunk) as stream:
-            class Reader:
-                def read(self,n):
-                    require(verify_lease() is True,"SEALED_RECOVERY_LEASE_LOST")
-                    data=stream.read(n)
-                    require(verify_lease() is True,"SEALED_RECOVERY_LEASE_LOST")
-                    return data
-            yield Reader()
-        require(verify_lease() is True,"SEALED_RECOVERY_LEASE_LOST")
+    require(target_identity(os.fstat(fd))==binding["target"],
+            "SEALED_RECOVERY_TARGET_CHANGED_AFTER_ADMISSION")
     proof=reconstruct_financial_image(fd,local,expected_plan=expected_plan,
         expected_source=expected_source,expected_manifest_sha=local_sha,
-        max_chunk_bytes=initial["max_chunk_bytes"],open_verified_plaintext=guarded)
+        max_chunk_bytes=initial["max_chunk_bytes"],
+        open_verified_plaintext=open_verified_plaintext,verify_lease=verify_lease)
     require(verify_lease() is True,"SEALED_RECOVERY_LEASE_LOST_AFTER_READBACK")
     return {**proof,"sealed_binding":binding,"sealed_binding_sha256":digest(canonical(binding)),
             "independent_host_authenticated":False,"retirement_authorized":False}
