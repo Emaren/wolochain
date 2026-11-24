@@ -585,3 +585,56 @@ Historical HD prior bounded WE4 catalog has zero exact digest matches
 Active financial worktree clean; no additional eligible retirement
 performed. M1 available12720272KiB at16:21:02Z, no attributed reclaim.
 No repeated C08, no production mutation or physical gate closure.
+
+### Nov24 16:49Z authenticated seal-to-target composition
+
+Preserve exact c17fc935b29eda8514f759f9b34a1380688ca2d2
+10/10 qualified baseline; no unchanged-source qualification rerun.
+New substantive recovery integration derives the local exact
+source manifest directly from the verified WE1/WE4 incremental
+prefix and authenticated final wire seal, rather than accepting
+an independently supplied local manifest. Pins original plan,
+source, receiver, recipients, initial and seal digests. Exact
+wire manifest/seal comparison; no second signature. Native
+one-use reconstruction admission must positively bind the
+initial and wire/local manifest digests, receiver, and exact
+empty private target descriptor identity, which is rechecked
+after admission. Bounded decryption/write/fsync and full
+target readback check independent lease throughout, with
+refusal after loss and no automatic partial-target replay.
+Focused new composition test PASS (disposable authenticated
+fixture only), wrong seal/receiver/reordered chunks/absent
+native admission/lease denied before writes, target drift
+and lease loss during readback refused. No actual native
+permit, enrolled receiver/decryptor, lease provider or full
+image read/write; callbacks are not authority. No extra image
+staging. New source needs exact-head review/qualification.
+
+Legacy disposition requires preserving original fully allocated
+ROOT-backed ext4 until exact independent raw image reconstruction,
+authenticated physical readback, separately admitted isolated
+read-only filesystem verification, and reviewed replacement of
+all legacy restore consumers. Existing _bounded_restore_mount
+and _restore_scratch_admission still mandate the original
+8–64GiB ROOT backing/loop, mount policy, 2x budget and 8GiB
+OS reserve. An offhost replacement must preserve these safety
+properties (finite private storage, no production mounts or
+network, source-bound PG role/ACL/restore evidence, durable
+recovery/abort and exact native permits), and independently
+qualify each dependent phase, or qualify exact on-demand
+rehydration with measured capacity. No path alias, smaller
+unqualified image, permanent recovery weakening or retirement
+credit. The existing original remains protected. WE2/WE4
+native exclusive-window and actual Intel admission outstanding.
+
+Five held worktrees: two exact tracked-source bytecode matches
+with original compile filename, including recursive code,
+constants, exception and line tables. Confirmed GitHub ancestry,
+descriptor identity excluding read-only atime changes, exact
+cache digest, tracked source and no visible consumers. Two
+non-force retirements at16:47:40Z, 16936KiB gross,
+M1 available15160932→15178484KiB; branches retained.
+Three stale, nonmatching caches remain original and held
+for evidence disposition; no forced deletion. Prior54+2=56
+physical worktrees retired. No HEL1 credit or financial gate
+closure. Historical HD original remains protected.
