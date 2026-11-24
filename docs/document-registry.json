@@ -1221,7 +1221,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-11-10",
       "sensitivity": "internal",
-      "sha256": "94ca81d6201fd958f13168317c668444a72414335d7a6a700fbbdf30f8432597",
+      "sha256": "37028a573f963f92a84ce6b1a8f8ca8c2407e7ffb7edce46c105ff0c069822be",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -2367,8 +2367,8 @@
   ],
   "generated_at": "2026-11-19T17:35:00+00:00",
   "implementation_baseline": {
-    "branch": "we1/chat-media-native-admission-20261124",
-    "commit": "5f6e4138b09ff500f137c3fe30582c01e0ab9b4c"
+    "branch": "we1/chat-media-protected-delivery-20261124",
+    "commit": "522da037fbfb647cc63d9bb1e6057d0fc522e3fd"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
