@@ -351,3 +351,42 @@ campaign is protected; no heavy scan, image IO, or historical HD
 retransmission. The 872018705-byte HD historical candidate remains
 held pending actual same-object independently authenticated Intel
 receipt; no retirement or new capacity credit.
+
+### Nov24 15:44Z native admission gap and Foundation invariant
+
+Exact 7b4140c7 Foundation run45425141115 job138554962834
+failed only at step64 chain invariant guard: five exact external
+service declaration lines in the C06 native barrier. C08 and prior
+steps passed; nine focused workflows passed. The invariant now
+recognizes only those five exact source-scoped declarations, each
+required once, preserving all other chain branding, denomination,
+address and endpoint prohibitions. Targeted allow/extra-chain-ID/
+duplicate cases 3/3 PASS and actual repository invariant PASS.
+No production controller or external unit list changed.
+
+Native HEL1 read-only stat at 15:44:07Z: legacy solo-runtime.json
+and solo-owner.json exist root-owned mode0600; expanded
+c06-expanded-runtime.json and c06-expanded-packets directory
+ABSENT. No secret contents read. No expanded enrollment or genuine
+phase packet exists at the source boundary. The native witness
+cannot be admitted from the old enrollment alone. Next eligible
+human action after source composition/review and exact WE2 lease:
+owner-native enrollment of exact source and plan on both hosts
+via reviewed witness route and creation of exact signed phase
+packet. No alternate key, fabricated packet, old grant reuse or
+forced-command change without approval.
+
+WE4 #192 d04c2858 source review: continuation shape validates
+coverage only, and recovery projection accepts SITE_RUNTIME
+receipt domains only, not financial image receipts. Require a
+separately reviewed financial-purpose adapter with exact original
+raw image SHA, authenticated chunk identity and independent
+reconstruction; do not relabel SITE_RUNTIME receipts or infer
+permission from coverage. No competing transfer controller.
+
+Operation/Progress OS consume existing deterministic journal
+handoff; source-level checks and missing native enrollment are
+not physical gate closure. Current 3/4 runtime restore receipt and
+fourth active transfer preclude exclusive financial IO. All six
+historical directories, legacy backing and M1 historical HD
+ciphertext remain protected; no capacity credit.
