@@ -13,7 +13,7 @@ review_interval_days: 7
 sensitivity: "internal"
 ---
 
-# Financial minimum production footprint
+# Financial minimum production footprint: native storage classification
 
 WE1 source-owned contribution to VPSSentry #63 and financial authority #239.
 These are native read-only observations from November 24 14:44–14:47Z,
