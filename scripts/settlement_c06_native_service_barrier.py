@@ -205,20 +205,36 @@ class NativeBarrier:
         activation paths, dependencies and its exact signed restart plan.
         """
         self.verify_fenced()
-        # Keep the marker until all exact owned drop-ins are removed. A failure
-        # is an ambiguous maintenance phase, not an instruction to retry.
-        for u in self.scope["stop"]:
+        # Release only one exact unit at a time. The hold remains until
+        # every authorized restart and every original inactive-unit release
+        # has been recorded. A crash cannot release the remaining units.
+        pending=set(self.scope["stop"])
+        def release(u):
             path=self.gate(u)
             def remove():
                 exact_root_file(path,gate_bytes(HOLD));path.unlink();sync_dir(path.parent)
             self.effect("resume","remove:"+u,remove)
-        self.effect("resume","reload",lambda:self.run(["systemctl","daemon-reload"]))
+            self.effect("resume","reload:"+u,lambda:self.run(["systemctl","daemon-reload"]))
+            pending.remove(u)
+            for other in sorted(pending):
+                effective_gate(other,HOLD,self.run)
+                s=show(other,self.run)
+                require(s.get("ActiveState")=="inactive" and s.get("MainPID","0")=="0",
+                        "PENDING_SERVICE_ACTIVATED")
+        for u in self.scope["resume"]:
+            self.check_quarantine()
+            release(u)
+            self.effect("resume","start:"+u,lambda:self.run(["systemctl","start","--",u]))
+            require(show(u,self.run).get("ActiveState")=="active","RESTART_POSTSTATE")
+        for u in self.scope["stop"]:
+            if u not in self.scope["resume"]:
+                self.check_quarantine()
+                release(u)
+                require(show(u,self.run).get("ActiveState")=="inactive","UNEXPECTED_ACTIVATION")
+        require(not pending,"UNRELEASED_GATES")
         def remove_marker():
             exact_root_file(HOLD,self.marker);HOLD.unlink();sync_dir(HOLD.parent)
         self.effect("resume","release-hold",remove_marker)
-        for u in self.scope["resume"]:
-            self.check_quarantine()
-            self.effect("resume","start:"+u,lambda:self.run(["systemctl","start","--",u]))
         self.check_quarantine();no_jobs(self.run)
         result={u:show(u,self.run) for u in self.scope["stop"]}
         require(all(s.get("ActiveState")==self.scope["prestate"][u]["ActiveState"]
