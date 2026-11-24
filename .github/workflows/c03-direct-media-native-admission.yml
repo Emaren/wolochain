@@ -5,6 +5,7 @@ on:
       - 'scripts/c03_hd_direct_media_*'
       - 'scripts/c03_hd_direct_image_*'
       - 'tests/test_c03_hd_direct_media_native_executor.py'
+      - 'tests/test_c03_hd_direct_media_review_delta.py'
       - '.github/workflows/c03-direct-media-native-admission.yml'
 permissions:
   contents: read
@@ -16,3 +17,4 @@ jobs:
       - uses: actions/checkout@v4
       - run: sudo apt-get update && sudo apt-get install -y postgresql-16
       - run: C03_DISPOSABLE_FIXED_GATEWAY_ONLY=1 PYTHONDONTWRITEBYTECODE=1 python3 tests/test_c03_hd_direct_media_native_executor.py
+      - run: C03_DISPOSABLE_FIXED_GATEWAY_ONLY=1 PYTHONDONTWRITEBYTECODE=1 python3 tests/test_c03_hd_direct_media_review_delta.py

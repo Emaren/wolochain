@@ -77,6 +77,10 @@ def write_once(p,raw):
     finally:os.close(fd)
 def file_pins():return {k:v[1] for k,v in FILES.items()}
 
+def require_live_permit(r,now):
+    a,b=utc(r['not_before']),utc(r['expires_at'])
+    need(timedelta(0)<b-a<=timedelta(minutes=10) and a<=now<b,'PERMIT_EXPIRED')
+
 def verify_packet(raw,public,review,phase,nonce,now,verify=None):
     p=strict(raw)
     need(type(p) is dict and set(p)=={'request','signature_der_b64'},'PACKET_FIELDS')
@@ -89,8 +93,7 @@ def verify_packet(raw,public,review,phase,nonce,now,verify=None):
         need(r[k]==review[k],'REVIEW_PIN_DRIFT_'+k)
     for k in ('hd_full_sha256','hd_invariant_sha256','de_full_sha256'):need(hex64(r[k]),'BAD_CATALOG_PIN')
     need(all(r[k] is False for k in FLAGS),'FORBIDDEN_AUTHORITY')
-    a,b=utc(r['not_before']),utc(r['expires_at'])
-    need(timedelta(0)<b-a<=timedelta(minutes=10) and a<=now<b,'PERMIT_EXPIRED')
+    require_live_permit(r,now)
     need(type(public) is bytes and len(public)==65 and public[0]==4 and digest(public)==r['owner_public_sha256'],'PUBLIC_KEY_DRIFT')
     need(type(p['signature_der_b64']) is str and len(p['signature_der_b64'])<=112,'SIGNATURE_FORMAT')
     sig=base64.b64decode(p['signature_der_b64'],validate=True)
@@ -145,8 +148,12 @@ def build_transaction(data,r,original_full=None):
         return "DO $media_guard$ BEGIN IF ("+expr+") IS DISTINCT FROM true THEN RAISE EXCEPTION '"+reason+"'; END IF; END $media_guard$;\n"
     pre="SELECT (j->>'full_sha256'='"+full+"' AND j->>'invariant_sha256'='"+inv+"' AND (j->>'enabled_event_triggers')::int=0 AND (j->>'hba_parse_errors')::int=0) FROM ("+witness_sql+") w(j)"
     post="SELECT (j->>'invariant_sha256'='"+inv+"' AND (j->>'enabled_event_triggers')::int=0 AND (j->>'media_functions')::int="+('4' if phase=='install' else '0')+" AND (j->>'media_relations')::int="+('5' if phase=='install' else '0')+" AND j->>'text_body_md5'='"+('aa1766746cc5f1ee1235c1e6c99bd487' if phase=='install' else '29748632792ceb09d6260bbb51900dba')+"'"+(" AND j->>'full_sha256'='"+original_full+"'" if phase=='inverse' else '')+") FROM ("+witness_sql+") w(j)"
-    # No retries or automatic destructive inverse on uncertain COMMIT.
-    return ("BEGIN ISOLATION LEVEL SERIALIZABLE; SET LOCAL search_path=pg_catalog,pg_temp; SET LOCAL lock_timeout='350ms'; SET LOCAL statement_timeout='10s';\n"+guard(pre,'SIGNED_PREIMAGE_DRIFT')+inner+guard(post,'INVARIANT_OR_POSTIMAGE_DRIFT')+witness_sql+";\nCOMMIT;\n").encode()
+    # Validate timestamp syntax before constructing SQL; the database clock is
+    # checked at transaction entry and again immediately before COMMIT.
+    a,b=utc(r['not_before']),utc(r['expires_at'])
+    need(timedelta(0)<b-a<=timedelta(minutes=10),'PERMIT_WINDOW_INVALID')
+    live="clock_timestamp() >= TIMESTAMPTZ '"+r['not_before']+"' AND clock_timestamp() < TIMESTAMPTZ '"+r['expires_at']+"'"
+    return ("BEGIN ISOLATION LEVEL SERIALIZABLE; SET LOCAL search_path=pg_catalog,pg_temp; SET LOCAL lock_timeout='350ms'; SET LOCAL statement_timeout='10s';\n"+guard(live,'PERMIT_EXPIRED_AT_SQL_ENTRY')+guard(pre,'SIGNED_PREIMAGE_DRIFT')+inner+guard(post,'INVARIANT_OR_POSTIMAGE_DRIFT')+witness_sql+";\n"+guard(live,'PERMIT_EXPIRED_BEFORE_COMMIT')+"COMMIT;\n").encode()
 
 def phase_state():
     need(all(x.name=='controller.lock' or re.fullmatch(r'(nonce|receipt)-[0-9a-f]{64}\.json',x.name) for x in STATE.iterdir()),'UNRECOGNIZED_STATE_EVIDENCE')
@@ -209,6 +216,9 @@ def execute(phase,nonce):
         write_once(STATE/('nonce-'+nonce+'.json'),canonical(info)+b'\n')
         rec={**info,'status':'UNKNOWN_NO_RETRY','source_commit':SOURCE,'financial_authorized':False}
         try:
+            # Consume first, then recheck the actual wall clock immediately
+            # before entering the fixed SQL transaction. Expired is spent.
+            require_live_permit(r,datetime.now(timezone.utc))
             after=parse_witness(psql(txn,'aoe2hd_db',False),'aoe2hd_db')
             h2=witness(data,'aoe2hd_db');d2=witness(data,'aoe2de_db')
             _,_,r2=live_pins()
