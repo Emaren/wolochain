@@ -260,8 +260,14 @@ class BoundedStreamTests(unittest.TestCase):
                       recipient_pin=c.digest(c.canonical(recipients)),
                       timeout_seconds=20)
             target=dest/"complete.age"
+            from settlement_c06_image_stream import identity,stream_exact,verify_reconstruction
+            source=root/"synthetic-image"
+            source.write_bytes(payload);source.chmod(0o600)
+            observation={}
             def writer(out):
-                for i in range(0,len(payload),4096):out.write(payload[i:i+4096])
+                with source.open("rb") as f:
+                    observation.update(stream_exact(f.fileno(),identity(f.fileno()),out,
+                                       expected_sha=c.digest(payload)))
             receipt=c.stream_age_ciphertext(writer,target,**args)
             self.assertEqual(receipt["ciphertext_sha256"],c.sha_file(target))
             self.assertEqual(receipt["plaintext_sha256"],c.digest(payload))
@@ -277,6 +283,23 @@ class BoundedStreamTests(unittest.TestCase):
             self.assertEqual(phases["ciphertext_bytes"],receipt["ciphertext_bytes"])
             self.assertEqual(list(dest.iterdir()),[target])
             for k in keys:self.assertEqual(run([age,"-d","-i",k,target]),payload)
+            import time,json
+            reconstruction=root/"reconstructed"
+            start=time.monotonic_ns()
+            with reconstruction.open("xb") as out:
+                reconstruction.chmod(0o600)
+                subprocess.run([str(age),"-d","-i",str(keys[1]),str(target)],
+                    stdout=out,stderr=subprocess.PIPE,check=True,timeout=15)
+                out.flush();os.fsync(out.fileno())
+            elapsed=time.monotonic_ns()-start
+            with reconstruction.open("rb") as f:
+                verified=verify_reconstruction(f.fileno(),c.digest(payload),len(payload))
+            print("SYNTHETIC_ONLY_PHASE_TELEMETRY "+json.dumps({
+                **phases,"source_read_ns":observation["source_read_ns"],
+                "source_sink_write_ns":observation["sink_write_ns"],
+                "restore_ns":elapsed,"restore_verification_ns":verified["verification_ns"],
+                "scope":"single_host_synthetic_exact_image","independent":False},
+                sort_keys=True),flush=True)
             with self.assertRaises(c.Hold):c.stream_age_ciphertext(writer,target,**args)
             with self.assertRaises(c.Hold):
                 c.stream_age_ciphertext(writer,dest/"wrong-pin.age",**(args|{"recipient_pin":"f"*64}))

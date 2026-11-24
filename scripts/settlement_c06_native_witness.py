@@ -29,6 +29,7 @@ SOURCES = legacy.SOURCES | frozenset({
     "settlement_c06_checkpoint_rehearsal.py",
     "settlement_c06_native_service_barrier.py",
     "settlement_c06_native_pg_checkpoint.py",
+    "settlement_c06_image_stream.py",
 })
 require = owner.require
 
