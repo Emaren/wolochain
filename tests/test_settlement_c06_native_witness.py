@@ -126,6 +126,49 @@ class NativeProtocol(unittest.TestCase):
                 b.anchor(b.sha,"FENCE_INTENT",tip)
             self.assertEqual(len(list(self.nonces.glob("nonce-*.json"))),1)
 
+    def test_effect_intent_witness_chain_and_replay(self):
+        from settlement_c06_native_service_barrier import validate_scope
+        from test_settlement_c06_native_service_barrier import scope
+        from settlement_c06_checkpoint_coordinator import validate_receipt
+        f=self.fixture;sc=scope()
+        f.plan["scope"]=validate_scope(sc)
+        f.q["plan_sha256"]=a.validate_plan(f.plan)
+        self.c["plan_sha256"]=a.validate_plan(f.plan)
+        packet=f.packet()
+        psha=self.c["plan_sha256"]
+        ep=f.root/"effects";ep.mkdir(mode=0o700)
+        sp=f.root/"source-effects";sp.mkdir(mode=0o700)
+        with Journal(self.root,psha) as j:
+            ack=w.dispatch(w.canonical(dict(action="consume",phase="capture",
+                previous=None,packet_b64=base64.b64encode(packet).decode(),plan=f.plan)),
+                self.c,self.old,f.enroll,j,self.nonces,self.crypto)
+            receipt=a.verify_expanded_witness_ack(ack,f.enroll,packet,f.plan,
+                phase="capture",previous=None,witness_identity="c"*64,**self.crypto)
+            admission=validate_receipt(receipt,"capture",psha,None)
+            tip=j.append("FENCE_INTENT",f.plan["producer_prestate"])
+            with w.BarrierEffectJournal(ep,f.plan,sc,"capture",tip,admission) as witness, \
+                 w.BarrierEffectJournal(sp,f.plan,sc,"capture",tip,admission) as source:
+                kw=dict(plan=f.plan,scope=sc,phase="capture",receipt=receipt,
+                    packet=packet,enrollment=f.enroll,phase_journal=j,effect_journal=witness,
+                    witness_identity="c"*64,**self.crypto)
+                r=source.append("hold")
+                with self.assertRaises(w.owner.AuthorityHold):
+                    w.anchor_barrier_effect(dict(r,action="start:foreign.service"),**kw)
+                got=w.anchor_barrier_effect(r,**kw)
+                self.assertEqual(got["tip"],source.tip)
+                self.assertFalse(got["production_authorized"])
+                with self.assertRaises(w.owner.AuthorityHold):
+                    w.anchor_barrier_effect(r,**kw)
+                next_record=source.append("gate:"+sc["stop"][0])
+                with self.assertRaises(w.owner.AuthorityHold):
+                    w.anchor_barrier_effect(next_record,**(kw|{"receipt":dict(receipt,packet="a"*64)}))
+                got=w.anchor_barrier_effect(next_record,**kw)
+                self.assertEqual(got["tip"],source.tip)
+                self.assertEqual(source.records,witness.records)
+            with w.BarrierEffectJournal(ep,f.plan,sc,"capture",tip,admission) as reopened:
+                self.assertEqual(len(reopened.records),2)
+                with self.assertRaises(w.owner.AuthorityHold):reopened.append("hold")
+
     def test_unenrolled_scope_and_arbitrary_action_rejected(self):
         f=self.fixture
         req={"action":"consume","phase":"capture","previous":None,

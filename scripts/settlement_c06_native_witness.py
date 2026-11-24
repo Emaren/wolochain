@@ -248,6 +248,135 @@ class CoordinatorWitnessBinding:
         return tip
 
 
+def barrier_schedule(scope,phase):
+    """Exact existing native barrier effects; no caller-selected commands."""
+    from settlement_c06_native_service_barrier import validate_scope
+    validate_scope(scope)
+    if phase=="capture":
+        return (["hold"]+["gate:"+u for u in scope["stop"]]+["reload"]+
+                ["stop:"+u for u in scope["stop"]])
+    require(phase=="resume","EFFECT_PHASE")
+    result=[]
+    for u in scope["resume"]:
+        result+=["remove:"+u,"reload:"+u,"start:"+u]
+    for u in scope["stop"]:
+        if u not in scope["resume"]:
+            result+=["remove:"+u,"reload:"+u]
+    return result+["release-hold"]
+
+
+class BarrierEffectJournal(Journal):
+    """Separate private per-phase subeffect intent chain.
+
+    Reuses the coordinator's locked directory mechanism. No installer or
+    transport dispatcher; no automatic retry after an existing intent.
+    A local intent is never an independently authenticated witness ACK.
+    """
+    def __init__(self,path,plan,scope,phase,phase_tip,admission_sha):
+        from settlement_c06_native_service_barrier import validate_scope
+        super().__init__(path,validate_plan(plan))
+        self.scope_sha=validate_scope(scope)
+        require(self.scope_sha==plan["scope"] and hash64(phase_tip)
+                and hash64(admission_sha),"EFFECT_JOURNAL_BINDING")
+        self.phase=phase;self.phase_tip=phase_tip;self.admission_sha=admission_sha
+        self.schedule=tuple(barrier_schedule(scope,phase))
+        require(0<len(self.schedule)<=1024,"EFFECT_COUNT")
+    def expected(self,index,previous):
+        require(type(index) is int and 0<=index<len(self.schedule),"EFFECT_SEQUENCE")
+        return dict(schema="wolo.c06.barrier-effect-intent.v1",plan=self.plan_sha,
+                    scope=self.scope_sha,phase=self.phase,phase_tip=self.phase_tip,
+                    admission_sha256=self.admission_sha,index=index,
+                    previous=previous,action=self.schedule[index])
+    def read(self):
+        files=sorted(set(os.listdir(self.fd))- {".lock"})
+        require(len(files)<=len(self.schedule),"EFFECT_JOURNAL_LENGTH")
+        records=[]
+        for n,name in enumerate(files):
+            require(name==f"{n:04d}.json","EFFECT_JOURNAL_GAP")
+            fd=os.open(name,os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK,dir_fd=self.fd)
+            with os.fdopen(fd,"rb") as f:
+                st=os.fstat(f.fileno())
+                require(stat.S_ISREG(st.st_mode) and st.st_uid==os.geteuid()
+                        and stat.S_IMODE(st.st_mode)==0o600 and st.st_nlink==1
+                        and 0<st.st_size<=4096,"EFFECT_JOURNAL_PRIVATE")
+                raw=f.read(4097)
+            r=self.expected(n,digest(canonical(records[-1])) if records else None)
+            require(raw==canonical(r),"EFFECT_JOURNAL_RECORD_DRIFT")
+            records.append(r)
+        return records
+    def append(self,action):
+        require(self.fd is not None and self.lock is not None
+                and self.read()==self.records,"EFFECT_JOURNAL_DRIFT")
+        n=len(self.records);r=self.expected(n,self.tip)
+        require(r["action"]==action,"EFFECT_ACTION_ORDER")
+        fd=os.open(f"{n:04d}.json",os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW|
+                   os.O_WRONLY,0o600,dir_fd=self.fd)
+        with os.fdopen(fd,"wb") as f:
+            f.write(canonical(r));f.flush();os.fsync(f.fileno())
+        os.fsync(self.fd)
+        self.records.append(r)
+        require(self.read()==self.records,"EFFECT_JOURNAL_READBACK")
+        return r
+
+
+def verify_barrier_phase(plan,scope,phase,receipt,packet,enrollment,journal,**crypto):
+    """Revalidate the genuine phase packet and its independently anchored admission.
+
+    Caller must hold the native phase journal lock; crypto pins originate
+    from protected enrollment, not caller-controlled values. No lease
+    assertion here: the driver must separately check the external lease.
+    """
+    from settlement_c06_checkpoint_coordinator import validate_receipt
+    from settlement_c06_native_service_barrier import validate_scope
+    sha=validate_plan(plan)
+    require(validate_scope(scope)==plan["scope"] and phase in ("capture","resume")
+            and journal.fd is not None and journal.lock is not None
+            and journal.plan_sha==sha and journal.read()==journal.records,
+            "EFFECT_PHASE_JOURNAL")
+    step="FENCE_INTENT" if phase=="capture" else "RESTART_INTENT"
+    require(journal.records and journal.records[-1]["step"]==step,
+            "EFFECT_PHASE_NOT_AT_INTENT")
+    before,admitted=authority.PHASE_STEPS[phase]
+    entries=[r for r in journal.records if r["step"]==admitted]
+    require(len(entries)==1,"EFFECT_ADMISSION_MISSING")
+    entry=entries[0];prev=entry["previous"]
+    admission=validate_receipt(receipt,phase,sha,prev)
+    require(entry["evidence"]==admission,"EFFECT_ADMISSION_DRIFT")
+    checked=authority.review(enrollment,packet,plan,phase=phase,previous=prev,**crypto)
+    require(all(checked[k]==receipt[k] for k in ("packet","nonce","expires")),
+            "EFFECT_PHASE_SIGNATURE_DRIFT")
+    return journal.tip,admission
+
+
+def anchor_barrier_effect(record,*,plan,scope,phase,receipt,packet,enrollment,
+                          phase_journal,effect_journal,witness_identity,**crypto):
+    """Witness-side durable exact next intent. Never returns fresh ACK on replay.
+
+    This library requires an independently enrolled native dispatcher and
+    the exact source/witness plan; it cannot establish channel authenticity.
+    """
+    tip,admission=verify_barrier_phase(plan,scope,phase,receipt,packet,enrollment,
+                                     phase_journal,**crypto)
+    sha=validate_plan(plan)
+    require(hash64(witness_identity) and witness_identity!=plan["host"]
+            and effect_journal.plan_sha==sha and effect_journal.phase==phase
+            and effect_journal.phase_tip==tip and effect_journal.admission_sha==admission
+            and effect_journal.scope_sha==plan["scope"]
+            and effect_journal.fd is not None and effect_journal.lock is not None
+            and effect_journal.read()==effect_journal.records,"EFFECT_WITNESS_BINDING")
+    expected=effect_journal.expected(len(effect_journal.records),effect_journal.tip)
+    require(type(record) is dict and canonical(record)==canonical(expected),
+            "EFFECT_WITNESS_ORDER_OR_REPLAY")
+    got=effect_journal.append(expected["action"])
+    require(canonical(got)==canonical(record),"EFFECT_WITNESS_READBACK")
+    # Expiry after durable write remains ambiguous/spent; never reissue.
+    verify_barrier_phase(plan,scope,phase,receipt,packet,enrollment,phase_journal,**crypto)
+    return dict(schema="wolo.c06.barrier-effect-anchor.v1",plan=sha,
+                phase=phase,tip=effect_journal.tip,witness_identity=witness_identity,
+                status="NEW_EFFECT_INTENT_ANCHORED",production_authorized=False,
+                funding_authorized=False)
+
+
 def witness_main():
     # An independently installed forced-command wrapper must invoke this only
     # for COMMAND; no change to the legacy command or authorized_keys here.
