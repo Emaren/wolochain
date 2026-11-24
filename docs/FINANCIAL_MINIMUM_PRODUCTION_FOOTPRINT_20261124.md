@@ -114,3 +114,104 @@ C03 development).
 
 Current formal gates C04/C08 closed, C01/C02/C03/C05/C06/C07/C09 open.
 Funding DENIED; custody inactive. No C06/C07/C03 closure from this document.
+
+## Exact image disposition decision — Nov24 follow-up
+
+Preserve the entire original image by default. Its root directory names
+were captured in the prior read-only debugfs listing, not fresh heavy IO:
+
+| Exact image-relative directory | Preservation requirement |
+| --- | --- |
+| online-mvcc-rehearsal-20261105 | Original fixture/capture inputs, outputs, manifest, comparisons and failure evidence |
+| offline-pg16-rehearsal-20261105 | Original physical PG16 recovery data and control/role/ACL/parity evidence |
+| archived-financial-journal-only-20261023T210040Z-two-settlement-node-untouched | Both original journal trees and RESTORE-HELD-RECEIPT.json (1014 B observed), without invoking settlement |
+| online-mvcc-age-offhost-20261105 | Original age/offhost recovery artifacts and transport receipts |
+| online-mvcc-age-v2-20261105 | Distinct v2 lineage; do not deduplicate against earlier version by name |
+| nonquiesced-settlement-journals-v2-20261105 | Original nonquiesced provenance, journal state and any incomplete/failure evidence; not a C06 checkpoint |
+
+These are preservation classes based on the observed names and earlier
+root listing, not assertions that any specific uninspected nested file
+exists. Keep the complete contents including hidden files, lost+found,
+filesystem journal, superblock/UUID, allocation metadata, deleted/free
+blocks and all unknowns. No historical receipt is to be rewritten, nor
+an old rehearsal relabeled as gate closure.
+
+### Full image vs content-only archive
+
+Full raw-image age ciphertext, optionally with reviewed lossless
+compression before encryption, followed by exact byte reconstruction and
+independent SHA256 comparison, preserves the whole image. Source identity
+is dev2049/inode2431572, root:root mode0600, size42949672960 B,
+allocated 42949709824 B (83886152 512-byte blocks), wrapper 42949718016 B.
+Use a fresh exact preimage including device/inode/link count/mtime/ctime,
+logical length and allocation when WE2 admits IO. No hash is known yet.
+Full image may include historical secrets and deleted material; encrypt
+to the existing approved financial recovery recipients, prohibit public
+upload, M1 plaintext staging, arbitrary SSH or SITE_RUNTIME-purpose grant.
+No plaintext temporary copy on HEL1 DATA: its measured free space is below
+the original image length. Use only a reviewed existing financial
+recovery transport with separately admitted exact object/class and byte
+limit; WE2/WE4 must establish that it supports this large object and
+direct streaming. No implied extension of #188/#191.
+
+Content-only archival can preserve named logical file content and explicit
+metadata (uid/gid, mode, ACL, xattrs, nanosecond times, symlinks/hardlinks,
+special entries, sparse extents, inode flags, filesystem parameters and
+all original provenance) but does not reproduce the original image bytes,
+inode layout, journal, free-block history or deleted evidence. It cannot
+substitute unless the owner explicitly changes the preservation contract
+after full evidence/consumer review and independently proven reconstruction.
+A 3.27GB used-block estimate is not an archive upper bound. Until such
+approval, use full-image exact recovery; no content-only retirement.
+
+### Sequential Intel capacity and legacy dependency
+
+WE4 #63 comment7134935702 reports Intel free219106541568 B with the
+unchanged 60GiB/64424509440 B reserve. No new direct Intel shell evidence
+was obtained this turn. Conservative no-compression age planning bound
+42992664576 B = 42949672960 + ceil(42949672960/1024) + 1048576.
+One retained ciphertext plus one fully allocated exact reconstruction =
+85942337536 B; remaining free133164204032 B, of which 68739694592 B is
+above reserve BEFORE VM filesystem overhead, guest base, scratch and
+other pending campaigns. This is arithmetic feasibility, not admission.
+Require measured actual Intel guest-backed disk capacity and physical
+allocation, not APFS sparse logical size, before opening the exclusive
+window. Budget retained ciphertext separately even after temporary
+reconstruction cleanup. The C06 capture and C07 independent restore
+need their own exact manifest, encrypted archive and fully allocated
+working-set budget, no compression credit, no overlap with SITE_RUNTIME
+or Traffic acquisition, no reuse of a stale size estimate as a permit.
+
+Legacy local restore source requires the precise full-allocation
+root-backed loop ext4 and 8GiB ROOT available AFTER allocation; do not
+weaken it or pretend a remote path satisfies it. The retirement decision
+must preserve a tested on-demand rehydration option (exact image restored
+to a fresh owner-approved ROOT path, exact byte verification, original
+wrapper, mount identity and guard checks before legacy use), or formally
+supersede the legacy operation through reviewed independently qualified
+C06/C07. No active dependency may point to a retired path without a
+reviewed cold-recovery procedure. Current native C06 source remains
+fixture-gated, so the legacy dependency is NOT yet resolved physically.
+After exclusive admission, qualify exact reconstruction in isolated Intel
+Linux, no replay/mutation of historical DBs, read-only no-journal-replay
+inspection; record raw SHA equality, filesystem geometry, all six
+directories, root entries, metadata and original receipt hashes.
+WE4 supplies independent authenticated receiver/restore receipt;
+WE2 validates authoritative exact object, quiescence, replacement
+recovery, approved retirement and measured before/after delta. Preserve
+original until all prerequisites hold. No image IO initiated this turn.
+
+### Native C06 engineering increment
+
+New native offline PG16 checkpoint component uses exact PG16 binary and
+system-identifier binding, clean shutdown, actual REDO WAL name and segment
+size, pg_control digest, rejects postmaster PID, nonempty tablespace or
+prepared-transaction directories, symlink WAL and external mount. Reads
+the control result twice and rechecks identity. No service mutation; the
+caller must supply genuine complete producer and reconnect exclusion,
+authenticated lease, frozen Comet/journal observations and archive driver.
+The expanded witness source-pin set now includes this component. New
+focused tests and existing native witness tests PASS; the existing
+disposable PG16 CI case additionally exercises the actual native parser
+and descriptor-relative tree check, rather than another standalone
+rehearsal. No live C06 call, no enrolled witness or gate closure.

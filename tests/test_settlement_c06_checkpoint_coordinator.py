@@ -141,6 +141,7 @@ class PhysicalReconnectTests(unittest.TestCase):
             active=False;client=None
             try:
                 ctl("start");active=True
+                system_id=run(args("postgres","fixture_admin")+["-c","SELECT system_identifier FROM pg_control_system()"]).stdout.decode().strip()
                 run(args("postgres","fixture_admin")+["-c","CREATE ROLE fixture_writer LOGIN"])
                 for db in ("aoe2hd_db","aoe2de_db","website_shared"):
                     run(args("postgres","fixture_admin")+["-c","CREATE DATABASE "+db])
@@ -169,7 +170,15 @@ class PhysicalReconnectTests(unittest.TestCase):
                 for db in ("aoe2hd_db","aoe2de_db","website_shared"):
                     for user in ("fixture_writer","fixture_admin"):
                         self.assertNotEqual(run(args(db,user)+["-c","SELECT 1"],False).returncode,0)
-                self.assertIn(b"shut down",run([pg/"pg_controldata",data]).stdout)
+                from settlement_c06_native_pg_checkpoint import parse_control,inspect_tree
+                raw=run([pg/"pg_controldata",data]).stdout
+                self.assertIn(b"shut down",raw)
+                control=parse_control(raw,system_id)
+                fd=os.open(data,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW)
+                try:
+                    self.assertEqual(len(inspect_tree(fd,control)),64)
+                finally:os.close(fd)
+                print("PASS_NATIVE_PG16_CONTROL_AND_REDO_SEGMENT",flush=True)
                 # Deliberate fixture-only resume, no autonomous retry.
                 ctl("start");active=True
                 for db in ("aoe2hd_db","aoe2de_db","website_shared"):
