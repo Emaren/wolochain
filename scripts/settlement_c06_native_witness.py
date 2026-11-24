@@ -92,22 +92,25 @@ def check_plan(c,old,plan):
 def request(raw):
     require(0 < len(raw) <= MAX_REQUEST, "C06_WITNESS_INPUT_LIMIT")
     r = owner.parse(raw)
-    require(type(r) is dict and r.get("action") in ("consume","anchor","anchor_effect"),
+    require(type(r) is dict and r.get("action") in ("consume","anchor","anchor_effect","anchor_barrier_completion"),
             "C06_WITNESS_ACTION")
     expected = {
         "consume":{"action","plan","phase","previous","packet_b64"},
         "anchor":{"action","plan","record"},
         "anchor_effect":{"action","plan","scope","phase","receipt","packet_b64","record"},
+        "anchor_barrier_completion":{"action","plan","scope","phase","receipt","packet_b64","record","poststate_sha256","effect_tip"},
     }[r["action"]]
     require(set(r)==expected, "C06_WITNESS_REQUEST_SCHEMA")
-    if r["action"] in ("consume","anchor_effect"):
+    if r["action"] in ("consume","anchor_effect","anchor_barrier_completion"):
         require(r["phase"] in authority.PHASE_STEPS, "C06_WITNESS_PHASE")
         p = base64.b64decode(r["packet_b64"],validate=True)
         require(0 < len(p) <= MAX_REQUEST, "C06_PACKET_LIMIT")
-    if r["action"]=="anchor_effect":
+    if r["action"] in ("anchor_effect","anchor_barrier_completion"):
         require(r["phase"] in ("capture","resume") and
                 all(type(r[k]) is dict for k in ("scope","receipt","record")),
                 "EFFECT_WIRE_SCHEMA")
+    if r["action"]=="anchor_barrier_completion":
+        require(hash64(r["poststate_sha256"]) and hash64(r["effect_tip"]),"EFFECT_COMPLETION_WIRE_DIGEST")
     return r
 
 
@@ -150,6 +153,24 @@ def dispatch(raw,c,old,enrollment,journal,nonce_root,crypto,*,
             witness_identity=identity,**crypto)
         require(verify_lease(plan) is True,"EFFECT_NATIVE_LEASE_LOST_AFTER_ANCHOR")
         return ack
+    if r["action"]=="anchor_barrier_completion":
+        require(effect_journal is not None and callable(verify_lease),
+                "COMPLETION_NATIVE_LEASE_PROVIDER_REQUIRED")
+        require(verify_lease(plan) is True,"COMPLETION_NATIVE_LEASE_REQUIRED")
+        tip,admission=verify_barrier_phase(plan,r["scope"],r["phase"],r["receipt"],
+            base64.b64decode(r["packet_b64"],validate=True),enrollment,journal,**crypto)
+        expected=barrier_completion_record(plan,r["scope"],r["phase"],journal,
+            effect_journal,tip,admission,r["poststate_sha256"])
+        require(r["effect_tip"]==effect_journal.tip and
+                canonical(r["record"])==canonical(expected),"COMPLETION_EXACT_BINDING")
+        require(verify_lease(plan) is True,"COMPLETION_NATIVE_LEASE_REQUIRED")
+        ack=authority.anchor_witness_record(journal,expected,plan=plan,**bound)
+        require(verify_lease(plan) is True,"COMPLETION_NATIVE_LEASE_LOST_AFTER_ANCHOR")
+        require(ack["status"]=="NEW_TIP_ANCHORED","COMPLETION_REPLAY")
+        return ack
+    require(type(r["record"]) is dict and
+            r["record"].get("step") not in ("FENCED","RESTORED_SERVICES"),
+            "BARRIER_COMPLETION_REQUIRES_EFFECT_CHAIN")
     return authority.anchor_witness_record(journal,r["record"],plan=plan,**bound)
 
 
@@ -248,6 +269,42 @@ class NativeWitnessClient:
         require(type(ack) is dict and canonical(ack)==canonical(expected),
                 "EFFECT_NATIVE_ACK_DRIFT_OR_REPLAY")
         return ack
+
+
+    def complete_barrier(self,*,scope,phase,receipt,packet,journal,binding,
+                         poststate_sha256,verify_lease):
+        """Link completed effects to outer journal before progressing.
+
+        The native driver must supply the real observed poststate and an
+        independently admitted lease. The remote intent journal is not itself
+        an observation that OS effects succeeded. No retry after uncertain ACK.
+        """
+        crypto=self.check()
+        require(callable(verify_lease) and verify_lease(self.plan) is True,
+                "COMPLETION_SOURCE_NATIVE_LEASE_REQUIRED")
+        tip,admission=verify_barrier_phase(self.plan,scope,phase,receipt,packet,
+                                          self.enrollment,journal,**crypto)
+        require(type(binding) is BarrierEffectBinding,"COMPLETION_SOURCE_BINDING_REQUIRED")
+        effect_tip=binding.verify_complete()
+        record=barrier_completion_record(self.plan,scope,phase,journal,binding.j,
+                                          tip,admission,poststate_sha256)
+        require(effect_tip==binding.j.tip,"COMPLETION_SOURCE_TIP_DRIFT")
+        binding.state="HOLD"
+        require(verify_lease(self.plan) is True,"COMPLETION_SOURCE_NATIVE_LEASE_REQUIRED")
+        ack=native_exchange(self.old,dict(action="anchor_barrier_completion",
+            plan=self.plan,scope=scope,phase=phase,receipt=receipt,
+            packet_b64=base64.b64encode(packet).decode(),record=record,
+            poststate_sha256=poststate_sha256,effect_tip=effect_tip))
+        crypto=self.check()
+        require(verify_lease(self.plan) is True and
+                verify_barrier_phase(self.plan,scope,phase,receipt,packet,
+                    self.enrollment,journal,**crypto)==(tip,admission) and
+                binding.j.read()==binding.j.records and binding.j.tip==effect_tip,
+                "COMPLETION_SOURCE_DRIFT_AFTER_ACK")
+        expected_tip=verify_anchor_ack(ack,record,self.old["witness"]["host_identity_sha256"])
+        require(journal.append(record["step"],record["evidence"])==expected_tip,
+                "COMPLETION_SOURCE_OUTER_TIP_DRIFT")
+        return expected_tip
 
 
 class CoordinatorWitnessBinding:
@@ -402,6 +459,40 @@ def verify_barrier_phase(plan,scope,phase,receipt,packet,enrollment,journal,**cr
     require(all(checked[k]==receipt[k] for k in ("packet","nonce","expires")),
             "EFFECT_PHASE_SIGNATURE_DRIFT")
     return journal.tip,admission
+
+
+def barrier_completion_record(plan,scope,phase,phase_journal,effect_journal,
+                              phase_tip,admission_sha,poststate_sha):
+    """Bind outer completion to the exact complete, durable effect intent chain.
+
+    This is not a lease issuer or proof of physical poststate; native driver
+    supplies and verifies that observation. Both journal locks are mandatory.
+    """
+    from settlement_c06_native_service_barrier import validate_scope
+    sha=validate_plan(plan)
+    scope_sha=validate_scope(scope)
+    require(phase in ("capture","resume") and scope_sha==plan["scope"] and
+            all(hash64(x) for x in (phase_tip,admission_sha,poststate_sha)),
+            "COMPLETION_SCOPE_OR_DIGEST")
+    intent,step=("FENCE_INTENT","FENCED") if phase=="capture" else ("RESTART_INTENT","RESTORED_SERVICES")
+    require(phase_journal.fd is not None and phase_journal.lock is not None and
+            phase_journal.plan_sha==sha and phase_journal.read()==phase_journal.records and
+            phase_journal.records and phase_journal.records[-1]["step"]==intent and
+            phase_journal.tip==phase_tip,"COMPLETION_OUTER_INTENT")
+    require(effect_journal.fd is not None and effect_journal.lock is not None and
+            effect_journal.plan_sha==sha and effect_journal.scope_sha==scope_sha and
+            effect_journal.phase==phase and effect_journal.phase_tip==phase_tip and
+            effect_journal.admission_sha==admission_sha and
+            effect_journal.schedule==tuple(barrier_schedule(scope,phase)) and
+            effect_journal.read()==effect_journal.records and
+            len(effect_journal.records)==len(effect_journal.schedule) and hash64(effect_journal.tip),
+            "COMPLETION_EFFECT_CHAIN_INCOMPLETE_OR_DRIFT")
+    evidence=digest(canonical(dict(schema="wolo.c06.barrier-completion.v1",
+        plan=sha,scope=scope_sha,phase=phase,phase_tip=phase_tip,
+        admission_sha256=admission_sha,effect_tip=effect_journal.tip,
+        effect_count=len(effect_journal.records),poststate_sha256=poststate_sha)))
+    return dict(schema="wolo.c06.checkpoint-journal.v1",index=len(phase_journal.records),
+        step=step,plan=sha,previous=phase_tip,evidence=evidence)
 
 
 def anchor_barrier_effect(record,*,plan,scope,phase,receipt,packet,enrollment,
