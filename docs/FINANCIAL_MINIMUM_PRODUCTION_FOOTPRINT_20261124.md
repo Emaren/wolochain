@@ -308,3 +308,46 @@ staging, independent Intel verification and full restoration,
 legacy rehydration requirement, 60GiB reserve, all six historical
 directories, one-use authority and no retirement from partial ACK.
 WE2 controls exclusive IO; WE4 owns route/policy engineering.
+
+### Coordinator effect lifetime and Operation OS handoff
+
+Exact head 509f4143 Foundation run45423168415 job138547898667
+step31 (C08 dedicated Intel deny-only SSHD launchd reversible
+contracts) completed SUCCESS. Nine other workflows completed
+SUCCESS; Foundation overall was still running at initial readback.
+Do not rerun previously accepted cases independently.
+
+Coordinator now checks the admitted phase expiry and existing lease
+before fence, checkpoint, capture, receiver verification, isolated
+restore, restart and terminal completion; rechecks after capture
+and restore, and after lease verification. Expiry produces HOLD,
+never automatic replay or restart. A native driver must additionally
+check expiry/lease inside long operations and every subeffect.
+The old signed windows are unchanged; no authority inferred from
+a handoff or from successful local tests.
+
+Existing locked journal now exposes deterministic read-only
+wolo.c06.operation-handoff.v1 canonical payload plus SHA256:
+plan, current phase, journal tip, record count, disposition and
+bounded next-action enum. A locally complete journal still requires
+external anchor and physical gate receipts. Intent without observation
+requires fresh containment authority, not retry. No private packet,
+credential, arbitrary error text, timestamp or production authority
+is exported. Operation OS may consume this projection later;
+it is not a new release or execution dependency.
+
+New targeted regressions: expired capture stops before checkpoint;
+deterministic handoff for no phase and ambiguous fence intent, no
+gate closure/authority claim. Both PASS. Live coordinator remains
+fixture-gated pending full native driver and genuine witness/lease.
+
+WE4 VPSSentry #192 94ea15ea source-only contiguous-chunk coverage
+and campaign/phase telemetry is the integration seam, not authorized
+transport. Financial source must bind exact full original image,
+final raw SHA, purpose and ordered encrypted chunk identities to the
+existing review; independent Intel reconstruction and legacy
+rehydration remain required. Current third historical runtime
+campaign is protected; no heavy scan, image IO, or historical HD
+retransmission. The 872018705-byte HD historical candidate remains
+held pending actual same-object independently authenticated Intel
+receipt; no retirement or new capacity credit.
