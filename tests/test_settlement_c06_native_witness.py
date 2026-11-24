@@ -184,7 +184,7 @@ class NativeProtocol(unittest.TestCase):
                         funding_authorized=False)
         with w.BarrierEffectJournal(sp,f.plan,sc,"capture",tip,admission) as j:
             b=w.BarrierEffectBinding(j,verify_phase=lambda:(tip,admission),
-                verify_lease=lambda:events.append("lease"),anchor_native=anchor,
+                verify_lease=lambda:(events.append("lease") or True),anchor_native=anchor,
                 witness_identity="c"*64)
             barrier=NativeBarrier(sc,admit_effect=b.admit_effect,
                 anchor_intent=b.anchor_intent,complete_effect=b.complete_effect)
@@ -205,6 +205,65 @@ class NativeProtocol(unittest.TestCase):
             with self.assertRaises(w.owner.AuthorityHold):
                 w.BarrierEffectBinding(j,verify_phase=lambda:(tip,admission),
                     verify_lease=lambda:None,anchor_native=anchor,witness_identity="c"*64)
+
+    def test_effect_wire_independent_lease_and_exact_ack(self):
+        from settlement_c06_native_service_barrier import validate_scope
+        from test_settlement_c06_native_service_barrier import scope
+        from settlement_c06_checkpoint_coordinator import validate_receipt
+        f=self.fixture;sc=scope();f.plan["scope"]=validate_scope(sc)
+        f.q["plan_sha256"]=a.validate_plan(f.plan)
+        self.c["plan_sha256"]=a.validate_plan(f.plan)
+        packet=f.packet();psha=self.c["plan_sha256"]
+        ep=f.root/"effects";ep.mkdir(mode=0o700)
+        with Journal(self.root,psha) as j:
+            ack=w.dispatch(w.canonical(dict(action="consume",phase="capture",
+                previous=None,packet_b64=base64.b64encode(packet).decode(),plan=f.plan)),
+                self.c,self.old,f.enroll,j,self.nonces,self.crypto)
+            r=a.verify_expanded_witness_ack(ack,f.enroll,packet,f.plan,
+                phase="capture",previous=None,witness_identity="c"*64,**self.crypto)
+            admission=validate_receipt(r,"capture",psha,None)
+            tip=j.append("FENCE_INTENT",f.plan["producer_prestate"])
+            with w.BarrierEffectJournal(ep,f.plan,sc,"capture",tip,admission) as effects:
+                record=effects.expected(0,None)
+                payload=dict(action="anchor_effect",plan=f.plan,scope=sc,
+                    phase="capture",receipt=r,packet_b64=base64.b64encode(packet).decode(),
+                    record=record)
+                args=(w.canonical(payload),self.c,self.old,f.enroll,j,self.nonces,self.crypto)
+                with self.assertRaises(w.owner.AuthorityHold):w.dispatch(*args)
+                with self.assertRaises(w.owner.AuthorityHold):
+                    w.dispatch(*args,effect_journal=effects,verify_lease=lambda p:None)
+                self.assertFalse(effects.records)
+                client=object.__new__(w.NativeWitnessClient)
+                client.plan=f.plan;client.c=self.c;client.old=self.old
+                client.enrollment=f.enroll;client.check=lambda:self.crypto
+                def exchange(old,p):
+                    self.assertEqual(p,payload)
+                    return w.dispatch(w.canonical(p),self.c,self.old,f.enroll,j,
+                        self.nonces,self.crypto,effect_journal=effects,
+                        verify_lease=lambda plan: plan==f.plan)
+                with patch.object(w,"native_exchange",side_effect=exchange) as native:
+                    out=client.anchor_effect(record,scope=sc,phase="capture",receipt=r,
+                        packet=packet,journal=j,verify_lease=lambda p: p==f.plan)
+                    self.assertEqual(out["tip"],effects.tip)
+                    self.assertFalse(out["production_authorized"])
+                    native.assert_called_once()
+                    with self.assertRaises(w.owner.AuthorityHold):
+                        client.anchor_effect(record,scope=sc,phase="capture",receipt=r,
+                            packet=packet,journal=j,verify_lease=lambda p:None)
+                    self.assertEqual(native.call_count,1)
+                self.assertEqual(len(effects.records),1)
+                with self.assertRaises(w.owner.AuthorityHold):
+                    w.dispatch(*args,effect_journal=effects,verify_lease=lambda p:True)
+                # A lost lease after durable append spends this intent and
+                # returns no ACK. A retry cannot turn it into fresh authority.
+                new=effects.expected(1,effects.tip)
+                args=(w.canonical(dict(payload,record=new)),*args[1:])
+                checks=iter((True,False))
+                with self.assertRaises(w.owner.AuthorityHold):
+                    w.dispatch(*args,effect_journal=effects,verify_lease=lambda p:next(checks))
+                self.assertEqual(len(effects.records),2)
+                with self.assertRaises(w.owner.AuthorityHold):
+                    w.dispatch(*args,effect_journal=effects,verify_lease=lambda p:True)
 
     def test_unenrolled_scope_and_arbitrary_action_rejected(self):
         f=self.fixture

@@ -92,15 +92,22 @@ def check_plan(c,old,plan):
 def request(raw):
     require(0 < len(raw) <= MAX_REQUEST, "C06_WITNESS_INPUT_LIMIT")
     r = owner.parse(raw)
-    require(type(r) is dict and r.get("action") in ("consume","anchor"),
+    require(type(r) is dict and r.get("action") in ("consume","anchor","anchor_effect"),
             "C06_WITNESS_ACTION")
-    expected = ({"action","plan","phase","previous","packet_b64"}
-                if r["action"] == "consume" else {"action","plan","record"})
+    expected = {
+        "consume":{"action","plan","phase","previous","packet_b64"},
+        "anchor":{"action","plan","record"},
+        "anchor_effect":{"action","plan","scope","phase","receipt","packet_b64","record"},
+    }[r["action"]]
     require(set(r)==expected, "C06_WITNESS_REQUEST_SCHEMA")
-    if r["action"]=="consume":
+    if r["action"] in ("consume","anchor_effect"):
         require(r["phase"] in authority.PHASE_STEPS, "C06_WITNESS_PHASE")
         p = base64.b64decode(r["packet_b64"],validate=True)
         require(0 < len(p) <= MAX_REQUEST, "C06_PACKET_LIMIT")
+    if r["action"]=="anchor_effect":
+        require(r["phase"] in ("capture","resume") and
+                all(type(r[k]) is dict for k in ("scope","receipt","record")),
+                "EFFECT_WIRE_SCHEMA")
     return r
 
 
@@ -116,7 +123,8 @@ def verify_anchor_ack(ack,record,witness_identity):
     return expected["tip"]
 
 
-def dispatch(raw,c,old,enrollment,journal,nonce_root,crypto):
+def dispatch(raw,c,old,enrollment,journal,nonce_root,crypto,*,
+             effect_journal=None,verify_lease=None):
     """Only called after native host/source/plan enrollment readback."""
     r=request(raw); plan=r["plan"]; check_plan(c,old,plan)
     identity=old["witness"]["host_identity_sha256"]
@@ -128,6 +136,20 @@ def dispatch(raw,c,old,enrollment,journal,nonce_root,crypto):
             base64.b64decode(r["packet_b64"],validate=True),plan,
             phase=r["phase"],previous=r["previous"],journal=journal,
             nonce_root=nonce_root,**bound,**crypto)
+    if r["action"]=="anchor_effect":
+        # Neither a request field nor the owner's phase packet is a WE2 lease.
+        # The witness host must independently load and verify the admitted
+        # exclusive window. No configured provider means mandatory refusal.
+        require(effect_journal is not None and callable(verify_lease),
+                "EFFECT_NATIVE_LEASE_PROVIDER_REQUIRED")
+        require(verify_lease(plan) is True,"EFFECT_NATIVE_LEASE_NOT_VERIFIED")
+        ack=anchor_barrier_effect(r["record"],plan=plan,scope=r["scope"],
+            phase=r["phase"],receipt=r["receipt"],
+            packet=base64.b64decode(r["packet_b64"],validate=True),
+            enrollment=enrollment,phase_journal=journal,effect_journal=effect_journal,
+            witness_identity=identity,**crypto)
+        require(verify_lease(plan) is True,"EFFECT_NATIVE_LEASE_LOST_AFTER_ANCHOR")
+        return ack
     return authority.anchor_witness_record(journal,r["record"],plan=plan,**bound)
 
 
@@ -192,6 +214,40 @@ class NativeWitnessClient:
         ack=native_exchange(self.old,dict(action="anchor",plan=self.plan,record=record))
         self.check()
         return verify_anchor_ack(ack,record,self.old["witness"]["host_identity_sha256"])
+
+    def anchor_effect(self,record,*,scope,phase,receipt,packet,journal,verify_lease):
+        """Fixed existing pinned SSH route; no grant or fallback.
+
+        Independently checked source phase and lease before and after the
+        call. The witness must validate its own lease, and the complete
+        source binding still owns the no-retry effect state machine.
+        """
+        crypto=self.check()
+        require(callable(verify_lease) and verify_lease(self.plan) is True,
+                "EFFECT_SOURCE_NATIVE_LEASE_REQUIRED")
+        tip,admission=verify_barrier_phase(self.plan,scope,phase,receipt,packet,
+                                        self.enrollment,journal,**crypto)
+        require(type(record) is dict and record.get("plan")==self.c["plan_sha256"]
+                and record.get("phase")==phase and record.get("phase_tip")==tip
+                and record.get("admission_sha256")==admission
+                and record.get("scope")==self.plan["scope"],
+                "EFFECT_SOURCE_WIRE_BINDING")
+        ack=native_exchange(self.old,dict(action="anchor_effect",plan=self.plan,
+            scope=scope,phase=phase,receipt=receipt,
+            packet_b64=base64.b64encode(packet).decode(),record=record))
+        crypto=self.check()
+        require(verify_lease(self.plan) is True and
+                verify_barrier_phase(self.plan,scope,phase,receipt,packet,
+                    self.enrollment,journal,**crypto)==(tip,admission),
+                "EFFECT_SOURCE_NATIVE_LEASE_OR_PHASE_LOST")
+        expected=dict(schema="wolo.c06.barrier-effect-anchor.v1",
+            plan=self.c["plan_sha256"],phase=phase,tip=digest(canonical(record)),
+            witness_identity=self.old["witness"]["host_identity_sha256"],
+            status="NEW_EFFECT_INTENT_ANCHORED",production_authorized=False,
+            funding_authorized=False)
+        require(type(ack) is dict and canonical(ack)==canonical(expected),
+                "EFFECT_NATIVE_ACK_DRIFT_OR_REPLAY")
+        return ack
 
 
 class CoordinatorWitnessBinding:
@@ -397,10 +453,10 @@ class BarrierEffectBinding:
     def check(self,phase,scope,action):
         require(phase==self.j.phase and scope==self.j.scope_sha
                 and self.j.read()==self.j.records,"EFFECT_SOURCE_SCOPE_DRIFT")
-        self.verify_lease()
+        require(self.verify_lease() is True,"EFFECT_SOURCE_LEASE_NOT_VERIFIED")
         require(self.verify_phase()==(self.j.phase_tip,self.j.admission_sha),
                 "EFFECT_SOURCE_PHASE_DRIFT")
-        self.verify_lease()
+        require(self.verify_lease() is True,"EFFECT_SOURCE_LEASE_NOT_VERIFIED")
     def admit_effect(self,phase,scope,action):
         if self.state=="READY":
             self.state="HOLD"
@@ -456,6 +512,9 @@ def witness_main():
     # Pre-created separately enrolled journal; no implicit directory creation.
     path=legacy.WITNESS_NONCES.parent/"c06-expanded-journal"/c["plan_sha256"]
     with Journal(path,c["plan_sha256"]) as journal:
+        # Effect dispatch is intentionally refused here until an independently
+        # reviewed native WE2 lease provider and protected effect journal are
+        # enrolled. The existing consume/anchor route remains unchanged.
         ack=dispatch(data,c,old,enrollment,journal,legacy.WITNESS_NONCES,crypto)
         require(legacy.private_file(cfg)==raw
                 and legacy.private_file(legacy.WITNESS_CONFIG)==oldraw
