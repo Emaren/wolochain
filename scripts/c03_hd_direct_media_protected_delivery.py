@@ -48,6 +48,18 @@ SOURCE_PINS = {
     APP / 'lib/woloMainnetTransfers.ts': '5ee644b6d20499946a5d90f82f1dda8878651b92eb760cfe83e8c720d22b8983',
 }
 ENV_PATHS = (Path('/etc/aoe2hdbets/aoe2hdbets-web.env'), APP / '.env', APP / '.env.local')
+# Native HEL1 metadata, reviewed against exact heartbeat paths only.
+# This exception is never used for root trust, stage or permit paths.
+# Tuple: device, inode, uid, gid, mode. Any replacement requires review.
+HEARTBEAT_DIR_PINS = {
+    Path('/var/www'): (2049, 259013, 1000, 1000, 0o755),
+    Path('/var/www/AoE2HDBets'): (2049, 259016, 1000, 1000, 0o755),
+    APP: (2049, 936068, 1000, 1000, 0o775),
+    APP / 'scripts': (2049, 936310, 1000, 1000, 0o775),
+    APP / 'lib': (2049, 936278, 1000, 1000, 0o755),
+}
+HEARTBEAT_APP_FILES = frozenset(p for p in (*SOURCE_PINS, *ENV_PATHS) if APP in p.parents)
+HBA = Path('/etc/postgresql/16/main/pg_hba.conf')
 ROLES = {'postgres', 'aoe2hd_user', 'aoe2war_web_prod', 'aoe2war_social_writer', 'aoe2de_user'}
 DBS = {'aoe2hd_db', 'aoe2de_db'}
 HEX = re.compile(r'[0-9a-f]{64}\Z')
@@ -65,17 +77,27 @@ def sha(data):
 def canonical(obj):
     return json.dumps(obj, sort_keys=True, separators=(',', ':'), ensure_ascii=True, allow_nan=False).encode()
 
-def open_dir(path, owners=(0,)):
+def check_directory(path, s, owners, heartbeat=False):
+    need(stat.S_ISDIR(s.st_mode), 'UNSAFE_DIRECTORY')
+    if heartbeat and path in HEARTBEAT_DIR_PINS:
+        actual = (s.st_dev, s.st_ino, s.st_uid, s.st_gid, stat.S_IMODE(s.st_mode))
+        need(actual == HEARTBEAT_DIR_PINS[path], 'HEARTBEAT_DIRECTORY_IDENTITY_DRIFT')
+    else:
+        need(s.st_uid in owners and not s.st_mode & 0o022, 'UNSAFE_DIRECTORY')
+
+def open_dir(path, owners=(0,), heartbeat=False):
     need(path.is_absolute(), 'ABSOLUTE_DIRECTORY_REQUIRED')
     fd = os.open('/', os.O_RDONLY | os.O_DIRECTORY | os.O_CLOEXEC)
     try:
+        current = Path('/')
         for part in path.parts[1:]:
+            current = current / part
             need(part not in ('.', '..'), 'DIRECTORY_COMPONENT')
             child = os.open(part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC, dir_fd=fd)
             os.close(fd)
             fd = child
             s = os.fstat(fd)
-            need(s.st_uid in owners and not s.st_mode & 0o022, 'UNSAFE_DIRECTORY')
+            check_directory(current, s, owners, heartbeat)
         return fd
     except BaseException:
         os.close(fd)
@@ -107,7 +129,14 @@ def read_at(fd, name, owners, limit=262144, mode=None, optional=False):
         os.close(f)
 
 def read_fixed(path, owners=(0,), limit=262144, mode=None, optional=False):
-    fd = open_dir(path.parent, owners=tuple(set((0,1000,*owners))))
+    # Root-only targets retain root-only ancestors. PostgreSQL's HBA has
+    # postgres-owned ancestors; the fixed path is the only special case.
+    if path in HEARTBEAT_APP_FILES:
+        fd = open_dir(path.parent, heartbeat=True)
+    elif path == HBA:
+        fd = open_dir(path.parent, owners=(0,pwd.getpwnam('postgres').pw_uid))
+    else:
+        fd = open_dir(path.parent)
     try:
         return read_at(fd,path.name,owners,limit,mode,optional)
     finally:
@@ -154,7 +183,7 @@ def review_pins(data):
     pub = data[PUBLIC]
     need(len(pub)==65 and pub[0]==4,'PUBLIC_KEY_SHAPE')
     host = read_fixed(Path('/etc/machine-id'),limit=256).strip()
-    hba = read_fixed(Path('/etc/postgresql/16/main/pg_hba.conf'),owners=(pwd.getpwnam('postgres').pw_uid,),limit=65535)
+    hba = read_fixed(HBA,owners=(pwd.getpwnam('postgres').pw_uid,),limit=65535)
     need(re.fullmatch(b'[0-9a-f]{32}',host) and sha(host)==q['host_id_sha256'] and sha(hba)==q['hba_sha256'], 'NATIVE_PIN_DRIFT')
     return q
 
