@@ -20,7 +20,7 @@ def utc(t):return t.strftime("%Y-%m-%dT%H:%M:%SZ")
 class SignatureTests(unittest.TestCase):
     def setUp(self):
         self.tmp=tempfile.TemporaryDirectory()
-        self.root=Path(self.tmp.name)
+        self.root=Path(self.tmp.name).resolve()
         self.ssl=os.environ.get("C06_OPENSSL") or shutil.which("openssl")
         self.assertIsNotNone(self.ssl)
         self.key=self.root/"fixture-key.pem"
