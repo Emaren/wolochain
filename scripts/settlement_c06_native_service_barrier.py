@@ -34,9 +34,18 @@ NEVER_STOP = frozenset({"cron.service","atd.service","nginx.service"})
 REQUIRED = frozenset({"postgresql.service","postgresql@16-main.service",
     "wolochaind-mainnet.service","aoe2hdbets-web-prod.service",
     "aoe2hdbets-web.service","aoe2hdbets-api.service",
+    "aoe2hdbets-web-r24.service","aoe2hdbets-web-candidate-3033.service",
     "aoe2dewarwagers-api.service","aoe2dewarwagers-web.service",
     "aoe2war-appearance-writer.service","aoe2war-social-writer.service",
     "tokenchain-hasura.service","tokenchain-indexer.service","tokenchain-web.service"})
+
+# Confirmed unit-file identities on HEL1; disabled is not an activation fence.
+# These dormant financial/chain producers must never be resumed by C06.
+DORMANT_DENY = frozenset({"aoe2hdbets-bet-stake-reconcile-plan.service",
+    "wolochain-mainnet-osmosis-relayer.service","wolochain-settlement.service"})
+REQUIRED = REQUIRED | DORMANT_DENY
+PG_UNITS = frozenset({"postgresql.service","postgresql@16-main.service"})
+PG_CLIENTS = REQUIRED - PG_UNITS - {"wolochaind-mainnet.service"}
 
 def validate_scope(scope):
     require(type(scope) is dict and set(scope)=={"stop","resume","prestate"},
@@ -58,13 +67,13 @@ def validate_scope(scope):
             "UNKNOWN_OR_TRANSITIONAL_SERVICE_STATE")
     require(set(resume)=={u for u in stop if scope["prestate"][u]["ActiveState"]=="active"},
             "RESUME_MUST_MATCH_ORIGINAL_ACTIVE_SET")
-    # Explicit dependency ordering for the shared cluster and consensus.
-    require(stop.index("postgresql@16-main.service")>stop.index("aoe2hdbets-api.service")
-            and stop.index("postgresql@16-main.service")>stop.index("tokenchain-hasura.service")
-            and stop.index("postgresql@16-main.service")>stop.index("tokenchain-indexer.service"),
+    require(not (set(resume)&DORMANT_DENY),"DORMANT_FINANCIAL_PRODUCER_ACTIVE")
+    # Explicit dependency ordering for the whole shared cluster, including
+    # both preserved fallback runtimes. Stopping does not delete either.
+    require(all(stop.index(u)<stop.index(pg) for u in PG_CLIENTS for pg in PG_UNITS),
             "PG_STOP_ORDER")
     if "postgresql@16-main.service" in resume:
-        for u in REQUIRED-{"postgresql@16-main.service","postgresql.service","wolochaind-mainnet.service"}:
+        for u in PG_CLIENTS:
             if u in resume:require(resume.index(u)>resume.index("postgresql@16-main.service"),"PG_RESUME_ORDER")
     for u in stop:
         if u.endswith((".timer",".socket",".path")):
