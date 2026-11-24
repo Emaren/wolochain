@@ -8,6 +8,7 @@ import time
 import subprocess
 import select
 import unittest
+from unittest.mock import patch
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/"scripts"))
 import settlement_c06_checkpoint_coordinator as c
 
@@ -103,6 +104,34 @@ class TestCoordinator(unittest.TestCase):
         d.authenticate_and_consume=lambda a,b,e:orig("wrong",b,e)
         with self.assertRaises(c.Hold):self.run_driver(d)
         self.assertNotIn("fence",d.calls)
+    def test_expired_capture_does_not_progress_to_checkpoint(self):
+        d=Driver()
+        orig=d.fence_and_deny_reconnect
+        def fence(p):
+            x=orig(p)
+            clock[0]+=120
+            return x
+        clock=[1000]
+        d.fence_and_deny_reconnect=fence
+        with patch.object(c.time,"time",side_effect=lambda:clock[0]):
+            with self.assertRaisesRegex(c.Hold,"PHASE_EXPIRED"):
+                self.run_driver(d)
+        self.assertNotIn("checkpoint",d.calls)
+        self.assertNotIn("restart",d.calls)
+    def test_deterministic_handoff_never_claims_authority(self):
+        with c.Journal(self.root,self.sha) as j:
+            initial=c.phase_handoff(j)
+            self.assertEqual(initial,c.phase_handoff(j))
+            self.assertEqual(initial["payload"]["next_action"],
+                             "OBTAIN_EXACT_ADMISSION_AND_EXTERNAL_LEASE")
+            j.append("ADMITTED",h("admitted"))
+            j.append("FENCE_INTENT",h("intent"))
+            result=c.phase_handoff(j)
+            self.assertEqual(result["sha256"],c.digest(c.canonical(result["payload"])))
+            self.assertEqual(result["payload"]["next_action"],
+                             "CONTAIN_AMBIGUOUS_EFFECT_WITH_FRESH_AUTHORITY")
+            self.assertFalse(result["payload"]["gate_closure_claimed"])
+            self.assertFalse(result["payload"]["external_anchor_verified"])
     def test_actual_process_death_after_intent(self):
         pid=os.fork()
         if pid==0:

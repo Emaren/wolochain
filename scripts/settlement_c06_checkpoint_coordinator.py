@@ -154,6 +154,8 @@ class Coordinator:
         self.j = journal
         self.d = driver
         self.seen = set()
+        self.phase = None
+        self.phase_expiry = None
 
     def record(self, step, evidence):
         tip = self.j.append(step, evidence)
@@ -169,7 +171,20 @@ class Coordinator:
         h = validate_receipt(r, phase, self.sha, previous)
         require(r["nonce"] not in self.seen, "PHASE_NONCE_REPLAY")
         self.seen.add(r["nonce"])
+        self.phase = phase
+        self.phase_expiry = r["expires"]
         return h
+
+    def require_phase(self, phase):
+        """Recheck the admitted phase before each subsequent effect boundary.
+
+        A valid packet at admission does not grant an indefinite window.
+        Native driver must also check within long-running operations.
+        """
+        require(self.phase == phase and self.phase_expiry is not None
+                and int(time.time()) < self.phase_expiry, "PHASE_EXPIRED_OR_CHANGED")
+        self.d.verify_lease(self.plan)
+        require(int(time.time()) < self.phase_expiry, "PHASE_EXPIRED_OR_CHANGED")
 
     def run(self):
         require(not self.j.records, "EXISTING_RUN_MANUAL_RECONCILIATION")
@@ -178,34 +193,40 @@ class Coordinator:
         require(self.d.is_disposable_fixture is True, "NATIVE_DRIVER_NOT_ADMITTED")
         self.record("ADMITTED", self.admit("capture"))
         self.record("FENCE_INTENT", self.plan["producer_prestate"])
-        self.d.verify_lease(self.plan)
+        self.require_phase("capture")
         fence = self.d.fence_and_deny_reconnect(self.plan)
         self.record("FENCED", fence)
         self.record("CHECKPOINT_INTENT", fence)
-        self.d.verify_lease(self.plan)
+        self.require_phase("capture")
         checkpoint = self.d.checkpoint(self.plan)
         self.record("CHECKPOINT", checkpoint)
         self.record("CAPTURE_INTENT", checkpoint)
-        self.d.verify_lease(self.plan)
+        self.require_phase("capture")
         cipher = self.d.capture_encrypted(self.plan, checkpoint)
         require(hash64(cipher), "CIPHERTEXT_DIGEST")
+        self.require_phase("capture")
         self.record("CAPTURED", cipher)
         require(self.d.verify_frozen(self.plan, checkpoint) is True,
                 "CHECKPOINT_DRIFT")
+        self.require_phase("capture")
         require(self.d.verify_receiver(cipher) == cipher, "RECEIVER_DIGEST")
+        self.require_phase("capture")
         self.record("RECEIVER_VERIFIED", cipher)
         self.record("RESTORE_ADMITTED", self.admit("restore"))
+        self.require_phase("restore")
         require(self.d.restore_isolated(cipher) == cipher, "RESTORE_DIGEST")
+        self.require_phase("restore")
         self.record("RESTORED", cipher)
         self.record("RESUME_ADMITTED", self.admit("resume"))
         require(self.d.verify_frozen(self.plan, checkpoint) is True,
                 "CHECKPOINT_DRIFT")
         self.record("RESTART_INTENT", self.plan["restart_plan"])
-        self.d.verify_lease(self.plan)
+        self.require_phase("resume")
         post = self.d.restore_original_nonfinancial_services(self.plan)
         self.record("RESTORED_SERVICES", post)
         require(self.d.verify_quarantine_and_poststate(self.plan) is True,
                 "POSTSTATE_OR_QUARANTINE")
+        self.require_phase("resume")
         self.record("COMPLETE", post)
         return cipher
 
@@ -219,3 +240,29 @@ def recovery_disposition(journal):
     if last in INTENTS:
         return "AMBIGUOUS_EFFECT_FRESH_CONTAINMENT_AUTHORITY_REQUIRED"
     return "HOLD_FRESH_RECONCILIATION_AND_AUTHORITY_REQUIRED"
+
+def phase_handoff(journal):
+    """Deterministic informational projection; not an external anchor or permit.
+
+    Requires the existing locked, validated journal. Never claims gate closure,
+    replays an effect, or makes Operation OS an execution dependency.
+    """
+    require(journal.fd is not None and journal.lock is not None
+            and journal.read() == journal.records, "HANDOFF_JOURNAL_DRIFT")
+    last = journal.records[-1]["step"] if journal.records else None
+    actions = {
+        None: "OBTAIN_EXACT_ADMISSION_AND_EXTERNAL_LEASE",
+        "COMPLETE": "VERIFY_INDEPENDENT_FINAL_ANCHOR_AND_PHYSICAL_GATE_RECEIPTS",
+    }
+    action = actions.get(last, "RECONCILE_JOURNAL_AND_EXTERNAL_ANCHOR_NO_REPLAY")
+    if last in INTENTS:
+        action = "CONTAIN_AMBIGUOUS_EFFECT_WITH_FRESH_AUTHORITY"
+    payload = {"schema":"wolo.c06.operation-handoff.v1",
+               "plan_sha256":journal.plan_sha,
+               "journal_tip_sha256":journal.tip,
+               "phase":last,"records":len(journal.records),
+               "disposition":recovery_disposition(journal),
+               "next_action":action,"external_anchor_verified":False,
+               "production_authorized":False,"gate_closure_claimed":False,
+               "funding_authorized":False}
+    return {"payload":payload,"sha256":digest(canonical(payload))}
