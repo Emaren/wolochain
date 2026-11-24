@@ -6,9 +6,9 @@ import settlement_c06_native_service_barrier as b
 from settlement_c06_checkpoint_rehearsal import Hold
 
 def scope():
-    stop=sorted(b.REQUIRED-{"postgresql.service","postgresql@16-main.service"})
+    stop=sorted(b.REQUIRED-{"postgresql.service","postgresql@16-main.service"}, key=lambda u:(not u.endswith((".timer",".socket",".path")),u))
     stop+=["postgresql@16-main.service","postgresql.service"]
-    resume=["postgresql@16-main.service","postgresql.service"]+[u for u in stop if u not in ("postgresql.service","postgresql@16-main.service")]
+    resume=["postgresql@16-main.service","postgresql.service"]+sorted([u for u in stop if u not in ("postgresql.service","postgresql@16-main.service")],key=lambda u:(u.endswith((".timer",".socket",".path")),u))
     return {"stop":stop,"resume":[u for u in resume if u not in b.DORMANT_DENY],"prestate":{
         u:{"Id":u,"LoadState":"loaded","ActiveState":"inactive" if u in b.DORMANT_DENY else "active"} for u in stop}}
 class ScopeTests(unittest.TestCase):
@@ -47,4 +47,28 @@ class ScopeTests(unittest.TestCase):
         effects=[]
         with self.assertRaises(RuntimeError):obj.effect("capture","fixture",lambda:effects.append(1))
         self.assertFalse(effects)
+    def test_new_scheduled_activation_paths_are_mandatory(self):
+        self.assertEqual(len(b.SCHEDULED_PRODUCERS),10)
+        for unit in b.SCHEDULED_PRODUCERS:
+            p=scope();p["stop"].remove(unit);p["resume"].remove(unit)
+            del p["prestate"][unit]
+            with self.assertRaises(Hold):b.validate_scope(p)
+    def test_activator_order(self):
+        p=scope();u="aoe2hdbets-challenge-reconcile.timer"
+        p["stop"].remove(u);p["stop"].append(u)
+        with self.assertRaises(Hold):b.validate_scope(p)
+        p=scope();p["resume"].remove(u);p["resume"].insert(0,u)
+        with self.assertRaises(Hold):b.validate_scope(p)
+    def test_actual_socket_and_custody_boundary(self):
+        from unittest.mock import patch
+        def run(args):
+            if args[0]=="ss":return "LISTEN 0 128 127.0.0.1:5432 0.0.0.0:*\n"
+            return "Id="+args[-1]+"\nActiveState=inactive\nUnitFileState=masked\n"
+        obj=b.NativeBarrier(scope(),admit_effect=lambda *x:None,anchor_intent=lambda *x:None,run=run)
+        with patch.object(b,"show",side_effect=lambda u,r:{"Id":u,"ActiveState":"inactive","MainPID":"0"}):
+            obj.check_quarantine()
+            obj.run=lambda args: "LISTEN 0 128 [::]:8094 [::]:*\n" if args[0]=="ss" else run(args)
+            with self.assertRaises(Hold):obj.check_quarantine()
+        with patch.object(b,"show",side_effect=lambda u,r:{"Id":u,"ActiveState":"active","MainPID":"123"}):
+            with self.assertRaises(Hold):obj.check_quarantine()
 if __name__=="__main__":unittest.main()

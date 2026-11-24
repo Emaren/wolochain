@@ -42,8 +42,23 @@ REQUIRED = frozenset({"postgresql.service","postgresql@16-main.service",
 # Confirmed unit-file identities on HEL1; disabled is not an activation fence.
 # These dormant financial/chain producers must never be resumed by C06.
 DORMANT_DENY = frozenset({"aoe2hdbets-bet-stake-reconcile-plan.service",
-    "wolochain-mainnet-osmosis-relayer.service","wolochain-settlement.service"})
-REQUIRED = REQUIRED | DORMANT_DENY
+    "wolochain-mainnet-osmosis-relayer.service","wolochain-settlement.service",
+    # Native HEL1 Nov24 readback: loaded, inactive, MainPID=0. Inactive
+    # custody/signing and alternate chain/website units are not safe to start.
+    "wolo-satchel-c01.service","wolo-reviewer-c01.service",
+    "tokenchain-callisto.service","tokenchain-faucet.service",
+    "tokenchain-daily-allocation.service","tokenchain-daily-allocation.timer",
+    "tokenchain-osmo-ibc-bootstrap.service","tokenchain-osmo-ibc-bootstrap.timer",
+    "tokenchain-relayer.service","aoe2war-r25-f7fdae2-candidate.service"})
+# Observed enabled timers and their static service targets. Stopping only
+# the website/PG leaves these scheduled activation paths open.
+SCHEDULED_PRODUCERS = frozenset(
+    name+suffix for name in (
+        "aoe2-wolo-transfer-heartbeat","aoe2hdbets-challenge-reconcile",
+        "aoe2hdbets-replay-auto-recovery","aoe2hdbets-trophy-tributes",
+        "aoe2war-prewarm")
+    for suffix in (".timer",".service"))
+REQUIRED = REQUIRED | DORMANT_DENY | SCHEDULED_PRODUCERS
 PG_UNITS = frozenset({"postgresql.service","postgresql@16-main.service"})
 PG_CLIENTS = REQUIRED - PG_UNITS - {"wolochaind-mainnet.service"}
 
@@ -164,6 +179,22 @@ class NativeBarrier:
             fields=dict(s.split("=",1) for s in raw.splitlines())
             require(fields.get("Id")==u and fields.get("ActiveState")=="inactive"
                 and fields.get("UnitFileState")=="masked","QUARANTINE_DRIFT")
+
+        # Unlike the six masked units, these two installed successors were
+        # static/inactive, so their inactive state is independently checked
+        # throughout the capture and selective release sequence.
+        for u in ("wolo-satchel-c01.service","wolo-reviewer-c01.service"):
+            fields=show(u,self.run)
+            require(fields.get("Id")==u and fields.get("ActiveState")=="inactive"
+                    and fields.get("MainPID")=="0","CUSTODY_OR_REVIEWER_ACTIVATED")
+        # Check actual TCP listeners, not a firewall assertion or service name.
+        listeners=self.run(["ss","-H","-ltn"])
+        for line in listeners.splitlines():
+            fields=line.split()
+            require(len(fields)>=5 and fields[0]=="LISTEN","SOCKET_OBSERVATION_INVALID")
+            port=fields[3].rsplit(":",1)[-1]
+            require(port.isdecimal(),"SOCKET_PORT_UNQUALIFIED")
+            require(int(port) not in range(8092,8096),"FINANCIAL_LISTENER_PRESENT")
 
     def fence(self):
         require(os.geteuid()==0,"ROOT_REQUIRED")
