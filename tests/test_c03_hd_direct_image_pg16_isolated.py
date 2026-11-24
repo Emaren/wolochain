@@ -6,6 +6,8 @@ import os
 from pathlib import Path
 import subprocess
 import tempfile
+import time
+import select
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 
@@ -67,13 +69,14 @@ def main():
             file(INSTALL)
             # Fresh connections as actual low-authority LOGIN roles.
             writer="aoe2war_social_writer"
-            def call(actor="scribe",target="emaren",caption="",reply=None,key="a"*32,digest="b"*64,ref=None,name="image.png",mime="image/png",size=123,rollback=False,success=True):
+            def call(actor="scribe",target="emaren",caption="",reply=None,key="a"*32,digest="b"*64,ref=None,name="image.png",mime="image/png",size=123,rollback=False,success=True,query_only=False):
                 if ref is None: ref="file:v1:dm-"+str(uuid.uuid4())+".png"
                 def lit(v):
                     if v is None: return "NULL"
                     if isinstance(v,int): return str(v)
                     return "'"+v.replace("'","''")+"'"
                 query="SELECT aoe2war_social_hd_v2.direct_image("+",".join(map(lit,[actor,target,caption,reply,key,digest,ref,name,mime,size]))+")"
+                if query_only: return query
                 if rollback: query="BEGIN ISOLATION LEVEL SERIALIZABLE;"+query+";ROLLBACK"
                 result=sql(query,writer,success=success)
                 return json.loads(result) if success else None
@@ -115,7 +118,37 @@ def main():
                 pair=[j.result(timeout=20) for j in jobs]
             check(all(x["status"]==201 for x in pair) and pair[0]["body"]["messageId"]==pair[1]["body"]["messageId"] and sorted(x["body"]["replayed"] for x in pair)==[False,True],"concurrent same-key one insert one replay")
             check(sql("SELECT count(*) FROM public.direct_messages")=="3","concurrency created exactly one additional message")
-            check(sql("SELECT count(*) FROM aoe2war_social_hd_v2.image_request_keys")=="3","one ledger row per actual send")
+            # Match WE3's SERIALIZABLE transaction: make the second connection
+            # wait on the first actor lock with its earlier snapshot, then commit.
+            args=[str(PG/"psql"),"-X","-qAt","-v","ON_ERROR_STOP=1","-v","VERBOSITY=verbose","-h",str(sock),"-p",str(port),"-d","aoe2hd_db","-U",writer]
+            first_proc=subprocess.Popen(args,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True,bufsize=1)
+            second_proc=None
+            try:
+                first_proc.stdin.write("BEGIN ISOLATION LEVEL SERIALIZABLE;"+call(key="2"*32,caption="serial",query_only=True)+";\n")
+                first_proc.stdin.flush()
+                assert select.select([first_proc.stdout],[],[],5)[0],"first serializable result timed out"
+                serial_first=json.loads(first_proc.stdout.readline())
+                assert serial_first["status"]==201 and not serial_first["body"]["replayed"]
+                second_proc=subprocess.Popen(args+["-c","BEGIN ISOLATION LEVEL SERIALIZABLE;"+call(key="2"*32,caption="serial",query_only=True)+";COMMIT"],stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
+                deadline=time.monotonic()+5
+                waiting=False
+                while time.monotonic()<deadline:
+                    if int(sql("SELECT count(*) FROM pg_stat_activity WHERE usename='aoe2war_social_writer' AND wait_event_type='Lock' AND wait_event='advisory'")):
+                        waiting=True;break
+                    time.sleep(.05)
+                assert waiting,"second writer did not reach advisory lock"
+                first_proc.stdin.write("COMMIT;\n\\q\n");first_proc.stdin.flush()
+                assert first_proc.wait(timeout=5)==0,first_proc.stderr.read()
+                out,err=second_proc.communicate(timeout=10)
+                check(second_proc.returncode!=0 and "40001" in err,"overlapping SERIALIZABLE snapshot fails with retryable 40001")
+                retry=call(key="2"*32,caption="serial")
+                check(retry["status"]==201 and retry["body"]["replayed"] and retry["body"]["messageId"]==serial_first["body"]["messageId"],"retry after serialization conflict returns original message")
+            finally:
+                for proc in (first_proc,second_proc):
+                    if proc is not None and proc.poll() is None:
+                        proc.kill();proc.wait(timeout=5)
+            check(sql("SELECT count(*) FROM public.direct_messages")=="4","serializable overlap produced one message")
+            check(sql("SELECT count(*) FROM aoe2war_social_hd_v2.image_request_keys")=="4","one ledger row per actual send")
             # Mirror WE3 route participant predicate; this is not DB row-level security.
             for who,want in [("scribe","1"),("emaren","1"),("outsider","0")]:
                 q=f"SELECT count(*) FROM public.direct_messages m JOIN public.direct_conversation_participants p ON p.conversation_id=m.conversation_id JOIN public.users u ON u.id=p.user_id WHERE m.id={mid} AND u.uid='{who}' AND m.attachment_data_url IS NOT NULL"
@@ -136,7 +169,7 @@ def main():
             check(True,"writer raw/leaf/financial/public/DE denial")
             check(sql(fingerprint)==before,"public ACL and roles unchanged after sends")
             file(INVERSE,success=False)
-            check(sql("SELECT count(*) FROM public.direct_messages")=="3","used inverse denied, messages preserved")
+            check(sql("SELECT count(*) FROM public.direct_messages")=="4","used inverse denied, messages preserved")
             print(json.dumps({"checks":len(passed),"install_sha256":hashlib.sha256(INSTALL.read_bytes()).hexdigest(),"inverse_sha256":hashlib.sha256(INVERSE.read_bytes()).hexdigest()}),flush=True)
         finally:
             run("pg_ctl","-D",data,"-m","fast","-w","stop")
