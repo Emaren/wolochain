@@ -1153,7 +1153,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-11-10",
       "sensitivity": "internal",
-      "sha256": "41a0c8b24698464b88c3ad24029febad3b2d5bea3636b3ba0bd7068a2a33b790",
+      "sha256": "929331bda7a1aa662b7dbaeb085ddb1f96fdcdf20512411011a30a1afcef8e27",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1162,6 +1162,29 @@
       ],
       "title": "WoloChain Documentation Index",
       "type": "reference"
+    },
+    {
+      "audience": [
+        "operators",
+        "developers",
+        "ai-agents"
+      ],
+      "authority": "read-only-storage-classification-no-retire",
+      "id": "aoe2war.wolochain.financial-minimum-production-footprint-20261124",
+      "owner": "wolochain-ops",
+      "path": "docs/FINANCIAL_MINIMUM_PRODUCTION_FOOTPRINT_20261124.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-24",
+      "sensitivity": "internal",
+      "sha256": "7f881030374477035a832fc28325ba0a74c629e7e47e5c639606bb5781099f92",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "Financial minimum production footprint: native storage classification",
+      "type": "runbook"
     },
     {
       "audience": [
@@ -2216,7 +2239,7 @@
       "review_interval_days": 14,
       "reviewed_at": "2026-11-24",
       "sensitivity": "internal",
-      "sha256": "ff5a4bc7e0f6040f79cafea3e5780a1c1d1c5f67e493dd6b6f70e69db77cd191",
+      "sha256": "3aff694959c351bde983407276d7587ae805ae3f4b01ce1f82824a3f58e9ed77",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -2255,7 +2278,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "we1/c06-coordinated-checkpoint-rehearsal-20261124",
-    "commit": "c03bb04dfa1b4156b4880fb785198bef04c614ad"
+    "commit": "813fe81a0577f755a5110ecc52cc50e585284416"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
