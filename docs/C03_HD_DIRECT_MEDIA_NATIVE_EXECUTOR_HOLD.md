@@ -17,24 +17,24 @@ sensitivity: "restricted"
 
 Separate stack on #259 exact 3e4c50452541805742f31bd743117b0863582f60.
 No change to the qualified 56-check media SQL or #258. Implementation
-commit c2e50623df76202262ae866abc0d1c90f7adf74c.
+commit 37fd44051da6875b83a604341d330d3469079ba3.
 
 ## Fixed identities
 
 - Executor scripts/c03_hd_direct_media_native_executor.py
-  SHA256 17f6e4fb7bdbb82bbab7674c822dc35054819652f5c29d022fbce3a2c7411200.
+  SHA256 a2cd1e97112897c957915ae7c3f82d912338e4d3d5285e3cd95468f477ce83db.
 - Catalog witness scripts/c03_hd_direct_media_catalog_witness.sql
-  SHA256 29d57312178c9ea3aeaaa215fce53ad1438316465c8508ff3d2f507c34826582.
+  SHA256 d1a0b2158b48da9d10f140fe67dd6fe454c44956d511787e5f26f71c344b59a4.
 - Exact #259 install db4c80451f9bb627598105b826c45d9ee115fd462a56d08aebf5deb79ad0723c;
   inverse 2298690e5c1c412cdd73d232c9469ee7e268c191fbaa0816e9f6340fde138baf.
-- Owner preimage helper 4789232dfc8c88d0461af614ad73c6e8d7f6319006f170e256f08e1f73a30f6c,
+- Owner preimage helper e1f4a4a8181993f1efe2f494392dde0de163bbe933ad10371a00f7eeb547fcc1,
   existing catalog audit a25b85c8f5f1cb95d6e320029d6ff5267cd7fd9fd6180b9c34e777f15f1aa8e7.
 - Separate owner Keychain source cf912cf4b4419b6b15d655b5e3b8aa2d4423ff835d521fdd153a2cd15a40b558
   and permit builder 84ec242fe02d0767fb92abe74bf6e42cf0a5357ae013d62a896ee6eac0a06455.
 
 ## Native evidence
 
-Disposable Homebrew PG16.10, private AF_UNIX, 24/24 focused executor
+Disposable Homebrew PG16.10, private AF_UNIX, 26/26 focused executor
 composition checks passed. Actual generated disposable P-256 signature
 verified; tampered signed preimage, scope/nonce/expiry and changed SQL
 denied. Real stale financial ACL digest rejected inside transaction.
@@ -51,7 +51,12 @@ syntax passed; no real key created, accessed or signature requested.
 ## Actual authority boundary
 
 The catalog query hashes only metadata (including FDW options); no player
-rows or raw passwords/options printed. The full fingerprint binds exact
+rows or raw passwords/options printed. The full fingerprint additionally binds PostgreSQL system identifier,
+postmaster start, critical connection/configuration identity and parsed HBA
+rules (including included-file rules); actual fixture HBA change and exact
+restoration proved digest drift and equality. Parsed HBA is not proof of
+loaded authentication behavior; actual credential tests remain required.
+The full fingerprint binds exact
 observed HD and DE catalogs, with a second invariant excluding only the
 new media objects and reviewed direct_text body change. This is not
 proof of all dynamic SQL or external producer behavior. Requires actual
@@ -77,13 +82,14 @@ serializable catalog check alone does not establish comprehensive exclusion.
 ## Owner action — first read-only production evidence
 
 On HEL1, the three source-pinned read-only capture files have been staged
-in owner-only /home/tony/we1-hd-direct-media-preimage-20261124 (0700);
+in owner-only /home/tony/we1-hd-direct-media-preimage-v2-20261124 (0700);
 SQL files 0600, helper 0700. Native SHA readback matched all three.
 No protected directory, database, HBA, service, or root executor mutated.
+Earlier v1 stage is superseded; use v2 only.
 
 From the owner's real M1 terminal run:
 
-    ssh -t hel1 /home/tony/we1-hd-direct-media-preimage-20261124/c03_hd_direct_media_owner_preimage.sh
+    ssh -t hel1 /home/tony/we1-hd-direct-media-preimage-v2-20261124/c03_hd_direct_media_owner_preimage.sh
 
 Type READ-ONLY-HD-DIRECT-MEDIA and authenticate sudo locally if requested.
 Do not send password or any signing private material to ChatGPT.
