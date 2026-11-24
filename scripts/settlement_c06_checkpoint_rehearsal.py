@@ -230,6 +230,7 @@ def verify_tar(stream, expected_manifest, destination):
     A failed extraction leaves an unaccepted private directory for inspection.
     Never extracts into an existing database/chain home.
     """
+    require(os.geteuid() != 0, "UNPRIVILEGED_REHEARSAL_ONLY")
     dest = Path(destination)
     require(dest.is_absolute() and dest.parent.resolve() == dest.parent and
             not os.path.lexists(dest), "FRESH_DESTINATION_REQUIRED")

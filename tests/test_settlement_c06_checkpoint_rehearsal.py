@@ -4,6 +4,9 @@ import os
 from pathlib import Path
 import sys
 import tempfile
+import tarfile
+import shutil
+import subprocess
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
@@ -100,9 +103,9 @@ class ArchiveTests(unittest.TestCase):
 
     def test_tampered_member(self):
         m=c.manifest(self.root,H);s=io.BytesIO();c.write_tar(self.root,m,s)
-        raw=s.getvalue().replace(b"pgdata"+b"\0"*100,b"pgdatX"+b"\0"*100)
-        if raw==s.getvalue(): raw=s.getvalue().replace(b"primary-journal"+b"\0"*100,b"primary-journaX"+b"\0"*100)
-        self.assertNotEqual(raw,s.getvalue())
+        with tarfile.open(fileobj=io.BytesIO(s.getvalue()),mode="r:") as t:
+            offset=t.getmember("pgdata/test").offset_data
+        raw=bytearray(s.getvalue());raw[offset]^=1
         with self.assertRaises(c.Hold):c.verify_tar(io.BytesIO(raw),m,self.root.parent/"bad")
 
     def test_extra_component(self):
@@ -151,4 +154,86 @@ class PhaseTests(unittest.TestCase):
         with self.assertRaises(c.Hold):c.run_phases(a,lambda x:None)
         self.assertEqual(a.calls,[])
 
+@unittest.skipUnless(os.geteuid()!=0 and os.environ.get("C06_PG_BIN")
+                     and os.environ.get("C06_AGE") and os.environ.get("C06_AGE_KEYGEN"),
+                     "explicit disposable PG16 and age tool paths required")
+class PhysicalFixtureTests(unittest.TestCase):
+    def test_pg16_age_restore(self):
+        # Entirely synthetic rows and generated test-only encryption identity.
+        pg=Path(os.environ["C06_PG_BIN"])
+        age=os.environ["C06_AGE"]
+        keygen=os.environ["C06_AGE_KEYGEN"]
+        def run(argv,**kw):
+            return subprocess.run([str(x) for x in argv],check=True,
+                                  capture_output=True,timeout=90,**kw).stdout
+        def psql(sock,db,sql):
+            return run([pg/"psql","-X","-w","-At","-v","ON_ERROR_STOP=1",
+                        "-h",sock,"-p","56498","-U","fixture_admin","-d",db,"-c",sql])
+        def start(data,sock):
+            run([pg/"pg_ctl","-D",data,"-l",sock/"server.log","-w","-o",
+                 "-h '' -k "+str(sock)+" -p 56498","start"])
+        def stop(data):
+            run([pg/"pg_ctl","-D",data,"-w","-m","fast","stop"])
+        with tempfile.TemporaryDirectory(prefix="c06fixture-") as tmp:
+            root=Path(tmp).resolve()
+            fixture=root/"fixture";fixture.mkdir(mode=0o700)
+            (fixture/".c06-disposable-fixture").touch(mode=0o600)
+            for n in c.ROOTS:(fixture/n).mkdir(mode=0o700)
+            for n in c.ROOTS-{"pgdata"}:(fixture/n/"synthetic").write_text(n)
+            data=fixture/"pgdata";sock=root/"s";sock.mkdir(mode=0o700)
+            run([pg/"initdb","-D",data,"-U","fixture_admin",
+                 "--auth-local=trust","--auth-host=reject","--no-locale"])
+            active=False
+            try:
+                start(data,sock);active=True
+                psql(sock,"postgres","CREATE ROLE fixture_reader NOLOGIN")
+                for db in DB:
+                    # The additional shared database name needs SQL quoting.
+                    psql(sock,"postgres",'CREATE DATABASE "'+db+'"')
+                    psql(sock,db,"CREATE TABLE t(id integer primary key); INSERT INTO t VALUES (42); GRANT SELECT ON t TO fixture_reader")
+                before=psql(sock,"postgres","SELECT datname FROM pg_database ORDER BY datname")
+                stop(data);active=False
+                ctl=run([pg/"pg_controldata",data]).decode()
+                self.assertRegex(ctl,r"Database cluster state:\s+shut down")
+                self.assertTrue(any((data/"pg_wal").iterdir()))
+                m=c.manifest(fixture,H)
+                # Bounded plaintext tar exists ONLY in this temporary synthetic
+                # test; production will require a separately reviewed stream.
+                tar=root/"fixture.tar"
+                with tar.open("wb") as out:c.write_tar(fixture,m,out)
+                self.assertEqual(tar.stat().st_size,c.tar_size(m))
+                identity=root/"test.agekey";run([keygen,"-o",identity])
+                recipient=run([keygen,"-y",identity]).decode().strip()
+                cipher=root/"fixture.age"
+                run([age,"-r",recipient,"-o",cipher,tar])
+                cipher_sha=c.sha_file(cipher)
+                self.assertLessEqual(cipher.stat().st_size,
+                    c.archive_budget(tar.stat().st_size,cipher_max=c.GIB,
+                        data_free=3*c.GIB,data_reserve=c.GIB,
+                        receiver_free=5*c.GIB,receiver_reserve=c.GIB,restore_bytes=c.GIB))
+                # Verify the same ciphertext; no new capture is allowed.
+                recovered=root/"recovered.tar"
+                run([age,"-d","-i",identity,"-o",recovered,cipher])
+                self.assertEqual(c.sha_file(cipher),cipher_sha)
+                restored=root/"restored"
+                with recovered.open("rb") as stream:c.verify_tar(stream,m,restored)
+                restored_data=restored/"pgdata"
+                self.assertEqual(run([pg/"pg_controldata",restored_data]),ctl.encode())
+                start(restored_data,sock);active=True;data=restored_data
+                self.assertEqual(psql(sock,"postgres","SELECT datname FROM pg_database ORDER BY datname"),before)
+                for db in DB:
+                    self.assertEqual(psql(sock,db,"SELECT id FROM t"),b"42\n")
+                    self.assertEqual(psql(sock,db,"SELECT has_table_privilege('fixture_reader','t','SELECT')"),b"t\n")
+                self.assertEqual(psql(sock,"postgres","SHOW listen_addresses"),b"\n")
+                stop(data);active=False
+                # Authentic age corruption detection; no restore from a partial stream.
+                damaged=root/"bad.age";raw=bytearray(cipher.read_bytes());raw[-1]^=1
+                damaged.write_bytes(raw)
+                bad=subprocess.run([age,"-d","-i",str(identity),"-o",str(root/"bad.tar"),str(damaged)],
+                                   capture_output=True,timeout=90)
+                self.assertNotEqual(bad.returncode,0)
+            finally:
+                if active:stop(data)
+
 if __name__=="__main__":unittest.main()
+
