@@ -166,3 +166,54 @@ def verify_financial_reconstruction(fd, manifest, *, expected_plan,
             "sha256":total.hexdigest(),"bytes":offset,
             "chunks":bound["chunks"],"verification_ns":time.monotonic_ns()-start,
             "independent_host_authenticated":False,"retirement_authorized":False}
+
+
+def financial_chunk_receipt(raw, manifest, *, expected_plan, expected_source,
+        expected_manifest_sha, max_chunk_bytes, expected_index,
+        expected_receipt_sha, expected_receiver, verify_native_receipt):
+    """Correlate a verified #192 financial-class chunk ACK to the exact manifest.
+
+    A separately enrolled native verifier must authenticate the raw receipt.
+    This adapter does not implement that verifier, grant continuation,
+    remember spent nonces or attest independent recovery.
+    """
+    import json
+    from settlement_c06_checkpoint_rehearsal import canonical,digest
+    bound=financial_manifest(manifest,expected_plan=expected_plan,
+        expected_source=expected_source,expected_manifest_sha=expected_manifest_sha,
+        max_chunk_bytes=max_chunk_bytes)
+    require(type(expected_index) is int and 0<=expected_index<bound["chunks"]
+        and hash64(expected_receiver) and hash64(expected_receipt_sha)
+        and type(raw) is bytes and 0<len(raw)<=32768
+        and digest(raw)==expected_receipt_sha and callable(verify_native_receipt),
+        "IMAGE_RECEIPT_BINDING")
+    def pairs(items):
+        result={}
+        for k,v in items:
+            require(k not in result,"IMAGE_RECEIPT_DUPLICATE")
+            result[k]=v
+        return result
+    try:
+        parsed=json.loads(raw,object_pairs_hook=pairs)
+    except (UnicodeError,ValueError):
+        raise ValueError("IMAGE_RECEIPT_JSON") from None
+    verified=verify_native_receipt(raw)
+    require(type(verified) is dict and canonical(verified)==canonical(parsed),
+            "IMAGE_RECEIPT_NATIVE_VERIFIER")
+    chunk=manifest["chunks"][expected_index]
+    expected={
+        "schema":"wolo.financial.image-chunk-ack.v1","purpose":PURPOSE,
+        "plan_sha256":expected_plan,"manifest_sha256":expected_manifest_sha,
+        "source_sha256":bound["source_sha256"],"receiver_identity_sha256":expected_receiver,
+        "index":expected_index,"offset":chunk["offset"],
+        "ciphertext_sha256":chunk["cipher_sha256"],
+        "ciphertext_bytes":chunk["cipher_bytes"],
+        "status":"CIPHERTEXT_DURABLE_READBACK_VERIFIED_NOT_RESTORED",
+        "retirement_authorized":False}
+    require(canonical(verified)==canonical(expected),"IMAGE_RECEIPT_SCOPE_OR_CHUNK_DRIFT")
+    return {"schema":"wolo.financial.image-chunk-correlation.v1",
+        "manifest_sha256":expected_manifest_sha,"index":expected_index,
+        "receipt_sha256":expected_receipt_sha,
+        "ciphertext_bytes":chunk["cipher_bytes"],"ciphertext_sha256":chunk["cipher_sha256"],
+        "independent_restore":False,"resume_authorized":False,
+        "retirement_authorized":False}

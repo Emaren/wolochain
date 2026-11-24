@@ -68,4 +68,35 @@ class ImageStream(unittest.TestCase):
             with self.assertRaises(Hold):im.verify_financial_reconstruction(f.fileno(),bad,**kwargs(bad))
             f.seek(0);f.write(b"defabc");f.flush()
             with self.assertRaises(Hold):im.verify_financial_reconstruction(f.fileno(),m,**kwargs(m))
+    def test_financial_receipt_correlation_requires_exact_native_domain(self):
+        import json
+        from settlement_c06_checkpoint_rehearsal import canonical
+        source=dict(device=1,inode=2,uid=0,gid=0,mode=0o600,bytes=3,
+                    allocated_bytes=512,mtime_ns=1,ctime_ns=1)
+        h=digest(b"abc");plan=digest(b"plan");receiver=digest(b"intel")
+        chunk=dict(index=0,offset=0,plain_bytes=3,cipher_bytes=19,
+                   plain_sha256=h,cipher_sha256=digest(b"cipher"))
+        m=dict(schema="wolo.financial.image-continuation.v1",purpose=im.PURPOSE,
+               plan_sha256=plan,source=source,source_sha256=h,chunks=[chunk])
+        mh=digest(canonical(m))
+        receipt=dict(schema="wolo.financial.image-chunk-ack.v1",purpose=im.PURPOSE,
+            plan_sha256=plan,manifest_sha256=mh,source_sha256=h,
+            receiver_identity_sha256=receiver,index=0,offset=0,
+            ciphertext_sha256=chunk["cipher_sha256"],ciphertext_bytes=19,
+            status="CIPHERTEXT_DURABLE_READBACK_VERIFIED_NOT_RESTORED",
+            retirement_authorized=False)
+        def check(r,verifier=json.loads):
+            raw=canonical(r)
+            return im.financial_chunk_receipt(raw,m,expected_plan=plan,
+                expected_source=source,expected_manifest_sha=mh,max_chunk_bytes=3,
+                expected_index=0,expected_receipt_sha=digest(raw),
+                expected_receiver=receiver,verify_native_receipt=verifier)
+        proof=check(receipt)
+        self.assertFalse(proof["resume_authorized"])
+        self.assertFalse(proof["independent_restore"])
+        for key,value in (("purpose","SITE_RUNTIME"),("index",False),
+                ("manifest_sha256",h),("retirement_authorized",True),
+                ("ciphertext_sha256",h),("receiver_identity_sha256",h)):
+            with self.assertRaises(Hold):check(dict(receipt,**{key:value}))
+        with self.assertRaises(Hold):check(receipt,lambda raw:None)
 if __name__=="__main__":unittest.main()
