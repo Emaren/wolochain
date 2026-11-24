@@ -50,7 +50,7 @@ def main():
             sql("CREATE DATABASE aoe2hd_db",db="postgres")
             sql("CREATE DATABASE aoe2de_db",db="postgres")
             sql(fixture)
-            sql("ALTER TABLE public.direct_messages ADD attachment_kind varchar(20), ADD attachment_name varchar(255), ADD attachment_mime_type varchar(120), ADD attachment_data_url text")
+            sql("ALTER TABLE public.direct_messages ADD attachment_kind varchar(20), ADD attachment_name varchar(255), ADD attachment_mime_type varchar(120), ADD attachment_data_url text, ADD shared_lobby_message_id integer, ADD delivered_at timestamp(6)")
             file(BASE)
             # Existing public ACLs/owners, column ACLs and role membership fingerprint.
             fingerprint="""SELECT md5(string_agg(x,'|' ORDER BY x)) FROM (
@@ -60,11 +60,13 @@ def main():
              UNION ALL SELECT row_to_json(m)::text FROM pg_auth_members m
              UNION ALL SELECT row_to_json(n)::text FROM pg_namespace n WHERE n.nspname IN('public','aoe2war_social_hd_v2')) s"""
             before=sql(fingerprint)
+            before_text=sql("SELECT md5(pg_get_functiondef('aoe2war_social_hd_v2.direct_text(text,text,text,integer)'::regprocedure))")
             file(INSTALL,db="aoe2de_db",success=False)
             check(sql("SELECT to_regnamespace('aoe2war_social_hd_v2') IS NULL",db="aoe2de_db")=="t","DE install denied")
             file(INSTALL)
             check(sql(fingerprint)==before,"public raw relation/column ACL, role/membership and schema fingerprint unchanged")
             file(INVERSE)
+            check(sql("SELECT md5(pg_get_functiondef('aoe2war_social_hd_v2.direct_text(text,text,text,integer)'::regprocedure))")==before_text,"unused inverse exact original text body")
             check(sql(fingerprint)==before and sql("SELECT to_regclass('aoe2war_social_hd_v2.image_request_keys') IS NULL")=="t","unused exact inverse")
             file(INSTALL)
             # Fresh connections as actual low-authority LOGIN roles.
@@ -170,6 +172,36 @@ def main():
             check(sql(fingerprint)==before,"public ACL and roles unchanged after sends")
             file(INVERSE,success=False)
             check(sql("SELECT count(*) FROM public.direct_messages")=="4","used inverse denied, messages preserved")
+            def text_send(actor,target,body,reply=None):
+                return json.loads(sql(f"SELECT aoe2war_social_hd_v2.direct_text('{actor}','{target}','{body}',{reply if reply is not None else 'NULL'})",writer))
+            def ack(actor,target,ids,rollback=False):
+                query=f"SELECT aoe2war_social_hd_v2.direct_delivered('{actor}','{target}',ARRAY[{','.join(map(str,ids))}]::integer[])"
+                if rollback: query="BEGIN;"+query+";ROLLBACK"
+                return json.loads(sql(query,writer))
+            mixed=call(key="3"*32,caption="same caption",reply=mid)
+            im=mixed["body"]["messageId"]
+            expect(text_send("scribe","emaren","same caption",mid),429,"image caption is cooldown, never text replay")
+            sql(f"UPDATE public.direct_messages SET created_at=clock_timestamp()-interval '5 seconds' WHERE sender_user_id=1")
+            tx=text_send("scribe","emaren","same caption",mid)
+            expect(tx,201,"same caption text after cooldown is a distinct message")
+            ti=tx["body"]["messageId"]
+            check(ti!=im and sql(f"SELECT attachment_kind IS NULL FROM public.direct_messages WHERE id={ti}")=="t","actual text row separate from image")
+            check(text_send("scribe","emaren","same caption",mid)["body"]["messageId"]==ti,"text-only recent retry returns text ID")
+            expect(ack("outsider","scribe",[im]),403,"outsider cannot acknowledge")
+            expect(ack("scribe","emaren",[im]),403,"sender cannot acknowledge own delivery")
+            expect(ack("emaren","scribe",[im,999999]),403,"mixed unauthorized batch denied")
+            check(sql(f"SELECT delivered_at IS NULL FROM public.direct_messages WHERE id={im}")=="t","mixed batch no partial update")
+            expect(ack("emaren","scribe",[im,ti],rollback=True),200,"delivery transaction rollback")
+            check(sql(f"SELECT count(*) FROM public.direct_messages WHERE id IN({im},{ti}) AND delivered_at IS NOT NULL")=="0","delivery rollback leaves timestamps null")
+            check(ack("emaren","scribe",[im,ti])["body"]["updatedCount"]==2,"recipient acknowledges exact text and image IDs")
+            stamps=sql(f"SELECT id,delivered_at FROM public.direct_messages WHERE id IN({im},{ti}) ORDER BY id")
+            check(ack("emaren","scribe",[im,ti])["body"]["updatedCount"]==0 and sql(f"SELECT id,delivered_at FROM public.direct_messages WHERE id IN({im},{ti}) ORDER BY id")==stamps,"delivery retry preserves first timestamp")
+            expect(ack("emaren","scribe",[im,im]),400,"duplicate receipt IDs denied")
+            expect(ack("emaren","scribe",list(range(1,52))),400,"oversize batch denied")
+            sql("SELECT aoe2war_social_hd_v2.leaf_ack_direct_delivery(1,2,ARRAY[1])",writer,success=False)
+            sql("SELECT aoe2war_social_hd_v2.direct_delivered('scribe','emaren',ARRAY[1])","c03_public_probe",success=False)
+            sql("SELECT aoe2war_social_hd_v2.direct_delivered('scribe','emaren',ARRAY[1])",writer,db="aoe2de_db",success=False)
+            check(sql(fingerprint)==before,"delivery and mixed sends leave public ACL and roles unchanged")
             print(json.dumps({"checks":len(passed),"install_sha256":hashlib.sha256(INSTALL.read_bytes()).hexdigest(),"inverse_sha256":hashlib.sha256(INVERSE.read_bytes()).hexdigest()}),flush=True)
         finally:
             run("pg_ctl","-D",data,"-m","fast","-w","stop")
