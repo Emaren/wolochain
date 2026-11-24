@@ -534,3 +534,54 @@ new APT exact pair needs fresh supported approval, sidecar execution
 block remains unresolved, no exclusive financial IO. Historical HD,
 original 40GiB image and six directories preserved. No new workspace
 retirement or physical closure.
+
+### Nov24 16:21Z witness wire and single-target image reconstruction
+
+NativeWitnessClient.anchor_effect uses the existing fixed pinned
+native_exchange route and exact effect request, validates source
+phase/lease before and after exchange, and exact fresh witness ACK.
+Dispatch accepts only exact anchor_effect fields, checks independent
+witness-side lease before and after durable effect anchor, rejects
+missing/None/false lease provider and replay. Prior source binding
+now explicitly requires positive True from lease verification, not
+merely lack of exception. Targeted wire and updated ambiguity tests
+PASS with disposable real Ed25519 phase and local transport fixture.
+A lost lease after durable append leaves spent intent, no ACK or
+automatic retry. Existing witness_main deliberately supplies no
+effect provider or journal until reviewed protected WE2 lease
+integration and actual enrollment; therefore native production
+effect request remains denied. No alternate SSH route, key, signer,
+live install, grant or owner action simulated. Independent lease
+issuer/verifier contract, genuine Intel enrollment, complete outer
+effect-tip linkage, privileged producer exclusion and complete live
+driver still required.
+
+WE4 exact2901ab8c Linux CI45435208936 SUCCESS; new
+advance_we1_financial_readback accepts exact WE1 initial/receipt wire
+without preknown whole SHA. Actual exact GitHub Python source in
+memory on M1 accepted two synthetic chunks, 6 logical bytes,
+matching final sealed prefix tip
+ec2736d736c905ea1e3af1d14eef1b43edb4a5de822baf67e4e5f4646fa3fa46.
+Cursor/manifest chunk list, total and seal lineage agree. No live
+native authentication, sender, receiver or continuation admission.
+Previous wire mismatch superseded.
+
+New reconstruct_financial_image source streams bounded decrypted
+chunks to ONE newly empty private descriptor, checks exact chunk
+size/digest and complete raw digest, requires authenticated
+decryptor context exit, fsyncs and performs full independent
+descriptor readback. Synthetic two-chunk test PASS (one chunk exceeds
+1MiB read bound), trailing plaintext and failed authentication
+denied, nonempty/partial target cannot be replayed. Native Intel
+driver must admit target, verify ciphertext/receipt and authenticated
+decryptor, reserve, mount exclusion, and independent physical
+readback/legacy dependency recovery. No actual image read/write or
+extra staging. No claim of host authentication or retirement.
+
+Latest WE2 exact cache proposal awaits reviewed fresh authority and
+capacity; sidecar execution block remains, no exclusive window.
+Historical HD prior bounded WE4 catalog has zero exact digest matches
+(not proof absence); no authenticated same-object receipt, retain.
+Active financial worktree clean; no additional eligible retirement
+performed. M1 available12720272KiB at16:21:02Z, no attributed reclaim.
+No repeated C08, no production mutation or physical gate closure.
