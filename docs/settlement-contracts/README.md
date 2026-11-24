@@ -8,7 +8,7 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "machine-readable-settlement-contract-index"
-reviewed_at: "2026-10-20"
+reviewed_at: "2026-11-24"
 review_interval_days: 30
 sensitivity: "public"
 ---
@@ -425,3 +425,9 @@ Use real tx hashes and real `wolo1...` addresses before submitting an example pa
 7. Use `wolochaind settlement challenge audit --settlement-id <settlement_run_id>` for read-only operator reconciliation.
 
 The read-only funding, inspect, recent, and audit surfaces are WoloChain truth. Challenge disposition fields such as no-show, winner, refund reason, or treasury policy remain caller-supplied AoE2HDBets truth.
+
+## Current applicability — reviewed 2026-11-24
+
+Current trusted-reader evidence is noncrediting and qualified reserve review still reports custody capability UNAVAILABLE. The original multi-party source requirements must not be silently bypassed by the adopted single-human C08 governance; financial transaction authority and reserve admission remain separate.
+
+Current decision boundary: [financial authority #239](https://github.com/Emaren/wolochain/issues/239) and [coordinated recovery #258](https://github.com/Emaren/wolochain/pull/258). C04/C08 closed; C01/C02/C03/C05/C06/C07/C09 open. Funding DENIED; custody inactive. This renewal is a source and dated-evidence applicability review, not a new physical receipt.

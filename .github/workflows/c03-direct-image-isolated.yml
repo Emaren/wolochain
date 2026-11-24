@@ -1,0 +1,19 @@
+name: C03 HD direct image isolated PG16
+on:
+  pull_request:
+    paths:
+      - 'scripts/c03_hd_direct_image_*'
+      - 'scripts/c03_hd_gateway_v2_restricted_install_candidate.sql'
+      - 'scripts/c03_hd_gateway_v2_physical_rehearsal.py'
+      - 'tests/test_c03_hd_direct_image_pg16_isolated.py'
+      - '.github/workflows/c03-direct-image-isolated.yml'
+permissions:
+  contents: read
+jobs:
+  pg16:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y postgresql-16
+      - run: C03_DISPOSABLE_FIXED_GATEWAY_ONLY=1 python3 tests/test_c03_hd_direct_image_pg16_isolated.py
