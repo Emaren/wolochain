@@ -27,10 +27,10 @@ rels AS (
  SELECT DISTINCT p.oid,p.proowner,p.proacl,p.prosecdef,p.proconfig,p.prolang,p.prosrc
  FROM pg_proc p WHERE p.oid IN (
  SELECT t.tgfoid FROM pg_trigger t JOIN rels r ON r.oid=t.tgrelid
- UNION SELECT to_regprocedure('c03_auth_ro.read_user(text)')::oid
+ UNION SELECT to_regprocedure('aoe2war_auth_v1.read_user(text)')::oid
  )
 ), roots AS (
- SELECT oid FROM pg_roles WHERE rolname IN ('aoe2war_web_prod','c03_auth_reader')
+ SELECT oid FROM pg_roles WHERE rolname = 'aoe2war_web_prod'
  UNION SELECT relowner FROM rels WHERE oid IS NOT NULL
  UNION SELECT relowner FROM seqs
  UNION SELECT proowner FROM funcs
@@ -58,9 +58,11 @@ SELECT 'RADIO_CATALOG',jsonb_build_object(
  'triggers',COALESCE((SELECT jsonb_agg(jsonb_build_object('relation_oid',t.tgrelid,'oid',t.oid,'name',t.tgname,'enabled',t.tgenabled,'internal',t.tgisinternal,'type',t.tgtype,'function_oid',t.tgfoid,'definition_hash',md5(pg_get_triggerdef(t.oid))) ORDER BY t.oid) FROM pg_trigger t JOIN rels r ON r.oid=t.tgrelid),'[]'::jsonb),
  'functions',COALESCE((SELECT jsonb_agg(jsonb_build_object('oid',f.oid,'identity',f.oid::regprocedure::text,'owner',f.proowner,'acl',f.proacl,'security_definer',f.prosecdef,'settings_hash',md5(f.proconfig::text),'language',f.prolang,'body_hash',md5(f.prosrc)) ORDER BY f.oid) FROM funcs f),'[]'::jsonb),
  'identity_columns',COALESCE((SELECT jsonb_agg(jsonb_build_object('relation_oid',a.attrelid,'number',a.attnum,'name',a.attname,'type',format_type(a.atttypid,a.atttypmod),'not_null',a.attnotnull,'acl',a.attacl) ORDER BY a.attnum) FROM pg_attribute a WHERE a.attrelid=to_regclass('public.users') AND a.attname IN ('id','uid') AND NOT a.attisdropped),'[]'::jsonb),
- 'identity_reader_oid',to_regprocedure('c03_auth_ro.read_user(text)')::oid,
+ 'identity_reader_oid',to_regprocedure('aoe2war_auth_v1.read_user(text)')::oid,
+ 'identity_web_role_oid',to_regrole('aoe2war_web_prod')::oid,
+ 'identity_reader_schema_usage',CASE WHEN to_regrole('aoe2war_web_prod') IS NOT NULL AND to_regnamespace('aoe2war_auth_v1') IS NOT NULL THEN has_schema_privilege(to_regrole('aoe2war_web_prod')::oid,to_regnamespace('aoe2war_auth_v1')::oid,'USAGE') ELSE NULL END,
  'roles',COALESCE((SELECT jsonb_agg(jsonb_build_object('oid',r.oid,'name',r.rolname,'login',r.rolcanlogin,'inherit',r.rolinherit,'superuser',r.rolsuper,'create_role',r.rolcreaterole,'create_db',r.rolcreatedb,'replication',r.rolreplication,'bypass_rls',r.rolbypassrls,'database_connect',has_database_privilege(r.oid,current_database(),'CONNECT'),'database_create',has_database_privilege(r.oid,current_database(),'CREATE')) ORDER BY r.oid) FROM pg_roles r JOIN relevant_roles q ON q.oid=r.oid),'[]'::jsonb),
- 'schemas',COALESCE((SELECT jsonb_agg(jsonb_build_object('oid',n.oid,'name',n.nspname,'owner',n.nspowner,'acl',n.nspacl) ORDER BY n.oid) FROM pg_namespace n WHERE n.nspname IN ('public','aoe2war_public_v2','c03_auth_ro')),'[]'::jsonb),
+ 'schemas',COALESCE((SELECT jsonb_agg(jsonb_build_object('oid',n.oid,'name',n.nspname,'owner',n.nspowner,'acl',n.nspacl) ORDER BY n.oid) FROM pg_namespace n WHERE n.nspname IN ('public','aoe2war_public_v2','aoe2war_auth_v1')),'[]'::jsonb),
  'membership_edges',COALESCE((SELECT jsonb_agg(to_jsonb(m) ORDER BY m.member,m.roleid,m.grantor) FROM pg_auth_members m WHERE m.member IN (SELECT oid FROM relevant_roles)),'[]'::jsonb),
  'membership',COALESCE((SELECT jsonb_agg(to_jsonb(c) ORDER BY root_oid,role_oid,seen) FROM chain c),'[]'::jsonb),
  'effective_relation_acl',COALESCE((SELECT jsonb_agg(jsonb_build_object('role_oid',q.oid,'relation_oid',r.oid,'select',has_table_privilege(q.oid,r.oid,'SELECT'),'insert',has_table_privilege(q.oid,r.oid,'INSERT'),'update',has_table_privilege(q.oid,r.oid,'UPDATE'),'delete',has_table_privilege(q.oid,r.oid,'DELETE'),'truncate',has_table_privilege(q.oid,r.oid,'TRUNCATE'),'trigger',has_table_privilege(q.oid,r.oid,'TRIGGER')) ORDER BY q.oid,r.oid) FROM relevant_roles q CROSS JOIN rels r WHERE r.oid IS NOT NULL),'[]'::jsonb),
