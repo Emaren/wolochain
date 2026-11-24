@@ -28,6 +28,7 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sim "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -65,7 +66,6 @@ func TestC06CheckpointChild(t *testing.T) {
 	conf.P2P.PexReactor = false
 	conf.P2P.Seeds = ""
 	conf.P2P.PersistentPeers = ""
-	conf.P2P.UPNP = false
 	conf.Instrumentation.Prometheus = false
 	conf.Consensus.TimeoutCommit = 2 * time.Second
 	conf.TxIndex.Indexer = "null"
@@ -91,7 +91,7 @@ func TestC06CheckpointChild(t *testing.T) {
 	require.NoError(t, gen.SaveAs(conf.GenesisFile()))
 	key, err := p2p.LoadOrGenNodeKey(conf.NodeKeyFile())
 	require.NoError(t, err)
-	n, err := node.NewNode(conf, pv, key, proxy.NewLocalClientCreator(a),
+	n, err := node.NewNode(conf, pv, key, proxy.NewLocalClientCreator(server.NewCometABCIWrapper(a)),
 		node.DefaultGenesisDocProviderFunc(conf), cfg.DefaultDBProvider,
 		node.DefaultMetricsProvider(conf.Instrumentation), clog.NewNopLogger())
 	require.NoError(t, err)
