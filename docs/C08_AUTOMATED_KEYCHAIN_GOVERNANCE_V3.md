@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war"]
 audience: ["operators", "developers", "financial-reviewers", "ai-agents"]
 source_of_truth: "git"
 authority: "one-human-nonfunded-governance-only"
-reviewed_at: "2026-11-08"
+reviewed_at: "2026-11-24"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -145,3 +145,9 @@ expired or overlong signing windows and no chain-financial write path.
 The macOS Keychain smoke test is separate physical M1 evidence, not a
 CI fixture. Only exact source merges and real owner-local Keychain
 adoption count toward closure.
+
+## Current applicability — reviewed 2026-11-24
+
+The original Keychain V3 governance ceremony has been physically completed and verified; the adopted receipt SHA is recorded in C08_NATIVE_GOVERNANCE_ADMISSION.md. Preserve that immutable receipt and old failed Ed25519 attempt. Do not run adopt again or substitute this policy-only P-256 key for the expanded C06 maintenance signature or any C09 transaction. The historical FileVault observation applies only to that enrollment time.
+
+Canonical status and execution evidence: [#239](https://github.com/Emaren/wolochain/issues/239), [#258](https://github.com/Emaren/wolochain/pull/258), [expanded witness source receipt](https://github.com/Emaren/wolochain/pull/258#issuecomment-7133994664). C04/C08 CLOSED; funding DENIED; custody inactive. This review does not change any historical signature, enrollment or permit.

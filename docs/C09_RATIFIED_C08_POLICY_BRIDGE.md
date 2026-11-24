@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war"]
 audience: ["developers", "operators", "financial-reviewers", "ai-agents"]
 source_of_truth: "git"
 authority: "authenticated-C08-governance-preflight-only-no-spending-permit"
-reviewed_at: "2026-11-08"
+reviewed_at: "2026-11-24"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -89,3 +89,9 @@ must complete a real encrypted-key owner signature and adopted receipt
 before claiming that **C08** itself is complete. No test-only key or
 simulated adoption may serve as production acceptance; never paste or
 publish owner signed raw private packets, private keys or any passphrase.
+
+## Current applicability — reviewed 2026-11-24
+
+This V2 Ed25519 bridge remains historical; the actual accepted C08 governance uses the separate V3 P-256 receipt and corresponding bridge described in C09_C08_KEYCHAIN_V3_RECEIPT_BINDING.md. Do not run the old encrypted-key adoption script or use a V2 packet to imply V3 acceptance. No C09 canary or funded executor until all independent financial gates and genuine fresh authority are accepted.
+
+Canonical status and execution evidence: [#239](https://github.com/Emaren/wolochain/issues/239), [#258](https://github.com/Emaren/wolochain/pull/258), [expanded witness source receipt](https://github.com/Emaren/wolochain/pull/258#issuecomment-7133994664). C04/C08 CLOSED; funding DENIED; custody inactive. This review does not change any historical signature, enrollment or permit.

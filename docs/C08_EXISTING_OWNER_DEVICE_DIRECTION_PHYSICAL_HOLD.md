@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war", "aoe2dewarwagers"]
 audience: ["operators", "developers", "financial-reviewers", "ai-agents"]
 source_of_truth: "git"
 authority: "historical-owner-device-signature-readonly-evidence-only-no-funding"
-reviewed_at: "2026-11-08"
+reviewed_at: "2026-11-24"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -58,3 +58,9 @@ After those prerequisites, the human owner must inspect and sign the **exact new
 15 dedicated disposable real-Ed25519 positive/negative contract tests cover historical direction, changed unsigned source digest, malicious but validly signed money permission, duplicate provenance, fake independent reviewer, changed source, signature tampering, substituted public key, fake ratification and unknown fields. The physical original signature verification is separately executed under the owner-controlled M1, not in CI.
 
 This is a **historical evidence closure** but **NOT formal C08 closure**. C01–C09 remain HARD HOLD; funded 8094/8095 stay closed, original 8092/8093 validator and all Session B website/Steam services are unaffected.
+
+## Current applicability — reviewed 2026-11-24
+
+The November 7 direction still is not ratification or a spend signature. C08 subsequently closed under the separate P-256 V3 governance adoption; the historical direction verifier remains nonauthorizing. Do not rerun the old physical command or request a new governance ratification. Current C06 requires its own source/plan/phase-bound owner packet and separate witness.
+
+Canonical status and execution evidence: [#239](https://github.com/Emaren/wolochain/issues/239), [#258](https://github.com/Emaren/wolochain/pull/258), [expanded witness source receipt](https://github.com/Emaren/wolochain/pull/258#issuecomment-7133994664). C04/C08 CLOSED; funding DENIED; custody inactive. This review does not change any historical signature, enrollment or permit.
