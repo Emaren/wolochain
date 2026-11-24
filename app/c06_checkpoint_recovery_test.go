@@ -34,6 +34,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
+	slash "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/emaren/wolochain/app"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
@@ -82,6 +83,14 @@ func TestC06CheckpointChild(t *testing.T) {
 		[]auth.GenesisAccount{account}, bank.Balance{Address: address.String(),
 			Coins: sdk.NewCoins(sdk.NewCoin("uwolo", sdkmath.NewInt(1000000000)))})
 	require.NoError(t, err)
+	// GenesisStateWithValSet does not populate signing info for an already
+	// bonded validator; real consensus needs it when processing block two.
+	var slashing slash.GenesisState
+	require.NoError(t, a.AppCodec().UnmarshalJSON(state[slash.ModuleName], &slashing))
+	consAddr := sdk.ConsAddress(pub.Address())
+	slashing.SigningInfos = []slash.SigningInfo{{Address: consAddr.String(),
+		ValidatorSigningInfo: slash.NewValidatorSigningInfo(consAddr, 0, 0, time.Unix(0,0).UTC(), false, 0)}}
+	state[slash.ModuleName] = a.AppCodec().MustMarshalJSON(&slashing)
 	raw, err := json.Marshal(state)
 	require.NoError(t, err)
 	gen := &ct.GenesisDoc{ChainID: c06Chain, InitialHeight: 1,
@@ -93,7 +102,7 @@ func TestC06CheckpointChild(t *testing.T) {
 	require.NoError(t, err)
 	n, err := node.NewNode(conf, pv, key, proxy.NewLocalClientCreator(server.NewCometABCIWrapper(a)),
 		node.DefaultGenesisDocProviderFunc(conf), cfg.DefaultDBProvider,
-		node.DefaultMetricsProvider(conf.Instrumentation), clog.NewNopLogger())
+		node.DefaultMetricsProvider(conf.Instrumentation), clog.NewTMLogger(clog.NewSyncWriter(os.Stderr)))
 	require.NoError(t, err)
 	require.NoError(t, n.Start())
 	stopped := false
