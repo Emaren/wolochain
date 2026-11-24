@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war", "aoe2dewarwagers"]
 audience: ["operators", "developers", "financial-reviewers", "ai-agents"]
 source_of_truth: "git"
 authority: "source-only-cryptographic-ratification-intent-review-no-governance-adoption-or-woLo-funding"
-reviewed_at: "2026-11-08"
+reviewed_at: "2026-11-24"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -115,3 +115,9 @@ negative proof, C04/C05 externally authenticated settlement/solvency,
 same-capture C06/C07 encrypted backup and restore, and a separately
 signed exact C09 transaction permit. No C01–C09 financial gate is
 closed by this documentation, source test or notice-age pass.
+
+## Current applicability — reviewed 2026-11-24
+
+The original proposed-policy observer remains a historic HOLD even with a valid signature; the later P-256 V3 adoption is the accepted C08 proof, not this domain. Preserve notice and proposal hashes. C08 closure does not grant C06 maintenance or C09 transaction authority, and the expired 120-second intent must not be recycled.
+
+Canonical status and execution evidence: [#239](https://github.com/Emaren/wolochain/issues/239), [#258](https://github.com/Emaren/wolochain/pull/258), [expanded witness source receipt](https://github.com/Emaren/wolochain/pull/258#issuecomment-7133994664). C04/C08 CLOSED; funding DENIED; custody inactive. This review does not change any historical signature, enrollment or permit.

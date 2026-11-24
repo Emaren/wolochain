@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war"]
 audience: ["developers", "operators", "ai-agents"]
 source_of_truth: "git"
 authority: "read-only-source-and-physical-financial-hold-not-c03-maintenance-or-funded-permit"
-reviewed_at: "2026-11-07"
+reviewed_at: "2026-11-24"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -58,3 +58,9 @@ Run isolated tests with `python3 -B -m unittest discover -s tests -p 'test_settl
 C04 remains HOLD on the original 69 claimed-but-hashless historical payout outcomes and these additional unverified paid labels. C05 remains HOLD until a source-sealed complete nonoverlapping HD/DE/founder/journal/Satchel/NFT/escrow/refund/staking/unknown inventory and independent same-height authenticated native bank proofs can be reconciled. C03 live owner-role and service isolation, C06 backup, C07 recovery and all production PG writes belong only to Session A. C08 governance and C09 transaction-specific owner authority remain separate.
 
 **Formal release 10/19. No WOLO moved.**
+
+## Current applicability — reviewed 2026-11-24
+
+The seven-surface observer still exits HOLD even for an exact match. Its older coverage figures are historical, not a substitute for the expanded one-height arithmetic source coverage contract; incomplete coverage is rejected. C04 quarantine has since closed without establishing payment finality.
+
+Current decision boundary: [financial authority #239](https://github.com/Emaren/wolochain/issues/239) and [coordinated recovery #258](https://github.com/Emaren/wolochain/pull/258). C04/C08 closed; C01/C02/C03/C05/C06/C07/C09 open. Funding DENIED; custody inactive. This renewal is a source and dated-evidence applicability review, not a new physical receipt.

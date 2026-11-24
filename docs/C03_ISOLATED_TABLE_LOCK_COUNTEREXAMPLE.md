@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war"]
 audience: ["developers", "operators", "ai-agents"]
 source_of_truth: "git"
 authority: "source-only-negative-lock-rehearsal-not-a-financial-fence"
-reviewed_at: "2026-11-06"
+reviewed_at: "2026-11-24"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -49,3 +49,9 @@ A genuine C06 encrypted offhost snapshot and C07 exact same-snapshot isolated re
 On the owner **Mac M1 only**, with Homebrew PostgreSQL 14 binaries at `/opt/homebrew/bin` and no root privileges, run `python3 -B scripts/settlement_c03_isolated_lock_counterexample.py`. The script refuses root and other platforms, creates a throwaway Unix-only cluster, records only boolean outcomes, and exits 0 only for the fully demonstrated **counterexample**. It cleans up the isolated cluster. Run `python3 -B -m unittest discover -s tests -p 'test_settlement_c03_isolated_lock_counterexample.py' -v` for hermetic tests.
 
 Running this command **does not fix C03, certify a freeze, establish a backup, or prove chain finality**.
+
+## Current applicability — reviewed 2026-11-24
+
+The PG14 counterexample remains valid: a table lock cannot cover sequences, schema DDL, another database or delayed writes. The newer #258 PG16 fixture proved actual rollback of an open transaction and reconnect denial during complete clean cluster shutdown; it is a different and stronger temporary checkpoint mechanism, not permanent C03. Preserve the original failed exploratory logs; do not replay this test to qualify production.
+
+Current authority: [#239](https://github.com/Emaren/wolochain/issues/239), [#257](https://github.com/Emaren/wolochain/pull/257), [#258](https://github.com/Emaren/wolochain/pull/258), [native evidence](https://github.com/Emaren/wolochain/pull/258#issuecomment-7133994664). C04/C08 closed; C03/C06/C07 open. Funding DENIED; custody inactive. Historical observations and source commands are not current execution authority.

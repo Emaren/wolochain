@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war"]
 audience: ["developers", "operators", "ai-agents"]
 source_of_truth: "git"
 authority: "source-only-intel-recovery-transport-not-a-financial-permit"
-reviewed_at: "2026-11-06"
+reviewed_at: "2026-11-24"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -45,3 +45,11 @@ Automatic retries cannot wake an unpowered receiver, establish a missing trust a
 ## Formal acceptance
 
 A new root-local HEL1 physical check must prove the listener is loopback-only, bound to an authorized restricted key, and reaches the **actual** Intel receiver using pinned host identity. Verify clean disconnect/reconnect, persistent launchd restart, no broader forwarding and no login shell before marking transport readiness. C06 itself requires additional fresh coordinated quiesced data, encrypted off-host ciphertext integrity and a real isolated C07 restore. No gate closes by installing this component.
+
+## Current applicability — reviewed 2026-11-24
+
+The earlier installation/enrollment instructions describe historical provisioning, not a request to reenroll. November 24 owner-native receipt #7131784934 confirms the existing pinned route was authenticated and the receiver was ready. Preserve the existing enrollment and prior encrypted objects; do not reinstall the supervisor or create new keys as part of checkpoint preparation.
+
+Current execution boundary: C04 and C08 are closed; C03, C06 and C07 remain open. Temporary complete producer/reconnect and chain quiescence is required for C06, followed by independently verified C07 recovery before permanent C03 writer exclusion. Financial listeners 8092–8095 remain closed; PostgreSQL remains loopback-only; preserve the 3030 rollback and 3033 emergency runtimes. Shared website/other PostgreSQL dependencies require authenticated B PREPARE and a reviewed maintenance/restoration window; WE2 must admit exact capacity and noncompeting workload priority. No production outage, signing or financial activation is authorized by this review. Funding DENIED.
+
+Evidence: [coordinated checkpoint PR #258](https://github.com/Emaren/wolochain/pull/258), [physical receiver receipt](https://github.com/Emaren/wolochain/issues/239#issuecomment-7131784934), [native recovery and coordinator evidence](https://github.com/Emaren/wolochain/pull/258#issuecomment-7132828076). Historical observations above are retained as dated evidence, not current runtime claims.

@@ -8,7 +8,7 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "runtime-evidence"
 authority: "mainnet-wallet-role-and-custody-map"
-reviewed_at: "2026-10-30"
+reviewed_at: "2026-11-24"
 review_interval_days: 14
 sensitivity: "restricted"
 ---
@@ -323,3 +323,9 @@ Before launch, Tony must approve:
 - which wallets are allowed to sign transactions after launch
 - alert thresholds for hot wallets
 - who can rotate keys and how emergency rotation works
+
+## Current applicability — reviewed 2026-11-24
+
+Historical wallet roles, public addresses and bank observations are retained as evidence, not admitted reserves or authority to access key material. Custody remains inactive; no new wallet census, signature, transfer or balance admission is claimed.
+
+Current decision boundary: [financial authority #239](https://github.com/Emaren/wolochain/issues/239) and [coordinated recovery #258](https://github.com/Emaren/wolochain/pull/258). C04/C08 closed; C01/C02/C03/C05/C06/C07/C09 open. Funding DENIED; custody inactive. This renewal is a source and dated-evidence applicability review, not a new physical receipt.

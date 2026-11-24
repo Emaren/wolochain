@@ -8,7 +8,7 @@ systems: ["wolochain","aoe2war","aoe2dewarwagers"]
 audience: ["operators","developers","ai-agents"]
 source_of_truth: "git"
 authority: "non-authorizing-financial-human-signature-review"
-reviewed_at: "2026-11-08"
+reviewed_at: "2026-11-24"
 review_interval_days: 14
 sensitivity: "internal"
 ---
@@ -118,3 +118,9 @@ This input MUST be independently reviewed and included through the existing phas
 6. Separate five signatures and fresh nonce enable independent OFFLINE_VERIFY and complete production-size restore; only a separately reviewed RESUME executor and genuine finance/chain bank solvency may ever move the final GO decision.
 
 **CURRENT STATE: engineering candidate only, operational financial HOLD.** No historical human enrollment, real nonce service, complete writer exclusion, signed recovery budget, production-size capture/restore, full bank solvency or safe RESUME shown.
+
+## Current applicability — reviewed 2026-11-24
+
+The historical 14 GiB estimate is superseded as planning evidence by November 24 read-only allocated measurements totaling 21,047,779,328 bytes for PG16, chain and journals. Allocation is not a tar/ciphertext upper bound or reservation. A fresh bounded archive plan and exclusive WE2 capacity/IO lease remain required.
+
+Current decision boundary: [financial authority #239](https://github.com/Emaren/wolochain/issues/239) and [coordinated recovery #258](https://github.com/Emaren/wolochain/pull/258). C04/C08 closed; C01/C02/C03/C05/C06/C07/C09 open. Funding DENIED; custody inactive. This renewal is a source and dated-evidence applicability review, not a new physical receipt.

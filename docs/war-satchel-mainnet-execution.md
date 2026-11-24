@@ -8,7 +8,7 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "restricted-satchel-execution-and-provisioning-contract"
-reviewed_at: "2026-11-07"
+reviewed_at: "2026-11-24"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -890,3 +890,9 @@ It explicitly sets independent bank proof, full solvency, payout retry, funds
 and all financial release authority to false. Exact source-match DOES NOT
 provide independently verified Comet finality, a trusted reserve balance,
 atomic HD+DE+chain snapshot, complete liability enumeration, or C05 closure.
+
+## Current applicability — reviewed 2026-11-24
+
+The earlier all-open gate descriptions are historical: C04/C08 now closed under nonfunded quarantine and adopted zero-funded governance respectively. The remaining seven are open. No financial execution, signer activation, reserve admission or legacy fallback is authorized.
+
+Current decision boundary: [financial authority #239](https://github.com/Emaren/wolochain/issues/239) and [coordinated recovery #258](https://github.com/Emaren/wolochain/pull/258). C04/C08 closed; C01/C02/C03/C05/C06/C07/C09 open. Funding DENIED; custody inactive. This renewal is a source and dated-evidence applicability review, not a new physical receipt.

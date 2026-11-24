@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war"]
 audience: ["developers", "operators", "ai-agents"]
 source_of_truth: "git"
 authority: "source-only-nologin-permission-rehearsal-not-live-ddl-approval"
-reviewed_at: "2026-11-06"
+reviewed_at: "2026-11-24"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -47,3 +47,9 @@ Do not deploy this synthetic script to HEL1 as a migration controller. Do not re
 On macOS ARM with Homebrew PostgreSQL14 installed under `/opt/homebrew/bin`, run `python3 -B scripts/settlement_c03_isolated_nologin_owner_rehearsal.py`. It refuses root and non-Mac environments, and starts its test cluster only under `~/.cache/aoe2war` with no TCP listener. The accompanying focused unit command is `python3 -B -m unittest discover -s tests -p 'test_settlement_c03_isolated_nologin_owner_rehearsal.py' -v`.
 
 **No financial gate closes based on this synthetic rehearsal.**
+
+## Current applicability — reviewed 2026-11-24
+
+The isolated nine-assertion model proves the mechanism and rollback only. The later real HD/DE 60/21 tests and #258 preconnected transaction fixture strengthen separate components but do not certify live ownership, indirect writes or reconnection after restart. Do not rerun the PG14 fixture as a gate prerequisite. Rehearse the permanent migration against the exact recovered C07 cluster and preserve public auth and unrelated application rights.
+
+Current authority: [#239](https://github.com/Emaren/wolochain/issues/239), [#257](https://github.com/Emaren/wolochain/pull/257), [#258](https://github.com/Emaren/wolochain/pull/258), [native evidence](https://github.com/Emaren/wolochain/pull/258#issuecomment-7133994664). C04/C08 closed; C03/C06/C07 open. Funding DENIED; custody inactive. Historical observations and source commands are not current execution authority.

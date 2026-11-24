@@ -8,12 +8,20 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "git-branch-authority-contract"
-reviewed_at: "2026-10-29"
+reviewed_at: "2026-11-24"
 review_interval_days: 14
 sensitivity: "internal"
 ---
 
 # WoloChain Branch Authority
+
+
+## Current applicability — reviewed 2026-11-24
+
+Current source review: GitHub default main `9eb8eeb8be0baf4ffffc5db1555b2448e6cf6840`; mainnet-prep `98f781d61fa6b35d2cc09b48f84605a617efc2c4`; #258 recovery lineage is `we1/c06-coordinated-checkpoint-rehearsal-20261124`, rooted at `f80872a05f511c79c7d425ad20c46d77bb149767`. Do not collapse those refs, protected artifact hashes or deployed runtime identity. The November 24 five-worktree retirement used exact retained local refs and remote commit verification, no force; original dirty checkout and unique sources preserved. Historical branch/website/legacy active-port observations below are not current. #189 recovery source was consolidated into WE2 #188 and closed unmerged; no competing installed policy. No source merge changes financial authority.
+
+Current source and evidence: [#239](https://github.com/Emaren/wolochain/issues/239), [#258](https://github.com/Emaren/wolochain/pull/258), [physical quarantine and witness receipt](https://github.com/Emaren/wolochain/pull/258#issuecomment-7133994664). Funding DENIED; no production permit granted.
+
 
 Reviewed: 2026-10-29 (GitHub source only)
 

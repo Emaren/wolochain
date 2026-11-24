@@ -1,0 +1,23 @@
+name: C06 isolated Comet SDK physical LevelDB recovery
+on:
+  pull_request:
+    paths:
+      - app/c06_checkpoint_recovery_test.go
+      - .github/workflows/c06-chain-recovery.yml
+permissions:
+  contents: read
+jobs:
+  chain-recovery:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      GOFLAGS: -tags=go1.27
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - run: go test ./app -run '^TestC06PhysicalCometSDKLevelDBRecovery$' -count=1 -v -timeout=90s

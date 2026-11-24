@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war", "aoe2dewarwagers"]
 audience: ["developers", "operators", "ai-agents"]
 source_of_truth: "git"
 authority: "source-only-c05-historical-payment-ambiguity-no-payment-authority"
-reviewed_at: "2026-11-08"
+reviewed_at: "2026-11-24"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -76,3 +76,9 @@ bet_payout economic events disjointly before clearing any gift.
 No outstanding C03/C04/C05 or C01-C09 financial gate is accepted
 by this observer. Financial service activation, payment retry,
 gift cancellation and customer WOLO mutation remain HARD HOLD.
+
+## Current applicability — reviewed 2026-11-24
+
+The same-recipient/same-nominal collision does not identify a unique economic obligation or prove discharge. The current observer remains read-only HOLD and no gift, payment or claim may be rewritten or replayed on this basis.
+
+Current decision boundary: [financial authority #239](https://github.com/Emaren/wolochain/issues/239) and [coordinated recovery #258](https://github.com/Emaren/wolochain/pull/258). C04/C08 closed; C01/C02/C03/C05/C06/C07/C09 open. Funding DENIED; custody inactive. This renewal is a source and dated-evidence applicability review, not a new physical receipt.

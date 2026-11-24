@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war", "aoe2dewarwagers"]
 audience: ["developers", "operators", "ai-agents"]
 source_of_truth: "git"
 authority: "source-only-read-only-c03-dual-evidence-bound-observer-never-a-finance-permit"
-reviewed_at: "2026-11-08"
+reviewed_at: "2026-11-24"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -105,3 +105,9 @@ and
 `14eafdb7201208434d8ee6f643939ea755d45710748d96fbfd364d3a980711a9`
 respectively. These are historical HOLD observations, not a current
 release permit. No financial role, service or WOLO was changed.
+
+## Current applicability — reviewed 2026-11-24
+
+The November 8 paired counts describe historical backend populations only. The current fixture in #258 physically rolls back a preconnected uncommitted transaction and rejects six reconnect attempts during a clean PG16 shutdown; this does not establish live effective-grant denial. Permanent C03 must verify owner, ACL, inherited privilege, trigger/SECURITY DEFINER, existing-backend, and reconnect denial against the actual C07 recovery image before applying the independently admitted live fence. The prior paired receipt must not be reused as a fresh preimage.
+
+Earlier observations and instructions above remain date-bound historical evidence. C04/C08 CLOSED; C03/C06/C07 OPEN. Funding DENIED; custody inactive; legacy settlement masks and closed 8092–8095 preserved, PostgreSQL 5432 loopback-only. No source review, fixture receipt, or historical operator instruction authorizes production changes. Evidence: [financial authority #239](https://github.com/Emaren/wolochain/issues/239), [coordinated checkpoint #258](https://github.com/Emaren/wolochain/pull/258), [native Linux and scope receipt](https://github.com/Emaren/wolochain/pull/258#issuecomment-7133287515).

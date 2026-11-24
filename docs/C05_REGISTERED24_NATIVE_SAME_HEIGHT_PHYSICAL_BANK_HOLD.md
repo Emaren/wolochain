@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war"]
 audience: ["operators", "developers", "financial-reviewers", "ai-agents"]
 source_of_truth: "git"
 authority: "source-bound-readonly-mainnet-bank-census-not-financial-reserve-acceptance"
-reviewed_at: "2026-11-09"
+reviewed_at: "2026-11-24"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -97,3 +97,9 @@ Do not top up from historical escrow or count protected/third-party
 funds as spendable just to clear C05.
 
 C04 and C08 CLOSED. C01/C02/C03/C05/C06/C07/C09 remain OPEN.
+
+## Current applicability — reviewed 2026-11-24
+
+The registered-wallet observation is historical gross bank evidence at one native height, not available collateral or spendable net reserves. The current source retains a HOLD outcome; neither a new height observation nor collateral admission is claimed.
+
+Current decision boundary: [financial authority #239](https://github.com/Emaren/wolochain/issues/239) and [coordinated recovery #258](https://github.com/Emaren/wolochain/pull/258). C04/C08 closed; C01/C02/C03/C05/C06/C07/C09 open. Funding DENIED; custody inactive. This renewal is a source and dated-evidence applicability review, not a new physical receipt.

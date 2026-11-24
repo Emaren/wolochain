@@ -8,7 +8,7 @@ systems: ["wolochain","aoe2war","aoe2dewarwagers"]
 audience: ["operators","developers","ai-agents"]
 source_of_truth: "git"
 authority: "non-authorizing-financial-human-signature-review"
-reviewed_at: "2026-11-08"
+reviewed_at: "2026-11-24"
 review_interval_days: 14
 sensitivity: "internal"
 ---
@@ -96,3 +96,29 @@ The inherited finance tests use mocks/disposable PostgreSQL; the actual containe
 **Engineering source:** review-only phase gate and v1-cli lockdown qualify only after exact-head CI, negative tests, DocsV2 and independent code review. **Real finance operations:** NO-GO pending externally authenticated real human enrollment, root-protected source-specific key registry, out-of-band revocation, monotonic nonce witness, integrated operational controller v2, 18-unit residual signers/no-run exclusion, full-size HD+DE offline restore, independently verified financial inventory and bank solvency, actual witnesses and approved maintenance window.
 
 No production backup, restore, unit stop, mount, restart, wallet operation or mainnet deployment has been performed by this review branch.
+
+## Current applicability — reviewed 2026-11-24
+
+The old 18-unit phase path is not executable authority for the present campaign. PR 258 introduces a source-only journal, native service barrier and separately scoped witness/admission contracts. No real phase permit, comprehensive reconnect exclusion, checkpoint, restart or restore is inferred.
+
+Current decision boundary: [financial authority #239](https://github.com/Emaren/wolochain/issues/239) and [coordinated recovery #258](https://github.com/Emaren/wolochain/pull/258). C04/C08 closed; C01/C02/C03/C05/C06/C07/C09 open. Funding DENIED; custody inactive. This renewal is a source and dated-evidence applicability review, not a new physical receipt.
+
+### Expanded witness integration source — 2026-11-24
+
+The new native witness protocol source connects the exact plan and owner Ed25519 signature verifier to a fixed host-key-pinned SSH request and separate Intel journal, sharing the existing one-use nonce store. It rejects legacy enrollment drift, plan drift, source pin drift, arbitrary commands and acknowledgement replay. Existing legacy sources and forced command remain unchanged. Both endpoints need separately admitted private expanded enrollment, exact source pins and pre-created journal; no enrollment writer or installer is included. New protocol tests used disposable keys only. No live Intel admission, production permit, native checkpoint driver activation or physical closure is asserted. Do not use a reachability receipt as admission.
+
+### November 24 native producer scope correction
+
+The native HEL1 14:47Z systemd census showed five enabled scheduling families
+(heartbeat, challenge reconciliation, replay recovery, trophy tribute and
+prewarm) with static service targets, and ten additional loaded inactive
+custody, alternate TokenChain and held website units. The C06 barrier now
+requires those 20 exact activation identities, denies starting the ten dormant
+units, requires activators stopped before services and restored only after
+services, and verifies actual TCP listeners 8092–8095 absent plus both C01
+custody/reviewer units inactive. Existing six masked units remain protected;
+Traffic, nginx and scheduler daemons remain outside the stop scope. This is
+source engineering, not a native fence. Direct privileged processes,
+external signers, non-systemd schedulers, complete ingress and reconnect
+exclusion, exact authenticated WE2 lease, whole-cluster checkpoint archive
+and Intel recovery driver still require integration. No live action authorized.

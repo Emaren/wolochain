@@ -24,7 +24,11 @@ DOC="docs/C03_TOKENCHAIN_INDEXER_UNSCOPED_DISCOVERY_HOLD.md"
 REG="docs/document-registry.json"
 BASE="docs/DOCUMENTATION_CONTROL_PLANE.md"
 UNRELATED="app/app.go"
+BARRIER="scripts/settlement_c06_native_service_barrier.py"
+BARRIER_LINES="\n".join(line for line in (ROOT/BARRIER).read_text().splitlines()
+                         if "tokenchain" in line)+"\n"
 FIXTURES={
+ BARRIER:BARRIER_LINES,
  OBSERVER:'    "tokenchain-",\n    "tokenchain_indexer_direct_and_indirect_database_writers",\n',
  DOC:'id: "aoe2war.wolochain.c03-tokenchain-indexer-unscoped-discovery-hold"\n'
      'systems: ["wolochain", "aoe2hdbets", "tokenchain"]\n'
@@ -93,6 +97,16 @@ class ExternalIndexerGuardTests(unittest.TestCase):
                 cwd=root,capture_output=True,text=True,timeout=6)
             self.assertEqual(r.returncode,1)
             self.assertIn("markers were removed",r.stderr)
+
+    def test_c06_external_service_declarations_do_not_allow_chain_identity(self):
+        r=self.check_fixture((BARRIER,'CHAIN_ID="tokenchain"\n'))
+        self.assertEqual(r.returncode,1)
+        self.assertIn("unapproved",r.stderr)
+
+    def test_c06_duplicate_declaration_rejected(self):
+        r=self.check_fixture((BARRIER,BARRIER_LINES.splitlines()[0]+"\n"))
+        self.assertEqual(r.returncode,1)
+        self.assertIn("missing or duplicated",r.stderr)
 
     def test_source_scoped_literals_do_not_bypass_other_invariants(self):
         self.assertIn(

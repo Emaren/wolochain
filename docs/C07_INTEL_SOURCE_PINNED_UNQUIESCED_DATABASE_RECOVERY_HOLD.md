@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war"]
 audience: ["operators", "developers", "financial-reviewers", "ai-agents"]
 source_of_truth: "git"
 authority: "nonfunded-real-offhost-recovery-rehearsal-not-gate-closure"
-reviewed_at: "2026-11-09"
+reviewed_at: "2026-11-24"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -28,3 +28,11 @@ The program also pins the separately captured full HD **872,018,705-byte** local
 ## Financial integrity limits
 
 **C06 and C07 remain OPEN.** The two real captures were UNQUIESCED, taken at different moments; the exact accepted cross-system financial writer freeze, original transaction journals, PostgreSQL WAL, synchronized HD+DE snapshot, authenticated consensus/bank checkpoint and final live recovery/rollback are not yet physically proved. Do not equate an isolated DE recovery with custody solvency, exact payment finality, a writer grant or C09 approval. No financial roles, original 8092/8093, 3030/3032, 8094/8095 or wallet funds are altered by this script.
+
+## Current applicability — reviewed 2026-11-24
+
+The November 9 DE recovery is historical and remains valuable; do not repeat it or infer HD completion. PR #258 separately qualifies physical PG16 and CometBFT/SDK LevelDB restoration on disposable M1/Linux fixtures. C07 requires the exact newly admitted coordinated C06 ciphertext, independent isolated recovery and original checkpoint parity, not a new unrelated archive. Physical PostgreSQL recovery requires a compatible isolated Linux PG16 target and exact shared-cluster scope.
+
+Current execution boundary: C04 and C08 are closed; C03, C06 and C07 remain open. Temporary complete producer/reconnect and chain quiescence is required for C06, followed by independently verified C07 recovery before permanent C03 writer exclusion. Financial listeners 8092–8095 remain closed; PostgreSQL remains loopback-only; preserve the 3030 rollback and 3033 emergency runtimes. Shared website/other PostgreSQL dependencies require authenticated B PREPARE and a reviewed maintenance/restoration window; WE2 must admit exact capacity and noncompeting workload priority. No production outage, signing or financial activation is authorized by this review. Funding DENIED.
+
+Evidence: [coordinated checkpoint PR #258](https://github.com/Emaren/wolochain/pull/258), [physical receiver receipt](https://github.com/Emaren/wolochain/issues/239#issuecomment-7131784934), [native recovery and coordinator evidence](https://github.com/Emaren/wolochain/pull/258#issuecomment-7132828076). Historical observations above are retained as dated evidence, not current runtime claims.

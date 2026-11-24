@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war"]
 audience: ["operators", "developers", "financial-reviewers", "ai-agents"]
 source_of_truth: "git"
 authority: "owner-only-unfunded-filevault-keychain-enrollment-not-a-payment-permit"
-reviewed_at: "2026-11-09"
+reviewed_at: "2026-11-24"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -59,3 +59,9 @@ bound to exact App native claim, recipient, amount+fee <=1 WOLO, bank
 root, C01-C07 accepted evidence, exact idempotent original operation and
 offhost one-use nonce remains mandatory. There must be NO credit, native
 broadcast or 8092 fallback from this enrollment alone. C09 remains OPEN.
+
+## Current applicability — reviewed 2026-11-24
+
+November 24 receiver verification proves authenticated recovery transport, FileVault ON and free capacity; it does not prove Intel login Keychain enrollment or authorize a C09 signing attempt. The earlier noninteractive failure remains the documented evidence. Do not prompt the owner to unlock or enroll a transaction key as a C06 prerequisite; no C09 signature or funding now.
+
+Canonical status and execution evidence: [#239](https://github.com/Emaren/wolochain/issues/239), [#258](https://github.com/Emaren/wolochain/pull/258), [expanded witness source receipt](https://github.com/Emaren/wolochain/pull/258#issuecomment-7133994664). C04/C08 CLOSED; funding DENIED; custody inactive. This review does not change any historical signature, enrollment or permit.

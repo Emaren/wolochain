@@ -121,6 +121,16 @@ required_source = {
     '"tokenchain-",',
     '"tokenchain_indexer_direct_and_indirect_database_writers",',
 }
+# Exact external C06 Linux service declarations only; never chain identity.
+barrier = "scripts/settlement_c06_native_service_barrier.py"
+required_barrier = {
+    '"tokenchain-hasura.service","tokenchain-indexer.service","tokenchain-web.service"})',
+    '"tokenchain-callisto.service","tokenchain-faucet.service",',
+    '"tokenchain-daily-allocation.service","tokenchain-daily-allocation.timer",',
+    '"tokenchain-osmo-ibc-bootstrap.service","tokenchain-osmo-ibc-bootstrap.timer",',
+    '"tokenchain-relayer.service","aoe2war-r25-f7fdae2-candidate.service"})',
+}
+barrier_hits = []
 allowed_registry = {
     '"id": "aoe2war.wolochain.c03-tokenchain-indexer-unscoped-discovery-hold",',
     '"tokenchain"',
@@ -148,6 +158,9 @@ for name in sys.argv[1:]:
         if name == source and line in required_source:
             all_source_hits.add(line)
             continue
+        if name == barrier and line in required_barrier:
+            barrier_hits.append(line)
+            continue
         if name == doc and line.startswith(allowed_doc_prefixes):
             continue
         if name == reg and line in allowed_registry:
@@ -157,6 +170,8 @@ for name in sys.argv[1:]:
         errors.append(f"{name}:{number}: unapproved legacy chain identity reference")
 if all_source_hits != required_source:
     errors.append("C03 exact external-service names or unproven-domain markers were removed")
+if set(barrier_hits) != required_barrier or len(barrier_hits) != len(required_barrier):
+    errors.append("C06 exact external producer declarations missing or duplicated")
 if errors:
     print("\n".join(errors), file=sys.stderr)
     sys.exit(1)

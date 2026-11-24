@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war"]
 audience: ["developers", "operators", "ai-agents"]
 source_of_truth: "git"
 authority: "source-only-isolated-nologin-counterexample-not-live-financial-fence"
-reviewed_at: "2026-11-06"
+reviewed_at: "2026-11-24"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -53,3 +53,9 @@ python3 -B scripts/settlement_c03_nologin_existing_backend_rehearsal.py
 ```
 
 **Never deploy this synthetic test as a real financial-fence controller.**
+
+## Current applicability — reviewed 2026-11-24
+
+The original five synthetic assertions are retained. Current #258 PG16 clean-shutdown fixture demonstrated rollback of an already-connected uncommitted writer and denied all six reconnects, then restored three shared databases. This does not solve effective owner/ACL denial after the cluster restarts. Use the exact C07 image to rehearse the permanent owner transition and all existing-session, role, DDL, sequence and function paths. No live backend termination is authorized by the old fixture.
+
+Current authority: [#239](https://github.com/Emaren/wolochain/issues/239), [#257](https://github.com/Emaren/wolochain/pull/257), [#258](https://github.com/Emaren/wolochain/pull/258), [native evidence](https://github.com/Emaren/wolochain/pull/258#issuecomment-7133994664). C04/C08 closed; C03/C06/C07 open. Funding DENIED; custody inactive. Historical observations and source commands are not current execution authority.

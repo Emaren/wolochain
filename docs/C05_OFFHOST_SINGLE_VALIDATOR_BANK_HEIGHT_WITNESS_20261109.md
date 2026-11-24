@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war"]
 audience: ["operators", "developers", "financial-reviewers", "ai-agents"]
 source_of_truth: "git"
 authority: "offhost-single-validator-historical-commit-consistency-no-funding"
-reviewed_at: "2026-11-09"
+reviewed_at: "2026-11-24"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -52,3 +52,9 @@ Choose a new filename for each new observation. The local output directory must 
 ## Critical consequence
 
 PASS: off-host source-bound historical same-node block/commit consistency and eleven adversarial tests. HOLD: genuinely independent bank/chain witness, cryptographic signature verification, signer-controlled pledged reserves, historical liability disjointness, C05 solvency admission, C06/C07 recovery and C09 funds. Session A must still prove actual eligible collateral and approved claim scope at an exact bank height. This tool does not permit funding or a financial gate closure.
+
+## Current applicability — reviewed 2026-11-24
+
+Height 2886568 is dated single-validator evidence, not independent consensus or a new offhost bank census. The current witness observer explicitly sets independent consensus verification, gate closure and funding authority false. No collateral is admitted by this witness.
+
+Current decision boundary: [financial authority #239](https://github.com/Emaren/wolochain/issues/239) and [coordinated recovery #258](https://github.com/Emaren/wolochain/pull/258). C04/C08 closed; C01/C02/C03/C05/C06/C07/C09 open. Funding DENIED; custody inactive. This renewal is a source and dated-evidence applicability review, not a new physical receipt.

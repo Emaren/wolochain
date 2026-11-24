@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war", "aoe2dewarwagers"]
 audience: ["developers", "operators", "ai-agents"]
 source_of_truth: "git"
 authority: "source-only-physical-transport-audit-no-financial-fence"
-reviewed_at: "2026-11-08"
+reviewed_at: "2026-11-24"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -125,3 +125,9 @@ All 21 new unit-confinement/transport-focused adversarial tests pass
 locally. These measurements are a capability inventory and admission
 gap, not a complete writer isolation, not an independent chain bank
 or custody proof, and not a financial permit. No unit mutation.
+
+## Current applicability — reviewed 2026-11-24
+
+The historical active 8092/8093 listeners and root service PIDs are no longer the current state: November 24 14:09:28Z readback in #7133994664 proved both settlement services and four stake service/timer units masked/inactive, no 8092–8095 listeners, PostgreSQL loopback-only. The historical RPC reachability observation is not a fresh chain transport audit and is not superseded by port closure alone. C06 requires exact native chain checkpoint and independent coverage of direct processes, ingress and signers; no blanket RPC rule change or validator stop without current admission.
+
+Current authority: [#239](https://github.com/Emaren/wolochain/issues/239), [#257](https://github.com/Emaren/wolochain/pull/257), [#258](https://github.com/Emaren/wolochain/pull/258), [native evidence](https://github.com/Emaren/wolochain/pull/258#issuecomment-7133994664). C04/C08 closed; C03/C06/C07 open. Funding DENIED; custody inactive. Historical observations and source commands are not current execution authority.

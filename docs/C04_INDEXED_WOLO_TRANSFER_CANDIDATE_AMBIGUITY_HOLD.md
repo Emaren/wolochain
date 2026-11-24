@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war", "aoe2dewarwagers"]
 audience: ["developers", "operators", "ai-agents"]
 source_of_truth: "git"
 authority: "source-only-c04-reconciliation-evidence-no-payment-authorization"
-reviewed_at: "2026-11-08"
+reviewed_at: "2026-11-24"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -240,3 +240,9 @@ Sixteen additional adversarial regression tests pass. This is
 a new economic-source disambiguation, **not** a bank payout,
 payment reversal, claim write, refund, credit, or financial
 gate acceptance. C04 remains HARD HOLD.
+
+## Current applicability — reviewed 2026-11-24
+
+The unique candidate's conflicting other-market refund attribution and the 69-record UNKNOWN finality remain historical evidence. C04 closure was subsequently accepted only as preservation and persistent execution quarantine, not discharge of the unresolved payments. No repeat indexed search, new payout hash, customer credit or reversal in C06/C07/C03. Preserve the original journal and claim relationships in the same coordinated checkpoint.
+
+Current authority: [#239](https://github.com/Emaren/wolochain/issues/239), [#258](https://github.com/Emaren/wolochain/pull/258), [physical quarantine readback](https://github.com/Emaren/wolochain/pull/258#issuecomment-7133994664). C04/C08 CLOSED; C03/C06/C07 OPEN. Funding DENIED; custody inactive. No live action authorized by this review.

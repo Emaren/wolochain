@@ -8,7 +8,7 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "runtime-evidence"
 authority: "mainnet-service-and-port-contract"
-reviewed_at: "2026-11-06"
+reviewed_at: "2026-11-24"
 review_interval_days: 14
 sensitivity: "internal"
 ---
@@ -256,3 +256,9 @@ Do not show a zero-balance signer as funded. If faucet claims or payout executio
 - Do not set AoE2HDBets `WOLO_STAKING_HOME` or `WOLO_FAUCET_HOME` to `/var/lib/wolochaind-testnet` for mainnet.
 - Do not set AoE2HDBets `WOLO_FAUCET_FROM=faucetgrowth` for mainnet unless that legacy app key is intentionally funded and documented as a new hot faucet signer. The funded current Faucet Hot Wallet is `wolo1dshyzxffd0jj39k7gj9tq9hgsx96ylxamyp5g0`.
 - Use mainnet RPC/REST tx lookup for AoE2HDBets stake verification unless `wolochain-mainnet-settlement.service` is deployed and verified against `wolo-1`.
+
+## Current applicability — reviewed 2026-11-24
+
+Earlier descriptions of active legacy settlement listeners are dated observations, superseded for operational decisions by the November 24 14:09Z readback: both legacy settlement services and the four staking units are masked/inactive and financial ports 8092–8095 closed. PostgreSQL remains local-only. This is not a new service observation or authority to restart consensus, settlement or custody.
+
+Current decision boundary: [financial authority #239](https://github.com/Emaren/wolochain/issues/239) and [coordinated recovery #258](https://github.com/Emaren/wolochain/pull/258). C04/C08 closed; C01/C02/C03/C05/C06/C07/C09 open. Funding DENIED; custody inactive. This renewal is a source and dated-evidence applicability review, not a new physical receipt.

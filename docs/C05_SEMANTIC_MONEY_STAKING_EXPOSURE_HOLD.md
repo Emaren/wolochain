@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war"]
 audience: ["developers", "operators", "ai-agents"]
 source_of_truth: "git"
 authority: "read-only-physical-observer-no-solvency-or-funding-authority"
-reviewed_at: "2026-11-07"
+reviewed_at: "2026-11-24"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -72,3 +72,9 @@ The strengthened `scripts/settlement_c05_gifts_nft_full_catalog_hold.py` checks 
 - C06/C07 coordinated backup and exact restore remain Session A. C01 custody/reviewer, C08 notice/witness and C09 exact funded owner permit remain separately HOLD.
 
 **Formal mainnet financial release stays HARD HOLD; no WOLO moved.**
+
+## Current applicability — reviewed 2026-11-24
+
+The semantic monetary-relation observer remains read-only HOLD, not a complete liability classification. The ambiguous pending staking item must not be retried; gift and paper-mark amounts must not be added to WOLO without economic identity and denomination reconciliation. Separate HD/DE observations are not one atomic snapshot.
+
+Current decision boundary: [financial authority #239](https://github.com/Emaren/wolochain/issues/239) and [coordinated recovery #258](https://github.com/Emaren/wolochain/pull/258). C04/C08 closed; C01/C02/C03/C05/C06/C07/C09 open. Funding DENIED; custody inactive. This renewal is a source and dated-evidence applicability review, not a new physical receipt.

@@ -8,7 +8,7 @@ systems: ["wolochain","aoe2war","aoe2dewarwagers"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "non-authorizing-financial-producer-evidence-correlation"
-reviewed_at: "2026-11-04"
+reviewed_at: "2026-11-24"
 review_interval_days: 14
 sensitivity: "internal"
 ---
@@ -549,3 +549,9 @@ remain historical. No fresh live HEL1 owner mapping, signer custody proof
 or independent solvency attestation was obtained by this review; none
 is asserted here. WoloChain C01–C09 remain physically open and financial
 release is held pending separate executable and custody controls.
+
+## Current applicability — reviewed 2026-11-24
+
+The historic 18-unit inventory is not a comprehensive producer fence. The current coordinated barrier adds explicit PG wrapper/child, chain and service scope with dormant-unit exclusions; direct privileged processes, schedulers, reconnect and external signers still require independently enforced exclusion. Read-only correlation cannot certify those effects.
+
+Current decision boundary: [financial authority #239](https://github.com/Emaren/wolochain/issues/239) and [coordinated recovery #258](https://github.com/Emaren/wolochain/pull/258). C04/C08 closed; C01/C02/C03/C05/C06/C07/C09 open. Funding DENIED; custody inactive. This renewal is a source and dated-evidence applicability review, not a new physical receipt.

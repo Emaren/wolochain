@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war"]
 audience: ["developers", "operators", "ai-agents"]
 source_of_truth: "git"
 authority: "source-only-verifier-mismatch-not-financial-authority"
-reviewed_at: "2026-11-05"
+reviewed_at: "2026-11-24"
 review_interval_days: 7
 sensitivity: "internal"
 ---
@@ -180,3 +180,9 @@ keyring, wallet, production database, legacy settlement or W1 release is touched
 **One next integration action:** Wolo and HD owners must accept and independently
 enroll the non-signing trust-input contract above. Then the exact CLI can be
 implemented against actual supplied provenance rather than invented PASS flags.
+
+## Current applicability — reviewed 2026-11-24
+
+The current escrow command retains fail-closed EPOCH_POLICY_INVALID handling and the production epoch signer remains absent. The historical wire evidence is not an authorization or fresh production test; no held signer is activated.
+
+Current decision boundary: [financial authority #239](https://github.com/Emaren/wolochain/issues/239) and [coordinated recovery #258](https://github.com/Emaren/wolochain/pull/258). C04/C08 closed; C01/C02/C03/C05/C06/C07/C09 open. Funding DENIED; custody inactive. This renewal is a source and dated-evidence applicability review, not a new physical receipt.

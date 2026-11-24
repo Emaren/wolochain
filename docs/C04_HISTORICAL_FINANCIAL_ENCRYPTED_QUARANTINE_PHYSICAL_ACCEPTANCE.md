@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war"]
 audience: ["operators", "developers", "financial-reviewers", "ai-agents"]
 source_of_truth: "git"
 authority: "nonfunded-legacy-liability-quarantine-no-adjudication-or-waiver"
-reviewed_at: "2026-11-09"
+reviewed_at: "2026-11-24"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -123,3 +123,9 @@ C04 nonfunded legacy quarantine can be formally admitted only if:
 
 This runbook never authorizes transfers, changes production SQL
 ownership, restarts financial services or opens funded listeners.
+
+## Current applicability — reviewed 2026-11-24
+
+C04 is formally CLOSED under the nonfunded quarantine interpretation above. The original 12/30-table archives, 2,453-claim commitment and original receipts remain immutable evidence, not substitutes for new coordinated C06/C07. November 24 14:09:28Z native readback verified both settlement services and four stake service/timer units masked/inactive and ports 8092–8095 closed. No fresh claim-count census or restoration of the historic subsets is required for this campaign; recheck invariants at actual C06/C03 execution without altering obligations.
+
+Current authority: [#239](https://github.com/Emaren/wolochain/issues/239), [#258](https://github.com/Emaren/wolochain/pull/258), [physical quarantine readback](https://github.com/Emaren/wolochain/pull/258#issuecomment-7133994664). C04/C08 CLOSED; C03/C06/C07 OPEN. Funding DENIED; custody inactive. No live action authorized by this review.

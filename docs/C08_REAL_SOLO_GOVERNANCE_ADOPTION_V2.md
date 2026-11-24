@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2hdbets", "aoe2dewarwagers"]
 audience: ["operators", "developers", "financial-reviewers", "ai-agents"]
 source_of_truth: "git"
 authority: "versioned-nonfunded-owner-governance-adoption-only"
-reviewed_at: "2026-11-08"
+reviewed_at: "2026-11-24"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -62,3 +62,9 @@ If owner signing prompts are unavailable, the `prepare` output can be inspected,
 Source success alone is **not** C08 CLOSED. Exact-head 10/10 GitHub checks; real owner local signature and persisted adoption receipt; independently re-verified policy/status; and retained immutable source/signing proof must all PASS. Exported sealed owner receipt must be enrolled into the new Satchel's permission controller and off-host recovery before allowing even an eventual separately signed funded C09 action. If this enrollment is not yet physically accepted, mark C08 `POLICY_ADOPTED_FUNDING_BOUNDARY_NOT_ENROLLED` rather than claim money can move.
 
 C01/C02/C03/C04/C05/C06/C07 and C09 have independent acceptance criteria. No legacy claims, websites, traffic series, native consensus state, financial permissions, services or WOLO balances are changed by C08 policy adoption.
+
+## Current applicability — reviewed 2026-11-24
+
+The historical Ed25519 adoption instructions are superseded for current C08 governance by the actual signed and verified zero-funded P-256 Keychain V3 receipt documented in C08_NATIVE_GOVERNANCE_ADMISSION.md. Do not ask the owner to unlock the earlier PEM or rerun V2 prepare/sign/adopt for this campaign. Preserve V2 source and historical evidence; C08 CLOSED, standing funding zero. C06 coordinated snapshot signatures belong to the separate existing maintenance authority, not a governance adoption or C09 transaction packet.
+
+Current evidence: [#239](https://github.com/Emaren/wolochain/issues/239), [#258](https://github.com/Emaren/wolochain/pull/258), [receiver readiness](https://github.com/Emaren/wolochain/issues/239#issuecomment-7131784934), [witness source qualification](https://github.com/Emaren/wolochain/pull/258#issuecomment-7133994664). Funding DENIED; custody inactive. No live authority is granted by this review.

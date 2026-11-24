@@ -8,7 +8,7 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "runtime-evidence"
 authority: "mainnet-prep-chronological-handoff"
-reviewed_at: "2026-11-01"
+reviewed_at: "2026-11-24"
 review_interval_days: 14
 sensitivity: "restricted"
 ---
@@ -475,3 +475,9 @@ Metadata plan:
 - `mainnet-prep/WOLO_OSMOSIS_METADATA_PLAN.md`
 
 No additional liquidity, new pool, new IBC transfer, relayer/service change, genesis change, or validator change is required for this metadata polish.
+
+## Current applicability — reviewed 2026-11-24
+
+This chronological preparation record is not the present production cutover plan. The November 24 physical quarantine and C04/C08 closure control; do not execute old cutover, listener activation or funding instructions. No fresh mainnet or website acceptance is claimed.
+
+Current decision boundary: [financial authority #239](https://github.com/Emaren/wolochain/issues/239) and [coordinated recovery #258](https://github.com/Emaren/wolochain/pull/258). C04/C08 closed; C01/C02/C03/C05/C06/C07/C09 open. Funding DENIED; custody inactive. This renewal is a source and dated-evidence applicability review, not a new physical receipt.

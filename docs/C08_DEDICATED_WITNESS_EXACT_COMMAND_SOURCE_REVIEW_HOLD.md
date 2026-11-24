@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war"]
 audience: ["operators", "developers", "financial-reviewers", "ai-agents"]
 source_of_truth: "git"
 authority: "source-only-offhost-nonce-witness-command-review-no-live-activation-or-finance-permit"
-reviewed_at: "2026-11-08"
+reviewed_at: "2026-11-24"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -43,3 +43,9 @@ The fixture suite now includes positive **synthetic** exact-source admission and
 Before any active C08 witness transition, a separate human-reviewed *physical* plan is mandatory: validate exact current source and enrolled root/Intel identities, install only a dedicated key-level forced command and narrowly configured dedicated localhost SSHD with its own rollback, perform real negative rejection of invalid/expired/foreign/duplicate owner packets, and validate one-use off-host receipt with real signer identity under fresh owner consent. Do not consume or fabricate a real customer release nonce just to make a test green. A fresh separately enrolled source-version update will be necessary before current-source solo maintenance. None of this authorizes funding.
 
 This remains **source-only / financial HARD HOLD**. The formal C08 gate and C01–C09 all remain open. No on-chain transaction, database DDL, unit restart, wallet, customer funds or Session B service changes are authorized by this patch.
+
+## Current applicability — reviewed 2026-11-24
+
+Preserve the exact historic forced-command and source pins; do not overwrite this historical admission to use #258. C08 zero-funded governance was subsequently physically adopted, but that does not admit an expanded coordinated C06 witness command. The #258 12/12 signature/journal integration is a disposable M1 qualification, not Intel transport or enrollment. The existing recovery route 22996 and witness route 22995 remain distinct; November 24 receiver authentication proves only the recovery route. Any expanded witness command must be installed with fresh source-bound owner authority and exact preimage/rollback proof.
+
+Current evidence: [#239](https://github.com/Emaren/wolochain/issues/239), [#258](https://github.com/Emaren/wolochain/pull/258), [receiver readiness](https://github.com/Emaren/wolochain/issues/239#issuecomment-7131784934), [witness source qualification](https://github.com/Emaren/wolochain/pull/258#issuecomment-7133994664). Funding DENIED; custody inactive. No live authority is granted by this review.

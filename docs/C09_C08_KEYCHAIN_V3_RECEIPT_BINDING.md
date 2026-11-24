@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war"]
 audience: ["operators", "developers", "financial-reviewers"]
 source_of_truth: "git"
 authority: "nonfunding-C08-policy-preflight-only"
-reviewed_at: "2026-11-08"
+reviewed_at: "2026-11-24"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -136,3 +136,9 @@ and malformed DER/base64. The complete related C09 test suites
 currently run **53/53 PASS**. The result is always
 C09_TRANSACTION_SPECIFIC_P256_SIGNATURE_VALID_EXECUTION_HOLD with
 all funded authorization booleans false.
+
+## Current applicability — reviewed 2026-11-24
+
+The original V3 receipt remains the accepted C08 policy pin, but the synthetic P-256 canary verifier is not a separately enrolled transaction key. The #258 expanded C06 owner signature/witness domain is also distinct and cannot authorize a canary. C09 remains OPEN; do not generate the 120-second canary packet, choose a recipient or invoke a signer during C06/C07/C03. Keep legacy settlement masks and zero standing allowance.
+
+Canonical status and execution evidence: [#239](https://github.com/Emaren/wolochain/issues/239), [#258](https://github.com/Emaren/wolochain/pull/258), [expanded witness source receipt](https://github.com/Emaren/wolochain/pull/258#issuecomment-7133994664). C04/C08 CLOSED; funding DENIED; custody inactive. This review does not change any historical signature, enrollment or permit.

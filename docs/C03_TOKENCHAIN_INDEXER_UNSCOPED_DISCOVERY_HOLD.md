@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2hdbets", "tokenchain"]
 audience: ["operators", "developers", "financial-reviewers", "ai-agents"]
 source_of_truth: "git"
 authority: "read-only-discovery-only-no-maintenance-unit-change"
-reviewed_at: "2026-11-08"
+reviewed_at: "2026-11-24"
 review_interval_days: 7
 sensitivity: "internal"
 ---
@@ -38,3 +38,9 @@ The canonical `scripts/check-chain-invariants.sh` guard originally barred every 
 Eight independent fixture tests execute the **actual invariant parser** against exact allowlisted labels and adversarial unexpected chain-source/registration/documentation references. The full canonical `WOLO_SKIP_RUNTIME_CHECKS=1 ./scripts/check-chain-invariants.sh` must still PASS with no widened admission.
 
 **C03 remains HARD HOLD:** 3031 restricted website fallback lacks Steam/session SECURITY DEFINER EXECUTE and non-equivalent auth cookies, as Session B is repairing; Traffic protected scope also requires review. No running indexer, heartbeat timer, website, validator, DB role, protected C01 unit, financial journal, or asset was modified by this source patch. No WOLO funding or C09 permit is authorized.
+
+## Current applicability — reviewed 2026-11-24
+
+The historical absence of a direct database environment variable still provides no privilege proof. The November 24 native unit-file observation in #258 includes TokenChain Hasura, indexer and web, both website fallback identities and dormant settlement/relayer/planning units. Their source identity alone does not determine their effective dependencies; all relevant direct and indirect access paths must be admitted before stopping the shared database. Independent Traffic jobs and scheduler daemon must not be interrupted by a name-prefix fence. No additional observer installation or historic census migration is required to preserve that distinction.
+
+Earlier observations and instructions above remain date-bound historical evidence. C04/C08 CLOSED; C03/C06/C07 OPEN. Funding DENIED; custody inactive; legacy settlement masks and closed 8092–8095 preserved, PostgreSQL 5432 loopback-only. No source review, fixture receipt, or historical operator instruction authorizes production changes. Evidence: [financial authority #239](https://github.com/Emaren/wolochain/issues/239), [coordinated checkpoint #258](https://github.com/Emaren/wolochain/pull/258), [native Linux and scope receipt](https://github.com/Emaren/wolochain/pull/258#issuecomment-7133287515).

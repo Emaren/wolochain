@@ -1,0 +1,640 @@
+---
+id: "aoe2war.wolochain.financial-minimum-production-footprint-20261124"
+title: "Financial minimum production footprint: native storage classification"
+type: "runbook"
+status: "draft"
+owner: "wolochain-ops"
+systems: ["wolochain","aoe2war"]
+audience: ["operators","developers","ai-agents"]
+source_of_truth: "git"
+authority: "read-only-storage-classification-no-retire"
+reviewed_at: "2026-11-24"
+review_interval_days: 7
+sensitivity: "internal"
+---
+
+# Financial minimum production footprint: native storage classification
+
+WE1 source-owned contribution to VPSSentry #63 and financial authority #239.
+These are native read-only observations from November 24 14:44–14:47Z,
+not an irreducible minimum, an atomic checkpoint, a retirement permit or
+a permanent reserve reduction. No database, log, chain, mount or live service
+changed. Financial quarantine remains in force.
+
+## Measured non-overlapping allocation by filesystem
+
+| Filesystem | Category | Allocated bytes | Disposition |
+| --- | --- | ---: | --- |
+| ROOT | Whole shared PG16 cluster | 11789783040 | Required live; includes WAL, tables, indexes, globals |
+| ROOT | Live wolo-1 data | 9249005568 | Required live; includes consensus WAL and indexes |
+| ROOT | PostgreSQL logs | 1446760448 | Active and rotated evidence; retention review only |
+| ROOT | Financial restore image wrapper | 42949718016 | Historical recovery and preallocated working set; conditional retirement candidate |
+| ROOT | Financial maintenance source/staging | 224436224 | Preserve exact active/held source and evidence; classify older stages |
+| ROOT | Legacy settlement local home | 151552 | Protected configuration and custody; do not inspect contents |
+| ROOT | Pre-portfix chain home | 106496 | Historical, small, retain pending recovery/dependency classification |
+| DATA | Primary settlement journal | 8015872 | Protected current state |
+| DATA | Founder settlement journal | 2818048 | Protected current state |
+| DATA | Historical settlement backups | 691220480 | Four dated sets; require recovery and dependencies |
+| DATA | Financial-maintenance backup directory | 4096 | Empty allocation at observation |
+| DATA | C06 public-age stage | 872054784 | Prior unquiesced encrypted evidence; preserve pending exact receipt review |
+| DATA | Two C04 evidence sets | 3923968 | Closed quarantine evidence, retain |
+| DATA | Placeholder chain home backups | 16384 | Historical, retain pending classification |
+
+ROOT available 10933174272 B; DATA available 31255379968 B at 14:44Z.
+The listed allocations are not whole-filesystem totals or guaranteed net
+reclamation. Do not add nested rows or count the same data as both PG logical
+and physical sizes.
+
+Whole-cluster PG16 base allocation 11692965888 B; pg_wal 83914752 B;
+max_wal_size 1024 MiB (soft), min_wal_size 80 MiB, wal_keep_size 0,
+archive_mode off, zero replication slots at observation. HD application
+relations 192: table bytes 9525092352, index bytes 1728339968.
+DE 52: table bytes 2301952, index bytes 3375104.
+TokenChain Callisto 54: table bytes 136495104, index bytes 190218240.
+These catalog sizes are nested within PG16, not additional filesystem
+allocation. No live relation/index removal, vacuum-full, WAL removal or
+unreviewed compaction.
+
+Chain data suballocation: blockstore 3065757696 B, application
+2443145216 B, transaction index 1609068544 B, state 1063915520 B,
+consensus WAL 1066815488 B, snapshots 262144 B, evidence 32768 B.
+Do not prune chain history or consensus WAL on the basis of size. Establish
+actual growth/compaction peaks and recovery performance before changing
+retention. Logs currently weekly rotate 10, copytruncate, compress with
+delaycompress. Active PG log logical size 547928528 B; retain and diagnose
+growth before reviewing retention. No log truncation.
+
+## Major candidate: bounded.ext4
+
+Native 14:45–14:46Z root-only metadata: path
+/var/lib/wolo-financial-restore/bounded.ext4, device 2049 inode 2431572,
+root:root mode0600, logical 42949672960 B, 83886152 512-byte allocated
+blocks, mtime Nov14 22:44:35Z. No associated loop attachment, no open fuser
+result, child mountpoint unmounted. Ext4 clean, 10485760 blocks of 4096 B,
+9687181 free blocks, approximately 3.27 GB used including filesystem
+metadata. This is NOT an empty disposable image. Read-only debugfs root
+listing identified six historical recovery/evidence directories (online
+MVCC, offline PG16, archived October23 financial journals, online MVCC age
+offhost and v2, nonquiesced settlement journals v2). Preserve all.
+
+The legacy maintenance controller explicitly requires the root-backed
+preallocated 8–64 GiB isolated ext4 child for its local restore path.
+This is a real source dependency, not a stale-path guess. New coordinated
+C06/C07 must separately qualify independent Intel Linux restoration of the
+identical ciphertext, with measured recovery working set. Do not remove,
+shrink, format, mount, hash the whole image or copy it while the existing
+SITE_RUNTIME campaign has exclusive IO. WE2 owns exact retirement admission.
+Only after separate approved archival of its evidence, independent restore,
+dependency disposition and replacement recovery admission may the existing
+recovery policy consider retirement. Gross allocation about 42.95 GB is not
+reclaimed space. Even an empty image would require replacement working
+capacity before removal.
+
+## Recovery working set and next dispositions
+
+Current PG16 + chain + both journals totals 21049622528 allocated bytes,
+before pgconfig, nonce state, logical vs allocated drift, exact tar manifest,
+age overhead and working/compaction peaks. This is an observation, not
+a ciphertext budget or permit. The existing C06 archive budget uses no
+compression credit and separate DATA/Intel reserve and restore allocations.
+Do not relax the 1 GiB DATA guard, the independent Intel reserve or any
+WE2 production guard; require exact source-bound upper bounds and exclusive
+IO/capacity lease.
+
+Historical DATA backups, older staged binaries and image-internal evidence
+are pending exact recovery IDs/receipts. The first priority is the 40 GiB
+image disposition under the canonical WE2 queue; no parallel retirement
+controller. M1: one additional clean redundant C01 source worktree retired
+without force, remote and local commit e8364be7f3bb4652c6cbd03d1dc7c263eb9adbd2
+verified, only two reproducible Python bytecode files removed first, no
+open-file/process references observed. Previous gross allocation 9818112 B,
+not net filesystem delta. Other source worktrees preserved pending unique
+evidence review (including one inconsistent GitHub API lookup and current
+C03 development).
+
+Current formal gates C04/C08 closed, C01/C02/C03/C05/C06/C07/C09 open.
+Funding DENIED; custody inactive. No C06/C07/C03 closure from this document.
+
+## Exact image disposition decision — Nov24 follow-up
+
+Preserve the entire original image by default. Its root directory names
+were captured in the prior read-only debugfs listing, not fresh heavy IO:
+
+| Exact image-relative directory | Preservation requirement |
+| --- | --- |
+| online-mvcc-rehearsal-20261105 | Original fixture/capture inputs, outputs, manifest, comparisons and failure evidence |
+| offline-pg16-rehearsal-20261105 | Original physical PG16 recovery data and control/role/ACL/parity evidence |
+| archived-financial-journal-only-20261023T210040Z-two-settlement-node-untouched | Both original journal trees and RESTORE-HELD-RECEIPT.json (1014 B observed), without invoking settlement |
+| online-mvcc-age-offhost-20261105 | Original age/offhost recovery artifacts and transport receipts |
+| online-mvcc-age-v2-20261105 | Distinct v2 lineage; do not deduplicate against earlier version by name |
+| nonquiesced-settlement-journals-v2-20261105 | Original nonquiesced provenance, journal state and any incomplete/failure evidence; not a C06 checkpoint |
+
+These are preservation classes based on the observed names and earlier
+root listing, not assertions that any specific uninspected nested file
+exists. Keep the complete contents including hidden files, lost+found,
+filesystem journal, superblock/UUID, allocation metadata, deleted/free
+blocks and all unknowns. No historical receipt is to be rewritten, nor
+an old rehearsal relabeled as gate closure.
+
+### Full image vs content-only archive
+
+Full raw-image age ciphertext, optionally with reviewed lossless
+compression before encryption, followed by exact byte reconstruction and
+independent SHA256 comparison, preserves the whole image. Source identity
+is dev2049/inode2431572, root:root mode0600, size42949672960 B,
+allocated 42949709824 B (83886152 512-byte blocks), wrapper 42949718016 B.
+Use a fresh exact preimage including device/inode/link count/mtime/ctime,
+logical length and allocation when WE2 admits IO. No hash is known yet.
+Full image may include historical secrets and deleted material; encrypt
+to the existing approved financial recovery recipients, prohibit public
+upload, M1 plaintext staging, arbitrary SSH or SITE_RUNTIME-purpose grant.
+No plaintext temporary copy on HEL1 DATA: its measured free space is below
+the original image length. Use only a reviewed existing financial
+recovery transport with separately admitted exact object/class and byte
+limit; WE2/WE4 must establish that it supports this large object and
+direct streaming. No implied extension of #188/#191.
+
+Content-only archival can preserve named logical file content and explicit
+metadata (uid/gid, mode, ACL, xattrs, nanosecond times, symlinks/hardlinks,
+special entries, sparse extents, inode flags, filesystem parameters and
+all original provenance) but does not reproduce the original image bytes,
+inode layout, journal, free-block history or deleted evidence. It cannot
+substitute unless the owner explicitly changes the preservation contract
+after full evidence/consumer review and independently proven reconstruction.
+A 3.27GB used-block estimate is not an archive upper bound. Until such
+approval, use full-image exact recovery; no content-only retirement.
+
+### Sequential Intel capacity and legacy dependency
+
+WE4 #63 comment7134935702 reports Intel free219106541568 B with the
+unchanged 60GiB/64424509440 B reserve. No new direct Intel shell evidence
+was obtained this turn. Conservative no-compression age planning bound
+42992664576 B = 42949672960 + ceil(42949672960/1024) + 1048576.
+One retained ciphertext plus one fully allocated exact reconstruction =
+85942337536 B; remaining free133164204032 B, of which 68739694592 B is
+above reserve BEFORE VM filesystem overhead, guest base, scratch and
+other pending campaigns. This is arithmetic feasibility, not admission.
+Require measured actual Intel guest-backed disk capacity and physical
+allocation, not APFS sparse logical size, before opening the exclusive
+window. Budget retained ciphertext separately even after temporary
+reconstruction cleanup. The C06 capture and C07 independent restore
+need their own exact manifest, encrypted archive and fully allocated
+working-set budget, no compression credit, no overlap with SITE_RUNTIME
+or Traffic acquisition, no reuse of a stale size estimate as a permit.
+
+Legacy local restore source requires the precise full-allocation
+root-backed loop ext4 and 8GiB ROOT available AFTER allocation; do not
+weaken it or pretend a remote path satisfies it. The retirement decision
+must preserve a tested on-demand rehydration option (exact image restored
+to a fresh owner-approved ROOT path, exact byte verification, original
+wrapper, mount identity and guard checks before legacy use), or formally
+supersede the legacy operation through reviewed independently qualified
+C06/C07. No active dependency may point to a retired path without a
+reviewed cold-recovery procedure. Current native C06 source remains
+fixture-gated, so the legacy dependency is NOT yet resolved physically.
+After exclusive admission, qualify exact reconstruction in isolated Intel
+Linux, no replay/mutation of historical DBs, read-only no-journal-replay
+inspection; record raw SHA equality, filesystem geometry, all six
+directories, root entries, metadata and original receipt hashes.
+WE4 supplies independent authenticated receiver/restore receipt;
+WE2 validates authoritative exact object, quiescence, replacement
+recovery, approved retirement and measured before/after delta. Preserve
+original until all prerequisites hold. No image IO initiated this turn.
+
+### Native C06 engineering increment
+
+New native offline PG16 checkpoint component uses exact PG16 binary and
+system-identifier binding, clean shutdown, actual REDO WAL name and segment
+size, pg_control digest, rejects postmaster PID, nonempty tablespace or
+prepared-transaction directories, symlink WAL and external mount. Reads
+the control result twice and rechecks identity. No service mutation; the
+caller must supply genuine complete producer and reconnect exclusion,
+authenticated lease, frozen Comet/journal observations and archive driver.
+The expanded witness source-pin set now includes this component. New
+focused tests and existing native witness tests PASS; the existing
+disposable PG16 CI case additionally exercises the actual native parser
+and descriptor-relative tree check, rather than another standalone
+rehearsal. No live C06 call, no enrolled witness or gate closure.
+
+### Transfer phase telemetry — Nov24
+
+WE4 owns Transfer OS performance integration under VPSSentry #63. The
+financial stream primitive now returns wolo.financial.transfer-phase.v1:
+monotonic nanoseconds, exact byte counts, age binary hash, producer wall,
+plaintext pipe write, pipeline wall, ciphertext pipe read, destination
+write/fsync/readback and publication. The exact-image descriptor reader
+separately measures source read and sink write, compares pre/post inode
+metadata, all logical bytes and optional source hash. Independent
+reconstruction readback validates exact length and SHA256. No new
+transport endpoint, admission mechanism or retention controller.
+
+Pipeline spans overlap; do not add them or interpret pipe waiting as
+encryption CPU or network latency. The local stream cannot observe remote
+transport, authenticated ACK, encryption CPU, or independent restore:
+these fields remain null, not zero. WE4 must map corresponding measured
+remote receiver and restore phase receipts to the existing canonical
+private telemetry contract, correlate by exact campaign/object/ciphertext
+identity and preserve provenance. The local component does not issue ACKs.
+Production metrics require actual approved route/campaign receipts; no
+extra heavy scan or benchmark during active work.
+
+One small single-host M1 synthetic regression physically exercised age
+dual-recipient encryption and exact reconstructed bytes (106496 plaintext,
+106810 ciphertext), source read 26417ns, pipeline wall 12546542ns,
+destination write 67291ns, fsync 85625ns, readback 115458ns,
+restore 10119416ns, restore verification 80542ns. These are one fixture
+sample, not route throughput, independent Intel evidence or a basis to
+extrapolate the 40GiB transfer. No source image IO occurred.
+
+Prior observed C089 616404482 ciphertext bytes /2795.63s (~220488 B/s)
+is historical end-to-end baseline only. At that observed rate a 40GiB
+image alone would take about 54 hours, before reconstruction. Existing
+bounded local stream timeout max 14400s and historical unquiesced SQL
+transport max 12GiB/1800s are not qualified for this object. Do not
+reuse or extend those limits silently. WE2/WE4 must review a real
+financial-purpose route, exact byte/time capacity, authenticated progress
+and failure/reconciliation semantics within a compatible exclusive
+window, without weakening current constraints. No route claim, image
+archive or actual retirement admission from the new primitives.
+
+### Exact-head CI, coordinator witness seam and historical M1 evidence
+
+Foundation run45420617318 job138538782741 at 826f43c failed three
+C08 fixture cases because they depended on actual /usr/bin/false
+metadata on the Ubuntu runner. Test-only explicit simulated OS
+metadata and socket state now exercise the unchanged production trust
+predicate, including missing/symlink/non-root/group-writable/world-
+writable refusal before subprocess execution. 13/13 local PASS;
+native OS trust and deny-only runtime unchanged. Full fresh CI required.
+
+Native coordinator witness binding now loads only pre-existing
+root-private exact-plan phase packets from the protected authority
+directory, uses the existing pinned NativeWitnessClient, checks the
+locked local journal against phase and previous tip, and anchors the
+actual durable journal record rather than caller-supplied record bytes.
+An uncertain consume/anchor is not retried. Native witness tests 4/4
+local PASS, not physical enrollment. The coordinator still refuses
+live execution; remaining external per-effect anchoring, genuine WE2
+lease, full producer/reconnect exclusion, native chain/checkpoint and
+capture/restore/restart composition are required. No owner packet or
+trust setting created, no old protocol replaced.
+
+Historical M1 exact path metadata at Nov24 15:12-15:15Z:
+owner-private c06-full-precapture-20261108 HD unquiesced ciphertext
+872018705 logical B, 872022016 allocated B, nlink1; existing source
+receipt records expected SHA b011a0a7949199a8b124650f9d16e3280264cca70380a789438fbe4221e504a4
+(see C06_HEL1_LOCAL_AGE_ENCRYPTED_HD_UNQUIESCED_PRECAPTURE.md).
+Adjacent historical LAN transfer log final line records 872018705
+bytes, 100%, 6.46MB/s, 00:02:08. That is a historical sender-side
+display, not authenticated destination readback or same-campaign
+independent restore evidence. C07_INTEL_SOURCE_PINNED_UNQUIESCED_DATABASE_RECOVERY_HOLD.md
+proves DE only; do not infer HD independent recovery. The separate
+encrypted global-roles file is 2441 logical/4096 allocated B. Keep both,
+and original logs, pending WE4 exact existing Intel receipt match.
+No new full hash, transfer, decryption, deletion or capacity credit.
+Candidate is distinct from the 40GiB image and from the new
+whole-cluster C06/C07 archive.
+
+WE4 passive receiver-window samples 449446 and 513050 B/s, median
+481248 B/s, imply about 24.8h for 40GiB before extra phases; 4h
+requires about 2.98MB/s before overhead. These are different scope
+and boundary from the historic LAN rsync display and C089 operator
+wall. No controlled optimization claim. For the existing WE4
+resumable design, bind the owner-approved financial purpose, original
+exact image identity/length, ordered immutable ciphertext chunk
+digests and lengths, authenticated durable checkpoint, continuation
+scope and final exact original raw SHA. Preserve encrypted-only
+staging, independent Intel verification and full restoration,
+legacy rehydration requirement, 60GiB reserve, all six historical
+directories, one-use authority and no retirement from partial ACK.
+WE2 controls exclusive IO; WE4 owns route/policy engineering.
+
+### Coordinator effect lifetime and Operation OS handoff
+
+Exact head 509f4143 Foundation run45423168415 job138547898667
+step31 (C08 dedicated Intel deny-only SSHD launchd reversible
+contracts) completed SUCCESS. Nine other workflows completed
+SUCCESS; Foundation overall was still running at initial readback.
+Do not rerun previously accepted cases independently.
+
+Coordinator now checks the admitted phase expiry and existing lease
+before fence, checkpoint, capture, receiver verification, isolated
+restore, restart and terminal completion; rechecks after capture
+and restore, and after lease verification. Expiry produces HOLD,
+never automatic replay or restart. A native driver must additionally
+check expiry/lease inside long operations and every subeffect.
+The old signed windows are unchanged; no authority inferred from
+a handoff or from successful local tests.
+
+Existing locked journal now exposes deterministic read-only
+wolo.c06.operation-handoff.v1 canonical payload plus SHA256:
+plan, current phase, journal tip, record count, disposition and
+bounded next-action enum. A locally complete journal still requires
+external anchor and physical gate receipts. Intent without observation
+requires fresh containment authority, not retry. No private packet,
+credential, arbitrary error text, timestamp or production authority
+is exported. Operation OS may consume this projection later;
+it is not a new release or execution dependency.
+
+New targeted regressions: expired capture stops before checkpoint;
+deterministic handoff for no phase and ambiguous fence intent, no
+gate closure/authority claim. Both PASS. Live coordinator remains
+fixture-gated pending full native driver and genuine witness/lease.
+
+WE4 VPSSentry #192 94ea15ea source-only contiguous-chunk coverage
+and campaign/phase telemetry is the integration seam, not authorized
+transport. Financial source must bind exact full original image,
+final raw SHA, purpose and ordered encrypted chunk identities to the
+existing review; independent Intel reconstruction and legacy
+rehydration remain required. Current third historical runtime
+campaign is protected; no heavy scan, image IO, or historical HD
+retransmission. The 872018705-byte HD historical candidate remains
+held pending actual same-object independently authenticated Intel
+receipt; no retirement or new capacity credit.
+
+### Nov24 15:44Z native admission gap and Foundation invariant
+
+Exact 7b4140c7 Foundation run45425141115 job138554962834
+failed only at step64 chain invariant guard: five exact external
+service declaration lines in the C06 native barrier. C08 and prior
+steps passed; nine focused workflows passed. The invariant now
+recognizes only those five exact source-scoped declarations, each
+required once, preserving all other chain branding, denomination,
+address and endpoint prohibitions. Targeted allow/extra-chain-ID/
+duplicate cases 3/3 PASS and actual repository invariant PASS.
+No production controller or external unit list changed.
+
+Native HEL1 read-only stat at 15:44:07Z: legacy solo-runtime.json
+and solo-owner.json exist root-owned mode0600; expanded
+c06-expanded-runtime.json and c06-expanded-packets directory
+ABSENT. No secret contents read. No expanded enrollment or genuine
+phase packet exists at the source boundary. The native witness
+cannot be admitted from the old enrollment alone. Next eligible
+human action after source composition/review and exact WE2 lease:
+owner-native enrollment of exact source and plan on both hosts
+via reviewed witness route and creation of exact signed phase
+packet. No alternate key, fabricated packet, old grant reuse or
+forced-command change without approval.
+
+WE4 #192 d04c2858 source review: continuation shape validates
+coverage only, and recovery projection accepts SITE_RUNTIME
+receipt domains only, not financial image receipts. Require a
+separately reviewed financial-purpose adapter with exact original
+raw image SHA, authenticated chunk identity and independent
+reconstruction; do not relabel SITE_RUNTIME receipts or infer
+permission from coverage. No competing transfer controller.
+
+Operation/Progress OS consume existing deterministic journal
+handoff; source-level checks and missing native enrollment are
+not physical gate closure. Current 3/4 runtime restore receipt and
+fourth active transfer preclude exclusive financial IO. All six
+historical directories, legacy backing and M1 historical HD
+ciphertext remain protected; no capacity credit.
+
+### Nov24 16:00Z financial-purpose continuation and workspace delta
+
+Exact 9e14fbf GitHub ten workflows SUCCESS, including Foundation
+run45429016626; no separate C08 rerun. New financial image source
+binding retains the #192 six-field ordered chunk shape and adds
+exact root-owned fully allocated original image identity, plan,
+financial COPY-only purpose, complete manifest digest and full raw
+source digest. The local descriptor readback verifies each plaintext
+chunk digest in order and the whole logical image SHA, including
+free blocks; no claim of authenticated independent host or retirement.
+
+Financial chunk ACK correlation requires a separately enrolled native
+receipt verifier, exact raw receipt digest, financial-only schema,
+plan, manifest, source digest, receiver identity, exact index/offset,
+ciphertext size/hash and non-restored readback status. No SITE_RUNTIME
+receipt substitution, continuation grant, nonce issuance or retirement.
+Two new targeted tests PASS (manifest source/purpose/order/size
+tampering and raw reconstruction; exact receipt correlation and
+wrong domain/receiver/hash/boolean refusal). Synthetic verifier only
+in fixture; actual authenticated producer/receiver integration pending.
+
+The complete manifest pin alone is not a streaming sender protocol:
+ciphertext digests become known only as chunks are encrypted. WE4 must
+bind an approved initial exact source/plan/purpose to authenticated
+append-only per-chunk admissions and durable prefix receipts, then
+seal the final complete manifest and whole-source digest without
+staging 40GiB ciphertext on HEL1 DATA or M1. No automatic continuation
+on partial receipt or replay of spent grants. Existing #192 owns
+transport and durable sequence; no competing controller. Exact
+independent Intel Linux reconstruction and legacy rehydration remain
+physical holds; do not change original 40GiB or six directories.
+
+M1 financial workspace disposition: independently resolved GitHub
+commit and branch 9a4822466c7ee5fb49cf09376bc0fc89a7f278bd,
+central/c01-c05-docs-reconcile-20261109; prior missing connector
+commit now resolved, direct remote exact match, clean including
+ignored files, no visible lsof or matching process. Actual non-force
+git worktree remove from WoloChain-wolo-1 registry at15:59:51Z,
+exact local branch retained and directory absent. Gross allocated
+9532KiB; same-volume df available13710336→13720356KiB, observed
++10020KiB not exclusively attributable on shared APFS. No branch
+deletion or bulk cleanup. Other unique financial workspaces,
+historical encrypted HD object/receipts remain protected.
+
+WE2/WE4 4/4 historical runtime restore PASS; #191 M1/Intel installed,
+HEL1 native install and seven sidecars/ROOT parity/retirement held
+per latest receipts. No exclusive financial window, expanded witness
+enrollment still unadmitted; no image IO, restore, financial service
+effect or gate closure. Existing coordinator live refusal retained.
+
+### Nov24 16:09Z incremental financial cross-contract and witness seam
+
+WE1 and WE4 #192 5d0f928c had different payloads under the same
+manifest schema. Source-local full metadata manifest renamed
+wolo.financial.image-source-manifest.v1; exact Transfer OS wire
+wolo.financial.image-continuation.v1 reserved for its identity/chunks
+format. No installed receipt was changed.
+
+New wolo.financial.image-prefix-identity.v1 binds campaign, plan,
+root-owned source metadata, chunk limit, recipient and receiver before
+the final raw digest exists. Authenticated prefix readback records
+bind initial SHA, preceding record digest, exact ordered chunk and
+receiver. Validate every receipt, reject gap/replay/tamper, project
+only contiguous bytes. Empty prefix is zero coverage; no implicit
+permission. Complete prefix plus authenticated final seal binds raw
+digest and exact #192 canonical manifest SHA. No additional full
+ciphertext staging required by the projection. The native controller
+must still provide independently authenticated initial/receipt/seal
+verification, durable storage, nonce exclusion, source read/encryption,
+transport, receiver readback and independent raw reconstruction.
+No controller, key, grant, filesystem action or network route added.
+
+New targeted HMAC fixture PASS, including partial prefix, reorder,
+replay, unauthenticated chunk, wrong final digest and incomplete seal
+denials. Actual exact GitHub #192 5d0f928c Python source executed in
+memory on M1 with the WE1 fixture: projected 6 synthetic logical
+bytes, two chunks, next action REQUEST_INDEPENDENT_FULL_IMAGE_RECONSTRUCTION,
+manifest ac4eb9447e68c113d64d50999c948107e5a380f06b9ef6c5c6dcd93c4721.
+Independent restore, resume and retirement false. Fixture authentication
+only; no live receipt or real 40GiB reconstruction.
+
+New coordinator binding positive test PASS with actual disposable
+Ed25519 signature, separate source/witness durable journals, native
+dispatch and ACK parser, one-use nonce, matching admission and
+FENCE_INTENT anchors, replay refusal. Only transport is fixture-local,
+not actual Intel, and not per-subeffect protocol or live driver.
+Remaining native gaps: per-subeffect durable external anchors, exact
+lease provider, direct/privileged/reconnect exclusion, complete chain
+checkpoint and production encrypted capture/receiver/restore/resume
+composition. No fixture-gate relaxation.
+
+Current #191 3/3 install and four original runtime restore plus 8/8
+native receipt verifications retained. Explicit sidecar launch block
+must not be circumvented; WE2 exclusive financial window not admitted.
+Preserve original image and six dirs, legacy dependency and historical
+HD. No financial production effect, native enrollment, image IO, new
+retirement or physical gate closure in this increment.
+
+### Nov24 16:16Z exact barrier subeffect authority seam
+
+New BarrierEffectJournal reuses the existing locked private directory
+and durable record conventions, binds exact signed plan/scope, phase
+intent tip, admitted receipt digest, ordered action and previous
+record. Exact schedule derives from NativeBarrier capture and resume
+orders, no caller command strings. Witness-side anchor checks
+independently held phase journal, admitted receipt and real owner
+signature/expiry before and after durable intent append. Replay,
+foreign action, changed receipt and wrong sequence denied. Separate
+source/witness fixture journals with disposable Ed25519 PASS.
+
+Source BarrierEffectBinding composes the existing admit/anchor hooks
+and new completion callback. It checks phase and lease before and
+after the exact external ACK and after successful function return;
+a failed effect, uncertain ACK or failed check leaves the in-memory
+run poisoned, and a pre-existing source journal cannot automatically
+restart. New focused crash/ambiguity fixture PASS. An effect return
+is not physical poststate proof; outer intent remains until the
+barrier verifies physical state. No production dispatcher, installed
+enrollment, native external transport or real lease provider added.
+Existing coordinator fixture-only guard retained. The native witness
+must independently check its installed host/plan and external lease,
+provide the reviewed protected route, and link complete effect
+journal tips into the outer phase record. Privileged/direct producer
+exclusion and complete checkpoint/capture/recovery/resume driver
+still outstanding. No C08 rerun.
+
+WE4 #192 397d6451 new advance_financial_prefix requires the complete
+raw source SHA in initial identity, while WE1 initial pin deliberately
+does not assume that digest before first encryption. Do not silently
+alias the formats. A single prehash under admitted immutable IO
+would cost one extra 40GiB read but not staging; alternatively use
+an explicitly reviewed versioned initial identity with unknown raw
+SHA and authenticated final seal, consistent with WE1. Prefer latter
+to avoid unnecessary image reread. Final exact #192 whole-image
+manifest compatibility previously proven; new incremental wire
+alignment and native verifier/CAS/transport still required. No
+physical image IO or extra allocation.
+
+Latest WE2 guided candidates are live dependencies/protected evidence;
+new APT exact pair needs fresh supported approval, sidecar execution
+block remains unresolved, no exclusive financial IO. Historical HD,
+original 40GiB image and six directories preserved. No new workspace
+retirement or physical closure.
+
+### Nov24 16:21Z witness wire and single-target image reconstruction
+
+NativeWitnessClient.anchor_effect uses the existing fixed pinned
+native_exchange route and exact effect request, validates source
+phase/lease before and after exchange, and exact fresh witness ACK.
+Dispatch accepts only exact anchor_effect fields, checks independent
+witness-side lease before and after durable effect anchor, rejects
+missing/None/false lease provider and replay. Prior source binding
+now explicitly requires positive True from lease verification, not
+merely lack of exception. Targeted wire and updated ambiguity tests
+PASS with disposable real Ed25519 phase and local transport fixture.
+A lost lease after durable append leaves spent intent, no ACK or
+automatic retry. Existing witness_main deliberately supplies no
+effect provider or journal until reviewed protected WE2 lease
+integration and actual enrollment; therefore native production
+effect request remains denied. No alternate SSH route, key, signer,
+live install, grant or owner action simulated. Independent lease
+issuer/verifier contract, genuine Intel enrollment, complete outer
+effect-tip linkage, privileged producer exclusion and complete live
+driver still required.
+
+WE4 exact2901ab8c Linux CI45435208936 SUCCESS; new
+advance_we1_financial_readback accepts exact WE1 initial/receipt wire
+without preknown whole SHA. Actual exact GitHub Python source in
+memory on M1 accepted two synthetic chunks, 6 logical bytes,
+matching final sealed prefix tip
+ec2736d736c905ea1e3af1d14eef1b43edb4a5de822baf67e4e5f4646fa3fa46.
+Cursor/manifest chunk list, total and seal lineage agree. No live
+native authentication, sender, receiver or continuation admission.
+Previous wire mismatch superseded.
+
+New reconstruct_financial_image source streams bounded decrypted
+chunks to ONE newly empty private descriptor, checks exact chunk
+size/digest and complete raw digest, requires authenticated
+decryptor context exit, fsyncs and performs full independent
+descriptor readback. Synthetic two-chunk test PASS (one chunk exceeds
+1MiB read bound), trailing plaintext and failed authentication
+denied, nonempty/partial target cannot be replayed. Native Intel
+driver must admit target, verify ciphertext/receipt and authenticated
+decryptor, reserve, mount exclusion, and independent physical
+readback/legacy dependency recovery. No actual image read/write or
+extra staging. No claim of host authentication or retirement.
+
+Latest WE2 exact cache proposal awaits reviewed fresh authority and
+capacity; sidecar execution block remains, no exclusive window.
+Historical HD prior bounded WE4 catalog has zero exact digest matches
+(not proof absence); no authenticated same-object receipt, retain.
+Active financial worktree clean; no additional eligible retirement
+performed. M1 available12720272KiB at16:21:02Z, no attributed reclaim.
+No repeated C08, no production mutation or physical gate closure.
+
+### Nov24 16:49Z authenticated seal-to-target composition
+
+Preserve exact c17fc935b29eda8514f759f9b34a1380688ca2d2
+10/10 qualified baseline; no unchanged-source qualification rerun.
+New substantive recovery integration derives the local exact
+source manifest directly from the verified WE1/WE4 incremental
+prefix and authenticated final wire seal, rather than accepting
+an independently supplied local manifest. Pins original plan,
+source, receiver, recipients, initial and seal digests. Exact
+wire manifest/seal comparison; no second signature. Native
+one-use reconstruction admission must positively bind the
+initial and wire/local manifest digests, receiver, and exact
+empty private target descriptor identity, which is rechecked
+after admission. Bounded decryption/write/fsync and full
+target readback check independent lease throughout, with
+refusal after loss and no automatic partial-target replay.
+Focused new composition test PASS (disposable authenticated
+fixture only), wrong seal/receiver/reordered chunks/absent
+native admission/lease denied before writes, target drift
+and lease loss during readback refused. No actual native
+permit, enrolled receiver/decryptor, lease provider or full
+image read/write; callbacks are not authority. No extra image
+staging. New source needs exact-head review/qualification.
+
+Legacy disposition requires preserving original fully allocated
+ROOT-backed ext4 until exact independent raw image reconstruction,
+authenticated physical readback, separately admitted isolated
+read-only filesystem verification, and reviewed replacement of
+all legacy restore consumers. Existing _bounded_restore_mount
+and _restore_scratch_admission still mandate the original
+8–64GiB ROOT backing/loop, mount policy, 2x budget and 8GiB
+OS reserve. An offhost replacement must preserve these safety
+properties (finite private storage, no production mounts or
+network, source-bound PG role/ACL/restore evidence, durable
+recovery/abort and exact native permits), and independently
+qualify each dependent phase, or qualify exact on-demand
+rehydration with measured capacity. No path alias, smaller
+unqualified image, permanent recovery weakening or retirement
+credit. The existing original remains protected. WE2/WE4
+native exclusive-window and actual Intel admission outstanding.
+
+Five held worktrees: two exact tracked-source bytecode matches
+with original compile filename, including recursive code,
+constants, exception and line tables. Confirmed GitHub ancestry,
+descriptor identity excluding read-only atime changes, exact
+cache digest, tracked source and no visible consumers. Two
+non-force retirements at16:47:40Z, 16936KiB gross,
+M1 available15160932→15178484KiB; branches retained.
+Three stale, nonmatching caches remain original and held
+for evidence disposition; no forced deletion. Prior54+2=56
+physical worktrees retired. No HEL1 credit or financial gate
+closure. Historical HD original remains protected.

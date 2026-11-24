@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war", "aoe2dewarwagers"]
 audience: ["developers", "operators", "ai-agents"]
 source_of_truth: "git"
 authority: "source-only-c06-hostkey-observation-no-backup-authority"
-reviewed_at: "2026-11-08"
+reviewed_at: "2026-11-24"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -97,3 +97,11 @@ All 16 dedicated adversarial tests passed.
 
 No step in this source observer grants permission for the next step.
 Formal C06/C07 and funded WOLO remain HARD HOLD.
+
+## Current applicability — reviewed 2026-11-24
+
+The November 8 observer did not authenticate a client. The separate November 24 owner-native pinned SSH receipt #7131784934 did authenticate to the Intel x86_64 receiver, verified FileVault and measured 221,516,890,112 free bytes. Receiver readiness is complete for that observation, but actual capture/restore budget and a fresh window remain separate. No witness-port substitution.
+
+Current execution boundary: C04 and C08 are closed; C03, C06 and C07 remain open. Temporary complete producer/reconnect and chain quiescence is required for C06, followed by independently verified C07 recovery before permanent C03 writer exclusion. Financial listeners 8092–8095 remain closed; PostgreSQL remains loopback-only; preserve the 3030 rollback and 3033 emergency runtimes. Shared website/other PostgreSQL dependencies require authenticated B PREPARE and a reviewed maintenance/restoration window; WE2 must admit exact capacity and noncompeting workload priority. No production outage, signing or financial activation is authorized by this review. Funding DENIED.
+
+Evidence: [coordinated checkpoint PR #258](https://github.com/Emaren/wolochain/pull/258), [physical receiver receipt](https://github.com/Emaren/wolochain/issues/239#issuecomment-7131784934), [native recovery and coordinator evidence](https://github.com/Emaren/wolochain/pull/258#issuecomment-7132828076). Historical observations above are retained as dated evidence, not current runtime claims.

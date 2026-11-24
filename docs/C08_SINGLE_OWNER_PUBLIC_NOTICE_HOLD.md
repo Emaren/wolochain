@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war"]
 audience: ["operators", "developers", "financial-reviewers"]
 source_of_truth: "git"
 authority: "public-notice-source-integrity-only-no-financial-permit"
-reviewed_at: "2026-11-07"
+reviewed_at: "2026-11-24"
 review_interval_days: 7
 sensitivity: "internal"
 ---
@@ -70,3 +70,9 @@ The owner-device NONFINANCIAL governance-direction receipt SHA256 is
 `3951e77f153e9a7b9ca27fa17548d67521cd55cc61489b5b612d0ecde843aca4`.
 It was automatically signed under owner instruction and is not a
 contemporaneous human-authorized WOLO spend.
+
+## Current applicability — reviewed 2026-11-24
+
+The publication-period evidence is already established and remains a historical prerequisite of the later adopted V3 governance policy. C08 and C04 are now CLOSED; seven other gates remain OPEN. No new notice-age run or five-human constitution workaround is needed for current recovery. Maintain zero funding and separate phase-specific execution authority.
+
+Canonical status and execution evidence: [#239](https://github.com/Emaren/wolochain/issues/239), [#258](https://github.com/Emaren/wolochain/pull/258), [expanded witness source receipt](https://github.com/Emaren/wolochain/pull/258#issuecomment-7133994664). C04/C08 CLOSED; funding DENIED; custody inactive. This review does not change any historical signature, enrollment or permit.

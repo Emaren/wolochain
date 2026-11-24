@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war"]
 audience: ["operators", "developers", "ai-agents", "financial-reviewers"]
 source_of_truth: "git"
 authority: "proposed-policy-no-mainnet-financial-authorization"
-reviewed_at: "2026-11-06"
+reviewed_at: "2026-11-24"
 review_interval_days: 7
 sensitivity: "internal"
 ---
@@ -55,3 +55,9 @@ The implementation must still use distinct technical surfaces: an owner intent-s
 The prior owner explicitly chose one-human centralized governance, and the engineering team is asked to propose a truthful operating model. This document **does not enroll a key, ratify a policy, grant custody or reserve permission, move funds, deploy 8094/8095, or close any formal C01–C09 gate**. A distinct reviewed implementation and exact owner approval are still required. Initial funded canary allowance is zero.
 
 Machine-readable draft: docs/settlement-contracts/solo-owner-governance-proposal-20261106.json.
+
+## Current applicability — reviewed 2026-11-24
+
+The older proposal is superseded for C08 by the actual adopted P256 Keychain V3 zero-funded governance receipt in C08_NATIVE_GOVERNANCE_ADMISSION. One owner is not independent human approval. No need to repeat the old signer ceremony; C06 maintenance and C09 transaction authority are distinct.
+
+Current decision boundary: [financial authority #239](https://github.com/Emaren/wolochain/issues/239) and [coordinated recovery #258](https://github.com/Emaren/wolochain/pull/258). C04/C08 closed; C01/C02/C03/C05/C06/C07/C09 open. Funding DENIED; custody inactive. This renewal is a source and dated-evidence applicability review, not a new physical receipt.
