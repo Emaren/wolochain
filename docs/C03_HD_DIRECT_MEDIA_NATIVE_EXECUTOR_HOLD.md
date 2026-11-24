@@ -17,17 +17,17 @@ sensitivity: "restricted"
 
 Separate stack on #259 exact 3e4c50452541805742f31bd743117b0863582f60.
 No change to the qualified 56-check media SQL or #258. Implementation
-commit 37fd44051da6875b83a604341d330d3469079ba3.
+commit 5f6e4138b09ff500f137c3fe30582c01e0ab9b4c.
 
 ## Fixed identities
 
 - Executor scripts/c03_hd_direct_media_native_executor.py
-  SHA256 a2cd1e97112897c957915ae7c3f82d912338e4d3d5285e3cd95468f477ce83db.
+  SHA256 f91685bbc1976ce679196221a5ad8d907907e03197413eaa5e4140bdfa86a39d.
 - Catalog witness scripts/c03_hd_direct_media_catalog_witness.sql
   SHA256 d1a0b2158b48da9d10f140fe67dd6fe454c44956d511787e5f26f71c344b59a4.
 - Exact #259 install db4c80451f9bb627598105b826c45d9ee115fd462a56d08aebf5deb79ad0723c;
   inverse 2298690e5c1c412cdd73d232c9469ee7e268c191fbaa0816e9f6340fde138baf.
-- Owner preimage helper e1f4a4a8181993f1efe2f494392dde0de163bbe933ad10371a00f7eeb547fcc1,
+- Owner preimage helper 5f13af27345083c80d7c5e877e175b024f351644177e777c4f69fcb3a08e355d,
   existing catalog audit a25b85c8f5f1cb95d6e320029d6ff5267cd7fd9fd6180b9c34e777f15f1aa8e7.
 - Separate owner Keychain source cf912cf4b4419b6b15d655b5e3b8aa2d4423ff835d521fdd153a2cd15a40b558
   and permit builder 84ec242fe02d0767fb92abe74bf6e42cf0a5357ae013d62a896ee6eac0a06455.
@@ -35,7 +35,13 @@ commit 37fd44051da6875b83a604341d330d3469079ba3.
 ## Native evidence
 
 Disposable Homebrew PG16.10, private AF_UNIX, 26/26 focused executor
-composition checks passed. Actual generated disposable P-256 signature
+composition checks passed on dc78aa6b. Final WE2 review delta 13/13
+PASS independently targeted: descriptor/path replacement, symlink/mode/hash
+refusal, immutable validated bytes used for all four HD/DE reads, actual
+expired/not-yet-valid SQL entry, expiry after DDL atomic rollback, fresh
+window install and unchanged DE. The after-DDL fixture inserted a test-only
+delay before the exact final guard. Fixture removed; no prior local
+qualification rerun. New Linux exact head CI required. Actual generated disposable P-256 signature
 verified; tampered signed preimage, scope/nonce/expiry and changed SQL
 denied. Real stale financial ACL digest rejected inside transaction.
 Real exact install with invariant including original roles, memberships,
@@ -72,7 +78,9 @@ binds actual HD full/invariant and DE full catalog digests. Preflight
 read-only; install/inverse only HD. PostgreSQL connection uses OS postgres
 peer and fixed local socket, port and database. One serializable
 transaction checks the signed catalog before DDL and the invariant and
-postimage before COMMIT. The inverse additionally binds exact prior
+postimage before COMMIT. Permit validity is rechecked after durable nonce
+consumption immediately before SQL, at SQL entry and before COMMIT, with
+expired/uncertain state held rather than retried. The inverse additionally binds exact prior
 preimage from durable install receipt and refuses populated media ledger.
 Post-commit independent readbacks must agree including unchanged DE and
 HBA, or durable UNKNOWN/no retry. No auto-inverse after uncertain COMMIT.
@@ -82,14 +90,30 @@ serializable catalog check alone does not establish comprehensive exclusion.
 ## Owner action — first read-only production evidence
 
 On HEL1, the three source-pinned read-only capture files have been staged
-in owner-only /home/tony/we1-hd-direct-media-preimage-v2-20261124 (0700);
+in owner-only /home/tony/we1-hd-direct-media-preimage-v3-20261124 (0700);
 SQL files 0600, helper 0700. Native SHA readback matched all three.
 No protected directory, database, HBA, service, or root executor mutated.
-Earlier v1 stage is superseded; use v2 only.
+Earlier stages are superseded for admission. V2 owner production capture
+completed during review and is retained unmodified at
+/home/tony/we1-hd-direct-media-preimage-v2-20261124/capture-fqljdQoo.
+Manifest SHA256 28839242f5c917a4a81f2fa3ccb504023d6bf00c3f5ccb93071ff71d759d7705;
+6/6 files independently verified. PG16.15, both media object counts zero,
+HBA parse errors and enabled event triggers zero, HD text body MD5 exact.
+Observed four HD target owners aoe2hd_user, RLS/force RLS false, no enabled
+custom target triggers, eight inbound FKs to target relations enumerated
+for independent review; no claim comprehensive financial exclusion. Both login roles
+reported no transitive membership; DE CONNECT ACL still true, not proof
+of usable authentication. Require actual HBA/SCRAM denial.
+The v2 helper had a check/use race identified by WE2; its production
+observation is preliminary, not an exact-byte admission witness. V3 now
+loads both bounded owner-private SQL files once with no-follow descriptors,
+validates ownership/mode/inode/size/timestamps/hash and executes only the
+retained immutable bytes via fixed local psql. Requires corrected owner
+capture and independent review of actual protected catalog before admission.
 
 From the owner's real M1 terminal run:
 
-    ssh -t hel1 /home/tony/we1-hd-direct-media-preimage-v2-20261124/c03_hd_direct_media_owner_preimage.sh
+    ssh -t hel1 /home/tony/we1-hd-direct-media-preimage-v3-20261124/c03_hd_direct_media_owner_preimage.py
 
 Type READ-ONLY-HD-DIRECT-MEDIA and authenticate sudo locally if requested.
 Do not send password or any signing private material to ChatGPT.

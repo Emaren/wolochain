@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `we1/chat-media-native-admission-20261124` at `37fd44051da6875b83a604341d330d3469079ba3`
+Implementation baseline: `we1/chat-media-native-admission-20261124` at `5f6e4138b09ff500f137c3fe30582c01e0ab9b4c`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
