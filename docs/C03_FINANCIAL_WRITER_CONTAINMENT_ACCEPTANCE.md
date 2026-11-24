@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war"]
 audience: ["developers", "operators", "ai-agents"]
 source_of_truth: "git"
 authority: "source-only-c03-global-containment-plan-not-a-financial-permit"
-reviewed_at: "2026-11-06"
+reviewed_at: "2026-11-24"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -109,3 +109,9 @@ including root/user cron, containers, Traffic, 3030 and 3032 Next.js
 pools, post-authorization reconnect, trigger/SECURITY DEFINER paths,
 settlement journals and WOLO custody. No command or receipt in this
 subsection authorizes closing C03 or starting funded 8094/8095.
+
+## Current applicability — reviewed 2026-11-24
+
+For the current campaign distinguish temporary C03-A quiescence from permanent C03-B closure: the actual C06 checkpoint includes the whole shared PostgreSQL 16 cluster (all databases, roles and WAL), closed chain LevelDB application/block/consensus state, journals and nonce evidence. #258 proves these recovery mechanisms in disposable fixtures. A coordinated clean shutdown may temporarily interrupt shared website clients and native chain service only with authentic B PREPARE, separately admitted restart/abort plan and WE2 exclusive window. Preserve fallback artifacts, configuration, and the original active-state set; do not assume the historical requirement for an uninterrupted rollback PID can coexist with a whole-cluster offline checkpoint. If B cannot admit that bounded outage, HOLD and review another capture method. Production writer exclusion, complete recovery and actual permanent ACL/owner migration remain unproven. Canonical live financial tracker is #239.
+
+Earlier observations and instructions above remain date-bound historical evidence. C04/C08 CLOSED; C03/C06/C07 OPEN. Funding DENIED; custody inactive; legacy settlement masks and closed 8092–8095 preserved, PostgreSQL 5432 loopback-only. No source review, fixture receipt, or historical operator instruction authorizes production changes. Evidence: [financial authority #239](https://github.com/Emaren/wolochain/issues/239), [coordinated checkpoint #258](https://github.com/Emaren/wolochain/pull/258), [native Linux and scope receipt](https://github.com/Emaren/wolochain/pull/258#issuecomment-7133287515).
