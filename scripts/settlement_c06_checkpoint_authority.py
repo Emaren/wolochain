@@ -7,7 +7,7 @@ Old solo-capture packets cannot authorize a whole shared-cluster checkpoint.
 from datetime import timedelta
 import hashlib
 import settlement_solo_owner_intent_review as owner
-from settlement_c06_checkpoint_coordinator import validate_plan
+from settlement_c06_checkpoint_coordinator import validate_plan, STEPS
 import settlement_maintenance_nonce_store as nonces
 from settlement_c06_checkpoint_rehearsal import canonical, digest, hash64
 
@@ -77,7 +77,7 @@ def review_witness_plan(plan, *, local_identity, source_identity,
 def consume_expanded_witness(enrollment, packet, plan, *, phase, previous,
         source_commit, enrollment_pin, owner_pin, openssl_path,
         local_identity, source_identity, witness_identity, expected_plan_sha,
-        nonce_root, now=None):
+        nonce_root, journal, now=None):
     """Witness-side library: a genuine signature plus durable one-use storage.
 
     A protected dispatcher must independently load the pinned source, plan and
@@ -88,6 +88,15 @@ def consume_expanded_witness(enrollment, packet, plan, *, phase, previous,
     review_witness_plan(plan, local_identity=local_identity,
         source_identity=source_identity, witness_identity=witness_identity,
         expected_plan_sha=expected_plan_sha)
+    # The independent witness, not the source host's request, owns phase
+    # lineage. An admitted phase is anchored before its ACK can leave.
+    owner.require(journal.fd is not None and journal.lock is not None and
+                  journal.plan_sha == expected_plan_sha and journal.read() == journal.records and
+                  journal.tip == previous and phase in PHASE_STEPS,
+                  "EXPANDED_WITNESS_JOURNAL_BINDING")
+    before, admitted = PHASE_STEPS[phase]
+    owner.require((journal.records[-1]["step"] if journal.records else None) == before,
+                  "EXPANDED_WITNESS_PHASE_ORDER")
     kwargs = dict(phase=phase, previous=previous, source_commit=source_commit,
         enrollment_pin=enrollment_pin, owner_pin=owner_pin,
         openssl_path=openssl_path, now=now)
@@ -99,7 +108,7 @@ def consume_expanded_witness(enrollment, packet, plan, *, phase, previous,
     # Check the same signature/window again after durable reservation.
     # An expired packet is still spent; uncertainty is never an unused nonce.
     review(enrollment, packet, plan, **kwargs)
-    return {"schema":ACK_SCHEMA,"phase":phase,"plan":checked["plan"],
+    ack = {"schema":ACK_SCHEMA,"phase":phase,"plan":checked["plan"],
             "previous":previous,"packet":checked["packet"],
             "request_sha256":digest(canonical(request)),
             "witness_identity":local_identity,
@@ -107,6 +116,10 @@ def consume_expanded_witness(enrollment, packet, plan, *, phase, previous,
             "nonce":checked["nonce"],"expires":checked["expires"],
             "fresh_consumption_confirmed":True,
             "production_authorized":False,"funding_authorized":False}
+    receipt = verify_expanded_witness_ack(ack, enrollment, packet, plan,
+        witness_identity=witness_identity, **kwargs)
+    journal.append(admitted, digest(canonical(receipt)))
+    return ack
 
 def verify_expanded_witness_ack(ack, enrollment, packet, plan, *,
         phase, previous, source_commit, enrollment_pin, owner_pin, openssl_path,
@@ -136,3 +149,47 @@ def verify_expanded_witness_ack(ack, enrollment, packet, plan, *,
     return {"phase":phase,"plan":checked["plan"],"previous":previous,
             "packet":checked["packet"],"witness":digest(canonical(ack)),
             "nonce":checked["nonce"],"expires":checked["expires"]}
+
+
+# Containment requires an independently reviewed recovery transition; it must
+# not fall through into the normal capture/resume state machine.
+PHASE_STEPS = {"capture":(None,"ADMITTED"),
+               "restore":("RECEIVER_VERIFIED","RESTORE_ADMITTED"),
+               "resume":("RESTORED","RESUME_ADMITTED")}
+ADMISSION_STEPS = frozenset(after for _,after in PHASE_STEPS.values())
+ANCHOR_SCHEMA = "wolo.c06.expanded-witness-journal-anchor.v1"
+
+def anchor_witness_record(journal, record, *, plan, local_identity,
+        source_identity,witness_identity,expected_plan_sha):
+    """Mirror exact source journal records to the separate enrolled witness.
+
+    Called only by an authenticated, separately installed native dispatcher.
+    Admission records must have been preanchored by signature consumption.
+    Duplicate exact last records are readbacks, not fresh effect admissions.
+    """
+    review_witness_plan(plan,local_identity=local_identity,
+        source_identity=source_identity,witness_identity=witness_identity,
+        expected_plan_sha=expected_plan_sha)
+    owner.require(journal.fd is not None and journal.lock is not None and
+        journal.plan_sha==expected_plan_sha and journal.read()==journal.records and
+        type(record) is dict and set(record)=={"schema","index","step","plan","previous","evidence"}
+        and record["schema"]=="wolo.c06.checkpoint-journal.v1"
+        and record["plan"]==expected_plan_sha and type(record["index"]) is int
+        and hash64(record["evidence"]), "EXPANDED_WITNESS_RECORD_INVALID")
+    if journal.records and canonical(record)==canonical(journal.records[-1]):
+        # A repeated exact tip is only a readback. This is required when the
+        # source records a phase that the witness preanchored during admission.
+        status="EXISTING_TIP_READBACK"
+    else:
+        index=len(journal.records)
+        owner.require(index<len(STEPS) and record["index"]==index and
+            record["step"]==STEPS[index] and record["step"] not in ADMISSION_STEPS
+            and record["previous"]==journal.tip,"EXPANDED_WITNESS_ANCHOR_ORDER")
+        journal.append(record["step"],record["evidence"])
+        owner.require(canonical(journal.records[-1])==canonical(record),
+                      "EXPANDED_WITNESS_RECORD_DRIFT")
+        status="NEW_TIP_ANCHORED"
+    return {"schema":ANCHOR_SCHEMA,"plan":expected_plan_sha,
+            "step":record["step"],"tip":journal.tip,
+            "witness_identity":local_identity,"status":status,
+            "production_authorized":False,"funding_authorized":False}

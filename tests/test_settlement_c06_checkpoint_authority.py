@@ -12,6 +12,7 @@ sys.path.insert(0,str(Path(__file__).resolve().parents[1]/"scripts"))
 import settlement_c06_checkpoint_authority as a
 import settlement_solo_owner_intent_review as owner
 from test_settlement_c06_checkpoint_coordinator import plan
+from settlement_c06_checkpoint_coordinator import Journal
 
 def sha(b):return hashlib.sha256(b).hexdigest()
 def utc(t):return t.strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -87,7 +88,10 @@ class SignatureTests(unittest.TestCase):
         args=self.witness_args()|dict(local_identity="c"*64,
             witness_identity="c"*64,source_identity=self.plan["host"],
             expected_plan_sha=a.validate_plan(self.plan),nonce_root=root)
-        return a.consume_expanded_witness(self.enroll,packet,self.plan,**(args|overrides))
+        witness=self.root/"journal";witness.mkdir(mode=0o700,exist_ok=True)
+        with Journal(witness,a.validate_plan(self.plan)) as journal:
+            return a.consume_expanded_witness(self.enroll,packet,self.plan,
+                                               journal=journal,**(args|overrides))
 
     def test_real_signature_durable_witness_and_ack(self):
         packet=self.packet()
@@ -99,7 +103,7 @@ class SignatureTests(unittest.TestCase):
         self.assertEqual(got["packet"],sha(packet))
         self.assertEqual(got["witness"],sha(a.canonical(ack)))
         self.assertEqual(len(list((self.root/"nonces").glob("nonce-*.json"))),1)
-        with self.assertRaises(a.nonces.ReservationRefused):self.consume(packet)
+        with self.assertRaises(owner.AuthorityHold):self.consume(packet)
         for k,v in (("packet","d"*64),("witness_identity","d"*64),
                     ("record_sha256","d"*64),("fresh_consumption_confirmed",1),
                     ("production_authorized",True)):
@@ -126,5 +130,48 @@ class SignatureTests(unittest.TestCase):
         with self.assertRaises(owner.AuthorityHold):
             self.consume(self.packet(domain=owner.DOMAIN))
         self.assertFalse(list((self.root/"nonces").glob("nonce-*.json")))
+
+    def anchor_args(self):
+        return dict(plan=self.plan,local_identity="c"*64,witness_identity="c"*64,
+                    source_identity=self.plan["host"],expected_plan_sha=a.validate_plan(self.plan))
+
+    def test_witness_preanchors_phase_and_exact_source_mirror(self):
+        packet=self.packet()
+        ack=self.consume(packet)
+        with Journal(self.root/"journal",a.validate_plan(self.plan)) as j:
+            self.assertEqual(j.records[-1]["step"],"ADMITTED")
+            receipt=a.verify_expanded_witness_ack(ack,self.enroll,packet,self.plan,
+                    witness_identity="c"*64,**self.witness_args())
+            self.assertEqual(j.records[-1]["evidence"],sha(a.canonical(receipt)))
+            admitted=j.records[-1]
+            result=a.anchor_witness_record(j,admitted,**self.anchor_args())
+            self.assertEqual(result["status"],"EXISTING_TIP_READBACK")
+            fence={"schema":admitted["schema"],"index":1,"step":"FENCE_INTENT",
+                   "plan":admitted["plan"],"previous":j.tip,"evidence":"d"*64}
+            for change in ({"previous":"e"*64},{"step":"RESUME_ADMITTED"},
+                           {"index":2},{"plan":"f"*64}):
+                with self.subTest(change=change),self.assertRaises(owner.AuthorityHold):
+                    a.anchor_witness_record(j,fence|change,**self.anchor_args())
+            self.assertEqual(a.anchor_witness_record(j,fence,**self.anchor_args())["status"],
+                             "NEW_TIP_ANCHORED")
+            self.assertEqual(j.records[-1],fence)
+            self.assertEqual(a.anchor_witness_record(j,fence,**self.anchor_args())["status"],
+                             "EXISTING_TIP_READBACK")
+            with self.assertRaises(owner.AuthorityHold):
+                a.anchor_witness_record(j,admitted,**self.anchor_args())
+        with Journal(self.root/"journal",a.validate_plan(self.plan)) as j:
+            self.assertEqual(j.records[-1],fence)
+        # A different genuine nonce cannot reopen capture for this plan.
+        with self.assertRaises(owner.AuthorityHold):
+            self.consume(self.packet(self.q|{"nonce":"3"*32}))
+
+    def test_no_admission_by_raw_journal_record(self):
+        path=self.root/"empty";path.mkdir(mode=0o700)
+        with Journal(path,a.validate_plan(self.plan)) as j:
+            raw={"schema":"wolo.c06.checkpoint-journal.v1","index":0,"step":"ADMITTED",
+                 "plan":j.plan_sha,"previous":None,"evidence":"e"*64}
+            with self.assertRaises(owner.AuthorityHold):
+                a.anchor_witness_record(j,raw,**self.anchor_args())
+            self.assertFalse(j.records)
 
 if __name__=="__main__":unittest.main()
