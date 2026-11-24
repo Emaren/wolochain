@@ -1153,7 +1153,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-11-10",
       "sensitivity": "internal",
-      "sha256": "0a9d640e5ca1bdc0da92b0cc218acf16456fb478abdf2d9cd625a6a44e8fc7c5",
+      "sha256": "ee953d942515b2960c93f23c4cf6926951a6dc0c5083181d9318c158b4279fa3",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1176,7 +1176,7 @@
       "review_interval_days": 7,
       "reviewed_at": "2026-11-24",
       "sensitivity": "internal",
-      "sha256": "97795e1ed8643eb761b4e672006332f97e7abfd6d9815a760bcb45a77229272a",
+      "sha256": "37f6e76928c8eb610aa99b55cc621c63757c7d1f40fdee29f34cdb116057abe0",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -2278,7 +2278,7 @@
   "generated_at": "2026-08-10T15:48:36.946892+00:00",
   "implementation_baseline": {
     "branch": "we1/c06-coordinated-checkpoint-rehearsal-20261124",
-    "commit": "9fa769b5869f417e632417c0ef23f09a2b063068"
+    "commit": "6d9829e2b3889592a90b9e09514b8868dd5e27b0"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
