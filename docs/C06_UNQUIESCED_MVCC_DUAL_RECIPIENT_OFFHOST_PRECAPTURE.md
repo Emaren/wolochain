@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2hdbets", "aoe2dewarwagers"]
 audience: ["operators", "developers", "financial-reviewers", "ai-agents"]
 source_of_truth: "git"
 authority: "prebackup-only-no-writer-fence-no-live-financial-release"
-reviewed_at: "2026-11-08"
+reviewed_at: "2026-11-24"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -68,3 +68,11 @@ The much larger HD export must be assessed separately from its own fresh owner-p
 The dedicated hermetic test suite covers exact Pg16 low-priority allowlisted commands, no arbitrary SQL, safe dual-key/host fingerprint checks, bounded private-file/age-only behavior, Python3.8 Intel readback compatibility, **real receiver code executed on synthetic encrypted bytes**, independent readback, hostile packet SHA mismatch with partial-file cleanup, replay rejection with original file intact, nonallowlisted DB refusal and 0600 owner receipt idempotence. No confidential production data is ever used inside CI tests.
 
 **Formal C01–C09 still HARD HOLD.** This changes only the available *preparatory* off-host full-data evidence. A qualifying C06 still demands real C03 writer fences, same-window exact B-safe rollback, externally anchored immutable WAL/journals, source/current-owner signed backup permit, authenticated same-state capture, decryption and a physical isolated HD+DE restore with no counter reset or WOLO movement. Do not mistake this standby ciphertext for a funded recovery release.
+
+## Current applicability — reviewed 2026-11-24
+
+The November 8 capacity and separate MVCC exports are historical. The physical shared-cluster recovery mechanism is qualified on disposable M1 and Linux fixtures in PR #258, but independent production capture is still absent. The old per-database snapshot and 12 GiB ceiling are not the new complete capture contract.
+
+Current execution boundary: C04 and C08 are closed; C03, C06 and C07 remain open. Temporary complete producer/reconnect and chain quiescence is required for C06, followed by independently verified C07 recovery before permanent C03 writer exclusion. Financial listeners 8092–8095 remain closed; PostgreSQL remains loopback-only; preserve the 3030 rollback and 3033 emergency runtimes. Shared website/other PostgreSQL dependencies require authenticated B PREPARE and a reviewed maintenance/restoration window; WE2 must admit exact capacity and noncompeting workload priority. No production outage, signing or financial activation is authorized by this review. Funding DENIED.
+
+Evidence: [coordinated checkpoint PR #258](https://github.com/Emaren/wolochain/pull/258), [physical receiver receipt](https://github.com/Emaren/wolochain/issues/239#issuecomment-7131784934), [native recovery and coordinator evidence](https://github.com/Emaren/wolochain/pull/258#issuecomment-7132828076). Historical observations above are retained as dated evidence, not current runtime claims.

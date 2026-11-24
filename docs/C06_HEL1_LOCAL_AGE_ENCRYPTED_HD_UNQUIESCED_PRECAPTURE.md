@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war"]
 audience: ["operators", "developers", "financial-reviewers", "ai-agents"]
 source_of_truth: "git"
 authority: "inert-readonly-unquiesced-capture-not-c06-release"
-reviewed_at: "2026-11-09"
+reviewed_at: "2026-11-24"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -33,3 +33,11 @@ This closes the prior **capture-time** bottleneck caused by HEL1-to-M1 wide-area
 **C06 and C07 remain OPEN.** The physical HD snapshot above was UNQUIESCED and is only one database. It was not synchronized with DE, original financial SQL writers, durable financial journals, PostgreSQL WAL, validator-consensus header or independently anchored bank root. It cannot be treated as accepted offhost redundancy until the exact ciphertext is copied, hash-matched, decrypted and independently restored from Intel. It does not authorize C01 signer enrollment, C03 owner migration, C05 collateral or a C09 canary.
 
 C08 remains formally closed (zero funded permission). Preserve the legacy chain, 8092/8093 and both 3030/3032 website profiles. Do not claim C06 from this successful script alone.
+
+## Current applicability — reviewed 2026-11-24
+
+The 67-second HD logical dump does not bound physical checkpoint downtime or full encrypted archive size. The 872,018,705-byte historical object remains a separate recovery point, never a substitute for the whole PostgreSQL cluster including WAL, closed chain state and journals.
+
+Current execution boundary: C04 and C08 are closed; C03, C06 and C07 remain open. Temporary complete producer/reconnect and chain quiescence is required for C06, followed by independently verified C07 recovery before permanent C03 writer exclusion. Financial listeners 8092–8095 remain closed; PostgreSQL remains loopback-only; preserve the 3030 rollback and 3033 emergency runtimes. Shared website/other PostgreSQL dependencies require authenticated B PREPARE and a reviewed maintenance/restoration window; WE2 must admit exact capacity and noncompeting workload priority. No production outage, signing or financial activation is authorized by this review. Funding DENIED.
+
+Evidence: [coordinated checkpoint PR #258](https://github.com/Emaren/wolochain/pull/258), [physical receiver receipt](https://github.com/Emaren/wolochain/issues/239#issuecomment-7131784934), [native recovery and coordinator evidence](https://github.com/Emaren/wolochain/pull/258#issuecomment-7132828076). Historical observations above are retained as dated evidence, not current runtime claims.

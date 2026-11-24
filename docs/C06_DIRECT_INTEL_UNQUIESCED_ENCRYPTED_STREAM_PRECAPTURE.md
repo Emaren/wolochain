@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war"]
 audience: ["operators", "developers", "financial-reviewers", "ai-agents"]
 source_of_truth: "git"
 authority: "read-only-unquiesced-backup-rehearsal-hold-not-c06-acceptance"
-reviewed_at: "2026-11-09"
+reviewed_at: "2026-11-24"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -33,3 +33,11 @@ The two age recipients are the original M1 recovery public identity and the sepa
 This source implements a **nonquiesced / non-atomic** physical rehearsal, not an accepted C06 or C07 financial capture. It does not stop all existing financial writers, capture synchronized HD/DE MVCC snapshot coordinates or a trusted Comet bank root, WAL and settlement journals at the same boundary. A successful isolated DB restore is genuine recovery evidence but does not establish funds finality, source role ownership fidelity, nonce/journal consistency or a funded execution permit.
 
 The public web 3032 and protected rollback 3030 must be preserved, and legacy 8092/8093 not confused with native 8094/8095. Do not use the script to certify C06/C07. Continue until: B proves authenticated Steam admin/nonadmin and a finance-safe rollback; A enforces temporary writer quiescence; full same-boundary encrypted HD/DE/chain/journal manifests are captured and restored on Intel; a freshly approved C09 exact canary executes once.
+
+## Current applicability — reviewed 2026-11-24
+
+The November 9 DE receipt is historical, not the coordinated snapshot. The earlier 12 GiB limit cannot be presumed adequate for the measured approximately 21.05 GB allocated whole-cluster/chain/journal source. Do not invoke this logical dump path for the coordinated checkpoint.
+
+Current execution boundary: C04 and C08 are closed; C03, C06 and C07 remain open. Temporary complete producer/reconnect and chain quiescence is required for C06, followed by independently verified C07 recovery before permanent C03 writer exclusion. Financial listeners 8092–8095 remain closed; PostgreSQL remains loopback-only; preserve the 3030 rollback and 3033 emergency runtimes. Shared website/other PostgreSQL dependencies require authenticated B PREPARE and a reviewed maintenance/restoration window; WE2 must admit exact capacity and noncompeting workload priority. No production outage, signing or financial activation is authorized by this review. Funding DENIED.
+
+Evidence: [coordinated checkpoint PR #258](https://github.com/Emaren/wolochain/pull/258), [physical receiver receipt](https://github.com/Emaren/wolochain/issues/239#issuecomment-7131784934), [native recovery and coordinator evidence](https://github.com/Emaren/wolochain/pull/258#issuecomment-7132828076). Historical observations above are retained as dated evidence, not current runtime claims.
