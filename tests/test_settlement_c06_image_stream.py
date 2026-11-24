@@ -148,4 +148,48 @@ class ImageStream(unittest.TestCase):
         self.assertFalse(result["independent_restore"])
         with self.assertRaises(Hold):im.seal_transfer_manifest(initial,receipts[:1],**args)
         with self.assertRaises(Hold):im.seal_transfer_manifest(initial,receipts,**(args|{"source_sha256":digest(b"wrong")}))
+    def test_single_target_reconstruction_and_failed_decrypt(self):
+        from settlement_c06_checkpoint_rehearsal import canonical
+        from contextlib import contextmanager
+        pieces=[b"a"*(im.BLOCK+7),b"tail"]
+        source=dict(device=1,inode=2,uid=0,gid=0,mode=0o600,
+            bytes=sum(map(len,pieces)),allocated_bytes=2*im.BLOCK,mtime_ns=1,ctime_ns=1)
+        plan=digest(b"plan");offset=0;chunks=[]
+        for i,piece in enumerate(pieces):
+            chunks.append(dict(index=i,offset=offset,plain_bytes=len(piece),
+                cipher_bytes=len(piece)+100,plain_sha256=digest(piece),
+                cipher_sha256=digest(b"cipher"+piece)))
+            offset+=len(piece)
+        m=dict(schema="wolo.financial.image-source-manifest.v1",purpose=im.PURPOSE,
+               plan_sha256=plan,source=source,source_sha256=digest(b"".join(pieces)),
+               chunks=chunks)
+        kw=dict(expected_plan=plan,expected_source=source,
+                expected_manifest_sha=digest(canonical(m)),max_chunk_bytes=im.BLOCK+7)
+        @contextmanager
+        def open_chunk(c):
+            yield io.BytesIO(pieces[c["index"]])
+        with tempfile.NamedTemporaryFile() as target:
+            proof=im.reconstruct_financial_image(target.fileno(),m,
+                open_verified_plaintext=open_chunk,**kw)
+            self.assertEqual(proof["sha256"],m["source_sha256"])
+            self.assertTrue(proof["single_target"])
+            self.assertFalse(proof["independent_host_authenticated"])
+            with self.assertRaises(Hold):im.reconstruct_financial_image(
+                target.fileno(),m,open_verified_plaintext=open_chunk,**kw)
+        @contextmanager
+        def failed_tag(c):
+            yield io.BytesIO(pieces[c["index"]])
+            raise Hold("fixture decrypt authentication failed")
+        with tempfile.NamedTemporaryFile() as target:
+            with self.assertRaises(Hold):im.reconstruct_financial_image(
+                target.fileno(),m,open_verified_plaintext=failed_tag,**kw)
+            self.assertEqual(os.fstat(target.fileno()).st_size,len(pieces[0]))
+            with self.assertRaises(Hold):im.reconstruct_financial_image(
+                target.fileno(),m,open_verified_plaintext=open_chunk,**kw)
+        @contextmanager
+        def trailing(c):
+            yield io.BytesIO(pieces[c["index"]]+b"extra")
+        with tempfile.NamedTemporaryFile() as target:
+            with self.assertRaises(Hold):im.reconstruct_financial_image(
+                target.fileno(),m,open_verified_plaintext=trailing,**kw)
 if __name__=="__main__":unittest.main()

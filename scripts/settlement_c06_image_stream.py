@@ -317,3 +317,55 @@ def seal_transfer_manifest(initial, receipts, *, expected_initial_sha,
     return {"manifest":manifest,"seal":seal,"seal_sha256":expected_seal_sha,
             "independent_restore":False,"resume_authorized":False,
             "retirement_authorized":False}
+
+
+def reconstruct_financial_image(fd, manifest, *, expected_plan, expected_source,
+        expected_manifest_sha, max_chunk_bytes, open_verified_plaintext):
+    """Single destination, bounded plaintext reconstruction and full readback.
+
+    The native Intel Linux driver owns isolated target admission, immutable
+    encrypted receipt verification, decryptor authentication/exit status,
+    reserve and mount exclusion. open_verified_plaintext(chunk) must be a
+    context manager which raises on failed authentication or decryption.
+    No source path or temp file is opened here. Partial output is retained
+    on failure and cannot be automatically replayed into this descriptor.
+    """
+    bound=financial_manifest(manifest,expected_plan=expected_plan,
+        expected_source=expected_source,expected_manifest_sha=expected_manifest_sha,
+        max_chunk_bytes=max_chunk_bytes)
+    st=os.fstat(fd)
+    require(stat.S_ISREG(st.st_mode) and st.st_nlink==1 and st.st_size==0
+            and st.st_uid==os.geteuid() and stat.S_IMODE(st.st_mode)==0o600
+            and (st.st_dev,st.st_ino)!=(expected_source["device"],expected_source["inode"])
+            and callable(open_verified_plaintext),"IMAGE_NEW_TARGET_REQUIRED")
+    total=hashlib.sha256();offset=0
+    start=time.monotonic_ns()
+    for c in manifest["chunks"]:
+        require(offset==c["offset"],"IMAGE_RECONSTRUCTION_OFFSET")
+        h=hashlib.sha256();remaining=c["plain_bytes"]
+        # Context exit must verify native decryptor success, even if the
+        # expected bytes were already delivered. Never accept a truncated tag.
+        with open_verified_plaintext(dict(c)) as stream:
+            while remaining:
+                data=stream.read(min(BLOCK,remaining))
+                require(type(data) is bytes and 0<len(data)<=min(BLOCK,remaining),
+                        "IMAGE_RECONSTRUCTION_SHORT_OR_OVERSIZE")
+                h.update(data);total.update(data)
+                n=os.pwrite(fd,data,offset)
+                require(n==len(data),"IMAGE_RECONSTRUCTION_SHORT_WRITE")
+                offset+=n;remaining-=n
+            require(stream.read(1)==b"","IMAGE_RECONSTRUCTION_TRAILING_PLAINTEXT")
+        require(h.hexdigest()==c["plain_sha256"],"IMAGE_RECONSTRUCTION_CHUNK_HASH")
+    require(offset==bound["source_bytes"] and total.hexdigest()==bound["source_sha256"],
+            "IMAGE_RECONSTRUCTION_WHOLE_HASH")
+    os.fsync(fd)
+    end=os.fstat(fd)
+    require((end.st_dev,end.st_ino,end.st_uid,end.st_mode,end.st_nlink)==
+            (st.st_dev,st.st_ino,st.st_uid,st.st_mode,st.st_nlink)
+            and end.st_size==offset,"IMAGE_RECONSTRUCTION_TARGET_DRIFT")
+    proof=verify_financial_reconstruction(fd,manifest,expected_plan=expected_plan,
+        expected_source=expected_source,expected_manifest_sha=expected_manifest_sha,
+        max_chunk_bytes=max_chunk_bytes)
+    return {**proof,"schema":"wolo.financial.image-single-target-reconstruction.v1",
+            "single_target":True,"reconstruction_wall_ns":time.monotonic_ns()-start,
+            "independent_host_authenticated":False,"retirement_authorized":False}
