@@ -8,7 +8,7 @@ systems: ["wolochain","aoe2war"]
 audience: ["operators","developers","ai-agents"]
 source_of_truth: "git"
 authority: "nonfunded-integration-handoff-only"
-reviewed_at: "2026-11-10"
+reviewed_at: "2026-11-24"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -43,3 +43,9 @@ C02 requires the actually restricted finance-owned durable operation journal and
 ## Release policy
 
 Keep PR #243 draft until its combined exact HEAD is green for Foundation, native Go, reviewer, C03/C07 negative controls and docs, with an independently reviewed nonfinancial runtime separation. Then an authorized merge is only SOURCE acceptance. For formal C01 or C05 closure, require exact installed hashes, real timestamped physical and adversarial receipts, reversible installation evidence, individually signed owner approvals where called for, and a gate-specific acceptance post to WoloChain issue #239. Never reset the chain, reactivate legacy 8092/8093, grant App raw finance tables, waive claims or broadcast funds to make a CI test green.
+
+## Current applicability — reviewed 2026-11-24
+
+The November 10 #243 source integration and old PID/website/Steam observations are historical. Current #258 recovers the physical PG16/Comet/SDK mechanisms and source witness integration, but actual C06 and C07 are still OPEN. C01 and C05 remain separately OPEN; no new custody key/config, reserve pledge, bank replay or claim reassignment is part of this recovery campaign. C04/C08 remain CLOSED. Keep the exact C05 liabilities and original evidence unchanged; current role and reserve measurements require a separately admitted future gate campaign.
+
+Current source and evidence: [#239](https://github.com/Emaren/wolochain/issues/239), [#258](https://github.com/Emaren/wolochain/pull/258), [physical quarantine and witness receipt](https://github.com/Emaren/wolochain/pull/258#issuecomment-7133994664). Funding DENIED; no production permit granted.

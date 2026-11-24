@@ -8,7 +8,7 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "noncrediting-original-request-chain-evidence"
-reviewed_at: "2026-11-04"
+reviewed_at: "2026-11-24"
 review_interval_days: 14
 sensitivity: "restricted"
 ---
@@ -27,3 +27,9 @@ wolo-c04-verify --state-root /mnt/HC_Volume_105319120/wolochain-mainnet/settleme
 ```
 
 All outcomes deliberately exit with code 3 / HOLD, including cryptographically consistent positive candidates. A primary public RPC operated by AoE2WAR is **not** an independently trusted consensus witness; adding another operator URL does not automatically prove independence. No missing/failed/ambiguous read may authorize retry. The separate founder #889 claim is not reconciled by this check. Source QA: `go test ./cmd/wolo-c04-verify` plus `go vet ./cmd/wolo-c04-verify`; `go test ./...` in CI already includes this command.
+
+## Current applicability — reviewed 2026-11-24
+
+C04 is formally closed on the separate preserved quarantine evidence, not because this noncrediting command could ever return a funded PASS. The original request reader remains read-only, HOLD on every candidate; no historical claim retry, credit or new proof run is required during coordinated C06. Preserve original request and chain journal evidence within the admitted checkpoint.
+
+Current source and evidence: [#239](https://github.com/Emaren/wolochain/issues/239), [#258](https://github.com/Emaren/wolochain/pull/258), [physical quarantine and witness receipt](https://github.com/Emaren/wolochain/pull/258#issuecomment-7133994664). Funding DENIED; no production permit granted.
