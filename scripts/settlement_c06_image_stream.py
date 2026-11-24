@@ -97,7 +97,7 @@ def financial_manifest(manifest, *, expected_plan, expected_source,
     require(type(manifest) is dict and set(manifest)=={
         "schema","purpose","plan_sha256","source","source_sha256","chunks"},
         "IMAGE_MANIFEST_FIELDS")
-    require(manifest["schema"]=="wolo.financial.image-continuation.v1"
+    require(manifest["schema"]=="wolo.financial.image-source-manifest.v1"
         and manifest["purpose"]==PURPOSE and hash64(expected_plan)
         and manifest["plan_sha256"]==expected_plan
         and hash64(manifest["source_sha256"])
@@ -217,3 +217,103 @@ def financial_chunk_receipt(raw, manifest, *, expected_plan, expected_source,
         "ciphertext_bytes":chunk["cipher_bytes"],"ciphertext_sha256":chunk["cipher_sha256"],
         "independent_restore":False,"resume_authorized":False,
         "retirement_authorized":False}
+
+
+def financial_prefix(initial, receipts, *, expected_initial_sha, verify_initial,
+                     verify_receipt):
+    """Read-only authenticated-prefix projection, not a sender or grant issuer.
+
+    Native policy pins the initial identity before the first encryption.
+    Each receipt must be authenticated by the existing class-specific
+    verifier and linked to the preceding receipt. No final image hash is
+    assumed at campaign start. The controller owns durability/replay
+    exclusion; this function cannot persist or authorize anything.
+    """
+    import re
+    from settlement_c06_checkpoint_rehearsal import canonical,digest
+    require(type(initial) is dict and set(initial)=={
+        "schema","purpose","campaign","plan_sha256","source","max_chunk_bytes",
+        "recipient_sha256","receiver_identity_sha256"},"PREFIX_INITIAL_FIELDS")
+    require(initial["schema"]=="wolo.financial.image-prefix-identity.v1"
+        and initial["purpose"]==PURPOSE
+        and type(initial["campaign"]) is str
+        and re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}",initial["campaign"])
+        and all(hash64(initial[k]) for k in ("plan_sha256","recipient_sha256",
+                                               "receiver_identity_sha256"))
+        and hash64(expected_initial_sha)
+        and digest(canonical(initial))==expected_initial_sha
+        and callable(verify_initial) and verify_initial(canonical(initial)) is True,
+        "PREFIX_INITIAL_BINDING")
+    source=initial["source"];limit=initial["max_chunk_bytes"]
+    require(type(source) is dict and set(source)==IDENTITY_FIELDS
+        and all(type(v) is int and v>=0 for v in source.values())
+        and 0<source["bytes"]<=MAX_BYTES and source["mode"]==0o600
+        and source["uid"]==source["gid"]==0
+        and source["allocated_bytes"]>=source["bytes"]
+        and type(limit) is int and 0<limit<=1<<32,
+        "PREFIX_SOURCE_IDENTITY")
+    require(type(receipts) is list and len(receipts)<=MAX_CHUNKS
+        and callable(verify_receipt),"PREFIX_RECEIPT_BOUND")
+    previous=expected_initial_sha;offset=0;cipher_total=0;chunks=[]
+    for i,r in enumerate(receipts):
+        require(type(r) is dict and set(r)=={"schema","initial_sha256","previous",
+            "receiver_identity_sha256","chunk","status","retirement_authorized"},
+            "PREFIX_RECEIPT_FIELDS")
+        require(r["schema"]=="wolo.financial.image-prefix-readback.v1"
+            and r["initial_sha256"]==expected_initial_sha and r["previous"]==previous
+            and r["receiver_identity_sha256"]==initial["receiver_identity_sha256"]
+            and r["status"]=="CIPHERTEXT_DURABLE_READBACK_VERIFIED_NOT_RESTORED"
+            and r["retirement_authorized"] is False,"PREFIX_RECEIPT_LINEAGE")
+        c=r["chunk"]
+        require(type(c) is dict and set(c)=={"index","offset","plain_bytes",
+            "cipher_bytes","plain_sha256","cipher_sha256"}
+            and type(c["index"]) is int and c["index"]==i
+            and type(c["offset"]) is int and c["offset"]==offset
+            and type(c["plain_bytes"]) is int and 0<c["plain_bytes"]<=limit
+            and type(c["cipher_bytes"]) is int and 0<c["cipher_bytes"]<=limit+(1<<20)
+            and hash64(c["plain_sha256"]) and hash64(c["cipher_sha256"]),
+            "PREFIX_CHUNK_DRIFT")
+        raw=canonical(r)
+        require(verify_receipt(raw) is True,"PREFIX_RECEIPT_NOT_AUTHENTICATED")
+        previous=digest(raw)
+        offset+=c["plain_bytes"];cipher_total+=c["cipher_bytes"]
+        require(offset<=source["bytes"],"PREFIX_OVERRUN")
+        chunks.append(dict(c))
+    return {"schema":"wolo.financial.image-prefix-projection.v1",
+            "initial_sha256":expected_initial_sha,"tip_sha256":previous,
+            "verified_plain_bytes":offset,"verified_cipher_bytes":cipher_total,
+            "chunks":chunks,"coverage_complete":offset==source["bytes"],
+            "resume_authorized":False,"retirement_authorized":False}
+
+
+def seal_transfer_manifest(initial, receipts, *, expected_initial_sha,
+        verify_initial, verify_receipt, source_sha256, expected_seal_sha,
+        verify_seal):
+    """Map complete authenticated prefix to exact #192 whole-image schema.
+
+    The authenticated final seal binds the original source digest and prefix
+    tip. A shape-only prefix or a caller's hash cannot establish that seal.
+    The result is a candidate for #192's own native verification, never a
+    recovery or retirement receipt.
+    """
+    from settlement_c06_checkpoint_rehearsal import canonical,digest
+    p=financial_prefix(initial,receipts,expected_initial_sha=expected_initial_sha,
+                       verify_initial=verify_initial,verify_receipt=verify_receipt)
+    require(p["coverage_complete"] and hash64(source_sha256)
+            and hash64(expected_seal_sha) and callable(verify_seal),"PREFIX_SEAL_INCOMPLETE")
+    manifest={"schema":"wolo.financial.image-continuation.v1",
+              "identity":{"purpose":"FULL_IMAGE_EXACT","campaign":initial["campaign"],
+                "plan_sha256":initial["plan_sha256"],
+                "source_identity_sha256":digest(canonical(initial["source"])),
+                "source_sha256":source_sha256,"source_bytes":initial["source"]["bytes"],
+                "max_chunk_bytes":initial["max_chunk_bytes"],
+                "recipient_sha256":initial["recipient_sha256"]},"chunks":p["chunks"]}
+    seal={"schema":"wolo.financial.image-prefix-seal.v1",
+          "initial_sha256":expected_initial_sha,"tip_sha256":p["tip_sha256"],
+          "manifest_sha256":digest(canonical(manifest)),"source_sha256":source_sha256}
+    raw=canonical(seal)
+    require(digest(raw)==expected_seal_sha and verify_seal(raw) is True,
+            "PREFIX_SEAL_NOT_AUTHENTICATED")
+    return {"manifest":manifest,"seal":seal,"seal_sha256":expected_seal_sha,
+            "independent_restore":False,"resume_authorized":False,
+            "retirement_authorized":False}

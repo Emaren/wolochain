@@ -44,7 +44,7 @@ class ImageStream(unittest.TestCase):
             chunks=[{"index":i,"offset":i*3,"plain_bytes":3,"cipher_bytes":19,
                      "plain_sha256":digest(raw[i*3:i*3+3]),
                      "cipher_sha256":digest(bytes([i]))} for i in range(2)]
-            m={"schema":"wolo.financial.image-continuation.v1","purpose":im.PURPOSE,
+            m={"schema":"wolo.financial.image-source-manifest.v1","purpose":im.PURPOSE,
                "plan_sha256":plan,"source":source,"source_sha256":digest(raw),"chunks":chunks}
             def kwargs(x):
                 return dict(expected_plan=plan,expected_source=source,
@@ -76,7 +76,7 @@ class ImageStream(unittest.TestCase):
         h=digest(b"abc");plan=digest(b"plan");receiver=digest(b"intel")
         chunk=dict(index=0,offset=0,plain_bytes=3,cipher_bytes=19,
                    plain_sha256=h,cipher_sha256=digest(b"cipher"))
-        m=dict(schema="wolo.financial.image-continuation.v1",purpose=im.PURPOSE,
+        m=dict(schema="wolo.financial.image-source-manifest.v1",purpose=im.PURPOSE,
                plan_sha256=plan,source=source,source_sha256=h,chunks=[chunk])
         mh=digest(canonical(m))
         receipt=dict(schema="wolo.financial.image-chunk-ack.v1",purpose=im.PURPOSE,
@@ -99,4 +99,53 @@ class ImageStream(unittest.TestCase):
                 ("ciphertext_sha256",h),("receiver_identity_sha256",h)):
             with self.assertRaises(Hold):check(dict(receipt,**{key:value}))
         with self.assertRaises(Hold):check(receipt,lambda raw:None)
+    def test_incremental_prefix_and_exact_transfer_seal(self):
+        from settlement_c06_checkpoint_rehearsal import canonical
+        import hmac
+        # Disposable fixture authentication; no production key or route.
+        def mac(raw):return hmac.digest(b"fixture-only-key",raw,"sha256")
+        def sha(v):return digest(canonical(v))
+        initial=dict(schema="wolo.financial.image-prefix-identity.v1",purpose=im.PURPOSE,
+            campaign="fixture",plan_sha256=digest(b"plan"),
+            source=dict(device=1,inode=2,uid=0,gid=0,mode=0o600,bytes=6,
+                        allocated_bytes=512,mtime_ns=1,ctime_ns=1),
+            max_chunk_bytes=3,recipient_sha256=digest(b"recipient"),
+            receiver_identity_sha256=digest(b"receiver"))
+        ih=sha(initial);signed={canonical(initial):mac(canonical(initial))}
+        def verify(raw):return raw in signed and hmac.compare_digest(signed[raw],mac(raw))
+        def sign(v):signed[canonical(v)]=mac(canonical(v))
+        receipts=[];tip=ih
+        for i,data in enumerate((b"abc",b"def")):
+            c=dict(index=i,offset=3*i,plain_bytes=3,cipher_bytes=19,
+                   plain_sha256=digest(data),cipher_sha256=digest(b"cipher"+data))
+            r=dict(schema="wolo.financial.image-prefix-readback.v1",initial_sha256=ih,
+                   previous=tip,receiver_identity_sha256=initial["receiver_identity_sha256"],
+                   chunk=c,status="CIPHERTEXT_DURABLE_READBACK_VERIFIED_NOT_RESTORED",
+                   retirement_authorized=False)
+            sign(r);receipts.append(r);tip=sha(r)
+        kw=dict(expected_initial_sha=ih,verify_initial=verify,verify_receipt=verify)
+        self.assertEqual(im.financial_prefix(initial,[],**kw)["verified_plain_bytes"],0)
+        self.assertEqual(im.financial_prefix(initial,receipts[:1],**kw)["verified_plain_bytes"],3)
+        p=im.financial_prefix(initial,receipts,**kw)
+        self.assertTrue(p["coverage_complete"]);self.assertFalse(p["resume_authorized"])
+        for bad in ([receipts[1]], [receipts[0],receipts[0]],
+                    [receipts[0],dict(receipts[1],retirement_authorized=True)]):
+            with self.assertRaises(Hold):im.financial_prefix(initial,bad,**kw)
+        bad=dict(receipts[1],chunk=dict(receipts[1]["chunk"],cipher_sha256=digest(b"other")))
+        with self.assertRaises(Hold):im.financial_prefix(initial,[receipts[0],bad],**kw)
+        source_sha=digest(b"abcdef")
+        expected=dict(schema="wolo.financial.image-continuation.v1",
+            identity=dict(purpose="FULL_IMAGE_EXACT",campaign="fixture",
+                plan_sha256=initial["plan_sha256"],source_identity_sha256=sha(initial["source"]),
+                source_sha256=source_sha,source_bytes=6,max_chunk_bytes=3,
+                recipient_sha256=initial["recipient_sha256"]),chunks=p["chunks"])
+        seal=dict(schema="wolo.financial.image-prefix-seal.v1",initial_sha256=ih,
+                  tip_sha256=tip,manifest_sha256=sha(expected),source_sha256=source_sha)
+        sign(seal)
+        args=dict(**kw,source_sha256=source_sha,expected_seal_sha=sha(seal),verify_seal=verify)
+        result=im.seal_transfer_manifest(initial,receipts,**args)
+        self.assertEqual(result["manifest"],expected)
+        self.assertFalse(result["independent_restore"])
+        with self.assertRaises(Hold):im.seal_transfer_manifest(initial,receipts[:1],**args)
+        with self.assertRaises(Hold):im.seal_transfer_manifest(initial,receipts,**(args|{"source_sha256":digest(b"wrong")}))
 if __name__=="__main__":unittest.main()
