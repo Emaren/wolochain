@@ -638,3 +638,43 @@ Three stale, nonmatching caches remain original and held
 for evidence disposition; no forced deletion. Prior54+2=56
 physical worktrees retired. No HEL1 credit or financial gate
 closure. Historical HD original remains protected.
+
+### Nov24 native barrier completion binding — separate source candidate
+
+Frozen #258 e0a844e01e0cc381f40a2a3896e55b3ca1aeac79 remains
+unchanged. Prior coordinator and recovery qualification retained.
+A distinct stacked source candidate closes the generic native witness
+dispatch route for FENCED and RESTORED_SERVICES records. Both now require
+the fixed anchor_barrier_completion request, exact signed phase and
+previous journal binding, complete locked independently anchored effect
+journal, exact schedule, tip/count, poststate digest, and positive
+independent lease checks before and after the remote append. The source
+validates the full completed local effect binding, poisons it before
+the exchange, accepts only the exact new witness ACK, and then appends
+the same outer completion locally. Loss of ACK can leave the remote
+journal ahead: HOLD, no automatic retry or rewind. A generic outer
+record cannot stand in for this completed effect chain.
+
+Focused native M1 Python tests 3/3 PASS with actual disposable OpenSSL
+Ed25519 signed capture and resume phases and distinct fsync'd local and
+remote fixture journals. Cases cover incomplete local/remote chains,
+generic completion refusal, wrong effect tip/poststate/outer digest,
+missing or false independent lease, exact completion both phases,
+lost ACK after remote durable append and replay refusal. Synthetic
+service outcomes and in-process transport only; no real Intel enrollment
+or physical effect. Previously qualified suites not repeated locally.
+The dedicated Linux workflow includes the new tests for exact-head CI.
+
+This is a native integration building block, not the complete driver.
+The existing fixture-only coordinator gate remains intact. The outer
+driver must call complete_barrier at the actual intent boundary with
+the independently observed poststate; the witness cannot infer that
+OS effects occurred merely from an intent journal. The native witness
+entrypoint still refuses effect and completion dispatch without actual
+independently admitted lease/journal provider. Protected WE2 lease,
+genuine Intel forced-command enrollment, privileged producer/reconnect
+and external signer exclusion, actual capture/checkpoint/restore and
+resume orchestration remain HOLD. No root files, services, data,
+financial gates, image or signer state changed.
+
+Implementation source: 756e6cbdd3d5e35fd7f496e20079648d56aa34fe.
