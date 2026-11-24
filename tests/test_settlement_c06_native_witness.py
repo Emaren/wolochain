@@ -87,6 +87,45 @@ class NativeProtocol(unittest.TestCase):
                     b.anchor(b.sha,"ADMITTED","a"*64)
                 self.assertFalse(client.anchor.called)
 
+    def test_coordinator_binding_positive_crypto_and_independent_journal(self):
+        # Test only: source and witness on distinct private fixture journals;
+        # real Ed25519 signature, durable nonce reservation and exact ACK parser.
+        f=self.fixture
+        source=f.root/"source-journal";source.mkdir(mode=0o700)
+        packet=f.packet()
+        class LocalTransportFixture:
+            def consume(self,raw,phase,previous):
+                req=dict(action="consume",phase=phase,previous=previous,
+                         packet_b64=base64.b64encode(raw).decode(),plan=f.plan)
+                ack=w.dispatch(w.canonical(req),self_outer.c,self_outer.old,
+                    f.enroll,remote,self_outer.nonces,self_outer.crypto)
+                return a.verify_expanded_witness_ack(ack,f.enroll,raw,f.plan,
+                    phase=phase,previous=previous,witness_identity="c"*64,
+                    **self_outer.crypto)
+            def anchor(self,record):
+                ack=w.dispatch(w.canonical(dict(action="anchor",plan=f.plan,record=record)),
+                    self_outer.c,self_outer.old,f.enroll,remote,self_outer.nonces,self_outer.crypto)
+                return w.verify_anchor_ack(ack,record,"c"*64)
+        self_outer=self
+        with Journal(self.root,self.c["plan_sha256"]) as remote, \
+             Journal(source,self.c["plan_sha256"]) as local:
+            with patch.object(w.os,"geteuid",return_value=0), \
+                 patch.object(w,"NativeWitnessClient",return_value=LocalTransportFixture()), \
+                 patch.object(local,"read",return_value=local.records):
+                b=w.CoordinatorWitnessBinding(f.plan,local)
+            with patch.object(w.legacy,"private_file",return_value=packet):
+                r=b.authenticate_and_consume("capture",f.plan,None)
+            from settlement_c06_checkpoint_coordinator import validate_receipt
+            tip=local.append("ADMITTED",validate_receipt(r,"capture",b.sha,None))
+            self.assertEqual(b.anchor(b.sha,"ADMITTED",tip),tip)
+            self.assertEqual(local.records,remote.records)
+            tip=local.append("FENCE_INTENT","a"*64)
+            self.assertEqual(b.anchor(b.sha,"FENCE_INTENT",tip),tip)
+            self.assertEqual(local.records,remote.records)
+            with self.assertRaises(w.owner.AuthorityHold):
+                b.anchor(b.sha,"FENCE_INTENT",tip)
+            self.assertEqual(len(list(self.nonces.glob("nonce-*.json"))),1)
+
     def test_unenrolled_scope_and_arbitrary_action_rejected(self):
         f=self.fixture
         req={"action":"consume","phase":"capture","previous":None,
