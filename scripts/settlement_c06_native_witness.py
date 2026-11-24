@@ -194,6 +194,60 @@ class NativeWitnessClient:
         return verify_anchor_ack(ack,record,self.old["witness"]["host_identity_sha256"])
 
 
+class CoordinatorWitnessBinding:
+    """Native coordinator authority seam. No effects, lease issuer or installer.
+
+    Packet files are pre-existing root-private, exact-plan, owner-signed
+    inputs. No caller-provided ACK, arbitrary packet path or fallback route.
+    The coordinator remains fixture-gated until the full native driver,
+    producer exclusion, effect anchoring and external lease are admitted.
+    """
+    def __init__(self,plan,journal):
+        require(os.geteuid()==0,"C06_SOURCE_ROOT_REQUIRED")
+        self.sha=validate_plan(plan)
+        self.j=journal
+        self.client=NativeWitnessClient(plan)
+        self.attempted=set()
+        self.anchored=set()
+        self.check_journal()
+
+    def check_journal(self):
+        require(self.j.fd is not None and self.j.lock is not None
+                and self.j.plan_sha==self.sha and self.j.read()==self.j.records,
+                "C06_SOURCE_JOURNAL_DRIFT")
+
+    def authenticate_and_consume(self,phase,plan,previous):
+        self.check_journal()
+        require(validate_plan(plan)==self.sha and self.j.tip==previous
+                and phase in authority.PHASE_STEPS and phase not in self.attempted,
+                "C06_SOURCE_PHASE_BINDING")
+        before,_=authority.PHASE_STEPS[phase]
+        require((self.j.records[-1]["step"] if self.j.records else None)==before,
+                "C06_SOURCE_PHASE_ORDER")
+        packet_path=legacy.CONFIG.parent/"c06-expanded-packets"/self.sha/(phase+".json")
+        packet=legacy.private_file(packet_path)
+        # An uncertain witness outcome is never retried within this binding.
+        self.attempted.add(phase)
+        receipt=self.client.consume(packet,phase,previous)
+        self.check_journal()
+        require(self.j.tip==previous,"C06_SOURCE_PHASE_JOURNAL_CHANGED")
+        from settlement_c06_checkpoint_coordinator import validate_receipt
+        validate_receipt(receipt,phase,self.sha,previous)
+        return receipt
+
+    def anchor(self,plan_sha,step,tip):
+        self.check_journal()
+        require(plan_sha==self.sha and self.j.records
+                and self.j.records[-1]["step"]==step and self.j.tip==tip
+                and tip not in self.anchored,"C06_SOURCE_ANCHOR_BINDING")
+        self.anchored.add(tip)
+        require(self.client.anchor(self.j.records[-1])==tip,
+                "C06_SOURCE_ANCHOR_ACK_DRIFT")
+        self.check_journal()
+        require(self.j.tip==tip,"C06_SOURCE_ANCHOR_JOURNAL_CHANGED")
+        return tip
+
+
 def witness_main():
     # An independently installed forced-command wrapper must invoke this only
     # for COMMAND; no change to the legacy command or authorized_keys here.

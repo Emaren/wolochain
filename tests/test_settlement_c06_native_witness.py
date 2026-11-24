@@ -3,6 +3,7 @@ import base64
 from pathlib import Path
 import sys
 import unittest
+from unittest.mock import patch, Mock
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/"scripts"))
 import settlement_c06_native_witness as w
 import settlement_c06_checkpoint_authority as a
@@ -62,6 +63,30 @@ class NativeProtocol(unittest.TestCase):
                 w.verify_anchor_ack(replay,next_record,"c"*64)
             with self.assertRaises(w.owner.AuthorityHold):
                 w.verify_anchor_ack(ack|{"witness_identity":"a"*64},next_record,"c"*64)
+    def test_native_coordinator_binding_exact_journal_and_no_retry(self):
+        f=self.fixture
+        client=Mock()
+        packet=f.packet()
+        with Journal(self.root,self.c["plan_sha256"]) as j, \
+             patch.object(w.os,"geteuid",return_value=0), \
+             patch.object(w,"NativeWitnessClient",return_value=client), \
+             patch.object(w.legacy,"private_file",return_value=packet) as read:
+            # Journal.read checks actual uid; fixture's test-only root shim
+            # must not interfere with the already opened unprivileged journal.
+            with patch.object(j,"read",return_value=j.records):
+                b=w.CoordinatorWitnessBinding(f.plan,j)
+                client.consume.side_effect=RuntimeError("uncertain")
+                with self.assertRaises(RuntimeError):
+                    b.authenticate_and_consume("capture",f.plan,None)
+                with self.assertRaises(w.owner.AuthorityHold):
+                    b.authenticate_and_consume("capture",f.plan,None)
+                client.consume.assert_called_once_with(packet,"capture",None)
+                self.assertEqual(read.call_args.args[0],
+                    w.legacy.CONFIG.parent/"c06-expanded-packets"/b.sha/"capture.json")
+                with self.assertRaises(w.owner.AuthorityHold):
+                    b.anchor(b.sha,"ADMITTED","a"*64)
+                self.assertFalse(client.anchor.called)
+
     def test_unenrolled_scope_and_arbitrary_action_rejected(self):
         f=self.fixture
         req={"action":"consume","phase":"capture","previous":None,
