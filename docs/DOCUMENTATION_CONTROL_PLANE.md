@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `we1/c06-coordinated-checkpoint-rehearsal-20261124` at `138003deb6bb416ed5fedffdd8876e05e8daf403`
+Implementation baseline: `we1/c06-coordinated-checkpoint-rehearsal-20261124` at `c03bb04dfa1b4156b4880fb785198bef04c614ad`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
