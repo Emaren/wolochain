@@ -76,4 +76,55 @@ class SignatureTests(unittest.TestCase):
         with self.assertRaises(owner.AuthorityHold):
             self.review(self.packet(),owner_pin="a"*64)
 
+    def witness_args(self):
+        return dict(phase="capture",previous=None,source_commit="1"*40,
+                    enrollment_pin=sha(self.enroll),owner_pin=self.pin,
+                    openssl_path=self.ssl,now=self.now)
+
+    def consume(self, packet, **overrides):
+        root=self.root/"nonces"
+        root.mkdir(mode=0o700,exist_ok=True)
+        args=self.witness_args()|dict(local_identity="c"*64,
+            witness_identity="c"*64,source_identity=self.plan["host"],
+            expected_plan_sha=a.validate_plan(self.plan),nonce_root=root)
+        return a.consume_expanded_witness(self.enroll,packet,self.plan,**(args|overrides))
+
+    def test_real_signature_durable_witness_and_ack(self):
+        packet=self.packet()
+        ack=self.consume(packet)
+        self.assertTrue(ack["fresh_consumption_confirmed"])
+        self.assertFalse(ack["production_authorized"])
+        got=a.verify_expanded_witness_ack(ack,self.enroll,packet,self.plan,
+                witness_identity="c"*64,**self.witness_args())
+        self.assertEqual(got["packet"],sha(packet))
+        self.assertEqual(got["witness"],sha(a.canonical(ack)))
+        self.assertEqual(len(list((self.root/"nonces").glob("nonce-*.json"))),1)
+        with self.assertRaises(a.nonces.ReservationRefused):self.consume(packet)
+        for k,v in (("packet","d"*64),("witness_identity","d"*64),
+                    ("record_sha256","d"*64),("fresh_consumption_confirmed",1),
+                    ("production_authorized",True)):
+            with self.subTest(k=k),self.assertRaises(owner.AuthorityHold):
+                a.verify_expanded_witness_ack(ack|{k:v},self.enroll,packet,self.plan,
+                    witness_identity="c"*64,**self.witness_args())
+
+    def test_same_host_and_unenrolled_plan_refused(self):
+        p=self.packet()
+        for kwargs in ({"local_identity":self.plan["host"]},
+                       {"witness_identity":self.plan["host"]},
+                       {"source_identity":"d"*64},
+                       {"expected_plan_sha":"d"*64}):
+            with self.subTest(kwargs=kwargs),self.assertRaises(owner.AuthorityHold):
+                self.consume(p,**kwargs)
+        self.assertFalse(list((self.root/"nonces").glob("nonce-*.json")))
+
+    def test_legacy_nonce_collision_refused(self):
+        root=self.root/"nonces";root.mkdir(mode=0o700)
+        a.nonces.reserve_once(root,self.q["nonce"],"e"*64,"live_capture")
+        with self.assertRaises(a.nonces.ReservationRefused):self.consume(self.packet())
+
+    def test_wrong_signature_never_spends_nonce(self):
+        with self.assertRaises(owner.AuthorityHold):
+            self.consume(self.packet(domain=owner.DOMAIN))
+        self.assertFalse(list((self.root/"nonces").glob("nonce-*.json")))
+
 if __name__=="__main__":unittest.main()
