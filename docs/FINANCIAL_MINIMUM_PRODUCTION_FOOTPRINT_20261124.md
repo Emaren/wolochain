@@ -440,3 +440,51 @@ HEL1 native install and seven sidecars/ROOT parity/retirement held
 per latest receipts. No exclusive financial window, expanded witness
 enrollment still unadmitted; no image IO, restore, financial service
 effect or gate closure. Existing coordinator live refusal retained.
+
+### Nov24 16:09Z incremental financial cross-contract and witness seam
+
+WE1 and WE4 #192 5d0f928c had different payloads under the same
+manifest schema. Source-local full metadata manifest renamed
+wolo.financial.image-source-manifest.v1; exact Transfer OS wire
+wolo.financial.image-continuation.v1 reserved for its identity/chunks
+format. No installed receipt was changed.
+
+New wolo.financial.image-prefix-identity.v1 binds campaign, plan,
+root-owned source metadata, chunk limit, recipient and receiver before
+the final raw digest exists. Authenticated prefix readback records
+bind initial SHA, preceding record digest, exact ordered chunk and
+receiver. Validate every receipt, reject gap/replay/tamper, project
+only contiguous bytes. Empty prefix is zero coverage; no implicit
+permission. Complete prefix plus authenticated final seal binds raw
+digest and exact #192 canonical manifest SHA. No additional full
+ciphertext staging required by the projection. The native controller
+must still provide independently authenticated initial/receipt/seal
+verification, durable storage, nonce exclusion, source read/encryption,
+transport, receiver readback and independent raw reconstruction.
+No controller, key, grant, filesystem action or network route added.
+
+New targeted HMAC fixture PASS, including partial prefix, reorder,
+replay, unauthenticated chunk, wrong final digest and incomplete seal
+denials. Actual exact GitHub #192 5d0f928c Python source executed in
+memory on M1 with the WE1 fixture: projected 6 synthetic logical
+bytes, two chunks, next action REQUEST_INDEPENDENT_FULL_IMAGE_RECONSTRUCTION,
+manifest ac4eb9447e68c113d64d50999c948107e5a380f06b9ef6c5c6dcd93c4721.
+Independent restore, resume and retirement false. Fixture authentication
+only; no live receipt or real 40GiB reconstruction.
+
+New coordinator binding positive test PASS with actual disposable
+Ed25519 signature, separate source/witness durable journals, native
+dispatch and ACK parser, one-use nonce, matching admission and
+FENCE_INTENT anchors, replay refusal. Only transport is fixture-local,
+not actual Intel, and not per-subeffect protocol or live driver.
+Remaining native gaps: per-subeffect durable external anchors, exact
+lease provider, direct/privileged/reconnect exclusion, complete chain
+checkpoint and production encrypted capture/receiver/restore/resume
+composition. No fixture-gate relaxation.
+
+Current #191 3/3 install and four original runtime restore plus 8/8
+native receipt verifications retained. Explicit sidecar launch block
+must not be circumvented; WE2 exclusive financial window not admitted.
+Preserve original image and six dirs, legacy dependency and historical
+HD. No financial production effect, native enrollment, image IO, new
+retirement or physical gate closure in this increment.
