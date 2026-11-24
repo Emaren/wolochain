@@ -215,3 +215,44 @@ focused tests and existing native witness tests PASS; the existing
 disposable PG16 CI case additionally exercises the actual native parser
 and descriptor-relative tree check, rather than another standalone
 rehearsal. No live C06 call, no enrolled witness or gate closure.
+
+### Transfer phase telemetry — Nov24
+
+WE4 owns Transfer OS performance integration under VPSSentry #63. The
+financial stream primitive now returns wolo.financial.transfer-phase.v1:
+monotonic nanoseconds, exact byte counts, age binary hash, producer wall,
+plaintext pipe write, pipeline wall, ciphertext pipe read, destination
+write/fsync/readback and publication. The exact-image descriptor reader
+separately measures source read and sink write, compares pre/post inode
+metadata, all logical bytes and optional source hash. Independent
+reconstruction readback validates exact length and SHA256. No new
+transport endpoint, admission mechanism or retention controller.
+
+Pipeline spans overlap; do not add them or interpret pipe waiting as
+encryption CPU or network latency. The local stream cannot observe remote
+transport, authenticated ACK, encryption CPU, or independent restore:
+these fields remain null, not zero. WE4 must map corresponding measured
+remote receiver and restore phase receipts to the existing canonical
+private telemetry contract, correlate by exact campaign/object/ciphertext
+identity and preserve provenance. The local component does not issue ACKs.
+Production metrics require actual approved route/campaign receipts; no
+extra heavy scan or benchmark during active work.
+
+One small single-host M1 synthetic regression physically exercised age
+dual-recipient encryption and exact reconstructed bytes (106496 plaintext,
+106810 ciphertext), source read 26417ns, pipeline wall 12546542ns,
+destination write 67291ns, fsync 85625ns, readback 115458ns,
+restore 10119416ns, restore verification 80542ns. These are one fixture
+sample, not route throughput, independent Intel evidence or a basis to
+extrapolate the 40GiB transfer. No source image IO occurred.
+
+Prior observed C089 616404482 ciphertext bytes /2795.63s (~220488 B/s)
+is historical end-to-end baseline only. At that observed rate a 40GiB
+image alone would take about 54 hours, before reconstruction. Existing
+bounded local stream timeout max 14400s and historical unquiesced SQL
+transport max 12GiB/1800s are not qualified for this object. Do not
+reuse or extend those limits silently. WE2/WE4 must review a real
+financial-purpose route, exact byte/time capacity, authenticated progress
+and failure/reconciliation semantics within a compatible exclusive
+window, without weakening current constraints. No route claim, image
+archive or actual retirement admission from the new primitives.
