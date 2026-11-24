@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war"]
 audience: ["developers", "operators", "ai-agents"]
 source_of_truth: "git"
 authority: "topology-only-no-financial-writer-fence-or-financial-permit"
-reviewed_at: "2026-11-06"
+reviewed_at: "2026-11-24"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -45,3 +45,9 @@ After exact-head independent GitHub CI and source merge, run the exact source-bo
 **A baseline name change is never auto-enrolled.** Require a new audited one-use source change, new review evidence, and the same explicit fail-closed process. No automatic drift repair is allowed to alter a production writer or move money.
 
 C03 still needs complete real writer/queue/signature containment, C06 a coordinated encrypted offhost backup and C07 exact restore. C08 independent witness and C09 funded transfer have separate cryptographic controls.
+
+## Current applicability — reviewed 2026-11-24
+
+The 57/33 baseline enrollment and later V2 cutover are historical one-use procedures, not pending work. V2 was rolled back and its cutover authority is spent. #257 reconciles the later expanded 62/38 and 72/48 name universes without enrolling a new baseline. V1 remains retained; drift cannot grant an automatic upgrade or finance authority. No watcher replacement or baseline reset is a prerequisite for the admitted C06 checkpoint.
+
+Current authority: [#239](https://github.com/Emaren/wolochain/issues/239), [#257](https://github.com/Emaren/wolochain/pull/257), [#258](https://github.com/Emaren/wolochain/pull/258), [native evidence](https://github.com/Emaren/wolochain/pull/258#issuecomment-7133994664). C04/C08 closed; C03/C06/C07 open. Funding DENIED; custody inactive. Historical observations and source commands are not current execution authority.

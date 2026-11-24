@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war"]
 audience: ["developers", "operators", "ai-agents"]
 source_of_truth: "git"
 authority: "read-only-finance-hold-monitor-not-a-fence-or-funded-permit"
-reviewed_at: "2026-11-06"
+reviewed_at: "2026-11-24"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -68,3 +68,9 @@ The failed service journal and protected staging have been retained as counterev
 The service uses a strict read-only filesystem sandbox, root-only receipt write allowance, AF_UNIX only, `NoNewPrivileges`, no home access and no TCP egress. It never executes a funded transaction, starts 8094/8095, stops 8092/8093, changes the wolo-1 validator, or modifies the live website.
 
 **C03, C06 and C07 physical financial gates remain HARD HOLD until the separately established producer fence and exact coordinated encrypted backup/restore proofs exist.**
+
+## Current applicability — reviewed 2026-11-24
+
+The deployment sequence and 55-unit snapshot above are historical; V1 was subsequently installed and enrolled, with observed topology drift and a separate spent V2 cutover/rollback. Latest retained V1 observer timer is active, one-shot has reported exit2 on drift (November 24 readback). #257 is source-only reconciliation of expanded unit-name universes, not permission proof or an installed replacement. Do not reinstall or re-enroll the original observer, delete its receipts, or reinterpret read-only telemetry as complete C06 quiescence. #258 contains separately qualified disposable activation barrier and witness primitives.
+
+Current authority: [#239](https://github.com/Emaren/wolochain/issues/239), [#257](https://github.com/Emaren/wolochain/pull/257), [#258](https://github.com/Emaren/wolochain/pull/258), [native evidence](https://github.com/Emaren/wolochain/pull/258#issuecomment-7133994664). C04/C08 closed; C03/C06/C07 open. Funding DENIED; custody inactive. Historical observations and source commands are not current execution authority.

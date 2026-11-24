@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war"]
 audience: ["developers", "operators", "ai-agents"]
 source_of_truth: "git"
 authority: "source-only-isolated-negative-proof-never-a-production-DDL-permit"
-reviewed_at: "2026-11-06"
+reviewed_at: "2026-11-24"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -63,3 +63,9 @@ Do not use this report to issue a permit or apply DDL to live HD/DE. The require
 ## Recovery evidence provenance
 
 Source-only GitHub PR and current HEL1/Intel source receipts are separate artifacts. Final acceptance is only through the WoloChain #5 register with exact source SHAs and physical receipts; a merged branch is not a physical financial gate closure.
+
+## Current applicability — reviewed 2026-11-24
+
+The 24/10 name-derived set and simulated ownership are historical, with later 60/21 preconnected writer rehearsals extending the scope but still not proving complete live privileges. Current physical C06 design requires a clean full PG16 cluster, WAL and all shared databases and chain state, not the two old schema archives. Use actual C07 recovery and full classified object inventory for the permanent migration. The current execution authority is tracker #239, not the historical #5 register alone.
+
+Current authority: [#239](https://github.com/Emaren/wolochain/issues/239), [#257](https://github.com/Emaren/wolochain/pull/257), [#258](https://github.com/Emaren/wolochain/pull/258), [native evidence](https://github.com/Emaren/wolochain/pull/258#issuecomment-7133994664). C04/C08 closed; C03/C06/C07 open. Funding DENIED; custody inactive. Historical observations and source commands are not current execution authority.
