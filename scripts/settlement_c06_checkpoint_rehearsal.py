@@ -331,10 +331,13 @@ class _ExactPlainWriter:
     def __init__(self, stream, length):
         self.stream, self.limit, self.count = stream, length, 0
         self.hash = hashlib.sha256()
+        self.pipe_write_ns = 0
 
     def write(self, block):
         require(self.count + len(block) <= self.limit, "PLAINTEXT_LIMIT")
+        tick = time.monotonic_ns()
         n = self.stream.write(block)
+        self.pipe_write_ns += time.monotonic_ns() - tick
         require(n == len(block), "PLAINTEXT_SHORT_WRITE")
         self.hash.update(block)
         self.count += n
@@ -354,6 +357,7 @@ def stream_age_ciphertext(write_plain, destination, *, plain_bytes,
     Timeout bounds the encryption subprocess/pipe; it cannot interrupt
     arbitrary producer code blocked in kernel I/O.
     """
+    started_ns = time.monotonic_ns()
     require(all(type(v) is int and 0 < v < (1 << 50)
                 for v in (plain_bytes,cipher_max,reserve_bytes)) and
             type(timeout_seconds) is int and 0 < timeout_seconds <= 14400,
@@ -405,6 +409,7 @@ def stream_age_ciphertext(write_plain, destination, *, plain_bytes,
         argv=[str(binary)]
         for recipient in recipients:argv+=["-r",recipient]
         # Only ciphertext reaches the disk; age reads from stdin.
+        pipeline_start_ns=time.monotonic_ns()
         process=subprocess.Popen(argv,stdin=subprocess.PIPE,stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL,env={"PATH":"/usr/bin:/bin","LANG":"C"})
         def kill():
@@ -416,15 +421,25 @@ def stream_age_ciphertext(write_plain, destination, *, plain_bytes,
             kill()
         def pump():
             h=hashlib.sha256();total=0
+            read_ns=write_ns=0
             try:
-                while block:=process.stdout.read(1<<20):
+                while True:
+                    tick=time.monotonic_ns()
+                    block=process.stdout.read(1<<20)
+                    read_ns+=time.monotonic_ns()-tick
+                    if not block:break
                     require(not expired.is_set(),"STREAM_TIMEOUT")
                     require(total+len(block)<=cipher_max,"CIPHERTEXT_LIMIT")
                     capacity(len(block))
+                    tick=time.monotonic_ns()
                     require(output.write(block)==len(block),"CIPHERTEXT_SHORT_WRITE")
+                    write_ns+=time.monotonic_ns()-tick
                     h.update(block);total+=len(block)
+                tick=time.monotonic_ns()
                 output.flush();os.fsync(output.fileno())
-                result.update(bytes=total,sha256=h.hexdigest())
+                result.update(bytes=total,sha256=h.hexdigest(),
+                    ciphertext_pipe_read_ns=read_ns,destination_write_ns=write_ns,
+                    destination_fsync_ns=time.monotonic_ns()-tick)
             except BaseException as exc:
                 worker_errors.append(exc)
                 kill()
@@ -433,7 +448,9 @@ def stream_age_ciphertext(write_plain, destination, *, plain_bytes,
         timer.daemon=True
         reader.start();timer.start()
         plain=_ExactPlainWriter(process.stdin,plain_bytes)
+        producer_start_ns=time.monotonic_ns()
         write_plain(plain)
+        producer_wall_ns=time.monotonic_ns()-producer_start_ns
         require(plain.count==plain_bytes,"PLAINTEXT_LENGTH_DRIFT")
         process.stdin.close()
         rc=process.wait(timeout=timeout_seconds)
@@ -442,9 +459,11 @@ def stream_age_ciphertext(write_plain, destination, *, plain_bytes,
         if worker_errors:raise worker_errors[0]
         require(rc==0 and not expired.is_set() and result.get("bytes",0)>0,
                 "AGE_STREAM_FAILED_OR_TIMED_OUT")
+        pipeline_wall_ns=time.monotonic_ns()-pipeline_start_ns
         capacity(0)
         output.close();output=None
         readfd=os.open(partial,os.O_RDONLY|os.O_NOFOLLOW,dir_fd=dfd)
+        verify_start_ns=time.monotonic_ns()
         h=hashlib.sha256()
         with os.fdopen(readfd,"rb") as check:
             s=os.fstat(check.fileno())
@@ -453,6 +472,8 @@ def stream_age_ciphertext(write_plain, destination, *, plain_bytes,
                     s.st_size==result["bytes"],"CIPHERTEXT_POSTIMAGE")
             while block:=check.read(1<<20):h.update(block)
             require(h.hexdigest()==result["sha256"],"CIPHERTEXT_READBACK")
+        verification_ns=time.monotonic_ns()-verify_start_ns
+        publication_start_ns=time.monotonic_ns()
         current=dest.parent.stat()
         require((current.st_dev,current.st_ino)==(ds.st_dev,ds.st_ino) and
                 not expired.is_set(),"DESTINATION_IDENTITY_OR_TIME_DRIFT")
@@ -473,6 +494,25 @@ def stream_age_ciphertext(write_plain, destination, *, plain_bytes,
                 "plaintext_bytes":plain.count,
                 "plaintext_sha256":plain.hash.hexdigest(),
                 "recipient_pin":recipient_pin,
+                "phase_telemetry":{
+                    "schema":"wolo.financial.transfer-phase.v1",
+                    "clock":"monotonic_ns","scope":"local_ciphertext_stream",
+                    "source_read_ns":None,
+                    "producer_wall_ns":producer_wall_ns,
+                    "plaintext_pipe_write_ns":plain.pipe_write_ns,
+                    "encryption_cpu_ns":None,
+                    "pipeline_wall_ns":pipeline_wall_ns,
+                    "ciphertext_pipe_read_ns":result["ciphertext_pipe_read_ns"],
+                    "transport_ns":None,
+                    "destination_write_ns":result["destination_write_ns"],
+                    "destination_fsync_ns":result["destination_fsync_ns"],
+                    "destination_verification_ns":verification_ns,
+                    "publication_ns":time.monotonic_ns()-publication_start_ns,
+                    "authenticated_ack_ns":None,"restore_ns":None,
+                    "wall_ns":time.monotonic_ns()-started_ns,
+                    "plain_bytes":plain.count,"ciphertext_bytes":result["bytes"],
+                    "age_binary_sha256":age_sha256,"compression":"none_by_primitive",
+                    "overlapping_stages":True},
                 "production_authorized":False,"c06_closed":False}
     finally:
         if timer is not None:timer.cancel()

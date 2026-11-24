@@ -266,6 +266,15 @@ class BoundedStreamTests(unittest.TestCase):
             self.assertEqual(receipt["ciphertext_sha256"],c.sha_file(target))
             self.assertEqual(receipt["plaintext_sha256"],c.digest(payload))
             self.assertFalse(receipt["c06_closed"])
+            phases=receipt["phase_telemetry"]
+            for name in ("producer_wall_ns","pipeline_wall_ns","destination_write_ns",
+                         "destination_fsync_ns","destination_verification_ns","wall_ns"):
+                self.assertGreater(phases[name],0)
+            self.assertIsNone(phases["source_read_ns"])
+            self.assertIsNone(phases["encryption_cpu_ns"])
+            self.assertIsNone(phases["transport_ns"])
+            self.assertIsNone(phases["restore_ns"])
+            self.assertEqual(phases["ciphertext_bytes"],receipt["ciphertext_bytes"])
             self.assertEqual(list(dest.iterdir()),[target])
             for k in keys:self.assertEqual(run([age,"-d","-i",k,target]),payload)
             with self.assertRaises(c.Hold):c.stream_age_ciphertext(writer,target,**args)
