@@ -107,7 +107,7 @@ def read_at(fd, name, owners, limit=262144, mode=None, optional=False):
         os.close(f)
 
 def read_fixed(path, owners=(0,), limit=262144, mode=None, optional=False):
-    fd = open_dir(path.parent, owners=(0,1000))
+    fd = open_dir(path.parent, owners=tuple(set((0,1000,*owners))))
     try:
         return read_at(fd,path.name,owners,limit,mode,optional)
     finally:
@@ -158,6 +158,11 @@ def review_pins(data):
     need(re.fullmatch(b'[0-9a-f]{32}',host) and sha(host)==q['host_id_sha256'] and sha(hba)==q['hba_sha256'], 'NATIVE_PIN_DRIFT')
     return q
 
+def trust_receipt():
+    return {'status':'ROOT_TRUST_DELIVERED_NO_SQL','sql_source':SQL_SOURCE,
+            'package_sha256':PACKAGE,'financial_authorized':False,
+            'database_sql_executed':False}
+
 def deliver_trust():
     # Root-delivery only; no SQL, service changes, signer operation or maintenance clock.
     data = stage_read(PACKAGE)
@@ -172,8 +177,7 @@ def deliver_trust():
             write_once(CODE/n,data[n])
     write_once(ROOT/PUBLIC,data[PUBLIC])
     write_once(ROOT/'review.json',data[CANDIDATE])
-    receipt={'status':'ROOT_TRUST_DELIVERED_NO_SQL','sql_source':SQL_SOURCE,
-             'package_sha256':PACKAGE,'financial_authorized':False}
+    receipt=trust_receipt()
     write_once(ROOT/'root-trust-delivery-receipt.json',canonical(receipt)+b'\n')
     return {'status':receipt['status'],'receipt_sha256':sha(canonical(receipt)+b'\n')}
 
@@ -203,7 +207,8 @@ def connection_fields(raw):
     # pretending libpq is equivalent. No URL/credential is returned to stdout.
     need(all(33<=c<=126 for c in raw),'URI_ASCII_HOLD')
     u=urlsplit(raw.decode('ascii'))
-    need(u.scheme in ('postgresql','postgres') and u.hostname=='127.0.0.1'
+    need(u.netloc.count('@')==1 and re.fullmatch(r'[A-Za-z0-9._~%+-]+:[A-Za-z0-9._~%+-]+@127\.0\.0\.1:5432',u.netloc)
+         and u.scheme in ('postgresql','postgres') and u.hostname=='127.0.0.1'
          and u.port==5432 and not u.fragment and u.path.count('/')==1
          and u.query in ('','schema=public','sslmode=disable','schema=public&sslmode=disable','sslmode=disable&schema=public'),
          'URI_SCOPE_OR_OPTIONS_HOLD')
@@ -272,6 +277,7 @@ def deliver_permit(nonce):
     module.__file__=str(CODE/EXECUTOR)
     exec(compile(code,module.__file__,'exec'),module.__dict__)
     _,pub,review=module.live_pins()
+    need(read_fixed(ROOT/'root-trust-delivery-receipt.json',mode=0o600)==canonical(trust_receipt())+b'\n','TRUST_RECEIPT_HOLD')
     lock=os.open(STATE/'controller.lock',os.O_RDWR|os.O_CREAT|os.O_NOFOLLOW|os.O_CLOEXEC,0o600)
     try:
         fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
