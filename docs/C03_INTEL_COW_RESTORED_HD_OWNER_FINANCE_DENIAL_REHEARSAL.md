@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war"]
 audience: ["operators", "developers", "financial-reviewers", "ai-agents"]
 source_of_truth: "git"
 authority: "nonfunded-real-restored-hd-partial-owner-migration-not-c03-closure"
-reviewed_at: "2026-11-09"
+reviewed_at: "2026-11-24"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -59,3 +59,9 @@ R25 rollback before any production owner transition. Follow that with the
 coordinated same-boundary C06 capture and Intel C07 restore. Financial
 release remains ZERO and C01-C07/C09 remain OPEN. This is a real partial
 owner-migration result, not formal C03 acceptance.
+
+## Current applicability — reviewed 2026-11-24
+
+The older 29-table/28-sequence test remains a partial historical owner migration with reconstructed rather than original ACLs. The later native HD 60-table and DE 21-table tests provide stronger preconnected idle-backend evidence, still not all actual production grants or open transactions. The current #258 clean shutdown fixture separately proves rollback of an open uncommitted writer transaction. Permanent C03 must use the newly coordinated C07 image and independently admitted exact object/ACL/sequence scope; do not recreate old clones as a completion criterion.
+
+Current authority: [financial gate tracker #239](https://github.com/Emaren/wolochain/issues/239), [coordinated checkpoint #258](https://github.com/Emaren/wolochain/pull/258), [native witness integration receipt](https://github.com/Emaren/wolochain/pull/258#issuecomment-7133994664). C04/C08 CLOSED; C03/C06/C07 OPEN. Funding DENIED; custody inactive. All earlier observations remain historical, and none is a current production execution permit.

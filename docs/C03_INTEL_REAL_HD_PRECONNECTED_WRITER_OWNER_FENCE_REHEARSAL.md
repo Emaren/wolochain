@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war"]
 audience: ["operators", "developers", "financial-reviewers"]
 source_of_truth: "git"
 authority: "physical-intel-only-restored-hd-owner-rehearsal-not-production-writer-fence"
-reviewed_at: "2026-11-09"
+reviewed_at: "2026-11-24"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -86,3 +86,9 @@ public restricted rollback acceptance. C04 legacy 8092/8093 mask remains
 intact. C09 exact signed canary authority remains independently required.
 
 **C04 and C08 CLOSED. Seven Chain gates OPEN. No WOLO moved.**
+
+## Current applicability — reviewed 2026-11-24
+
+The historical HD 60/190 result and paired DE 21/52 evidence remain valuable and must not be repeated merely to refresh a date. The users table is a particularly important mixed-purpose boundary: inherited write, owner, trigger/cascade and SECURITY DEFINER paths require explicit classification, not blanket grants or a finance-name heuristic. The current coordinated whole-cluster C06 plan includes WAL, roles and shared databases; #258 fixture recovery and preconnected rollback are separate from production closure. Require real authenticated B acceptance, same-ciphertext C07 recovery, and a new exact permanent C03 admission before live role or ownership changes.
+
+Current authority: [financial gate tracker #239](https://github.com/Emaren/wolochain/issues/239), [coordinated checkpoint #258](https://github.com/Emaren/wolochain/pull/258), [native witness integration receipt](https://github.com/Emaren/wolochain/pull/258#issuecomment-7133994664). C04/C08 CLOSED; C03/C06/C07 OPEN. Funding DENIED; custody inactive. All earlier observations remain historical, and none is a current production execution permit.

@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war"]
 audience: ["operators", "developers", "financial-reviewers"]
 source_of_truth: "git"
 authority: "real-intel-pg16-de-restored-clone-only-not-production-writer-admission"
-reviewed_at: "2026-11-09"
+reviewed_at: "2026-11-24"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -80,3 +80,9 @@ recovery barrier is accepted. The C04 persistent 8092/8093 masks
 must remain; no C09 canary or funded Satchel signing is allowed.
 
 **C04/C08 CLOSED; C01/C02/C03/C05/C06/C07/C09 OPEN. No WOLO moved.**
+
+## Current applicability — reviewed 2026-11-24
+
+Retain the historical DE 21/52 result and exact original clone/receipt; no repeat required. It proves denial for an already-connected idle client following table-owner transition, not denial of transactions already in progress or complete sequence/function/role reachability. The #258 physical PG16 fixture closes the separate temporary-shutdown mechanics question (rollback of a real open uncommitted writer plus reconnect denial across HD, DE and a shared database). Do not combine separate checkpoints or call either permanent C03. Rehearse the actual reviewed permanent migration against the exact C07 coordinated image after recovery.
+
+Current authority: [financial gate tracker #239](https://github.com/Emaren/wolochain/issues/239), [coordinated checkpoint #258](https://github.com/Emaren/wolochain/pull/258), [native witness integration receipt](https://github.com/Emaren/wolochain/pull/258#issuecomment-7133994664). C04/C08 CLOSED; C03/C06/C07 OPEN. Funding DENIED; custody inactive. All earlier observations remain historical, and none is a current production execution permit.

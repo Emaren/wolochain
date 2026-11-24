@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war", "aoe2dewarwagers"]
 audience: ["operators", "developers", "financial-reviewers", "ai-agents"]
 source_of_truth: "git"
 authority: "pre-migration-source-metadata-insurance-only-not-full-financial-backup-or-writer-fence"
-reviewed_at: "2026-11-08"
+reviewed_at: "2026-11-24"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -58,3 +58,9 @@ A ciphertext SHA and original recipient key match prove storage/transfer integri
 The dedicated source-only test suite checks allowlisted three Pg16 metadata-only commands, strict recipient SSH identity parsing, two-recipient binding, remote O_EXCL/NOFOLLOW, original globals resume integrity, remote SHA/length negative cases, source defaults, owner0600 receipt idempotence and every false funded/backup/restore flag. CI shall run these fixtures; live owner receipt does not belong in GitHub.
 
 **Formal finance status: C01–C09 HARD HOLD, 8094/8095 closed**. This closes only a technical rollback-preparation subtask; the live C03 writer fence and complete C06/C07 have NOT been executed.
+
+## Current applicability — reviewed 2026-11-24
+
+Retain the original three encrypted schema-only artifacts and original receipt. The November 24 Intel pinned transport and FileVault/capacity verification (#7131784934) is receiver readiness, not evidence that these November 8 artifacts can currently be decrypted. Do not rerun the old capture or the globals resume command as part of coordinated C06. A whole-cluster encrypted capture requires the exact newly admitted C06 plan and separate independent C07 recovery; the historic schema-only recovery is supplementary rollback metadata, not a substitute.
+
+Current authority: [financial gate tracker #239](https://github.com/Emaren/wolochain/issues/239), [coordinated checkpoint #258](https://github.com/Emaren/wolochain/pull/258), [native witness integration receipt](https://github.com/Emaren/wolochain/pull/258#issuecomment-7133994664). C04/C08 CLOSED; C03/C06/C07 OPEN. Funding DENIED; custody inactive. All earlier observations remain historical, and none is a current production execution permit.
