@@ -1,0 +1,18 @@
+name: C03 HD direct media native executor composition
+on:
+  pull_request:
+    paths:
+      - 'scripts/c03_hd_direct_media_*'
+      - 'scripts/c03_hd_direct_image_*'
+      - 'tests/test_c03_hd_direct_media_native_executor.py'
+      - '.github/workflows/c03-direct-media-native-admission.yml'
+permissions:
+  contents: read
+jobs:
+  isolated-pg16:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y postgresql-16
+      - run: C03_DISPOSABLE_FIXED_GATEWAY_ONLY=1 PYTHONDONTWRITEBYTECODE=1 python3 tests/test_c03_hd_direct_media_native_executor.py
