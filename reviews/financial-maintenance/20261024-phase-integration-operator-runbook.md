@@ -106,3 +106,19 @@ Current decision boundary: [financial authority #239](https://github.com/Emaren/
 ### Expanded witness integration source — 2026-11-24
 
 The new native witness protocol source connects the exact plan and owner Ed25519 signature verifier to a fixed host-key-pinned SSH request and separate Intel journal, sharing the existing one-use nonce store. It rejects legacy enrollment drift, plan drift, source pin drift, arbitrary commands and acknowledgement replay. Existing legacy sources and forced command remain unchanged. Both endpoints need separately admitted private expanded enrollment, exact source pins and pre-created journal; no enrollment writer or installer is included. New protocol tests used disposable keys only. No live Intel admission, production permit, native checkpoint driver activation or physical closure is asserted. Do not use a reachability receipt as admission.
+
+### November 24 native producer scope correction
+
+The native HEL1 14:47Z systemd census showed five enabled scheduling families
+(heartbeat, challenge reconciliation, replay recovery, trophy tribute and
+prewarm) with static service targets, and ten additional loaded inactive
+custody, alternate TokenChain and held website units. The C06 barrier now
+requires those 20 exact activation identities, denies starting the ten dormant
+units, requires activators stopped before services and restored only after
+services, and verifies actual TCP listeners 8092–8095 absent plus both C01
+custody/reviewer units inactive. Existing six masked units remain protected;
+Traffic, nginx and scheduler daemons remain outside the stop scope. This is
+source engineering, not a native fence. Direct privileged processes,
+external signers, non-systemd schedulers, complete ingress and reconnect
+exclusion, exact authenticated WE2 lease, whole-cluster checkpoint archive
+and Intel recovery driver still require integration. No live action authorized.
