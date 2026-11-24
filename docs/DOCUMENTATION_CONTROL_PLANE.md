@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `we1/chat-media-1509-20261124` at `4ed75d47e8c13c9b8ee5afd913a3337fcde7c72d`
+Implementation baseline: `we1/chat-media-native-admission-20261124` at `c2e50623df76202262ae866abc0d1c90f7adf74c`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
@@ -27,7 +27,7 @@ This page is generated from the validated front matter in this repository. Cross
 
 ## Documentation health
 
-- Authoritative repository documents: **100**
+- Authoritative repository documents: **101**
 - Path moves in this migration: **0**
 - Every listed document has an explicit owner, lifecycle, authority, and review interval.
 
@@ -35,13 +35,13 @@ This page is generated from the validated front matter in this repository. Cross
 
 - `historical`: 14
 - `reference`: 49
-- `runbook`: 32
+- `runbook`: 33
 - `working`: 5
 
 ### Lifecycle
 
 - `active`: 16
-- `draft`: 70
+- `draft`: 71
 - `historical`: 14
 
 ## Documents
@@ -60,6 +60,7 @@ This page is generated from the validated front matter in this repository. Cross
 | [C03 Financial Writer Containment — Physical Release Acceptance Protocol](C03_FINANCIAL_WRITER_CONTAINMENT_ACCEPTANCE.md) | `reference` | `draft` | `source-only-c03-global-containment-plan-not-a-financial-permit` |
 | [C03 Financial Writer Drift Watchdog](C03_FINANCIAL_WRITER_DRIFT_WATCHDOG.md) | `reference` | `draft` | `read-only-finance-hold-monitor-not-a-fence-or-funded-permit` |
 | [C03 HD direct image, text replay and delivery acknowledgement — admission HOLD](C03_HD_DIRECT_IMAGE_DELIVERY_ADMISSION_HOLD.md) | `runbook` | `draft` | `source-only-nonfinancial-media-and-delivery-no-production-permit` |
+| [C03 HD Direct Media native executor — owner admission HOLD](C03_HD_DIRECT_MEDIA_NATIVE_EXECUTOR_HOLD.md) | `runbook` | `draft` | `source-only-fixed-media-executor-no-root-or-financial-admission` |
 | [C03 Intel COW Restored HD Owner Finance Denial Rehearsal](C03_INTEL_COW_RESTORED_HD_OWNER_FINANCE_DENIAL_REHEARSAL.md) | `runbook` | `draft` | `nonfunded-real-restored-hd-partial-owner-migration-not-c03-closure` |
 | [C03 Intel Real Restored DE: Preconnected Legacy Owner DML Denial Rehearsal](C03_INTEL_REAL_DE_PRECONNECTED_WRITER_OWNER_FENCE_REHEARSAL.md) | `runbook` | `draft` | `real-intel-pg16-de-restored-clone-only-not-production-writer-admission` |
 | [C03 Intel Real Restored HD: Preconnected Legacy Owner DML Denial Rehearsal](C03_INTEL_REAL_HD_PRECONNECTED_WRITER_OWNER_FENCE_REHEARSAL.md) | `runbook` | `draft` | `physical-intel-only-restored-hd-owner-rehearsal-not-production-writer-fence` |

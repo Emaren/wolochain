@@ -284,6 +284,29 @@
       "audience": [
         "operators",
         "developers",
+        "ai-agents"
+      ],
+      "authority": "source-only-fixed-media-executor-no-root-or-financial-admission",
+      "id": "aoe2war.wolochain.c03-hd-direct-media-native-executor-hold",
+      "owner": "wolochain-ops",
+      "path": "docs/C03_HD_DIRECT_MEDIA_NATIVE_EXECUTOR_HOLD.md",
+      "review_interval_days": 14,
+      "reviewed_at": "2026-11-24",
+      "sensitivity": "restricted",
+      "sha256": "6ae41e272e27538a55ebad5d1fa4c871796bf9e65343a5af7bd3fdc095d348a3",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C03 HD Direct Media native executor \u2014 owner admission HOLD",
+      "type": "runbook"
+    },
+    {
+      "audience": [
+        "operators",
+        "developers",
         "financial-reviewers",
         "ai-agents"
       ],
@@ -1198,7 +1221,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-11-10",
       "sensitivity": "internal",
-      "sha256": "449e1d2f137a157ae50d9abafb642b219048473e75b1e2ff632bc51b8fc92d46",
+      "sha256": "3748c70415ccd3318481f0dbc1cf7b041d91684ecf38cbfd3bb9f8d5c320b480",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -2344,8 +2367,8 @@
   ],
   "generated_at": "2026-11-19T17:35:00+00:00",
   "implementation_baseline": {
-    "branch": "we1/chat-media-1509-20261124",
-    "commit": "4ed75d47e8c13c9b8ee5afd913a3337fcde7c72d"
+    "branch": "we1/chat-media-native-admission-20261124",
+    "commit": "c2e50623df76202262ae866abc0d1c90f7adf74c"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
