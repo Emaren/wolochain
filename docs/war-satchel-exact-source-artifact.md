@@ -8,7 +8,7 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "source-artifact-proof-not-runtime-or-financial-approval"
-reviewed_at: "2026-11-06"
+reviewed_at: "2026-11-24"
 review_interval_days: 14
 sensitivity: "restricted"
 ---
@@ -167,3 +167,9 @@ journal mutation and sufficient extra uncommitted assets beyond recorded
 liabilities, gas and floors. No authenticated atomic liability discharge is
 assumed. No independent mainnet root has been supplied for this candidate;
 source qualification and reproducibility cannot authorize funding or execution.
+
+## Current applicability — reviewed 2026-11-24
+
+Original named artifact profiles and their exact-source bindings remain frozen historical evidence. The current C06 engineering branch is not a substitute artifact or authorization to build, install or expose 8094/8095. No artifact rebuild or live parity verification occurred in this review.
+
+Current decision boundary: [financial authority #239](https://github.com/Emaren/wolochain/issues/239) and [coordinated recovery #258](https://github.com/Emaren/wolochain/pull/258). C04/C08 closed; C01/C02/C03/C05/C06/C07/C09 open. Funding DENIED; custody inactive. This renewal is a source and dated-evidence applicability review, not a new physical receipt.

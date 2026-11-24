@@ -8,12 +8,20 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "chain-repository-entrypoint"
-reviewed_at: "2026-11-06"
+reviewed_at: "2026-11-24"
 review_interval_days: 14
 sensitivity: "public"
 ---
 
 # WoloChain
+
+
+## Current applicability — reviewed 2026-11-24
+
+**Current operational boundary (2026-11-24):** The historical launch, September/October/November 6 observations and funded settlement instructions below are retained as historical API/design reference only. Do not execute them. C04/C08 are physically CLOSED; C01/C02/C03/C05/C06/C07/C09 remain OPEN. Funding DENIED, custody inactive. Six legacy settlement/stake units are masked/inactive and 8092–8095 closed; PG5432 is loopback-only (November 24 native receipt #7133994664). Mainnet validator remains separate; do not restart or build on HEL1 under current capacity pressure. The held source recovery campaign is #258, not a deployed runtime. Complete genuine B PREPARE, WE2 exclusive capacity/IO and native checkpoint authority before coordinated C06, independently recover identical ciphertext for C07, then admit permanent C03. Preserve all historical claims and exact source/receipt identities. Current gate tracker [#239](https://github.com/Emaren/wolochain/issues/239).
+
+Current source and evidence: [#239](https://github.com/Emaren/wolochain/issues/239), [#258](https://github.com/Emaren/wolochain/pull/258), [physical quarantine and witness receipt](https://github.com/Emaren/wolochain/pull/258#issuecomment-7133994664). Funding DENIED; no production permit granted.
+
 
 ## November 6, 2026 — Chain source and live-boundary technical review (non-authorizing)
 

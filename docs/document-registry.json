@@ -11,9 +11,9 @@
       "owner": "wolochain-ops",
       "path": "README.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-11-06",
+      "reviewed_at": "2026-11-24",
       "sensitivity": "public",
-      "sha256": "8ba8d9120b35275689fbe5af057c5eaa8c1ebdc6bc7d19433f63ec398462b2f7",
+      "sha256": "940b00a815bd723cb5ce084c3ffcd09a8f07405f35d161518f4ce5ce2d91e543",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -256,6 +256,29 @@
       ],
       "title": "C03 Financial Writer Drift Watchdog",
       "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "source-only-nonfinancial-media-and-delivery-no-production-permit",
+      "id": "aoe2war.wolochain.c03-hd-direct-image-delivery-admission-hold",
+      "owner": "wolochain-ops",
+      "path": "docs/C03_HD_DIRECT_IMAGE_DELIVERY_ADMISSION_HOLD.md",
+      "review_interval_days": 14,
+      "reviewed_at": "2026-11-24",
+      "sensitivity": "restricted",
+      "sha256": "26daa9b3b0b73793a7631755a3ef6c6191e62d4296866d2a2d2bae5676c30d74",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C03 HD direct image, text replay and delivery acknowledgement \u2014 admission HOLD",
+      "type": "runbook"
     },
     {
       "audience": [
@@ -1175,7 +1198,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-11-10",
       "sensitivity": "internal",
-      "sha256": "1eb456de0d182cc331e39f401b3f46f3318fa6c25fad7882f75e5bc30cd5c41a",
+      "sha256": "449e1d2f137a157ae50d9abafb642b219048473e75b1e2ff632bc51b8fc92d46",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1471,9 +1494,9 @@
       "owner": "wolochain-ops",
       "path": "docs/mainnet-services-and-ports.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-11-06",
+      "reviewed_at": "2026-11-24",
       "sensitivity": "internal",
-      "sha256": "1bf2af16757d570493787ad9615c898dc9b57d31ebb34d0494f442666f4d963e",
+      "sha256": "39bb8775a4c994b7dc1ad57cd13bacfdaf9c752b0b07f92213c16c194a69409b",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -1610,9 +1633,9 @@
       "owner": "wolochain-ops",
       "path": "docs/settlement-contracts/README.md",
       "review_interval_days": 30,
-      "reviewed_at": "2026-10-20",
+      "reviewed_at": "2026-11-24",
       "sensitivity": "public",
-      "sha256": "6d089735649761ba86236a2866211e0d7e1b0c264b9ef06f2f934afa2b9c0853",
+      "sha256": "d921bb9d5bd26eaf1ec2a727d7322f4480dcca08d19c3c9c3742d977038625bf",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1773,9 +1796,9 @@
       "owner": "wolochain-ops",
       "path": "docs/war-satchel-exact-source-artifact.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-11-06",
+      "reviewed_at": "2026-11-24",
       "sensitivity": "restricted",
-      "sha256": "ae7e5a8943205f9fd1859da054dfe156f4a1fe2a5abfd29f699501756f2d892d",
+      "sha256": "87efcfc4b556749c6e677e0fe53a6b8d957353ed64933024c97edfc192939287",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -1819,9 +1842,9 @@
       "owner": "wolochain-ops",
       "path": "docs/war-satchel-integration-readiness.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-11-05",
+      "reviewed_at": "2026-11-24",
       "sensitivity": "restricted",
-      "sha256": "cfe9bce2e9b7d249e4808569a7deb861ca49894166b7998ab2a5cb2f52d7c91c",
+      "sha256": "fb2b77d27716f0b134a3bc27673c953a6a19989fd2aa93357952e1f8d3596d30",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -2233,9 +2256,9 @@
       "owner": "wolochain-ops",
       "path": "reviews/financial-maintenance/20261024-human-authority-and-writer-closeout.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-11-08",
+      "reviewed_at": "2026-11-24",
       "sensitivity": "internal",
-      "sha256": "b40cb9ae5d8cc9e43b2c4e7bc813f298ee97efa34764e6eb26c51435c8a35053",
+      "sha256": "fda54d65dad97c89a8099654df4a5a71f1168aa6385bb935af96033ed3e0b93e",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -2257,9 +2280,9 @@
       "owner": "wolochain-ops",
       "path": "reviews/financial-maintenance/20261024-p1-writer-evidence-and-budget-proposal.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-11-08",
+      "reviewed_at": "2026-11-24",
       "sensitivity": "internal",
-      "sha256": "b9115d156b106250c86a3efb82a231cb016a3dce188e6cf5b4a94f272483db8d",
+      "sha256": "93ad3cd0df15875428fe84b10502bd78a7d1f383aa8347f293caaad66a35d34a",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -2281,9 +2304,9 @@
       "owner": "wolochain-ops",
       "path": "reviews/financial-maintenance/20261024-phase-integration-operator-runbook.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-11-08",
+      "reviewed_at": "2026-11-24",
       "sensitivity": "internal",
-      "sha256": "666889fcbe9cb6f066c0a20c327c1a3b84ad03860ccf0acd48a9544b2cb529a4",
+      "sha256": "e0bdf53b6f952f75139f592fbb807f72652fc5cc84461036590a2aba0f5de824",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -2305,9 +2328,9 @@
       "owner": "wolochain-ops",
       "path": "reviews/financial-maintenance/20261024-source-integrity-enrollment-and-restore-qualification.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-11-08",
+      "reviewed_at": "2026-11-24",
       "sensitivity": "internal",
-      "sha256": "fe3453c955ae494709c5166a9438f37366119ec55f6e1e5555f3afae79e347e8",
+      "sha256": "36f254950a905c8edf39e728f6285333770346d4bca294e455429a9f16df4990",
       "source_of_truth": "git",
       "status": "draft",
       "systems": [
@@ -2321,8 +2344,8 @@
   ],
   "generated_at": "2026-11-19T17:35:00+00:00",
   "implementation_baseline": {
-    "branch": "we1/chat-social-lifecycle-repair-central-20261120",
-    "commit": "f027effedb5d60cf3e67c6489ca942e322dc4714"
+    "branch": "we1/chat-media-1509-20261124",
+    "commit": "4ed75d47e8c13c9b8ee5afd913a3337fcde7c72d"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

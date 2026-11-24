@@ -8,7 +8,7 @@ systems: ["wolochain","aoe2war","aoe2dewarwagers"]
 audience: ["operators","developers","ai-agents"]
 source_of_truth: "git"
 authority: "non-authorizing-financial-human-signature-review"
-reviewed_at: "2026-11-08"
+reviewed_at: "2026-11-24"
 review_interval_days: 14
 sensitivity: "internal"
 ---
@@ -90,3 +90,9 @@ The signed `independent-writer-coverage.json` is a closed 12-surface digest-boun
 ## Codex release sequencing
 
 The original LIVE watcher website may undergo a **separate code-only release gate** without authorizing finance or chain writes. Funded War Satchel/Mecha Auto Bets and Wolo custody mainnet operations are **NO-GO** until the source-drift P1, all 12 writers and real five-human/nonce authority, full-size recovery, independent financial liability ceiling and bank solvency are actually certified. This runbook and its current code explicitly cannot declare operational GO.
+
+## Current applicability — reviewed 2026-11-24
+
+The historical 171-commit comparison does not prove current installed parity. November 24 Intel reachability, pinned host identity, FileVault and free-space observations establish receiver readiness only, not expanded witness enrollment or identical-ciphertext restoration. Exact protected admission remains required.
+
+Current decision boundary: [financial authority #239](https://github.com/Emaren/wolochain/issues/239) and [coordinated recovery #258](https://github.com/Emaren/wolochain/pull/258). C04/C08 closed; C01/C02/C03/C05/C06/C07/C09 open. Funding DENIED; custody inactive. This renewal is a source and dated-evidence applicability review, not a new physical receipt.
