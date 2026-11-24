@@ -53,8 +53,11 @@ def digest(value):
 
 
 def sha_file(path):
+    h = hashlib.sha256()
     with path.open("rb") as f:
-        return hashlib.file_digest(f, "sha256").hexdigest()
+        while block := f.read(1 << 20):
+            h.update(block)
+    return h.hexdigest()
 
 
 def hash64(value):
