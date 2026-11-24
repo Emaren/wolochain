@@ -8,7 +8,7 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "source-only-war-satchel-chain-evidence"
-reviewed_at: "2026-10-30"
+reviewed_at: "2026-11-24"
 review_interval_days: 14
 sensitivity: "restricted"
 ---
@@ -223,3 +223,9 @@ I/O. A signed synthetic regression reproduces witness observation expiry while
 the primary remains fresh under a bounded clock correction; it fails before the
 completion guard and returns `stale_head:witness:complete` afterward. No
 CometBFT authentication or default NONCREDITING/C2 gate is relaxed.
+
+## Current applicability — reviewed 2026-11-24
+
+Current TrustedReader authenticated evidence still returns CreditAuthorized false. Historic chain observation is not credit authority, and no new bank query or independent consensus proof is claimed.
+
+Current decision boundary: [financial authority #239](https://github.com/Emaren/wolochain/issues/239) and [coordinated recovery #258](https://github.com/Emaren/wolochain/pull/258). C04/C08 closed; C01/C02/C03/C05/C06/C07/C09 open. Funding DENIED; custody inactive. This renewal is a source and dated-evidence applicability review, not a new physical receipt.

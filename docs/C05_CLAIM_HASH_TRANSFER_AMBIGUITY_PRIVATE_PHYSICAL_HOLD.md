@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war"]
 audience: ["operators", "developers", "financial-reviewers", "ai-agents"]
 source_of_truth: "git"
 authority: "root-private-repeatable-read-historical-claim-attribution-never-payment-or-reserve-admission"
-reviewed_at: "2026-11-09"
+reviewed_at: "2026-11-24"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -95,3 +95,8 @@ Aggregate noncrediting receipt, mode0600, SHA256:
 
 The private report retains claim IDs and hash-to-index links for review without publishing them. Source SHA pin and one-use O_EXCL protected output prevent silent replacement. Companion offline tests passed **7/7**; combined C05 regression tests **17/17**. The first same-hash and second cross-hash manifests must be used together when deriving a unique economic liability ledger. They still **do not** independently prove actual payment finality, signed reserve pledge, or full C05 acceptance.
 
+## Current applicability — reviewed 2026-11-24
+
+The historical 158 ambiguous groups, 69 hashless claims and 58 cross-hash pairs are not repayment instructions. The collision-manifest source explicitly denies payment proof, repayment eligibility and solvency admission. C04 quarantine closure preserves these records rather than adjudicating payment finality.
+
+Current decision boundary: [financial authority #239](https://github.com/Emaren/wolochain/issues/239) and [coordinated recovery #258](https://github.com/Emaren/wolochain/pull/258). C04/C08 closed; C01/C02/C03/C05/C06/C07/C09 open. Funding DENIED; custody inactive. This renewal is a source and dated-evidence applicability review, not a new physical receipt.

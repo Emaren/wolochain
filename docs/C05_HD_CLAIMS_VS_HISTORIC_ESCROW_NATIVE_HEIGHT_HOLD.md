@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2hdbets"]
 audience: ["operators", "developers", "financial-reviewers", "ai-agents"]
 source_of_truth: "git"
 authority: "physical-aggregate-reconciliation-observation-not-financial-solvency-or-release"
-reviewed_at: "2026-11-08"
+reviewed_at: "2026-11-24"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -42,3 +42,9 @@ The initial read-only source execution on HEL1 completed, exit **3 intentional f
 The source's 13 dedicated adversarial unit tests check exact two categories/counts/IDs, malformed/duplicate/status changes, foreign bank denominations, denial of dynamic RPC/send/broadcast, no financial service commands, source-wallet pinning, offline 0700/0600 private exclusive receipt, symlink refusal, financial HOLD flags and explicit SQL rollback. It is registered in the canonical Foundation CI workflow with generated docs register.
 
 Before C04 can be accepted, each claimed-nohash payout requires independently authenticated chain execution identity or a conservatively approved quarantine with **no replay**. Before C05 can be accepted, a complete collision-free HD/DE obligation inventory and authenticated custodian-held reserve inventory at a consistent chain height must be reconciled; fresh custody proof, fee cushion and separate reviewer are mandatory. Do not add the 69 nominal automatically to wager principal, claim customer insolvency or initiate a treasury top-up merely on this comparison. Any funded canary remains behind separately current C03/C06/C07/C08/C09 permission gates. No finance runtime, DB row, wallet or Wolo transfer was changed by this observation.
+
+## Current applicability — reviewed 2026-11-24
+
+The historical 69/948 comparison is neither a complete liability inventory nor an atomic common-height solvency proof. The current comparison observer remains a read-only HOLD. C04 closure means quarantine preservation, not that these obligations have been discharged.
+
+Current decision boundary: [financial authority #239](https://github.com/Emaren/wolochain/issues/239) and [coordinated recovery #258](https://github.com/Emaren/wolochain/pull/258). C04/C08 closed; C01/C02/C03/C05/C06/C07/C09 open. Funding DENIED; custody inactive. This renewal is a source and dated-evidence applicability review, not a new physical receipt.

@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war", "aoe2dewarwagers"]
 audience: ["developers", "operators", "ai-agents"]
 source_of_truth: "git"
 authority: "non-authorizing-c07-isolated-recovery-rehearsal"
-reviewed_at: "2026-11-09"
+reviewed_at: "2026-11-24"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -59,3 +59,9 @@ A match produces a new exclusive mode0600 receipt and a **nonfunded rehearsal pa
 A finance-only production writer freeze is needed, coordinated with Session B's authenticated finance-safe website rollback. C06 must capture the same consistent financial checkpoint across HD+DE, global roles including secure password-verifier treatment, exact Wolo ledger, journals, nonce/permit and WAL, plus all large replay tables. Only C07 restoration of that **same C06 package**, genuine negative replay tests and new owner source-bound acceptance can close C07.
 
 No production financial services were started or modified by this rehearsal; no historical payout was released. C04+C08 remain closed; C01/C02/C03/C05/C06/C07/C09 remain formally OPEN.
+
+## Current applicability — reviewed 2026-11-24
+
+The November 9 physical role/ACL recovery is preserved as a scoped rehearsal, not C07 closure for the forthcoming coordinated C06 ciphertext. Current recovery requires the exact same admitted whole PG16 checkpoint including WAL and roles, closed chain state and journals, independently restored and verified. No duplicate rehearsal or new restore is asserted.
+
+Current decision boundary: [financial authority #239](https://github.com/Emaren/wolochain/issues/239) and [coordinated recovery #258](https://github.com/Emaren/wolochain/pull/258). C04/C08 closed; C01/C02/C03/C05/C06/C07/C09 open. Funding DENIED; custody inactive. This renewal is a source and dated-evidence applicability review, not a new physical receipt.

@@ -8,7 +8,7 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "source-only-legacy-settlement-hardening"
-reviewed_at: "2026-11-01"
+reviewed_at: "2026-11-24"
 review_interval_days: 14
 sensitivity: "restricted"
 ---
@@ -195,3 +195,9 @@ satisfied. This source PR performs no SSH, deployments, service operations,
 key access, signing, broadcasts, token transfers, database changes, state
 rewrites or retries. Green source CI is not live custody certification or
 production cutover approval.
+
+## Current applicability — reviewed 2026-11-24
+
+Current settlement source retains prebroadcast hold handling and exact transaction lookup. Historical hardening does not authorize restarting legacy financial listeners or retrying an ambiguous broadcast; the November 24 physical quarantine is controlling.
+
+Current decision boundary: [financial authority #239](https://github.com/Emaren/wolochain/issues/239) and [coordinated recovery #258](https://github.com/Emaren/wolochain/pull/258). C04/C08 closed; C01/C02/C03/C05/C06/C07/C09 open. Funding DENIED; custody inactive. This renewal is a source and dated-evidence applicability review, not a new physical receipt.

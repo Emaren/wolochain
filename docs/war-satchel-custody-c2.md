@@ -8,7 +8,7 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "source-only-war-satchel-custody-capability"
-reviewed_at: "2026-10-30"
+reviewed_at: "2026-11-24"
 review_interval_days: 14
 sensitivity: "restricted"
 ---
@@ -266,3 +266,9 @@ justify a 100/100 financial-readiness score.
 - Source tests, including historical payout compatibility tests, run locally and
   in CI. They do not repeat the exhausted production founder investigation or
   resolve claim #889.
+
+## Current applicability — reviewed 2026-11-24
+
+Current qualified reserve review reports custody capability UNAVAILABLE and custody is inactive. Neither a source qualification nor the zero-funded governance receipt enables custody or waives independent admission.
+
+Current decision boundary: [financial authority #239](https://github.com/Emaren/wolochain/issues/239) and [coordinated recovery #258](https://github.com/Emaren/wolochain/pull/258). C04/C08 closed; C01/C02/C03/C05/C06/C07/C09 open. Funding DENIED; custody inactive. This renewal is a source and dated-evidence applicability review, not a new physical receipt.

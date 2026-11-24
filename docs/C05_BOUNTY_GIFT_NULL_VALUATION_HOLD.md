@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war", "aoe2dewarwagers"]
 audience: ["developers", "operators", "ai-agents"]
 source_of_truth: "git"
 authority: "source-only-financial-hold-not-a-funding-or-replay-permit"
-reviewed_at: "2026-11-08"
+reviewed_at: "2026-11-24"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -132,3 +132,9 @@ in addition to the existing C05 gift catalog and other Chain
 tests. GitHub exact-head CI must re-run and independently pass
 before merging; the new workflow step is not a financial
 or physical source-proof gate acceptance.
+
+## Current applicability — reviewed 2026-11-24
+
+The unassigned, unpublished bounty with a null reward remains a read-only HOLD; absence of a reward is not proof of zero economic exposure. The current bounty assignment/publication observer exits HOLD without authorizing mutation. No fresh census or valuation has been performed.
+
+Current decision boundary: [financial authority #239](https://github.com/Emaren/wolochain/issues/239) and [coordinated recovery #258](https://github.com/Emaren/wolochain/pull/258). C04/C08 closed; C01/C02/C03/C05/C06/C07/C09 open. Funding DENIED; custody inactive. This renewal is a source and dated-evidence applicability review, not a new physical receipt.

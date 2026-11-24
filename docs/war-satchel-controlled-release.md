@@ -8,7 +8,7 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "source-integration-proof-not-production-approval"
-reviewed_at: "2026-11-02"
+reviewed_at: "2026-11-24"
 review_interval_days: 14
 sensitivity: "restricted"
 ---
@@ -466,3 +466,9 @@ controls remain binding. Neither it nor C01 may target the consensus service,
 executable, state or keys, or resume HD/DE producers without separate authority.
 Founder #889 and accepted legacy transactions retain their individual holds;
 a release permit is never payment evidence.
+
+## Current applicability — reviewed 2026-11-24
+
+Current physical gate state is C04/C08 closed only; C01/C02/C03/C05/C06/C07/C09 open. Older control counts and release plans are chronological evidence, not the current release scoreboard. Funding remains denied and any native canary requires separate admission.
+
+Current decision boundary: [financial authority #239](https://github.com/Emaren/wolochain/issues/239) and [coordinated recovery #258](https://github.com/Emaren/wolochain/pull/258). C04/C08 closed; C01/C02/C03/C05/C06/C07/C09 open. Funding DENIED; custody inactive. This renewal is a source and dated-evidence applicability review, not a new physical receipt.
