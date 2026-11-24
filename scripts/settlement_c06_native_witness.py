@@ -377,6 +377,72 @@ def anchor_barrier_effect(record,*,plan,scope,phase,receipt,packet,enrollment,
                 funding_authorized=False)
 
 
+class BarrierEffectBinding:
+    """Source-side barrier callbacks; native transport and lease still required.
+
+    No existing source effect journal may be resumed automatically. A failed
+    action or uncertain external ACK permanently poisons this in-memory run.
+    The outer phase journal remains at INTENT until poststate is verified.
+    This is library composition, not an installed live dispatcher.
+    """
+    def __init__(self,journal,*,verify_phase,verify_lease,anchor_native,witness_identity):
+        require(journal.fd is not None and journal.lock is not None
+                and journal.read()==journal.records and not journal.records
+                and hash64(witness_identity)
+                and all(callable(fn) for fn in (verify_phase,verify_lease,anchor_native)),
+                "EFFECT_SOURCE_EXISTING_OR_UNADMITTED")
+        self.j=journal;self.verify_phase=verify_phase;self.verify_lease=verify_lease
+        self.anchor_native=anchor_native;self.identity=witness_identity
+        self.state="READY";self.action=None
+    def check(self,phase,scope,action):
+        require(phase==self.j.phase and scope==self.j.scope_sha
+                and self.j.read()==self.j.records,"EFFECT_SOURCE_SCOPE_DRIFT")
+        self.verify_lease()
+        require(self.verify_phase()==(self.j.phase_tip,self.j.admission_sha),
+                "EFFECT_SOURCE_PHASE_DRIFT")
+        self.verify_lease()
+    def admit_effect(self,phase,scope,action):
+        if self.state=="READY":
+            self.state="HOLD"
+            self.check(phase,scope,action)
+            require(self.j.expected(len(self.j.records),self.j.tip)["action"]==action,
+                    "EFFECT_SOURCE_ACTION_ORDER")
+            self.action=action;self.state="ADMITTED"
+        elif self.state=="ANCHORED" and action==self.action:
+            self.state="HOLD"
+            self.check(phase,scope,action)
+            self.state="EFFECT_IN_FLIGHT"
+        else:
+            self.state="HOLD"
+            raise owner.AuthorityHold("EFFECT_SOURCE_SEQUENCE_OR_UNCERTAINTY")
+    def anchor_intent(self,phase,scope,action):
+        valid=self.state=="ADMITTED" and action==self.action
+        self.state="HOLD"
+        require(valid,"EFFECT_SOURCE_ANCHOR_ORDER")
+        self.check(phase,scope,action)
+        record=self.j.append(action)
+        expected=dict(schema="wolo.c06.barrier-effect-anchor.v1",plan=self.j.plan_sha,
+                      phase=phase,tip=self.j.tip,witness_identity=self.identity,
+                      status="NEW_EFFECT_INTENT_ANCHORED",production_authorized=False,
+                      funding_authorized=False)
+        ack=self.anchor_native(record)
+        require(type(ack) is dict and canonical(ack)==canonical(expected),
+                "EFFECT_SOURCE_WITNESS_ACK_DRIFT")
+        self.check(phase,scope,action)
+        self.state="ANCHORED"
+    def complete_effect(self,phase,scope,action):
+        valid=self.state=="EFFECT_IN_FLIGHT" and action==self.action
+        self.state="HOLD"
+        require(valid,"EFFECT_SOURCE_COMPLETION_ORDER")
+        self.check(phase,scope,action)
+        self.action=None;self.state="READY"
+    def verify_complete(self):
+        require(self.state=="READY" and self.j.read()==self.j.records
+                and len(self.j.records)==len(self.j.schedule),
+                "EFFECT_SOURCE_INCOMPLETE")
+        return self.j.tip
+
+
 def witness_main():
     # An independently installed forced-command wrapper must invoke this only
     # for COMMAND; no change to the legacy command or authorized_keys here.

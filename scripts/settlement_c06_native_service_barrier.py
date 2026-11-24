@@ -154,11 +154,12 @@ class NativeBarrier:
     It must revalidate the real signed phase and external lease before every
     effect, and durably anchor every intent. A structural packet is not enough.
     """
-    def __init__(self,scope,*,admit_effect,anchor_intent,run=native_run):
+    def __init__(self,scope,*,admit_effect,anchor_intent,complete_effect=None,run=native_run):
         self.scope=scope
         self.sha=validate_scope(scope)
         self.admit_effect=admit_effect
         self.anchor_intent=anchor_intent
+        self.complete_effect=complete_effect
         self.run=run
         self.marker=canonical({"schema":"wolo.c06.native-hold.v1","scope":self.sha})
 
@@ -170,7 +171,10 @@ class NativeBarrier:
         self.admit_effect(phase,self.sha,action)
         self.anchor_intent(phase,self.sha,action)
         self.admit_effect(phase,self.sha,action)
-        return fn()
+        result=fn()
+        if self.complete_effect is not None:
+            self.complete_effect(phase,self.sha,action)
+        return result
 
     def check_quarantine(self):
         for u in sorted(QUARANTINED):

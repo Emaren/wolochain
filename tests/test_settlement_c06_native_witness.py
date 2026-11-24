@@ -169,6 +169,43 @@ class NativeProtocol(unittest.TestCase):
                 self.assertEqual(len(reopened.records),2)
                 with self.assertRaises(w.owner.AuthorityHold):reopened.append("hold")
 
+    def test_effect_source_binding_no_progress_after_ambiguous_effect(self):
+        from settlement_c06_native_service_barrier import NativeBarrier,validate_scope
+        from test_settlement_c06_native_service_barrier import scope
+        f=self.fixture;sc=scope();f.plan["scope"]=validate_scope(sc)
+        tip="a"*64;admission="b"*64
+        sp=f.root/"source-effects";sp.mkdir(mode=0o700)
+        events=[]
+        def anchor(r):
+            events.append("anchor")
+            return dict(schema="wolo.c06.barrier-effect-anchor.v1",plan=j.plan_sha,
+                        phase="capture",tip=j.tip,witness_identity="c"*64,
+                        status="NEW_EFFECT_INTENT_ANCHORED",production_authorized=False,
+                        funding_authorized=False)
+        with w.BarrierEffectJournal(sp,f.plan,sc,"capture",tip,admission) as j:
+            b=w.BarrierEffectBinding(j,verify_phase=lambda:(tip,admission),
+                verify_lease=lambda:events.append("lease"),anchor_native=anchor,
+                witness_identity="c"*64)
+            barrier=NativeBarrier(sc,admit_effect=b.admit_effect,
+                anchor_intent=b.anchor_intent,complete_effect=b.complete_effect)
+            barrier.effect("capture","hold",lambda:events.append("effect"))
+            self.assertEqual(events.count("anchor"),1)
+            self.assertLess(events.index("anchor"),events.index("effect"))
+            self.assertEqual(b.state,"READY")
+            def fail():
+                raise RuntimeError("ambiguous")
+            with self.assertRaises(RuntimeError):
+                barrier.effect("capture","gate:"+sc["stop"][0],fail)
+            self.assertEqual(b.state,"EFFECT_IN_FLIGHT")
+            with self.assertRaises(w.owner.AuthorityHold):
+                barrier.effect("capture","gate:"+sc["stop"][1],lambda:events.append("bad"))
+            self.assertNotIn("bad",events)
+            with self.assertRaises(w.owner.AuthorityHold):b.verify_complete()
+        with w.BarrierEffectJournal(sp,f.plan,sc,"capture",tip,admission) as j:
+            with self.assertRaises(w.owner.AuthorityHold):
+                w.BarrierEffectBinding(j,verify_phase=lambda:(tip,admission),
+                    verify_lease=lambda:None,anchor_native=anchor,witness_identity="c"*64)
+
     def test_unenrolled_scope_and_arbitrary_action_rejected(self):
         f=self.fixture
         req={"action":"consume","phase":"capture","previous":None,
