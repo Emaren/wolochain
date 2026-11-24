@@ -369,3 +369,71 @@ def reconstruct_financial_image(fd, manifest, *, expected_plan, expected_source,
     return {**proof,"schema":"wolo.financial.image-single-target-reconstruction.v1",
             "single_target":True,"reconstruction_wall_ns":time.monotonic_ns()-start,
             "independent_host_authenticated":False,"retirement_authorized":False}
+
+
+def reconstruct_sealed_financial_image(fd, initial, receipts, manifest, seal, *,
+        expected_initial_sha, expected_seal_sha, expected_plan, expected_source,
+        expected_receiver, expected_recipient, verify_initial, verify_receipt,
+        verify_seal, verify_reconstruction_admission, verify_lease,
+        open_verified_plaintext):
+    """Connect the exact authenticated continuation seal to one recovery target.
+
+    The independent driver supplies native trust, one-use reconstruction
+    admission and lease checks, not a caller-generated replacement manifest.
+    This composition creates no authority or extra plaintext staging image.
+    A lost lease or uncertain native result leaves the partial target held.
+    """
+    from settlement_c06_checkpoint_rehearsal import canonical,digest
+    require(type(initial) is dict and type(manifest) is dict and type(seal) is dict
+            and all(hash64(v) for v in (expected_plan,expected_receiver,
+                                       expected_recipient,expected_seal_sha))
+            and initial.get("plan_sha256")==expected_plan
+            and initial.get("source")==expected_source
+            and initial.get("receiver_identity_sha256")==expected_receiver
+            and initial.get("recipient_sha256")==expected_recipient
+            and callable(verify_reconstruction_admission) and callable(verify_lease)
+            and callable(open_verified_plaintext),"SEALED_RECOVERY_ADMISSION_BINDING")
+    require(verify_lease() is True,"SEALED_RECOVERY_LEASE_REQUIRED")
+    checked=seal_transfer_manifest(initial,receipts,
+        expected_initial_sha=expected_initial_sha,verify_initial=verify_initial,
+        verify_receipt=verify_receipt,source_sha256=seal.get("source_sha256"),
+        expected_seal_sha=expected_seal_sha,verify_seal=verify_seal)
+    require(canonical(manifest)==canonical(checked["manifest"])
+            and canonical(seal)==canonical(checked["seal"]),
+            "SEALED_RECOVERY_WIRE_DRIFT")
+    # Derive the local raw-image manifest exclusively from the verified
+    # identity and prefix. No additional signature or unbound digest input.
+    local={"schema":"wolo.financial.image-source-manifest.v1","purpose":PURPOSE,
+           "plan_sha256":expected_plan,"source":dict(expected_source),
+           "source_sha256":checked["seal"]["source_sha256"],
+           "chunks":[dict(c) for c in checked["manifest"]["chunks"]]}
+    local_sha=digest(canonical(local))
+    binding={"schema":"wolo.financial.sealed-reconstruction-binding.v1",
+             "initial_sha256":expected_initial_sha,"seal_sha256":expected_seal_sha,
+             "wire_manifest_sha256":checked["seal"]["manifest_sha256"],
+             "local_manifest_sha256":local_sha,"plan_sha256":expected_plan,
+             "receiver_identity_sha256":expected_receiver}
+    # Target identity and capacity are admitted by the actual native driver.
+    # The verifier must consume a genuine one-use permit; no default verifier.
+    require(verify_lease() is True and
+            verify_reconstruction_admission(canonical(binding),fd) is True
+            and verify_lease() is True,"SEALED_RECOVERY_NATIVE_ADMISSION_REQUIRED")
+    from contextlib import contextmanager
+    @contextmanager
+    def guarded(chunk):
+        require(verify_lease() is True,"SEALED_RECOVERY_LEASE_LOST")
+        with open_verified_plaintext(chunk) as stream:
+            class Reader:
+                def read(self,n):
+                    require(verify_lease() is True,"SEALED_RECOVERY_LEASE_LOST")
+                    data=stream.read(n)
+                    require(verify_lease() is True,"SEALED_RECOVERY_LEASE_LOST")
+                    return data
+            yield Reader()
+        require(verify_lease() is True,"SEALED_RECOVERY_LEASE_LOST")
+    proof=reconstruct_financial_image(fd,local,expected_plan=expected_plan,
+        expected_source=expected_source,expected_manifest_sha=local_sha,
+        max_chunk_bytes=initial["max_chunk_bytes"],open_verified_plaintext=guarded)
+    require(verify_lease() is True,"SEALED_RECOVERY_LEASE_LOST_AFTER_READBACK")
+    return {**proof,"sealed_binding":binding,"sealed_binding_sha256":digest(canonical(binding)),
+            "independent_host_authenticated":False,"retirement_authorized":False}

@@ -192,4 +192,70 @@ class ImageStream(unittest.TestCase):
         with tempfile.NamedTemporaryFile() as target:
             with self.assertRaises(Hold):im.reconstruct_financial_image(
                 target.fileno(),m,open_verified_plaintext=trailing,**kw)
+    def test_sealed_recovery_composition_requires_exact_native_admission(self):
+        from settlement_c06_checkpoint_rehearsal import canonical
+        from contextlib import contextmanager
+        import hmac
+        key=b"disposable-fixture-only"
+        def sha(x):return digest(canonical(x))
+        signed={}
+        def sign(x):signed[canonical(x)]=hmac.digest(key,canonical(x),"sha256")
+        def verify(raw):
+            return raw in signed and hmac.compare_digest(signed[raw],hmac.digest(key,raw,"sha256"))
+        data=[b"abc",b"def"];source=dict(device=1,inode=2,uid=0,gid=0,
+            mode=0o600,bytes=6,allocated_bytes=512,mtime_ns=1,ctime_ns=1)
+        initial=dict(schema="wolo.financial.image-prefix-identity.v1",purpose=im.PURPOSE,
+            campaign="fixture-sealed",plan_sha256=digest(b"plan"),source=source,
+            max_chunk_bytes=3,recipient_sha256=digest(b"recipient"),
+            receiver_identity_sha256=digest(b"receiver"))
+        sign(initial);ih=sha(initial);tip=ih;receipts=[];chunks=[]
+        for i,piece in enumerate(data):
+            c=dict(index=i,offset=i*3,plain_bytes=3,cipher_bytes=19,
+                plain_sha256=digest(piece),cipher_sha256=digest(b"cipher"+piece))
+            r=dict(schema="wolo.financial.image-prefix-readback.v1",initial_sha256=ih,
+                previous=tip,receiver_identity_sha256=initial["receiver_identity_sha256"],
+                chunk=c,status="CIPHERTEXT_DURABLE_READBACK_VERIFIED_NOT_RESTORED",
+                retirement_authorized=False)
+            sign(r);tip=sha(r);receipts.append(r);chunks.append(c)
+        manifest=dict(schema="wolo.financial.image-continuation.v1",
+            identity=dict(purpose="FULL_IMAGE_EXACT",campaign=initial["campaign"],
+                plan_sha256=initial["plan_sha256"],source_identity_sha256=sha(source),
+                source_sha256=digest(b"".join(data)),source_bytes=6,max_chunk_bytes=3,
+                recipient_sha256=initial["recipient_sha256"]),chunks=chunks)
+        seal=dict(schema="wolo.financial.image-prefix-seal.v1",initial_sha256=ih,
+            tip_sha256=tip,manifest_sha256=sha(manifest),
+            source_sha256=manifest["identity"]["source_sha256"])
+        sign(seal);calls=[];opened=[]
+        @contextmanager
+        def open_chunk(c):
+            opened.append(c["index"]);yield io.BytesIO(data[c["index"]])
+        def admit(raw,fd):
+            self.assertEqual(os.fstat(fd).st_size,0)
+            calls.append(raw);return True
+        kw=dict(expected_initial_sha=ih,expected_seal_sha=sha(seal),
+            expected_plan=initial["plan_sha256"],expected_source=source,
+            expected_receiver=initial["receiver_identity_sha256"],
+            expected_recipient=initial["recipient_sha256"],verify_initial=verify,
+            verify_receipt=verify,verify_seal=verify,verify_reconstruction_admission=admit,
+            verify_lease=lambda:True,open_verified_plaintext=open_chunk)
+        with tempfile.NamedTemporaryFile() as f:
+            proof=im.reconstruct_sealed_financial_image(f.fileno(),initial,receipts,manifest,seal,**kw)
+            self.assertEqual(proof["sha256"],seal["source_sha256"])
+            self.assertEqual(proof["sealed_binding"]["wire_manifest_sha256"],sha(manifest))
+            self.assertEqual(proof["sealed_binding"]["seal_sha256"],sha(seal))
+            self.assertEqual(calls,[canonical(proof["sealed_binding"])])
+            self.assertEqual(opened,[0,1]);self.assertFalse(proof["independent_host_authenticated"])
+        for changes in ({"verify_reconstruction_admission":lambda *_:None},
+                        {"verify_lease":lambda:False},
+                        {"expected_receiver":digest(b"wrong receiver")},
+                        {"verify_seal":lambda _:False}):
+            with tempfile.NamedTemporaryFile() as f:
+                with self.assertRaises(Hold):im.reconstruct_sealed_financial_image(
+                    f.fileno(),initial,receipts,manifest,seal,**(kw|changes))
+                self.assertEqual(os.fstat(f.fileno()).st_size,0)
+        with tempfile.NamedTemporaryFile() as f:
+            with self.assertRaises(Hold):im.reconstruct_sealed_financial_image(
+                f.fileno(),initial,receipts,dict(manifest,chunks=list(reversed(chunks))),seal,**kw)
+            self.assertEqual(os.fstat(f.fileno()).st_size,0)
+        self.assertEqual(opened,[0,1])
 if __name__=="__main__":unittest.main()
