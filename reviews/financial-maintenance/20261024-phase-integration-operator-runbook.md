@@ -102,3 +102,7 @@ No production backup, restore, unit stop, mount, restart, wallet operation or ma
 The old 18-unit phase path is not executable authority for the present campaign. PR 258 introduces a source-only journal, native service barrier and separately scoped witness/admission contracts. No real phase permit, comprehensive reconnect exclusion, checkpoint, restart or restore is inferred.
 
 Current decision boundary: [financial authority #239](https://github.com/Emaren/wolochain/issues/239) and [coordinated recovery #258](https://github.com/Emaren/wolochain/pull/258). C04/C08 closed; C01/C02/C03/C05/C06/C07/C09 open. Funding DENIED; custody inactive. This renewal is a source and dated-evidence applicability review, not a new physical receipt.
+
+### Expanded witness integration source — 2026-11-24
+
+The new native witness protocol source connects the exact plan and owner Ed25519 signature verifier to a fixed host-key-pinned SSH request and separate Intel journal, sharing the existing one-use nonce store. It rejects legacy enrollment drift, plan drift, source pin drift, arbitrary commands and acknowledgement replay. Existing legacy sources and forced command remain unchanged. Both endpoints need separately admitted private expanded enrollment, exact source pins and pre-created journal; no enrollment writer or installer is included. New protocol tests used disposable keys only. No live Intel admission, production permit, native checkpoint driver activation or physical closure is asserted. Do not use a reachability receipt as admission.
