@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war"]
 audience: ["operators", "developers", "financial-reviewers", "ai-agents"]
 source_of_truth: "git"
 authority: "zero-funded-governance-prerequisite-only"
-reviewed_at: "2026-11-08"
+reviewed_at: "2026-11-24"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -145,3 +145,9 @@ AOE2WAR_C08_OWNER_RECEIPT_ROOT="$HOME/.wolo-owner-authority/c08-keychain-policy-
 Never publish receipt bytes, private keys, authentication tokens or
 Keychain passwords in CI, issue comments or chat. A passing source test
 is a source qualification, not a production financial release certificate.
+
+## Current applicability — reviewed 2026-11-24
+
+C08 is now formally CLOSED, with original adopted receipt and P-256 trust pins retained. No new C08 adoption or signer build is required for the C06 recovery campaign. The distinct C06 owner Ed25519 maintenance request and offhost witness are not satisfied by the zero-funded C08 governance receipt. Keep C09 separate; C01/C02/C03/C05/C06/C07/C09 remain OPEN. Do not run the signer or install a funded configuration in the maintenance campaign.
+
+Current evidence: [#239](https://github.com/Emaren/wolochain/issues/239), [#258](https://github.com/Emaren/wolochain/pull/258), [receiver readiness](https://github.com/Emaren/wolochain/issues/239#issuecomment-7131784934), [witness source qualification](https://github.com/Emaren/wolochain/pull/258#issuecomment-7133994664). Funding DENIED; custody inactive. No live authority is granted by this review.

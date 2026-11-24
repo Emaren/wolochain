@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war"]
 audience: ["operators", "developers", "financial-reviewers", "ai-agents"]
 source_of_truth: "git"
 authority: "reviewed-deny-only-ssh-transport-no-nonce-or-financial-authority"
-reviewed_at: "2026-11-08"
+reviewed_at: "2026-11-24"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -58,3 +58,9 @@ The M1 and Intel had no private signing key material copied and no witness packe
 The already merged source-review of the next distinct command admission is `scripts/settlement_c08_intel_reverse_tunnel_hold.py`, source SHA256 `d7a634d02ee127acbf82db884d067c478e2f087c4dc91e72073f049d4ab54161`; it still physically classifies this deny-only SSHD as NOT admitted. Any transition to actual one-use witness must separately review and apply the exact forced-command substitution, reverse tunnel, current source-key enrollment, adversarial invalid/expired/replayed signed packets, independent receipt and rollback. Do not use the old Nov7 nonfinancial owner direction as a C08 funded ratification or any C09 transaction permit.
 
 This is **nonfunded infrastructure**. All C01–C09 remain HARD HOLD until original physical gate receipts pass; no financial release authorization.
+
+## Current applicability — reviewed 2026-11-24
+
+The November 8 deny-only configuration, listener, PIDs and port states are historical. C08 is closed via separately verified zero-funded governance; do not reinstall or roll back this old SSHD merely because the earlier record says the gate is open. The current C06 expanded witness domain still needs genuine admission to the existing independently enrolled witness boundary, with old enrollment/nonce history preserved. Recovery transport verified November 24 is not proof of that witness route.
+
+Current evidence: [#239](https://github.com/Emaren/wolochain/issues/239), [#258](https://github.com/Emaren/wolochain/pull/258), [receiver readiness](https://github.com/Emaren/wolochain/issues/239#issuecomment-7131784934), [witness source qualification](https://github.com/Emaren/wolochain/pull/258#issuecomment-7133994664). Funding DENIED; custody inactive. No live authority is granted by this review.
