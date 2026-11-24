@@ -5,6 +5,8 @@ from pathlib import Path
 import sys
 import tempfile
 import time
+import subprocess
+import select
 import unittest
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/"scripts"))
 import settlement_c06_checkpoint_coordinator as c
@@ -114,4 +116,71 @@ class TestCoordinator(unittest.TestCase):
             self.assertEqual(c.recovery_disposition(j),
                 "AMBIGUOUS_EFFECT_FRESH_CONTAINMENT_AUTHORITY_REQUIRED")
             with self.assertRaises(c.Hold):c.Coordinator(self.p,j,Driver()).run()
+@unittest.skipUnless(os.geteuid()!=0 and os.environ.get("C06_PG_BIN"),
+                     "explicit disposable PG16 path required")
+class PhysicalReconnectTests(unittest.TestCase):
+    def test_preconnected_writer_and_reconnect_after_shutdown(self):
+        pg=Path(os.environ["C06_PG_BIN"])
+        with tempfile.TemporaryDirectory(prefix="c06-reconnect-") as td:
+            root=Path(td).resolve();data=root/"data";sock=root/"s"
+            sock.mkdir(mode=0o700)
+            def run(args,check=True):
+                return subprocess.run([str(x) for x in args],capture_output=True,
+                                      timeout=30,check=check)
+            def ctl(action):
+                args=[pg/"pg_ctl","-D",data,"-w"]
+                if action=="start":args+=["-l",sock/"server.log","-o",
+                                         "-h '' -k "+str(sock)+" -p 56501","start"]
+                else:args+=["-m","fast","stop"]
+                return run(args)
+            def args(db,user):
+                return [str(pg/"psql"),"-X","-w","-At","-v","ON_ERROR_STOP=1",
+                        "-h",str(sock),"-p","56501","-U",user,"-d",db]
+            run([pg/"initdb","-D",data,"-U","fixture_admin",
+                 "--auth-local=trust","--auth-host=reject","--no-locale"])
+            active=False;client=None
+            try:
+                ctl("start");active=True
+                run(args("postgres","fixture_admin")+["-c","CREATE ROLE fixture_writer LOGIN"])
+                for db in ("aoe2hd_db","aoe2de_db","website_shared"):
+                    run(args("postgres","fixture_admin")+["-c","CREATE DATABASE "+db])
+                    run(args(db,"fixture_admin")+["-c",
+                        "CREATE TABLE t(id integer); GRANT INSERT, SELECT ON t TO fixture_writer"])
+                client=subprocess.Popen(args("aoe2hd_db","fixture_writer"),
+                                        stdin=subprocess.PIPE,stdout=subprocess.PIPE,
+                                        stderr=subprocess.PIPE,bufsize=0)
+                client.stdin.write(b"BEGIN;\nINSERT INTO t VALUES (99);\nSELECT 'PRECONNECTED_UNCOMMITTED';\n")
+                ready=b"";deadline=time.monotonic()+8
+                while b"PRECONNECTED_UNCOMMITTED" not in ready and time.monotonic()<deadline:
+                    if select.select([client.stdout],[],[],.2)[0]:
+                        block=os.read(client.stdout.fileno(),4096)
+                        if not block:break
+                        ready+=block
+                self.assertIn(b"PRECONNECTED_UNCOMMITTED",ready)
+                ctl("stop");active=False
+                # Preconnected transaction cannot commit after the clean stop.
+                # BrokenPipe or nonzero psql exit is an expected failure.
+                try:
+                    client.stdin.write(b"COMMIT;\n")
+                    client.stdin.close()
+                except BrokenPipeError:pass
+                client.wait(timeout=8)
+                self.assertNotEqual(client.returncode,0)
+                for db in ("aoe2hd_db","aoe2de_db","website_shared"):
+                    for user in ("fixture_writer","fixture_admin"):
+                        self.assertNotEqual(run(args(db,user)+["-c","SELECT 1"],False).returncode,0)
+                self.assertIn(b"shut down",run([pg/"pg_controldata",data]).stdout)
+                # Deliberate fixture-only resume, no autonomous retry.
+                ctl("start");active=True
+                for db in ("aoe2hd_db","aoe2de_db","website_shared"):
+                    self.assertEqual(run(args(db,"fixture_admin")+["-c","SELECT count(*) FROM t"]).stdout,b"0\n")
+                self.assertEqual(run(args("postgres","fixture_admin")+["-c","SHOW listen_addresses"]).stdout,b"\n")
+                ctl("stop");active=False
+                print("PASS_DISPOSABLE_PRECONNECTED_ROLLBACK_SIX_RECONNECT_DENIALS_THREE_DATABASE_RESTART",flush=True)
+            finally:
+                if client is not None and client.poll() is None:
+                    client.kill();client.wait(timeout=5)
+                if active:ctl("stop")
+
 if __name__=="__main__":unittest.main()
+

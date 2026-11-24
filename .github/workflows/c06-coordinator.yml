@@ -10,9 +10,12 @@ permissions:
 jobs:
   coordinator:
     runs-on: ubuntu-24.04
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
-      - run: python3 -B tests/test_settlement_c06_checkpoint_coordinator.py -v
+      - run: sudo apt-get update -qq && sudo apt-get install -y postgresql-16
+      - env:
+          C06_PG_BIN: /usr/lib/postgresql/16/bin
+        run: python3 -B tests/test_settlement_c06_checkpoint_coordinator.py -v
