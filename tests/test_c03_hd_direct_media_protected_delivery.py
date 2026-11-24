@@ -2,6 +2,8 @@
 from pathlib import Path
 import importlib.util
 import unittest
+import stat
+from types import SimpleNamespace
 from unittest import mock
 
 SCRIPT=Path(__file__).resolve().parents[1]/'scripts/c03_hd_direct_media_protected_delivery.py'
@@ -10,6 +12,34 @@ m=importlib.util.module_from_spec(spec)
 spec.loader.exec_module(m)
 
 class DeliveryTests(unittest.TestCase):
+    def test_exact_native_heartbeat_directories_only(self):
+        for path, (dev, ino, uid, gid, mode) in m.HEARTBEAT_DIR_PINS.items():
+            s=SimpleNamespace(st_dev=dev,st_ino=ino,st_uid=uid,st_gid=gid,st_mode=stat.S_IFDIR|mode)
+            m.check_directory(path,s,(0,),heartbeat=True)
+            for key in ('st_dev','st_ino','st_uid','st_gid','st_mode'):
+                changed=SimpleNamespace(**vars(s))
+                setattr(changed,key,getattr(changed,key)^1)
+                with self.subTest(path=path,key=key),self.assertRaises(m.Hold):
+                    m.check_directory(path,changed,(0,),heartbeat=True)
+            with self.assertRaises(m.Hold):
+                m.check_directory(path,s,(0,),heartbeat=False)
+    def test_unlisted_writable_directory_never_exempt(self):
+        s=SimpleNamespace(st_uid=0,st_mode=stat.S_IFDIR|0o775)
+        with self.assertRaises(m.Hold):
+            m.check_directory(m.ROOT,s,(0,),heartbeat=True)
+    def test_only_exact_heartbeat_files_use_native_exception(self):
+        with mock.patch.object(m,'open_dir',return_value=9) as op, mock.patch.object(m,'read_at'),mock.patch.object(m.os,'close'):
+            for p in m.HEARTBEAT_APP_FILES:
+                m.read_fixed(p)
+                op.assert_called_with(p.parent,heartbeat=True)
+            for p in (m.CODE/m.EXECUTOR,m.ROOT/'review.json',m.ROOT/'permit-example.json',m.APP/'unlisted'):
+                m.read_fixed(p)
+                op.assert_called_with(p.parent)
+    def test_hba_only_accepts_postgres_owned_ancestors(self):
+        with mock.patch.object(m,'open_dir',return_value=9) as op, mock.patch.object(m,'read_at'),mock.patch.object(m.os,'close'),mock.patch.object(m.pwd,'getpwnam',return_value=SimpleNamespace(pw_uid=108)):
+            m.read_fixed(m.HBA,owners=(108,))
+            op.assert_called_with(m.HBA.parent,owners=(0,108))
+
     def test_exact_last_file_last_line_wins(self):
         first=b'DATABASE_URL=postgresql://aoe2hd_user:fixture@127.0.0.1:5432/aoe2hd_db'
         second=b'DATABASE_URL="postgresql+asyncpg://aoe2war_social_writer:p%40ss@127.0.0.1:5432/aoe2hd_db"'
