@@ -11,8 +11,8 @@ import unittest
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/"scripts"))
 import settlement_c06_checkpoint_authority as a
 import settlement_solo_owner_intent_review as owner
-from test_settlement_c06_checkpoint_coordinator import plan
-from settlement_c06_checkpoint_coordinator import Journal
+from test_settlement_c06_checkpoint_coordinator import plan, Driver
+from settlement_c06_checkpoint_coordinator import Journal, Coordinator, STEPS
 
 def sha(b):return hashlib.sha256(b).hexdigest()
 def utc(t):return t.strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -173,5 +173,45 @@ class SignatureTests(unittest.TestCase):
             with self.assertRaises(owner.AuthorityHold):
                 a.anchor_witness_record(j,raw,**self.anchor_args())
             self.assertFalse(j.records)
+
+    def test_integrated_three_signed_phases_and_independent_journal(self):
+        source=self.root/"source-journal";source.mkdir(mode=0o700)
+        witness=self.root/"witness-journal";witness.mkdir(mode=0o700)
+        nonces=self.root/"nonces";nonces.mkdir(mode=0o700)
+        plan_sha=a.validate_plan(self.plan)
+        phase_seen=[]
+        with Journal(source,plan_sha) as sj,Journal(witness,plan_sha) as wj:
+            d=Driver()
+            def consume(phase,p,previous):
+                self.assertEqual(p,self.plan)
+                q=self.q|{"phase":phase,"operation":a.OPS[phase],
+                    "previous_journal_sha256":previous,
+                    "nonce":str(len(phase_seen)+3)*32}
+                packet=self.packet(q)
+                args=self.witness_args()|{"phase":phase,"previous":previous}
+                ack=a.consume_expanded_witness(self.enroll,packet,p,
+                    journal=wj,nonce_root=nonces,**args,
+                    local_identity="c"*64,witness_identity="c"*64,
+                    source_identity=p["host"],expected_plan_sha=plan_sha)
+                phase_seen.append(phase)
+                return a.verify_expanded_witness_ack(ack,self.enroll,packet,p,
+                    witness_identity="c"*64,**args)
+            def anchor(p,step,tip):
+                self.assertEqual(p,plan_sha)
+                self.assertEqual(sj.records[-1]["step"],step)
+                ack=a.anchor_witness_record(wj,sj.records[-1],**self.anchor_args())
+                self.assertEqual(ack["tip"],tip)
+            d.authenticate_and_consume=consume
+            d.anchor=anchor
+            out=Coordinator(self.plan,sj,d).run()
+            self.assertEqual(out,sha(b"cipher"))
+            self.assertEqual(phase_seen,["capture","restore","resume"])
+            self.assertEqual([r["step"] for r in sj.records],list(STEPS))
+            self.assertEqual(sj.records,wj.records)
+            self.assertEqual(len(list(nonces.glob("nonce-*.json"))),3)
+        with Journal(source,plan_sha) as sj,Journal(witness,plan_sha) as wj:
+            self.assertEqual(sj.records,wj.records)
+            self.assertEqual(sj.tip,wj.tip)
+        print("PASS_THREE_REAL_DISPOSABLE_SIGNATURES_INDEPENDENT_DURABLE_PHASE_MIRROR",flush=True)
 
 if __name__=="__main__":unittest.main()
