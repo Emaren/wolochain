@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war"]
 audience: ["operators", "developers", "financial-reviewers", "ai-agents"]
 source_of_truth: "git"
 authority: "source-held-no-live-legacy-liability-release"
-reviewed_at: "2026-11-08"
+reviewed_at: "2026-11-24"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -71,3 +71,9 @@ C03 C05 C06 C07 and a fresh C09 signature remain separate prerequisites.
 
 No 8092 fallback, financial grants, funded keys, live deployments or owner
 signing are authorized by this source check.
+
+## Current applicability — reviewed 2026-11-24
+
+The source-only namespace check above is historical. C04 was subsequently physically CLOSED as nonfunded quarantine, not historical payment adjudication or activation of native 8094. Preserve the original namespace boundary, all historic claims and original quarantine archives. The current C06 whole-cluster checkpoint must preserve this state; no legacy claim replay or new funded native claim is admitted.
+
+Current authority: [#239](https://github.com/Emaren/wolochain/issues/239), [#258](https://github.com/Emaren/wolochain/pull/258), [physical quarantine readback](https://github.com/Emaren/wolochain/pull/258#issuecomment-7133994664). C04/C08 CLOSED; C03/C06/C07 OPEN. Funding DENIED; custody inactive. No live action authorized by this review.
