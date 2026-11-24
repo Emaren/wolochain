@@ -51,6 +51,12 @@ def main():
             hd=m.witness(data,'aoe2hd_db',runner);de=m.witness(data,'aoe2de_db',runner)
             check(hd['media_functions']==0 and hd['media_relations']==0 and de['media_functions']==0,'catalog-only HD/DE preimage')
             check(hd==m.witness(data,'aoe2hd_db',runner),'catalog digest stable on repeat')
+            # Prove parsed HBA bytes are included in signed fingerprint.
+            hba=db/'pg_hba.conf';original=hba.read_bytes()
+            hba.write_bytes(original+b'\nlocal aoe2hd_db c03_public_probe reject\n')
+            check(m.witness(data,'aoe2hd_db',runner)['full_sha256']!=hd['full_sha256'],'parsed HBA change alters signed digest')
+            hba.write_bytes(original)
+            check(hd==m.witness(data,'aoe2hd_db',runner),'restored HBA preimage exactly matches')
             # Actual disposable P256 signature, never a real owner key.
             key=root/'key';pub=root/'pub';sig=root/'sig';message=root/'message'
             run('/usr/bin/openssl','ecparam','-name','prime256v1','-genkey','-noout','-out',key)

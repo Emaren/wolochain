@@ -32,7 +32,9 @@ objects AS (
  UNION ALL SELECT 'pg_namespace'::regclass::oid,oid,false FROM ns
 ),
 items AS (
- SELECT 'schema' k,oid::text id,to_jsonb(ns) val,false omit,false body_delta FROM ns
+ SELECT 'cluster_identity' k,'fixed' id,jsonb_build_array((SELECT system_identifier::text FROM pg_control_system()),pg_postmaster_start_time(),current_database(),current_setting('server_version_num'),current_setting('data_directory'),current_setting('hba_file'),current_setting('port'),current_setting('unix_socket_directories'),current_setting('listen_addresses')) val,false omit,false body_delta
+ UNION ALL SELECT 'parsed_hba',concat_ws(':',rule_number,file_name,line_number),to_jsonb(h),false,false FROM pg_hba_file_rules h
+ UNION ALL SELECT 'schema',oid::text,to_jsonb(ns),false,false FROM ns
  UNION ALL SELECT 'role',oid::text,to_jsonb(r)-'rolpassword',false,false FROM pg_roles r
  UNION ALL SELECT 'membership',oid::text,to_jsonb(m),false,false FROM pg_auth_members m
  UNION ALL SELECT 'database',oid::text,to_jsonb(d)-'datfrozenxid'-'datminmxid',false,false FROM pg_database d

@@ -26,7 +26,7 @@ DOMAIN=b'AOE2WAR-WE1-HD-DIRECT-MEDIA-SQL-ONLY-V1\x00'
 FILES={
  'install':('c03_hd_direct_image_install_candidate.sql','db4c80451f9bb627598105b826c45d9ee115fd462a56d08aebf5deb79ad0723c'),
  'inverse':('c03_hd_direct_image_inverse_candidate.sql','2298690e5c1c412cdd73d232c9469ee7e268c191fbaa0816e9f6340fde138baf'),
- 'witness':('c03_hd_direct_media_catalog_witness.sql','29d57312178c9ea3aeaaa215fce53ad1438316465c8508ff3d2f507c34826582'),
+ 'witness':('c03_hd_direct_media_catalog_witness.sql','d1a0b2158b48da9d10f140fe67dd6fe454c44956d511787e5f26f71c344b59a4'),
 }
 HEX=re.compile(r'[0-9a-f]{64}\Z')
 SPKI=bytes.fromhex('3059301306072a8648ce3d020106082a8648ce3d030107034200')

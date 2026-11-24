@@ -3,12 +3,12 @@
 set -euo pipefail
 umask 077
 export PATH=/usr/bin:/bin
-root='/home/tony/we1-hd-direct-media-preimage-20261124'
+root='/home/tony/we1-hd-direct-media-preimage-v2-20261124'
 witness="$root/c03_hd_direct_media_catalog_witness.sql"
 audit="$root/c03_social_writer_catalog_readonly.sql"
 [[ $(id -un) == tony && -t 0 && -t 1 && -r /dev/tty ]] || { echo 'HOLD_OWNER_TERMINAL_REQUIRED' >&2; exit 3; }
 [[ -d "$root" && ! -L "$root" && -O "$root" && -f "$witness" && ! -L "$witness" && -f "$audit" && ! -L "$audit" ]] || exit 3
-[[ $(sha256sum "$witness" | awk '{print $1}') == 29d57312178c9ea3aeaaa215fce53ad1438316465c8508ff3d2f507c34826582 ]] || exit 3
+[[ $(sha256sum "$witness" | awk '{print $1}') == d1a0b2158b48da9d10f140fe67dd6fe454c44956d511787e5f26f71c344b59a4 ]] || exit 3
 [[ $(sha256sum "$audit" | awk '{print $1}') == a25b85c8f5f1cb95d6e320029d6ff5267cd7fd9fd6180b9c34e777f15f1aa8e7 ]] || exit 3
 echo 'Read-only HD/DE PostgreSQL catalogs only; no player rows, DDL, grants, service changes, or financial authority.'
 printf 'Type READ-ONLY-HD-DIRECT-MEDIA to authorize catalog capture: ' >/dev/tty
