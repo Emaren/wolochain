@@ -1,0 +1,18 @@
+name: C06 durable coordinator crash boundaries
+on:
+  pull_request:
+    paths:
+      - scripts/settlement_c06_checkpoint_coordinator.py
+      - tests/test_settlement_c06_checkpoint_coordinator.py
+      - .github/workflows/c06-coordinator.yml
+permissions:
+  contents: read
+jobs:
+  coordinator:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - run: python3 -B tests/test_settlement_c06_checkpoint_coordinator.py -v
