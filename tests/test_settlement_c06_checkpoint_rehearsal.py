@@ -235,5 +235,55 @@ class PhysicalFixtureTests(unittest.TestCase):
             finally:
                 if active:stop(data)
 
+@unittest.skipUnless(os.geteuid()!=0 and os.environ.get("C06_AGE")
+                     and os.environ.get("C06_AGE_KEYGEN"),
+                     "disposable age tools required")
+class BoundedStreamTests(unittest.TestCase):
+    def test_real_direct_dual_recipient_ciphertext_and_failure_evidence(self):
+        age=Path(os.environ["C06_AGE"]).resolve()
+        keygen=Path(os.environ["C06_AGE_KEYGEN"]).resolve()
+        def run(argv):
+            return subprocess.run([str(x) for x in argv],capture_output=True,
+                                  check=True,timeout=15).stdout
+        with tempfile.TemporaryDirectory(prefix="c06-stream-") as td:
+            root=Path(td).resolve()
+            dest=root/"cipher";dest.mkdir(mode=0o700)
+            keys=[];recipients=[]
+            for i in range(2):
+                k=root/("fixture-key-"+str(i))
+                run([keygen,"-o",k]);keys.append(k)
+                recipients.append(run([keygen,"-y",k]).decode().strip())
+            payload=(b"synthetic checkpoint only\n"*4096)
+            args=dict(plain_bytes=len(payload),cipher_max=4<<20,
+                      reserve_bytes=1<<20,age_path=age,
+                      age_sha256=c.sha_file(age),recipients=tuple(recipients),
+                      recipient_pin=c.digest(c.canonical(recipients)),
+                      timeout_seconds=20)
+            target=dest/"complete.age"
+            def writer(out):
+                for i in range(0,len(payload),4096):out.write(payload[i:i+4096])
+            receipt=c.stream_age_ciphertext(writer,target,**args)
+            self.assertEqual(receipt["ciphertext_sha256"],c.sha_file(target))
+            self.assertEqual(receipt["plaintext_sha256"],c.digest(payload))
+            self.assertFalse(receipt["c06_closed"])
+            self.assertEqual(list(dest.iterdir()),[target])
+            for k in keys:self.assertEqual(run([age,"-d","-i",k,target]),payload)
+            with self.assertRaises(c.Hold):c.stream_age_ciphertext(writer,target,**args)
+            with self.assertRaises(c.Hold):
+                c.stream_age_ciphertext(writer,dest/"wrong-pin.age",**(args|{"recipient_pin":"f"*64}))
+            self.assertFalse((dest/"wrong-pin.age.incomplete").exists())
+            short=dest/"short.age"
+            with self.assertRaises(c.Hold):
+                c.stream_age_ciphertext(lambda w:w.write(b"short"),short,**args)
+            self.assertFalse(short.exists())
+            self.assertTrue((dest/"short.age.incomplete").is_file())
+            long=dest/"long.age"
+            with self.assertRaises(c.Hold):
+                c.stream_age_ciphertext(lambda w:w.write(payload+b"x"),long,**args)
+            self.assertFalse(long.exists())
+            self.assertTrue((dest/"long.age.incomplete").is_file())
+            self.assertFalse(list(dest.glob("*.tar")))
+            print("PASS_DIRECT_DUAL_RECIPIENT_CIPHERTEXT_WITHOUT_PLAINTEXT_STAGE",flush=True)
+
 if __name__=="__main__":unittest.main()
 

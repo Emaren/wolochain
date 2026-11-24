@@ -17,6 +17,8 @@ import stat
 import subprocess
 import tarfile
 import tempfile
+import threading
+import time
 
 ROOTS = frozenset({"pgdata", "pgconfig", "chain-data", "primary-journal",
                    "founder-journal", "nonce-state"})
@@ -322,3 +324,166 @@ def run_phases(adapter, journal):
     except Exception:
         journal("HOLD_NO_AUTOMATIC_RETRY_OR_RESTART")
         raise
+
+
+class _ExactPlainWriter:
+    """No staging file; enforce exact plaintext length on the age pipe."""
+    def __init__(self, stream, length):
+        self.stream, self.limit, self.count = stream, length, 0
+        self.hash = hashlib.sha256()
+
+    def write(self, block):
+        require(self.count + len(block) <= self.limit, "PLAINTEXT_LIMIT")
+        n = self.stream.write(block)
+        require(n == len(block), "PLAINTEXT_SHORT_WRITE")
+        self.hash.update(block)
+        self.count += n
+        return n
+
+def stream_age_ciphertext(write_plain, destination, *, plain_bytes,
+                          cipher_max, reserve_bytes, age_path, age_sha256,
+                          recipients, recipient_pin, timeout_seconds):
+    """Bounded encryption stream to a private ciphertext-only destination.
+
+    This is an I/O primitive, not admission, a production snapshot driver,
+    or a producer fence. The protected caller must independently establish
+    the complete immutable source scope, approved dual recipient pin, actual
+    destination device and shared capacity/IO lease, and keep them valid.
+    An incomplete stream never becomes an accepted ciphertext. On failure
+    preserve the exclusive .incomplete evidence; do not retry or overwrite.
+    Timeout bounds the encryption subprocess/pipe; it cannot interrupt
+    arbitrary producer code blocked in kernel I/O.
+    """
+    require(all(type(v) is int and 0 < v < (1 << 50)
+                for v in (plain_bytes,cipher_max,reserve_bytes)) and
+            type(timeout_seconds) is int and 0 < timeout_seconds <= 14400,
+            "STREAM_BUDGET_TYPE")
+    require(plain_bytes + (plain_bytes+1023)//1024 + (1<<20) <= cipher_max,
+            "STREAM_CIPHER_BOUND")
+    binary=Path(age_path)
+    require(binary.is_absolute() and binary.resolve(strict=True)==binary and
+            hash64(age_sha256) and sha_file(binary)==age_sha256,
+            "AGE_BINARY_PIN")
+    bs=binary.stat()
+    require(stat.S_ISREG(bs.st_mode) and bs.st_uid in (0,os.geteuid()) and
+            not bs.st_mode&0o022 and bs.st_mode&0o111,"AGE_BINARY_UNSAFE")
+    require(type(recipients) is tuple and len(recipients)==2 and
+            len(set(recipients))==2 and all(type(x) is str and
+            (re.fullmatch(r"age1[0-9a-z]{58}",x) or
+             re.fullmatch(r"ssh-ed25519 [A-Za-z0-9+/=]{40,120}",x))
+             for x in recipients) and
+            digest(canonical(list(recipients)))==recipient_pin,
+            "EXACT_DUAL_RECIPIENT_PIN")
+    dest=Path(destination)
+    require(dest.is_absolute() and dest.parent.resolve(strict=True)==dest.parent
+            and re.fullmatch(r"[A-Za-z0-9_-]{1,120}\.age",dest.name),
+            "CIPHERTEXT_DESTINATION")
+    dfd=os.open(dest.parent,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW)
+    partial=dest.name+".incomplete"
+    output=None
+    process=None
+    reader=None
+    timer=None
+    worker_errors=[]
+    result={}
+    expired=threading.Event()
+    try:
+        ds=os.fstat(dfd)
+        require(stat.S_ISDIR(ds.st_mode) and ds.st_uid==os.geteuid() and
+                stat.S_IMODE(ds.st_mode)==0o700,"CIPHERTEXT_DIRECTORY_PRIVATE")
+        require(dest.name not in os.listdir(dfd) and partial not in os.listdir(dfd),
+                "CIPHERTEXT_EXISTS_HOLD")
+        def capacity(extra):
+            fs=os.fstatvfs(dfd)
+            require(fs.f_bavail*fs.f_frsize >= reserve_bytes+extra,
+                    "STREAM_RESERVE_VIOLATION")
+        capacity(cipher_max)
+        fd=os.open(partial,os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,
+                   0o600,dir_fd=dfd)
+        output=os.fdopen(fd,"wb",buffering=0)
+        os.fsync(dfd)
+        argv=[str(binary)]
+        for recipient in recipients:argv+=["-r",recipient]
+        # Only ciphertext reaches the disk; age reads from stdin.
+        process=subprocess.Popen(argv,stdin=subprocess.PIPE,stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,env={"PATH":"/usr/bin:/bin","LANG":"C"})
+        def kill():
+            if process.poll() is None:
+                try:process.kill()
+                except ProcessLookupError:pass
+        def timeout():
+            expired.set()
+            kill()
+        def pump():
+            h=hashlib.sha256();total=0
+            try:
+                while block:=process.stdout.read(1<<20):
+                    require(not expired.is_set(),"STREAM_TIMEOUT")
+                    require(total+len(block)<=cipher_max,"CIPHERTEXT_LIMIT")
+                    capacity(len(block))
+                    require(output.write(block)==len(block),"CIPHERTEXT_SHORT_WRITE")
+                    h.update(block);total+=len(block)
+                output.flush();os.fsync(output.fileno())
+                result.update(bytes=total,sha256=h.hexdigest())
+            except BaseException as exc:
+                worker_errors.append(exc)
+                kill()
+        reader=threading.Thread(target=pump,daemon=True)
+        timer=threading.Timer(timeout_seconds,timeout)
+        timer.daemon=True
+        reader.start();timer.start()
+        plain=_ExactPlainWriter(process.stdin,plain_bytes)
+        write_plain(plain)
+        require(plain.count==plain_bytes,"PLAINTEXT_LENGTH_DRIFT")
+        process.stdin.close()
+        rc=process.wait(timeout=timeout_seconds)
+        reader.join(timeout=5)
+        require(not reader.is_alive(),"CIPHERTEXT_READER_HOLD")
+        if worker_errors:raise worker_errors[0]
+        require(rc==0 and not expired.is_set() and result.get("bytes",0)>0,
+                "AGE_STREAM_FAILED_OR_TIMED_OUT")
+        capacity(0)
+        output.close();output=None
+        readfd=os.open(partial,os.O_RDONLY|os.O_NOFOLLOW,dir_fd=dfd)
+        h=hashlib.sha256()
+        with os.fdopen(readfd,"rb") as check:
+            s=os.fstat(check.fileno())
+            require(stat.S_ISREG(s.st_mode) and s.st_uid==os.geteuid() and
+                    stat.S_IMODE(s.st_mode)==0o600 and s.st_nlink==1 and
+                    s.st_size==result["bytes"],"CIPHERTEXT_POSTIMAGE")
+            while block:=check.read(1<<20):h.update(block)
+            require(h.hexdigest()==result["sha256"],"CIPHERTEXT_READBACK")
+        current=dest.parent.stat()
+        require((current.st_dev,current.st_ino)==(ds.st_dev,ds.st_ino) and
+                not expired.is_set(),"DESTINATION_IDENTITY_OR_TIME_DRIFT")
+        # linkat is no-overwrite publication. Crash between link/unlink leaves
+        # ambiguous evidence; the native caller must reconcile, never replay.
+        os.link(partial,dest.name,src_dir_fd=dfd,dst_dir_fd=dfd,
+                follow_symlinks=False)
+        os.fsync(dfd)
+        os.unlink(partial,dir_fd=dfd)
+        os.fsync(dfd)
+        final=os.stat(dest.name,dir_fd=dfd,follow_symlinks=False)
+        require(final.st_nlink==1 and (final.st_dev,final.st_ino)==
+                (s.st_dev,s.st_ino) and final.st_size==result["bytes"],
+                "CIPHERTEXT_FINAL_IDENTITY")
+        return {"schema":"wolo.c06.bounded-age-stream.v1",
+                "ciphertext_bytes":result["bytes"],
+                "ciphertext_sha256":result["sha256"],
+                "plaintext_bytes":plain.count,
+                "plaintext_sha256":plain.hash.hexdigest(),
+                "recipient_pin":recipient_pin,
+                "production_authorized":False,"c06_closed":False}
+    finally:
+        if timer is not None:timer.cancel()
+        if process is not None:
+            if process.poll() is None:
+                process.kill()
+            process.wait(timeout=5)
+            if reader is not None:reader.join(timeout=5)
+            for pipe in (process.stdin,process.stdout):
+                if pipe is not None and not pipe.closed:
+                    try:pipe.close()
+                    except BrokenPipeError:pass
+        if output is not None:output.close()
+        os.close(dfd)
