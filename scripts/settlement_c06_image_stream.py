@@ -76,3 +76,93 @@ def verify_reconstruction(fd, expected_sha, expected_bytes):
     return {"schema":"wolo.financial.image-readback.v1","sha256":expected_sha,
             "bytes":offset,"verification_ns":time.monotonic_ns()-start,
             "retirement_authorized":False}
+
+# Financial source-side binding to the existing Transfer OS contiguous
+# encrypted chunk shape. No transport, grant, signature issuer or executor.
+PURPOSE="FINANCIAL_RECOVERY_IMAGE_COPY_ONLY"
+IDENTITY_FIELDS=frozenset(("device","inode","uid","gid","mode","bytes",
+                          "allocated_bytes","mtime_ns","ctime_ns"))
+MAX_CHUNKS=4096
+
+
+def financial_manifest(manifest, *, expected_plan, expected_source,
+                       expected_manifest_sha, max_chunk_bytes):
+    """Exact source identity/ordered chunk binding; not transport admission.
+
+    The expected values MUST originate in separately authenticated native
+    policy. This routine intentionally cannot authorize resume or retirement.
+    The chunk keys match the Transfer OS #192 source contract.
+    """
+    from settlement_c06_checkpoint_rehearsal import canonical,digest
+    require(type(manifest) is dict and set(manifest)=={
+        "schema","purpose","plan_sha256","source","source_sha256","chunks"},
+        "IMAGE_MANIFEST_FIELDS")
+    require(manifest["schema"]=="wolo.financial.image-continuation.v1"
+        and manifest["purpose"]==PURPOSE and hash64(expected_plan)
+        and manifest["plan_sha256"]==expected_plan
+        and hash64(manifest["source_sha256"])
+        and hash64(expected_manifest_sha)
+        and digest(canonical(manifest))==expected_manifest_sha,
+        "IMAGE_MANIFEST_BINDING")
+    source=manifest["source"]
+    require(type(source) is dict and set(source)==IDENTITY_FIELDS
+        and all(type(v) is int and v>=0 for v in source.values())
+        and source==expected_source and 0<source["bytes"]<=MAX_BYTES
+        and source["mode"]==0o600 and source["uid"]==0
+        and source["gid"]==0 and source["allocated_bytes"]>=source["bytes"],
+        "IMAGE_MANIFEST_SOURCE_IDENTITY")
+    chunks=manifest["chunks"]
+    require(type(max_chunk_bytes) is int and 0<max_chunk_bytes<=1<<32
+        and type(chunks) is list and 0<len(chunks)<=MAX_CHUNKS,
+        "IMAGE_MANIFEST_CHUNK_BOUND")
+    offset=cipher_total=0
+    for i,c in enumerate(chunks):
+        require(type(c) is dict and set(c)=={
+            "index","offset","plain_bytes","cipher_bytes","plain_sha256","cipher_sha256"}
+            and type(c["index"]) is int and c["index"]==i
+            and type(c["offset"]) is int and c["offset"]==offset
+            and type(c["plain_bytes"]) is int and 0<c["plain_bytes"]<=max_chunk_bytes
+            and type(c["cipher_bytes"]) is int
+            and 0<c["cipher_bytes"]<=max_chunk_bytes+(1<<20)
+            and hash64(c["plain_sha256"]) and hash64(c["cipher_sha256"]),
+            "IMAGE_MANIFEST_CHUNK_DRIFT")
+        offset+=c["plain_bytes"];cipher_total+=c["cipher_bytes"]
+        require(offset<=source["bytes"],"IMAGE_MANIFEST_OVERRUN")
+    require(offset==source["bytes"],"IMAGE_MANIFEST_INCOMPLETE")
+    return {"schema":"wolo.financial.image-manifest-binding.v1",
+            "manifest_sha256":expected_manifest_sha,"plan_sha256":expected_plan,
+            "source_sha256":manifest["source_sha256"],"source_bytes":offset,
+            "ciphertext_bytes":cipher_total,"chunks":len(chunks),
+            "resume_authorized":False,"retirement_authorized":False}
+
+
+def verify_financial_reconstruction(fd, manifest, *, expected_plan,
+        expected_source, expected_manifest_sha, max_chunk_bytes):
+    """Read back every original logical byte AND every ordered chunk digest.
+
+    Native independent recovery must supply a privately reconstructed raw
+    descriptor. This is a local measurement, NOT an authenticated Intel
+    receipt, a filesystem mount check or permission to retire the original.
+    """
+    bound=financial_manifest(manifest,expected_plan=expected_plan,
+        expected_source=expected_source,expected_manifest_sha=expected_manifest_sha,
+        max_chunk_bytes=max_chunk_bytes)
+    pre=identity(fd)
+    require(pre["bytes"]==bound["source_bytes"],"IMAGE_RESTORE_SIZE")
+    total=hashlib.sha256();offset=0;start=time.monotonic_ns()
+    for c in manifest["chunks"]:
+        chunk=hashlib.sha256()
+        remaining=c["plain_bytes"]
+        while remaining:
+            data=os.pread(fd,min(BLOCK,remaining),offset)
+            require(0<len(data)<=remaining,"IMAGE_RESTORE_SHORT_READ")
+            total.update(data);chunk.update(data)
+            offset+=len(data);remaining-=len(data)
+        require(chunk.hexdigest()==c["plain_sha256"],"IMAGE_RESTORE_CHUNK_MISMATCH")
+    require(identity(fd)==pre and total.hexdigest()==bound["source_sha256"],
+            "IMAGE_RESTORE_MISMATCH")
+    return {"schema":"wolo.financial.image-continuation-readback.v1",
+            "manifest_sha256":expected_manifest_sha,"plan_sha256":expected_plan,
+            "sha256":total.hexdigest(),"bytes":offset,
+            "chunks":bound["chunks"],"verification_ns":time.monotonic_ns()-start,
+            "independent_host_authenticated":False,"retirement_authorized":False}
