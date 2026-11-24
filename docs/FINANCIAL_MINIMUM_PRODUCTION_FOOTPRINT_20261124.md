@@ -390,3 +390,53 @@ not physical gate closure. Current 3/4 runtime restore receipt and
 fourth active transfer preclude exclusive financial IO. All six
 historical directories, legacy backing and M1 historical HD
 ciphertext remain protected; no capacity credit.
+
+### Nov24 16:00Z financial-purpose continuation and workspace delta
+
+Exact 9e14fbf GitHub ten workflows SUCCESS, including Foundation
+run45429016626; no separate C08 rerun. New financial image source
+binding retains the #192 six-field ordered chunk shape and adds
+exact root-owned fully allocated original image identity, plan,
+financial COPY-only purpose, complete manifest digest and full raw
+source digest. The local descriptor readback verifies each plaintext
+chunk digest in order and the whole logical image SHA, including
+free blocks; no claim of authenticated independent host or retirement.
+
+Financial chunk ACK correlation requires a separately enrolled native
+receipt verifier, exact raw receipt digest, financial-only schema,
+plan, manifest, source digest, receiver identity, exact index/offset,
+ciphertext size/hash and non-restored readback status. No SITE_RUNTIME
+receipt substitution, continuation grant, nonce issuance or retirement.
+Two new targeted tests PASS (manifest source/purpose/order/size
+tampering and raw reconstruction; exact receipt correlation and
+wrong domain/receiver/hash/boolean refusal). Synthetic verifier only
+in fixture; actual authenticated producer/receiver integration pending.
+
+The complete manifest pin alone is not a streaming sender protocol:
+ciphertext digests become known only as chunks are encrypted. WE4 must
+bind an approved initial exact source/plan/purpose to authenticated
+append-only per-chunk admissions and durable prefix receipts, then
+seal the final complete manifest and whole-source digest without
+staging 40GiB ciphertext on HEL1 DATA or M1. No automatic continuation
+on partial receipt or replay of spent grants. Existing #192 owns
+transport and durable sequence; no competing controller. Exact
+independent Intel Linux reconstruction and legacy rehydration remain
+physical holds; do not change original 40GiB or six directories.
+
+M1 financial workspace disposition: independently resolved GitHub
+commit and branch 9a4822466c7ee5fb49cf09376bc0fc89a7f278bd,
+central/c01-c05-docs-reconcile-20261109; prior missing connector
+commit now resolved, direct remote exact match, clean including
+ignored files, no visible lsof or matching process. Actual non-force
+git worktree remove from WoloChain-wolo-1 registry at15:59:51Z,
+exact local branch retained and directory absent. Gross allocated
+9532KiB; same-volume df available13710336→13720356KiB, observed
++10020KiB not exclusively attributable on shared APFS. No branch
+deletion or bulk cleanup. Other unique financial workspaces,
+historical encrypted HD object/receipts remain protected.
+
+WE2/WE4 4/4 historical runtime restore PASS; #191 M1/Intel installed,
+HEL1 native install and seven sidecars/ROOT parity/retirement held
+per latest receipts. No exclusive financial window, expanded witness
+enrollment still unadmitted; no image IO, restore, financial service
+effect or gate closure. Existing coordinator live refusal retained.
