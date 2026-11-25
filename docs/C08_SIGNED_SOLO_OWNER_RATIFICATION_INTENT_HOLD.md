@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war", "aoe2dewarwagers"]
 audience: ["operators", "developers", "financial-reviewers", "ai-agents"]
 source_of_truth: "git"
 authority: "source-only-cryptographic-ratification-intent-review-no-governance-adoption-or-woLo-funding"
-reviewed_at: "2026-11-08"
+reviewed_at: "2026-11-19"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -115,3 +115,11 @@ negative proof, C04/C05 externally authenticated settlement/solvency,
 same-capture C06/C07 encrypted backup and restore, and a separately
 signed exact C09 transaction permit. No C01–C09 financial gate is
 closed by this documentation, source test or notice-age pass.
+
+## November 19, 2026 — limited authority and dated evidence review
+
+An AI source examiner acting through the sole owner's existing connected source workspace checked this document's 103 original body lines for repository-source links, gate-authorization claims, older governance conditions and current-versus-historical language; 2 referenced local source paths were resolved. This is a **scope and safety review**, not an independent human signature or a fresh validation of each historical physical claim. Original observations remain dated and unmodified.
+
+**Topic-specific reconciliation (one-human governance):** Older five-human conditions are historical proposals. Current C08 is a CLOSED nonfunding policy gate for the sole human owner; it creates no C09 transaction signature or financial permit.
+
+**Current controlling decision:** WoloChain issue #239 and reviewed code head `70a95e8f9cb0facbec314063e9deafe7e15aa550`. C04 and C08 CLOSED; C01/C02/C03/C05/C06/C07/C09 OPEN; funding DENIED. The original test/source facts remain evidence only and may not authorize live SQL, HBA, custody, funds, backups or a canary. Live acceptance requires exact source, legitimate protected owner authority and independent physical readback.

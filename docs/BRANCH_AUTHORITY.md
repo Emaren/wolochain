@@ -8,7 +8,7 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "git-branch-authority-contract"
-reviewed_at: "2026-10-29"
+reviewed_at: "2026-11-19"
 review_interval_days: 14
 sensitivity: "internal"
 ---
@@ -252,3 +252,11 @@ AoE2WAR-docs should ingest the WoloChain source registry from
 `wolo-1-mainnet-prep` until the branch authority is deliberately changed.
 Central documentation may index this truth; it must not silently promote
 `main` or invent a merge.
+
+## November 19, 2026 — limited authority and dated evidence review
+
+An AI source examiner acting through the sole owner's existing connected source workspace checked this document's 240 original body lines for repository-source links, gate-authorization claims, older governance conditions and current-versus-historical language; 0 referenced local source paths were resolved. This is a **scope and safety review**, not an independent human signature or a fresh validation of each historical physical claim. Original observations remain dated and unmodified.
+
+**Topic-specific reconciliation (branch authority):** The distinction between main, wolo-1-mainnet-prep and held draft #248 was checked against the 45-open-PR GitHub census. No Git branch becomes a permitted financial runtime.
+
+**Current controlling decision:** WoloChain issue #239 and reviewed code head `70a95e8f9cb0facbec314063e9deafe7e15aa550`. C04 and C08 CLOSED; C01/C02/C03/C05/C06/C07/C09 OPEN; funding DENIED. The original test/source facts remain evidence only and may not authorize live SQL, HBA, custody, funds, backups or a canary. Live acceptance requires exact source, legitimate protected owner authority and independent physical readback.

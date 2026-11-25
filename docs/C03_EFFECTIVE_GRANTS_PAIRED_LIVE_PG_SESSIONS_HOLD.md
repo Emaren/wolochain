@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war", "aoe2dewarwagers"]
 audience: ["developers", "operators", "ai-agents"]
 source_of_truth: "git"
 authority: "source-only-read-only-c03-dual-evidence-bound-observer-never-a-finance-permit"
-reviewed_at: "2026-11-08"
+reviewed_at: "2026-11-19"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -105,3 +105,11 @@ and
 `14eafdb7201208434d8ee6f643939ea755d45710748d96fbfd364d3a980711a9`
 respectively. These are historical HOLD observations, not a current
 release permit. No financial role, service or WOLO was changed.
+
+## November 19, 2026 — limited authority and dated evidence review
+
+An AI source examiner acting through the sole owner's existing connected source workspace checked this document's 93 original body lines for repository-source links, gate-authorization claims, older governance conditions and current-versus-historical language; 1 referenced local source paths were resolved. This is a **scope and safety review**, not an independent human signature or a fresh validation of each historical physical claim. Original observations remain dated and unmodified.
+
+**Topic-specific reconciliation (financial writer exclusion):** C03 is OPEN. HD/DE original owner roles retain financial write capabilities. Restricted social V2 and Library filtered views are separate additive nonfinancial application contracts, not a global writer fence.
+
+**Current controlling decision:** WoloChain issue #239 and reviewed code head `70a95e8f9cb0facbec314063e9deafe7e15aa550`. C04 and C08 CLOSED; C01/C02/C03/C05/C06/C07/C09 OPEN; funding DENIED. The original test/source facts remain evidence only and may not authorize live SQL, HBA, custody, funds, backups or a canary. Live acceptance requires exact source, legitimate protected owner authority and independent physical readback.

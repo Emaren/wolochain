@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2hdbets", "aoe2dewarwagers"]
 audience: ["operators", "developers", "financial-reviewers", "ai-agents"]
 source_of_truth: "git"
 authority: "versioned-nonfunded-owner-governance-adoption-only"
-reviewed_at: "2026-11-08"
+reviewed_at: "2026-11-19"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -62,3 +62,11 @@ If owner signing prompts are unavailable, the `prepare` output can be inspected,
 Source success alone is **not** C08 CLOSED. Exact-head 10/10 GitHub checks; real owner local signature and persisted adoption receipt; independently re-verified policy/status; and retained immutable source/signing proof must all PASS. Exported sealed owner receipt must be enrolled into the new Satchel's permission controller and off-host recovery before allowing even an eventual separately signed funded C09 action. If this enrollment is not yet physically accepted, mark C08 `POLICY_ADOPTED_FUNDING_BOUNDARY_NOT_ENROLLED` rather than claim money can move.
 
 C01/C02/C03/C04/C05/C06/C07 and C09 have independent acceptance criteria. No legacy claims, websites, traffic series, native consensus state, financial permissions, services or WOLO balances are changed by C08 policy adoption.
+
+## November 19, 2026 — limited authority and dated evidence review
+
+An AI source examiner acting through the sole owner's existing connected source workspace checked this document's 50 original body lines for repository-source links, gate-authorization claims, older governance conditions and current-versus-historical language; 2 referenced local source paths were resolved. This is a **scope and safety review**, not an independent human signature or a fresh validation of each historical physical claim. Original observations remain dated and unmodified.
+
+**Topic-specific reconciliation (one-human governance):** Older five-human conditions are historical proposals. Current C08 is a CLOSED nonfunding policy gate for the sole human owner; it creates no C09 transaction signature or financial permit.
+
+**Current controlling decision:** WoloChain issue #239 and reviewed code head `70a95e8f9cb0facbec314063e9deafe7e15aa550`. C04 and C08 CLOSED; C01/C02/C03/C05/C06/C07/C09 OPEN; funding DENIED. The original test/source facts remain evidence only and may not authorize live SQL, HBA, custody, funds, backups or a canary. Live acceptance requires exact source, legitimate protected owner authority and independent physical readback.

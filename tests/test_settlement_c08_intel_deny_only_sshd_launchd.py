@@ -8,6 +8,7 @@ from pathlib import Path
 import stat
 import sys
 import tempfile
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
@@ -22,6 +23,23 @@ class Proc:
         self.returncode=rc
         self.stdout=stdout
         self.stderr=stderr
+
+class BinaryMetadataFixture:
+    """Model only the exact SSHD path metadata; never run a host binary."""
+    def __init__(self, path):
+        self.path=path
+        self.regular=True
+        self.symlink=False
+        self.uid=0
+        self.mode=stat.S_IFREG|0o755
+    def __str__(self):
+        return str(self.path)
+    def is_file(self):
+        return self.regular
+    def is_symlink(self):
+        return self.symlink
+    def stat(self):
+        return SimpleNamespace(st_uid=self.uid,st_mode=self.mode)
 
 class DenyOnlyLaunchD(unittest.TestCase):
     def setUp(self):
@@ -45,6 +63,7 @@ class DenyOnlyLaunchD(unittest.TestCase):
                          ("ssh_host_ed25519_key",b"fixture-key-material-not-a-real-private-key")):
             p=self.base/name
             p.write_bytes(raw);p.chmod(0o600)
+        self.sshd=BinaryMetadataFixture(Path(self.temp.name)/"fixture-sshd-not-executable")
         self.patchers=[
             patch.object(m,"USER_HOME",self.home),
             patch.object(m,"DEDICATED",self.base),
@@ -57,7 +76,7 @@ class DenyOnlyLaunchD(unittest.TestCase):
             patch.object(m,"AUTHORIZED_SHA256",hashlib.sha256(self.auth).hexdigest()),
             patch.object(m,"HOST_BLOB_SHA256",hashlib.sha256(b"AAAATESTHOSTKEY").hexdigest()),
             patch.object(m,"assert_owner_host",return_value=None),
-            patch.object(m,"SSHD",Path("/usr/bin/false")),
+            patch.object(m,"SSHD",self.sshd),
         ]
         for p in self.patchers:p.start()
         self.p2=patch.object(m.subprocess,"run",side_effect=self.fake_run)
@@ -96,6 +115,15 @@ class DenyOnlyLaunchD(unittest.TestCase):
         self.assertTrue(x["force_command_is_usr_bin_false"])
         self.assertFalse(x["source_admits_real_witness_executable"])
         self.assertFalse(x["funded_financial_release_authorized"])
+    def test_untrusted_binary_metadata_refused_before_any_subprocess(self):
+        for attr,value in (("regular",False),("symlink",True),("uid",501),
+                           ("mode",stat.S_IFREG|0o775),("mode",stat.S_IFREG|0o757)):
+            with self.subTest(attribute=attr,value=value):
+                with patch.object(self.sshd,attr,value):
+                    with self.assertRaisesRegex(m.Hold,"OS_SSHD_BINARY_NOT_TRUSTED"):
+                        m.preflight()
+                m.subprocess.run.assert_not_called()
+
     def test_modified_config_refused(self):
         (self.base/"sshd_config").write_bytes(self.config+b"PermitTTY yes\n")
         with self.assertRaisesRegex(m.Hold,"EXACT_DENY_ONLY_SSHD_CONFIG_CHANGED"):

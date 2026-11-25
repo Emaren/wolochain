@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war", "aoe2dewarwagers"]
 audience: ["operators", "developers", "financial-reviewers", "ai-agents"]
 source_of_truth: "git"
 authority: "historical-owner-device-signature-readonly-evidence-only-no-funding"
-reviewed_at: "2026-11-08"
+reviewed_at: "2026-11-19"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -58,3 +58,11 @@ After those prerequisites, the human owner must inspect and sign the **exact new
 15 dedicated disposable real-Ed25519 positive/negative contract tests cover historical direction, changed unsigned source digest, malicious but validly signed money permission, duplicate provenance, fake independent reviewer, changed source, signature tampering, substituted public key, fake ratification and unknown fields. The physical original signature verification is separately executed under the owner-controlled M1, not in CI.
 
 This is a **historical evidence closure** but **NOT formal C08 closure**. C01–C09 remain HARD HOLD; funded 8094/8095 stay closed, original 8092/8093 validator and all Session B website/Steam services are unaffected.
+
+## November 19, 2026 — limited authority and dated evidence review
+
+An AI source examiner acting through the sole owner's existing connected source workspace checked this document's 46 original body lines for repository-source links, gate-authorization claims, older governance conditions and current-versus-historical language; 1 referenced local source paths were resolved. This is a **scope and safety review**, not an independent human signature or a fresh validation of each historical physical claim. Original observations remain dated and unmodified.
+
+**Topic-specific reconciliation (one-human governance):** Older five-human conditions are historical proposals. Current C08 is a CLOSED nonfunding policy gate for the sole human owner; it creates no C09 transaction signature or financial permit.
+
+**Current controlling decision:** WoloChain issue #239 and reviewed code head `70a95e8f9cb0facbec314063e9deafe7e15aa550`. C04 and C08 CLOSED; C01/C02/C03/C05/C06/C07/C09 OPEN; funding DENIED. The original test/source facts remain evidence only and may not authorize live SQL, HBA, custody, funds, backups or a canary. Live acceptance requires exact source, legitimate protected owner authority and independent physical readback.

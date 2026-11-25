@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war"]
 audience: ["developers", "operators", "ai-agents"]
 source_of_truth: "git"
 authority: "read-only-source-and-physical-financial-hold-not-c03-maintenance-or-funded-permit"
-reviewed_at: "2026-11-07"
+reviewed_at: "2026-11-19"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -58,3 +58,11 @@ Run isolated tests with `python3 -B -m unittest discover -s tests -p 'test_settl
 C04 remains HOLD on the original 69 claimed-but-hashless historical payout outcomes and these additional unverified paid labels. C05 remains HOLD until a source-sealed complete nonoverlapping HD/DE/founder/journal/Satchel/NFT/escrow/refund/staking/unknown inventory and independent same-height authenticated native bank proofs can be reconciled. C03 live owner-role and service isolation, C06 backup, C07 recovery and all production PG writes belong only to Session A. C08 governance and C09 transaction-specific owner authority remain separate.
 
 **Formal release 10/19. No WOLO moved.**
+
+## November 19, 2026 — limited authority and dated evidence review
+
+An AI source examiner acting through the sole owner's existing connected source workspace checked this document's 46 original body lines for repository-source links, gate-authorization claims, older governance conditions and current-versus-historical language; 1 referenced local source paths were resolved. This is a **scope and safety review**, not an independent human signature or a fresh validation of each historical physical claim. Original observations remain dated and unmodified.
+
+**Topic-specific reconciliation (reserves and liabilities):** C05 is OPEN. Amounts, 24-wallet indexes and earlier bank results are not an independently authenticated, disjoint same-height liability/reserve solvency proof.
+
+**Current controlling decision:** WoloChain issue #239 and reviewed code head `70a95e8f9cb0facbec314063e9deafe7e15aa550`. C04 and C08 CLOSED; C01/C02/C03/C05/C06/C07/C09 OPEN; funding DENIED. The original test/source facts remain evidence only and may not authorize live SQL, HBA, custody, funds, backups or a canary. Live acceptance requires exact source, legitimate protected owner authority and independent physical readback.

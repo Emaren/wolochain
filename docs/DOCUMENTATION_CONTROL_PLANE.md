@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `central/c01-c05-docs-reconcile-20261109` at `7525351b1300bbb60fd6df6eee6cf0b0dca1780b`
+Implementation baseline: `integration/hd-only-funded-wire-proof-20261026` at `deefe7af57ad12652d66094cf79e6f0544d173c9`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 

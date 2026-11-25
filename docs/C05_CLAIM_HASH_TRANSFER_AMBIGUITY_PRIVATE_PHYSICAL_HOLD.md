@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war"]
 audience: ["operators", "developers", "financial-reviewers", "ai-agents"]
 source_of_truth: "git"
 authority: "root-private-repeatable-read-historical-claim-attribution-never-payment-or-reserve-admission"
-reviewed_at: "2026-11-09"
+reviewed_at: "2026-11-19"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -95,3 +95,10 @@ Aggregate noncrediting receipt, mode0600, SHA256:
 
 The private report retains claim IDs and hash-to-index links for review without publishing them. Source SHA pin and one-use O_EXCL protected output prevent silent replacement. Companion offline tests passed **7/7**; combined C05 regression tests **17/17**. The first same-hash and second cross-hash manifests must be used together when deriving a unique economic liability ledger. They still **do not** independently prove actual payment finality, signed reserve pledge, or full C05 acceptance.
 
+## November 19, 2026 — limited authority and dated evidence review
+
+An AI source examiner acting through the sole owner's existing connected source workspace checked this document's 83 original body lines for repository-source links, gate-authorization claims, older governance conditions and current-versus-historical language; 2 referenced local source paths were resolved. This is a **scope and safety review**, not an independent human signature or a fresh validation of each historical physical claim. Original observations remain dated and unmodified.
+
+**Topic-specific reconciliation (reserves and liabilities):** C05 is OPEN. Amounts, 24-wallet indexes and earlier bank results are not an independently authenticated, disjoint same-height liability/reserve solvency proof.
+
+**Current controlling decision:** WoloChain issue #239 and reviewed code head `70a95e8f9cb0facbec314063e9deafe7e15aa550`. C04 and C08 CLOSED; C01/C02/C03/C05/C06/C07/C09 OPEN; funding DENIED. The original test/source facts remain evidence only and may not authorize live SQL, HBA, custody, funds, backups or a canary. Live acceptance requires exact source, legitimate protected owner authority and independent physical readback.

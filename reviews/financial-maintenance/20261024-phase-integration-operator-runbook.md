@@ -8,7 +8,7 @@ systems: ["wolochain","aoe2war","aoe2dewarwagers"]
 audience: ["operators","developers","ai-agents"]
 source_of_truth: "git"
 authority: "non-authorizing-financial-human-signature-review"
-reviewed_at: "2026-11-08"
+reviewed_at: "2026-11-24"
 review_interval_days: 14
 sensitivity: "internal"
 ---
@@ -96,3 +96,11 @@ The inherited finance tests use mocks/disposable PostgreSQL; the actual containe
 **Engineering source:** review-only phase gate and v1-cli lockdown qualify only after exact-head CI, negative tests, DocsV2 and independent code review. **Real finance operations:** NO-GO pending externally authenticated real human enrollment, root-protected source-specific key registry, out-of-band revocation, monotonic nonce witness, integrated operational controller v2, 18-unit residual signers/no-run exclusion, full-size HD+DE offline restore, independently verified financial inventory and bank solvency, actual witnesses and approved maintenance window.
 
 No production backup, restore, unit stop, mount, restart, wallet operation or mainnet deployment has been performed by this review branch.
+
+## Current applicability — reviewed 2026-11-24
+
+The old 18-unit phase path is not executable authority for the present campaign. PR 258 introduces a source-only journal, native service barrier and separately scoped witness/admission contracts. No real phase permit, comprehensive reconnect exclusion, checkpoint, restart or restore is inferred.
+
+Current decision boundary: [financial authority #239](https://github.com/Emaren/wolochain/issues/239) and [coordinated recovery #258](https://github.com/Emaren/wolochain/pull/258). C04/C08 closed; C01/C02/C03/C05/C06/C07/C09 open. Funding DENIED; custody inactive. This renewal is a source and dated-evidence applicability review, not a new physical receipt.
+
+The expanded witness and producer scope source changes belong to separate frozen PR #258, not this media branch. Consult its exact source and receipts; do not infer an installed driver or new financial authority here.
