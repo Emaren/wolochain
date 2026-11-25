@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `fix/20261020-custody-artifact-pin-recovered-lifecycle-held` at `6eca3d750795c0e0fd5b4b8bc99398cbdec1859d`
+Implementation baseline: `codex/w1-quarantined-build-receipt` at `7d50ed691654cc5b36b468bf2327e469b390d54e`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 

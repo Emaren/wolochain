@@ -1153,7 +1153,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-11-10",
       "sensitivity": "internal",
-      "sha256": "97e8a9e78984f20489da1789bb9891bd6fb57a6faaf9666fcdf4649ccd0f4a6d",
+      "sha256": "4f767e197e31fde011330242e64986bc402ee964dca504ce9c287f6e42b3c387",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -2254,8 +2254,8 @@
   ],
   "generated_at": "2026-11-25T00:34:47Z",
   "implementation_baseline": {
-    "branch": "fix/20261020-custody-artifact-pin-recovered-lifecycle-held",
-    "commit": "6eca3d750795c0e0fd5b4b8bc99398cbdec1859d"
+    "branch": "codex/w1-quarantined-build-receipt",
+    "commit": "7d50ed691654cc5b36b468bf2327e469b390d54e"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
