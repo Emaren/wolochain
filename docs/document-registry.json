@@ -1153,7 +1153,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-11-10",
       "sensitivity": "internal",
-      "sha256": "437e70bf5d12362ed9c32f16724c9d6f3768bd481f469f89e70d64ab6eb92a01",
+      "sha256": "d8663ffee81a7b43faa24c5f67c57edd46d7946e0274ff22ec4cfe31271e09b1",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -2252,10 +2252,10 @@
       "type": "runbook"
     }
   ],
-  "generated_at": "2026-11-25T00:15:34Z",
+  "generated_at": "2026-11-25T00:24:28Z",
   "implementation_baseline": {
     "branch": "integration/hd-only-funded-wire-proof-20261026",
-    "commit": "0092b782c8756f1bf3635d779c2d46687342761e"
+    "commit": "deefe7af57ad12652d66094cf79e6f0544d173c9"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

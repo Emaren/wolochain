@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `integration/hd-only-funded-wire-proof-20261026` at `0092b782c8756f1bf3635d779c2d46687342761e`
+Implementation baseline: `integration/hd-only-funded-wire-proof-20261026` at `deefe7af57ad12652d66094cf79e6f0544d173c9`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
