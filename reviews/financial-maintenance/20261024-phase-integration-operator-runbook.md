@@ -8,13 +8,20 @@ systems: ["wolochain","aoe2war","aoe2dewarwagers"]
 audience: ["operators","developers","ai-agents"]
 source_of_truth: "git"
 authority: "non-authorizing-financial-human-signature-review"
-reviewed_at: "2026-10-24"
+reviewed_at: "2026-11-08"
 review_interval_days: 14
 sensitivity: "internal"
 ---
 
 # Financial maintenance phase integration operator runbook — 2026-10-24
 **Status: FINANCIAL HARD HOLD / review-only code. Source branch:** `review/20261024-maintenance-phase-integration-held` stacked on held Wolo PR #97. **Never a live playbook until independently authorized.**
+
+
+### 2026-11-08 documented technical re-review — NOT A LIVE OPERATOR RUNBOOK
+
+The following October 24 18-unit phase machine is retained for review history only. It is **not** source/host-authorized for current production. Later C03 physical inventory includes the restricted R25 (3032), original 3030 rollback, HD/DE API sessions, owner-implicit PostgreSQL finance writes, direct chain REST1318/RPC27657/CLI/external signing paths and other scheduler/control surfaces beyond an 18-unit stop. Live C03 at Nov 7 23:43 recorded **17** mapped PG sessions, **81** conservative finance candidates and **161** unclassified tables; none of those is proved globally fenced. Zero preconnected sessions was **not** certified.
+
+The owner requested centralized single-human control, but [notice #184](https://github.com/Emaren/wolochain/issues/184) is **UNRATIFIED** with earliest notice maturity Nov 8 10:22:33 UTC. Do not issue five synthetic signatures or silently waive the pre-existing release authority. C06 transport/receiver checks are **not** quiesced backup, C07 same-backup restore or transaction-specific C09 spending consent. This documentation review was delegated to an AI assistant and is not an independent natural-human financial approval. No live action below is authorized.
 
 ## Boundary and source
 - [PR #95](https://github.com/Emaren/wolochain/pull/95): finite OS-root disk-backed ext4 isolated restore, no mounts or formats performed by controller, Docker data root preserved.

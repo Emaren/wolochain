@@ -8,12 +8,17 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "chain-repository-entrypoint"
-reviewed_at: "2026-10-22"
+reviewed_at: "2026-11-06"
 review_interval_days: 14
 sensitivity: "public"
 ---
 
 # WoloChain
+
+## November 6, 2026 — Chain source and live-boundary technical review (non-authorizing)
+
+Rechecked the current WoloChain source paths for `wolo-1`, `uwolo`, the frozen named-profile build policy in `scripts/settlement-artifact.py`, and the live HEL1 chain operating boundary. The incumbent validator and legacy 8092/8093 settlement services remain active, while new 8094 Satchel and 8095 reviewer services are inactive. This editorial and source verification **does not** certify current total supply, historical payout finality, independently controlled custody keys, solvency, quiesced backups, or funded mainnet transactions. C01–C09 remain HARD HOLD under issue #5; historical operating observations below retain their original timestamps. The independent chain checkpoint is still unresolved, and `/net_info` observed zero peers on November 6; that observation does not establish there are no external copies. Do not restart the validator or substitute the legacy 8092 rail for new returns.
+
 
 ## Source documentation review — 2026-10-22
 
@@ -81,6 +86,21 @@ This September 22 review did **not** re-prove fixed supply, bank metadata,
 historical funding balances, or the deployed binary's Git commit. Those facts
 remain tied to the dated evidence stated below rather than being silently
 promoted to a newer observation.
+
+## Historical Testnet Observation — May 24, 2026
+
+Verified on May 24, 2026. This section describes the public WoloChain testnet only; do not copy these routes or caveats into the live AoE2WAR mainnet app.
+
+- VPS node service: `wolochaind-testnet.service`
+- VPS settlement service: `wolochain-settlement.service`
+- VPS moniker: `wolo-testnet-validator-1`
+- Runtime chain ID: `wolo-testnet`
+- Settlement health: `ok=true`
+- Current VPS peer count: `0`
+- Public testnet RPC route: `https://aoe2war.com/rpc/`
+- Public testnet REST route: `https://aoe2war.com/rest/`
+- Public testnet explorer route: `https://aoe2war.com/wolo-testnet`
+
 
 The launch baseline below was verified on June 4, 2026. A read-only review on
 September 9, 2026 reconfirmed the canonical `wolo-1` identity, fixed supply,
@@ -343,9 +363,9 @@ For one logical result with many payouts, the preferred flow is:
 - If Hetzner expands the volume again later, the guest still needs the on-host filesystem step. For the current ext4 layout that means `sudo resize2fs /dev/sdb`, then re-check `df -h /mnt/HC_Volume_105319120`.
 - Treat settlement request state as operator data; it lives on the VPS extra volume.
 - Treat grouped run state as operator data too; it lives beside request state under the settlement state dir.
-- Treat testnet balances as testnet-only data. They do not automatically migrate to any future mainnet.
-- Future mainnet planning must use a separate fresh chain. See [`docs/mainnet-template.md`](docs/mainnet-template.md) before touching any mainnet-facing config.
-- The mainnet planning package starts at [`docs/mainnet-template.md`](docs/mainnet-template.md) and includes launch plan, allocation, wallets, services, DNS/TLS, Keplr/explorer, IBC/Osmosis, and cutover checklist docs.
+- Treat testnet balances as testnet-only data. They do not migrate to mainnet.
+- Keep testnet/mainnet boundaries explicit. See [`docs/mainnet-template.md`](docs/mainnet-template.md) before touching any mainnet-facing config or app copy.
+- The historical mainnet planning package remains linked from [`docs/mainnet-template.md`](docs/mainnet-template.md); use the current mainnet runbook for operational authority.
 - Prefer keeping `WOLO_SETTLEMENT_AUTH_TOKEN` enabled even for localhost-only POSTs and have callers send bearer auth.
 - For mainnet, keep payout and escrow signers in `/var/lib/wolochain-mainnet-settlement/keyring` with `WOLO_SETTLEMENT_KEYRING_BACKEND=file` and `WOLO_SETTLEMENT_KEYRING_PASSPHRASE_FILE=/etc/wolochain-mainnet-settlement.keyring-passphrase`.
 - `WOLO_SETTLEMENT_ESCROW_ADDRESS` only affects proof classification and operator warnings; it does not create escrow semantics by itself.

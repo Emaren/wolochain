@@ -49,6 +49,35 @@ func TestCommandRefusesUnconfiguredExecutionWithoutLeakingInputs(t *testing.T) {
 		}
 	}
 }
+
+// No owner-private C08 receipt is ever added to CI. These negative tests use
+// disposable strings and prove the production probe cannot leak file paths
+// or start custody when its exact signed owner material is absent.
+func TestC08ProductionAdmissionProbeFailsClosedWithoutRealReceipt(t *testing.T) {
+	folder := t.TempDir()
+	receipt := filepath.Join(folder, "fake-owner-adoption.json")
+	public := filepath.Join(folder, "fake-public-key.bin")
+	if err := os.WriteFile(receipt, []byte("{}"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(public, []byte("not-a-public-key"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	cases := [][]string{
+		{"verify-c08-governance"},
+		{"verify-c08-governance", "--receipt", receipt},
+		{"verify-c08-governance", "--receipt", receipt, "--owner-public", public},
+		{"verify-c08-governance", "--owner-public", public, "--receipt", receipt},
+		{"verify-c08-governance", "--receipt", receipt, "--owner-public", public, "extra"},
+	}
+	for _, args := range cases {
+		var out, errout bytes.Buffer
+		if code := run(t.Context(), args, &out, &errout); code != 3 || out.Len() != 0 ||
+			strings.Contains(errout.String(), receipt) || strings.Contains(errout.String(), public) {
+			t.Fatalf("governance probe did not fail safely: code=%d, stdout=%s, stderr=%s", code, out.String(), errout.String())
+		}
+	}
+}
 func TestPermitCheckedBeforeEachSignAndBroadcastButRecoveryRemainsAvailable(t *testing.T) {
 	inner := &countedBackend{}
 	active := true
@@ -89,7 +118,7 @@ func TestRunningExecutableDigestIsStableAndPublic(t *testing.T) {
 	}
 }
 
-func TestStaticCheckVerifiesRealPermitWithoutNetworkOrKeyring(t *testing.T) {
+func TestStaticCheckDeniesValidExecutionPermitWithoutOwnerGovernance(t *testing.T) {
 	dir, err := filepath.EvalSymlinks(t.TempDir())
 	if err != nil {
 		t.Fatal(err)
@@ -103,7 +132,7 @@ func TestStaticCheckVerifiesRealPermitWithoutNetworkOrKeyring(t *testing.T) {
 	}
 	authority := ed25519.NewKeyFromSeed(bytes.Repeat([]byte{3}, 32))
 	approval := ed25519.NewKeyFromSeed(bytes.Repeat([]byte{4}, 32))
-	cfg := satchelservice.Config{Version: 1, Vault: address(1), PublicKeyHex: "02" + strings.Repeat("01", 32), BettingEscrow: address(2), ProtectedAddresses: []string{address(2)}, MaxAmountUWolo: 1000000, RPC: "https://primary.invalid", REST: "https://rest.invalid", WitnessRPC: "https://witness.invalid", TrustAnchor: satchel.TrustAnchor{Height: 1, Hash: strings.Repeat("A", 64), PeriodSeconds: 3600, EvidenceReference: "synthetic-test-only"}, KeyringDir: filepath.Join(dir, "does-not-exist-keyring"), KeyName: "synthetic", PassphraseFile: filepath.Join(dir, "does-not-exist-unlock"), TokenFile: filepath.Join(dir, "does-not-exist-token"), StatePath: filepath.Join(dir, "does-not-exist-state"), FeesUWolo: "5000", GasLimit: 120000, TimeoutBlocks: 20, WithdrawalApprovalKeyHex: hex.EncodeToString(approval.Public().(ed25519.PublicKey)), WagerApprovalKeyHex: hex.EncodeToString(ed25519.NewKeyFromSeed(bytes.Repeat([]byte{5},32)).Public().(ed25519.PublicKey)), ActivationAuthorityKeyHex: hex.EncodeToString(authority.Public().(ed25519.PublicKey)), PermitFile: filepath.Join(dir, "permit.json")}
+	cfg := satchelservice.Config{Version: 1, Vault: address(1), PublicKeyHex: "02" + strings.Repeat("01", 32), BettingEscrow: address(2), ProtectedAddresses: []string{address(2)}, MaxAmountUWolo: 1000000, RPC: "https://primary.invalid", REST: "https://rest.invalid", WitnessRPC: "https://witness.invalid", TrustAnchor: satchel.TrustAnchor{Height: 1, Hash: strings.Repeat("A", 64), PeriodSeconds: 3600, EvidenceReference: "synthetic-test-only"}, KeyringDir: filepath.Join(dir, "does-not-exist-keyring"), KeyName: "synthetic", PassphraseFile: filepath.Join(dir, "does-not-exist-unlock"), TokenFile: filepath.Join(dir, "does-not-exist-token"), StatePath: filepath.Join(dir, "does-not-exist-state"), FeesUWolo: "5000", GasLimit: 120000, TimeoutBlocks: 20, WithdrawalApprovalKeyHex: hex.EncodeToString(approval.Public().(ed25519.PublicKey)), WagerApprovalKeyHex: hex.EncodeToString(ed25519.NewKeyFromSeed(bytes.Repeat([]byte{5}, 32)).Public().(ed25519.PublicKey)), ActivationAuthorityKeyHex: hex.EncodeToString(authority.Public().(ed25519.PublicKey)), PermitFile: filepath.Join(dir, "permit.json")}
 	data, _ := json.Marshal(cfg)
 	digest := sha256.Sum256(data)
 	binary, err := runningDigest()
@@ -117,13 +146,13 @@ func TestStaticCheckVerifiesRealPermitWithoutNetworkOrKeyring(t *testing.T) {
 	if os.WriteFile(config, data, 0600) != nil || os.WriteFile(cfg.PermitFile, encoded, 0600) != nil {
 		t.Fatal("fixture write failed")
 	}
-	// A canceled context makes any accidental network trust check fail. Missing
-	// keyring/token paths make accidental signer initialization fail as well.
-	ctx, cancel := context.WithCancel(t.Context())
-	cancel()
+	// The context is live: rejection must follow from ABSENT governance,
+	// not a canceled caller. Keyring and token stay absent to expose any
+	// accidental signer initialization.
+	ctx := t.Context()
 	var out, errout bytes.Buffer
-	if code := run(ctx, []string{"-config", config, "-check"}, &out, &errout); code != 0 || !strings.Contains(out.String(), "TRUST_UNCHECKED") || errout.Len() != 0 {
-		t.Fatalf("static check touched execution resources: %d %s %s", code, out.String(), errout.String())
+	if code := run(ctx, []string{"-config", config, "-check"}, &out, &errout); code == 0 || !strings.Contains(errout.String(), "activation permit unavailable") || out.Len() != 0 {
+		t.Fatalf("old permit alone must not activate custody: %d %s %s", code, out.String(), errout.String())
 	}
 	if _, err := os.Lstat(cfg.KeyringDir); !os.IsNotExist(err) {
 		t.Fatal("static check created keyring")

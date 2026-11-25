@@ -8,12 +8,70 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "runtime-evidence"
 authority: "mainnet-settlement-operations"
-reviewed_at: "2026-10-26"
+reviewed_at: "2026-11-10"
 review_interval_days: 14
 sensitivity: "restricted"
 ---
 
 # WoloChain Mainnet Settlement Runbook
+
+## CURRENT OPERATING PRECEDENCE — 2026-11-10 UTC (FINANCIALLY HELD)
+
+**This newer guardrail supersedes operational availability implied by historical commands or dated receipts below.** HEL1 read-only systemctl, ss and HTTP checks confirmed: wolochaind-mainnet.service active PID 1009, zero restarts; wolo-satchel-c01.service and wolo-reviewer-c01.service both INACTIVE, PID 0; financial listeners 8092/8093/8094/8095 ALL CLOSED; repaired R25 web 3032 active PID 465815, protected /api/bets HTTP 503; Steam V18 scheduled refresher FAILED, ExecMainStatus 3, pending separate App V19 retirement repair. The older November 5 observation of live 8092/8093 is historical, not a current-state statement or permission to restart them.
+
+Formal Chain scoreboard in Emaren/wolochain issue #239: C04 and C08 CLOSED; C01/C02/C03/C05/C06/C07/C09 OPEN. C01 source admission and C05 off-host reserve review code alone cannot certify live signer enrollment, exclusive unencumbered collateral, complete disjoint historical liabilities, actual same-checkpoint off-host C06/C07 restore, HD/DE financial writer fencing, or a separately signed funded C09 canary. There is one human owner, not an independent reviewer council; separate technical keys and one-use owner signing remain different controls.
+
+**No archived settlement, maintenance, SQL or transfer command below is a current executable permit.** This review covers the historical receipt classification and present protected runtime, **not** a line-by-line requalification of every archived command in this large runbook. Any action still requires current exact-source, authority, recovery and noninterference acceptance. No wallet, financial service, ledger, database grant or Chain state was changed.
+
+## November 5, 2026 — C08 real protected-source size admission repair (HELD)
+
+HEL1 root verified all six files from immutable held Wolo merge
+9447bb62545781aa293d88a931b30b4c7a89dd97 and preserved the live
+validator/8092/8093. An actual root-owned source_check rejected the
+66,795-byte settlement_financial_maintenance.py: the original
+private_read(source=True) default was only 65,536 bytes. This was a
+source-only implementation defect, not bad file ownership or an authority
+denial. The exact held repair passes a finite 131,072-byte source-only
+limit when verifying the six pinned controller files; secret/config/permit
+read limits and root:root ownership, no-symlink, regular-file, stable-inode,
+no-write-mode and per-file SHA256 requirements remain unchanged. A focused
+regression uses the actual repository file lengths and proves source drift
+still fails closed.
+
+The corrected source requires fresh full CI, merge to HELD source, and
+root-only exact-revision restaging before CLI admission. This is NOT an
+approved maintenance phase or evidence of funded production readiness.
+Original financial units remain untouched. Do not weaken root private
+file checks merely to suppress this error.
+
+## November 5, 2026 — Intel rootless owner-witness fallback (HELD)
+
+The owner's physically separate macOS 11.7.4 Intel Mac successfully ran an
+unprivileged loopback SSH daemon with no administrative password, while HEL1
+retains the dedicated outbound host-key-pinned SSH identity and the
+loopback-only reverse tunnel. The nonroot Darwin witness configuration and
+nonce paths are derived from the operating-system account database rather
+than the SSH client's requested command or a writable environment variable.
+Root Darwin and Linux paths retain their existing protected semantics.
+
+This is a source-only alternate witness-storage mode, not a deployed
+controller or financial production approval. The user-owned private directory
+and 0600 evidence guard against an attacker controlling only the VPS. They
+are not root-protected on Intel: a compromised Intel user account may
+erase/replay its own nonce ledger. A separately enrolled root-owned/hardware
+witness is stronger for disaster recovery and remains preferable. This
+fallback does not weaken owner Ed25519 verification, separate host identity,
+private pinned binaries, frozen source, one-use nonce reservation, SSH
+host-key pinning, or phase expiry.
+
+The existing production SSH endpoint on Intel port 22996 still forces
+/usr/bin/false; a rootless endpoint running locally on 22997 was probed
+for loopback accessibility only. There is no completed signed challenge,
+no observed replay rejection through the tunnel, no authorized
+financial maintenance phase, and no bank/finality/asset certification.
+No funds, mainnet wallet or legacy settlement service are changed by this
+source.
+
 
 ## October 26, 2026 — aggregate replay evidence and actual P1 frontier
 
@@ -1909,3 +1967,223 @@ routes, replace Wolo settlement services, or rebroadcast historic 100-WOLO
 or claim payouts from this build. The CI artifact must be independently
 retrieved and SHA-256 checked against the authenticated GitHub workflow
 identity before a separate operator inspection.
+
+
+## Single-owner maintenance runtime candidate — October 26
+
+The source-only #109 intent verifier remains NONAUTHORIZING. The separately
+versioned `scripts/settlement_solo_runtime.py` uses the signature domain
+`AOE2WAR-WOLO-SOLO-MAINTENANCE-RUNTIME-V1\0` and packet schema
+`wolo.solo-maintenance-runtime-packet.v1`. Old offline signatures and five-role
+permits cannot be relabelled into this domain. One enrolled Ed25519 owner signs
+each capture, isolated verification and resume phase. No private owner key is loaded by
+the controller. Revoked/expired enrollments fail before nonce consumption.
+
+The existing `settlement_financial_maintenance.py` lease now dispatches
+`solo-capture`, `solo-offline-restore`, `solo-resume` and stop-only
+`solo-contain`. The new permit schema
+`wolo.solo-owner-maintenance-permit.v1` accepts exactly one owner approval;
+all original scope, source, database, attestation, image, byte-budget and window
+guards remain. The old v1 schema still requires its original five role refs.
+Capture fences the existing **18 units** (4 apps, 7 oneshots and 7 timers), drains them and calls the original
+bounded snapshot/dump implementation. Restore uses a separate signature, retained
+fence, exact completed capture lineage and the existing bounded ext4 isolated
+PostgreSQL mechanics. A restore window may be up to four hours; this never
+extends the original maximum 30-minute capture authorization. No automatic
+unfence or resume occurs at either expiry. An outage extending beyond capture
+must be explicitly accepted in the owner's complete procedure before capture.
+
+Admission requires root-private enrollment at
+`/etc/wolochain-financial-maintenance/authority/solo-runtime.json` and
+`solo-owner.json`; no environment variable or caller-supplied hash substitutes
+for those operator-provisioned files. The runtime enrollment binds the exact
+six controller module hashes, source commit, actual host identity and owner
+public-key/enrollment digests. Actual running consensus and both settlement
+executable hashes are checked before and after authority consumption; none of
+those processes is stopped or changed. All 12 writer categories must resolve to
+retained observation bytes whose hashes are bound by the signed procedure.
+These observations and the owner's external-fence attestations are **not** a
+machine certification that every external writer is excluded. Successful
+receipts explicitly retain `global_writers_fenced=false`,
+`custody_or_solvency_certified=false` and `financial_release_authorized=false`.
+
+The off-host nonce witness is executable code, rather than an always-refuse
+stub. Install the same reviewed protocol on a separately controlled host outside
+VPS rollback scope. Pin the target VPS identity and owner/source enrollment there;
+pin the witness host identity and SSH host key on the VPS. On the witness, the
+fixed `wolo-maintenance-witness-v1` SSH forced command invokes:
+
+```sh
+python3 /protected/reviewed/scripts/settlement_solo_runtime.py --witness-stdin
+```
+
+Use an existing dedicated operator transport credential with a restricted SSH
+forced command, no PTY, forwarding or agent access. Never reuse a WOLO signer
+key. On macOS, enroll canonical `/private/etc` and `/private/var` witness paths.
+Both hosts pin their own absolute OpenSSL 3 executable and binary digest in the
+protected enrollment; a restricted SSH PATH must not select macOS LibreSSL,
+which lacks the required Ed25519 `pkeyutl -rawin` operation.
+The witness verifies the original owner signature and time/phase before
+atomic, fsynced O_EXCL consumption in its separately provisioned 0700 nonce
+ledger. The ledger must never be restored from a VPS snapshot, automatically
+pruned, or recreated after loss. Any corrupt/partial record blocks subsequent
+admission. An SSH timeout or lost acknowledgement means **nonce may already be
+consumed**: inspect both retained ledgers; never redispatch the same authority.
+The witness authenticates consumption, not chain finality, human review or funds.
+
+After legitimate enrollment and procedure review, the read-only preparation CLI
+emits the exact unsigned request and base64 signing message (exit 3):
+
+```sh
+sudo python3 scripts/settlement_solo_runtime.py --prepare \
+  --mode solo-capture --procedure /root/reviewed/capture-procedure.json
+```
+
+The real owner inspects the complete procedure and signs that message locally
+using the existing protected key. Supply the resulting packet and exact permit:
+
+```sh
+sudo python3 scripts/settlement_financial_maintenance.py --mode solo-capture \
+  --packet /root/reviewed/owner-capture-packet.json \
+  --procedure /root/reviewed/capture-procedure.json \
+  --writer-inventory /root/reviewed/writer-observations.json \
+  --permit /root/reviewed/solo-capture-permit.json \
+  --fence-receipt /root/reviewed/fence.json \
+  --output /mnt/HC_Volume_105319120/wolochain-mainnet/financial-maintenance-backups/OWNER_SELECTED_NEW_CAPTURE \
+  --completion-receipt /root/reviewed/capture-completed.json
+```
+
+**Live capture status remains HOLD. Do not issue a live owner challenge yet.**
+The versioned resume path below now exists in source; its fixtures are not
+production-size outage, global exclusion or human financial evidence. The 12
+category observation files alone do not prove global writer exclusion. No actual
+enrollment, witness, owner approval or global fence has been installed by source
+development. In particular a four-hour isolated verification is incompatible
+with promising a 30-minute full outage unless production-size evidence proves
+the total fits. The installed application build and all seven persistent timer
+families still need the concrete qualifications below before capture is safe.
+Historical 100-WOLO uncertainty, claim #889, refund #8477, shared DE liabilities,
+original source provenance and the independent historical checkpoint remain
+unchanged. The website stays at its existing certified release.
+
+### Recoverable capture and exact-source resume (held source)
+
+Procedure schema `wolo.solo-maintenance-runtime-procedure.v2` adds two mandatory
+fields: `capture_seal` and `resume_plan`, each either null or exactly
+`{"path":"ABSOLUTE_ROOT_PRIVATE_FILE","sha256":"EXACT_FILE_SHA256"}`.
+Capture requires `capture_seal` and a null resume plan; offline verification
+requires both null; resume requires a plan and a null capture seal. Existing v1
+procedures and four-module enrollments fail closed. Both hosts must enroll the
+same reviewed six modules, including `settlement_solo_resume.py` and
+`settlement_resume_producer_identities.py`. Never overwrite the owner's key or
+reset either nonce ledger to perform that source-enrollment update.
+
+The capture seal schema `wolo.maintenance-resume-capture.v1` contains
+`producer_identities` (the full double-sampled identity packet) and
+`producer_sources` (exactly the four application and seven one-shot service
+source manifests). `fence.v2` retains that exact seal's path and digest. A
+signature is checked before nonce consumption; the seal is checked again before
+HOLD creation. Legacy fence.v1 receipts remain readable for historical
+verification and are **never eligible for resume**.
+
+Native systemd properties are ordered and may repeat EnvironmentFiles and
+ExecStartPre. Singular identity/state duplicates still refuse. Command identity
+comes from typed D-Bus `a(sasbttttuii)` tuples: executable, ordered argv and
+ignore-errors flag are configuration; last PID/time/exit counters are runtime.
+Timer `Triggers` must be exactly its qualified paired one-shot. Chroots, bind
+mounts, credential injection, preload/search-path environment variables, relative
+interpreter scripts and inline shell/eval commands refuse instead of hashing
+the wrong execution inputs. No raw environment or command values are printed.
+`systemctl` renders even empty credential arrays as `[unprintable]`; that text
+cannot establish whether credentials exist. The collector reads native D-Bus
+`LoadCredential:a(ss)` and `SetCredential:a(say)`, permits only genuinely empty
+arrays, and still refuses nonempty/unsealed credentials. This serialization
+edge was independently reproduced on HEL1 without reading or printing values.
+
+Each producer source manifest is root-private with schema
+`wolo.maintenance-producer-source.v1`, exact unit, source commit, uid `0`, and
+`files` entries `{path,sha256,kind}`. At least an actual entrypoint and build
+metadata are required; an interpreter hash is insufficient. Every native
+command's executable and entrypoint must resolve to sealed absolute files.
+The code refuses app-writable files or parents, symlinks, hard links, unsafe
+permissions, mid-read replacement and an aggregate over 8 GiB. **An ordinary
+app-owned mutable checkout is not qualified by this contract.** An operator
+must separately review a root-controlled immutable build location and exact
+entrypoint before changing any production permission, unit or path. No such
+change is authorized by this documentation.
+
+The resume plan schema `wolo.maintenance-resume-plan.v1` binds the same source
+commit, exact fence, backup-manifest and restore-receipt digests, plus
+`timer_qualifications` and `contained_partial` (null for initial resume).
+Every originally active timer needs a root-private
+`wolo.maintenance-timer-qualification.v1` packet binding that timer and service
+configuration digests, its source-manifest digest and two retained reviewed CI
+receipts (`idempotence_test`, `uncertainty_test`). Those receipts bind the same
+source manifest, test contract, PASS result and actual CI URL. They are explicit
+owner-reviewed source evidence; the reader does not independently authenticate
+GitHub CI or certify production catch-up safety. Missing or mismatched evidence
+raises `PERSISTENT_TIMER_CATCHUP_NOT_QUALIFIED` before HOLD removal. Qualify all
+seven real timer families; do not manufacture packets from synthetic tests.
+
+After a completed OFFLINE_VERIFY, the owner signs a **new** <=30 minute
+`resume_existing` request using `solo-resume`. It binds the prior offline
+completion receipt and exact resume plan. The witness consumes that new nonce
+outside VPS rollback scope. Under the original lease, resume checks the actual
+parse-read digests, full HD/DE read-only zero-session/zero-prepared-transaction
+censuses, unchanged settlement state, retained HOLD/drop-ins and all producer
+source/config identities. Enrollment, source, running consensus/settlement
+binary identities and expiry are checked again after I/O and around starts.
+
+```sh
+sudo python3 scripts/settlement_solo_runtime.py --prepare \
+  --mode solo-resume --procedure /root/reviewed/resume-procedure.json \
+  --previous-receipt /root/reviewed/offline-completed.json
+# Only after genuine new owner signature and complete qualification:
+sudo python3 scripts/settlement_financial_maintenance.py --mode solo-resume \
+  --packet /root/reviewed/owner-resume-packet.json \
+  --procedure /root/reviewed/resume-procedure.json \
+  --writer-inventory /root/reviewed/writer-observations.json \
+  --previous-review /root/reviewed/offline-completed.json \
+  --fence-receipt /root/reviewed/fence.json \
+  --output /mnt/HC_Volume_105319120/wolochain-mainnet/financial-maintenance-backups/OWNER_SELECTED_CAPTURE \
+  --completion-receipt /root/reviewed/resume-completed.json
+```
+
+`RESUME_COMMITTED.json` is written exclusively and fsynced **before** unlinking
+the exact owned HOLD. It preserves the original HOLD digest and phase nonce.
+Only originally active apps start, followed by qualified originally active
+timers. The executor never directly starts a financial one-shot, changes SQL,
+retries a transaction, or starts/stops Wolo settlement/consensus services.
+
+On a caught failure, the executor attempts exact HOLD reassertion and all 18
+containment stops even if the HOLD write fails, then verifies inactivity. Any
+uncertainty is explicit. **SIGKILL cannot guarantee automatic re-fencing.** A
+commit marker without completion is a partial-return incident: inspect the
+actual HOLD, all units/jobs, both nonce ledgers and current DB/payment evidence;
+do not replay that procedure, restore old SQL, remove the marker or infer that
+no payment occurred. A fresh separately approved containment/recovery procedure
+is required. Stop-only `solo-contain` implements that narrow containment action:
+its `wolo.maintenance-partial-containment-plan.v1` binds the source, fence and
+backup digests and `prior_resume_commit` path/digest. Its new owner request binds
+that same prior commit as `previous_phase_receipt_sha256`. It verifies retained
+exact drop-ins, durably writes a separate containment-commit marker, attempts
+HOLD reassertion and stops only the original 18 units. Foreign HOLD bytes remain
+untouched, but all scoped stops are still attempted and any uncertainty refuses
+completion. It never starts a service, restores SQL or retries a payment.
+
+Only after actual containment completion may a new signed resume plan bind its
+completed receipt in `contained_partial`. That receipt is consumed exclusively
+once before a new nonce-specific resume commit. The original commit remains
+immutable. Both current financial censuses and settlement state must still
+equal the verified archives; changed or uncertain obligations require fresh
+financial reconciliation, never an old SQL restore. Old/noncurrent signatures,
+the original consumed nonce and a reused containment receipt cannot authorize
+this recovery. Preparation uses `--mode solo-contain --previous-receipt` pointing
+to the exact prior `RESUME_COMMITTED*.json`; execution uses the same complete
+argument shape as solo-resume, with that new phase's signed procedure/packet and
+`--previous-review` pointing to the original commit. A new owner signature and
+off-host consumption are required for **each** phase.
+
+This interruption boundary is not a live rollback certificate. Live maintenance
+remains HOLD until the complete production-size and partial-return recovery
+procedure is independently witnessed.

@@ -115,10 +115,25 @@ func (e *Engine) CustodyJournal() (CustodyJournal, error) {
 // Caller owns the execution mutex. Qualification must precede the first new
 // intent write without reacquiring that mutex or weakening the snapshot checks.
 func (e *Engine) custodyJournalLocked() (CustodyJournal, error) {
+	var out CustodyJournal
+	err := e.db.View(func(tx *bolt.Tx) error {
+		var err error
+		out, err = e.custodyJournalTx(tx)
+		return err
+	})
+	if err != nil {
+		return CustodyJournal{}, err
+	}
+	return out, nil
+}
+
+// The caller owns e.mu and a read transaction. Reuse the exact journal
+// validation/framing inside other read-only checkpoints of the same snapshot.
+func (e *Engine) custodyJournalTx(tx *bolt.Tx) (CustodyJournal, error) {
 	out := CustodyJournal{Protocol: 1, ChainID: "wolo-1", Denom: "uwolo", Kind: "execution_journal_checkpoint",
 		CustodyCapability: "UNAVAILABLE", OperationStatusCounts: map[string]uint64{
 			"UNKNOWN": 0, "ACCEPTED": 0, "OBSERVED_NONCREDITING": 0, "CONFIRMED": 0, "FAILED": 0, "REFUSED": 0}}
-	err := e.db.View(func(tx *bolt.Tx) error {
+	err := func() error {
 		if tx.Bucket(meta) == nil || tx.Bucket(operations) == nil || tx.Bucket(effects) == nil || string(tx.Bucket(meta).Get([]byte("policy"))) != hashJSON(e.policy) {
 			return errors.New("custody_journal_unverifiable")
 		}
@@ -237,7 +252,7 @@ func (e *Engine) custodyJournalLocked() (CustodyJournal, error) {
 		out.ConfirmedReturnUWolo = strconv.FormatUint(returned, 10)
 		out.BytesRead = scan.bytes
 		return nil
-	})
+	}()
 	if err != nil {
 		return CustodyJournal{}, err
 	}

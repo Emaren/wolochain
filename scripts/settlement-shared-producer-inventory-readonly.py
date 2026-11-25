@@ -20,6 +20,15 @@ import sys
 
 NAME = re.compile(r"^[A-Za-z0-9_.@:-]+\.(?:service|timer)$")
 APP_PREFIXES = ("aoe2hdbets-", "aoe2war-", "aoe2dewarwagers-", "aoe2-wolo-")
+# Cross-project units are discovery-only. Inclusion never adds a shutdown,
+# financial permit, signer capability or approved writer identity.
+CROSS_PROJECT_PREFIXES = ("wolo-satchel-", "wolo-reviewer-", "traffic-v2-")
+EXPECTED_CROSS_PROJECT = {
+    "wolo-satchel-c01.service",
+    "wolo-reviewer-c01.service",
+    "traffic-v2-forward-ledger-aoe2hdbets.service",
+    "traffic-v2-forward-ledger-aoe2hdbets.timer",
+}
 EXACT_APP = {
     "aoe2hdbets-web.service",
     "aoe2hdbets-api.service",
@@ -67,9 +76,15 @@ def run_systemctl(args: list[str]) -> str:
     return result.stdout
 
 
+def cross_project(name: str) -> bool:
+    return bool(NAME.fullmatch(name) and
+                any(name.startswith(x) for x in CROSS_PROJECT_PREFIXES))
+
+
 def relevant(name: str) -> bool:
     return bool(NAME.fullmatch(name) and (
         name in EXACT_APP or any(name.startswith(x) for x in APP_PREFIXES)
+        or cross_project(name)
     ))
 
 
@@ -147,16 +162,22 @@ def info(unit: str) -> dict:
     pid = fields.get("MainPID", "")
     inspectable, keys = process_keys(pid)
     active = fields.get("ActiveState") == "active"
+    pid_present = bool(pid.isdecimal() and int(pid) > 0)
     return {
         "unit": unit,
         "isTimer": unit.endswith(".timer"),
         "active": active,
         "loadState": fields.get("LoadState", "unknown"),
         "unitFileState": fields.get("UnitFileState", "unknown"),
-        "mainPidPresent": bool(pid.isdecimal() and int(pid) > 0),
+        "mainPidPresent": pid_present,
         "processEnvironmentInspectable": inspectable,
         "configuredFinancialKeyNames": keys,
-        "isCandidateForExplicitMaintenanceReview": active or bool(keys),
+        # A process in activating/deactivating/failed state can still execute.
+        # An installed but inactive reserve reviewer, signer, or Traffic timer
+        # can be activated later. Treat it as unresolved even without a PID.
+        "isCandidateForExplicitMaintenanceReview": (
+            active or pid_present or bool(keys) or cross_project(unit)
+        ),
     }
 
 
@@ -166,7 +187,12 @@ def inspect() -> dict:
     incomplete_units = []
     for name in discovered:
         try:
-            units.append(info(name))
+            observed = info(name)
+            units.append(observed)
+            # An observed live PID with inaccessible /proc environment is
+            # evidence UNKNOWN, not an independently complete inventory.
+            if observed.get("mainPidPresent") and not observed.get("processEnvironmentInspectable"):
+                incomplete_units.append(name)
         except (OSError, ValueError, subprocess.SubprocessError):
             # Keep the successful inventory visible but NEVER silently conclude
             # a failed inspection is safe or that a writer is inert.
@@ -179,6 +205,12 @@ def inspect() -> dict:
         "observedAtUtc": datetime.now(timezone.utc).isoformat(),
         "appUnits": units,
         "activeCandidateUnitsToReview": candidates,
+        "crossProjectUnitsRequiringReview": sorted(
+            x["unit"] for x in units if cross_project(x["unit"])
+        ),
+        "expectedCrossProjectUnitsNotFound": sorted(
+            EXPECTED_CROSS_PROJECT - set(discovered)
+        ),
         "expectedNamedUnitsNotFound": sorted(EXACT_APP - set(discovered)),
         "templateDefinitionsNotServiceInstances": templates,
         "unitsWithIncompleteInspection": incomplete_units,
@@ -187,6 +219,8 @@ def inspect() -> dict:
         "cannotProve": [
             "no external or independently signed payout origin",
             "no unlisted cron, user-level systemd or container writer",
+            "no excluded legacy PostgreSQL writer or indirect financial API",
+            "no activated future cross-project service without another census",
             "no queued transaction, event worker or database-triggered payment",
             "no active HTTP session or future wallet execution",
             "financial drain, reserve solvency, independent chain finality",

@@ -134,9 +134,9 @@ def utc(s):
         raise AuthorityHold("UTC_INVALID") from exc
 
 
-def openssl(*args, input_data=None):
+def openssl(*args, input_data=None, executable="openssl"):
     try:
-        result = subprocess.run(["openssl", *args], input=input_data,
+        result = subprocess.run([executable, *args], input=input_data,
                                 capture_output=True, timeout=8, check=False)
     except (OSError, subprocess.TimeoutExpired) as exc:
         raise AuthorityHold("OPENSSL_UNAVAILABLE") from exc
@@ -144,8 +144,9 @@ def openssl(*args, input_data=None):
     return result.stdout
 
 
-def review(enrollment_raw, packet_raw, *, pinned_enrollment_sha256,
-           pinned_owner_der_sha256, now=None):
+def authenticate_owner(enrollment_raw, packet_raw, *, pinned_enrollment_sha256,
+           pinned_owner_der_sha256, packet_schema, domain, validate_request, now=None,
+                       openssl_path="openssl"):
     require(hex64(pinned_enrollment_sha256) and hex64(pinned_owner_der_sha256)
             and hashlib.sha256(enrollment_raw).hexdigest() == pinned_enrollment_sha256,
             "EXTERNAL_ENROLLMENT_PIN_MISMATCH")
@@ -160,7 +161,7 @@ def review(enrollment_raw, packet_raw, *, pinned_enrollment_sha256,
             and e["public_key_pem"].endswith("-----END PUBLIC KEY-----\n"),
             "OWNER_PUBLIC_ENROLLMENT_INVALID")
     der = openssl("pkey", "-pubin", "-inform", "PEM", "-outform", "DER",
-                  input_data=e["public_key_pem"].encode("ascii"))
+                  input_data=e["public_key_pem"].encode("ascii"), executable=openssl_path)
     require(hashlib.sha256(der).hexdigest() == pinned_owner_der_sha256,
             "PINNED_OWNER_PUBLIC_KEY_MISMATCH")
     n = datetime.now(timezone.utc) if now is None else now
@@ -170,10 +171,33 @@ def review(enrollment_raw, packet_raw, *, pinned_enrollment_sha256,
             "OWNER_ENROLLMENT_EXPIRED")
 
     packet = parse(packet_raw)
-    require(set(packet) == PACKET_KEYS and packet["schema"] == PACKET_SCHEMA
+    require(set(packet) == PACKET_KEYS and packet["schema"] == packet_schema
             and packet["owner_key_id"] == e["owner_key_id"],
             "OWNER_PACKET_SCHEMA_OR_KEY_MISMATCH")
     q = packet["request"]
+    require(type(q) is dict, "SIGNED_REQUEST_OBJECT_REQUIRED")
+    validate_request(q, n)
+    try:
+        sig = base64.b64decode(packet["signature_b64"], validate=True)
+    except (ValueError, TypeError, binascii.Error) as exc:
+        raise AuthorityHold("SIGNATURE_ENCODING_INVALID") from exc
+    require(len(sig) == 64, "ED25519_SIGNATURE_LENGTH_INVALID")
+    message = domain + canonical({"owner_key_id": e["owner_key_id"], "request": q})
+    with tempfile.TemporaryDirectory(prefix="wolo-solo-intent-") as directory:
+        folder = Path(directory)
+        key, payload, signature = [folder / x for x in ("key.pem", "msg", "sig")]
+        for file, data in (
+            (key, e["public_key_pem"].encode("ascii")),
+            (payload, message), (signature, sig)
+        ):
+            file.write_bytes(data)
+            file.chmod(0o600)
+        openssl("pkeyutl", "-verify", "-pubin", "-rawin", "-inkey",
+                str(key), "-in", str(payload), "-sigfile", str(signature), executable=openssl_path)
+    return e, q, n
+
+
+def _validate_request(q, n):
     require(type(q) is dict and set(q) == REQUEST_KEYS and q["schema"] == SCHEMA
             and q["chain_id"] == "wolo-1" and type(q["phase"]) is str
             and q["phase"] in OPS
@@ -193,23 +217,16 @@ def review(enrollment_raw, packet_raw, *, pinned_enrollment_sha256,
     begin, expires = utc(q["not_before"]), utc(q["expires_at"])
     require(begin <= n < expires and timedelta() < expires - begin
             <= timedelta(seconds=WINDOW), "OWNER_PHASE_WINDOW_INVALID")
-    try:
-        sig = base64.b64decode(packet["signature_b64"], validate=True)
-    except (ValueError, TypeError, binascii.Error) as exc:
-        raise AuthorityHold("SIGNATURE_ENCODING_INVALID") from exc
-    require(len(sig) == 64, "ED25519_SIGNATURE_LENGTH_INVALID")
-    message = DOMAIN + canonical({"owner_key_id": e["owner_key_id"], "request": q})
-    with tempfile.TemporaryDirectory(prefix="wolo-solo-intent-") as directory:
-        folder = Path(directory)
-        key, payload, signature = [folder / x for x in ("key.pem", "msg", "sig")]
-        for file, data in (
-            (key, e["public_key_pem"].encode("ascii")),
-            (payload, message), (signature, sig)
-        ):
-            file.write_bytes(data)
-            file.chmod(0o600)
-        openssl("pkeyutl", "-verify", "-pubin", "-rawin", "-inkey",
-                str(key), "-in", str(payload), "-sigfile", str(signature))
+
+
+def review(enrollment_raw, packet_raw, *, pinned_enrollment_sha256,
+           pinned_owner_der_sha256, now=None):
+    _, q, _ = authenticate_owner(
+        enrollment_raw, packet_raw,
+        pinned_enrollment_sha256=pinned_enrollment_sha256,
+        pinned_owner_der_sha256=pinned_owner_der_sha256,
+        packet_schema=PACKET_SCHEMA, domain=DOMAIN,
+        validate_request=_validate_request, now=now)
     # Source-review truth only. No consumption, off-host monotonicity, P1 source
     # provenance, asset proof, signer census, or production permissions.
     return {

@@ -8,12 +8,17 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "runtime-evidence"
 authority: "mainnet-service-and-port-contract"
-reviewed_at: "2026-10-22"
+reviewed_at: "2026-11-06"
 review_interval_days: 14
 sensitivity: "internal"
 ---
 
 # WoloChain Mainnet Services And Ports
+
+## November 6, 2026 — Physical HEL1 boundary review (non-authorizing)
+
+A fresh bounded HEL1 systemd/socket observation independently confirmed the original `wolochaind-mainnet`, `wolochain-mainnet-settlement` and `wolochain-founder-rewards-settlement` services still active with loopback 8092 and 8093 listeners. The distinct `wolo-satchel-c01` and `wolo-reviewer-c01` units remain inactive, and new 8094/8095 are not listening. This is **not** proof of historical transaction finality, sufficient reserves, independent reviewer enrollment, protected custody, production Satchel schema admission, or funded release. Other port descriptions are contracts or historical observations unless separately timestamped; no service was changed. A separate current read-only C03 audit found the legacy HD and DE database roles retain broad write privileges, so service status alone cannot certify quiescence.
+
 
 ## Source-only review — 2026-10-22 UTC
 

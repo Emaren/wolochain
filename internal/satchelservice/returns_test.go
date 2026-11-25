@@ -104,16 +104,16 @@ func testOwnedReturnEngine(t *testing.T) (*Engine, string, Policy, *engineTestBa
 
 func TestReturnPreparationUsesEscrowRunAndFullUnmatchedStake(t *testing.T) {
 	engine, _, policy, backend, request := testOwnedReturnEngine(t)
-	approval := testOwnedReturnApproval(t, request.OperationID, "101")
+	approval := testOwnedReturnApproval(t, request.OperationID, "900000000101")
 	run, err := engine.PrepareReturnRun(t.Context(), approval)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if run.SettlementRunID != "satchel:claim-return:101" || run.SourceApp != "aoe2hdbets" || run.SourceEventID != request.OperationID || run.SignerRole != "escrow" || len(run.Payouts) != 1 {
+	if run.SettlementRunID != "satchel:claim-return:900000000101" || run.SourceApp != "aoe2hdbets" || run.SourceEventID != request.OperationID || run.SignerRole != "escrow" || len(run.Payouts) != 1 {
 		t.Fatalf("not canonical existing escrow run: %+v", run)
 	}
 	payout := run.Payouts[0]
-	if payout.RequestID != run.SettlementRunID || payout.ToAddress != policy.Vault || payout.AmountUWolo != request.AmountUWolo || payout.Memo != "aoe2war/satchel/claim-return/v1/101" {
+	if payout.RequestID != run.SettlementRunID || payout.ToAddress != policy.Vault || payout.AmountUWolo != request.AmountUWolo || payout.Memo != "aoe2war/satchel/claim-return/v1/900000000101" {
 		t.Fatalf("unmatched refund deducted a fee or changed destination: %+v", payout)
 	}
 	if backend.signs.Load() != 1 || backend.broadcasts.Load() != 1 {
@@ -150,7 +150,7 @@ func TestReturnApprovalRejectsInvalidOwnershipFinancialAndSignatureEvidence(t *t
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			engine, _, policy, backend, request := testOwnedReturnEngine(t)
-			approval := testOwnedReturnApproval(t, request.OperationID, "101")
+			approval := testOwnedReturnApproval(t, request.OperationID, "900000000101")
 			test.mutate(&approval)
 			if test.resign {
 				testSignReturnApproval(&approval, policy)
@@ -167,7 +167,7 @@ func TestReturnApprovalRejectsInvalidOwnershipFinancialAndSignatureEvidence(t *t
 
 func TestReturnApprovalCannotCrossWithdrawalSignatureDomain(t *testing.T) {
 	engine, _, _, _, request := testOwnedReturnEngine(t)
-	a := testOwnedReturnApproval(t, request.OperationID, "101")
+	a := testOwnedReturnApproval(t, request.OperationID, "900000000101")
 	w := engineTestWithdrawal(t)
 	a.Signature = w.Approval.Signature
 	if _, err := engine.PrepareReturnRun(t.Context(), a); err == nil {
@@ -195,7 +195,7 @@ func TestReturnRequiresConfirmedOriginalWagerAndOwner(t *testing.T) {
 					t.Fatal(err)
 				}
 			}
-			a := testOwnedReturnApproval(t, request.OperationID, "101")
+			a := testOwnedReturnApproval(t, request.OperationID, "900000000101")
 			if _, err := engine.PrepareReturnRun(t.Context(), a); err == nil {
 				t.Fatal("unconfirmed or foreign-owner wager generated claim return")
 			}
@@ -209,14 +209,14 @@ func TestReturnClaimAndOperationAllocationCannotBeReassigned(t *testing.T) {
 		mutate func(*ReturnApproval)
 	}{
 		{"different owner same claim", func(a *ReturnApproval) { a.OwnerID = "owner-2" }},
-		{"undeclared claim same operation", func(a *ReturnApproval) { a.ClaimID = "102" }},
+		{"undeclared claim same operation", func(a *ReturnApproval) { a.ClaimID = "900000000102" }},
 		{"different amount same claim", func(a *ReturnApproval) { a.ClaimKind = "bet_payout"; a.AmountUWolo = "2000000" }},
 		{"different kind same claim", func(a *ReturnApproval) { a.ClaimKind = "bet_payout" }},
 		{"different allocation same claim", func(a *ReturnApproval) { a.AllocationDigest = strings.Repeat("E", 64) }},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			engine, _, policy, _, request := testOwnedReturnEngine(t)
-			a := testOwnedReturnApproval(t, request.OperationID, "101")
+			a := testOwnedReturnApproval(t, request.OperationID, "900000000101")
 			if _, err := engine.PrepareReturnRun(t.Context(), a); err != nil {
 				t.Fatal(err)
 			}
@@ -231,7 +231,7 @@ func TestReturnClaimAndOperationAllocationCannotBeReassigned(t *testing.T) {
 
 func TestReturnCancellationCannotCreateNewAllocation(t *testing.T) {
 	engine, _, _, _, request := testOwnedReturnEngine(t)
-	a := testOwnedReturnApproval(t, request.OperationID, "101")
+	a := testOwnedReturnApproval(t, request.OperationID, "900000000101")
 	ctx, cancel := context.WithCancel(t.Context())
 	cancel()
 	if _, err := engine.PrepareReturnRun(ctx, a); err == nil {
@@ -250,7 +250,7 @@ func TestReturnCancellationCannotCreateNewAllocation(t *testing.T) {
 
 func TestReturnMissingTrustedProofNeverInfersPayment(t *testing.T) {
 	engine, _, _, backend, request := testOwnedReturnEngine(t)
-	a := testOwnedReturnApproval(t, request.OperationID, "101")
+	a := testOwnedReturnApproval(t, request.OperationID, "900000000101")
 	if _, err := engine.PrepareReturnRun(t.Context(), a); err != nil {
 		t.Fatal(err)
 	}
@@ -270,7 +270,7 @@ func TestReturnDuplicatePhysicalEffectsCannotBecomeOwnerCredits(t *testing.T) {
 	for _, index := range []int{0, 1} {
 		t.Run("alternate_observed_ordinal="+string(rune('0'+index)), func(t *testing.T) {
 			engine, _, policy, _, request := testOwnedReturnEngine(t)
-			first := testOwnedReturnApproval(t, request.OperationID, "101")
+			first := testOwnedReturnApproval(t, request.OperationID, "900000000101")
 			if _, err := engine.PrepareReturnRun(t.Context(), first); err != nil {
 				t.Fatal(err)
 			}
@@ -289,7 +289,7 @@ func TestReturnDuplicatePhysicalEffectsCannotBecomeOwnerCredits(t *testing.T) {
 			if _, err := engine.Reconcile(t.Context(), secondRequest.OperationID); err != nil {
 				t.Fatal(err)
 			}
-			second := testOwnedReturnApproval(t, secondRequest.OperationID, "102")
+			second := testOwnedReturnApproval(t, secondRequest.OperationID, "900000000102")
 			second.OwnerID = "owner-2"
 			second.Allocation.OwnerID = second.OwnerID
 			second.Allocation.FundingTxHash = engineTestSigned(secondRequest).Hash
@@ -311,7 +311,7 @@ func TestReturnDuplicatePhysicalEffectsCannotBecomeOwnerCredits(t *testing.T) {
 
 func TestReturnReceiptReplayRemainsOwnerBoundAcrossRestart(t *testing.T) {
 	engine, path, policy, _, request := testOwnedReturnEngine(t)
-	a := testOwnedReturnApproval(t, request.OperationID, "101")
+	a := testOwnedReturnApproval(t, request.OperationID, "900000000101")
 	if _, err := engine.PrepareReturnRun(t.Context(), a); err != nil {
 		t.Fatal(err)
 	}
@@ -350,7 +350,7 @@ func TestReturnPoisonedReceiptCannotBeReplayed(t *testing.T) {
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			engine, _, _, _, request := testOwnedReturnEngine(t)
-			a := testOwnedReturnApproval(t, request.OperationID, "101")
+			a := testOwnedReturnApproval(t, request.OperationID, "900000000101")
 			if _, err := engine.PrepareReturnRun(t.Context(), a); err != nil {
 				t.Fatal(err)
 			}
@@ -368,5 +368,55 @@ func TestReturnPoisonedReceiptCannotBeReplayed(t *testing.T) {
 				t.Fatal("poisoned receipt became an owner payment")
 			}
 		})
+	}
+}
+
+// TestC04NativeClaimNamespaceDisjoint refuses historical IDs at the native
+// Chain authority even when a malicious caller presents a correctly signed
+// v2 allocation and owner approval. App-side input validation is NOT trusted.
+func TestC04NativeClaimNamespaceDisjoint(t *testing.T) {
+	for _, tc := range []struct {
+		id    string
+		valid bool
+	}{
+		{"900000000001", true}, {"999999999999", true},
+		{"900000000000", false}, {"889", false}, {"9645", false},
+		{"101", false}, {"102", false}, {"0", false},
+		{"99999999999", false}, {"1000000000000", false},
+		{"0900000000001", false}, {"90000000000a", false},
+		{"900000000001 ", false}, {"-900000000001", false},
+	} {
+		if validFreshNativeClaimID(tc.id) != tc.valid {
+			t.Fatalf("C04 native identity boundary %q accepted=%v wanted=%v",
+				tc.id, validFreshNativeClaimID(tc.id), tc.valid)
+		}
+	}
+
+	engine, _, _, _, request := testOwnedReturnEngine(t)
+	for _, legacy := range []string{"889", "9645", "101", "900000000000", "99999999999"} {
+		approval := testOwnedReturnApproval(t, request.OperationID, legacy)
+		if _, err := engine.PrepareReturnRun(t.Context(), approval); err == nil {
+			t.Fatalf("C04 accepted historical/replayed claim %s under signed v2 allocation", legacy)
+		}
+	}
+	original := testOwnedReturnApproval(t, request.OperationID, "900000000001")
+	if _, err := engine.PrepareReturnRun(t.Context(), original); err != nil {
+		t.Fatalf("C04 refused valid fresh app claim: %v", err)
+	}
+	// Even when the target entitlement is genuinely fresh, a different
+	// legacy identity must never be embedded in the signed allocation.
+	tampered := testOwnedReturnApproval(t, request.OperationID, "900000000002")
+	tampered.Allocation.Legs[0].Entitlements = append(
+		tampered.Allocation.Legs[0].Entitlements,
+		ReturnEntitlement{
+			EntitlementID: "zz-old-claim", ClaimID: "9645", ClaimKind: "bet_refund",
+			PrincipalUWolo: "1", AmountUWolo: "1",
+		},
+	)
+	testSignAllocation(tampered.Allocation, engineTestPolicy(t))
+	tampered.AllocationDigest = AllocationDigest(*tampered.Allocation, engineTestPolicy(t))
+	testSignReturnApproval(&tampered, engineTestPolicy(t))
+	if _, err := engine.PrepareReturnRun(t.Context(), tampered); err == nil {
+		t.Fatal("C04 accepted legacy claim embedded in signed native allocation")
 	}
 }

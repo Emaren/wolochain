@@ -128,7 +128,7 @@ func validReviewAuthority(a ReserveReviewAuthority) bool {
   a.ExecutionAuthorityKey,a.WagerApprovalKey,a.WithdrawalApprovalKey,
  }
  for i,key:=range keys {
-  if len(key)!=ed25519.PublicKeySize {return false}
+  if !ValidAuthorityPublicKey(key) {return false}
   for j:=0;j<i;j++ {if bytes.Equal(key,keys[j]) {return false}}
  }
  return a.ExpectedVault!="" &&

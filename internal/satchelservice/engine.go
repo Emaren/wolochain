@@ -26,18 +26,19 @@ import (
 )
 
 type TransferRequest struct {
-	OperationID  string                  `json:"operation_id"`
-	ChainID      string                  `json:"chain_id"`
-	Denom        string                  `json:"denom"`
-	Sender       string                  `json:"sender"`
-	Recipient    string                  `json:"recipient"`
-	AmountUWolo  string                  `json:"amount_uwolo"`
-	Memo         string                  `json:"memo"`
-	Kind         string                  `json:"kind"`
-	OwnerID      string                  `json:"owner_id,omitempty"`
-	Approval     *WithdrawalApproval     `json:"approval,omitempty"`
-	OwnerMandate *OwnerWithdrawalMandate `json:"owner_mandate,omitempty"`
-	Reservation  *WagerReservation       `json:"reservation,omitempty"`
+	OperationID    string                  `json:"operation_id"`
+	ChainID        string                  `json:"chain_id"`
+	Denom          string                  `json:"denom"`
+	Sender         string                  `json:"sender"`
+	Recipient      string                  `json:"recipient"`
+	AmountUWolo    string                  `json:"amount_uwolo"`
+	Memo           string                  `json:"memo"`
+	Kind           string                  `json:"kind"`
+	OwnerID        string                  `json:"owner_id,omitempty"`
+	Approval       *WithdrawalApproval     `json:"approval,omitempty"`
+	OwnerMandate   *OwnerWithdrawalMandate `json:"owner_mandate,omitempty"`
+	Reservation    *WagerReservation       `json:"reservation,omitempty"`
+	ReturnApproval *ReturnApproval         `json:"return_approval,omitempty"`
 }
 type WithdrawalApproval struct {
 	WithdrawalID      string `json:"withdrawal_id"`
@@ -179,6 +180,11 @@ func (p Policy) verifyWithdrawal(r TransferRequest, now time.Time) error {
 const maxWarSatchelWagerUWolo uint64 = ProductMaxWagerUWolo
 
 func (p Policy) validate(r TransferRequest, now time.Time) error {
+	// Escrow returns belong to the separately enrolled return role and existing
+	// returns journal, never the vault operation namespace or its fingerprints.
+	if r.ReturnApproval != nil {
+		return errors.New("escrow_return_metadata_on_vault_operation")
+	}
 	if !ids.MatchString(r.OperationID) || r.ChainID != "wolo-1" || r.Denom != "uwolo" || r.Sender != p.Vault || !validAddress(r.Recipient) || r.Recipient == p.Vault || !amount(r.AmountUWolo, p.MaxAmountUWolo) {
 		return errors.New("transfer_policy_refused")
 	}
@@ -303,7 +309,7 @@ func load(tx *bolt.Tx, id string) (record, error) {
 	if json.Unmarshal(b, &r) != nil {
 		return r, errors.New("state_corrupt")
 	}
-	if r.Request.OperationID != id || r.Fingerprint != fingerprint(r.Request) || r.Result.OperationID != id || !r.Result.DurableFenced {
+	if r.Request.ReturnApproval != nil || r.Request.OperationID != id || r.Fingerprint != fingerprint(r.Request) || r.Result.OperationID != id || !r.Result.DurableFenced {
 		return r, errors.New("state_corrupt")
 	}
 	switch r.Result.Status {
@@ -355,6 +361,9 @@ func held(r record, reason string) record {
 func (e *Engine) Submit(ctx context.Context, req TransferRequest) (Result, error) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
+	if req.ReturnApproval != nil {
+		return Result{}, errors.New("escrow_return_metadata_on_vault_operation")
+	}
 	// Keep accepted authority independent of mutable pointers retained by an
 	// in-process caller. The original approvals stay bound to this journal.
 	if req.Approval != nil {

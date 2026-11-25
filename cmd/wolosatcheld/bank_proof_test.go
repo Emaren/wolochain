@@ -23,6 +23,8 @@ func TestBankProofCommandsFailClosedBeforeCustodyStartup(t *testing.T) {
 		{"verify-bank-proof", "--authority", file, "--height", "9", "--proof", file},
 		{"verify-bank-proof", "--authority", file, "--height", "0", "--proof", file},
 		{"verify-bank-proof", "--authority", file, "--height", "9", "--proof", file, "--rpc", "https://caller.example"},
+		{"verify-bank-proof", "--authority", file, "--height", "9", "--proof", file, "--account-role", "caller"},
+		{"verify-bank-proof", "--authority", file, "--height", "9", "--proof", file, "--account-role", "escrow"},
 	} {
 		var out, errout bytes.Buffer
 		if code := run(t.Context(), args, &out, &errout); code != 2 || out.Len() != 0 || !strings.Contains(errout.String(), "UNVERIFIABLE") || strings.Contains(errout.String(), "sensitive") {

@@ -8,7 +8,7 @@ systems: ["wolochain","aoe2war","aoe2dewarwagers"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "non-authorizing-financial-producer-evidence-correlation"
-reviewed_at: "2026-10-20"
+reviewed_at: "2026-11-04"
 review_interval_days: 14
 sensitivity: "internal"
 ---
@@ -24,6 +24,25 @@ Inputs are (1) the established root-run `scripts/settlement-shared-producer-inve
 The correlation tool uses `--runtime <file> --hd-source <file> --de-source <file>`, reads only regular bounded JSON files, rejects leaf symlinks, duplicate JSON keys and changed inodes, and prints a sanitized list of *public unit names* with owner-review classifications (HD/shared, DE or unknown). It will not emit financial environment names, values, signer locations or secrets present in the input. A runtime observation is labelled fresh only for a bounded one-hour window relative to UTC; future or invalid timestamps are stale. Duplicate, unknown, malformed or omitted units must be reviewed. The tool exits **3 even if all three inputs look valid**.
 
 The report marks the following **false unconditionally**: deployed-source-to-running-executable parity, producer isolation, reconciled transfers, financial release, website release, and mutation of production. All input sources can be mutually consistent while independent HD/DE wallets, direct mnemonic and keyring paths, processes, HTTP/timer/cron ingress, and outstanding obligations remain unknown.
+
+## November 4 — source-bound static successor coverage
+
+The installed HEL1 `wolo-satchel-c01.service` and
+`wolo-reviewer-c01.service` are separate financial services, not ordinary
+HD/DE web units. The original financial topology inspector did not match their
+names. The C03 source now matches **these exact successor names only**,
+classifies their prospective roles as `WOLO_CUSTODY` and `WOLO_REVIEWER`,
+and imports the prior installed-unit-file parity check so that a static unit
+which is installed but absent from `systemctl list-units --all` is recorded
+as **INSTALLED_BUT_NOT_LOADED**, never as a missing service file.
+
+This only improves source and current systemd census completeness. The report
+still explicitly marks `nativeSuccessorsAreFinancialWritersExcluded=false`,
+`financialIngressFenced=false`, and `satchelActivationAuthorized=false`.
+Loaded, dormant, and reactivatable financial successors must all remain in the
+future coordinated C03 source-bound fence and deterministic resume proof.
+Neither a successful inventory, a systemd sandbox score, nor an absent
+protected config is independent financial authority.
 
 ## First owner-review sequence
 
@@ -236,12 +255,15 @@ material:
   names and active timer names, **not** user-manager env, ExecStart,
   logs, credential or service file content. Missing or inaccessible
   user DBus creates `NOT_INSPECTED`, not empty evidence.
-- Read-only `docker ps`/`podman ps` container names with their
-  restart-policy boolean. It does not inspect volume mounts,
-  environment, tokens, network bindings, grants, or database contents.
-  A running Hasura service is treated as a *potential* financial
-  writer until independently classified; absent Docker/Podman tooling
-  is `ENGINE_UNAVAILABLE`, not complete host coverage.
+- Read-only `docker ps --all`/`podman ps --all` enumerates **running,
+  paused, and stopped** containers, and reads only the named container's
+  restart-policy label and runtime state. Dormant auto-restart containers
+  remain potential financial writers after a daemon/host restart.
+  Unknown or malformed state returns `NOT_INSPECTED`, never a false
+  exclusion. It does not inspect volume mounts, environment, tokens,
+  network bindings, grants, or database contents. Hasura remains a
+  potential writer until independently classified; absent Docker/Podman
+  tooling is `ENGINE_UNAVAILABLE`, not complete host coverage.
 - All financial-ready, producer-fenced and Satchel activation flags
   stay false; successful observational output exits **3** and
   critical evidence failures exit 2. It cannot start/stop systemd,
@@ -502,3 +524,28 @@ would be required to **prove** their identities; aggregate count delta
 and file mtime alone cannot prove membership. Do not turn journal
 recording into chain solvency, finance approval, replay, refund, or
 automatic betting permission.
+
+
+## November 4, 2026 — substantive source review (AI, not financial approval)
+
+Reviewed against the current C01 held integration source (GitHub PR #124
+merged into the codex/c01-enrolled-native-executor-20261101 parent at
+c1e14d7). This is an **AI-conducted documentation/source review**, not an
+independent operator inspection or human financial sign-off.
+
+Verified that settlement_producer_owner_triage.py remains a bounded
+sanitized-file correlator with deliberate exit 3 even for valid inputs;
+settlement_maintenance_board.py retains six-control HOLD and exit 3;
+and settlement_producer_activation_topology.py only observes selected
+systemd metadata through bounded read operations and explicitly returns
+cutoverAuthorized=false. Targeted owner-triage, activation-topology,
+and resume-producer identity tests were rerun for this review.
+
+The new C01 escrow-return executor source is **not evidence** that the
+HD/DE/external financial-producer inventory, coordinated writer fence,
+authenticated reserve, historical ambiguous payouts, financial recovery
+or mainnet funded canary has passed. The dated October observations above
+remain historical. No fresh live HEL1 owner mapping, signer custody proof
+or independent solvency attestation was obtained by this review; none
+is asserted here. WoloChain C01–C09 remain physically open and financial
+release is held pending separate executable and custody controls.

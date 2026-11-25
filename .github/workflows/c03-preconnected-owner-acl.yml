@@ -1,0 +1,22 @@
+name: C03 existing-backend finance owner ACL negative source contract
+
+on:
+  pull_request:
+  push:
+    branches:
+      - fix/c03-preconnected-acl-proof-20261107
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  c03-preconnected-finance-permission-denial:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate physical-source SHA and no live finance release claim
+        run: python3 -B -m unittest discover -s tests -p 'test_settlement_c03_existing_connected_pg_owner_acl_rehearsal.py' -v

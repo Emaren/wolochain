@@ -116,22 +116,22 @@ func TestFinancialProofRefusesOwnerlessWagerAndUnreconciledReturn(t *testing.T) 
 	if _, _, err := e.operationProofRecord(r.OperationID); err == nil || err.Error() != "operation_owner_binding_unavailable" {
 		t.Fatal("ownerless legacy wager adopted an owner")
 	}
-	ownerless := testReturnApproval(t, r.OperationID, "101")
+	ownerless := testReturnApproval(t, r.OperationID, "900000000101")
 	if _, err := e.PrepareReturnRun(t.Context(), ownerless); err == nil {
 		t.Fatal("ownerless historical wager acquired a return owner")
 	}
 	e, _, p, _, r = testOwnedReturnEngine(t)
-	a := testOwnedReturnApproval(t, r.OperationID, "101")
+	a := testOwnedReturnApproval(t, r.OperationID, "900000000101")
 	if _, err := e.PrepareReturnRun(t.Context(), a); err != nil {
 		t.Fatal(err)
 	}
-	if _, _, err := e.returnProofRecord("101"); err == nil {
+	if _, _, err := e.returnProofRecord("900000000101"); err == nil {
 		t.Fatal("unpaid entitlement exported as paid")
 	}
 	if _, err := e.ReturnProof(t.Context(), "889", nil); err == nil {
 		t.Fatal("founder claim historical hold bypassed")
 	}
-	c := FinancialProofContext{Protocol: 1, Kind: "claim_return", OwnerID: a.OwnerID, OperationID: a.OperationID, Sender: p.BettingEscrow, Recipient: p.Vault, AmountUWolo: a.AmountUWolo, Memo: "aoe2war/satchel/claim-return/v1/101", TxHash: testHTTPHash, FundedAmountUWolo: r.AmountUWolo, ReturnApproval: &a}
+	c := FinancialProofContext{Protocol: 1, Kind: "claim_return", OwnerID: a.OwnerID, OperationID: a.OperationID, Sender: p.BettingEscrow, Recipient: p.Vault, AmountUWolo: a.AmountUWolo, Memo: "aoe2war/satchel/claim-return/v1/900000000101", TxHash: testHTTPHash, FundedAmountUWolo: r.AmountUWolo, ReturnApproval: &a}
 	if err := verifyReturnContext(c, p); err != nil {
 		t.Fatalf("valid v2 independent attribution refused: %v", err)
 	}
@@ -176,9 +176,9 @@ func TestPrivateFinancialProofReadOnlyAfterPermitExpiryAndCannotRetarget(t *test
 		{"retarget operation", "/satchel/v1/proofs/operation", `{"operation_id":"satchel:ticket:1","tx_hash":"` + testHTTPHash + `"}`, 400, 0},
 		{"caller node", "/satchel/v1/proofs/operation", `{"operation_id":"satchel:ticket:1","rpc":"http://evil"}`, 400, 0},
 		{"case alias", "/satchel/v1/proofs/operation", `{"Operation_ID":"satchel:ticket:1"}`, 400, 0},
-		{"return unavailable", "/satchel/v1/proofs/return", `{"claim_id":"101"}`, 409, 1},
+		{"return unavailable", "/satchel/v1/proofs/return", `{"claim_id":"900000000101"}`, 409, 1},
 		{"claim889", "/satchel/v1/proofs/return", `{"claim_id":"889"}`, 400, 0},
-		{"retarget claim owner", "/satchel/v1/proofs/return", `{"claim_id":"101","owner_id":"other"}`, 400, 0},
+		{"retarget claim owner", "/satchel/v1/proofs/return", `{"claim_id":"900000000101","owner_id":"other"}`, 400, 0},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			b := &httpProofTestBackend{httpTestBackend: &httpTestBackend{}, err: &satchel.EvidenceError{Code: satchel.UntrustedConsensus, Source: "trust", Operation: "test"}}

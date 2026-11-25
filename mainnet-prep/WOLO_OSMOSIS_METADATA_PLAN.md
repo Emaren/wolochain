@@ -8,12 +8,18 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "post-launch-osmosis-metadata-plan"
-reviewed_at: "2026-10-10"
+reviewed_at: "2026-11-10"
 review_interval_days: 30
 sensitivity: "public"
 ---
 
 # WOLO Osmosis Metadata Plan
+
+## Independent metadata review — 2026-11-10 UTC
+
+WoloChain RPC/REST returned wolo-1, native supply **100,000,000 WOLO** (100000000000000 uwolo) and display denomination wolo exponent 6. Osmosis LCD returned Gamm Pool 3461, exact documented address, swap fee 0.002 (0.2%), and documented WOLO/USDC IBC denoms. Point-in-time pool reserves: 181872725700 atomic WOLO (181,872.725700 WOLO) and 22007451 atomic USDC (22.007451 USDC); these are **not** the historical launch amounts printed below. Public Cosmos Chain Registry master/wolo/chain.json and master/wolo/assetlist.json both returned HTTP 404 at this time. An alternate registry or frontend publication was not audited. Current Osmosis frontend display propagation remains unverified.
+
+HEL1 Hermes relayer is inactive. Pool existence and open channel state do not prove active bridging. This remains a metadata PLAN, not permission to move pool funds, publish unapproved signing endpoints or activate relayer/settlement.
 
 ## Review Scope — 2026-10-10 UTC
 

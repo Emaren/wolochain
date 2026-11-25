@@ -397,7 +397,9 @@ def cron_sources(
 
 
 def container_inventory(engine: str) -> dict:
-    code, listing = command([engine, "ps", "--format", "{{.Names}}"])
+    # Enumerate dormant containers too. A stopped container with a restart policy
+    # is still a latent writer after Docker/Podman or host recovery.
+    code, listing = command([engine, "ps", "--all", "--format", "{{.Names}}"])
     if code == 127:
         return {"engine":engine, "status":"ENGINE_UNAVAILABLE",
                 "names":[], "restartPolicyObserved":False}
@@ -411,14 +413,21 @@ def container_inventory(engine: str) -> dict:
         raise InventoryError("UNSAFE_CONTAINER_LIST")
     records = []
     for name in sorted(names):
-        rc, restart = command([engine, "inspect", "--format",
-                              "{{.HostConfig.RestartPolicy.Name}}", name])
-        if rc or restart.strip() not in {"no", "always", "unless-stopped",
-                                         "on-failure", ""}:
+        rc, metadata = command([engine, "inspect", "--format",
+                                "{{.HostConfig.RestartPolicy.Name}}|{{.State.Status}}", name])
+        pieces = metadata.strip().split("|")
+        if rc or len(pieces) != 2:
             return {"engine":engine, "status":"NOT_INSPECTED",
                     "names":[], "restartPolicyObserved":False}
-        records.append({"name":name, "restartConfigured":restart.strip()
-                        not in {"no", ""}, "potentialFinancialWriter":True})
+        restart, state = pieces
+        if restart not in {"no", "always", "unless-stopped", "on-failure", ""} or state not in {
+            "created", "running", "paused", "restarting", "removing", "exited", "dead"
+        }:
+            return {"engine":engine, "status":"NOT_INSPECTED",
+                    "names":[], "restartPolicyObserved":False}
+        records.append({"name":name, "runtimeState":state,
+                        "restartConfigured":restart not in {"no", ""},
+                        "potentialFinancialWriter":True})
     return {"engine":engine, "status":"OBSERVED_ONLY",
             "names":records, "restartPolicyObserved":True,
             "containerEnvOrMountsInspected":False}

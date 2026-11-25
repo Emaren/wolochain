@@ -8,12 +8,187 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "restricted-satchel-execution-and-provisioning-contract"
-reviewed_at: "2026-10-22"
+reviewed_at: "2026-11-07"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
 
+
+## Independent operator review — November 7, 2026 UTC (still financial HOLD)
+
+This scheduled source review is limited to the operator boundaries documented
+here and the new C01/C08 nonfinancial protections; it is **not** financial
+approval. The held source reports all nine Chain gates C01–C09 open. Public
+R25 remains accepted, while new custody/reviewer 8094/8095 are inactive.
+The validator and legacy settlement 8092/8093 must not be altered or reused
+as a fallback. The C04 historical UNKNOWN records remain quarantined;
+C05's independently complete, disjoint same-height liabilities, consensus
+trust and reserve coverage have not been physically attested.
+
+[C01 PR #174](https://github.com/Emaren/wolochain/pull/174) merged a
+real-binary nonroot **negative startup** verifier with a clean security scan.
+It proved refusal while the protected C01 custody/reviewer profiles were
+absent; it did not enroll either authority or permit a transaction.
+
+**C08 off-host witness architecture reviewed and corrected.** The Intel's
+ordinary macOS SSH server on port 22 is not the C08 witness. The dedicated
+witness SSHD has its own Ed25519 host identity and Intel-only loopback port
+22996. HEL1's original loopback:22995 known-hosts pin matches that *dedicated*
+host identity. An earlier source-reviewed host-key rotation that pointed to
+the ordinary macOS SSHD was reversed using the exact protected C08 rollback
+controller, restoring the original HEL1 C08 runtime and host-key files.
+The extra C08 public key previously enrolled on ordinary macOS SSH was also
+reverted, preserving unrelated management and recovery entries. These
+reversals **do not** establish an admitted remote witness.
+
+The correct restricted C08 tunnel connects HEL1 localhost port **22995**
+to the Intel's dedicated localhost port **22996**. This is distinct from
+Session A's C06 recovery forward on HEL1 localhost port 22996. The Intel
+dedicated witness SSHD is presently not listening and its protected
+configuration and authorized-key command intentionally deny execution
+(`/usr/bin/false`). The [C08 PR #177](https://github.com/Emaren/wolochain/pull/177)
+source now refuses its rootless LaunchAgent installation under those
+conditions; it is a monitored **HOLD**, not a failure to be bypassed.
+Do not switch the tunnel destination back to the normal port 22, turn off
+StrictHostKeyChecking, replace dedicated witness credentials, or activate a
+forced command without independent source/host admission and exact nonce
+recovery evidence.
+
+**Retired C08 mutation entrypoints (November 7 source hardening):**
+`settlement_c08_intel_witness_ssh_enrollment_hold.py --mode apply` and
+`settlement_c08_hel1_witness_hostkey_rotation_hold.py --mode apply`
+now STOP before modifying normal macOS SSH or HEL1 trust. The first old
+controller could append a witness key to regular authorized_keys; the second
+could repin HEL1's dedicated-witness SSH endpoint to the wrong macOS server.
+Their strictly compared revert/rollback paths remain available solely to
+recover a preexisting exact historical error; plans are read-only and
+nonauthorizing. This change does not admit the dedicated SSHD or consume any
+cryptographic witness nonce. No live SSH file is altered by this retirement.
+
+**C05 source-bound one-height evidence hardening — November 7 (HOLD):**
+The offline `scripts/settlement_financial_one_height_arithmetic.py`
+controller now requires `--expected-input-sha256 <reviewed-SHA256>`
+alongside the absolute `--input` path. It refuses absent or substituted
+digests, a symlink, multiply linked file, non-0600 evidence, a non-0700
+or non-owner evidence parent, and file replacement during the read.
+Prior loose source files were *not* eligible for financial admission
+even before this patch; the new controls stop misleading analytic
+output from unprotected or quietly substituted candidate evidence.
+A digest supplied by the same operator is **not independent source
+authentication**. Even with a syntactically valid, matching input,
+the controller returns HOLD/exit3; matching balance and obligation
+arithmetic does not make a consensus-authenticated solvency claim.
+Same-height authenticated bank assets, all external writer families,
+uncertain execution upper bounds and true disjoint liability evidence
+remain unproven.
+
+For C02, the App finance track must prove effective financial ownership,
+role membership, table/sequence/index DML and schema CREATE **after** the
+29 new Satchel tables are created, not merely before migration. Session A
+owns the temporary financial writer fence, the fresh coordinated encrypted
+C06 off-host backup and the exact C07 restored-state rollback proof.
+App C02 post-DDL source checks and synthetic PostgreSQL 16 rehearsals
+cannot substitute for that same-epoch physical sequence.
+
+A future C09 canary still requires ALL C01–C08 gates physically accepted
+plus a new, narrowly scoped, transaction-specific signed owner permit.
+No monitoring timer, source merge, operator login, test key, reviewer alias,
+or technical witness packet is a financial signing authority. Never retry,
+rebroadcast or reinterpret an UNKNOWN transfer; preserve its original
+identity and evidence. This November 7 review grants **zero funded
+allowance**, performs no deployment and does not certify the historic
+contracts in later sections as current independent external evidence.
+
+## C04 live HD/DE pending-claim drift observer — November 7, 2026 UTC
+
+Session B independently queried `aoe2hd_db` and `aoe2de_db` on HEL1
+under PostgreSQL `REPEATABLE READ READ ONLY` using SQL generated by
+`scripts/settlement_c04_live_dual_db_drift_hold.py`. The program does
+not access a database or network: it emits exact source-bound SELECT-only
+statements and validates two SHA256-pinned owner-private 0600 observations.
+They are **not an atomic cross-database or Comet-consensus snapshot**.
+
+At 01:31 UTC, HD contained **69 claimed-but-hashless rows** nominal
+120,443 WOLO: 15 bet payouts (109,504), three bet refunds (6,801), and
+51 founder bonuses (4,138). HD additionally recorded **948 pending**
+claims nominal 993,289 WOLO; DE recorded zero pending and zero
+claimed-but-hashless rows. The protected seven critical claims included
+#889 pending/hashless 300, #9645 pending/hashless 100, #8217
+claimed/hashless 800, and pending founder bonuses #8218/#8219/#8226/#8227.
+Void wagers #394/#396 had stake hashes but no payout hashes. This does
+not determine whether any transfer actually happened.
+
+The v2 observer requires a **full 69-claim read-only identity set**
+with claim ID, original kind, recorded amount, original market/source
+identity, founder bonus source and legacy/mainnet era. It separately
+checks the four era/kind groups (five legacy payouts / 10 mainnet
+payouts / three refunds / 51 founder bonuses) and compares the
+canonical set SHA256 against an operator-supplied, source-reviewed
+baseline. This rejects offsetting edits to two claims even if all
+aggregate counts and nominal sums remain identical. The first live
+source-scoped HD/DE read at 01:46:10–01:46:12 UTC returned 69 identities,
+all expected era/kind amounts and candidate claim-set fingerprint
+`eec442d8ea865fd41be47f89a2578fb807851b37e1d426c8f657341c895e9323`.
+A second protected full-claim physical capture was blocked by desktop
+safety controls; **no repeatability receipt is asserted** until it is
+obtained through an approved source-bound path. Even a matching
+operator-supplied digest is **not** independently signed evidence.
+
+The observer deliberately emits `HOLD_C04_UNRESOLVED_PAYMENT_FINALITY`
+(exit3) for matching local data and STOP for source drift, a newly
+writable or missing case, incomplete snapshot, altered claim identity,
+changed amount with unchanged totals, expired time window or unsafe
+local evidence. It asserts no automatic payout retry, no proof of
+independent finality, and no additive liability sum.
+It neither edits C03 financial writers nor starts C01/8094 services.
+The second exact-source physical read-only rehearsal at
+01:34:43–01:34:46 UTC returned its deliberate C04/HOLD with both
+database inventories matching the historical unknown baseline. Private
+0600 M1 source-bound receipt SHA256:
+`47bcadada3fff470996829d54101697a1fc356a6162dd10c48dd7bb3529736b3`.
+This is a current **database observation**, never a claim that those
+unproven transfers settled or that either database is frozen.
+
+Real C04 closure requires independently authenticated historical claim
+fates; C05 requires complete same-height disjoint liabilities and bank
+reserves, beyond this observer.
+
+## Source review — October 30, 2026 UTC
+
+The reviewer continuation now supplies durable custody/issuer fee checkpoints
+and an explicit native-bank/HD-ledger/signed-inventory census composition. See
+[integration evidence](war-satchel-integration-readiness.md#reviewer-fee-and-reserve-composition-october-29).
+It does not install a reviewer, create enrolled keys or certify a real liability
+inventory. The conservative principal margin below remains enforced: the
+reviewed census's booked principal is not a proof of exclusive hold discharge.
+Actual claim-return execution and that typed discharge contract remain source
+work in progress. Existing UNKNOWN fencing, separate legacy routing and all
+historical liabilities remain binding. Owner authority to complete a governed
+release and a maximum 1-WOLO canary does not substitute for actual Keplr signing
+or the independent production prerequisites. No deployment or funds moved in
+this renewal.
+
 # War Satchel Mainnet Execution and Operator Gates
+
+## Independent source and gate review — 2026-10-30 UTC
+
+Session B re-read the operator/owner gates against the immutable held-source
+[`http.go`](https://github.com/Emaren/wolochain/blob/9c11a617ba1362fbdee1a9ef5903a1efad0e6db1/internal/satchelservice/http.go)
+(blob `2bb311876fd84ebb94eca760de6304df993b0d0c`) and
+[`reviewer_finance_observation.go`](https://github.com/Emaren/wolochain/blob/9c11a617ba1362fbdee1a9ef5903a1efad0e6db1/internal/satchelservice/reviewer_finance_observation.go)
+(blob `d08a835500bc8da406b19bd60eea1a0ea9574cfb`).
+The private HTTP handler does not equate health/accepted broadcast with
+credit. `AuthenticatedFeeCensus` still returns
+`ReviewerFinanceCoverageUnknown`: owner ledger and authenticated bank reads
+are NOT complete cross-source signer/withdrawal/uncertain-fee coverage.
+[Codex's separate October 29 HEL1 receipt](https://github.com/Emaren/wolochain/pull/115#issuecomment-6508382058)
+reports **8094/8095 absent**, and notes HD Satchel migrations not qualified.
+The [B #121 exact-head source CI](https://github.com/Emaren/wolochain/actions/runs/40979957375)
+passes 19 synthetic arithmetic cases but FAILS DocsV2 review expiry; it is
+not a funded execution, bank witness or signer approval. This source review
+does not validate pending prepared fees, unmaterialized broadcasts, signed
+dual-review identity, native keyring, replay/return executor, real recovery or
+owner Keplr authorization. The financial path remains **HOLD**.
 
 **Source implementation is not production authorization. C2 custody remains
 `UNAVAILABLE`; C3 evidence remains `NONCREDITING`.** No dedicated wallet, signer
@@ -32,6 +207,32 @@ The exact private wire schemas and safe failure semantics are versioned in
 Source ABI tests fail on route or Go JSON-field drift. The
 [controlled installation and recovery procedure](war-satchel-controlled-release.md)
 keeps the dedicated signer separate from legacy services and consensus.
+
+## Independent reviewer startup composition
+
+`cmd/woloreviewerd` composes the existing read-only PG, original live checkpoint,
+signed Watcher, native bank, custody fee and complete signed reserve readers
+with the durable 8095 issuer. Its protected configuration pins exact clean Git
+source, running binary, policy, all immutable credential/CA/public-key files and
+five distinct financial roles plus the separate Watcher witness key. It rejects
+root execution, inherited PG connection variables, unpinned inputs and shared
+transport credentials. A separate signed reviewer startup permit has a maximum
+120-second window. The current command deliberately caps its canary configuration
+at 1 WOLO; that does not change the product's existing smaller-owner-limits and
+10,000-WOLO ceiling contracts.
+
+The runtime binds its authorization callback before serving. The issuer checks
+it before intent, directly before signing, before persistence and before returning
+new or historical grants. Revocation never deletes a durable PENDING/SIGNED
+record or renews its authority times. Response buffering adds a final check.
+Filesystem changes cannot be made atomic with a CPU signature instruction;
+these bounded checks do not claim such atomicity. Every actual transfer still
+requires its separately governed custody permit and native execution guard.
+
+Source tests and composition cannot enroll real operators, original Watcher
+capture servers, trust anchors, read-only PG roles or signing authorities. The
+command creates none of those inputs and opens no custody keyring. New source
+requires exact-head CI and a separately pinned artifact before installation.
 
 ## HD interface and custody boundary
 
@@ -134,6 +335,9 @@ enabled against it. HD must select the 8094 adapter in its separate release.
 | `POST /satchel/v2/one-shot` | Protocol 2 snake-case wager with required independently signed owner ledger reservation; exact schema is in the versioned OpenAPI contract. |
 | `POST /satchel/v1/one-shot` | Legacy replay compatibility; a new bearer-only wager is refused. Snake-case `request_id`, `chain_id`, `signer_role`, `from_address`, `to_address`, `amount:{denom,amount}`, `memo`; or protocol-1 camel-case `requestId`, `chainId`, `senderAddress`, `recipientAddress`, `denom`, `amountUwolo`, `memo`. |
 | `GET /satchel/v1/custody/journal` | Bounded consistent execution-history checkpoint, exact journal/policy digests and unresolved/confirmed totals; bank, credit and solvency authority always false. |
+| `POST /satchel/v1/custody/fee-checkpoint` | Read-only complete unresolved fee snapshot with at most 1,024 requested original identities, 64 KiB request and 4 MiB response; never authorizes spending. |
+| `POST /satchel/v1/custody/principal-checkpoint` | Bounded complete custody terminal history for the independent owner-partition reader; pinned peer/vault/policy provenance, no transfer or debt-discharge authority. |
+| `POST /satchel/v1/proofs/escrow-bank` | Server-selected current betting-escrow proof, authenticated independently with the protected CLI escrow role; no caller account/root or inferred free-reserve authority. |
 | `GET /satchel/v1/operations/<operation-id>` | Read an existing durable operation; never signs or resubmits. |
 | `POST /satchel/v1/reconcile` | Strict `operation_id`; observes the original signed transaction without transmitting it. |
 | `POST /v1/satchel/withdrawals` | Owner-bound withdrawal plus independent approval; a service token alone is insufficient. |
@@ -621,3 +825,68 @@ The exact Go approval bytes are supplied by exported
 `WagerReservationMessage`, not an app-invented canonicalizer. HD's existing
 1,000 WOLO combined game and 10,000 daily policy remain app authority; this
 handoff changes neither cap. No app files were read locally or modified.
+
+## C08 dedicated SSHD exact-config admission hardening — November 7, 2026 UTC
+
+The source-only Central C08 follow-up corrects the witness tunnel's SSH
+admission parser after independent negative tests exposed two ambiguities in
+the earlier merged source. It is **not** a production authorization.
+
+- A required `PasswordAuthentication no` line did not exclude a preceding
+  `PasswordAuthentication yes`, extra non-loopback `ListenAddress`, broadened
+  `AllowUsers`, `AllowTcpForwarding yes`, or `Include` in the same config.
+  Dedicated sshd configuration is now checked against an exact reviewed
+  directive allowlist, with no unknown/duplicate active directives. Approved
+  optional lines are sourced from the Intel's real rootless deny-only
+  `sshd_config`, including `AddressFamily inet`, `PermitRootLogin no`,
+  `AuthenticationMethods publickey`, and the explicit forwarding/PTY denials.
+- An authorized_keys command containing the words
+  `settlement_solo_runtime.py` and `--witness-stdin` formerly counted as a
+  forced witness protocol even when it actually executed a different command.
+  It is now parsed as one exact command+key, with no shell substitutions.
+  The only presently approved command is `/usr/bin/false`; the active witness
+  command remains deliberately **unreviewed** at the source boundary.
+  `REVIEWED_WITNESS_EXEC_COMMAND=None` means no source or changed Intel
+  configuration can accidentally activate the backend. A separately reviewed,
+  exact-byte source change is required before enabling a real witness command.
+
+Independent source tests 27/27, SSH enrollment 17/17, single-owner governance
+15/15 and hostkey rollback 17/17 all passed. A read-only execution of the
+exact revised parser against the real Intel's protected configuration returned
+`deny=true`, `protocol_forced=false`, `admitted=false` with host-key
+identity verified. No persistent LaunchAgent or dedicated SSHD was installed
+or started. HEL1 port 22995 (C08) and 22996 (C06) remained closed during the
+review. All payment permissions, independent owner nonce and C09 funded
+release remain HOLD.
+
+## C05 active-wager source identity drift observer (held source only, Nov 7, 2026)
+
+The Central C05 source-only guard `scripts/settlement_c05_active_winner_live_hold.py`
+pins two protected historical HEL1 observations from November 5 (41 active
+wagers and 25 separately observed historical winning wagers). Its built-in
+`--emit-hd-sql` prints a bounded `REPEATABLE READ READ ONLY` SQL statement
+for `aoe2hd_db`; the operator separately saves one private 0600 JSON result.
+`--classify` only reads three exactly SHA-pinned private files, with no
+database driver, network connection, signer, wallet, grant or mutation.
+
+Admission requires all 41 actual live HD stake identities and original
+principal amounts to match the historical source-bound 41-record commitment
+exactly, including wager ID, market ID, original amount in uwolo and stake
+transaction hash. A one-WOLO swap between records, changed market, duplicate
+or reused hash, omitted wager, wrong historical pin, cross-family collision
+with any of 25 historical winning wagers, and stale/future observation each
+STOP. The literal historic active tuple SHA256 is
+`fb1a6afb429f0d501377f07fe2f70434196d23668292e53de47300cd98e9dbbc`.
+The 41 actual stakes sum to 53,728 nominal WOLO, but that amount is not a
+new debt to add to the 69 unknown claim nominal amounts.
+
+Independent source-stream execution against real HEL1 PostgreSQL and
+historical protected observations on Nov 7 returned only
+`HOLD_C05_ACTIVE_SOURCE_IDENTITIES_MATCH_NO_SOLVENCY`. The root-private
+receipt `/root/aoe2war-central-c05-active-collision-hold/20261107-c05-new-guard-native-hold.json`
+is SHA256 `ae8848d33eecedb7c3d7ecc061678b8eaf53b7c41918e0fcc3b9f17f5a12caec`.
+No raw wallet, recipient or transaction hashes are printed by the guard.
+It explicitly sets independent bank proof, full solvency, payout retry, funds
+and all financial release authority to false. Exact source-match DOES NOT
+provide independently verified Comet finality, a trusted reserve balance,
+atomic HD+DE+chain snapshot, complete liability enumeration, or C05 closure.

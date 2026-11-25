@@ -8,12 +8,18 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "runtime-evidence"
 authority: "mainnet-wallet-registry-metadata"
-reviewed_at: "2026-10-10"
+reviewed_at: "2026-11-10"
 review_interval_days: 30
 sensitivity: "public"
 ---
 
 # WoloChain Mainnet Keplr And Explorer Metadata
+
+## Read-only operating review — 2026-11-10 UTC
+
+Mainnet RPC /status and REST node_info independently returned wolo-1 (HTTP 200, valid TLS). The queried native uwolo bank supply was 100000000000000 uwolo = **100,000,000 WOLO** at this observation; REST denomination metadata reported base uwolo, display wolo, symbol WOLO and exponent 6. This is the observed current native chain supply, not a promise about future multi-bridge caps or owner distributions. RPC transaction indexing was on. Public browser RPC and REST preflights returned HTTP 204 with the expected CORS origins. A separately branded explorer route and authenticated Keplr signing were not checked and cannot be accepted from this metadata review.
+
+Historical chain suggestion, fee, explorer and transaction examples below are references; only the enumerated fields received fresh live read-only evidence. No wallet, registry or Chain mutation occurred.
 
 ## Review Scope — 2026-10-10 UTC
 

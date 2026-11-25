@@ -26,11 +26,90 @@ AMOUNT = re.compile(r"(?:0|[1-9][0-9]{0,38})\Z")
 LIMIT = (1 << 128) - 1
 MAX_BYTES = 524288
 MAX_ROWS = 2000
+# Read-only C03 semantic owner-risk catalog names, as reviewed 2026-11-07.
+# Each is an INDEPENDENT C05 source-classification completeness prerequisite,
+# not a claim that every row contains an outstanding WOLO debt. Do not sum
+# config, event, history and staking snapshots without proved economic IDs.
+SEMANTIC_C05_TABLES = {
+    "hd": (
+        "bounty_events",
+        "bounty_opportunities",
+        "bounty_valuations",
+        "event_tiles",
+        "feature_requests",
+        "forge_commitments",
+        "forge_events",
+        "leagues",
+        "marketplace_inquiries",
+        "marketplace_invoices",
+        "marketplace_payments",
+        "marketplace_shops",
+        "marketplace_tax_payments",
+        "scheduled_match_funding_proofs",
+        "scheduled_matches",
+        "staking_daily_stats",
+        "staking_events",
+        "staking_events_repair_backup_20260622",
+        "staking_positions",
+        "trophies",
+        "trophy_challenges",
+        "trophy_economics_versions",
+        "trophy_events",
+        "war_graph_rulesets",
+    ),
+    "de": (
+        "event_tiles",
+        "scheduled_matches",
+        "staking_daily_stats",
+        "staking_events",
+        "staking_positions",
+        "trophies",
+        "trophy_challenges",
+        "trophy_economics_versions",
+        "trophy_events",
+    ),
+}
+# Additional Session A Nov 7 full-schema gap beyond 54 HD / 20 DE regex
+# candidates. The public table universe is currently 190 HD / 52 DE.
+# These are CLASSIFICATION scopes, not inferred debts or payer authorities.
+# 'oracle_paper_positions' uses paper marks, never a WOLO amount.
+SECONDARY_C05_SCOPE = frozenset((
+    "hd_user_gifts",
+    "de_user_gifts",
+    "hd_oracle_market_proposals",
+    "hd_championship_custody_seats",
+    "hd_championship_challenge_participants",
+    "hd_war_graph_watcher_attestations",
+    "hd_oracle_paper_positions",
+    "hd_full_public_base_table_catalog",
+    "de_full_public_base_table_catalog",
+))
 COVERAGE = frozenset({
     "hd_claims", "de_claims", "primary_settlement_journals",
     "founder_settlement_journals", "war_satchel", "mecha_auto_bets",
     "founder_rewards", "staking", "refunds", "offhost_signers",
-})
+    # Nov 7 C03 owner-scope discovery: genuine money or NFT-transfer tables
+    # omitted from the earlier 24 HD / 10 DE financial owner migration.
+    # Even empty tables need authenticated completeness in a source-sealed
+    # liability inventory. No value is automatically assigned to NFT seats,
+    # dry-run amounts, or hash-labeled paid records here.
+    "hd_bounty_payouts", "hd_championship_transfer_groups",
+    "hd_championship_transfer_seats", "hd_trophy_payout_allocations",
+    "hd_trophy_payouts", "hd_war_graph_payout_events",
+    "de_trophy_payouts",
+    # Session A's Nov 7 semantic-column inspection discovered 24 HD + 9 DE
+    # *additional* owner-writable monetary-schema relations, beyond the
+    # name-based 30 HD + 11 DE set. A finance claim cannot certify completeness
+    # while those uncategorized catalog surfaces lack source-backed coverage.
+    # These two domains are catalog/classification evidence, NOT invented debt
+    # amounts or proof all 33 records are outstanding liabilities.
+    "hd_semantic_money_column_catalog",
+    "de_semantic_money_column_catalog",
+}) | frozenset(
+    f"{db}_semantic_{table}"
+    for db,tables in SEMANTIC_C05_TABLES.items()
+    for table in tables
+) | SECONDARY_C05_SCOPE
 SOURCES = frozenset({
     "hd", "de", "primary_journal", "founder_journal", "war_satchel",
     "mecha", "founder", "staking", "refund", "external",
@@ -95,13 +174,23 @@ def pairs_no_duplicates(pairs):
     return result
 
 
-def read_input(filename: Path):
+def read_input(filename: Path, expected_sha256: str):
     fd = None
     try:
-        require(filename.is_absolute(), "ABSOLUTE_INPUT_REQUIRED")
+        require(type(expected_sha256) is str and digest(expected_sha256),
+                "EXPECTED_EVIDENCE_SHA256_REQUIRED")
+        require(filename.is_absolute() and ".." not in filename.parts
+                and not filename.is_symlink(), "ABSOLUTE_INPUT_REQUIRED")
+        parent = filename.parent
+        require(not parent.is_symlink()
+                and parent.stat().st_uid == os.geteuid()
+                and stat.S_IMODE(parent.stat().st_mode) == 0o700,
+                "PRIVATE_PARENT_OWNER_OR_MODE_INVALID")
         fd = os.open(filename, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
         before = os.fstat(fd)
         require(stat.S_ISREG(before.st_mode) and before.st_nlink == 1
+                and before.st_uid == os.geteuid()
+                and stat.S_IMODE(before.st_mode) == 0o600
                 and 1 <= before.st_size <= MAX_BYTES, "UNSAFE_EVIDENCE_FILE")
         raw = bytearray()
         while len(raw) <= MAX_BYTES:
@@ -114,9 +203,12 @@ def read_input(filename: Path):
             getattr(before, key) == getattr(after, key)
             for key in ("st_dev", "st_ino", "st_size", "st_mtime_ns", "st_ctime_ns")
         ), "EVIDENCE_CHANGED_DURING_READ")
+        actual_sha256 = hashlib.sha256(raw).hexdigest()
+        require(actual_sha256 == expected_sha256,
+                "SOURCE_EVIDENCE_SHA256_MISMATCH")
         packet = json.loads(raw.decode("utf-8"), object_pairs_hook=pairs_no_duplicates,
                             parse_constant=lambda _: require(False, "INVALID_NUMBER"))
-        return packet, hashlib.sha256(raw).hexdigest()
+        return packet, actual_sha256
     except InvalidEvidence:
         raise
     except (OSError, ValueError, UnicodeError, RecursionError) as exc:
@@ -188,6 +280,8 @@ def arithmetic(packet, input_sha256):
     debt = sum_safe(unique_debt.values())
 
     unique_effect = {}
+    effect_source_rows = {}
+    effect_origins_by_id = {}
     unknown_effects = set()
     for row in effects:
         r = exact(row, UNCERTAIN, "UNCERTAIN_EFFECT_SCHEMA_INVALID")
@@ -201,10 +295,27 @@ def arithmetic(packet, input_sha256):
         require(key not in unique_effect or unique_effect[key] == n,
                 "SAME_EFFECT_BOUND_CONFLICT")
         unique_effect[key] = n
+        # The same fingerprint appearing in two independent producer sources
+        # is not proof the sources refer to the same physical prepared send.
+        # A repeated row inside ONE source is counted once; distinct source
+        # claims remain additive until separately authenticated as identical.
+        effect_source_rows[(key, r["source"])] = n
+        effect_origins_by_id.setdefault(key, set()).add(r["source"])
         if n is None:
             unknown_effects.add(key)
-    known_exposure = sum_safe(v for v in unique_effect.values() if v is not None)
-    arithmetic_complete = not gaps and not unknown_effects and len(obligations) > 0
+    known_exposure = sum_safe(
+        v for v in effect_source_rows.values() if v is not None)
+    unverified_effect_overlaps = sum(
+        len(sources) > 1 for sources in effect_origins_by_id.values())
+    # Equal claimant-supplied hashes across HD/DE/founder/journal are not an
+    # independent proof that two sources reference the SAME physical debt.
+    # Pending a source-sealed overlap map, no positive numerical coverage margin
+    # may be inferred from counting those rows only once.
+    unverified_overlaps = sum(len(sources) > 1 for sources in origin_by_id.values())
+    arithmetic_complete = (
+        not gaps and not unknown_effects and len(obligations) > 0
+        and unverified_overlaps == 0 and unverified_effect_overlaps == 0
+    )
     # Effects are conservatively ADDITIVE to obligations even when hashes appear
     # related. An independently verified effect-to-obligation mapping is required
     # before offsetting any payout against an unpaid claim.
@@ -226,11 +337,12 @@ def arithmetic(packet, input_sha256):
         "bank_assets_claimed_uwolo": str(assets),
         "obligations_unique": len(unique_debt),
         "obligations_observed_rows": len(obligations),
-        "cross_source_obligation_identifiers": sum(
-            len(sources) > 1 for sources in origin_by_id.values()),
+        "cross_source_obligation_identifiers": unverified_overlaps,
+        "unverified_cross_source_obligation_overlaps": unverified_overlaps,
         "recorded_unpaid_requested_uwolo": str(debt),
         "unresolved_effects_unique": len(unique_effect),
         "unbounded_effects": len(unknown_effects),
+        "unverified_cross_source_uncertain_effect_overlaps": unverified_effect_overlaps,
         "bounded_effect_additional_reserve_uwolo": str(known_exposure),
         "coverage_gaps": gaps,
         "arithmetic_complete_for_claimed_scope": arithmetic_complete,
@@ -247,16 +359,20 @@ def arithmetic(packet, input_sha256):
         "accounting_note": (
             "Claimed fingerprints/digests and completeness flags are not chain,"
             " signer or custodian attestations; ambiguous physical effects"
-            " remain additive. Never promote this report to release authority."),
+            " remain additive across sources. Cross-source debt and prepared"
+            " transaction deduplication require independent identity-overlap"
+            " evidence. Never promote to release authority."),
     }
 
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--input", type=Path, required=True)
+    ap.add_argument("--expected-input-sha256", required=True,
+                    help="independently reviewed exact 0600 candidate packet hash")
     args = ap.parse_args(argv)
     try:
-        doc, sha = read_input(args.input)
+        doc, sha = read_input(args.input, args.expected_input_sha256)
         output = arithmetic(doc, sha)
     except InvalidEvidence as exc:
         print(json.dumps({"status": "STOP", "reason": str(exc),

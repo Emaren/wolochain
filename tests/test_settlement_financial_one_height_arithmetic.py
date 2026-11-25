@@ -1,6 +1,7 @@
 """Synthetic, side-effect-free one-height solvency arithmetic regression tests."""
 import copy
 import importlib.util
+import hashlib
 import json
 from pathlib import Path
 import tempfile
@@ -67,6 +68,95 @@ class OneHeightArithmeticTests(unittest.TestCase):
         with self.assertRaisesRegex(finance.InvalidEvidence, "^" + message + "$"):
             self.report()
 
+    def test_seven_additional_financial_surfaces_are_mandatory(self):
+        names = {
+            "hd_bounty_payouts", "hd_championship_transfer_groups",
+            "hd_championship_transfer_seats", "hd_trophy_payout_allocations",
+            "hd_trophy_payouts", "hd_war_graph_payout_events",
+            "de_trophy_payouts",
+        }
+        self.assertTrue(names.issubset(finance.COVERAGE))
+        self.assertEqual(len(finance.COVERAGE), 61)
+        # Legacy pre-Nov-7 "complete" ten-surface certificates cannot pass.
+        for name in sorted(names):
+            candidate = fixture()
+            candidate["scope_coverage"].pop(name)
+            with self.subTest(omitted=name):
+                with self.assertRaisesRegex(finance.InvalidEvidence, "^UNSCOPED_FINANCIAL_OWNERS$"):
+                    finance.arithmetic(candidate, SHA("f"))
+
+    def test_two_unclassified_money_column_domains_require_independent_coverage(self):
+        domains = {"hd_semantic_money_column_catalog", "de_semantic_money_column_catalog"}
+        self.assertTrue(domains.issubset(finance.COVERAGE))
+        for domain in sorted(domains):
+            packet = fixture()
+            packet["scope_coverage"].pop(domain)
+            with self.subTest(omitted=domain):
+                with self.assertRaisesRegex(finance.InvalidEvidence,"^UNSCOPED_FINANCIAL_OWNERS$"):
+                    finance.arithmetic(packet,SHA("f"))
+            packet = fixture()
+            packet["obligations"].pop(1)
+            packet["scope_coverage"][domain]["complete"] = False
+            r=finance.arithmetic(packet,SHA("f"))
+            self.assertIn(domain,r["coverage_gaps"])
+            self.assertIsNone(r["conditional_recorded_reserve_uwolo"])
+            self.assertIsNone(r["conditional_margin_uwolo"])
+            self.assertFalse(r["financial_release_authorized"])
+
+    def test_each_of_33_semantic_money_tables_requires_a_separate_classification(self):
+        self.assertEqual(len(finance.SEMANTIC_C05_TABLES["hd"]),24)
+        self.assertEqual(len(finance.SEMANTIC_C05_TABLES["de"]),9)
+        seen=set()
+        for db,tables in finance.SEMANTIC_C05_TABLES.items():
+            for table in tables:
+                scope=f"{db}_semantic_{table}"
+                self.assertIn(scope,finance.COVERAGE)
+                self.assertNotIn(scope,seen)
+                seen.add(scope)
+                packet=fixture()
+                packet["scope_coverage"].pop(scope)
+                with self.subTest(omitted=scope):
+                    with self.assertRaisesRegex(finance.InvalidEvidence,"^UNSCOPED_FINANCIAL_OWNERS$"):
+                        finance.arithmetic(packet,SHA("f"))
+                packet=fixture()
+                packet["obligations"].pop(1)
+                packet["scope_coverage"][scope]["complete"]=False
+                report=finance.arithmetic(packet,SHA("f"))
+                self.assertIn(scope,report["coverage_gaps"])
+                self.assertFalse(report["arithmetic_complete_for_claimed_scope"])
+                self.assertIsNone(report["conditional_margin_uwolo"])
+                self.assertFalse(report["financial_release_authorized"])
+        self.assertEqual(len(seen),33)
+
+    def test_secondary_gift_bond_nft_provenance_and_full_catalog_scopes(self):
+        self.assertEqual(len(finance.SECONDARY_C05_SCOPE),9)
+        for label in sorted(finance.SECONDARY_C05_SCOPE):
+            self.assertIn(label,finance.COVERAGE)
+            packet=fixture()
+            packet["scope_coverage"].pop(label)
+            with self.subTest(omitted=label):
+                with self.assertRaisesRegex(finance.InvalidEvidence,"^UNSCOPED_FINANCIAL_OWNERS$"):
+                    finance.arithmetic(packet,SHA("f"))
+            packet=fixture()
+            packet["obligations"].pop(1)
+            packet["scope_coverage"][label]["complete"]=False
+            r=finance.arithmetic(packet,SHA("f"))
+            self.assertFalse(r["arithmetic_complete_for_claimed_scope"])
+            self.assertIn(label,r["coverage_gaps"])
+            self.assertIsNone(r["conditional_margin_uwolo"])
+            self.assertFalse(r["financial_release_authorized"])
+
+    def test_new_financial_surface_incomplete_blocks_conditional_margin(self):
+        # Even an empty payout table must have independently authenticated
+        # coverage; unknown NFT liabilities cannot be silently excluded.
+        self.packet["obligations"].pop(1)
+        self.packet["scope_coverage"]["hd_championship_transfer_seats"]["complete"] = False
+        r = self.report()
+        self.assertIn("hd_championship_transfer_seats", r["coverage_gaps"])
+        self.assertFalse(r["arithmetic_complete_for_claimed_scope"])
+        self.assertIsNone(r["conditional_margin_uwolo"])
+        self.assertFalse(r["financial_release_authorized"])
+
     def test_claimed_same_height_arithmetic_never_authorizes_bank(self):
         r = self.report()
         self.assertEqual(r["bank_accounts_unique"], 2)
@@ -75,15 +165,42 @@ class OneHeightArithmeticTests(unittest.TestCase):
         self.assertEqual(r["obligations_unique"], 2)
         self.assertEqual(r["cross_source_obligation_identifiers"], 1)
         self.assertEqual(r["bounded_effect_additional_reserve_uwolo"], "100")
-        self.assertEqual(r["conditional_recorded_reserve_uwolo"], "500")
-        self.assertEqual(r["conditional_margin_uwolo"], "150")
+        self.assertEqual(r["unverified_cross_source_obligation_overlaps"], 1)
+        self.assertFalse(r["arithmetic_complete_for_claimed_scope"])
+        self.assertIsNone(r["conditional_recorded_reserve_uwolo"])
+        self.assertIsNone(r["conditional_margin_uwolo"])
         self.assertEqual(r["solvency_verdict"], "UNKNOWN_INDEPENDENT_EVIDENCE_REQUIRED")
         self.assertIsNone(r["global_liability_upper_bound_uwolo"])
         self.assertIsNone(r["bank_assets_authenticated_uwolo"])
         self.assertFalse(r["financial_release_authorized"])
         self.assertFalse(r["chain_finality_authenticated"])
 
+    def test_unambiguous_per_source_claims_have_conditional_math_only(self):
+        # The physical HD obligation is not separately reasserted by a founder
+        # source. These are still caller claims, NOT an authenticated reserve.
+        self.packet["obligations"].pop(1)
+        r = self.report()
+        self.assertEqual(r["cross_source_obligation_identifiers"], 0)
+        self.assertEqual(r["unverified_cross_source_obligation_overlaps"], 0)
+        self.assertTrue(r["arithmetic_complete_for_claimed_scope"])
+        self.assertEqual(r["conditional_recorded_reserve_uwolo"], "500")
+        self.assertEqual(r["conditional_margin_uwolo"], "150")
+        self.assertEqual(r["status"], "HOLD")
+        self.assertFalse(r["financial_release_authorized"])
+
+    def test_identical_cross_source_claims_require_independent_overlap_proof(self):
+        # HD and founder journal can each hold a distinct 300 uWOLO claim.
+        # A repeated economic_id_sha256, equal amount and complete=true
+        # alone cannot justify a positive available-reserve margin.
+        r = self.report()
+        self.assertEqual(r["cross_source_obligation_identifiers"], 1)
+        self.assertEqual(r["unverified_cross_source_obligation_overlaps"], 1)
+        self.assertIsNone(r["conditional_margin_uwolo"])
+        self.assertFalse(r["arithmetic_complete_for_claimed_scope"])
+        self.assertEqual(r["solvency_verdict"], "UNKNOWN_INDEPENDENT_EVIDENCE_REQUIRED")
+
     def test_underwater_math_is_reported_but_not_certified(self):
+        self.packet["obligations"].pop(1)
         self.packet["accounts"][0]["balance_uwolo"] = "10"
         self.packet["accounts"][1]["balance_uwolo"] = "10"
         self.packet["accounts"][2]["balance_uwolo"] = "10"
@@ -124,6 +241,58 @@ class OneHeightArithmeticTests(unittest.TestCase):
         self.packet["uncertain_effects"][-1]["upper_exposure_uwolo"] = "99"
         self.held("SAME_EFFECT_BOUND_CONFLICT")
 
+    def test_same_id_pending_gas_in_two_sources_never_becomes_free_reserve(self):
+        # Claimed HD/founder debt collision is removed so this regression
+        # isolates the independent prepared-send/fee fingerprint failure.
+        self.packet["obligations"].pop(1)
+        duplicate = copy.deepcopy(self.packet["uncertain_effects"][0])
+        duplicate["source"] = "external"
+        duplicate["source_sha256"] = SHA("9")
+        self.packet["uncertain_effects"].append(duplicate)
+        r = self.report()
+        self.assertEqual(r["unverified_cross_source_obligation_overlaps"], 0)
+        self.assertEqual(r["unverified_cross_source_uncertain_effect_overlaps"], 1)
+        self.assertEqual(r["unresolved_effects_unique"], 1)
+        # Two source-specific 100-uWOLO pending preparations can both execute.
+        # A matching claimant ID does not justify counting only one 100.
+        self.assertEqual(r["bounded_effect_additional_reserve_uwolo"], "200")
+        self.assertFalse(r["arithmetic_complete_for_claimed_scope"])
+        self.assertIsNone(r["conditional_recorded_reserve_uwolo"])
+        self.assertIsNone(r["conditional_margin_uwolo"])
+        self.assertFalse(r["financial_release_authorized"])
+
+    def test_simultaneous_pending_withdrawal_and_fee_are_additive(self):
+        self.packet["obligations"].pop(1)
+        # A distinct pending Satchel withdrawal is still an unpaid liability;
+        # prepared offhost gas is a separate unresolved physical exposure.
+        self.packet["obligations"].append({
+            "economic_id_sha256": SHA("e"), "source": "war_satchel",
+            "requested_unpaid_uwolo": "120", "source_sha256": SHA("8"),
+            "height": HEIGHT, "block_sha256": SHA("1"),
+        })
+        self.packet["uncertain_effects"].append({
+            "physical_effect_id_sha256": SHA("8"), "source": "external",
+            "upper_exposure_uwolo": "40", "source_sha256": SHA("9"),
+            "height": HEIGHT, "block_sha256": SHA("1"),
+        })
+        r = self.report()
+        self.assertEqual(r["unverified_cross_source_uncertain_effect_overlaps"], 0)
+        self.assertEqual(r["bounded_effect_additional_reserve_uwolo"], "140")
+        self.assertEqual(r["conditional_recorded_reserve_uwolo"], "660")
+        self.assertEqual(r["conditional_margin_uwolo"], "-10")
+        self.assertEqual(r["status"], "HOLD")
+        self.assertFalse(r["financial_release_authorized"])
+
+    def test_same_source_repeated_prepared_effect_is_not_double_counted(self):
+        self.packet["obligations"].pop(1)
+        self.packet["uncertain_effects"].append(
+            copy.deepcopy(self.packet["uncertain_effects"][0]))
+        r = self.report()
+        self.assertEqual(r["unverified_cross_source_uncertain_effect_overlaps"], 0)
+        self.assertEqual(r["bounded_effect_additional_reserve_uwolo"], "100")
+        self.assertEqual(r["conditional_margin_uwolo"], "150")
+        self.assertFalse(r["financial_release_authorized"])
+
     def test_forged_solvency_or_approval_fields_rejected(self):
         for name, value in (
             ("financial_release_authorized", True),
@@ -161,19 +330,103 @@ class OneHeightArithmeticTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             p = Path(d) / "candidate.json"
             p.write_text('{"a":1,"a":2}')
+            p.chmod(0o600)
+            sha = hashlib.sha256(p.read_bytes()).hexdigest()
             with self.assertRaisesRegex(finance.InvalidEvidence, "^DUPLICATE_JSON_KEY$"):
-                finance.read_input(p)
+                finance.read_input(p, sha)
             p.unlink()
             p.symlink_to("/etc/hosts")
             with self.assertRaises(finance.InvalidEvidence):
-                finance.read_input(p)
+                finance.read_input(p, sha)
+
+    def test_missing_or_substituted_sha256_refused_before_arithmetic(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / "one-height.json"
+            p.write_text(json.dumps(self.packet), encoding="utf8")
+            p.chmod(0o600)
+            good = hashlib.sha256(p.read_bytes()).hexdigest()
+            with self.assertRaisesRegex(finance.InvalidEvidence, "EXPECTED_EVIDENCE_SHA256_REQUIRED"):
+                finance.read_input(p, None)
+            with self.assertRaisesRegex(finance.InvalidEvidence, "SOURCE_EVIDENCE_SHA256_MISMATCH"):
+                finance.read_input(p, "f"*64 if good != "f"*64 else "e"*64)
+            packet, sha = finance.read_input(p, good)
+            self.assertEqual(packet["height"], HEIGHT)
+            self.assertEqual(sha, good)
+
+    def test_world_readable_or_unauthorized_file_mode_stop(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / "one-height.json"
+            p.write_text(json.dumps(self.packet), encoding="utf8")
+            good = hashlib.sha256(p.read_bytes()).hexdigest()
+            for mode in (0o644, 0o640, 0o666, 0o400):
+                with self.subTest(mode=oct(mode)):
+                    p.chmod(mode)
+                    with self.assertRaisesRegex(finance.InvalidEvidence, "UNSAFE_EVIDENCE_FILE"):
+                        finance.read_input(p, good)
+            p.chmod(0o600)
+            finance.read_input(p, good)
+
+    def test_parent_directory_must_be_private_and_owned(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            p = root / "packet.json"
+            p.write_text(json.dumps(self.packet), encoding="utf8")
+            p.chmod(0o600)
+            sha = hashlib.sha256(p.read_bytes()).hexdigest()
+            root.chmod(0o755)
+            with self.assertRaisesRegex(finance.InvalidEvidence,
+                                        "PRIVATE_PARENT_OWNER_OR_MODE_INVALID"):
+                finance.read_input(p, sha)
+            root.chmod(0o700)
+            finance.read_input(p, sha)
+
+    def test_duplicate_hardlink_rejected_even_when_0600(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d)
+            p=root/"packet.json"
+            p.write_text(json.dumps(self.packet), encoding="utf8")
+            p.chmod(0o600)
+            clone=root/"another-reference.json"
+            clone.hardlink_to(p)
+            sha=hashlib.sha256(p.read_bytes()).hexdigest()
+            with self.assertRaisesRegex(finance.InvalidEvidence,"UNSAFE_EVIDENCE_FILE"):
+                finance.read_input(p, sha)
+
+    def test_content_changed_after_reviewed_hash_is_stopped(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d)
+            p=root/"packet.json"
+            p.write_text(json.dumps(self.packet), encoding="utf8")
+            p.chmod(0o600)
+            sha=hashlib.sha256(p.read_bytes()).hexdigest()
+            p.write_text(json.dumps({"changed":True}),encoding="utf8")
+            with self.assertRaisesRegex(finance.InvalidEvidence,
+                                        "SOURCE_EVIDENCE_SHA256_MISMATCH"):
+                finance.read_input(p, sha)
+
+    def test_cli_stops_if_supplied_digest_is_not_actual_private_packet(self):
+        with tempfile.TemporaryDirectory() as d:
+            p=Path(d)/"packet.json"
+            p.write_text(json.dumps(self.packet),encoding="utf8")
+            p.chmod(0o600)
+            actual=hashlib.sha256(p.read_bytes()).hexdigest()
+            other="f"*64 if actual!="f"*64 else "e"*64
+            with patch.object(finance,"print",create=True) as printer:
+                self.assertEqual(finance.main([
+                    "--input",str(p),"--expected-input-sha256",other]),2)
+            report=json.loads(printer.call_args.args[0])
+            self.assertEqual(report["reason"],"SOURCE_EVIDENCE_SHA256_MISMATCH")
+            self.assertFalse(report["financial_release_authorized"])
 
     def test_actual_cli_has_held_exit_and_no_private_identity(self):
         with tempfile.TemporaryDirectory() as d:
             p = Path(d) / "packet.json"
             p.write_text(json.dumps(self.packet), encoding="utf8")
+            p.chmod(0o600)
+            sha = hashlib.sha256(p.read_bytes()).hexdigest()
             with patch.object(finance, "print", create=True) as printer:
-                self.assertEqual(finance.main(["--input", str(p)]), 3)
+                self.assertEqual(finance.main(["--input", str(p),
+                    "--expected-input-sha256", sha]), 3)
             result = json.loads(printer.call_args.args[0])
             self.assertFalse(result["financial_release_authorized"])
             self.assertNotIn("wallet", json.dumps(result).lower())

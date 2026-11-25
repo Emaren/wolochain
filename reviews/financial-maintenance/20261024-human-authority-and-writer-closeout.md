@@ -8,7 +8,7 @@ systems: ["wolochain","aoe2war","aoe2dewarwagers"]
 audience: ["operators","developers","ai-agents"]
 source_of_truth: "git"
 authority: "non-authorizing-financial-human-signature-review"
-reviewed_at: "2026-10-24"
+reviewed_at: "2026-11-08"
 review_interval_days: 14
 sensitivity: "internal"
 ---
@@ -16,6 +16,13 @@ sensitivity: "internal"
 # Financial-maintenance authority and writer review — 2026-10-24
 
 **Nonauthorizing review stacked on Wolo PR #96**, exact baseline `aa932a64ffcfc35e07f46516d38d2b923802c9b3`. PR96's 18-unit correction is closed; storage preparation is already complete. This branch only introduces an *offline cryptographic evidence verifier*, unit tests and this design. It does **not** alter `settlement_financial_maintenance.py`, its v1 permits, the existing 30-minute window or any production services. Existing financial checklist: five BLOCKED and solvency UNKNOWN. No human signatures, permits, payments, DB writes, service stops or real backup/restore occurred.
+
+
+### 2026-11-08 documented technical re-review — FINANCIAL HOLD, not authority
+
+This is an owner-delegated **documentation/source triage**, **not** a fifth human's approval, independent reviewer endorsement, cryptographic enrollment, financial release, or a change to the existing constitution. The October 24 five-person protocol and 18-unit list are retained as their historical *review proposal*, not certified as the complete present writer universe. Public [single-owner governance notice #184](https://github.com/Emaren/wolochain/issues/184) proposes one-human centralized governance; it is **UNRATIFIED**, with a 24-hour minimum not earlier than 2026-11-08 10:22:33 UTC. Do not silently substitute it for any binding earlier authorization requirements.
+
+Fresh independent read-only HEL1 C03 checks (2026-11-07 23:43 UTC) mapped **17 existing HD/DE PostgreSQL sessions** and identified **81 conservative owner-writable finance-review candidates plus 161 unclassified public tables**. The UID1000 → 8092/8093 deny is only partial; direct REST/RPC/CLI, off-host signer and DBA paths remain. **NO global C03 fence, C06 coordinated capture, C07 verified restore or C09 canary** was approved. The original per-phase human and nonce instructions below remain **nonexecutable proposals**. The historical source hashes, counts and budget figures below are not new live permits.
 
 ## Actual positive evidence and finite authority owners
 

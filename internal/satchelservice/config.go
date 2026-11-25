@@ -21,31 +21,38 @@ import (
 )
 
 type Config struct {
-	Version                   int                 `json:"version"`
-	Vault                     string              `json:"vault"`
-	PublicKeyHex              string              `json:"public_key_hex"`
-	BettingEscrow             string              `json:"betting_escrow"`
-	ProtectedAddresses        []string            `json:"protected_addresses"`
-	MaxAmountUWolo            uint64              `json:"max_amount_uwolo"`
-	RPC                       string              `json:"rpc"`
-	REST                      string              `json:"rest"`
-	WitnessRPC                string              `json:"witness_rpc"`
-	TrustAnchor               satchel.TrustAnchor `json:"trust_anchor"`
-	KeyringDir                string              `json:"keyring_dir"`
-	KeyName                   string              `json:"key_name"`
-	PassphraseFile            string              `json:"passphrase_file"`
-	TokenFile                 string              `json:"token_file"`
-	StatePath                 string              `json:"state_path"`
-	FeesUWolo                 string              `json:"fees_uwolo"`
-	GasLimit                  uint64              `json:"gas_limit"`
-	TimeoutBlocks             uint64              `json:"timeout_blocks"`
-	WithdrawalApprovalKeyHex  string              `json:"withdrawal_approval_key_hex"`
-	WagerApprovalKeyHex       string              `json:"wager_approval_key_hex"`
-	ActivationAuthorityKeyHex string              `json:"activation_authority_key_hex"`
-	PermitFile                string              `json:"permit_file"`
-	AccountingReviewerKeyHex  string              `json:"accounting_reviewer_key_hex,omitempty"`
-	CustodyReviewerKeyHex     string              `json:"custody_reviewer_key_hex,omitempty"`
-	ReserveReviewFile         string              `json:"reserve_review_file,omitempty"`
+	Version                      int                 `json:"version"`
+	Vault                        string              `json:"vault"`
+	PublicKeyHex                 string              `json:"public_key_hex"`
+	BettingEscrow                string              `json:"betting_escrow"`
+	ProtectedAddresses           []string            `json:"protected_addresses"`
+	MaxAmountUWolo               uint64              `json:"max_amount_uwolo"`
+	RPC                          string              `json:"rpc"`
+	REST                         string              `json:"rest"`
+	WitnessRPC                   string              `json:"witness_rpc"`
+	TrustAnchor                  satchel.TrustAnchor `json:"trust_anchor"`
+	KeyringDir                   string              `json:"keyring_dir"`
+	KeyName                      string              `json:"key_name"`
+	PassphraseFile               string              `json:"passphrase_file"`
+	TokenFile                    string              `json:"token_file"`
+	StatePath                    string              `json:"state_path"`
+	FeesUWolo                    string              `json:"fees_uwolo"`
+	GasLimit                     uint64              `json:"gas_limit"`
+	TimeoutBlocks                uint64              `json:"timeout_blocks"`
+	WithdrawalApprovalKeyHex     string              `json:"withdrawal_approval_key_hex"`
+	WagerApprovalKeyHex          string              `json:"wager_approval_key_hex"`
+	ActivationAuthorityKeyHex    string              `json:"activation_authority_key_hex"`
+	PermitFile                   string              `json:"permit_file"`
+	C08GovernanceReceiptFile     string              `json:"c08_governance_receipt_file,omitempty"`
+	C08GovernanceOwnerPublicFile string              `json:"c08_governance_owner_public_file,omitempty"`
+	C08GovernanceReceiptSHA256   string              `json:"c08_governance_receipt_sha256,omitempty"`
+	AccountingReviewerKeyHex     string              `json:"accounting_reviewer_key_hex,omitempty"`
+	CustodyReviewerKeyHex        string              `json:"custody_reviewer_key_hex,omitempty"`
+	ReserveReviewFile            string              `json:"reserve_review_file,omitempty"`
+	EscrowReturnExecutionFile    string              `json:"escrow_return_execution_file,omitempty"`
+	EscrowReturnExecutionSHA256  string              `json:"escrow_return_execution_sha256,omitempty"`
+	EscrowSignerEnrollmentFile   string              `json:"escrow_signer_enrollment_file,omitempty"`
+	EscrowSignerEnrollmentSHA256 string              `json:"escrow_signer_enrollment_sha256,omitempty"`
 }
 
 // ExecutionPermit is an independent operator's scoped authorization to execute
@@ -77,7 +84,14 @@ func PermitMessage(p ExecutionPermit) []byte {
 // No final-component or ancestor symlinks, FIFOs, shared files, remote URLs,
 // environment substitutions, or executable configuration are accepted.
 func ReadPrivateFile(path string, limit int64) ([]byte, error) {
-	if !filepath.IsAbs(path) || limit <= 0 || limit > 1<<20 {
+	return readPrivateFileBounded(path, limit, 1<<20)
+}
+
+// Keep the public key/config reader ceiling unchanged. The signed coverage
+// inventory has its own explicit two-MiB budget and the identical descriptor,
+// ownership, symlink, hardlink and before/after stability checks below.
+func readPrivateFileBounded(path string, limit, ceiling int64) ([]byte, error) {
+	if !filepath.IsAbs(path) || limit <= 0 || ceiling <= 0 || ceiling > 2<<20 || limit > ceiling {
 		return nil, errors.New("private_file_refused")
 	}
 	real, err := filepath.EvalSymlinks(path)
@@ -125,7 +139,9 @@ func LoadConfig(path string) (Config, string, error) {
 	if err = decodePrivate(b, &c); err != nil {
 		return c, "", err
 	}
-	if c.Version != 1 || !validAddress(c.Vault) || satchel.IsKnownRoleAddress(c.Vault) || !validAddress(c.BettingEscrow) || c.Vault == c.BettingEscrow || c.MaxAmountUWolo == 0 || c.MaxAmountUWolo > 50000000000 || len(c.ProtectedAddresses) == 0 || len(c.ProtectedAddresses) > 128 {
+	if c.Version != 1 || !validAddress(c.Vault) || satchel.IsKnownRoleAddress(c.Vault) ||
+		!validAddress(c.BettingEscrow) || satchel.IsKnownRoleAddress(c.BettingEscrow) || c.Vault == c.BettingEscrow ||
+		c.MaxAmountUWolo == 0 || c.MaxAmountUWolo > 50000000000 || len(c.ProtectedAddresses) == 0 || len(c.ProtectedAddresses) > 128 {
 		return c, "", errors.New("configuration_invalid")
 	}
 	public, e := hex.DecodeString(c.PublicKeyHex)
@@ -133,15 +149,15 @@ func LoadConfig(path string) (Config, string, error) {
 		return c, "", errors.New("configuration_invalid")
 	}
 	a, e := hex.DecodeString(c.ActivationAuthorityKeyHex)
-	if e != nil || len(a) != ed25519.PublicKeySize {
+	if e != nil || !ValidAuthorityPublicKey(a) {
 		return c, "", errors.New("configuration_invalid")
 	}
 	w, e := hex.DecodeString(c.WithdrawalApprovalKeyHex)
-	if e != nil || len(w) != ed25519.PublicKeySize || bytes.Equal(a, w) {
+	if e != nil || !ValidAuthorityPublicKey(w) || bytes.Equal(a, w) {
 		return c, "", errors.New("independent_approval_keys_required")
 	}
 	g, e := hex.DecodeString(c.WagerApprovalKeyHex)
-	if e != nil || len(g) != ed25519.PublicKeySize || bytes.Equal(a, g) || bytes.Equal(w, g) {
+	if e != nil || !ValidAuthorityPublicKey(g) || bytes.Equal(a, g) || bytes.Equal(w, g) {
 		return c, "", errors.New("independent_approval_keys_required")
 	}
 	for _, p := range []string{c.KeyringDir, c.PassphraseFile, c.TokenFile, c.StatePath, c.PermitFile} {
@@ -149,11 +165,22 @@ func LoadConfig(path string) (Config, string, error) {
 			return c, "", errors.New("configuration_invalid")
 		}
 	}
+	// A legacy config may be inspected, but activating real custody requires
+	// all three new governance inputs. Reject misleading partial enrollments.
+	if c.C08GovernanceReceiptFile != "" || c.C08GovernanceOwnerPublicFile != "" || c.C08GovernanceReceiptSHA256 != "" {
+		if !filepath.IsAbs(c.C08GovernanceReceiptFile) ||
+			filepath.Clean(c.C08GovernanceReceiptFile) != c.C08GovernanceReceiptFile ||
+			!filepath.IsAbs(c.C08GovernanceOwnerPublicFile) ||
+			filepath.Clean(c.C08GovernanceOwnerPublicFile) != c.C08GovernanceOwnerPublicFile ||
+			!validReserveDigest(c.C08GovernanceReceiptSHA256) {
+			return c, "", errors.New("governance_receipt_configuration_required")
+		}
+	}
 	// Old configurations remain readable but cannot qualify live custody.
 	if c.AccountingReviewerKeyHex != "" || c.CustodyReviewerKeyHex != "" || c.ReserveReviewFile != "" {
 		accounting, ae := hex.DecodeString(c.AccountingReviewerKeyHex)
 		custody, ce := hex.DecodeString(c.CustodyReviewerKeyHex)
-		if ae != nil || ce != nil || len(accounting) != ed25519.PublicKeySize || len(custody) != ed25519.PublicKeySize ||
+		if ae != nil || ce != nil || !ValidAuthorityPublicKey(accounting) || !ValidAuthorityPublicKey(custody) ||
 			!filepath.IsAbs(c.ReserveReviewFile) || filepath.Clean(c.ReserveReviewFile) != c.ReserveReviewFile {
 			return c, "", errors.New("independent_reserve_review_configuration_required")
 		}
@@ -164,6 +191,19 @@ func LoadConfig(path string) (Config, string, error) {
 					return c, "", errors.New("independent_reserve_review_configuration_required")
 				}
 			}
+		}
+	}
+	if c.EscrowReturnExecutionFile != "" || c.EscrowReturnExecutionSHA256 != "" {
+		if c.AccountingReviewerKeyHex == "" || c.CustodyReviewerKeyHex == "" ||
+			!filepath.IsAbs(c.EscrowReturnExecutionFile) || filepath.Clean(c.EscrowReturnExecutionFile) != c.EscrowReturnExecutionFile ||
+			!validReserveDigest(c.EscrowReturnExecutionSHA256) {
+			return c, "", errors.New("escrow_return_execution_configuration_required")
+		}
+	}
+	if c.EscrowSignerEnrollmentFile != "" || c.EscrowSignerEnrollmentSHA256 != "" {
+		if c.EscrowReturnExecutionFile == "" || !filepath.IsAbs(c.EscrowSignerEnrollmentFile) ||
+			filepath.Clean(c.EscrowSignerEnrollmentFile) != c.EscrowSignerEnrollmentFile || !validReserveDigest(c.EscrowSignerEnrollmentSHA256) {
+			return c, "", errors.New("escrow_signer_enrollment_required")
 		}
 	}
 	for _, address := range c.ProtectedAddresses {

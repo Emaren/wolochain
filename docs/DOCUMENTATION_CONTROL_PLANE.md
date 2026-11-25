@@ -8,7 +8,7 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "repository-documentation-index"
-reviewed_at: "2026-10-10"
+reviewed_at: "2026-11-10"
 review_interval_days: 30
 sensitivity: "internal"
 ---
@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `integration/hd-only-funded-wire-proof-20261026` at `94213e0b5ff81609062dcbfb8bba9ff5f94b1130`
+Implementation baseline: `central/c01-c05-docs-reconcile-20261109` at `7525351b1300bbb60fd6df6eee6cf0b0dca1780b`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
@@ -27,21 +27,21 @@ This page is generated from the validated front matter in this repository. Cross
 
 ## Documentation health
 
-- Authoritative repository documents: **46**
+- Authoritative repository documents: **96**
 - Path moves in this migration: **0**
 - Every listed document has an explicit owner, lifecycle, authority, and review interval.
 
 ### Types
 
 - `historical`: 14
-- `reference`: 23
-- `runbook`: 7
+- `reference`: 49
+- `runbook`: 31
 - `working`: 2
 
 ### Lifecycle
 
 - `active`: 16
-- `draft`: 16
+- `draft`: 66
 - `historical`: 14
 
 ## Documents
@@ -49,7 +49,54 @@ This page is generated from the validated front matter in this repository. Cross
 | Document | Type | Status | Authority |
 | --- | --- | --- | --- |
 | [WoloChain](../README.md) | `reference` | `active` | `chain-repository-entrypoint` |
+| [C04 — bounded original-request / chain-proof observation](../cmd/wolo-c04-verify/README.md) | `reference` | `draft` | `noncrediting-original-request-chain-evidence` |
 | [WoloChain Branch Authority](BRANCH_AUTHORITY.md) | `reference` | `active` | `git-branch-authority-contract` |
+| [C01 Immutable Source CI: Recovering Authenticated Merged Pull Request Provenance](C01_AUTHENTICATED_HISTORICAL_SOURCE_CI_PR124_MERGED.md) | `runbook` | `draft` | `c01-source-provenance-nonfunded-candidate-review-not-custody-approval` |
+| [C01/C05 integrated source and physical acceptance boundary](C01_C05_PRODUCTION_ACCEPTANCE_SOURCE_BOUNDARY_20261110.md) | `runbook` | `draft` | `nonfunded-integration-handoff-only` |
+| [C03 effective grants with paired live PostgreSQL sessions HOLD](C03_EFFECTIVE_GRANTS_PAIRED_LIVE_PG_SESSIONS_HOLD.md) | `reference` | `draft` | `source-only-read-only-c03-dual-evidence-bound-observer-never-a-finance-permit` |
+| [C03 Owner-Only Encrypted Off-Host Schema and Role Pre-Migration Rollback](C03_ENCRYPTED_PRECHANGE_SCHEMA_ROLLBACK_OFFHOST.md) | `runbook` | `draft` | `pre-migration-source-metadata-insurance-only-not-full-financial-backup-or-writer-fence` |
+| [C03 Separate 67-Unit Financial Writer Telemetry V2: Inert Stage and HOLD](C03_EXTENDED_67_UNIT_WATCHDOG_V2_STAGING_HOLD.md) | `runbook` | `draft` | `separate-telemetry-only-no-financial-containment-or-execution` |
+| [C03 Financial Writer Containment — Physical Release Acceptance Protocol](C03_FINANCIAL_WRITER_CONTAINMENT_ACCEPTANCE.md) | `reference` | `draft` | `source-only-c03-global-containment-plan-not-a-financial-permit` |
+| [C03 Financial Writer Drift Watchdog](C03_FINANCIAL_WRITER_DRIFT_WATCHDOG.md) | `reference` | `draft` | `read-only-finance-hold-monitor-not-a-fence-or-funded-permit` |
+| [C03 Intel COW Restored HD Owner Finance Denial Rehearsal](C03_INTEL_COW_RESTORED_HD_OWNER_FINANCE_DENIAL_REHEARSAL.md) | `runbook` | `draft` | `nonfunded-real-restored-hd-partial-owner-migration-not-c03-closure` |
+| [C03 Intel Real Restored DE: Preconnected Legacy Owner DML Denial Rehearsal](C03_INTEL_REAL_DE_PRECONNECTED_WRITER_OWNER_FENCE_REHEARSAL.md) | `runbook` | `draft` | `real-intel-pg16-de-restored-clone-only-not-production-writer-admission` |
+| [C03 Intel Real Restored HD: Preconnected Legacy Owner DML Denial Rehearsal](C03_INTEL_REAL_HD_PRECONNECTED_WRITER_OWNER_FENCE_REHEARSAL.md) | `runbook` | `draft` | `physical-intel-only-restored-hd-owner-rehearsal-not-production-writer-fence` |
+| [C03 Isolated PostgreSQL Table Lock Counterexample](C03_ISOLATED_TABLE_LOCK_COUNTEREXAMPLE.md) | `reference` | `draft` | `source-only-negative-lock-rehearsal-not-a-financial-fence` |
+| [C03 NOLOGIN Existing Backend Counterexample](C03_NOLOGIN_EXISTING_BACKEND_COUNTEREXAMPLE.md) | `reference` | `draft` | `source-only-isolated-nologin-counterexample-not-live-financial-fence` |
+| [C03 Real Production Schema Isolated NOLOGIN Ownership Rehearsal](C03_REAL_PRODUCTION_SCHEMA_OWNER_REHEARSAL.md) | `reference` | `draft` | `source-only-isolated-negative-proof-never-a-production-DDL-permit` |
+| [C03 root legacy settlement and RPC transport admission gap](C03_ROOT_LEGACY_RPC_REACHABILITY_HOLD.md) | `reference` | `draft` | `source-only-physical-transport-audit-no-financial-fence` |
+| [C03 Synthetic NOLOGIN Owner Partition Rehearsal](C03_SYNTHETIC_NOLOGIN_OWNER_REHEARSAL.md) | `reference` | `draft` | `source-only-nologin-permission-rehearsal-not-live-ddl-approval` |
+| [C03 TokenChain Indexer: Previously Omitted Service Discovery and Financial Writer HOLD](C03_TOKENCHAIN_INDEXER_UNSCOPED_DISCOVERY_HOLD.md) | `reference` | `draft` | `read-only-discovery-only-no-maintenance-unit-change` |
+| [C03 Topology-Only Watchdog Baseline Enrollment](C03_TOPOLOGY_ONLY_WATCHDOG_ENROLLMENT.md) | `reference` | `draft` | `topology-only-no-financial-writer-fence-or-financial-permit` |
+| [C04 Forward-Only Native Return Claim Identity and Legacy Liability Non-Interference](C04_FRESH_NATIVE_CLAIM_NONINTERFERENCE.md) | `runbook` | `draft` | `source-held-no-live-legacy-liability-release` |
+| [C04 Historical Financial Quarantine: Physical Noninterference Acceptance](C04_HISTORICAL_FINANCIAL_ENCRYPTED_QUARANTINE_PHYSICAL_ACCEPTANCE.md) | `runbook` | `draft` | `nonfunded-legacy-liability-quarantine-no-adjudication-or-waiver` |
+| [C04 indexed WOLO transfer candidate ambiguity and hashless claim finality](C04_INDEXED_WOLO_TRANSFER_CANDIDATE_AMBIGUITY_HOLD.md) | `reference` | `draft` | `source-only-c04-reconciliation-evidence-no-payment-authorization` |
+| [C05 pending bounty gift — missing reward valuation](C05_BOUNTY_GIFT_NULL_VALUATION_HOLD.md) | `reference` | `draft` | `source-only-financial-hold-not-a-funding-or-replay-permit` |
+| [C05 Exact Claim-to-Transfer Ambiguity Manifest: Private Physical HOLD](C05_CLAIM_HASH_TRANSFER_AMBIGUITY_PRIVATE_PHYSICAL_HOLD.md) | `runbook` | `draft` | `root-private-repeatable-read-historical-claim-attribution-never-payment-or-reserve-admission` |
+| [C04/C05 Read-Only HD Claim Nominal Versus Historical Escrow: Real Native Height and Economic HOLD](C05_HD_CLAIMS_VS_HISTORIC_ESCROW_NATIVE_HEIGHT_HOLD.md) | `reference` | `draft` | `physical-aggregate-reconciliation-observation-not-financial-solvency-or-release` |
+| [C05 Offhost Fixed Bank Height: Single-Validator Source-Bound Witness](C05_OFFHOST_SINGLE_VALIDATOR_BANK_HEIGHT_WITNESS_20261109.md) | `runbook` | `draft` | `offhost-single-validator-historical-commit-consistency-no-funding` |
+| [C05 pending gift nominal collisions — not proof of payment](C05_PENDING_GIFT_SAME_NOMINAL_CLAIM_COLLISION_HOLD.md) | `reference` | `draft` | `source-only-c05-historical-payment-ambiguity-no-payment-authority` |
+| [C05 Registered Wallets Native Same-Height Bank Evidence: Physical HOLD](C05_REGISTERED24_NATIVE_SAME_HEIGHT_PHYSICAL_BANK_HOLD.md) | `runbook` | `draft` | `source-bound-readonly-mainnet-bank-census-not-financial-reserve-acceptance` |
+| [C05 Semantic Money Columns and Staking Exposure — Independent HOLD](C05_SEMANTIC_MONEY_STAKING_EXPOSURE_HOLD.md) | `reference` | `draft` | `read-only-physical-observer-no-solvency-or-funding-authority` |
+| [C05 Expanded Payout and NFT-Transfer Surface Census — Read-Only HOLD](C05_SEVEN_SURFACE_READONLY_CENSUS_HOLD.md) | `reference` | `draft` | `read-only-source-and-physical-financial-hold-not-c03-maintenance-or-funded-permit` |
+| [C06 Direct HEL1 to Intel Encrypted Financial Precapture — Nonfunded Rehearsal](C06_DIRECT_INTEL_UNQUIESCED_ENCRYPTED_STREAM_PRECAPTURE.md) | `runbook` | `draft` | `read-only-unquiesced-backup-rehearsal-hold-not-c06-acceptance` |
+| [C06 HEL1 Local Age Encrypted HD Unquiesced Precapture](C06_HEL1_LOCAL_AGE_ENCRYPTED_HD_UNQUIESCED_PRECAPTURE.md) | `runbook` | `draft` | `inert-readonly-unquiesced-capture-not-c06-release` |
+| [C06 Intel offhost receiver host identity — transport-only evidence](C06_INTEL_OFFHOST_RECOVERY_TUNNEL_HOSTKEY_HOLD.md) | `reference` | `draft` | `source-only-c06-hostkey-observation-no-backup-authority` |
+| [C06 Intel Recovery Tunnel Supervisor](C06_INTEL_RECOVERY_TUNNEL_SUPERVISOR.md) | `reference` | `draft` | `source-only-intel-recovery-transport-not-a-financial-permit` |
+| [C06 Preparatory Live-MVCC Full-Data Exports: Dual-Recipient Encrypted Intel Retention](C06_UNQUIESCED_MVCC_DUAL_RECIPIENT_OFFHOST_PRECAPTURE.md) | `runbook` | `draft` | `prebackup-only-no-writer-fence-no-live-financial-release` |
+| [C07 Intel Source-Pinned Unquiesced Database Recovery HOLD](C07_INTEL_SOURCE_PINNED_UNQUIESCED_DATABASE_RECOVERY_HOLD.md) | `runbook` | `draft` | `nonfunded-real-offhost-recovery-rehearsal-not-gate-closure` |
+| [C08 Keychain Software P-256 One-Human Governance — Real Passwordless Adoption](C08_AUTOMATED_KEYCHAIN_GOVERNANCE_V3.md) | `runbook` | `draft` | `one-human-nonfunded-governance-only` |
+| [C08 Dedicated Intel Witness: Exact Forced Command and Source-Pin Admission Review](C08_DEDICATED_WITNESS_EXACT_COMMAND_SOURCE_REVIEW_HOLD.md) | `reference` | `draft` | `source-only-offhost-nonce-witness-command-review-no-live-activation-or-finance-permit` |
+| [C08 Verified Owner Device Direction: Historical Ed25519 Signature Is Not Governance Ratification](C08_EXISTING_OWNER_DEVICE_DIRECTION_PHYSICAL_HOLD.md) | `reference` | `draft` | `historical-owner-device-signature-readonly-evidence-only-no-funding` |
+| [C08 Intel Dedicated Witness SSHD: Persistent Loopback Deny-Only Launchd Service](C08_INTEL_DENY_ONLY_WITNESS_SSHD_PHYSICAL.md) | `runbook` | `draft` | `reviewed-deny-only-ssh-transport-no-nonce-or-financial-authority` |
+| [C08 Native Custody Admission — Verified Owner P-256 Receipt](C08_NATIVE_GOVERNANCE_ADMISSION.md) | `runbook` | `draft` | `zero-funded-governance-prerequisite-only` |
+| [C08 Genuine One-Owner Governance Adoption V2 — Signed Policy, Zero Financial Permission](C08_REAL_SOLO_GOVERNANCE_ADOPTION_V2.md) | `runbook` | `draft` | `versioned-nonfunded-owner-governance-adoption-only` |
+| [C08 Real Owner-Signed Ratification Intent: Public Notice and Policy-Bound HOLD](C08_SIGNED_SOLO_OWNER_RATIFICATION_INTENT_HOLD.md) | `reference` | `draft` | `source-only-cryptographic-ratification-intent-review-no-governance-adoption-or-woLo-funding` |
+| [C08 Single-Owner Public Notice — Pinned 24-Hour Financial HOLD](C08_SINGLE_OWNER_PUBLIC_NOTICE_HOLD.md) | `reference` | `draft` | `public-notice-source-integrity-only-no-financial-permit` |
+| [C09 Exact Canary Requires Genuine Keychain C08 V3 Receipt](C09_C08_KEYCHAIN_V3_RECEIPT_BINDING.md) | `runbook` | `draft` | `nonfunding-C08-policy-preflight-only` |
+| [C09 Distinct Intel FileVault P-256 Transaction Key: Physical Enrollment HOLD](C09_INTEL_FILEVAULT_TRANSACTION_KEY_ENROLLMENT_HOLD.md) | `runbook` | `draft` | `owner-only-unfunded-filevault-keychain-enrollment-not-a-payment-permit` |
+| [C09 Ratified C08 Governance Bridge — Signed Canary Ceiling and No Spending](C09_RATIFIED_C08_POLICY_BRIDGE.md) | `runbook` | `draft` | `authenticated-C08-governance-preflight-only-no-spending-permit` |
+| [Native epoch-v3 wire-v1 trust mismatch and held handoff](epoch-v3-wire-v1-hold.md) | `reference` | `draft` | `source-only-verifier-mismatch-not-financial-authority` |
 | [Exact Settlement Confirmation C4](exact-settlement-confirmation-c4.md) | `reference` | `draft` | `source-only-exact-settlement-confirmation` |
 | [Legacy Settlement Hardening and Protected Release Handoff](legacy-settlement-hardening.md) | `reference` | `draft` | `source-only-legacy-settlement-hardening` |
 | [WoloChain Mainnet Cutover Checklist](mainnet-cutover-checklist.md) | `historical` | `historical` | `mainnet-launch-cutover-evidence` |
@@ -63,8 +110,11 @@ This page is generated from the validated front matter in this repository. Cross
 | [WoloChain Mainnet Settlement Runbook](mainnet-settlement-runbook.md) | `runbook` | `active` | `mainnet-settlement-operations` |
 | [WoloChain Mainnet Template Report](mainnet-template.md) | `historical` | `historical` | `mainnet-preparation-template-evidence` |
 | [WoloChain Mainnet Wallet And Key Plan](mainnet-wallets.md) | `reference` | `active` | `mainnet-wallet-role-and-custody-map` |
+| [Held native new-epoch escrow v3 decision boundary](new-epoch-escrow-v3-held.md) | `reference` | `draft` | `source-review-only-nonactivating-escrow-candidate` |
+| [C07 real HD/DE owner and ACL recovery: physical rehearsal and reusable comparator](settlement-contracts/C07_REAL_HD_DE_ROLE_OWNER_ACL_RECOVERY_20261109.md) | `runbook` | `draft` | `non-authorizing-c07-isolated-recovery-rehearsal` |
 | [Settlement Contracts](settlement-contracts/README.md) | `reference` | `active` | `machine-readable-settlement-contract-index` |
 | [HD and DE Financial Producer Owner Review](settlement-contracts/producer-owner-correlation.md) | `runbook` | `draft` | `non-authorizing-financial-producer-evidence-correlation` |
+| [WOLO Centralized Solo-Owner Financial Governance — C08 Proposal](solo-owner-centralized-financial-governance.md) | `reference` | `draft` | `proposed-policy-no-mainnet-financial-authorization` |
 | [WoloChain Testnet Ops](testnet-ops.md) | `runbook` | `active` | `legacy-testnet-operations` |
 | [War Satchel C3 Chain Evidence](war-satchel-chain-evidence-c3.md) | `reference` | `draft` | `source-only-war-satchel-chain-evidence` |
 | [War Satchel Controlled Release Gates](war-satchel-controlled-release.md) | `reference` | `draft` | `source-integration-proof-not-production-approval` |

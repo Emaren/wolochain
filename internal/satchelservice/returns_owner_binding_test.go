@@ -22,7 +22,7 @@ func TestReturnOwnerlessConfirmedFundingCannotBeAssigned(t *testing.T) {
 	}); err != nil {
 		t.Fatal(err)
 	}
-	a := testReturnApproval(t, request.OperationID, "101")
+	a := testReturnApproval(t, request.OperationID, "900000000101")
 	// Even an authentic new reviewer signature cannot retroactively establish
 	// the owner of the already confirmed, ownerless custody debit.
 	testSignAllocation(a.Allocation, p)
@@ -58,7 +58,7 @@ func TestReturnOwnerUIDMatchesExistingProofContract(t *testing.T) {
 	if _, err := e.Reconcile(t.Context(), r.OperationID); err != nil {
 		t.Fatal(err)
 	}
-	a := testReturnApproval(t, r.OperationID, "101")
+	a := testReturnApproval(t, r.OperationID, "900000000101")
 	a.OwnerID = r.OwnerID
 	a.Allocation.OwnerID = r.OwnerID
 	a.Allocation.FundingTxHash = engineTestSigned(r).Hash
@@ -79,7 +79,7 @@ func TestReturnOwnerUIDMatchesExistingProofContract(t *testing.T) {
 
 func TestReturnAllZeroPhysicalIdentityCannotBecomeReceipt(t *testing.T) {
 	e, _, _, _, request := testOwnedReturnEngine(t)
-	a := testOwnedReturnApproval(t, request.OperationID, "101")
+	a := testOwnedReturnApproval(t, request.OperationID, "900000000101")
 	if _, err := e.PrepareReturnRun(t.Context(), a); err != nil {
 		t.Fatal(err)
 	}
