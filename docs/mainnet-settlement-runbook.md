@@ -8,12 +8,16 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "runtime-evidence"
 authority: "mainnet-settlement-operations"
-reviewed_at: "2026-11-10"
+reviewed_at: "2026-11-25"
 review_interval_days: 14
 sensitivity: "restricted"
 ---
 
 # WoloChain Mainnet Settlement Runbook
+
+## 2026-11-25 UTC — held source applicability review (NONAUTHORIZING)
+
+The exact retained integration tree and restored source-pair CI in PR #110 are source-only. The verifier deliberately exits 3/HOLD even when all five source surfaces match. The dated [financial authority ledger #239](https://github.com/Emaren/wolochain/issues/239) and [owner directive](https://github.com/Emaren/wolochain/issues/239#issuecomment-7134068168) preserve C04/C08 CLOSED and C01/C02/C03/C05/C06/C07/C09 OPEN, funding DENIED and custody inactive. No live isolation or historical physical claim was independently remeasured. C06 capture requires authentic native admission and exclusive capacity; C07 and C03 remain separate. Historical commands and dates below are evidence, not current instructions or permits. This limited applicability review does not qualify individual archived commands, refresh evidence timestamps or grant approval.
 
 ## CURRENT OPERATING PRECEDENCE — 2026-11-10 UTC (FINANCIALLY HELD)
 

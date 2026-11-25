@@ -1427,9 +1427,9 @@
       "owner": "wolochain-ops",
       "path": "docs/mainnet-settlement-runbook.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-11-10",
+      "reviewed_at": "2026-11-25",
       "sensitivity": "restricted",
-      "sha256": "2e2a716367709151723f08c221f38bc5fa486e42ad3388a1984bcc175f125a95",
+      "sha256": "5a231af48b0accabaa7df227895ee520eb6d6aa9a6f91cb687b4c59fa8c792ce",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -2252,7 +2252,7 @@
       "type": "runbook"
     }
   ],
-  "generated_at": "2026-11-25T00:14:21Z",
+  "generated_at": "2026-11-25T00:15:34Z",
   "implementation_baseline": {
     "branch": "integration/hd-only-funded-wire-proof-20261026",
     "commit": "0092b782c8756f1bf3635d779c2d46687342761e"
