@@ -3,7 +3,9 @@
 
 Run after the existing CI checks. This receipt records bytes and workflow
 references; it does not authenticate test results, previous production state,
-an owner signature, an inverse, or a financial release.
+an owner signature, an inverse, or a financial release. Run only in the
+exclusive disposable CI checkout: these bounded before/after observations
+are not proof against a concurrent adversarial process after observation.
 """
 from __future__ import annotations
 
@@ -50,9 +52,7 @@ def candidate(root: Path, expected: str, artifact: str) -> dict:
         raise Hold("FULL_SOURCE_SHA_REQUIRED")
     if git(root, "rev-parse", "HEAD") != expected:
         raise Hold("SOURCE_SHA_MISMATCH")
-    status = git(root, "status", "--porcelain=v1", "--untracked-files=normal")
-    # The preserved hidden worktree directory is outside Go package discovery.
-    if any(line != "?? .worktrees/" for line in status.splitlines()):
+    if git(root, "status", "--porcelain=v1", "--untracked-files=normal"):
         raise Hold("SOURCE_NOT_CLEAN")
     p = local_path(root, artifact)
     fd = os.open(p, os.O_RDONLY | os.O_NOFOLLOW)
@@ -71,8 +71,18 @@ def candidate(root: Path, expected: str, artifact: str) -> dict:
     fields = ("st_ino", "st_dev", "st_size", "st_mtime_ns", "st_ctime_ns")
     if any(getattr(before, x) != getattr(after, x) for x in fields):
         raise Hold("ARTIFACT_CHANGED_DURING_READ")
+    # A stable open descriptor is not enough: a parent directory can be
+    # renamed, leaving the original inode readable at a different pathname.
+    # Recheck the intended artifact path before issuing its receipt.
+    current = local_path(root, artifact).stat(follow_symlinks=False)
+    if not stat.S_ISREG(current.st_mode) or any(
+        getattr(current, field) != getattr(after, field) for field in fields
+    ):
+        raise Hold("ARTIFACT_PATH_REPLACED")
     if git(root, "rev-parse", "HEAD") != expected:
         raise Hold("SOURCE_CHANGED_DURING_READ")
+    if git(root, "status", "--porcelain=v1", "--untracked-files=normal"):
+        raise Hold("SOURCE_NOT_CLEAN")
     run_id = os.environ.get("GITHUB_RUN_ID", "")
     repository = os.environ.get("GITHUB_REPOSITORY", "")
     run_url = None

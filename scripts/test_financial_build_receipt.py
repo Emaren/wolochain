@@ -5,6 +5,8 @@ from pathlib import Path
 import subprocess
 import tempfile
 import unittest
+from unittest.mock import patch
+import os
 
 SCRIPT = Path(__file__).with_name("financial-build-receipt.py")
 spec = importlib.util.spec_from_file_location("receipt", SCRIPT)
@@ -60,6 +62,45 @@ class ReceiptTests(unittest.TestCase):
             receipt.candidate(self.root, self.sha, "build/wolochaind")
         with self.assertRaisesRegex(receipt.Hold, "UNSAFE_ARTIFACT_PATH"):
             receipt.candidate(self.root, self.sha, "../source.go")
+
+    def test_source_mutation_during_hash_is_denied(self):
+        real_sha256 = receipt.hashlib.sha256
+        def mutate(data):
+            (self.root / "source.go").write_text("changed during hash")
+            return real_sha256(data)
+        with patch.object(receipt.hashlib, "sha256", side_effect=mutate):
+            with self.assertRaisesRegex(receipt.Hold, "SOURCE_NOT_CLEAN"):
+                receipt.candidate(self.root, self.sha, "build/wolochaind")
+
+    def test_artifact_path_replaced_during_hash_is_denied(self):
+        real_sha256 = receipt.hashlib.sha256
+        def replace(data):
+            alternate = self.root / "build/replacement"
+            alternate.write_bytes(self.artifact.read_bytes() + b"replacement")
+            os.replace(alternate, self.artifact)
+            return real_sha256(data)
+        with patch.object(receipt.hashlib, "sha256", side_effect=replace):
+            with self.assertRaisesRegex(receipt.Hold, "ARTIFACT_(PATH_REPLACED|CHANGED_DURING_READ)"):
+                receipt.candidate(self.root, self.sha, "build/wolochaind")
+
+    def test_parent_directory_replaced_during_hash_is_denied(self):
+        real_sha256 = receipt.hashlib.sha256
+        def replace(data):
+            contents = self.artifact.read_bytes()
+            (self.root / "build").rename(self.root / "old-build")
+            (self.root / "build").mkdir()
+            self.artifact.write_bytes(contents + b"replacement")
+            return real_sha256(data)
+        (self.root / ".git/info/exclude").write_text("old-build/\n")
+        with patch.object(receipt.hashlib, "sha256", side_effect=replace):
+            with self.assertRaisesRegex(receipt.Hold, "ARTIFACT_PATH_REPLACED"):
+                receipt.candidate(self.root, self.sha, "build/wolochaind")
+
+    def test_hidden_untracked_source_is_denied(self):
+        (self.root / ".worktrees").mkdir()
+        (self.root / ".worktrees/extra.go").write_text("package main")
+        with self.assertRaisesRegex(receipt.Hold, "SOURCE_NOT_CLEAN"):
+            receipt.candidate(self.root, self.sha, "build/wolochaind")
 
     def test_nonbinary_and_wrong_architecture_are_denied(self):
         self.artifact.write_bytes(b"not an executable")
