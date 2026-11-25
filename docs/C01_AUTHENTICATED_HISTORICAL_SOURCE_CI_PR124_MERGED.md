@@ -8,7 +8,7 @@ systems: ["wolochain"]
 audience: ["operators", "developers", "financial-reviewers", "ai-agents"]
 source_of_truth: "git"
 authority: "c01-source-provenance-nonfunded-candidate-review-not-custody-approval"
-reviewed_at: "2026-11-08"
+reviewed_at: "2026-11-19"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -57,3 +57,11 @@ After source-head GitHub CI passes and the held branch is merged, re-dispatch th
 Live HEL1 still has root-owned but **empty** `/etc/wolo-financial-c01` and inactive `wolo-satchel-c01.service`/`wolo-reviewer-c01.service`; neither missing `custody.json` nor `reviewer.json` can be substituted by the owner-printed historical CI. Exact independent custody/reviewer keys and reserve approval, C03 live writer containment, C04 chain finality, C05 same-height solvency, C06+C07 backup/recovery, current C08 ratification, and separate C09 amount/recipient/nonce permit remain mandatory.
 
 **No private keys, customer WOLO, bank, database permissions, systemd services or production financial funds changed**. This fixes only the real historical source CI provenance-bound candidate blocker.
+
+## November 19, 2026 — limited authority and dated evidence review
+
+An AI source examiner acting through the sole owner's existing connected source workspace checked this document's 45 original body lines for repository-source links, gate-authorization claims, older governance conditions and current-versus-historical language; 1 referenced local source paths were resolved. This is a **scope and safety review**, not an independent human signature or a fresh validation of each historical physical claim. Original observations remain dated and unmodified.
+
+**Topic-specific reconciliation (custody):** C01 is OPEN. Isolated zero-funds tests, source approval and old service units do not establish currently permitted custody or reviewer activation.
+
+**Current controlling decision:** WoloChain issue #239 and reviewed code head `70a95e8f9cb0facbec314063e9deafe7e15aa550`. C04 and C08 CLOSED; C01/C02/C03/C05/C06/C07/C09 OPEN; funding DENIED. The original test/source facts remain evidence only and may not authorize live SQL, HBA, custody, funds, backups or a canary. Live acceptance requires exact source, legitimate protected owner authority and independent physical readback.

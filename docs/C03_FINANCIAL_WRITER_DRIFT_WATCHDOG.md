@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war"]
 audience: ["developers", "operators", "ai-agents"]
 source_of_truth: "git"
 authority: "read-only-finance-hold-monitor-not-a-fence-or-funded-permit"
-reviewed_at: "2026-11-06"
+reviewed_at: "2026-11-19"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -68,3 +68,13 @@ The failed service journal and protected staging have been retained as counterev
 The service uses a strict read-only filesystem sandbox, root-only receipt write allowance, AF_UNIX only, `NoNewPrivileges`, no home access and no TCP egress. It never executes a funded transaction, starts 8094/8095, stops 8092/8093, changes the wolo-1 validator, or modifies the live website.
 
 **C03, C06 and C07 physical financial gates remain HARD HOLD until the separately established producer fence and exact coordinated encrypted backup/restore proofs exist.**
+
+## November 19, 2026 — limited authority and dated evidence review
+
+An AI source examiner acting through the sole owner's existing connected source workspace checked this document's 56 original body lines for repository-source links, gate-authorization claims, older governance conditions and current-versus-historical language; 1 referenced local source paths were resolved. This is a **scope and safety review**, not an independent human signature or a fresh validation of each historical physical claim. Original observations remain dated and unmodified.
+
+**Topic-specific reconciliation (financial writer exclusion):** C03 is OPEN. HD/DE original owner roles retain financial write capabilities. Restricted social V2 and Library filtered views are separate additive nonfinancial application contracts, not a global writer fence.
+
+**Current controlling decision:** WoloChain issue #239 and reviewed code head `70a95e8f9cb0facbec314063e9deafe7e15aa550`. C04 and C08 CLOSED; C01/C02/C03/C05/C06/C07/C09 OPEN; funding DENIED. The original test/source facts remain evidence only and may not authorize live SQL, HBA, custody, funds, backups or a canary. Live acceptance requires exact source, legitimate protected owner authority and independent physical readback.
+
+**References not resolved in this WoloChain checkout:** `deploy/c03-observer-systemd/wolo-c03-observer`. They are not falsely asserted present; they may be other-repository or historical identifiers.

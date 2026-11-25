@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2hdbets", "aoe2dewarwagers"]
 audience: ["operators", "developers", "financial-reviewers", "ai-agents"]
 source_of_truth: "git"
 authority: "prebackup-only-no-writer-fence-no-live-financial-release"
-reviewed_at: "2026-11-08"
+reviewed_at: "2026-11-19"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -68,3 +68,11 @@ The much larger HD export must be assessed separately from its own fresh owner-p
 The dedicated hermetic test suite covers exact Pg16 low-priority allowlisted commands, no arbitrary SQL, safe dual-key/host fingerprint checks, bounded private-file/age-only behavior, Python3.8 Intel readback compatibility, **real receiver code executed on synthetic encrypted bytes**, independent readback, hostile packet SHA mismatch with partial-file cleanup, replay rejection with original file intact, nonallowlisted DB refusal and 0600 owner receipt idempotence. No confidential production data is ever used inside CI tests.
 
 **Formal C01–C09 still HARD HOLD.** This changes only the available *preparatory* off-host full-data evidence. A qualifying C06 still demands real C03 writer fences, same-window exact B-safe rollback, externally anchored immutable WAL/journals, source/current-owner signed backup permit, authenticated same-state capture, decryption and a physical isolated HD+DE restore with no counter reset or WOLO movement. Do not mistake this standby ciphertext for a funded recovery release.
+
+## November 19, 2026 — limited authority and dated evidence review
+
+An AI source examiner acting through the sole owner's existing connected source workspace checked this document's 56 original body lines for repository-source links, gate-authorization claims, older governance conditions and current-versus-historical language; 1 referenced local source paths were resolved. This is a **scope and safety review**, not an independent human signature or a fresh validation of each historical physical claim. Original observations remain dated and unmodified.
+
+**Topic-specific reconciliation (encrypted backup):** C06 is OPEN. Synthetic/partial/unquiesced captures do not establish a synchronized accepted encrypted off-host financial backup.
+
+**Current controlling decision:** WoloChain issue #239 and reviewed code head `70a95e8f9cb0facbec314063e9deafe7e15aa550`. C04 and C08 CLOSED; C01/C02/C03/C05/C06/C07/C09 OPEN; funding DENIED. The original test/source facts remain evidence only and may not authorize live SQL, HBA, custody, funds, backups or a canary. Live acceptance requires exact source, legitimate protected owner authority and independent physical readback.
