@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `we1/chat-social-lifecycle-repair-central-20261120` at `f027effedb5d60cf3e67c6489ca942e322dc4714`
+Implementation baseline: `we1/clan-image-member-only-20261125` at `6e673f13ab64ae8a8ca3d496c82dff536f606d3a`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
@@ -27,22 +27,22 @@ This page is generated from the validated front matter in this repository. Cross
 
 ## Documentation health
 
-- Authoritative repository documents: **99**
+- Authoritative repository documents: **100**
 - Path moves in this migration: **0**
 - Every listed document has an explicit owner, lifecycle, authority, and review interval.
 
 ### Types
 
-- `historical`: 14
+- `historical`: 18
 - `reference`: 49
-- `runbook`: 31
-- `working`: 5
+- `runbook`: 27
+- `working`: 6
 
 ### Lifecycle
 
 - `active`: 16
-- `draft`: 69
-- `historical`: 14
+- `draft`: 66
+- `historical`: 18
 
 ## Documents
 
@@ -97,6 +97,7 @@ This page is generated from the validated front matter in this repository. Cross
 | [C09 Exact Canary Requires Genuine Keychain C08 V3 Receipt](C09_C08_KEYCHAIN_V3_RECEIPT_BINDING.md) | `runbook` | `draft` | `nonfunding-C08-policy-preflight-only` |
 | [C09 Distinct Intel FileVault P-256 Transaction Key: Physical Enrollment HOLD](C09_INTEL_FILEVAULT_TRANSACTION_KEY_ENROLLMENT_HOLD.md) | `runbook` | `draft` | `owner-only-unfunded-filevault-keychain-enrollment-not-a-payment-permit` |
 | [C09 Ratified C08 Governance Bridge — Signed Canary Ceiling and No Spending](C09_RATIFIED_C08_POLICY_BRIDGE.md) | `runbook` | `draft` | `authenticated-C08-governance-preflight-only-no-spending-permit` |
+| [WE1 Clan image member-only admission — source HOLD](WE1_CLAN_IMAGE_MEMBER_ONLY_ADMISSION_20261125.md) | `working` | `draft` | `source-only-clan-image-contract-not-production-admission` |
 | [WE1 solo-owner financial engineering — source review vs physical authority](WE1_SOLO_OWNER_FINANCIAL_TECHNICAL_REVIEW_POLICY_20261119.md) | `working` | `draft` | `single-human-source-review-policy-no-production-permit` |
 | [WE1 Source Authority and Dated Evidence Review — November 19, 2026](WE1_SOURCE_AUTHORITY_DATED_EVIDENCE_REVIEW_20261119.md) | `working` | `draft` | `AI-machine-assisted-review-nonfinancial-nonfunding` |
 | [Native epoch-v3 wire-v1 trust mismatch and held handoff](epoch-v3-wire-v1-hold.md) | `reference` | `draft` | `source-only-verifier-mismatch-not-financial-authority` |
@@ -142,10 +143,10 @@ This page is generated from the validated front matter in this repository. Cross
 | [Mainnet Genesis Prep](../mainnet-prep/genesis/README.md) | `historical` | `historical` | `prelaunch-genesis-scaffold` |
 | [WoloChain Mainnet Validator Gentx Checklist](../mainnet-prep/genesis/VALIDATOR_GENTX_CHECKLIST.md) | `historical` | `historical` | `prelaunch-validator-gentx-evidence` |
 | [WoloChain Mainnet Nginx Notes](../mainnet-prep/nginx/README.md) | `reference` | `active` | `mainnet-nginx-routing-reference` |
-| [Financial-maintenance authority and writer review — 2026-10-24](../reviews/financial-maintenance/20261024-human-authority-and-writer-closeout.md) | `runbook` | `draft` | `non-authorizing-financial-human-signature-review` |
-| [Production P1 source integrity, writer evidence, five-person authority and bounded recovery proposal — 2026-10-24](../reviews/financial-maintenance/20261024-p1-writer-evidence-and-budget-proposal.md) | `runbook` | `draft` | `non-authorizing-financial-human-signature-review` |
-| [Financial maintenance phase integration operator runbook — 2026-10-24](../reviews/financial-maintenance/20261024-phase-integration-operator-runbook.md) | `runbook` | `draft` | `non-authorizing-financial-human-signature-review` |
-| [Financial controller source integrity and five-human enrollment — 2026-10-24](../reviews/financial-maintenance/20261024-source-integrity-enrollment-and-restore-qualification.md) | `runbook` | `draft` | `non-authorizing-financial-human-signature-review` |
+| [Financial-maintenance authority and writer review — 2026-10-24](../reviews/financial-maintenance/20261024-human-authority-and-writer-closeout.md) | `historical` | `historical` | `non-authorizing-financial-human-signature-review` |
+| [Production P1 source integrity, writer evidence, five-person authority and bounded recovery proposal — 2026-10-24](../reviews/financial-maintenance/20261024-p1-writer-evidence-and-budget-proposal.md) | `historical` | `historical` | `non-authorizing-financial-human-signature-review` |
+| [Financial maintenance phase integration operator runbook — 2026-10-24](../reviews/financial-maintenance/20261024-phase-integration-operator-runbook.md) | `historical` | `historical` | `non-authorizing-financial-human-signature-review` |
+| [Financial controller source integrity and five-human enrollment — 2026-10-24](../reviews/financial-maintenance/20261024-source-integrity-enrollment-and-restore-qualification.md) | `historical` | `historical` | `non-authorizing-financial-human-signature-review` |
 
 ## Canonical commands
 

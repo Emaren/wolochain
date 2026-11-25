@@ -8,10 +8,15 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "chain-repository-entrypoint"
-reviewed_at: "2026-11-06"
+reviewed_at: "2026-11-25"
 review_interval_days: 14
 sensitivity: "public"
 ---
+
+
+## November 25, 2026 — bounded current authority and evidence precedence
+
+Current authority is issue #239 and Central #46 (PR #262 comment 7162906079), not the November 6 active-legacy snapshot or blanket nine-gate HOLD. C04/C08 CLOSED; seven remaining gates OPEN; funding DENIED, custody inactive. HEL1 12:51:06Z observed 3030/3032/3033 and PostgreSQL 5432 loopback, no 8092–8095 listeners. Canonical main 9eb8eeb8be0baf4ffffc5db1555b2448e6cf6840 is not this held branch or deployed website. No new chain identity, validator, supply, binary or financial admission verified.
 
 # WoloChain
 

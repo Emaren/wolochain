@@ -8,10 +8,15 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "runtime-evidence"
 authority: "mainnet-service-and-port-contract"
-reviewed_at: "2026-11-06"
+reviewed_at: "2026-11-25"
 review_interval_days: 14
 sensitivity: "internal"
 ---
+
+
+## November 25, 2026 — bounded current authority and evidence precedence
+
+HEL1 read-only socket observation 2026-11-25 12:51:06Z: 3030/3032/3033, 5432 loopback (IPv4/IPv6), no 8092–8095 TCP listeners; social writer active. This supersedes earlier live 8092/8093 observations. No service or firewall change. Other service identities, validator and protected configurations not freshly attested by this probe. Preserve the protected topology.
 
 # WoloChain Mainnet Services And Ports
 

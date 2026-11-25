@@ -8,10 +8,15 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "source-integration-proof-not-production-approval"
-reviewed_at: "2026-11-05"
+reviewed_at: "2026-11-25"
 review_interval_days: 14
 sensitivity: "restricted"
 ---
+
+
+## November 25, 2026 — bounded current authority and evidence precedence
+
+Current Central #46 / issue #239: C04/C08 CLOSED, seven OPEN; no funding, custody inactive. HEL1 12:51:06Z no 8092–8095 listeners. The Nov5 live settlement observation is historical. The separate #264 Clan media source delta is nonfinancial and does not alter Satchel source contracts. No new Satchel runtime, admission, proof of reserves or financial migration; this is a bounded precedence review.
 
 ## November 5, 2026 — bounded documentation review
 
