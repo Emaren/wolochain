@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `integration/hd-only-funded-wire-proof-20261026` at `deefe7af57ad12652d66094cf79e6f0544d173c9`
+Implementation baseline: `fix/20261020-custody-artifact-pin-recovered-lifecycle-held` at `6eca3d750795c0e0fd5b4b8bc99398cbdec1859d`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 

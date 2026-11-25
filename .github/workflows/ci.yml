@@ -147,6 +147,9 @@ jobs:
       - name: Source-bound documentation
         run: python3 scripts/docs_v2_check.py
 
+      - name: Recovered custody artifact lineage (NONAUTHORIZING)
+        run: PYTHONPATH=tests python3 -B -m unittest -v test_settlement_artifact_profiles.BackendArtifactSourceContractTests.test_recovered_custody_source_lineage_preserves_authenticated_surfaces test_settlement_artifact_profiles.BackendArtifactSourceContractTests.test_runtime_workflow_has_new_pin_and_preserves_frozen_backend_profile
+
       - name: Set up Go
         uses: actions/setup-go@v5
         with:

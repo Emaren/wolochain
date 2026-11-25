@@ -93,6 +93,47 @@ class BackendArtifactSourceContractTests(unittest.TestCase):
         self.assertEqual(artifact.profile_policy("composed-satcheld")["source"],
                          "155fcf67fb2127a2227de5ea785e51bdbb0155c0")
 
+    def test_recovered_custody_source_lineage_preserves_authenticated_surfaces(self):
+        # PR #74 recovered original bank/lifecycle/Watcher source. Do not
+        # restore its historical artifact pin or infer runtime authority.
+        recovered = "d2b442b0de19837b0001a1137cb00c044d47bd67"
+        spec = importlib.util.spec_from_file_location(
+            "recovered_custody_lineage", ROOT / "scripts" / "settlement-artifact.py")
+        artifact = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(artifact)
+        paths = (
+            "cmd/wolosatcheld/bank_proof.go",
+            "internal/satchel/bank_proof.go",
+            "internal/satchel/isolated_lifecycle_test.go",
+            "internal/satchelservice/reviewer_original_live_source.go",
+            "internal/satchelservice/reviewer_live_witness_owner_game.go",
+        )
+        for profile, pin in (
+            ("custody-backend", REVIEWED_BACKEND_SOURCE),
+            ("custody-runtime", REVIEWED_RUNTIME_SOURCE),
+            ("integrated-custody-runtime", REVIEWED_INTEGRATED_SOURCE),
+        ):
+            with self.subTest(profile=profile):
+                self.assertEqual(artifact.profile_policy(profile)["source"], pin)
+                self.assertEqual(subprocess.check_output(
+                    ["git", "-C", str(ROOT), "rev-parse", pin + "^{commit}"],
+                    text=True, timeout=10).strip(), pin)
+                subprocess.run(["git", "-C", str(ROOT), "merge-base",
+                                "--is-ancestor", recovered, pin], check=True, timeout=10)
+                for path in paths:
+                    subprocess.run(["git", "-C", str(ROOT), "cat-file", "-e",
+                                    pin + ":" + path], check=True, timeout=10)
+        workflow = (ROOT / artifact.BACKEND_WORKFLOW_PATH).read_text()
+        self.assertIn("path: implementation", workflow)
+        self.assertIn('test "$(git rev-parse HEAD)" = "$EXPECTED_SOURCE"', workflow)
+        self.assertIn("NO DEPLOY", workflow)
+        self.assertIn("UNDEPLOYED", workflow)
+        self.assertNotRegex(workflow, r"(?m)^\s*(?:deploy|production|mainnet_activation):")
+        policy_text = (ROOT / "scripts/settlement-artifact.py").read_text()
+        for flag in ("production_authorized", "satchel_activation_authorized",
+                     "financial_readiness_attested"):
+            self.assertIn(f'"{flag}": False', policy_text)
+
     def test_backend_artifact_trigger_includes_current_held_base(self):
         workflow = (ROOT / ".github/workflows/custody-backend-satcheld-exact-artifact.yml").read_text()
         branches = re.findall(r"^\s+branches: \[([^\]]+)\]$", workflow, re.MULTILINE)
