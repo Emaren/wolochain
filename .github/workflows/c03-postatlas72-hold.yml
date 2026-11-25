@@ -1,0 +1,24 @@
+name: C03 post-Atlas exact-five source HOLD
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/settlement_c03_postatlas72_reconcile_hold.py'
+      - 'tests/test_settlement_c03_postatlas72_reconcile_hold.py'
+      - 'tests/fixtures/c03_postatlas72_unit_names_20261124.json'
+      - '.github/workflows/c03-postatlas72-hold.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  nonfinancial-observer-rebaseline:
+    name: Exact-five 62/72 source-and-negative tests (funding denied)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Strict read-only five-unit source and old observer regressions
+        run: python3 -B -m unittest -q tests.test_settlement_c03_postatlas72_reconcile_hold tests.test_settlement_c03_observer_watchdog_v2 tests.test_settlement_c03_watchdog_v2_cutover_hold

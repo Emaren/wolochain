@@ -245,6 +245,9 @@ jobs:
       - name: C03 v2 source-bound systemd observer switch and rollback fixtures
         run: python3 -B -m unittest discover -s tests -p 'test_settlement_c03_watchdog_v2_cutover_hold.py' -v
 
+      - name: C03 post-Atlas exact-five unit SHA rebaseline stays FINANCIAL HOLD
+        run: python3 -B -m unittest discover -s tests -p 'test_settlement_c03_postatlas72_reconcile_hold.py' -v
+
       - name: C08 dedicated Intel deny-only SSHD launchd reversible contracts
         run: python3 -B -m unittest discover -s tests -p 'test_settlement_c08_intel_deny_only_sshd_launchd.py' -v
 
