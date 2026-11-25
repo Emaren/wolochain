@@ -1,0 +1,26 @@
+{
+  "status": "SOURCE_ONLY_NOT_ADMITTED",
+  "base": "1d7339d73bf0828a5db644421e65ec4fb9bbb3ec",
+  "db": "aoe2hd_db",
+  "scope": "member-only single local PNG/JPEG/WebP, image-only empty body; no captions, remote URLs, audio/video, multiple images, admin override or wider audiences",
+  "rpc": {
+    "post": "POST /v1/clan/image",
+    "read": "POST /v1/clan/image-read",
+    "publicPost": "POST /api/social/clan-image",
+    "publicRead": "new exact authenticated route; never fall back to legacy reader for file:v1:clan references"
+  },
+  "writer": "existing signed-session sidecar derives verified UID; no browser actor assertions; private storage root distinct from direct media; safe nofollow file lifecycle and uncertain-commit reconciliation; validate actual image bytes and digest; private no-store read; never return storageRef to browser",
+  "database": {
+    "newSchema": "aoe2war_clan_image_hd_v1",
+    "newExecutor": "aoe2war_clan_image_exec_v1",
+    "existingSocialV2": "unchanged",
+    "inverse": "unused only; no CASCADE"
+  },
+  "required": [
+    "exact current HD/DE catalog and role/ACL witness",
+    "real independent PG16 fixture including concurrent membership change, replay and cross-clan denial",
+    "actual owner-signed narrow admission",
+    "WE3 static ingress+read handling and WE2 exact guard/storage",
+    "real authenticated persistence/reload and nonmember denial"
+  ]
+}

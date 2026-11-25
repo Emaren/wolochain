@@ -1,17 +1,22 @@
 ---
 id: "aoe2war.wolochain.production-p1-and-authority-gates-20261024"
 title: "Production P1 source integrity, writer evidence, five-person authority and bounded recovery proposal — 2026-10-24"
-type: "runbook"
-status: "draft"
+type: "historical"
+status: "historical"
 owner: "wolochain-ops"
 systems: ["wolochain","aoe2war","aoe2dewarwagers"]
 audience: ["operators","developers","ai-agents"]
 source_of_truth: "git"
 authority: "non-authorizing-financial-human-signature-review"
 reviewed_at: "2026-11-08"
-review_interval_days: 14
+review_interval_days: 0
 sensitivity: "internal"
 ---
+
+
+## November 25, 2026 — historical proposal classification
+
+The October 24 five-human, 18-unit and capacity proposal is retained as historical evidence, not a current operator runbook. Central #46 and issue #239 govern: C08 and C04 CLOSED; seven gates OPEN; funding DENIED; one human owner, separate technical custody remains required. Do not execute archived commands, reuse old permits or infer full writer exclusion or C06/C07 acceptance. Original review date and evidence retained; classification is not a renewed technical qualification.
 
 # Production P1 source integrity, writer evidence, five-person authority and bounded recovery proposal — 2026-10-24
 

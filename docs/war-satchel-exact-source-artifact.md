@@ -8,10 +8,15 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "source-artifact-proof-not-runtime-or-financial-approval"
-reviewed_at: "2026-11-06"
+reviewed_at: "2026-11-25"
 review_interval_days: 14
 sensitivity: "restricted"
 ---
+
+
+## November 25, 2026 — bounded current authority and evidence precedence
+
+The exact four-file #264 implementation delta does not change the historical named financial artifact profiles. Retain immutable source pins below; no new binary download, reproducibility, installation or current artifact expiry attested. HEL1 12:51:06Z no 8092–8095 listeners; C04/C08 CLOSED, seven OPEN, funding DENIED. Exact-source registry repair is not artifact or custody acceptance.
 
 # War Satchel Exact Source Artifact Contract
 

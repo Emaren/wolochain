@@ -8,10 +8,15 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "machine-readable-settlement-contract-index"
-reviewed_at: "2026-10-20"
+reviewed_at: "2026-11-25"
 review_interval_days: 30
 sensitivity: "public"
 ---
+
+
+## November 25, 2026 — bounded current authority and evidence precedence
+
+The exact #264 source delta contains only the separate Clan image contract, install, inverse and isolated fixture; it does not change the documented settlement contract code. Current Central #46 / issue #239 scoreboard is C04/C08 CLOSED, seven OPEN, funding DENIED. Nothing here certifies live reserve, historical liability completeness, custody or funded release; do not reuse old proofs. This is a bounded source-delta/authority review, not a full requalification of the archived contracts.
 
 # Settlement Contracts
 
