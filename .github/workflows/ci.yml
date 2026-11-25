@@ -389,3 +389,26 @@ jobs:
 
       - name: Generated proto drift
         run: ./scripts/check-generated-protos.sh
+
+      - name: Financial candidate receipt checks
+        run: python3 -B -m unittest discover -s scripts -p test_financial_build_receipt.py
+
+      - name: Record quarantined build identity
+        env:
+          EXPECTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          test -f wolochaind && test ! -L wolochaind
+          mkdir -p build
+          test ! -e build/wolochaind && test ! -L build/wolochaind
+          mv -- wolochaind build/wolochaind
+          python3 -B scripts/financial-build-receipt.py --source-sha "$EXPECTED_SOURCE_SHA"
+
+      - name: Retain non-authorizing candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: quarantined-wolochaind-${{ github.event.pull_request.head.sha || github.sha }}-${{ github.run_attempt }}
+          path: |
+            build/wolochaind
+            build/financial-build-candidate.json
+          if-no-files-found: error
+          retention-days: 7

@@ -969,3 +969,15 @@ func canonicalAoE2HDBetsChallengeFundingMemo(challengeID, participantSide, wager
 		"&g=" + guaranteeUWolo +
 		"&t=" + strconv.FormatUint(wager+guarantee, 10)
 }
+
+func TestResolveEscrowAddressPreservesLaunchFailure(t *testing.T) {
+	t.Parallel()
+	cfg := settlementConfig{
+		EscrowKeyName:  "escrow",
+		ExecutablePath: filepath.Join(t.TempDir(), "missing-wolochaind"),
+	}
+	_, err := cfg.resolveEscrowAddress(t.Context())
+	if err == nil || !strings.Contains(err.Error(), cfg.ExecutablePath) {
+		t.Fatalf("expected executable launch cause, got %v", err)
+	}
+}

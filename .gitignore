@@ -31,3 +31,6 @@ scripts/local-dev.env
 /wolochaind
 
 scripts/local-validator/
+
+# Python operator checks
+__pycache__/
