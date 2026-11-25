@@ -1,16 +1,15 @@
 {
   "memo_prefix": "wolo.challenge.funding.v1:",
+  "raw_required_keys": ["app", "sid", "cid", "side", "w", "g", "t"],
   "examples": [
     {
       "description": "left participant funds one combined deposit for wager plus match guarantee",
-      "memo": "wolo.challenge.funding.v1:app=aoe2hdbets&sid=aoe2hdbets:challenge-42:one-noshow:v1&cid=challenge-42&eid=match-2026-04-20-00042&side=left&pid=aoe2-user-left&w=1000000&g=500000&t=1500000",
+      "memo": "wolo.challenge.funding.v1:app=aoe2hdbets&sid=aoe2hdbets:challenge-42:v1&cid=42&side=left&w=1000000&g=500000&t=1500000",
       "fields": {
         "source_app": "aoe2hdbets",
-        "settlement_run_id": "aoe2hdbets:challenge-42:one-noshow:v1",
-        "challenge_id": "challenge-42",
-        "source_event_id": "match-2026-04-20-00042",
+        "settlement_run_id": "aoe2hdbets:challenge-42:v1",
+        "challenge_id": "42",
         "participant_side": "left",
-        "participant_id": "aoe2-user-left",
         "wager_uwolo": "1000000",
         "guarantee_uwolo": "500000",
         "total_funded_uwolo": "1500000"
@@ -18,14 +17,12 @@
     },
     {
       "description": "right participant funds one combined deposit for wager plus match guarantee",
-      "memo": "wolo.challenge.funding.v1:app=aoe2hdbets&sid=aoe2hdbets:challenge-42:one-noshow:v1&cid=challenge-42&eid=match-2026-04-20-00042&side=right&pid=aoe2-user-right&w=1000000&g=500000&t=1500000",
+      "memo": "wolo.challenge.funding.v1:app=aoe2hdbets&sid=aoe2hdbets:challenge-42:v1&cid=42&side=right&w=1000000&g=500000&t=1500000",
       "fields": {
         "source_app": "aoe2hdbets",
-        "settlement_run_id": "aoe2hdbets:challenge-42:one-noshow:v1",
-        "challenge_id": "challenge-42",
-        "source_event_id": "match-2026-04-20-00042",
+        "settlement_run_id": "aoe2hdbets:challenge-42:v1",
+        "challenge_id": "42",
         "participant_side": "right",
-        "participant_id": "aoe2-user-right",
         "wager_uwolo": "1000000",
         "guarantee_uwolo": "500000",
         "total_funded_uwolo": "1500000"

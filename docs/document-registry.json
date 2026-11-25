@@ -1,0 +1,2263 @@
+{
+  "documents": [
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "chain-repository-entrypoint",
+      "id": "aoe2war.wolochain.readme",
+      "owner": "wolochain-ops",
+      "path": "README.md",
+      "review_interval_days": 14,
+      "reviewed_at": "2026-11-24",
+      "sensitivity": "public",
+      "sha256": "940b00a815bd723cb5ce084c3ffcd09a8f07405f35d161518f4ce5ce2d91e543",
+      "source_of_truth": "git",
+      "status": "active",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "WoloChain",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "noncrediting-original-request-chain-evidence",
+      "id": "aoe2war.wolochain.c04-original-request-proof",
+      "owner": "wolochain-ops",
+      "path": "cmd/wolo-c04-verify/README.md",
+      "review_interval_days": 14,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "restricted",
+      "sha256": "ae5b7cdcb212601c112511acbdba766944fc2e90fee0134fa97a0f7ffa49ed62",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C04 \u2014 bounded original-request / chain-proof observation",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "git-branch-authority-contract",
+      "id": "aoe2war.wolochain.branch-authority",
+      "owner": "wolochain-ops",
+      "path": "docs/BRANCH_AUTHORITY.md",
+      "review_interval_days": 14,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "internal",
+      "sha256": "a5bf5373ea57bd5d7c23cfcdd0f1ca71d63c149443287f5eb74ffba72dc33d9d",
+      "source_of_truth": "git",
+      "status": "active",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "WoloChain Branch Authority",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "operators",
+        "developers",
+        "financial-reviewers",
+        "ai-agents"
+      ],
+      "authority": "c01-source-provenance-nonfunded-candidate-review-not-custody-approval",
+      "id": "aoe2war.wolochain.c01-authenticated-historical-merged-pr-source-ci",
+      "owner": "wolochain-ops",
+      "path": "docs/C01_AUTHENTICATED_HISTORICAL_SOURCE_CI_PR124_MERGED.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "restricted",
+      "sha256": "40c0f966781b6351ca5e16ea3a7a7e24477e8c689c4c8385478361dbf8fad0bd",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain"
+      ],
+      "title": "C01 Immutable Source CI: Recovering Authenticated Merged Pull Request Provenance",
+      "type": "runbook"
+    },
+    {
+      "audience": [
+        "operators",
+        "developers",
+        "ai-agents"
+      ],
+      "authority": "nonfunded-integration-handoff-only",
+      "id": "aoe2war.wolochain.c01-c05-integrated-source-acceptance-20261110",
+      "owner": "wolochain-ops",
+      "path": "docs/C01_C05_PRODUCTION_ACCEPTANCE_SOURCE_BOUNDARY_20261110.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "restricted",
+      "sha256": "42005e66c5afa594b5c641ec84de3e8bb8254edf176c542c157e6a60b8476f10",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C01/C05 integrated source and physical acceptance boundary",
+      "type": "runbook"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "source-only-read-only-c03-dual-evidence-bound-observer-never-a-finance-permit",
+      "id": "aoe2war.wolochain.c03-effective-grants-paired-live-pg-sessions-hold",
+      "owner": "wolochain-ops",
+      "path": "docs/C03_EFFECTIVE_GRANTS_PAIRED_LIVE_PG_SESSIONS_HOLD.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "restricted",
+      "sha256": "85e266aa7d178e5352c89580d5dfbecb01ddcf8cb4c2eed75e3ca544fb1ebe5b",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war",
+        "aoe2dewarwagers"
+      ],
+      "title": "C03 effective grants with paired live PostgreSQL sessions HOLD",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "operators",
+        "developers",
+        "financial-reviewers",
+        "ai-agents"
+      ],
+      "authority": "pre-migration-source-metadata-insurance-only-not-full-financial-backup-or-writer-fence",
+      "id": "aoe2war.wolochain.c03-encrypted-prechange-schema-rollback-offhost",
+      "owner": "wolochain-ops",
+      "path": "docs/C03_ENCRYPTED_PRECHANGE_SCHEMA_ROLLBACK_OFFHOST.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "restricted",
+      "sha256": "bd289ed89a403a6df570233b09bb6ecbb5119bdb13bd4442ef892058c688fe49",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war",
+        "aoe2dewarwagers"
+      ],
+      "title": "C03 Owner-Only Encrypted Off-Host Schema and Role Pre-Migration Rollback",
+      "type": "runbook"
+    },
+    {
+      "audience": [
+        "operators",
+        "developers",
+        "financial-reviewers",
+        "ai-agents"
+      ],
+      "authority": "separate-telemetry-only-no-financial-containment-or-execution",
+      "id": "aoe2war.wolochain.c03-extended-67-unit-observer-v2-stage",
+      "owner": "wolochain-ops",
+      "path": "docs/C03_EXTENDED_67_UNIT_WATCHDOG_V2_STAGING_HOLD.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "restricted",
+      "sha256": "bcfe08c3ed2070c35d6097d14c88a6223d2400e7e0df34a0439d4e92d32f01b9",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2hdbets",
+        "aoe2dewarwagers"
+      ],
+      "title": "C03 Separate 67-Unit Financial Writer Telemetry V2: Inert Stage and HOLD",
+      "type": "runbook"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "source-only-c03-global-containment-plan-not-a-financial-permit",
+      "id": "aoe2war.wolochain.c03-financial-writer-containment-acceptance",
+      "owner": "wolochain-ops",
+      "path": "docs/C03_FINANCIAL_WRITER_CONTAINMENT_ACCEPTANCE.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "restricted",
+      "sha256": "ddeba00d4dd8e2733c186e10e94019872e70bdc6b759d5bbffd450caa2b028f4",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C03 Financial Writer Containment \u2014 Physical Release Acceptance Protocol",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "read-only-finance-hold-monitor-not-a-fence-or-funded-permit",
+      "id": "aoe2war.wolochain.c03-financial-writer-drift-observer",
+      "owner": "wolochain-ops",
+      "path": "docs/C03_FINANCIAL_WRITER_DRIFT_WATCHDOG.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "restricted",
+      "sha256": "9af99e9c70ea820c6ed4ab2f4be4381bcff03dc75c9bf309c81e66b230dc4796",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C03 Financial Writer Drift Watchdog",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "operators",
+        "developers",
+        "financial-reviewers",
+        "ai-agents"
+      ],
+      "authority": "nonfunded-real-restored-hd-partial-owner-migration-not-c03-closure",
+      "id": "aoe2war.wolochain.c03-intel-cow-restored-hd-owner-finance-denial-rehearsal",
+      "owner": "wolochain-ops",
+      "path": "docs/C03_INTEL_COW_RESTORED_HD_OWNER_FINANCE_DENIAL_REHEARSAL.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "restricted",
+      "sha256": "1e33099863e3163c6dadb3839947a09de6a774de6dc48bca289ca1442b3b407c",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C03 Intel COW Restored HD Owner Finance Denial Rehearsal",
+      "type": "runbook"
+    },
+    {
+      "audience": [
+        "operators",
+        "developers",
+        "financial-reviewers"
+      ],
+      "authority": "real-intel-pg16-de-restored-clone-only-not-production-writer-admission",
+      "id": "aoe2war.wolochain.c03-intel-real-preconnected-de-owner-migration-rehearsal",
+      "owner": "wolochain-ops",
+      "path": "docs/C03_INTEL_REAL_DE_PRECONNECTED_WRITER_OWNER_FENCE_REHEARSAL.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "restricted",
+      "sha256": "65858ca02b72eec83b4f19260db987538e62387272564c9632bc033581e28533",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C03 Intel Real Restored DE: Preconnected Legacy Owner DML Denial Rehearsal",
+      "type": "runbook"
+    },
+    {
+      "audience": [
+        "operators",
+        "developers",
+        "financial-reviewers"
+      ],
+      "authority": "physical-intel-only-restored-hd-owner-rehearsal-not-production-writer-fence",
+      "id": "aoe2war.wolochain.c03-intel-real-preconnected-hd-owner-migration-rehearsal",
+      "owner": "wolochain-ops",
+      "path": "docs/C03_INTEL_REAL_HD_PRECONNECTED_WRITER_OWNER_FENCE_REHEARSAL.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "restricted",
+      "sha256": "c7899d26f17e1fe03a2a39b706a443002931ba9a36d5247870e2cc3e2ada19c3",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C03 Intel Real Restored HD: Preconnected Legacy Owner DML Denial Rehearsal",
+      "type": "runbook"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "source-only-negative-lock-rehearsal-not-a-financial-fence",
+      "id": "aoe2war.wolochain.c03-isolated-table-lock-counterexample",
+      "owner": "wolochain-ops",
+      "path": "docs/C03_ISOLATED_TABLE_LOCK_COUNTEREXAMPLE.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "restricted",
+      "sha256": "6fae7731b1011d59a168a5e0d7c1f4c7243f8d3610dc22af7662a5fca1856a63",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C03 Isolated PostgreSQL Table Lock Counterexample",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "source-only-isolated-nologin-counterexample-not-live-financial-fence",
+      "id": "aoe2war.wolochain.c03-nologin-existing-backend-counterexample",
+      "owner": "wolochain-ops",
+      "path": "docs/C03_NOLOGIN_EXISTING_BACKEND_COUNTEREXAMPLE.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "restricted",
+      "sha256": "f68f8b1443167a205300e39cd7b51debc226d755cd72fbe09678683962a3713e",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C03 NOLOGIN Existing Backend Counterexample",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "source-only-isolated-negative-proof-never-a-production-DDL-permit",
+      "id": "aoe2war.wolochain.c03-real-production-schema-owner-rehearsal",
+      "owner": "wolochain-ops",
+      "path": "docs/C03_REAL_PRODUCTION_SCHEMA_OWNER_REHEARSAL.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "restricted",
+      "sha256": "b1a2b9682e16c0720b629bdb6b01c7474e63f1db7053f165c567706dffbfacd2",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C03 Real Production Schema Isolated NOLOGIN Ownership Rehearsal",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "source-only-physical-transport-audit-no-financial-fence",
+      "id": "aoe2war.wolochain.c03-root-legacy-rpc-reachability-hold",
+      "owner": "wolochain-ops",
+      "path": "docs/C03_ROOT_LEGACY_RPC_REACHABILITY_HOLD.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "restricted",
+      "sha256": "1169898e4ea7b069c2875de9cd9bfa35d0cd13e37809e2b582b144f3f03d27af",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war",
+        "aoe2dewarwagers"
+      ],
+      "title": "C03 root legacy settlement and RPC transport admission gap",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "source-only-nologin-permission-rehearsal-not-live-ddl-approval",
+      "id": "aoe2war.wolochain.c03-synthetic-nologin-owner-rehearsal",
+      "owner": "wolochain-ops",
+      "path": "docs/C03_SYNTHETIC_NOLOGIN_OWNER_REHEARSAL.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "restricted",
+      "sha256": "843c894040a52d56cafdd6acc428d1fdacf737d2f022ccefe5a58a0028237cb4",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C03 Synthetic NOLOGIN Owner Partition Rehearsal",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "operators",
+        "developers",
+        "financial-reviewers",
+        "ai-agents"
+      ],
+      "authority": "read-only-discovery-only-no-maintenance-unit-change",
+      "id": "aoe2war.wolochain.c03-tokenchain-indexer-unscoped-discovery-hold",
+      "owner": "wolochain-ops",
+      "path": "docs/C03_TOKENCHAIN_INDEXER_UNSCOPED_DISCOVERY_HOLD.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "internal",
+      "sha256": "91990399c8bb440a1fdf173ce859ecbfd8cca7e75c814fe1199565bc33fcfbe6",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2hdbets",
+        "tokenchain"
+      ],
+      "title": "C03 TokenChain Indexer: Previously Omitted Service Discovery and Financial Writer HOLD",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "topology-only-no-financial-writer-fence-or-financial-permit",
+      "id": "aoe2war.wolochain.c03-topology-only-baseline-review",
+      "owner": "wolochain-ops",
+      "path": "docs/C03_TOPOLOGY_ONLY_WATCHDOG_ENROLLMENT.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "restricted",
+      "sha256": "ba4cf51d4eea687fdaa6c9bbdb5717766f39be5f45caed3c0b603f75fb59966e",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C03 Topology-Only Watchdog Baseline Enrollment",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "operators",
+        "developers",
+        "financial-reviewers",
+        "ai-agents"
+      ],
+      "authority": "source-held-no-live-legacy-liability-release",
+      "id": "aoe2war.wolochain.c04-fresh-native-claim-noninterference",
+      "owner": "wolochain-ops",
+      "path": "docs/C04_FRESH_NATIVE_CLAIM_NONINTERFERENCE.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "restricted",
+      "sha256": "5c9422da81ba29070b151318917b5e494f84bc231f9e65fb0980c813189933e4",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C04 Forward-Only Native Return Claim Identity and Legacy Liability Non-Interference",
+      "type": "runbook"
+    },
+    {
+      "audience": [
+        "operators",
+        "developers",
+        "financial-reviewers",
+        "ai-agents"
+      ],
+      "authority": "nonfunded-legacy-liability-quarantine-no-adjudication-or-waiver",
+      "id": "aoe2war.wolochain.c04-historical-finance-encrypted-quarantine-and-native-noninterference-acceptance",
+      "owner": "wolochain-ops",
+      "path": "docs/C04_HISTORICAL_FINANCIAL_ENCRYPTED_QUARANTINE_PHYSICAL_ACCEPTANCE.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "restricted",
+      "sha256": "f041da33c682556be4596be66e99ae8c82b08fc1253cbffee846b70a0ffb51a9",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C04 Historical Financial Quarantine: Physical Noninterference Acceptance",
+      "type": "runbook"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "source-only-c04-reconciliation-evidence-no-payment-authorization",
+      "id": "aoe2war.wolochain.c04-indexed-wolo-transfer-ambiguity-hold",
+      "owner": "wolochain-ops",
+      "path": "docs/C04_INDEXED_WOLO_TRANSFER_CANDIDATE_AMBIGUITY_HOLD.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "restricted",
+      "sha256": "8d7c3d85c83e4d8963f14d31357e5fe8555e3151754faa14ff868ee44adc8851",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war",
+        "aoe2dewarwagers"
+      ],
+      "title": "C04 indexed WOLO transfer candidate ambiguity and hashless claim finality",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "source-only-financial-hold-not-a-funding-or-replay-permit",
+      "id": "aoe2war.wolochain.c05-bounty-gift-null-valuation-hold",
+      "owner": "wolochain-ops",
+      "path": "docs/C05_BOUNTY_GIFT_NULL_VALUATION_HOLD.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "restricted",
+      "sha256": "d8ab36b970a64820f079a372ef47e35084b4ea3c3a6234ee7414b56d5150ebba",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war",
+        "aoe2dewarwagers"
+      ],
+      "title": "C05 pending bounty gift \u2014 missing reward valuation",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "operators",
+        "developers",
+        "financial-reviewers",
+        "ai-agents"
+      ],
+      "authority": "root-private-repeatable-read-historical-claim-attribution-never-payment-or-reserve-admission",
+      "id": "aoe2war.wolochain.c05-private-claimed-hash-ambiguity-physical-hold",
+      "owner": "wolochain-ops",
+      "path": "docs/C05_CLAIM_HASH_TRANSFER_AMBIGUITY_PRIVATE_PHYSICAL_HOLD.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "restricted",
+      "sha256": "898109d3b8d0e5a740da3e2ea9eea41750e3cd2975f9e36555b8ef9b3d52e702",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C05 Exact Claim-to-Transfer Ambiguity Manifest: Private Physical HOLD",
+      "type": "runbook"
+    },
+    {
+      "audience": [
+        "operators",
+        "developers",
+        "financial-reviewers",
+        "ai-agents"
+      ],
+      "authority": "physical-aggregate-reconciliation-observation-not-financial-solvency-or-release",
+      "id": "aoe2war.wolochain.c05-hd-claim-nominal-legacy-escrow-single-height-held",
+      "owner": "wolochain-ops",
+      "path": "docs/C05_HD_CLAIMS_VS_HISTORIC_ESCROW_NATIVE_HEIGHT_HOLD.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "restricted",
+      "sha256": "999fbb84a9ad1711ae473a6cf0bc4658d71ec0d037973f91e76a8945f30a0603",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2hdbets"
+      ],
+      "title": "C04/C05 Read-Only HD Claim Nominal Versus Historical Escrow: Real Native Height and Economic HOLD",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "operators",
+        "developers",
+        "financial-reviewers",
+        "ai-agents"
+      ],
+      "authority": "offhost-single-validator-historical-commit-consistency-no-funding",
+      "id": "aoe2war.wolochain.c05-offhost-fixed-bank-height-20261109",
+      "owner": "wolochain-ops",
+      "path": "docs/C05_OFFHOST_SINGLE_VALIDATOR_BANK_HEIGHT_WITNESS_20261109.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "restricted",
+      "sha256": "5c203a6ae1ad997f1ec855c61d5b4c753aa1b2e24e992d2cb11112e424843f7c",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C05 Offhost Fixed Bank Height: Single-Validator Source-Bound Witness",
+      "type": "runbook"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "source-only-c05-historical-payment-ambiguity-no-payment-authority",
+      "id": "aoe2war.wolochain.c05-pending-gift-same-nominal-claim-collision-hold",
+      "owner": "wolochain-ops",
+      "path": "docs/C05_PENDING_GIFT_SAME_NOMINAL_CLAIM_COLLISION_HOLD.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "restricted",
+      "sha256": "8b648a7fc2b2f0af8d3983e765f037a2905088dfb48f3702f2993140e32da673",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war",
+        "aoe2dewarwagers"
+      ],
+      "title": "C05 pending gift nominal collisions \u2014 not proof of payment",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "operators",
+        "developers",
+        "financial-reviewers",
+        "ai-agents"
+      ],
+      "authority": "source-bound-readonly-mainnet-bank-census-not-financial-reserve-acceptance",
+      "id": "aoe2war.wolochain.c05-native-registered24-single-height-bank-physical-hold",
+      "owner": "wolochain-ops",
+      "path": "docs/C05_REGISTERED24_NATIVE_SAME_HEIGHT_PHYSICAL_BANK_HOLD.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "restricted",
+      "sha256": "7d4e41a8249c39aaa0322e72d26213d2d159f2646befeb97c61d84aa0ceb9ba7",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C05 Registered Wallets Native Same-Height Bank Evidence: Physical HOLD",
+      "type": "runbook"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "read-only-physical-observer-no-solvency-or-funding-authority",
+      "id": "aoe2war.wolochain.c05-semantic-money-staking-exposure-hold",
+      "owner": "wolochain-ops",
+      "path": "docs/C05_SEMANTIC_MONEY_STAKING_EXPOSURE_HOLD.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "restricted",
+      "sha256": "32e30dcb55966efb8f7f3a9ab45cbaf4a4f99e8ffbc52861e04a5b1a5a4f5443",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C05 Semantic Money Columns and Staking Exposure \u2014 Independent HOLD",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "read-only-source-and-physical-financial-hold-not-c03-maintenance-or-funded-permit",
+      "id": "aoe2war.wolochain.c05-seven-surface-readonly-census-hold",
+      "owner": "wolochain-ops",
+      "path": "docs/C05_SEVEN_SURFACE_READONLY_CENSUS_HOLD.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "restricted",
+      "sha256": "13547851dcef228898cee9dabe66439fa776333e79ec5fdf39c691596cdb0b83",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C05 Expanded Payout and NFT-Transfer Surface Census \u2014 Read-Only HOLD",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "operators",
+        "developers",
+        "financial-reviewers",
+        "ai-agents"
+      ],
+      "authority": "read-only-unquiesced-backup-rehearsal-hold-not-c06-acceptance",
+      "id": "aoe2war.wolochain.c06-direct-intel-unquiesced-precapture",
+      "owner": "wolochain-ops",
+      "path": "docs/C06_DIRECT_INTEL_UNQUIESCED_ENCRYPTED_STREAM_PRECAPTURE.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "restricted",
+      "sha256": "302f89156caac19a4cbbc86b20cb8b05f274e662c04941355a35513d850a61ac",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C06 Direct HEL1 to Intel Encrypted Financial Precapture \u2014 Nonfunded Rehearsal",
+      "type": "runbook"
+    },
+    {
+      "audience": [
+        "operators",
+        "developers",
+        "financial-reviewers",
+        "ai-agents"
+      ],
+      "authority": "inert-readonly-unquiesced-capture-not-c06-release",
+      "id": "aoe2war.wolochain.c06-hel1-local-age-hd-unquiesced-precapture",
+      "owner": "wolochain-ops",
+      "path": "docs/C06_HEL1_LOCAL_AGE_ENCRYPTED_HD_UNQUIESCED_PRECAPTURE.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "restricted",
+      "sha256": "1ffebc6843f6842d3dc63078fd43799d8f373e48c23b4ccc6eb1cfc2846a7fde",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C06 HEL1 Local Age Encrypted HD Unquiesced Precapture",
+      "type": "runbook"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "source-only-c06-hostkey-observation-no-backup-authority",
+      "id": "aoe2war.wolochain.c06-intel-offhost-recovery-hostkey-hold",
+      "owner": "wolochain-ops",
+      "path": "docs/C06_INTEL_OFFHOST_RECOVERY_TUNNEL_HOSTKEY_HOLD.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "restricted",
+      "sha256": "f37dbb31703f14f6359d6611c730cc51c77a0e90d89e640e3f4e2cfba8e69709",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war",
+        "aoe2dewarwagers"
+      ],
+      "title": "C06 Intel offhost receiver host identity \u2014 transport-only evidence",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "source-only-intel-recovery-transport-not-a-financial-permit",
+      "id": "aoe2war.wolochain.c06-intel-recovery-tunnel-supervisor",
+      "owner": "wolochain-ops",
+      "path": "docs/C06_INTEL_RECOVERY_TUNNEL_SUPERVISOR.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "restricted",
+      "sha256": "808d9efc8d689e5d9a3b84bf7aa7c19e4f94bbdca8ebc777f34c5f0c6e15db56",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C06 Intel Recovery Tunnel Supervisor",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "operators",
+        "developers",
+        "financial-reviewers",
+        "ai-agents"
+      ],
+      "authority": "prebackup-only-no-writer-fence-no-live-financial-release",
+      "id": "aoe2war.wolochain.c06-unquiesced-mvcc-dual-recipient-intel-precapture",
+      "owner": "wolochain-ops",
+      "path": "docs/C06_UNQUIESCED_MVCC_DUAL_RECIPIENT_OFFHOST_PRECAPTURE.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "restricted",
+      "sha256": "904576f8437ed7ead134655e44a577d7fecf78c24f4ec1dc2937815dbf207a4b",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2hdbets",
+        "aoe2dewarwagers"
+      ],
+      "title": "C06 Preparatory Live-MVCC Full-Data Exports: Dual-Recipient Encrypted Intel Retention",
+      "type": "runbook"
+    },
+    {
+      "audience": [
+        "operators",
+        "developers",
+        "financial-reviewers",
+        "ai-agents"
+      ],
+      "authority": "nonfunded-real-offhost-recovery-rehearsal-not-gate-closure",
+      "id": "aoe2war.wolochain.c07-intel-source-pinned-unquiesced-database-recovery-hold",
+      "owner": "wolochain-ops",
+      "path": "docs/C07_INTEL_SOURCE_PINNED_UNQUIESCED_DATABASE_RECOVERY_HOLD.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "restricted",
+      "sha256": "efeb4ca7ba68f9a124dd6425b527d493111df22e1ec4c3c57c0af745dca14ffe",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C07 Intel Source-Pinned Unquiesced Database Recovery HOLD",
+      "type": "runbook"
+    },
+    {
+      "audience": [
+        "operators",
+        "developers",
+        "financial-reviewers",
+        "ai-agents"
+      ],
+      "authority": "one-human-nonfunded-governance-only",
+      "id": "aoe2war.wolochain.c08-automated-keychain-governance-v3",
+      "owner": "wolochain-ops",
+      "path": "docs/C08_AUTOMATED_KEYCHAIN_GOVERNANCE_V3.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "restricted",
+      "sha256": "1373dab53d84b8b6205f614b8567e2e3780b1ac361f97a6f6e76268efce04aba",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C08 Keychain Software P-256 One-Human Governance \u2014 Real Passwordless Adoption",
+      "type": "runbook"
+    },
+    {
+      "audience": [
+        "operators",
+        "developers",
+        "financial-reviewers",
+        "ai-agents"
+      ],
+      "authority": "source-only-offhost-nonce-witness-command-review-no-live-activation-or-finance-permit",
+      "id": "aoe2war.wolochain.c08-dedicated-witness-command-source-review-hold",
+      "owner": "wolochain-ops",
+      "path": "docs/C08_DEDICATED_WITNESS_EXACT_COMMAND_SOURCE_REVIEW_HOLD.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "restricted",
+      "sha256": "e0647aed207fdc95b247fe31332f7b1192c7805a604ce5b1d4efcf4e4d65a77e",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C08 Dedicated Intel Witness: Exact Forced Command and Source-Pin Admission Review",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "operators",
+        "developers",
+        "financial-reviewers",
+        "ai-agents"
+      ],
+      "authority": "historical-owner-device-signature-readonly-evidence-only-no-funding",
+      "id": "aoe2war.wolochain.c08-existing-owner-device-direction-hold",
+      "owner": "wolochain-ops",
+      "path": "docs/C08_EXISTING_OWNER_DEVICE_DIRECTION_PHYSICAL_HOLD.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "restricted",
+      "sha256": "11ab6b85aa1f6402b0d9290ee47e73c986bd0b3e1ccd19e4d2f6fbc6ea9a9d8d",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war",
+        "aoe2dewarwagers"
+      ],
+      "title": "C08 Verified Owner Device Direction: Historical Ed25519 Signature Is Not Governance Ratification",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "operators",
+        "developers",
+        "financial-reviewers",
+        "ai-agents"
+      ],
+      "authority": "reviewed-deny-only-ssh-transport-no-nonce-or-financial-authority",
+      "id": "aoe2war.wolochain.c08-intel-dedicated-deny-only-sshd-physical-service",
+      "owner": "wolochain-ops",
+      "path": "docs/C08_INTEL_DENY_ONLY_WITNESS_SSHD_PHYSICAL.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "restricted",
+      "sha256": "83f04b9f9027540c1afa3f70b370a52d5cecfe98b3fe40287918dbb282bd73e1",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C08 Intel Dedicated Witness SSHD: Persistent Loopback Deny-Only Launchd Service",
+      "type": "runbook"
+    },
+    {
+      "audience": [
+        "operators",
+        "developers",
+        "financial-reviewers",
+        "ai-agents"
+      ],
+      "authority": "zero-funded-governance-prerequisite-only",
+      "id": "aoe2war.wolochain.c08-native-keychain-governance-admission",
+      "owner": "wolochain-ops",
+      "path": "docs/C08_NATIVE_GOVERNANCE_ADMISSION.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "restricted",
+      "sha256": "d36290c2db4b374f15859685f3c55fe7d3c3f619b89a2ce257cff9f8b2d6df7a",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C08 Native Custody Admission \u2014 Verified Owner P-256 Receipt",
+      "type": "runbook"
+    },
+    {
+      "audience": [
+        "operators",
+        "developers",
+        "financial-reviewers",
+        "ai-agents"
+      ],
+      "authority": "versioned-nonfunded-owner-governance-adoption-only",
+      "id": "aoe2war.wolochain.c08-real-solo-owner-governance-adoption-v2",
+      "owner": "wolochain-ops",
+      "path": "docs/C08_REAL_SOLO_GOVERNANCE_ADOPTION_V2.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "restricted",
+      "sha256": "eafce51576d2a7966910cea660a92515ae10128d8c2858e6778fc15ef2347889",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2hdbets",
+        "aoe2dewarwagers"
+      ],
+      "title": "C08 Genuine One-Owner Governance Adoption V2 \u2014 Signed Policy, Zero Financial Permission",
+      "type": "runbook"
+    },
+    {
+      "audience": [
+        "operators",
+        "developers",
+        "financial-reviewers",
+        "ai-agents"
+      ],
+      "authority": "source-only-cryptographic-ratification-intent-review-no-governance-adoption-or-woLo-funding",
+      "id": "aoe2war.wolochain.c08-signed-solo-owner-ratification-intent-hold",
+      "owner": "wolochain-ops",
+      "path": "docs/C08_SIGNED_SOLO_OWNER_RATIFICATION_INTENT_HOLD.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "restricted",
+      "sha256": "85a62ac2bc19b008f13e1cd1d143d16698ee6cace466066529f525cbf146862a",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war",
+        "aoe2dewarwagers"
+      ],
+      "title": "C08 Real Owner-Signed Ratification Intent: Public Notice and Policy-Bound HOLD",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "operators",
+        "developers",
+        "financial-reviewers"
+      ],
+      "authority": "public-notice-source-integrity-only-no-financial-permit",
+      "id": "aoe2war.wolochain.c08.single-owner-public-notice-hold",
+      "owner": "wolochain-ops",
+      "path": "docs/C08_SINGLE_OWNER_PUBLIC_NOTICE_HOLD.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "internal",
+      "sha256": "de5583f600d9547d5a8e3a585bae6288c59bfc8c235cfd3f25592f28178b813f",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C08 Single-Owner Public Notice \u2014 Pinned 24-Hour Financial HOLD",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "operators",
+        "developers",
+        "financial-reviewers"
+      ],
+      "authority": "nonfunding-C08-policy-preflight-only",
+      "id": "aoe2war.wolochain.c09-c08-keychain-v3-receipt-binding",
+      "owner": "wolochain-ops",
+      "path": "docs/C09_C08_KEYCHAIN_V3_RECEIPT_BINDING.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "restricted",
+      "sha256": "1eecd041bb1ed8e59aa39998af435c77db06f96da0d65446069263bdca0a848d",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C09 Exact Canary Requires Genuine Keychain C08 V3 Receipt",
+      "type": "runbook"
+    },
+    {
+      "audience": [
+        "operators",
+        "developers",
+        "financial-reviewers",
+        "ai-agents"
+      ],
+      "authority": "owner-only-unfunded-filevault-keychain-enrollment-not-a-payment-permit",
+      "id": "aoe2war.wolochain.c09-filevault-intel-transaction-key-enrollment-hold",
+      "owner": "wolochain-ops",
+      "path": "docs/C09_INTEL_FILEVAULT_TRANSACTION_KEY_ENROLLMENT_HOLD.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "restricted",
+      "sha256": "3dbf6dad0132467eff202f4192161a9be48b79cda196771d733fed0307a04389",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C09 Distinct Intel FileVault P-256 Transaction Key: Physical Enrollment HOLD",
+      "type": "runbook"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "financial-reviewers",
+        "ai-agents"
+      ],
+      "authority": "authenticated-C08-governance-preflight-only-no-spending-permit",
+      "id": "aoe2war.wolochain.c09-ratified-c08-policy-bridge",
+      "owner": "wolochain-ops",
+      "path": "docs/C09_RATIFIED_C08_POLICY_BRIDGE.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "restricted",
+      "sha256": "b52aeff37caab246a2ec1972779531c814ac4de97b0aad65c63f5368d974c081",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "C09 Ratified C08 Governance Bridge \u2014 Signed Canary Ceiling and No Spending",
+      "type": "runbook"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "repository-documentation-index",
+      "id": "aoe2war.wolochain.documentation-control-plane",
+      "owner": "wolochain-ops",
+      "path": "docs/DOCUMENTATION_CONTROL_PLANE.md",
+      "review_interval_days": 30,
+      "reviewed_at": "2026-11-10",
+      "sensitivity": "internal",
+      "sha256": "97e8a9e78984f20489da1789bb9891bd6fb57a6faaf9666fcdf4649ccd0f4a6d",
+      "source_of_truth": "git",
+      "status": "active",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "WoloChain Documentation Index",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "source-only-verifier-mismatch-not-financial-authority",
+      "id": "aoe2war.wolochain.epoch-v3-wire-v1-hold",
+      "owner": "wolochain-ops",
+      "path": "docs/epoch-v3-wire-v1-hold.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "internal",
+      "sha256": "160020fb14fc4cb53d214ddbb3dc1bed76e661b56ae2402a836e5935e0a999f5",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "Native epoch-v3 wire-v1 trust mismatch and held handoff",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "source-only-exact-settlement-confirmation",
+      "id": "aoe2war.wolochain.exact-settlement-confirmation-c4",
+      "owner": "wolochain-ops",
+      "path": "docs/exact-settlement-confirmation-c4.md",
+      "review_interval_days": 14,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "restricted",
+      "sha256": "d3f856479e0ad39a4a204b131599e6a3c7183782f3348e0e6a20ba1f54b90b4d",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "Exact Settlement Confirmation C4",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "source-only-legacy-settlement-hardening",
+      "id": "aoe2war.wolochain.legacy-settlement-hardening",
+      "owner": "wolochain-ops",
+      "path": "docs/legacy-settlement-hardening.md",
+      "review_interval_days": 14,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "restricted",
+      "sha256": "36d2292f2cd21451d65afe343f61c9912d198adb108a4de2605c3afbddaa5086",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "Legacy Settlement Hardening and Protected Release Handoff",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "mainnet-launch-cutover-evidence",
+      "id": "aoe2war.wolochain.mainnet-cutover-checklist",
+      "owner": "wolochain-ops",
+      "path": "docs/mainnet-cutover-checklist.md",
+      "review_interval_days": 0,
+      "reviewed_at": "2026-08-10",
+      "sensitivity": "internal",
+      "sha256": "b253a94a429f77ae656c4275be3e2fa7f14ee2980dfc2ffb8a7db190d493146f",
+      "source_of_truth": "historical-evidence",
+      "status": "historical",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "WoloChain Mainnet Cutover Checklist",
+      "type": "historical"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "mainnet-launch-decision-evidence",
+      "id": "aoe2war.wolochain.mainnet-decision-checklist",
+      "owner": "wolochain-ops",
+      "path": "docs/mainnet-decision-checklist.md",
+      "review_interval_days": 0,
+      "reviewed_at": "2026-08-10",
+      "sensitivity": "internal",
+      "sha256": "3fb10d6f249a28fc314b0fa452d3eda775bf0e4784c3adb8a1b9a5e43cd559b1",
+      "source_of_truth": "historical-evidence",
+      "status": "historical",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "WoloChain Mainnet Tony Decision Checklist",
+      "type": "historical"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "mainnet-public-endpoint-routing",
+      "id": "aoe2war.wolochain.mainnet-dns-nginx-tls",
+      "owner": "wolochain-ops",
+      "path": "docs/mainnet-dns-nginx-tls.md",
+      "review_interval_days": 30,
+      "reviewed_at": "2026-11-10",
+      "sensitivity": "internal",
+      "sha256": "fde8249dc3515b85c312079f9cdc582b2478de230d5a3c94ebabae26b88c091a",
+      "source_of_truth": "runtime-evidence",
+      "status": "active",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "WoloChain Mainnet DNS, Nginx, And TLS",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "prelaunch-genesis-allocation-template",
+      "id": "aoe2war.wolochain.mainnet-genesis-allocation-template",
+      "owner": "wolochain-ops",
+      "path": "docs/mainnet-genesis-allocation-template.md",
+      "review_interval_days": 0,
+      "reviewed_at": "2026-08-10",
+      "sensitivity": "internal",
+      "sha256": "762816b90d45bbb255f7f06766f5ffffa02df36f22d1389a9e96331760bd957e",
+      "source_of_truth": "historical-evidence",
+      "status": "historical",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "WoloChain Mainnet Genesis Allocation Template",
+      "type": "historical"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "pre-ibc-osmosis-planning-evidence",
+      "id": "aoe2war.wolochain.mainnet-ibc-osmosis",
+      "owner": "wolochain-ops",
+      "path": "docs/mainnet-ibc-osmosis.md",
+      "review_interval_days": 0,
+      "reviewed_at": "2026-08-10",
+      "sensitivity": "internal",
+      "sha256": "3126e62e757e5cc763c800811926db2bcdfeb00e9d60744678a703bb787c29a4",
+      "source_of_truth": "historical-evidence",
+      "status": "historical",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "WoloChain Mainnet IBC And Osmosis Plan",
+      "type": "historical"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "mainnet-wallet-registry-metadata",
+      "id": "aoe2war.wolochain.mainnet-keplr-explorer",
+      "owner": "wolochain-ops",
+      "path": "docs/mainnet-keplr-explorer.md",
+      "review_interval_days": 30,
+      "reviewed_at": "2026-11-10",
+      "sensitivity": "public",
+      "sha256": "1683ec8b4f3cf9277ac37edbbf7b27920c6afa91e5865275de1e7a994bd26265",
+      "source_of_truth": "runtime-evidence",
+      "status": "active",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "WoloChain Mainnet Keplr And Explorer Metadata",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "mainnet-launch-plan-evidence",
+      "id": "aoe2war.wolochain.mainnet-launch-plan",
+      "owner": "wolochain-ops",
+      "path": "docs/mainnet-launch-plan.md",
+      "review_interval_days": 0,
+      "reviewed_at": "2026-08-10",
+      "sensitivity": "internal",
+      "sha256": "9a1379ad0b4e903069d78024ab1d1504f1333568142e97caff9039c9f41d11fb",
+      "source_of_truth": "historical-evidence",
+      "status": "historical",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "WoloChain Mainnet Launch Plan",
+      "type": "historical"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "mainnet-service-and-port-contract",
+      "id": "aoe2war.wolochain.mainnet-services-and-ports",
+      "owner": "wolochain-ops",
+      "path": "docs/mainnet-services-and-ports.md",
+      "review_interval_days": 14,
+      "reviewed_at": "2026-11-24",
+      "sensitivity": "internal",
+      "sha256": "39bb8775a4c994b7dc1ad57cd13bacfdaf9c752b0b07f92213c16c194a69409b",
+      "source_of_truth": "runtime-evidence",
+      "status": "active",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "WoloChain Mainnet Services And Ports",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "mainnet-settlement-operations",
+      "id": "aoe2war.wolochain.mainnet-settlement-runbook",
+      "owner": "wolochain-ops",
+      "path": "docs/mainnet-settlement-runbook.md",
+      "review_interval_days": 14,
+      "reviewed_at": "2026-11-25",
+      "sensitivity": "restricted",
+      "sha256": "5a231af48b0accabaa7df227895ee520eb6d6aa9a6f91cb687b4c59fa8c792ce",
+      "source_of_truth": "runtime-evidence",
+      "status": "active",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "WoloChain Mainnet Settlement Runbook",
+      "type": "runbook"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "mainnet-preparation-template-evidence",
+      "id": "aoe2war.wolochain.mainnet-template",
+      "owner": "wolochain-ops",
+      "path": "docs/mainnet-template.md",
+      "review_interval_days": 0,
+      "reviewed_at": "2026-08-10",
+      "sensitivity": "internal",
+      "sha256": "104cc8fce8ab5998065fef5a6e1a0a338c899db551927823517e0e7a60880f00",
+      "source_of_truth": "historical-evidence",
+      "status": "historical",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "WoloChain Mainnet Template Report",
+      "type": "historical"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "mainnet-wallet-role-and-custody-map",
+      "id": "aoe2war.wolochain.mainnet-wallets",
+      "owner": "wolochain-ops",
+      "path": "docs/mainnet-wallets.md",
+      "review_interval_days": 14,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "restricted",
+      "sha256": "73351740ad7a398f7e5d9ef0e0d011a93bbef5af229d0925e35f869c1824a317",
+      "source_of_truth": "runtime-evidence",
+      "status": "active",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "WoloChain Mainnet Wallet And Key Plan",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "source-review-only-nonactivating-escrow-candidate",
+      "id": "aoe2war.wolochain.new-epoch-escrow-v3-held",
+      "owner": "wolochain-ops",
+      "path": "docs/new-epoch-escrow-v3-held.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "internal",
+      "sha256": "9cdfcc48fef402f36fe24795c3ad42cc213aab14670ffba0321578e9ced86b5f",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "Held native new-epoch escrow v3 decision boundary",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "non-authorizing-c07-isolated-recovery-rehearsal",
+      "id": "aoe2war.wolochain.c07-real-hd-de-owner-acl-restoration-20261109",
+      "owner": "wolochain-ops",
+      "path": "docs/settlement-contracts/C07_REAL_HD_DE_ROLE_OWNER_ACL_RECOVERY_20261109.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "restricted",
+      "sha256": "7836d782f492b69457accac73a273d3f9c04150c0ac1b6fe3970a89d93363909",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war",
+        "aoe2dewarwagers"
+      ],
+      "title": "C07 real HD/DE owner and ACL recovery: physical rehearsal and reusable comparator",
+      "type": "runbook"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "machine-readable-settlement-contract-index",
+      "id": "aoe2war.wolochain.settlement-contracts",
+      "owner": "wolochain-ops",
+      "path": "docs/settlement-contracts/README.md",
+      "review_interval_days": 30,
+      "reviewed_at": "2026-11-24",
+      "sensitivity": "public",
+      "sha256": "d921bb9d5bd26eaf1ec2a727d7322f4480dcca08d19c3c9c3742d977038625bf",
+      "source_of_truth": "git",
+      "status": "active",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "Settlement Contracts",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "non-authorizing-financial-producer-evidence-correlation",
+      "id": "aoe2war.wolochain.producer-owner-triage",
+      "owner": "wolochain-ops",
+      "path": "docs/settlement-contracts/producer-owner-correlation.md",
+      "review_interval_days": 14,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "internal",
+      "sha256": "175284b3aeb816fe9a75014c3c269e1ffb3b42edd56d0a05bd91cc4a52ab3d38",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war",
+        "aoe2dewarwagers"
+      ],
+      "title": "HD and DE Financial Producer Owner Review",
+      "type": "runbook"
+    },
+    {
+      "audience": [
+        "operators",
+        "developers",
+        "ai-agents",
+        "financial-reviewers"
+      ],
+      "authority": "proposed-policy-no-mainnet-financial-authorization",
+      "id": "aoe2war.wolochain.solo-owner-centralized-financial-governance-proposal",
+      "owner": "wolochain-ops",
+      "path": "docs/solo-owner-centralized-financial-governance.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "internal",
+      "sha256": "324f3d2421b09e275fbb15d0c81f2d62acf68b3c944bf1584ebf1ce4ff393838",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "WOLO Centralized Solo-Owner Financial Governance \u2014 C08 Proposal",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "legacy-testnet-operations",
+      "id": "aoe2war.wolochain.testnet-ops",
+      "owner": "wolochain-ops",
+      "path": "docs/testnet-ops.md",
+      "review_interval_days": 60,
+      "reviewed_at": "2026-10-10",
+      "sensitivity": "restricted",
+      "sha256": "826660e5d5c75a823dc4cc59cdf41c4467afd08892971dca824277b0713c8acb",
+      "source_of_truth": "runtime-evidence",
+      "status": "active",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "WoloChain Testnet Ops",
+      "type": "runbook"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "source-only-war-satchel-chain-evidence",
+      "id": "aoe2war.wolochain.war-satchel-chain-evidence-c3",
+      "owner": "wolochain-ops",
+      "path": "docs/war-satchel-chain-evidence-c3.md",
+      "review_interval_days": 14,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "restricted",
+      "sha256": "e2973805ce89c3a8437a87225b79c65fc39c789713c13abf4683d834671b4fd0",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "War Satchel C3 Chain Evidence",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "source-integration-proof-not-production-approval",
+      "id": "aoe2war.wolochain.satchel-controlled-release",
+      "owner": "wolochain-ops",
+      "path": "docs/war-satchel-controlled-release.md",
+      "review_interval_days": 14,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "restricted",
+      "sha256": "b710a315ea03bb8966adf34e4357dc27b18c415d271bbcf8bfd14e9f23e8aea4",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "War Satchel Controlled Release Gates",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "source-only-war-satchel-custody-capability",
+      "id": "aoe2war.wolochain.war-satchel-custody-c2",
+      "owner": "wolochain-ops",
+      "path": "docs/war-satchel-custody-c2.md",
+      "review_interval_days": 14,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "restricted",
+      "sha256": "d52d41abda5e454178602dcfa942574a7ab521ebdf776fb71411a5a466fd4eb2",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "War Satchel C2 Custody Capability",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "source-artifact-proof-not-runtime-or-financial-approval",
+      "id": "aoe2war.wolochain.war-satchel-exact-source-artifact",
+      "owner": "wolochain-ops",
+      "path": "docs/war-satchel-exact-source-artifact.md",
+      "review_interval_days": 14,
+      "reviewed_at": "2026-11-24",
+      "sensitivity": "restricted",
+      "sha256": "87efcfc4b556749c6e677e0fe53a6b8d957353ed64933024c97edfc192939287",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "War Satchel Exact Source Artifact Contract",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "source-integration-proof-not-production-approval",
+      "id": "aoe2war.wolochain.satchel-financial-bridge",
+      "owner": "wolochain-ops",
+      "path": "docs/war-satchel-financial-bridge.md",
+      "review_interval_days": 14,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "restricted",
+      "sha256": "71eb0046fb015ca06dad2767c3c2d473fc5f8a189c16934ad00aad94216d194c",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "Authenticated War Satchel Financial Bridge",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "source-integration-proof-not-production-approval",
+      "id": "aoe2war.wolochain.satchel-integration-readiness",
+      "owner": "wolochain-ops",
+      "path": "docs/war-satchel-integration-readiness.md",
+      "review_interval_days": 14,
+      "reviewed_at": "2026-11-24",
+      "sensitivity": "restricted",
+      "sha256": "fb2b77d27716f0b134a3bc27673c953a6a19989fd2aa93357952e1f8d3596d30",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "War Satchel Integration Evidence and Operator Handoff",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "restricted-satchel-execution-and-provisioning-contract",
+      "id": "aoe2war.wolochain.war-satchel-mainnet-execution",
+      "owner": "wolochain-ops",
+      "path": "docs/war-satchel-mainnet-execution.md",
+      "review_interval_days": 7,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "restricted",
+      "sha256": "62490e711965c0a43e4f9da3f32be2838091f504fc15d684ea398f6b5cf6ee20",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "War Satchel Mainnet Execution and Operator Gates",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "undeployed-warbound-module-design",
+      "id": "aoe2war.wolochain.warbound-trophies",
+      "owner": "wolochain-ops",
+      "path": "docs/warbound-trophies.md",
+      "review_interval_days": 30,
+      "reviewed_at": "2026-11-10",
+      "sensitivity": "internal",
+      "sha256": "d71a1fb9320a1e3748324b3eafcdf7db0a3c0b24f4d9cfbf2b08a73dea0a0710",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "AoE2WAR Warbound Trophies",
+      "type": "working"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "ibc-mission-prompt-evidence",
+      "id": "aoe2war.wolochain.codex-osmosis-ibc-mission",
+      "owner": "wolochain-ops",
+      "path": "mainnet-prep/CODEX_OSMOSIS_IBC_MISSION.md",
+      "review_interval_days": 0,
+      "reviewed_at": "2026-08-10",
+      "sensitivity": "internal",
+      "sha256": "515c6acbc9c2bbb522c600185ea9b06c9a0935fc88737a883d10db6a5976a3f6",
+      "source_of_truth": "historical-evidence",
+      "status": "historical",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "Codex Mission: WoloChain Mainnet \u2194 Osmosis IBC Prep",
+      "type": "historical"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "ibc-relayer-operating-reference",
+      "id": "aoe2war.wolochain.hermes-osmosis-relayer-staging",
+      "owner": "wolochain-ops",
+      "path": "mainnet-prep/HERMES_OSMOSIS_RELAYER_STAGING.md",
+      "review_interval_days": 30,
+      "reviewed_at": "2026-11-10",
+      "sensitivity": "restricted",
+      "sha256": "4d18c05a0c07925a0eef207b614209cfca20d39fa5639ced0cf6f011890ac8d4",
+      "source_of_truth": "runtime-evidence",
+      "status": "active",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "WoloChain Mainnet Osmosis Hermes Relayer Staging",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "pre-ibc-reconnaissance-evidence",
+      "id": "aoe2war.wolochain.ibc-recon-summary",
+      "owner": "wolochain-ops",
+      "path": "mainnet-prep/IBC_RECON_SUMMARY.md",
+      "review_interval_days": 0,
+      "reviewed_at": "2026-08-10",
+      "sensitivity": "internal",
+      "sha256": "ebdff9b2c0657ec6346657cf7cae1934c8e6ad30aac60d630d85a8a1d7031813",
+      "source_of_truth": "historical-evidence",
+      "status": "historical",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "WoloChain Mainnet IBC Recon Summary",
+      "type": "historical"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "live-ibc-path-receipt",
+      "id": "aoe2war.wolochain.ibc-wolo-osmosis-live",
+      "owner": "wolochain-ops",
+      "path": "mainnet-prep/IBC_WOLO_OSMOSIS_LIVE.md",
+      "review_interval_days": 30,
+      "reviewed_at": "2026-11-10",
+      "sensitivity": "internal",
+      "sha256": "5fb12ac4cadfecd0ef174363fa85da846e512bfc5a9a153cb3f2887e0d8eba0f",
+      "source_of_truth": "runtime-evidence",
+      "status": "active",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "WoloChain Mainnet Osmosis IBC Path Live",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "mainnet-prep-artifact-index",
+      "id": "aoe2war.wolochain.mainnet-prep-readme",
+      "owner": "wolochain-ops",
+      "path": "mainnet-prep/README.md",
+      "review_interval_days": 60,
+      "reviewed_at": "2026-10-10",
+      "sensitivity": "internal",
+      "sha256": "9ce8ea2034aa7b310b784bc7dcb63625d5f50413a01a3451186ad2854106501d",
+      "source_of_truth": "git",
+      "status": "active",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "WoloChain wolo-1 Prep Templates",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "relayer-key-funding-preparation-evidence",
+      "id": "aoe2war.wolochain.relayer-keys-and-funding-checklist",
+      "owner": "wolochain-ops",
+      "path": "mainnet-prep/RELAYER_KEYS_AND_FUNDING_CHECKLIST.md",
+      "review_interval_days": 0,
+      "reviewed_at": "2026-08-10",
+      "sensitivity": "internal",
+      "sha256": "db4e925f6ac25142972abae7dbc9f16987c877bc38e0bc983f5a4e97c9dac7fe",
+      "source_of_truth": "historical-evidence",
+      "status": "historical",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "Relayer Keys and Funding Checklist",
+      "type": "historical"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "mainnet-prep-chronological-handoff",
+      "id": "aoe2war.wolochain.mainnet-prep-status",
+      "owner": "wolochain-ops",
+      "path": "mainnet-prep/STATUS.md",
+      "review_interval_days": 14,
+      "reviewed_at": "2026-11-19",
+      "sensitivity": "restricted",
+      "sha256": "327b39966b3d646a36209aa6527d9ddf7bf032960524dc3ed92b2fba66f33655",
+      "source_of_truth": "runtime-evidence",
+      "status": "active",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "WoloChain wolo-1 Mainnet Prep Status",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "liquidity-transfer-receipt",
+      "id": "aoe2war.wolochain.osmosis-liquidity-transfer",
+      "owner": "wolochain-ops",
+      "path": "mainnet-prep/WOLO_OSMOSIS_LIQUIDITY_TRANSFER.md",
+      "review_interval_days": 0,
+      "reviewed_at": "2026-08-10",
+      "sensitivity": "internal",
+      "sha256": "7d55c2bf36fd2d3581941e9440be23eae6185c3d8f9d4de00454c6c68cf5764b",
+      "source_of_truth": "historical-evidence",
+      "status": "historical",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "WoloChain Mainnet \u2192 Osmosis Liquidity Transfer",
+      "type": "historical"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "post-launch-osmosis-metadata-plan",
+      "id": "aoe2war.wolochain.osmosis-metadata-plan",
+      "owner": "wolochain-ops",
+      "path": "mainnet-prep/WOLO_OSMOSIS_METADATA_PLAN.md",
+      "review_interval_days": 30,
+      "reviewed_at": "2026-11-10",
+      "sensitivity": "public",
+      "sha256": "ac9c19f450ab492113adbcaad2423f1cc4b7f091878e6a94b3efc5caa80b21e3",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "WOLO Osmosis Metadata Plan",
+      "type": "working"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "pre-pool-launch-plan-evidence",
+      "id": "aoe2war.wolochain.osmosis-pool-launch-plan",
+      "owner": "wolochain-ops",
+      "path": "mainnet-prep/WOLO_OSMOSIS_POOL_LAUNCH.md",
+      "review_interval_days": 0,
+      "reviewed_at": "2026-08-10",
+      "sensitivity": "internal",
+      "sha256": "cecf8674d0a98b3a08b461a81a93b866c7200656da0462987091bb08dd861954",
+      "source_of_truth": "historical-evidence",
+      "status": "historical",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "WOLO Osmosis Pool Launch Plan",
+      "type": "historical"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "ibc-test-transfer-receipt",
+      "id": "aoe2war.wolochain.osmosis-test-transfer",
+      "owner": "wolochain-ops",
+      "path": "mainnet-prep/WOLO_OSMOSIS_TEST_TRANSFER.md",
+      "review_interval_days": 0,
+      "reviewed_at": "2026-08-10",
+      "sensitivity": "internal",
+      "sha256": "0e4fb9bd50af84cfc8341d9f128a20a7024524abe85d66f9387428d4a4323ffd",
+      "source_of_truth": "historical-evidence",
+      "status": "historical",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "WoloChain Mainnet \u2192 Osmosis Test Transfer",
+      "type": "historical"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "live-osmosis-pool-receipt",
+      "id": "aoe2war.wolochain.osmosis-pool-live",
+      "owner": "wolochain-ops",
+      "path": "mainnet-prep/WOLO_USDC_OSMOSIS_POOL_LIVE.md",
+      "review_interval_days": 30,
+      "reviewed_at": "2026-11-10",
+      "sensitivity": "public",
+      "sha256": "8be73779d82411bcee864397a678efd9e2d8ca8ab8d5f7b5523e6a1cd967f734",
+      "source_of_truth": "runtime-evidence",
+      "status": "active",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "WOLO/USDC Osmosis Pool",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "prelaunch-genesis-scaffold",
+      "id": "aoe2war.wolochain.mainnet-genesis-prep",
+      "owner": "wolochain-ops",
+      "path": "mainnet-prep/genesis/README.md",
+      "review_interval_days": 0,
+      "reviewed_at": "2026-08-10",
+      "sensitivity": "internal",
+      "sha256": "94b8ff53d101f71033d16f910b5ec298afd129712fbc35312976fc78778b71c4",
+      "source_of_truth": "historical-evidence",
+      "status": "historical",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "Mainnet Genesis Prep",
+      "type": "historical"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "prelaunch-validator-gentx-evidence",
+      "id": "aoe2war.wolochain.validator-gentx-checklist",
+      "owner": "wolochain-ops",
+      "path": "mainnet-prep/genesis/VALIDATOR_GENTX_CHECKLIST.md",
+      "review_interval_days": 0,
+      "reviewed_at": "2026-08-10",
+      "sensitivity": "internal",
+      "sha256": "391f91d5c70a5afbb0800616ab3e49444e72f4659a56f69d0250430a692487a9",
+      "source_of_truth": "historical-evidence",
+      "status": "historical",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "WoloChain Mainnet Validator Gentx Checklist",
+      "type": "historical"
+    },
+    {
+      "audience": [
+        "developers",
+        "operators",
+        "ai-agents"
+      ],
+      "authority": "mainnet-nginx-routing-reference",
+      "id": "aoe2war.wolochain.mainnet-nginx-notes",
+      "owner": "wolochain-ops",
+      "path": "mainnet-prep/nginx/README.md",
+      "review_interval_days": 30,
+      "reviewed_at": "2026-11-10",
+      "sensitivity": "internal",
+      "sha256": "31fb3a41e25474547b736cc2d4759bc13c3cbf7a2909e3bea966fa4de51fc123",
+      "source_of_truth": "runtime-evidence",
+      "status": "active",
+      "systems": [
+        "wolochain",
+        "aoe2war"
+      ],
+      "title": "WoloChain Mainnet Nginx Notes",
+      "type": "reference"
+    },
+    {
+      "audience": [
+        "operators",
+        "developers",
+        "ai-agents"
+      ],
+      "authority": "non-authorizing-financial-human-signature-review",
+      "id": "aoe2war.wolochain.financial-five-human-maintenance-review-20261024",
+      "owner": "wolochain-ops",
+      "path": "reviews/financial-maintenance/20261024-human-authority-and-writer-closeout.md",
+      "review_interval_days": 14,
+      "reviewed_at": "2026-11-24",
+      "sensitivity": "internal",
+      "sha256": "fda54d65dad97c89a8099654df4a5a71f1168aa6385bb935af96033ed3e0b93e",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war",
+        "aoe2dewarwagers"
+      ],
+      "title": "Financial-maintenance authority and writer review \u2014 2026-10-24",
+      "type": "runbook"
+    },
+    {
+      "audience": [
+        "operators",
+        "developers",
+        "ai-agents"
+      ],
+      "authority": "non-authorizing-financial-human-signature-review",
+      "id": "aoe2war.wolochain.production-p1-and-authority-gates-20261024",
+      "owner": "wolochain-ops",
+      "path": "reviews/financial-maintenance/20261024-p1-writer-evidence-and-budget-proposal.md",
+      "review_interval_days": 14,
+      "reviewed_at": "2026-11-24",
+      "sensitivity": "internal",
+      "sha256": "93ad3cd0df15875428fe84b10502bd78a7d1f383aa8347f293caaad66a35d34a",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war",
+        "aoe2dewarwagers"
+      ],
+      "title": "Production P1 source integrity, writer evidence, five-person authority and bounded recovery proposal \u2014 2026-10-24",
+      "type": "runbook"
+    },
+    {
+      "audience": [
+        "operators",
+        "developers",
+        "ai-agents"
+      ],
+      "authority": "non-authorizing-financial-human-signature-review",
+      "id": "aoe2war.wolochain.financial-maintenance-phase-integration-20261024",
+      "owner": "wolochain-ops",
+      "path": "reviews/financial-maintenance/20261024-phase-integration-operator-runbook.md",
+      "review_interval_days": 14,
+      "reviewed_at": "2026-11-24",
+      "sensitivity": "internal",
+      "sha256": "e0bdf53b6f952f75139f592fbb807f72652fc5cc84461036590a2aba0f5de824",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war",
+        "aoe2dewarwagers"
+      ],
+      "title": "Financial maintenance phase integration operator runbook \u2014 2026-10-24",
+      "type": "runbook"
+    },
+    {
+      "audience": [
+        "operators",
+        "developers",
+        "ai-agents"
+      ],
+      "authority": "non-authorizing-financial-human-signature-review",
+      "id": "aoe2war.wolochain.financial-controller-source-integrity-and-enrollment-20261024",
+      "owner": "wolochain-ops",
+      "path": "reviews/financial-maintenance/20261024-source-integrity-enrollment-and-restore-qualification.md",
+      "review_interval_days": 14,
+      "reviewed_at": "2026-11-24",
+      "sensitivity": "internal",
+      "sha256": "36f254950a905c8edf39e728f6285333770346d4bca294e455429a9f16df4990",
+      "source_of_truth": "git",
+      "status": "draft",
+      "systems": [
+        "wolochain",
+        "aoe2war",
+        "aoe2dewarwagers"
+      ],
+      "title": "Financial controller source integrity and five-human enrollment \u2014 2026-10-24",
+      "type": "runbook"
+    }
+  ],
+  "generated_at": "2026-11-25T00:34:47Z",
+  "implementation_baseline": {
+    "branch": "fix/20261020-custody-artifact-pin-recovered-lifecycle-held",
+    "commit": "6eca3d750795c0e0fd5b4b8bc99398cbdec1859d"
+  },
+  "owner": "wolochain-ops",
+  "repo": "wolochain",
+  "schema_version": "2.1.0"
+}

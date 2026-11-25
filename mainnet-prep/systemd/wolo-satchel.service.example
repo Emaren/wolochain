@@ -1,0 +1,33 @@
+[Unit]
+Description=Isolated War Satchel custody signer (requires independent activation permit)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=wolo-satchel
+Group=wolo-satchel
+ExecStart=/opt/wolo-satchel/releases/REVIEWED_SHA/wolosatcheld -config /etc/wolo-satchel/config.json
+Restart=no
+TimeoutStopSec=8
+UMask=0077
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadOnlyPaths=/etc/wolo-satchel /var/lib/wolo-satchel/keyring
+ReadWritePaths=/var/lib/wolo-satchel/state
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+CapabilityBoundingSet=
+AmbientCapabilities=
+LimitNOFILE=256
+TasksMax=64
+MemoryMax=512M
+
+[Install]
+WantedBy=multi-user.target

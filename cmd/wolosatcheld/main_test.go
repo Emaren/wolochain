@@ -1,0 +1,160 @@
+package main
+
+import (
+	"bytes"
+	"context"
+	"crypto/ed25519"
+	"crypto/sha256"
+	"encoding/base64"
+	"encoding/hex"
+	"encoding/json"
+	"errors"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/cosmos/btcutil/bech32"
+	"github.com/emaren/wolochain/internal/satchel"
+	"github.com/emaren/wolochain/internal/satchelservice"
+)
+
+type countedBackend struct{ signs, broadcasts, confirms int }
+
+func (b *countedBackend) Sign(context.Context, satchelservice.TransferRequest) (satchelservice.SignedTransaction, error) {
+	b.signs++
+	return satchelservice.SignedTransaction{}, nil
+}
+func (b *countedBackend) ValidateSigned(satchelservice.TransferRequest, satchelservice.SignedTransaction) error {
+	return nil
+}
+func (b *countedBackend) Broadcast(context.Context, satchelservice.SignedTransaction) (satchelservice.BroadcastResult, error) {
+	b.broadcasts++
+	return satchelservice.BroadcastResult{Status: "ACCEPTED"}, nil
+}
+func (b *countedBackend) Confirm(context.Context, satchelservice.TransferRequest, satchelservice.SignedTransaction) (satchelservice.Confirmation, error) {
+	b.confirms++
+	return satchelservice.Confirmation{Status: "UNKNOWN"}, nil
+}
+
+func TestCommandRefusesUnconfiguredExecutionWithoutLeakingInputs(t *testing.T) {
+	for _, args := range [][]string{nil, {"-unknown-sensitive-value"}, {"-config", "/sensitive/production/path"}, {"-config", "/sensitive/path", "-check"}} {
+		var out, errout bytes.Buffer
+		if code := run(t.Context(), args, &out, &errout); code == 0 {
+			t.Fatal("unconfigured service started")
+		}
+		if strings.Contains(errout.String(), "sensitive") || out.Len() != 0 {
+			t.Fatal("configuration path or unknown input leaked")
+		}
+	}
+}
+
+// No owner-private C08 receipt is ever added to CI. These negative tests use
+// disposable strings and prove the production probe cannot leak file paths
+// or start custody when its exact signed owner material is absent.
+func TestC08ProductionAdmissionProbeFailsClosedWithoutRealReceipt(t *testing.T) {
+	folder := t.TempDir()
+	receipt := filepath.Join(folder, "fake-owner-adoption.json")
+	public := filepath.Join(folder, "fake-public-key.bin")
+	if err := os.WriteFile(receipt, []byte("{}"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(public, []byte("not-a-public-key"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	cases := [][]string{
+		{"verify-c08-governance"},
+		{"verify-c08-governance", "--receipt", receipt},
+		{"verify-c08-governance", "--receipt", receipt, "--owner-public", public},
+		{"verify-c08-governance", "--owner-public", public, "--receipt", receipt},
+		{"verify-c08-governance", "--receipt", receipt, "--owner-public", public, "extra"},
+	}
+	for _, args := range cases {
+		var out, errout bytes.Buffer
+		if code := run(t.Context(), args, &out, &errout); code != 3 || out.Len() != 0 ||
+			strings.Contains(errout.String(), receipt) || strings.Contains(errout.String(), public) {
+			t.Fatalf("governance probe did not fail safely: code=%d, stdout=%s, stderr=%s", code, out.String(), errout.String())
+		}
+	}
+}
+func TestPermitCheckedBeforeEachSignAndBroadcastButRecoveryRemainsAvailable(t *testing.T) {
+	inner := &countedBackend{}
+	active := true
+	guard := &permittedBackend{inner: inner, authorize: func(context.Context) bool { return active }, trust: func(context.Context) error { return nil }}
+	if _, err := guard.Sign(t.Context(), satchelservice.TransferRequest{}); err != nil || inner.signs != 1 {
+		t.Fatal("verified permit refused")
+	}
+	active = false
+	if _, err := guard.Sign(t.Context(), satchelservice.TransferRequest{}); err == nil || inner.signs != 1 {
+		t.Fatal("expired permit authorized signing")
+	}
+	if r, err := guard.Broadcast(t.Context(), satchelservice.SignedTransaction{}); err == nil || r.Status != "UNKNOWN" || inner.broadcasts != 0 {
+		t.Fatal("expired permit authorized transmission")
+	}
+	if _, err := guard.Confirm(t.Context(), satchelservice.TransferRequest{}, satchelservice.SignedTransaction{}); err != nil || inner.confirms != 1 {
+		t.Fatal("permit expiry blocked read-only recovery")
+	}
+	if guard.ValidateSigned(satchelservice.TransferRequest{}, satchelservice.SignedTransaction{}) != nil {
+		t.Fatal("permit expiry blocked durable verification")
+	}
+}
+
+func TestUnverifiedConsensusTrustCannotReachSigner(t *testing.T) {
+	inner := &countedBackend{}
+	guard := &permittedBackend{inner: inner, authorize: func(context.Context) bool { return true }, trust: func(context.Context) error { return errors.New("untrusted checkpoint") }}
+	if _, err := guard.Sign(t.Context(), satchelservice.TransferRequest{}); err == nil || inner.signs != 0 {
+		t.Fatal("unverified trust reached signer")
+	}
+}
+func TestRunningExecutableDigestIsStableAndPublic(t *testing.T) {
+	a, err := runningDigest()
+	if err != nil || len(a) != 64 {
+		t.Fatalf("digest unavailable: %v", err)
+	}
+	b, err := runningDigest()
+	if err != nil || a != b {
+		t.Fatal(errors.New("executable digest changed"))
+	}
+}
+
+func TestStaticCheckDeniesValidExecutionPermitWithoutOwnerGovernance(t *testing.T) {
+	dir, err := filepath.EvalSymlinks(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	address := func(b byte) string {
+		s, err := bech32.EncodeFromBase256("wolo", bytes.Repeat([]byte{b}, 20))
+		if err != nil {
+			t.Fatal(err)
+		}
+		return s
+	}
+	authority := ed25519.NewKeyFromSeed(bytes.Repeat([]byte{3}, 32))
+	approval := ed25519.NewKeyFromSeed(bytes.Repeat([]byte{4}, 32))
+	cfg := satchelservice.Config{Version: 1, Vault: address(1), PublicKeyHex: "02" + strings.Repeat("01", 32), BettingEscrow: address(2), ProtectedAddresses: []string{address(2)}, MaxAmountUWolo: 1000000, RPC: "https://primary.invalid", REST: "https://rest.invalid", WitnessRPC: "https://witness.invalid", TrustAnchor: satchel.TrustAnchor{Height: 1, Hash: strings.Repeat("A", 64), PeriodSeconds: 3600, EvidenceReference: "synthetic-test-only"}, KeyringDir: filepath.Join(dir, "does-not-exist-keyring"), KeyName: "synthetic", PassphraseFile: filepath.Join(dir, "does-not-exist-unlock"), TokenFile: filepath.Join(dir, "does-not-exist-token"), StatePath: filepath.Join(dir, "does-not-exist-state"), FeesUWolo: "5000", GasLimit: 120000, TimeoutBlocks: 20, WithdrawalApprovalKeyHex: hex.EncodeToString(approval.Public().(ed25519.PublicKey)), WagerApprovalKeyHex: hex.EncodeToString(ed25519.NewKeyFromSeed(bytes.Repeat([]byte{5}, 32)).Public().(ed25519.PublicKey)), ActivationAuthorityKeyHex: hex.EncodeToString(authority.Public().(ed25519.PublicKey)), PermitFile: filepath.Join(dir, "permit.json")}
+	data, _ := json.Marshal(cfg)
+	digest := sha256.Sum256(data)
+	binary, err := runningDigest()
+	if err != nil {
+		t.Fatal(err)
+	}
+	permit := satchelservice.ExecutionPermit{Version: 1, Scope: "satchel-execution-v1", ConfigSHA256: hex.EncodeToString(digest[:]), BinarySHA256: binary, Vault: cfg.Vault, IsolationEvidenceSHA256: strings.Repeat("1", 64), AccountingEvidenceSHA256: strings.Repeat("2", 64), RecoveryEvidenceSHA256: strings.Repeat("3", 64), Reviewer: "synthetic test reviewer", Reference: "synthetic-only", IssuedAt: time.Now().Unix() - 1, ExpiresAt: time.Now().Unix() + 300}
+	permit.Signature = base64.StdEncoding.EncodeToString(ed25519.Sign(authority, satchelservice.PermitMessage(permit)))
+	encoded, _ := json.Marshal(permit)
+	config := filepath.Join(dir, "config.json")
+	if os.WriteFile(config, data, 0600) != nil || os.WriteFile(cfg.PermitFile, encoded, 0600) != nil {
+		t.Fatal("fixture write failed")
+	}
+	// The context is live: rejection must follow from ABSENT governance,
+	// not a canceled caller. Keyring and token stay absent to expose any
+	// accidental signer initialization.
+	ctx := t.Context()
+	var out, errout bytes.Buffer
+	if code := run(ctx, []string{"-config", config, "-check"}, &out, &errout); code == 0 || !strings.Contains(errout.String(), "activation permit unavailable") || out.Len() != 0 {
+		t.Fatalf("old permit alone must not activate custody: %d %s %s", code, out.String(), errout.String())
+	}
+	if _, err := os.Lstat(cfg.KeyringDir); !os.IsNotExist(err) {
+		t.Fatal("static check created keyring")
+	}
+}

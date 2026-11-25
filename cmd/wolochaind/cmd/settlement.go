@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"net"
 	"net/http"
 	"net/url"
@@ -21,21 +22,25 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cosmos/btcutil/bech32"
+	"github.com/emaren/wolochain/internal/chainevents"
+	"github.com/emaren/wolochain/internal/chainjson"
 	"github.com/spf13/cobra"
-
-	"github.com/emaren/wolochain/app"
 )
 
 const (
-	settlementCanonicalChainID      = "wolo-testnet"
+	settlementCanonicalChainID      = "wolo-1"
 	settlementCanonicalBaseDenom    = "uwolo"
 	settlementCanonicalDisplayDenom = "wolo"
 	settlementCanonicalPrefix       = "wolo"
 	settlementDefaultGasPrices      = "0.025uwolo"
-	settlementDefaultRPC            = "http://127.0.0.1:26657"
-	settlementDefaultNode           = "tcp://127.0.0.1:26657"
-	settlementDefaultREST           = "http://127.0.0.1:1317"
-	settlementDefaultListenAddr     = "127.0.0.1:8091"
+	settlementDefaultHome           = "/var/lib/wolochaind-mainnet"
+	settlementDefaultRPC            = "http://127.0.0.1:27657"
+	settlementDefaultNode           = "tcp://127.0.0.1:27657"
+	settlementDefaultREST           = "http://127.0.0.1:1318"
+	settlementDefaultPublicREST     = "https://rest-mainnet.aoe2war.com"
+	settlementDefaultListenAddr     = "127.0.0.1:8092"
+	settlementDefaultEscrowKeyName  = "mainnet-escrow"
 	settlementSignerRole            = "payout"
 	settlementEscrowSignerRole      = "escrow"
 	settlementMaxRunPayouts         = 250
@@ -46,9 +51,11 @@ var settlementSourceEventPattern = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._:
 
 type settlementConfig struct {
 	ExecutablePath         string
+	ExecutableInterpreter  string
 	HomeDir                string
 	KeyringBackend         string
 	KeyringDir             string
+	KeyringPassphrase      string
 	NodeAddr               string
 	RPCHTTP                string
 	RESTURL                string
@@ -83,6 +90,18 @@ type settlementConfig struct {
 	ConfirmInterval        time.Duration
 }
 
+func (cfg settlementConfig) executableCommand(args []string) (string, []string) {
+	if strings.TrimSpace(cfg.ExecutableInterpreter) == "" {
+		return cfg.ExecutablePath, args
+	}
+
+	commandArgs := make([]string, 0, len(args)+1)
+	commandArgs = append(commandArgs, cfg.ExecutablePath)
+	commandArgs = append(commandArgs, args...)
+
+	return cfg.ExecutableInterpreter, commandArgs
+}
+
 type settlementHealthResponse struct {
 	OK                     bool     `json:"ok"`
 	FailureCode            string   `json:"failure_code,omitempty"`
@@ -94,6 +113,8 @@ type settlementHealthResponse struct {
 	PublicRESTURL          string   `json:"public_rest_url,omitempty"`
 	HomeDir                string   `json:"home_dir"`
 	KeyringBackend         string   `json:"keyring_backend"`
+	KeyringDir             string   `json:"keyring_dir,omitempty"`
+	StateDir               string   `json:"state_dir"`
 	PayoutKeyName          string   `json:"payout_key_name,omitempty"`
 	PayoutAddress          string   `json:"payout_address,omitempty"`
 	EscrowKeyName          string   `json:"escrow_key_name,omitempty"`
@@ -133,6 +154,7 @@ type normalizedSettlementRequest struct {
 }
 
 type settlementExecuteResponse struct {
+	ConfirmationStatus         string `json:"confirmation_status,omitempty"`
 	OK                         bool   `json:"ok"`
 	Status                     string `json:"status"`
 	FailureCode                string `json:"failure_code,omitempty"`
@@ -194,6 +216,7 @@ type normalizedSettlementPayout struct {
 }
 
 type settlementRunPayoutResult struct {
+	ConfirmationStatus         string   `json:"confirmation_status,omitempty"`
 	Index                      int      `json:"index"`
 	RequestID                  string   `json:"request_id"`
 	Attempted                  bool     `json:"attempted"`
@@ -287,6 +310,7 @@ type settlementRunStoredResult struct {
 }
 
 type settlementLookupResponse struct {
+	Status                     string               `json:"status"`
 	OK                         bool                 `json:"ok"`
 	FailureCode                string               `json:"failure_code,omitempty"`
 	Detail                     string               `json:"detail,omitempty"`
@@ -308,6 +332,13 @@ type settlementLookupResponse struct {
 	Transfers                  []settlementTransfer `json:"transfers,omitempty"`
 	MatchedExpected            bool                 `json:"matched_expected"`
 	MatchedTransfer            *settlementTransfer  `json:"matched_transfer,omitempty"`
+	// A unique ordinal in the canonical flattened transfer-event list. Nil for
+	// zero or multiple matching transfers; neither case is Satchel credit proof.
+	MatchedTransferIndex *int `json:"matched_transfer_index,omitempty"`
+	// Strict payout v1 has exactly one MsgSend/coin. Its stable receipt effect
+	// index is 0 regardless of optional log/fee event representations.
+	ReceiptTransferIndex  *int `json:"receipt_transfer_index,omitempty"`
+	MatchingTransferCount int  `json:"matching_transfer_count"`
 }
 
 type settlementEscrowVerifyResponse struct {
@@ -349,12 +380,7 @@ type settlementEscrowDepositItem struct {
 	CanonicalTxLookupPublic    string `json:"canonical_tx_lookup_public,omitempty"`
 }
 
-type settlementTransfer struct {
-	Sender    string `json:"sender"`
-	Recipient string `json:"recipient"`
-	Amount    string `json:"amount"`
-	Denom     string `json:"denom"`
-}
+type settlementTransfer = chainevents.Transfer
 
 type settlementInspectResponse struct {
 	Found       bool                     `json:"found"`
@@ -379,6 +405,7 @@ type settlementRecentItem struct {
 }
 
 type settlementRecordSummary struct {
+	ConfirmationStatus         string    `json:"confirmation_status,omitempty"`
 	RequestID                  string    `json:"request_id"`
 	UpdatedAt                  time.Time `json:"updated_at,omitempty"`
 	Outcome                    string    `json:"outcome"`
@@ -486,9 +513,14 @@ type settlementRunRecentSummary struct {
 }
 
 type settlementLookupExpectations struct {
-	Sender      string
-	Recipient   string
-	AmountUWolo string
+	Denom         string
+	Memo          string
+	RequireMemo   bool
+	RequirePayout bool
+	RequireEscrow bool
+	Sender        string
+	Recipient     string
+	AmountUWolo   string
 }
 
 type tenderStatusResponse struct {
@@ -572,19 +604,9 @@ type restTxSearchResponse struct {
 	Total string `json:"total"`
 }
 
-type restTxLogItem struct {
-	Events []restTxEvent `json:"events"`
-}
-
-type restTxEvent struct {
-	Type       string                 `json:"type"`
-	Attributes []restTxEventAttribute `json:"attributes"`
-}
-
-type restTxEventAttribute struct {
-	Key   string `json:"key"`
-	Value string `json:"value"`
-}
+type restTxLogItem = chainevents.LogItem
+type restTxEvent = chainevents.Event
+type restTxEventAttribute = chainevents.Attribute
 
 type bankSendBroadcastResponse struct {
 	Height    string `json:"height"`
@@ -1055,11 +1077,7 @@ func newSettlementServeCmd() *cobra.Command {
 				return err
 			}
 
-			server := &http.Server{
-				Addr:              cfg.ListenAddr,
-				Handler:           cfg.newSettlementHTTPHandler(),
-				ReadHeaderTimeout: 5 * time.Second,
-			}
+			server := cfg.newSettlementHTTPServer()
 
 			cmd.Printf("settlement server listening on http://%s\n", cfg.ListenAddr)
 			return server.ListenAndServe()
@@ -1069,6 +1087,7 @@ func newSettlementServeCmd() *cobra.Command {
 
 func (cfg settlementConfig) newSettlementHTTPHandler() http.Handler {
 	mux := http.NewServeMux()
+	mux.HandleFunc("/settlement/v1/runs/inspect", cfg.inspectSettlementRunHTTP)
 	mux.HandleFunc("/settlement/v1/health", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			writeJSONResponse(w, http.StatusMethodNotAllowed, map[string]string{"detail": "method not allowed"})
@@ -1094,7 +1113,7 @@ func (cfg settlementConfig) newSettlementHTTPHandler() http.Handler {
 		}
 
 		var request settlementExecuteRequest
-		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		if err := decodeSettlementRequestJSON(w, r, &request); err != nil {
 			writeJSONResponse(w, http.StatusBadRequest, settlementExecuteResponse{
 				OK:          false,
 				Status:      "failed",
@@ -1134,7 +1153,7 @@ func (cfg settlementConfig) newSettlementHTTPHandler() http.Handler {
 		}
 
 		var request settlementRunRequest
-		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		if err := decodeSettlementRequestJSON(w, r, &request); err != nil {
 			writeJSONResponse(w, http.StatusBadRequest, settlementRunResponse{
 				OK:          false,
 				DryRun:      true,
@@ -1173,7 +1192,7 @@ func (cfg settlementConfig) newSettlementHTTPHandler() http.Handler {
 		}
 
 		var request settlementRunRequest
-		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		if err := decodeSettlementRequestJSON(w, r, &request); err != nil {
 			writeJSONResponse(w, http.StatusBadRequest, settlementRunResponse{
 				OK:          false,
 				DryRun:      false,
@@ -1283,7 +1302,7 @@ func (cfg settlementConfig) newSettlementHTTPHandler() http.Handler {
 		}
 
 		var request settlementChallengeRequest
-		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		if err := decodeSettlementRequestJSON(w, r, &request); err != nil {
 			writeJSONResponse(w, http.StatusBadRequest, settlementChallengeResponse{
 				OK:          false,
 				DryRun:      true,
@@ -1429,7 +1448,7 @@ func (cfg settlementConfig) newSettlementHTTPHandler() http.Handler {
 			}
 
 			var request settlementChallengeRequest
-			if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+			if err := decodeSettlementRequestJSON(w, r, &request); err != nil {
 				writeJSONResponse(w, http.StatusBadRequest, settlementChallengeResponse{
 					OK:          false,
 					DryRun:      false,
@@ -1518,7 +1537,7 @@ func (cfg settlementConfig) newSettlementHTTPHandler() http.Handler {
 		writeJSONResponse(w, statusCode, response)
 	})
 
-	return mux
+	return boundedSettlementHandler(mux)
 }
 
 func loadSettlementConfig() (settlementConfig, error) {
@@ -1529,13 +1548,13 @@ func loadSettlementConfig() (settlementConfig, error) {
 
 	homeDir := getenvFirst("WOLO_SETTLEMENT_HOME", "WOLO_HOME")
 	if homeDir == "" {
-		homeDir = app.DefaultNodeHome
+		homeDir = settlementDefaultHome
 	}
 	homeDir = expandHome(homeDir)
 
 	rpcHTTP := normalizeHTTPURL(getenvFirst("WOLO_SETTLEMENT_RPC_HTTP", "WOLO_SETTLEMENT_RPC_URL", "WOLO_RPC_URL"), settlementDefaultRPC)
 	restURL := normalizeHTTPURL(getenvFirst("WOLO_SETTLEMENT_REST_URL", "WOLO_REST_URL"), settlementDefaultREST)
-	publicRESTURL := strings.TrimSpace(getenvFirst("WOLO_SETTLEMENT_PUBLIC_REST_URL", "WOLO_PUBLIC_REST_URL"))
+	publicRESTURL := strings.TrimSpace(getenvDefault("WOLO_SETTLEMENT_PUBLIC_REST_URL", getenvDefault("WOLO_PUBLIC_REST_URL", settlementDefaultPublicREST)))
 	if publicRESTURL != "" {
 		publicRESTURL = normalizeHTTPURL(publicRESTURL, "")
 	}
@@ -1555,12 +1574,17 @@ func loadSettlementConfig() (settlementConfig, error) {
 	if err != nil {
 		return settlementConfig{}, err
 	}
+	keyringPassphrase, err := readSettlementSecretFile(os.Getenv("WOLO_SETTLEMENT_KEYRING_PASSPHRASE_FILE"))
+	if err != nil {
+		return settlementConfig{}, err
+	}
 
 	cfg := settlementConfig{
 		ExecutablePath:         executablePath,
 		HomeDir:                homeDir,
 		KeyringBackend:         getenvDefault("WOLO_SETTLEMENT_KEYRING_BACKEND", "os"),
 		KeyringDir:             expandHome(os.Getenv("WOLO_SETTLEMENT_KEYRING_DIR")),
+		KeyringPassphrase:      keyringPassphrase,
 		NodeAddr:               getenvDefault("WOLO_SETTLEMENT_NODE", settlementDefaultNode),
 		RPCHTTP:                rpcHTTP,
 		RESTURL:                restURL,
@@ -1571,7 +1595,7 @@ func loadSettlementConfig() (settlementConfig, error) {
 		AddressPrefix:          getenvDefault("WOLO_SETTLEMENT_ADDRESS_PREFIX", settlementCanonicalPrefix),
 		PayoutKeyName:          strings.TrimSpace(os.Getenv("WOLO_SETTLEMENT_PAYOUT_KEY_NAME")),
 		PayoutAddress:          strings.TrimSpace(os.Getenv("WOLO_SETTLEMENT_PAYOUT_ADDRESS")),
-		EscrowKeyName:          strings.TrimSpace(getenvDefault("WOLO_SETTLEMENT_ESCROW_KEY_NAME", "escrow")),
+		EscrowKeyName:          strings.TrimSpace(getenvDefault("WOLO_SETTLEMENT_ESCROW_KEY_NAME", settlementDefaultEscrowKeyName)),
 		EscrowAddress:          strings.TrimSpace(getenvFirst("WOLO_SETTLEMENT_ESCROW_ADDRESS", "WOLO_BET_ESCROW_ADDRESS")),
 		TreasuryAddress:        strings.TrimSpace(os.Getenv("WOLO_SETTLEMENT_TREASURY_ADDRESS")),
 		EscrowAutoTopUp:        parseBoolEnv("WOLO_SETTLEMENT_ESCROW_AUTO_TOP_UP_ENABLED"),
@@ -1606,6 +1630,33 @@ func loadSettlementConfig() (settlementConfig, error) {
 	return cfg, nil
 }
 
+func readSettlementSecretFile(path string) (string, error) {
+	trimmed := strings.TrimSpace(path)
+	if trimmed == "" {
+		return "", nil
+	}
+
+	content, err := os.ReadFile(expandHome(trimmed))
+	if err != nil {
+		return "", fmt.Errorf("read settlement secret file %s: %w", trimmed, err)
+	}
+
+	secret := strings.TrimRight(string(content), "\r\n")
+	if strings.TrimSpace(secret) == "" {
+		return "", fmt.Errorf("settlement secret file %s is empty", trimmed)
+	}
+
+	return secret, nil
+}
+
+func (cfg settlementConfig) attachKeyringPassphrase(cmd *exec.Cmd) {
+	if cfg.KeyringPassphrase == "" {
+		return
+	}
+
+	cmd.Stdin = strings.NewReader(cfg.KeyringPassphrase + "\n")
+}
+
 func (cfg settlementConfig) buildHealthReport(ctx context.Context) settlementHealthResponse {
 	report := settlementHealthResponse{
 		OK:                     true,
@@ -1615,6 +1666,8 @@ func (cfg settlementConfig) buildHealthReport(ctx context.Context) settlementHea
 		PublicRESTURL:          cfg.PublicRESTURL,
 		HomeDir:                cfg.HomeDir,
 		KeyringBackend:         cfg.KeyringBackend,
+		KeyringDir:             cfg.KeyringDir,
+		StateDir:               cfg.StateDir,
 		PayoutKeyName:          cfg.PayoutKeyName,
 		EscrowKeyName:          cfg.EscrowKeyName,
 		EscrowAddress:          cfg.EscrowAddress,
@@ -1665,6 +1718,9 @@ func (cfg settlementConfig) buildHealthReport(ctx context.Context) settlementHea
 
 	if cfg.KeyringBackend == "test" {
 		report.Warnings = append(report.Warnings, "test keyring backend is enabled; use only for local/dev or explicitly accepted ops")
+	}
+	if cfg.KeyringBackend == "file" && cfg.KeyringPassphrase == "" {
+		report.Warnings = append(report.Warnings, "file keyring backend is enabled but WOLO_SETTLEMENT_KEYRING_PASSPHRASE_FILE is not configured")
 	}
 
 	if cfg.AuthToken == "" {
@@ -1844,10 +1900,19 @@ func (cfg settlementConfig) executeSettlement(ctx context.Context, request settl
 				}, nil
 			}
 
+			if held := cfg.guardSettlementStoredReplay(ctx, stored); held != nil {
+				return *held, nil
+			}
 			if stored.Response.OK || stored.Response.TxHash != "" || !stored.Response.Retryable {
 				replayed := stored.Response
 				replayed.IdempotentReplay = true
 				return replayed, nil
+			}
+			// The historical writer could persist a retryable RPC timeout AFTER
+			// invoking bank-send, with no returned tx hash. Only a narrowly
+			// proved pre-signing refusal may be retried after this upgrade.
+			if !legacySettlementPreflightRetryProven(stored.Response, normalized.SignerRole) {
+				return quarantineAmbiguousLegacySettlementResponse(stored.Response), nil
 			}
 		} else if !errors.Is(readErr, os.ErrNotExist) {
 			return settlementExecuteResponse{
@@ -1881,7 +1946,13 @@ func (cfg settlementConfig) executeSettlement(ctx context.Context, request settl
 			return *failure, nil
 		}
 
+		// Persist an explicitly ambiguous, non-retryable request before calling
+		// the signing/broadcast command. A crash cannot erase the request ID.
+		if err := cfg.writeSettlementPrebroadcastHold(recordPath, normalized, signerAddress); err != nil {
+			return settlementExecuteResponse{}, err
+		}
 		result := cfg.broadcastPayout(ctx, normalized, signerAddress)
+		result = preserveUnresolvedSettlementBroadcast(result)
 		if err := cfg.writeSettlementRecord(recordPath, normalized, signerAddress, result); err != nil {
 			return settlementExecuteResponse{}, err
 		}
@@ -1950,6 +2021,9 @@ func (cfg settlementConfig) executeSettlementRun(ctx context.Context, request se
 				}, nil
 			}
 
+			if held := cfg.guardSettlementRunStoredReplay(ctx, stored); held != nil {
+				return *held, nil
+			}
 			if settlementRunResponseIsFinal(stored.Response) {
 				replayed := stored.Response
 				replayed.DryRun = false
@@ -2196,7 +2270,7 @@ func (cfg settlementConfig) buildPayoutSettlementRunPlan(ctx context.Context, re
 		response.Status = "failed"
 		response.FailureCode = "PAYOUT_SIGNER_UNAVAILABLE"
 		response.Retryable = false
-		response.Detail = fmt.Sprintf("payout signer key %q could not be resolved; check WOLO_SETTLEMENT_PAYOUT_KEY_NAME, WOLO_SETTLEMENT_HOME, and WOLO_SETTLEMENT_KEYRING_BACKEND", cfg.PayoutKeyName)
+		response.Detail = fmt.Sprintf("payout signer key %q could not be resolved; check WOLO_SETTLEMENT_PAYOUT_KEY_NAME, WOLO_SETTLEMENT_HOME, WOLO_SETTLEMENT_KEYRING_BACKEND, WOLO_SETTLEMENT_KEYRING_DIR, and WOLO_SETTLEMENT_KEYRING_PASSPHRASE_FILE", cfg.PayoutKeyName)
 		response.Payouts = markRunReadyPayoutsRefused(response.Payouts, response.FailureCode, response.Detail, false)
 		return response
 	}
@@ -2520,7 +2594,7 @@ func (cfg settlementConfig) preflightExecution(ctx context.Context, requestAmoun
 			Retryable:   false,
 			ChainID:     cfg.ChainID,
 			SignerRole:  settlementSignerRole,
-			Detail:      fmt.Sprintf("payout signer key %q could not be resolved; check WOLO_SETTLEMENT_PAYOUT_KEY_NAME, WOLO_SETTLEMENT_HOME, and WOLO_SETTLEMENT_KEYRING_BACKEND", cfg.PayoutKeyName),
+			Detail:      fmt.Sprintf("payout signer key %q could not be resolved; check WOLO_SETTLEMENT_PAYOUT_KEY_NAME, WOLO_SETTLEMENT_HOME, WOLO_SETTLEMENT_KEYRING_BACKEND, WOLO_SETTLEMENT_KEYRING_DIR, and WOLO_SETTLEMENT_KEYRING_PASSPHRASE_FILE", cfg.PayoutKeyName),
 		}
 	}
 
@@ -2601,7 +2675,9 @@ func (cfg settlementConfig) broadcastPayout(ctx context.Context, request normali
 		args = append(args, "--note", request.Memo)
 	}
 
-	cmd := exec.CommandContext(ctx, cfg.ExecutablePath, args...)
+	executablePath, commandArgs := cfg.executableCommand(args)
+	cmd := exec.CommandContext(ctx, executablePath, commandArgs...)
+	cfg.attachKeyringPassphrase(cmd)
 	output, err := cmd.CombinedOutput()
 
 	response := settlementExecuteResponse{
@@ -2633,31 +2709,8 @@ func (cfg settlementConfig) broadcastPayout(ctx context.Context, request normali
 			response.CanonicalTxLookupInternal = cfg.txLookupURL(broadcast.TxHash)
 			response.CanonicalTxLookupPublic = cfg.publicTxLookupURL(broadcast.TxHash)
 			if broadcast.Code == 0 {
-				confirmed, confirmErr := cfg.waitForTxConfirmation(ctx, broadcast.TxHash)
-				if confirmErr == nil && confirmed != nil {
-					response.Code = confirmed.Code
-					response.Codespace = confirmed.Codespace
-					response.RawLog = confirmed.RawLog
-					if confirmed.TxSuccess {
-						response.OK = true
-						response.Status = "confirmed"
-						response.Detail = "payout confirmed on WoloChain"
-						return response
-					}
-
-					response.FailureCode = classifyRejectedTx(confirmed.RawLog, confirmed.Code)
-					response.Detail = fmt.Sprintf("tx failed with code %d", confirmed.Code)
-					response.Retryable = false
-					return response
-				}
-
-				response.OK = true
-				response.Status = "accepted"
-				if confirmErr != nil {
-					response.Detail = "payout broadcast accepted; final confirmation check failed"
-				} else {
-					response.Detail = "payout broadcast accepted; final confirmation pending"
-				}
+				confirmed, confirmErr := cfg.waitForTxConfirmation(ctx, broadcast.TxHash, payoutConfirmationExpectations(request, signerAddress))
+				cfg.applySettlementConfirmation(ctx, &response, request, signerAddress, confirmed, confirmErr)
 				return response
 			}
 
@@ -2688,11 +2741,17 @@ func extractJSONPayload(output []byte) []byte {
 	return bytes.TrimSpace(output[start : end+1])
 }
 
-func (cfg settlementConfig) waitForTxConfirmation(parent context.Context, txHash string) (*settlementLookupResponse, error) {
+func (cfg settlementConfig) waitForTxConfirmation(parent context.Context, txHash string, expectations settlementLookupExpectations) (*settlementLookupResponse, error) {
+	if !expectations.RequirePayout {
+		return &settlementLookupResponse{Status: "unverifiable", FailureCode: "PAYOUT_CONTEXT_REQUIRED"}, nil
+	}
 	deadline := time.Now().Add(cfg.ConfirmTimeout)
 	for time.Now().Before(deadline) {
+		if err := parent.Err(); err != nil {
+			return nil, err
+		}
 		ctx, cancel := context.WithTimeout(parent, cfg.LookupTimeout)
-		result, err := cfg.lookupSettlementTx(ctx, txHash, settlementLookupExpectations{})
+		result, err := cfg.lookupSettlementTx(ctx, txHash, expectations)
 		cancel()
 		if err != nil {
 			return nil, err
@@ -2718,14 +2777,16 @@ func (cfg settlementConfig) lookupSettlementTx(ctx context.Context, txHash strin
 	normalizedHash := normalizeTxHash(txHash)
 	if normalizedHash == "" {
 		return settlementLookupResponse{
+			Status:      "unverifiable",
 			OK:          false,
 			FailureCode: "INVALID_TX_HASH",
 			Detail:      "tx hash is required",
 		}, nil
 	}
 
-	if !isHexHash(normalizedHash) {
+	if len(normalizedHash) != 64 || !isHexHash(normalizedHash) {
 		return settlementLookupResponse{
+			Status:      "unverifiable",
 			OK:          false,
 			FailureCode: "INVALID_TX_HASH",
 			Detail:      "tx hash must be uppercase/lowercase hex",
@@ -2735,9 +2796,10 @@ func (cfg settlementConfig) lookupSettlementTx(ctx context.Context, txHash strin
 	ctx, cancel := context.WithTimeout(ctx, cfg.LookupTimeout)
 	defer cancel()
 
-	runtimeChainID, err := cfg.fetchRuntimeChainID(ctx)
+	runtimeChainID, err := cfg.fetchSettlementConfirmationChainID(ctx)
 	if err != nil {
 		return settlementLookupResponse{
+			Status:      "unverifiable",
 			OK:          false,
 			FailureCode: "RPC_UNREACHABLE",
 			Detail:      err.Error(),
@@ -2746,35 +2808,21 @@ func (cfg settlementConfig) lookupSettlementTx(ctx context.Context, txHash strin
 
 	if runtimeChainID != cfg.ChainID {
 		return settlementLookupResponse{
+			Status:      "unverifiable",
 			OK:          false,
 			FailureCode: "CHAIN_ID_MISMATCH",
 			Detail:      fmt.Sprintf("rpc reported %s, expected %s", runtimeChainID, cfg.ChainID),
 		}, nil
 	}
 
-	payload := restTxLookupResponse{}
-	statusCode, err := getJSON(ctx, cfg.txLookupURL(normalizedHash), &payload)
-	if err != nil {
-		return settlementLookupResponse{
-			OK:                         false,
-			FailureCode:                "LOOKUP_FAILED",
-			Detail:                     err.Error(),
-			CanonicalTxLookup:          cfg.txLookupURL(normalizedHash),
-			CanonicalTxLookupPreferred: cfg.preferredTxLookupURL(normalizedHash),
-			CanonicalTxLookupInternal:  cfg.txLookupURL(normalizedHash),
-			CanonicalTxLookupPublic:    cfg.publicTxLookupURL(normalizedHash),
-		}, nil
+	payload, body, statusCode, failure := cfg.readSettlementTx(ctx, normalizedHash)
+	if failure != "" {
+		return cfg.unverifiableSettlementTx(normalizedHash, failure), nil
 	}
 	if statusCode == http.StatusNotFound {
-		return settlementLookupResponse{
-			OK:                         false,
-			FailureCode:                "TX_NOT_FOUND",
-			Detail:                     "tx hash not found on WoloChain REST",
-			CanonicalTxLookup:          cfg.txLookupURL(normalizedHash),
-			CanonicalTxLookupPreferred: cfg.preferredTxLookupURL(normalizedHash),
-			CanonicalTxLookupInternal:  cfg.txLookupURL(normalizedHash),
-			CanonicalTxLookupPublic:    cfg.publicTxLookupURL(normalizedHash),
-		}, nil
+		response := cfg.unverifiableSettlementTx(normalizedHash, "TX_NOT_FOUND")
+		response.Detail = "tx hash not found on WoloChain REST"
+		return response, nil
 	}
 
 	transfers := extractSettlementTransfers(payload)
@@ -2789,6 +2837,7 @@ func (cfg settlementConfig) lookupSettlementTx(ctx context.Context, txHash strin
 	}
 
 	response := settlementLookupResponse{
+		Status:                     "committed",
 		OK:                         true,
 		Found:                      true,
 		ChainID:                    cfg.ChainID,
@@ -2808,6 +2857,26 @@ func (cfg settlementConfig) lookupSettlementTx(ctx context.Context, txHash strin
 		Transfers:                  transfers,
 		MatchedExpected:            matchedExpected,
 		MatchedTransfer:            matchedTransfer,
+	}
+
+	if !response.TxSuccess {
+		response.Status = "failed"
+	}
+	if expectations.RequireMemo && body.Memo != expectations.Memo {
+		return cfg.unverifiableSettlementTx(normalizedHash, "TX_MEMO_MISMATCH"), nil
+	}
+	if expectations.RequirePayout {
+		if failure := cfg.verifySettlementPayout(ctx, normalizedHash, body, payload, expectations, &response); failure != "" {
+			return cfg.unverifiableSettlementTx(normalizedHash, failure), nil
+		}
+		if response.TxSuccess {
+			response.Status = "confirmed"
+		}
+	}
+	if expectations.RequireEscrow {
+		if failure := cfg.verifySettlementEscrow(ctx, normalizedHash, body, payload, expectations, &response); failure != "" {
+			return cfg.unverifiableSettlementTx(normalizedHash, failure), nil
+		}
 	}
 
 	return response, nil
@@ -2836,7 +2905,8 @@ func (cfg settlementConfig) verifyEscrowDeposit(ctx context.Context, txHash, exp
 
 	expectedAmountUWolo = strings.TrimSpace(expectedAmountUWolo)
 	if expectedAmountUWolo != "" {
-		if _, err := strconv.ParseUint(expectedAmountUWolo, 10, 64); err != nil {
+		amount, err := strconv.ParseUint(expectedAmountUWolo, 10, 64)
+		if err != nil || amount == 0 || strconv.FormatUint(amount, 10) != expectedAmountUWolo {
 			response.FailureCode = "INVALID_AMOUNT"
 			response.Detail = "expected_amount_uwolo must be a positive integer"
 			return response, nil
@@ -2844,9 +2914,10 @@ func (cfg settlementConfig) verifyEscrowDeposit(ctx context.Context, txHash, exp
 	}
 
 	lookup, err := cfg.lookupSettlementTx(ctx, txHash, settlementLookupExpectations{
-		Sender:      expectedSender,
-		Recipient:   cfg.EscrowAddress,
-		AmountUWolo: expectedAmountUWolo,
+		RequireEscrow: true,
+		Sender:        expectedSender,
+		Recipient:     cfg.EscrowAddress,
+		AmountUWolo:   expectedAmountUWolo,
 	})
 	if err != nil {
 		return settlementEscrowVerifyResponse{}, err
@@ -2863,6 +2934,13 @@ func (cfg settlementConfig) verifyEscrowDeposit(ctx context.Context, txHash, exp
 		response.Detail = "tx hash not found on WoloChain REST"
 		return response, nil
 	}
+	// A failed transaction may still carry attempted transfer events. Event
+	// matching is not bank custody: never certify a nonzero execution code.
+	if !lookup.TxSuccess || lookup.Code != 0 {
+		response.FailureCode = "TX_EXECUTION_FAILED"
+		response.Detail = "tx execution failed; transfer events are not escrow deposit proof"
+		return response, nil
+	}
 	if lookup.Kind != "escrow_deposit" {
 		response.FailureCode = "NOT_ESCROW_DEPOSIT"
 		response.Detail = "tx did not deliver a WOLO transfer into the configured escrow address"
@@ -2870,12 +2948,19 @@ func (cfg settlementConfig) verifyEscrowDeposit(ctx context.Context, txHash, exp
 	}
 
 	response.DepositFound = true
-	if lookup.MatchedExpected {
+	// The unique match was bound to actual transaction bytes and the committed
+	// result by the shared configured-node proof contract above.
+	if lookup.MatchingTransferCount == 1 && lookup.MatchedExpected {
+		lookup.MatchedExpected = true
+		response.Lookup = &lookup
 		response.OK = true
 		response.Detail = "tx delivered a WOLO transfer into the configured escrow address"
 		return response, nil
 	}
-
+	// A generic foreign-denom match is not valid WOLO proof.
+	lookup.MatchedExpected = false
+	lookup.MatchedTransfer = nil
+	response.Lookup = &lookup
 	response.FailureCode = "ESCROW_DEPOSIT_MISMATCH"
 	response.Detail = "tx reached the configured escrow address but did not match the expected sender and/or amount"
 	return response, nil
@@ -3034,7 +3119,9 @@ func (cfg settlementConfig) resolvePayoutAddress(ctx context.Context) (string, e
 		args = append(args, "--keyring-dir", cfg.KeyringDir)
 	}
 
-	cmd := exec.CommandContext(ctx, cfg.ExecutablePath, args...)
+	executablePath, commandArgs := cfg.executableCommand(args)
+	cmd := exec.CommandContext(ctx, executablePath, commandArgs...)
+	cfg.attachKeyringPassphrase(cmd)
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
 	output, err := cmd.Output()
@@ -3283,11 +3370,9 @@ func (cfg settlementConfig) withRequestLock(requestID, signerRole string, fn fun
 	lockFile, err := os.OpenFile(lockPath, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0o600)
 	if err != nil {
 		if errors.Is(err, os.ErrExist) {
-			info, statErr := os.Stat(lockPath)
-			if statErr == nil && time.Since(info.ModTime()) > cfg.RequestLockTTL {
-				_ = os.Remove(lockPath)
-				return cfg.withRequestLock(requestID, signerRole, fn)
-			}
+			// Age is not proof the owning process stopped. In particular it
+			// may still be in preflight before its durable broadcast marker.
+			// Never steal this lock or erase interruption evidence on restart.
 			return settlementExecuteResponse{
 				OK:          false,
 				Status:      "failed",
@@ -3296,7 +3381,7 @@ func (cfg settlementConfig) withRequestLock(requestID, signerRole string, fn fun
 				RequestID:   requestID,
 				ChainID:     cfg.ChainID,
 				SignerRole:  signerRole,
-				Detail:      "another settlement attempt with this request id is already running",
+				Detail:      "request lock exists; its owner may be running or interrupted; independent reconciliation is required before any lock recovery",
 			}, nil
 		}
 		return settlementExecuteResponse{}, err
@@ -3320,11 +3405,6 @@ func (cfg settlementConfig) withRunLock(runID, signerRole string, fn func() (set
 	lockFile, err := os.OpenFile(lockPath, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0o600)
 	if err != nil {
 		if errors.Is(err, os.ErrExist) {
-			info, statErr := os.Stat(lockPath)
-			if statErr == nil && time.Since(info.ModTime()) > cfg.RequestLockTTL {
-				_ = os.Remove(lockPath)
-				return cfg.withRunLock(runID, signerRole, fn)
-			}
 			return settlementRunResponse{
 				OK:              false,
 				DryRun:          false,
@@ -3333,7 +3413,7 @@ func (cfg settlementConfig) withRunLock(runID, signerRole string, fn func() (set
 				Retryable:       true,
 				SettlementRunID: runID,
 				SignerRole:      signerRole,
-				Detail:          "another settlement run attempt with this settlement_run_id is already running",
+				Detail:          "run lock exists; its owner may be running or interrupted; independent reconciliation is required before any lock recovery",
 			}, nil
 		}
 		return settlementRunResponse{}, err
@@ -3519,7 +3599,7 @@ func normalizeSettlementRequest(request settlementExecuteRequest) (normalizedSet
 
 func normalizeAmountUWolo(amountUWolo string, amountWolo int64) (string, error) {
 	trimmed := strings.TrimSpace(amountUWolo)
-	if trimmed != "" && amountWolo > 0 {
+	if trimmed != "" && amountWolo != 0 {
 		return "", errors.New("provide either amount_uwolo or amount_wolo, not both")
 	}
 	if trimmed == "" && amountWolo <= 0 {
@@ -3527,11 +3607,12 @@ func normalizeAmountUWolo(amountUWolo string, amountWolo int64) (string, error) 
 	}
 
 	if trimmed != "" {
-		if _, err := strconv.ParseUint(trimmed, 10, 64); err != nil {
-			return "", errors.New("amount_uwolo must be a positive integer")
-		}
-		if trimmed == "0" {
-			return "", errors.New("amount_uwolo must be greater than zero")
+		// Enforce one canonical positive base-unit representation.
+		// Padded zero, leading plus, and uint64-only values otherwise enter
+		// distinct request identities or overflow downstream int64 readers.
+		units, err := strconv.ParseInt(trimmed, 10, 64)
+		if err != nil || units <= 0 || strconv.FormatInt(units, 10) != trimmed {
+			return "", errors.New("amount_uwolo must be a canonical positive int64")
 		}
 		return trimmed, nil
 	}
@@ -3539,7 +3620,11 @@ func normalizeAmountUWolo(amountUWolo string, amountWolo int64) (string, error) 
 	if amountWolo <= 0 {
 		return "", errors.New("amount_wolo must be greater than zero")
 	}
-
+	// Multiplication without this guard silently wraps a signed int64,
+	// potentially turning a requested payout into a smaller/negative value.
+	if amountWolo > math.MaxInt64/1_000_000 {
+		return "", errors.New("amount_wolo exceeds representable base units")
+	}
 	return strconv.FormatInt(amountWolo*1_000_000, 10), nil
 }
 
@@ -3770,6 +3855,7 @@ func normalizeStoredSettlementSignerRole(role string) string {
 
 func settlementRunPayoutResultFromExecuteResponse(payout normalizedSettlementPayout, response settlementExecuteResponse) settlementRunPayoutResult {
 	return settlementRunPayoutResult{
+		ConfirmationStatus:         response.ConfirmationStatus,
 		Index:                      payout.Index,
 		RequestID:                  response.RequestID,
 		Attempted:                  true,
@@ -3872,6 +3958,14 @@ func deriveSettlementRunStatus(response settlementRunResponse) (string, bool, st
 	if response.FailureCode == "INVALID_RUN" {
 		return "failed", false, response.FailureCode
 	}
+	// Uncertain signer outcomes override aggregate success. Never turn an
+	// unknown-hash transfer into a retryable partial run with no status.
+	for _, payout := range response.Payouts {
+		if payout.Status == "unverifiable" || payout.ConfirmationStatus == "unverifiable" || payout.Outcome == "unverifiable" {
+			return "unverifiable", false, firstNonEmpty(response.FailureCode,
+				firstSettlementRunFailureCode(response.Payouts), "RUN_PAYOUT_UNVERIFIABLE")
+		}
+	}
 	if response.ConfirmedPayoutCount == response.RequestedPayoutCount && response.RequestedPayoutCount > 0 {
 		return "confirmed", true, ""
 	}
@@ -3906,6 +4000,8 @@ func settlementRunExecutionDetail(response settlementRunResponse) string {
 		return fmt.Sprintf("all %d payouts broadcast accepted; final confirmation is still pending for at least one payout", response.ExecutedPayoutCount)
 	case "partial":
 		return fmt.Sprintf("%d of %d payouts executed; inspect per-recipient results for the remaining failures", response.ExecutedPayoutCount, response.RequestedPayoutCount)
+	case "unverifiable":
+		return fmt.Sprintf("%d of %d payouts have confirmed or accepted evidence; one or more remaining signer outcomes require operator reconciliation, never automatic retry", response.ExecutedPayoutCount, response.RequestedPayoutCount)
 	case "failed":
 		if detail := firstSettlementRunFailureDetail(response.Payouts); detail != "" {
 			return detail
@@ -3951,7 +4047,7 @@ func settlementRunResponseIsFinal(response settlementRunResponse) bool {
 		return false
 	}
 
-	return response.OK || strings.EqualFold(strings.TrimSpace(response.Status), "failed") || strings.EqualFold(strings.TrimSpace(response.Status), "partial")
+	return response.OK || strings.EqualFold(strings.TrimSpace(response.Status), "failed") || strings.EqualFold(strings.TrimSpace(response.Status), "partial") || strings.EqualFold(strings.TrimSpace(response.Status), "unverifiable")
 }
 
 func markRunReadyPayoutsRefused(payouts []settlementRunPayoutResult, failureCode, detail string, retryable bool) []settlementRunPayoutResult {
@@ -4061,6 +4157,7 @@ func summarizeSettlementStoredResult(record settlementStoredResult) settlementRe
 	canonicalPreferred := firstNonEmpty(response.CanonicalTxLookupPreferred, response.CanonicalTxLookupPublic, canonicalInternal)
 
 	return settlementRecordSummary{
+		ConfirmationStatus:         response.ConfirmationStatus,
 		RequestID:                  firstNonEmpty(record.Request.RequestID, response.RequestID),
 		UpdatedAt:                  record.UpdatedAt,
 		Outcome:                    deriveSettlementOutcome(response),
@@ -4284,82 +4381,13 @@ func extractSettlementTransfers(payload restTxLookupResponse) []settlementTransf
 }
 
 func extractSettlementTransfersFromLogsAndEvents(logItems []restTxLogItem, fallbackEvents []restTxEvent) []settlementTransfer {
-	transfers := make([]settlementTransfer, 0)
-
-	appendFromEvents := func(events []restTxEvent) {
-		for _, event := range events {
-			if event.Type != "transfer" {
-				continue
-			}
-
-			sender := ""
-			recipient := ""
-			amount := ""
-			for _, attr := range event.Attributes {
-				switch attr.Key {
-				case "sender":
-					sender = strings.TrimSpace(attr.Value)
-				case "recipient":
-					recipient = strings.TrimSpace(attr.Value)
-				case "amount":
-					amount = strings.TrimSpace(attr.Value)
-				}
-			}
-
-			if sender == "" || recipient == "" || amount == "" {
-				continue
-			}
-
-			for _, coin := range splitCoinAmounts(amount) {
-				transfers = append(transfers, settlementTransfer{
-					Sender:    sender,
-					Recipient: recipient,
-					Amount:    coin.Amount,
-					Denom:     coin.Denom,
-				})
-			}
-		}
-	}
-
-	for _, logItem := range logItems {
-		appendFromEvents(logItem.Events)
-	}
-
-	if len(transfers) == 0 {
-		appendFromEvents(fallbackEvents)
-	}
-
-	return transfers
+	return chainevents.Extract(logItems, fallbackEvents)
 }
 
-type coinAmount struct {
-	Amount string
-	Denom  string
-}
+type coinAmount = chainevents.CoinAmount
 
 func splitCoinAmounts(raw string) []coinAmount {
-	parts := strings.Split(raw, ",")
-	out := make([]coinAmount, 0, len(parts))
-	for _, part := range parts {
-		part = strings.TrimSpace(part)
-		if part == "" {
-			continue
-		}
-
-		splitAt := 0
-		for splitAt < len(part) && part[splitAt] >= '0' && part[splitAt] <= '9' {
-			splitAt++
-		}
-		if splitAt == 0 || splitAt >= len(part) {
-			continue
-		}
-
-		out = append(out, coinAmount{
-			Amount: part[:splitAt],
-			Denom:  part[splitAt:],
-		})
-	}
-	return out
+	return chainevents.SplitCoins(raw)
 }
 
 func matchSettlementTransfer(transfers []settlementTransfer, expectations settlementLookupExpectations) (*settlementTransfer, bool) {
@@ -4370,28 +4398,36 @@ func matchSettlementTransfer(transfers []settlementTransfer, expectations settle
 		return nil, false
 	}
 
+	var match *settlementTransfer
 	for _, transfer := range transfers {
-		if expectedSender != "" && !strings.EqualFold(transfer.Sender, expectedSender) {
+		if expectedSender != "" && transfer.Sender != expectedSender {
 			continue
 		}
-		if expectedRecipient != "" && !strings.EqualFold(transfer.Recipient, expectedRecipient) {
+		if expectedRecipient != "" && transfer.Recipient != expectedRecipient {
 			continue
 		}
 		if expectedAmount != "" && transfer.Amount != expectedAmount {
 			continue
 		}
-
-		match := transfer
-		return &match, true
+		if transfer.Denom != firstNonEmpty(expectations.Denom, settlementCanonicalBaseDenom) {
+			continue
+		}
+		if match != nil {
+			return nil, false
+		}
+		copy := transfer
+		match = &copy
 	}
-
-	return nil, false
+	return match, match != nil
 }
 
 func readSettlementStoredResult(path string) (settlementStoredResult, error) {
-	data, err := os.ReadFile(path)
+	data, err := readSettlementReceiptState(path)
 	if err != nil {
 		return settlementStoredResult{}, err
+	}
+	if !chainjson.ValidFolded(data) {
+		return settlementStoredResult{}, errSettlementReceiptState
 	}
 
 	result := settlementStoredResult{}
@@ -4402,11 +4438,14 @@ func readSettlementStoredResult(path string) (settlementStoredResult, error) {
 }
 
 func readSettlementRunStoredResult(path string) (settlementRunStoredResult, error) {
-	data, err := os.ReadFile(path)
+	data, err := readSettlementStateBounded(path, settlementReceiptMaxStateBytes)
 	if err != nil {
 		return settlementRunStoredResult{}, err
 	}
 
+	if !chainjson.ValidFolded(data) {
+		return settlementRunStoredResult{}, errSettlementReceiptState
+	}
 	result := settlementRunStoredResult{}
 	if err := json.Unmarshal(data, &result); err != nil {
 		return settlementRunStoredResult{}, err
@@ -4464,40 +4503,29 @@ func isHexHash(txHash string) bool {
 
 func isWoloAddress(address, prefix string) bool {
 	address = strings.TrimSpace(address)
-	return address != "" && strings.HasPrefix(strings.ToLower(address), strings.ToLower(prefix)+"1")
+	if address != strings.ToLower(address) || prefix != settlementCanonicalPrefix {
+		return false
+	}
+	hrp, words, err := bech32.Decode(address, 90)
+	if err != nil || hrp != prefix {
+		return false
+	}
+	payload, err := bech32.ConvertBits(words, 5, 8, false)
+	return err == nil && len(payload) == 20
 }
 
 func getJSON(ctx context.Context, target string, dst any) (int, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, target, nil)
+	body, status, err := readSettlementEvidenceJSON(ctx, target)
 	if err != nil {
-		return 0, err
+		return status, err
 	}
-	req.Header.Set("Accept", "application/json")
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return 0, err
+	if status != http.StatusOK {
+		return status, fmt.Errorf("upstream returned %d", status)
 	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return resp.StatusCode, err
+	if _, ok := chainjson.Object(body); !ok {
+		return status, errors.New("upstream must return a JSON object")
 	}
-
-	if resp.StatusCode == http.StatusNotFound {
-		return resp.StatusCode, nil
-	}
-	if resp.StatusCode >= 400 {
-		return resp.StatusCode, fmt.Errorf("upstream returned %d: %s", resp.StatusCode, strings.TrimSpace(string(body)))
-	}
-
-	decoder := json.NewDecoder(bytes.NewReader(body))
-	if err := decoder.Decode(dst); err != nil {
-		return resp.StatusCode, err
-	}
-
-	return resp.StatusCode, nil
+	return status, json.Unmarshal(body, dst)
 }
 
 func writeJSON(writer io.Writer, value any) error {
@@ -4532,10 +4560,20 @@ func (cfg settlementConfig) logSettlementRunResponse(event string, response sett
 		refusalReason = strings.TrimSpace(response.Detail)
 	}
 
+	operation := strings.TrimSpace(event)
+	logEvent, healthProbe := settlementRunLogEvent(operation, response)
+	probeKind := ""
+	if healthProbe {
+		probeKind = "dry_settlement_run_validate"
+	}
+
 	payload := struct {
 		Event                string   `json:"event"`
 		At                   string   `json:"at"`
 		ChainID              string   `json:"chain_id"`
+		Operation            string   `json:"operation,omitempty"`
+		HealthProbe          bool     `json:"health_probe,omitempty"`
+		ProbeKind            string   `json:"probe_kind,omitempty"`
 		DryRun               bool     `json:"dry_run"`
 		Status               string   `json:"status,omitempty"`
 		OK                   bool     `json:"ok"`
@@ -4552,9 +4590,12 @@ func (cfg settlementConfig) logSettlementRunResponse(event string, response sett
 		RefusalReason        string   `json:"refusal_reason,omitempty"`
 		TxHashes             []string `json:"tx_hashes,omitempty"`
 	}{
-		Event:                "settlement_run_" + strings.TrimSpace(event),
+		Event:                logEvent,
 		At:                   time.Now().UTC().Format(time.RFC3339Nano),
 		ChainID:              cfg.ChainID,
+		Operation:            operation,
+		HealthProbe:          healthProbe,
+		ProbeKind:            probeKind,
 		DryRun:               response.DryRun,
 		Status:               response.Status,
 		OK:                   response.OK,
@@ -4577,6 +4618,62 @@ func (cfg settlementConfig) logSettlementRunResponse(event string, response sett
 		return
 	}
 	fmt.Fprintf(os.Stderr, "%s\n", data)
+}
+
+func settlementRunLogEvent(operation string, response settlementRunResponse) (string, bool) {
+	operation = strings.TrimSpace(operation)
+	if operation == "" {
+		operation = "unknown"
+	}
+
+	if isSettlementRunHealthProbe(response) {
+		if response.OK {
+			return "health_probe_ok", true
+		}
+		return "health_probe_failed", true
+	}
+
+	switch operation {
+	case "validate":
+		if response.OK {
+			return "settlement_validation_ok", false
+		}
+		return "settlement_validation_failed", false
+	case "execute":
+		if response.OK {
+			return "payout_execution_ok", false
+		}
+		return "payout_execution_failed", false
+	default:
+		if response.OK {
+			return "settlement_" + operation + "_ok", false
+		}
+		return "settlement_" + operation + "_failed", false
+	}
+}
+
+func isSettlementRunHealthProbe(response settlementRunResponse) bool {
+	if !response.DryRun {
+		return false
+	}
+
+	sourceApp := strings.ToLower(strings.TrimSpace(response.SourceApp))
+	switch sourceApp {
+	case "settlement-health-probe", "settlement-alert-check", "verify-live-settlement":
+		return true
+	}
+
+	runID := strings.ToLower(strings.TrimSpace(response.SettlementRunID))
+	switch runID {
+	case "settlement-health-probe", "settlement-health-probe-alert", "settlement-health-probe-verify", "alert-check-run", "verify-live-run-check":
+		return true
+	}
+	if strings.HasPrefix(runID, "settlement-health-probe") {
+		return true
+	}
+
+	sourceEventID := strings.ToLower(strings.TrimSpace(response.SourceEventID))
+	return strings.HasPrefix(sourceEventID, "health-probe")
 }
 
 func optionalSettlementRecord(summaryOnly bool, record *settlementStoredResult) *settlementStoredResult {
@@ -4629,8 +4726,7 @@ func readJSONInput(path string, dst any) error {
 		reader = file
 	}
 
-	decoder := json.NewDecoder(reader)
-	return decoder.Decode(dst)
+	return decodeSettlementObject(reader, dst)
 }
 
 func parseOptionalUWoloEnv(key string) (uint64, error) {

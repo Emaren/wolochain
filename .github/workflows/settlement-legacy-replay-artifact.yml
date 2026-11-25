@@ -1,0 +1,52 @@
+name: Legacy replay qualification artifact (NO DEPLOY)
+
+on:
+  pull_request:
+    branches: [review/20261025-legacy-ambiguous-replay-guard-red]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  artifact:
+    name: Exact settlement replay source, two builds, no financial authority
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      EXPECTED_SOURCE: cb24cb2546392c981da8dcac18a04d1df4241330
+      BUILDER_COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
+      GOTOOLCHAIN: local
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - name: Checkout reviewed artifact machinery
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ env.BUILDER_COMMIT }}
+          path: artifact-tools
+          persist-credentials: false
+      - name: Checkout immutable implementation, distinct from builder
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ env.EXPECTED_SOURCE }}
+          path: implementation
+          persist-credentials: false
+      - name: Pin compiler; forbid automatic toolchain substitution
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff
+        with:
+          go-version: '1.24.6'
+          check-latest: false
+          cache: false
+      - name: Existing offline adversarial provenance contracts
+        working-directory: artifact-tools
+        run: python3 -m unittest discover -s tests -p 'test_settlement_artifact*.py' -v
+      - name: Reuse strict builder and verifier for two fresh-cache builds
+        run: bash artifact-tools/scripts/build-settlement-artifact.sh --profile legacy-replay "$GITHUB_WORKSPACE/implementation" "$RUNNER_TEMP/legacy-replay-artifact"
+      - name: Preserve source-bound UNDEPLOYED artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: legacy-replay-${{ env.EXPECTED_SOURCE }}-linux-amd64-${{ github.run_id }}-${{ github.run_attempt }}-UNDEPLOYED
+          path: ${{ runner.temp }}/legacy-replay-artifact/
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 30

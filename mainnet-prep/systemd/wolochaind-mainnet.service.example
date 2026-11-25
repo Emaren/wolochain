@@ -1,0 +1,17 @@
+[Unit]
+Description=WoloChain mainnet node
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=root
+Group=root
+EnvironmentFile=/etc/wolochain-mainnet/wolochaind-mainnet.env
+WorkingDirectory=/var/www/WoloChain-wolo-1
+ExecStart=/usr/local/bin/wolochaind-mainnet start --home ${WOLO_HOME} --minimum-gas-prices ${MIN_GAS_PRICES}
+Restart=always
+RestartSec=5
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target

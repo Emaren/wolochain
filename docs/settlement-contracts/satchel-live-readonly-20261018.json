@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "observed_at": "2026-10-18T08:08:29.824792+00:00",
+  "read_only": true,
+  "mutation": false,
+  "services": [
+    {
+      "MainPID": "1009",
+      "ActiveState": "active",
+      "SubState": "running",
+      "unit": "wolochaind-mainnet.service",
+      "exe": "/usr/local/bin/wolochaind-mainnet-node-prewartrophy",
+      "binary_sha256": "4b77f622191db7550cb87cafb8f1886a0aadebee3eb6565f9f90036f809e61d3"
+    },
+    {
+      "MainPID": "1012",
+      "ActiveState": "active",
+      "SubState": "running",
+      "unit": "wolochain-mainnet-settlement.service",
+      "exe": "/usr/local/bin/wolochaind-mainnet",
+      "binary_sha256": "040126a2884946caf1651a50b7d8115c5a6fb2d5aa94fcbbe150694602d451a5"
+    },
+    {
+      "MainPID": "1010",
+      "ActiveState": "active",
+      "SubState": "running",
+      "unit": "wolochain-founder-rewards-settlement.service",
+      "exe": "/usr/local/bin/wolochaind-mainnet",
+      "binary_sha256": "040126a2884946caf1651a50b7d8115c5a6fb2d5aa94fcbbe150694602d451a5"
+    },
+    {
+      "MainPID": "0",
+      "ActiveState": "inactive",
+      "SubState": "dead",
+      "unit": "wolo-satchel.service"
+    }
+  ],
+  "health": [
+    {
+      "port": 8092,
+      "path": "/settlement/v1/health",
+      "ok": true,
+      "chain_id": "wolo-1",
+      "runtime_chain_id": "wolo-1",
+      "loopback_only": true,
+      "available": true
+    },
+    {
+      "port": 8093,
+      "path": "/settlement/v1/health",
+      "ok": true,
+      "chain_id": "wolo-1",
+      "runtime_chain_id": "wolo-1",
+      "loopback_only": true,
+      "available": true
+    },
+    {
+      "port": 8094,
+      "path": "/satchel/v1/health",
+      "available": false
+    }
+  ],
+  "state": [
+    {
+      "port": 8092,
+      "bounded_request_records": 919,
+      "recorded_status_counts": {
+        "confirmed": 913,
+        "failed": 5,
+        "accepted": 1
+      },
+      "founder15_leads": [],
+      "exclusive_snapshot": false,
+      "complete_liabilities_proven": false,
+      "state_records_are_chain_proof": false
+    },
+    {
+      "port": 8093,
+      "bounded_request_records": 646,
+      "recorded_status_counts": {
+        "confirmed": 609,
+        "failed": 37
+      },
+      "founder15_leads": [],
+      "exclusive_snapshot": false,
+      "complete_liabilities_proven": false,
+      "state_records_are_chain_proof": false
+    }
+  ],
+  "financial_activation_authorized": false,
+  "claim889_reconciled": false
+}

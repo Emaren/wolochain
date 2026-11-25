@@ -3,8 +3,8 @@
   "limit": 20,
   "count": 2,
   "source_app": "aoe2hdbets",
-  "settlement_run_id": "aoe2hdbets:challenge-42:one-noshow:v1",
-  "challenge_id": "challenge-42",
+  "settlement_run_id": "aoe2hdbets:challenge-42:v1",
+  "challenge_id": "42",
   "funding": [
     {
       "index": 0,
@@ -12,12 +12,14 @@
       "detail": "challenge funding deposit verified",
       "deposit_found": true,
       "funding_tx_hash": "1111111111111111111111111111111111111111111111111111111111111111",
+      "chain_id": "wolo-1",
+      "tx_success": true,
+      "height": "12345",
+      "timestamp": "2026-06-27T20:00:00Z",
       "source_app": "aoe2hdbets",
-      "settlement_run_id": "aoe2hdbets:challenge-42:one-noshow:v1",
-      "challenge_id": "challenge-42",
-      "source_event_id": "match-2026-04-20-00042",
+      "settlement_run_id": "aoe2hdbets:challenge-42:v1",
+      "challenge_id": "42",
       "participant_side": "left",
-      "participant_id": "aoe2-user-left",
       "sender": "wolo1leftplayer0000000000000000000000000000",
       "escrow_address": "wolo1escrow0000000000000000000000000000000",
       "total_funded_uwolo": "1500000",
@@ -26,7 +28,7 @@
       "wager_wolo": "1.000000",
       "guarantee_uwolo": "500000",
       "guarantee_wolo": "0.500000",
-      "canonical_tx_lookup_preferred": "https://aoe2war.com/rest/cosmos/tx/v1beta1/txs/1111111111111111111111111111111111111111111111111111111111111111"
+      "canonical_tx_lookup_preferred": "https://rest-mainnet.aoe2war.com/cosmos/tx/v1beta1/txs/1111111111111111111111111111111111111111111111111111111111111111"
     },
     {
       "index": 1,
@@ -34,12 +36,14 @@
       "detail": "challenge funding deposit verified",
       "deposit_found": true,
       "funding_tx_hash": "2222222222222222222222222222222222222222222222222222222222222222",
+      "chain_id": "wolo-1",
+      "tx_success": true,
+      "height": "12346",
+      "timestamp": "2026-06-27T20:01:00Z",
       "source_app": "aoe2hdbets",
-      "settlement_run_id": "aoe2hdbets:challenge-42:one-noshow:v1",
-      "challenge_id": "challenge-42",
-      "source_event_id": "match-2026-04-20-00042",
+      "settlement_run_id": "aoe2hdbets:challenge-42:v1",
+      "challenge_id": "42",
       "participant_side": "right",
-      "participant_id": "aoe2-user-right",
       "sender": "wolo1rightplayer000000000000000000000000000",
       "escrow_address": "wolo1escrow0000000000000000000000000000000",
       "total_funded_uwolo": "1500000",
@@ -48,7 +52,7 @@
       "wager_wolo": "1.000000",
       "guarantee_uwolo": "500000",
       "guarantee_wolo": "0.500000",
-      "canonical_tx_lookup_preferred": "https://aoe2war.com/rest/cosmos/tx/v1beta1/txs/2222222222222222222222222222222222222222222222222222222222222222"
+      "canonical_tx_lookup_preferred": "https://rest-mainnet.aoe2war.com/cosmos/tx/v1beta1/txs/2222222222222222222222222222222222222222222222222222222222222222"
     }
   ]
 }

@@ -1,0 +1,30 @@
+# SOURCE REVIEW ONLY. This candidate exits HELD and cannot open a signer.
+# Do not install/start it as a financial executor or create keys from this file.
+[Unit]
+Description=HELD independent new-epoch escrow v3 policy candidate
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=wolo-escrow-v3
+Group=wolo-escrow-v3
+ExecStart=/opt/wolo-escrow-v3/releases/REVIEWED_SHA/woloescrowd -config /etc/wolo-escrow-v3/policy.json
+Restart=no
+UMask=0077
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadOnlyPaths=/etc/wolo-escrow-v3
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+RestrictAddressFamilies=AF_UNIX
+CapabilityBoundingSet=
+AmbientCapabilities=
+LimitNOFILE=64
+TasksMax=16
+MemoryMax=256M

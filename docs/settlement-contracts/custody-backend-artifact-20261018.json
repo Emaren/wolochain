@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "production_authorized": false,
+  "source_commit": "99f32de617964565875ed4689bea0d688bb99147",
+  "profile": "custody-backend",
+  "github": {
+    "builder_commit": "7611946cddec5a5617779504275d04a4ab62ea80",
+    "repository": "Emaren/wolochain",
+    "run_attempt": "1",
+    "run_id": "39129775493",
+    "workflow_ref": "Emaren/wolochain/.github/workflows/custody-backend-satcheld-exact-artifact.yml@refs/pull/39/merge",
+    "workflow_sha": "e60ad7cb5baf303f18ac604a11c92c8604eb409e"
+  },
+  "artifact_id": "12137404359",
+  "artifact_digest_sha256": "0aadb1825a893f7c33065a9af2239d57221886a45b013418327b3490c705a053",
+  "artifact_url": "https://github.com/Emaren/wolochain/actions/runs/39129775493/artifacts/12137404359",
+  "manifest_sha256": "f47a8ddb08bcf6db7811fd0e55075cbfd6ef9ff9cd61f509673e9d7bad3477c5",
+  "binary_sha256": "d431c580a47ff020d997534145c5c53959c70c6f2d00d13029582ee8ec8709ac",
+  "receipt_scope": "exact-source UNDEPLOYED build and independent artifact verification; never live custody authority",
+  "compiler": "go1.24.6",
+  "target": "linux/amd64",
+  "vcs_modified": false,
+  "verification": {
+    "strict_existing_verifier_exit_code": 0,
+    "independent_clean_source_clone": true,
+    "authenticated_github_metadata_matched": true,
+    "raw_archives_and_contents_matched": true,
+    "all_sha256sums_matched": true,
+    "binary_executed_locally": false,
+    "production_mutated": false
+  },
+  "ci": [
+    {
+      "run_id": 39129775390,
+      "conclusion": "success",
+      "head_revision": "7611946cddec5a5617779504275d04a4ab62ea80"
+    },
+    {
+      "run_id": 39129775468,
+      "conclusion": "success",
+      "head_revision": "7611946cddec5a5617779504275d04a4ab62ea80"
+    },
+    {
+      "run_id": 39129775493,
+      "conclusion": "success",
+      "head_revision": "7611946cddec5a5617779504275d04a4ab62ea80"
+    }
+  ]
+}

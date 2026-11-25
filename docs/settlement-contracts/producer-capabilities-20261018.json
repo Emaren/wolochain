@@ -1,0 +1,1837 @@
+{
+  "schema": "aoe2war.wolo.producer-capability-observations.v1",
+  "observed_window_utc": "2026-10-18T19:07:59Z/2026-10-18T19:15:53Z",
+  "scope": "Targeted continuation of October18 inventory. Observational data, not a new readiness registry. No operations approved.",
+  "hd_units": [
+    {
+      "unit": "aoe2hdbets-web.service",
+      "osOwner": "tony",
+      "accountableProductOwner": "AoE2WAR HD application owner; coordinated window authorized by Tony",
+      "classification": "CONFIRMED_PRODUCER_AND_INDEPENDENT_SIGNER",
+      "liveState": "active",
+      "unitFile": "/etc/systemd/system/aoe2hdbets-web.service",
+      "configEntryPoints": [
+        "/etc/aoe2hdbets/aoe2hdbets-bet-stake-reconcile.env",
+        "/etc/aoe2hdbets/aoe2hdbets-web.env",
+        "/etc/aoe2hdbets/aoe2war-os-bridge.env"
+      ],
+      "financialCapability": "Initiates main8092 payout/escrow runs, founder8093 payouts, direct staking-keyring withdrawals and faucet-keyring sends; GET routes and in-process jobs can create/reconcile liabilities.",
+      "signingAuthority": "Live config pins8092/8093 and holds both bearers. Live GET staking/config reports staking_keyring ready. No key material read. Local payout mnemonic fallback flag unset and mnemonic env absent; do not treat that as exclusion of keyring paths.",
+      "queueOrTimerBehavior": "Public GET /,/api/lobby,/api/live-games,/api/bets,/api/header-summary can schedule ensureBetMarkets. In-memory single-flight timers/promises plus persistent financial rows. WarGraph in-process2s worker leases DB jobs/creates immutable reward entitlements.",
+      "dependencies": [
+        "Primary8092",
+        "Founder8093",
+        "canonicalRPC/REST",
+        "PostgreSQL",
+        "shared faucet/staking signer configuration",
+        "OS Operator Bridge"
+      ],
+      "sourceReferences": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "78d2a3329096c25b9429a3536f08c33d1d9dc96f",
+          "file": "lib/woloBetSettlement.ts",
+          "line": 1599,
+          "proves": "authenticated main payout"
+        },
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "78d2a3329096c25b9429a3536f08c33d1d9dc96f",
+          "file": "lib/woloBetSettlement.ts",
+          "line": 1987,
+          "proves": "grouped runs and fallback"
+        },
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "78d2a3329096c25b9429a3536f08c33d1d9dc96f",
+          "file": "lib/woloBetSettlement.ts",
+          "line": 2338,
+          "proves": "founder service; absent founder URL can fallback to primary"
+        },
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "78d2a3329096c25b9429a3536f08c33d1d9dc96f",
+          "file": "lib/woloStakingUnstake.ts",
+          "line": 141,
+          "proves": "direct CLI bank send independent of8092/8093"
+        },
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "78d2a3329096c25b9429a3536f08c33d1d9dc96f",
+          "file": "app/api/wolo/faucet/claim/route.ts",
+          "line": 204,
+          "proves": "independent faucet CLI bank send"
+        },
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "78d2a3329096c25b9429a3536f08c33d1d9dc96f",
+          "file": "lib/lobbySnapshot.ts",
+          "line": 82,
+          "proves": "public read schedules financial maintenance"
+        },
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "78d2a3329096c25b9429a3536f08c33d1d9dc96f",
+          "file": "lib/bets.ts",
+          "line": 8269,
+          "proves": "ensure ends in payouts/refunds/founder reconciliation"
+        },
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "78d2a3329096c25b9429a3536f08c33d1d9dc96f",
+          "file": "instrumentation.node.ts",
+          "line": 12,
+          "proves": "starts WarGraph automatically in production"
+        },
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "78d2a3329096c25b9429a3536f08c33d1d9dc96f",
+          "file": "lib/wargraph/runtime.ts",
+          "line": 207,
+          "proves": "worker runs unless explicit disable guard"
+        },
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "78d2a3329096c25b9429a3536f08c33d1d9dc96f",
+          "file": "lib/wargraph/prismaSettlementWorker.ts",
+          "line": 709,
+          "proves": "creates reward entitlements"
+        }
+      ],
+      "proposedFence": "After explicit approval, financial ingress must be gated and process cgroup drained; current source has no comprehensive online financial pause. Whole web process runtime-mask+stop is the source-proven isolation fallback, with agreed website outage. Do not apply in this task."
+    },
+    {
+      "unit": "aoe2hdbets-api.service",
+      "osOwner": "tony",
+      "accountableProductOwner": "AoE2WAR HD application owner; coordinated window authorized by Tony",
+      "classification": "CONFIRMED_INDIRECT_PRODUCER_AND_FINANCIAL_IDENTITY_WRITER",
+      "liveState": "active",
+      "unitFile": "/etc/systemd/system/aoe2hdbets-api.service",
+      "configEntryPoints": [],
+      "financialCapability": "Replay direct upload commits source evidence then background POST to HD web/post-ingest can trigger championship settlement and market payouts. Legacy routes/bets.py is not mounted by current app.py. Mounted user routes update wallet/name and register identity; mounted admin route deletes user; debug deletion is separately environmentgated.",
+      "signingAuthority": "No WOLO signer/settlement key names in observed cgroup process environments; INTERNAL_API_KEY is configured for web bridge. This is not global proof no manual signer exists.",
+      "queueOrTimerBehavior": "API background bridge retries default3 attempts,5s each,0.25s exponential backoff, max4/10s/2s. Bridge work itself is not durable; replay DB rows persist and require explicit catch-up identification.",
+      "dependencies": [
+        "PostgreSQL",
+        "HD web /api/replay/post-ingest",
+        "replay watcher/client ingress"
+      ],
+      "sourceReferences": [
+        {
+          "repository": "Emaren/api-prodn",
+          "commit": "8faaf6c885415c7e1ea050218e1140f25b2d46a2",
+          "file": "routes/replay_routes_async.py",
+          "line": 2348,
+          "proves": "schedules bridge after commit"
+        },
+        {
+          "repository": "Emaren/api-prodn",
+          "commit": "8faaf6c885415c7e1ea050218e1140f25b2d46a2",
+          "file": "utils/replay_post_ingest_bridge.py",
+          "line": 52,
+          "proves": "authenticated web bridge with bounded retries"
+        },
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "78d2a3329096c25b9429a3536f08c33d1d9dc96f",
+          "file": "app/api/replay/post-ingest/route.ts",
+          "line": 79,
+          "proves": "championship executeSettlements=true"
+        },
+        {
+          "repository": "Emaren/api-prodn",
+          "commit": "8faaf6c885415c7e1ea050218e1140f25b2d46a2",
+          "file": "app.py",
+          "line": 198,
+          "proves": "mounts identity/admin/debug mutators"
+        },
+        {
+          "repository": "Emaren/api-prodn",
+          "commit": "8faaf6c885415c7e1ea050218e1140f25b2d46a2",
+          "file": "routes/user_routes_async.py",
+          "line": 211,
+          "proves": "updates payment recipient wallet"
+        },
+        {
+          "repository": "Emaren/api-prodn",
+          "commit": "8faaf6c885415c7e1ea050218e1140f25b2d46a2",
+          "file": "routes/user_routes_async.py",
+          "line": 165,
+          "proves": "updates matching name"
+        },
+        {
+          "repository": "Emaren/api-prodn",
+          "commit": "8faaf6c885415c7e1ea050218e1140f25b2d46a2",
+          "file": "routes/user_register.py",
+          "line": 18,
+          "proves": "creates identity"
+        },
+        {
+          "repository": "Emaren/api-prodn",
+          "commit": "8faaf6c885415c7e1ea050218e1140f25b2d46a2",
+          "file": "routes/admin_routes_async.py",
+          "line": 71,
+          "proves": "deletes user"
+        },
+        {
+          "repository": "Emaren/api-prodn",
+          "commit": "8faaf6c885415c7e1ea050218e1140f25b2d46a2",
+          "file": "routes/debug_routes_async.py",
+          "line": 24,
+          "proves": "conditional user/game delete"
+        },
+        {
+          "repository": "Emaren/api-prodn",
+          "commit": "8faaf6c885415c7e1ea050218e1140f25b2d46a2",
+          "file": "app.py",
+          "line": 110,
+          "proves": "upload capacity guard 0=unlimited; notfinancialmaintenancegate"
+        }
+      ],
+      "proposedFence": "Conservative current-source approved window must fence HD API service as well as HD web: public/internal callbacks AND recipient/identity/evidence writes make financial snapshot mutable. No existing complete financial maintenance gate found. Keep API serving only if app owner independently proves alreadytested direct-listener route fences for callback, replay mutations, wallet/name/register/delete and any DBwriters; not ready in current evidence."
+    },
+    {
+      "unit": "aoe2hdbets-bet-stake-reconcile-plan.service",
+      "osOwner": "tony",
+      "accountableProductOwner": "AoE2WAR HD application owner; coordinated window authorized by Tony",
+      "classification": "READ_ONLY_CONSUMER",
+      "liveState": "inactive",
+      "unitFile": "/etc/systemd/system/aoe2hdbets-bet-stake-reconcile-plan.service",
+      "configEntryPoints": [
+        "/etc/aoe2hdbets/aoe2hdbets-bet-stake-reconcile.env",
+        "/etc/aoe2hdbets/aoe2hdbets-web.env"
+      ],
+      "financialCapability": "GET signed-but-unrecorded recovery candidates only.",
+      "signingAuthority": "Bearer authorizes plan endpoint; endpoint does not sign.",
+      "queueOrTimerBehavior": "Manual oneshot, no timer; take20 default/max50; HTTP220s timeout,unit120s.",
+      "dependencies": [
+        "HD web /api/bets/stake-reconciliation",
+        "PostgreSQL"
+      ],
+      "sourceReferences": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "78d2a3329096c25b9429a3536f08c33d1d9dc96f",
+          "file": "scripts/run-bet-stake-reconciliation.mjs",
+          "line": 25,
+          "proves": "default GET vs --apply POST"
+        },
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "78d2a3329096c25b9429a3536f08c33d1d9dc96f",
+          "file": "app/api/bets/stake-reconciliation/route.ts",
+          "line": 71,
+          "proves": "plan only calls inspect"
+        },
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "78d2a3329096c25b9429a3536f08c33d1d9dc96f",
+          "file": "lib/betStakeAutoRecovery.ts",
+          "line": 113,
+          "proves": "SELECT-only candidate inspection"
+        }
+      ],
+      "proposedFence": "No signing fence required; remains inactive. Do not run mutating apply sibling. Plan cannot establish drain alone."
+    },
+    {
+      "unit": "aoe2hdbets-bet-stake-reconcile.service",
+      "osOwner": "tony",
+      "accountableProductOwner": "AoE2WAR HD application owner; coordinated window authorized by Tony",
+      "classification": "CONFIRMED_FINANCIAL_RECONCILER",
+      "liveState": "inactive",
+      "unitFile": "/etc/systemd/system/aoe2hdbets-bet-stake-reconcile.service",
+      "configEntryPoints": [
+        "/etc/aoe2hdbets/aoe2hdbets-bet-stake-reconcile.env",
+        "/etc/aoe2hdbets/aoe2hdbets-web.env"
+      ],
+      "financialCapability": "--apply POST discovers chain stakes and commits matching intents/tickets into wager records; no direct server send in this leaf.",
+      "signingAuthority": "Uses bearer to HD; future payout authority resides web settlement adapters.",
+      "queueOrTimerBehavior": "Persistent repeating5min after oneshot completion, initialboot4min,jitter20s; bounded220s HTTP/unit240s.",
+      "dependencies": [
+        "HD web",
+        "PostgreSQL",
+        "chain evidence lookups"
+      ],
+      "sourceReferences": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "78d2a3329096c25b9429a3536f08c33d1d9dc96f",
+          "file": "scripts/run-bet-stake-reconciliation.mjs",
+          "line": 25,
+          "proves": "--apply mutates"
+        },
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "78d2a3329096c25b9429a3536f08c33d1d9dc96f",
+          "file": "lib/betStakeAutoRecovery.ts",
+          "line": 309,
+          "proves": "commits intent wager"
+        },
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "78d2a3329096c25b9429a3536f08c33d1d9dc96f",
+          "file": "lib/betStakeAutoRecovery.ts",
+          "line": 383,
+          "proves": "commits ticket"
+        }
+      ],
+      "proposedFence": "Fence apply service and timer together before web drain; capture recoverable intent/ticket statuses and chain hashes without claiming absent means no money."
+    },
+    {
+      "unit": "aoe2hdbets-challenge-reconcile.service",
+      "osOwner": "tony",
+      "accountableProductOwner": "AoE2WAR HD application owner; coordinated window authorized by Tony",
+      "classification": "CONFIRMED_REFUND_PRODUCER",
+      "liveState": "inactive",
+      "unitFile": "/etc/systemd/system/aoe2hdbets-challenge-reconcile.service",
+      "configEntryPoints": [
+        "/etc/aoe2hdbets/aoe2hdbets-web.env"
+      ],
+      "financialCapability": "POST defaults executeRefunds=true; challenge/championship lifecycle can queue expiry refunds and execute scheduled match settlement through8092 escrow.",
+      "signingAuthority": "Cron bearer or admin session reaches web authority; no key in leaf.",
+      "queueOrTimerBehavior": "Persistent every5min active-based; boot3min,jitter30s; no --no-refunds live argument.",
+      "dependencies": [
+        "HD web",
+        "PostgreSQL",
+        "8092 escrow adapter"
+      ],
+      "sourceReferences": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "78d2a3329096c25b9429a3536f08c33d1d9dc96f",
+          "file": "scripts/run-challenge-reconciliation.mjs",
+          "line": 10,
+          "proves": "refunds default enabled"
+        },
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "78d2a3329096c25b9429a3536f08c33d1d9dc96f",
+          "file": "app/api/challenges/reconcile/route.ts",
+          "line": 53,
+          "proves": "token/admin entry"
+        },
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "78d2a3329096c25b9429a3536f08c33d1d9dc96f",
+          "file": "lib/challengeReconciler.ts",
+          "line": 328,
+          "proves": "eligible refunds executed"
+        },
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "78d2a3329096c25b9429a3536f08c33d1d9dc96f",
+          "file": "lib/challengeReconciler.ts",
+          "line": 356,
+          "proves": "scheduled settlement call"
+        }
+      ],
+      "proposedFence": "Fence service+timer, and admin/manual HTTP callers through web fence. Preserve all scheduled/refund records; do not invoke no-refunds as substitute for frozen financial queue."
+    },
+    {
+      "unit": "aoe2hdbets-replay-auto-recovery.service",
+      "osOwner": "root/system manager",
+      "accountableProductOwner": "AoE2WAR HD application owner; coordinated window authorized by Tony",
+      "classification": "POSSIBLE_INDIRECT_PRODUCER_EVIDENCE_WRITER",
+      "liveState": "inactive",
+      "unitFile": "/etc/systemd/system/aoe2hdbets-replay-auto-recovery.service",
+      "configEntryPoints": [
+        "/etc/aoe2hdbets/aoe2hdbets-web.env"
+      ],
+      "financialCapability": "POST reparses/reconciles accepted terminal evidence and identities; this can make liabilities executable on subsequent ensureBetMarkets. No direct signing call found in this route.",
+      "signingAuthority": "Internal API credential permits web recovery; subprocess parser inherits web environment, including financial config, although parser source has no signing path identified.",
+      "queueOrTimerBehavior": "Timer every5min after completion,nonpersistent,jitter5s;root curl intoHD route;unit timeout360s. Requires=HD web can reactivate a merely stopped web service.",
+      "dependencies": [
+        "HD web REQUIRED",
+        "API parser worker",
+        "PostgreSQL"
+      ],
+      "sourceReferences": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "78d2a3329096c25b9429a3536f08c33d1d9dc96f",
+          "file": "app/api/admin/replay-auto-recovery/route.ts",
+          "line": 252,
+          "proves": "mutating recovery route"
+        },
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "78d2a3329096c25b9429a3536f08c33d1d9dc96f",
+          "file": "app/api/admin/replay-auto-recovery/route.ts",
+          "line": 691,
+          "proves": "parser dispatch"
+        },
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "78d2a3329096c25b9429a3536f08c33d1d9dc96f",
+          "file": "app/api/admin/replay-auto-recovery/route.ts",
+          "line": 707,
+          "proves": "automatic terminal reconciliation"
+        },
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "78d2a3329096c25b9429a3536f08c33d1d9dc96f",
+          "file": "lib/replayParserOnDemand.ts",
+          "line": 61,
+          "proves": "exec parser with inherited process environment"
+        }
+      ],
+      "proposedFence": "Fence timer+service to prevent both evidence mutation and Requires-triggered HD web restart; keep pure replay parser/read paths where independently isolated."
+    },
+    {
+      "unit": "aoe2hdbets-staking-rewards.service",
+      "osOwner": "tony",
+      "accountableProductOwner": "AoE2WAR HD application owner; coordinated window authorized by Tony",
+      "classification": "CONFIRMED_SETTLEMENT_PRODUCER",
+      "liveState": "inactive",
+      "unitFile": "/etc/systemd/system/aoe2hdbets-staking-rewards.service",
+      "configEntryPoints": [
+        "/etc/aoe2hdbets/aoe2hdbets-web.env"
+      ],
+      "financialCapability": "POST computes distribution then executes reward runs and treasury payout. Chain-backed compounding selects8092 escrow; ordinary rewards and treasury use8092 payout.",
+      "signingAuthority": "Web8092 bearer; direct unstake is separate web keyring path.",
+      "queueOrTimerBehavior": "Daily00:10UTC persistent timer; missed calendar tick may run upon restoration. Wants=HD web can reactivate stopped process.",
+      "dependencies": [
+        "HD web WANTED",
+        "PostgreSQL",
+        "8092 payout+escrow"
+      ],
+      "sourceReferences": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "78d2a3329096c25b9429a3536f08c33d1d9dc96f",
+          "file": "scripts/run-staking-reward-distribution.mjs",
+          "line": 23,
+          "proves": "POST reward runner"
+        },
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "78d2a3329096c25b9429a3536f08c33d1d9dc96f",
+          "file": "app/api/staking/rewards/run/route.ts",
+          "line": 78,
+          "proves": "executeDailyStakingRewardPayouts"
+        },
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "78d2a3329096c25b9429a3536f08c33d1d9dc96f",
+          "file": "app/api/staking/rewards/run/route.ts",
+          "line": 92,
+          "proves": "execute treasury payout"
+        },
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "78d2a3329096c25b9429a3536f08c33d1d9dc96f",
+          "file": "lib/staking.ts",
+          "line": 3656,
+          "proves": "escrow vs payout authority selection"
+        },
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "78d2a3329096c25b9429a3536f08c33d1d9dc96f",
+          "file": "lib/stakingExecution.ts",
+          "line": 29,
+          "proves": "distribution pause=false current source"
+        }
+      ],
+      "proposedFence": "Fence service+timer and web direct/admin reward routes. Restoration requires missed-date/partiallyexecuted distribution reconciliation; never blindly start persistent timer."
+    },
+    {
+      "unit": "aoe2hdbets-trophy-tributes.service",
+      "osOwner": "tony",
+      "accountableProductOwner": "AoE2WAR HD application owner; coordinated window authorized by Tony",
+      "classification": "CONFIRMED_QUEUE_AND_CONDITIONAL_PAYOUT_PRODUCER",
+      "liveState": "inactive",
+      "unitFile": "/etc/systemd/system/aoe2hdbets-trophy-tributes.service",
+      "configEntryPoints": [
+        "/etc/aoe2hdbets/aoe2hdbets-web.env"
+      ],
+      "financialCapability": "POST creates daily trophy entitlements; DB setting trophy_tribute_auto_execute=true executes up to25 founder payouts. Admin execute and allocated championship paths also use8093.",
+      "signingAuthority": "Web founder8093 bearer; allocated path requires canonical loopback8093 and never mnemonic fallback.",
+      "queueOrTimerBehavior": "Daily00:05UTC persistent timer; Wants=HD web; scheduledFor/status/retries and per-seat allocation proof stored.",
+      "dependencies": [
+        "HD web WANTED",
+        "PostgreSQL trophy settings/rows",
+        "8093 Founder"
+      ],
+      "sourceReferences": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "78d2a3329096c25b9429a3536f08c33d1d9dc96f",
+          "file": "scripts/run-trophy-tribute-queue.mjs",
+          "line": 24,
+          "proves": "POST queue"
+        },
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "78d2a3329096c25b9429a3536f08c33d1d9dc96f",
+          "file": "app/api/trophies/tributes/queue/route.ts",
+          "line": 97,
+          "proves": "DB auto-execute controls financial execution"
+        },
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "78d2a3329096c25b9429a3536f08c33d1d9dc96f",
+          "file": "lib/trophies/service.ts",
+          "line": 1140,
+          "proves": "scalar founder payout"
+        },
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "78d2a3329096c25b9429a3536f08c33d1d9dc96f",
+          "file": "lib/trophies/championship.ts",
+          "line": 319,
+          "proves": "broadcasting state persisted before send"
+        },
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "78d2a3329096c25b9429a3536f08c33d1d9dc96f",
+          "file": "lib/trophies/allocatedFounderPayout.ts",
+          "line": 39,
+          "proves": "isolated8093 POST and uncertainty barrier"
+        }
+      ],
+      "proposedFence": "Fence service+timer and manual/admin paths via web. Preserve broadcasting/uncertain allocations; restore only after per-date and per-allocation review, never requeue unknown payouts."
+    },
+    {
+      "unit": "aoe2-wolo-transfer-heartbeat.service",
+      "osOwner": "root/system manager",
+      "accountableProductOwner": "AoE2WAR HD application owner; coordinated window authorized by Tony",
+      "classification": "READ_ONLY_CHAIN_CONSUMER_AND_CACHE_WRITER",
+      "liveState": "inactive",
+      "unitFile": "/etc/systemd/system/aoe2-wolo-transfer-heartbeat.service",
+      "configEntryPoints": [],
+      "financialCapability": "Reads canonical chain and inserts/updates wolo_indexed_transfers cache. No ledger-credit, signing or settlement HTTP mutation in this call graph.",
+      "signingAuthority": "No signing config required by helper; loads DATABASE_URL only.",
+      "queueOrTimerBehavior": "Every60s persistent timer;root helper flock prevents duplicate helper runs; bounded backfill20000blocks/1address/25peraddress/250global. Cache writes are real DB writes, not quiescent state.",
+      "dependencies": [
+        "PostgreSQL transfer index",
+        "canonical chain queries"
+      ],
+      "sourceReferences": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "78d2a3329096c25b9429a3536f08c33d1d9dc96f",
+          "file": "scripts/backfill-wolo-mainnet-transfers.mjs",
+          "line": 29,
+          "proves": "backfill leaf"
+        },
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "78d2a3329096c25b9429a3536f08c33d1d9dc96f",
+          "file": "lib/woloMainnetTransfers.ts",
+          "line": 792,
+          "proves": "only indexed-transfer table upsert"
+        }
+      ],
+      "proposedFence": "No financial signer fence required for settlement-only state ownership; keep if snapshots/accounting explicitly allow independent cache writes. If shared DB quiescence required by backup plan, fence this pair as bookkeeping writer, not because it pays."
+    },
+    {
+      "unit": "aoe2war-prewarm.service",
+      "osOwner": "root/system manager",
+      "accountableProductOwner": "AoE2WAR HD application owner; coordinated window authorized by Tony",
+      "classification": "CONFIRMED_INDIRECT_FINANCIAL_TRIGGER",
+      "liveState": "inactive",
+      "unitFile": "/etc/systemd/system/aoe2war-prewarm.service",
+      "configEntryPoints": [],
+      "financialCapability": "GET / queues lobby maintenance and can execute pending payouts via ensureBetMarkets; /watch and API stats also hit but no explicitsigning inhelper.",
+      "signingAuthority": "Anonymous HTTP triggers web-owned settlement authority; helper itself holds no signer.",
+      "queueOrTimerBehavior": "Root helper GET /,/watch,/api/game_stats every5min persistent timer; no auth needed for root GET.",
+      "dependencies": [
+        "HD web GET /",
+        "HD replay API read"
+      ],
+      "sourceReferences": [
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "78d2a3329096c25b9429a3536f08c33d1d9dc96f",
+          "file": "app/page.tsx",
+          "line": 22,
+          "proves": "loads lobby snapshot"
+        },
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "78d2a3329096c25b9429a3536f08c33d1d9dc96f",
+          "file": "lib/lobbySnapshot.ts",
+          "line": 146,
+          "proves": "public snapshot schedules maintenance"
+        },
+        {
+          "repository": "Emaren/app-prodn",
+          "commit": "78d2a3329096c25b9429a3536f08c33d1d9dc96f",
+          "file": "lib/bets.ts",
+          "line": 8269,
+          "proves": "downstream payout reconciliation"
+        }
+      ],
+      "proposedFence": "Fence timer+service until web financial execution may explicitly resume; classify GET side effects, do not call it nonfinancial cache warming."
+    },
+    {
+      "unit": "aoe2hdbets-bet-stake-reconcile.timer",
+      "osOwner": "root/system manager",
+      "classification": "SCHEDULED_REACTIVATION_ROUTE",
+      "financialCapability": "Schedules aoe2hdbets-bet-stake-reconcile.service; inherits target financial classification CONFIRMED_FINANCIAL_RECONCILER",
+      "signingAuthority": "None in timer; target transitive authority above",
+      "queueOrTimerBehavior": {
+        "persistent": "yes",
+        "timersCalendar": "",
+        "timersMonotonic": "{ OnUnitInactiveUSec=5min ; next_elapse=2d 5h 43min 19.456079s } { OnBootUSec=4min ; next_elapse=4min }",
+        "lastTrigger": "Sun 2026-10-18 19:09:20 UTC"
+      },
+      "dependencies": {
+        "triggers": "aoe2hdbets-bet-stake-reconcile.service",
+        "before": "aoe2hdbets-bet-stake-reconcile.service timers.target shutdown.target",
+        "after": "-.mount sysinit.target"
+      },
+      "proposedFence": "Fence apply service and timer together before web drain; capture recoverable intent/ticket statuses and chain hashes without claiming absent means no money."
+    },
+    {
+      "unit": "aoe2hdbets-challenge-reconcile.timer",
+      "osOwner": "root/system manager",
+      "classification": "SCHEDULED_REACTIVATION_ROUTE",
+      "financialCapability": "Schedules aoe2hdbets-challenge-reconcile.service; inherits target financial classification CONFIRMED_REFUND_PRODUCER",
+      "signingAuthority": "None in timer; target transitive authority above",
+      "queueOrTimerBehavior": {
+        "persistent": "yes",
+        "timersCalendar": "",
+        "timersMonotonic": "{ OnUnitActiveUSec=5min ; next_elapse=2d 5h 41min 19.387421s } { OnBootUSec=3min ; next_elapse=3min }",
+        "lastTrigger": "Sun 2026-10-18 19:07:22 UTC"
+      },
+      "dependencies": {
+        "triggers": "aoe2hdbets-challenge-reconcile.service",
+        "before": "aoe2hdbets-challenge-reconcile.service shutdown.target timers.target",
+        "after": "-.mount sysinit.target"
+      },
+      "proposedFence": "Fence service+timer, and admin/manual HTTP callers through web fence. Preserve all scheduled/refund records; do not invoke no-refunds as substitute for frozen financial queue."
+    },
+    {
+      "unit": "aoe2hdbets-replay-auto-recovery.timer",
+      "osOwner": "root/system manager",
+      "classification": "SCHEDULED_REACTIVATION_ROUTE",
+      "financialCapability": "Schedules aoe2hdbets-replay-auto-recovery.service; inherits target financial classification POSSIBLE_INDIRECT_PRODUCER_EVIDENCE_WRITER",
+      "signingAuthority": "None in timer; target transitive authority above",
+      "queueOrTimerBehavior": {
+        "persistent": "no",
+        "timersCalendar": "",
+        "timersMonotonic": "{ OnUnitInactiveUSec=5min ; next_elapse=2d 5h 43min 4.624604s } { OnActiveUSec=5min ; next_elapse=5min 18.948263s }",
+        "lastTrigger": "Sun 2026-10-18 19:08:57 UTC"
+      },
+      "dependencies": {
+        "triggers": "aoe2hdbets-replay-auto-recovery.service",
+        "before": "timers.target shutdown.target aoe2hdbets-replay-auto-recovery.service",
+        "after": "sysinit.target"
+      },
+      "proposedFence": "Fence timer+service to prevent both evidence mutation and Requires-triggered HD web restart; keep pure replay parser/read paths where independently isolated."
+    },
+    {
+      "unit": "aoe2hdbets-staking-rewards.timer",
+      "osOwner": "root/system manager",
+      "classification": "SCHEDULED_REACTIVATION_ROUTE",
+      "financialCapability": "Schedules aoe2hdbets-staking-rewards.service; inherits target financial classification CONFIRMED_SETTLEMENT_PRODUCER",
+      "signingAuthority": "None in timer; target transitive authority above",
+      "queueOrTimerBehavior": {
+        "persistent": "yes",
+        "timersCalendar": "{ OnCalendar=*-*-* 00:10:00 UTC ; next_elapse=Mon 2026-10-19 00:10:00 UTC }",
+        "timersMonotonic": "",
+        "lastTrigger": "Sun 2026-10-18 00:10:00 UTC"
+      },
+      "dependencies": {
+        "triggers": "aoe2hdbets-staking-rewards.service",
+        "before": "timers.target shutdown.target aoe2hdbets-staking-rewards.service",
+        "after": "sysinit.target time-set.target -.mount time-sync.target"
+      },
+      "proposedFence": "Fence service+timer and web direct/admin reward routes. Restoration requires missed-date/partiallyexecuted distribution reconciliation; never blindly start persistent timer."
+    },
+    {
+      "unit": "aoe2hdbets-trophy-tributes.timer",
+      "osOwner": "root/system manager",
+      "classification": "SCHEDULED_REACTIVATION_ROUTE",
+      "financialCapability": "Schedules aoe2hdbets-trophy-tributes.service; inherits target financial classification CONFIRMED_QUEUE_AND_CONDITIONAL_PAYOUT_PRODUCER",
+      "signingAuthority": "None in timer; target transitive authority above",
+      "queueOrTimerBehavior": {
+        "persistent": "yes",
+        "timersCalendar": "{ OnCalendar=*-*-* 00:05:00 UTC ; next_elapse=Mon 2026-10-19 00:05:00 UTC }",
+        "timersMonotonic": "",
+        "lastTrigger": "Sun 2026-10-18 00:05:00 UTC"
+      },
+      "dependencies": {
+        "triggers": "aoe2hdbets-trophy-tributes.service",
+        "before": "timers.target shutdown.target aoe2hdbets-trophy-tributes.service",
+        "after": "sysinit.target time-set.target time-sync.target -.mount"
+      },
+      "proposedFence": "Fence service+timer and manual/admin paths via web. Preserve broadcasting/uncertain allocations; restore only after per-date and per-allocation review, never requeue unknown payouts."
+    },
+    {
+      "unit": "aoe2-wolo-transfer-heartbeat.timer",
+      "osOwner": "root/system manager",
+      "classification": "SCHEDULED_REACTIVATION_ROUTE",
+      "financialCapability": "Schedules aoe2-wolo-transfer-heartbeat.service; inherits target financial classification READ_ONLY_CHAIN_CONSUMER_AND_CACHE_WRITER",
+      "signingAuthority": "None in timer; target transitive authority above",
+      "queueOrTimerBehavior": {
+        "persistent": "yes",
+        "timersCalendar": "",
+        "timersMonotonic": "{ OnUnitActiveUSec=1min ; next_elapse=2d 5h 42min 26.392241s } { OnBootUSec=30s ; next_elapse=30s }",
+        "lastTrigger": "Sun 2026-10-18 19:12:29 UTC"
+      },
+      "dependencies": {
+        "triggers": "aoe2-wolo-transfer-heartbeat.service",
+        "before": "shutdown.target aoe2-wolo-transfer-heartbeat.service timers.target",
+        "after": "-.mount sysinit.target"
+      },
+      "proposedFence": "No financial signer fence required for settlement-only state ownership; keep if snapshots/accounting explicitly allow independent cache writes. If shared DB quiescence required by backup plan, fence this pair as bookkeeping writer, not because it pays."
+    },
+    {
+      "unit": "aoe2war-prewarm.timer",
+      "osOwner": "root/system manager",
+      "classification": "SCHEDULED_REACTIVATION_ROUTE",
+      "financialCapability": "Schedules aoe2war-prewarm.service; inherits target financial classification CONFIRMED_INDIRECT_FINANCIAL_TRIGGER",
+      "signingAuthority": "None in timer; target transitive authority above",
+      "queueOrTimerBehavior": {
+        "persistent": "yes",
+        "timersCalendar": "",
+        "timersMonotonic": "{ OnUnitActiveUSec=5min ; next_elapse=2d 5h 46min 6.391547s } { OnBootUSec=2min ; next_elapse=2min }",
+        "lastTrigger": "Sun 2026-10-18 19:12:09 UTC"
+      },
+      "dependencies": {
+        "triggers": "aoe2war-prewarm.service",
+        "before": "timers.target shutdown.target aoe2war-prewarm.service",
+        "after": "-.mount sysinit.target"
+      },
+      "proposedFence": "Fence timer+service until web financial execution may explicitly resume; classify GET side effects, do not call it nonfinancial cache warming."
+    }
+  ],
+  "hd_manual_and_external_paths": [
+    {
+      "path": "Browser Keplr/WalletConnect alreadyloadedtabs",
+      "classification": "EXTERNAL_INDEPENDENT_SIGNER",
+      "authority": "User wallet, not8092/8093 bearer",
+      "source": [
+        "app/bets/page.tsx:2979",
+        "lib/clientStaking.ts:151",
+        "lib/clientChallengeFunding.ts:179",
+        "lib/clientAcademyPayment.ts:172",
+        "lib/clientMarketplacePayment.ts:188",
+        "components/BetForm.tsx:88",
+        "hooks/useSendWolo.ts:48"
+      ],
+      "maintenanceLimit": "Stopping app does not revoke alreadyissued wallet signing or public-RPC broadcasts. Preserve and observe receipts/mempool/finality after fence; require late-deposit accounting and no automatic payouts. Do not stop consensus to fence user wallets."
+    },
+    {
+      "path": "scripts/audit-backfill-jims-rule.mts",
+      "classification": "POSSIBLE_MANUAL8092_PRODUCER",
+      "authority": "Loads app execution credentials and guarded --apply",
+      "maintenanceLimit": "No automatic schedule established by this agent. Require operator no-run/external-origin evidence, not proof from inactive timer."
+    },
+    {
+      "path": "scripts/reconcile-legacy-staking-custody.mts",
+      "classification": "MANUAL8092_PRODUCER_CURRENTLY_SOURCE_BLOCKED",
+      "authority": "App execution credentials, --apply/exactconfirm/Git guard; current source distribution pause=false causes early refusal",
+      "maintenanceLimit": "Keep untouched; source refusal is not independent assurance no othermanual tools run."
+    }
+  ],
+  "hd_queue_requirements": [
+    "Use existing scripts/wolo-maintenance-drain-readonly.mjs with its six-counter scope explicit; no global drain inference.",
+    "Supplement trophy allocation broadcasting state (sensor currently misses it), bet_stake_tickets, staking reward allocations/treasury distributions, WarGraph queued/running jobs/leases/rewards, faucet ledger/lock and settlement run/request stores.",
+    "Two observations across closed ingress with no financial writers/reactivators, request locks/open connections/mempool/finality and exact priorunknown outcomes independently reconciled. A processstop is not proofa prior payout failed.",
+    "No bridge callback durablequeue exists: if API continuesuploads, retain exact durable gameID/time boundary and callback failure evidence. Any catch-up financial processing requires separate authorization."
+  ],
+  "de_units": [
+    {
+      "unit": "aoe2dewarwagers-web.service",
+      "owner": "tony; DE application owner",
+      "source_commit": "c768957b (full hash in retained de-source-tree.json)",
+      "classification": "POSSIBLE_SIGNER_CONFIRMED_FINANCIAL_RECONCILER",
+      "entrypoint": "Next web4000; current source9reviewedfiles match live",
+      "capability": "GET board/lobby/AI/WarChest can run market/wager/founder settlement. Faucet has implicit CLI/home/keyring defaults even without signer env; default home currently absent, no keys inspected.",
+      "queues": "DE DB financial tables currently empty in bounded read; not proof of no liabilities.",
+      "required_fence": "Web process and all external caller/manual launch ownership; POST-only fence insufficient."
+    },
+    {
+      "unit": "aoe2dewarwagers-api.service",
+      "owner": "tony; DE replay API owner",
+      "source_commit": "58livePythonfiles match source; retained evidence hashes",
+      "classification": "FINANCIAL_IDENTITY_AND_UPSTREAM_PRODUCER",
+      "entrypoint": "API4400, public independent API alias",
+      "capability": "Updates wallet recipients and identity, can delete users/results; replay ingestion supplies settlement inputs. No direct signer identified in reviewed source.",
+      "required_fence": "Whole API process unless independent app owner proves complete route admission fence including independent API alias. Current source has none."
+    }
+  ],
+  "scheduler_entries": [
+    {
+      "surface": "/etc/crontab",
+      "sha256": "ffb48ad57868ed639fad049d11ef4b9bcdd3d2d3e556754ce69b4d6b016969a3",
+      "owners": [
+        "root"
+      ],
+      "entryCount": 4,
+      "classification": "NONFINANCIAL_SCHEDULER",
+      "entrypoints": [
+        "cd",
+        "run-parts",
+        "test"
+      ],
+      "maintenanceFence": "NONE_IDENTIFIED",
+      "limits": "Package jobs may invoke package/security maintenance; require no overlapping OS upgrade or config change in protected window."
+    },
+    {
+      "surface": "/etc/cron.d/.placeholder",
+      "sha256": "49674d9b1bd433cdb58f30497f6c441dc823de549160eef5c1acec4c20786810",
+      "owners": [],
+      "entryCount": 0,
+      "classification": "NO_ACTIVE_CRON_ENTRY",
+      "entrypoints": [],
+      "maintenanceFence": "NONE_IDENTIFIED",
+      "limits": "Package jobs may invoke package/security maintenance; require no overlapping OS upgrade or config change in protected window."
+    },
+    {
+      "surface": "/etc/cron.d/certbot",
+      "sha256": "2fa6b230c2a8733329c08b1b42fd426159a81ec671e68d65b95d87b6b24db86e",
+      "owners": [
+        "root"
+      ],
+      "entryCount": 1,
+      "classification": "NONFINANCIAL_SCHEDULER",
+      "entrypoints": [
+        "certbot",
+        "perl",
+        "test"
+      ],
+      "maintenanceFence": "NONE_IDENTIFIED",
+      "limits": "Package jobs may invoke package/security maintenance; require no overlapping OS upgrade or config change in protected window."
+    },
+    {
+      "surface": "/etc/cron.d/e2scrub_all",
+      "sha256": "d4df081b982b23e66cac7102f9d91032f296caf13031991d90af44ee6cbf6e3b",
+      "owners": [
+        "root"
+      ],
+      "entryCount": 2,
+      "classification": "NONFINANCIAL_SCHEDULER",
+      "entrypoints": [
+        "/sbin/e2scrub_all",
+        "/usr/lib/x86_64-linux-gnu/e2fsprogs/e2scrub_all_cron",
+        "test"
+      ],
+      "maintenanceFence": "NONE_IDENTIFIED",
+      "limits": "Package jobs may invoke package/security maintenance; require no overlapping OS upgrade or config change in protected window."
+    },
+    {
+      "surface": "/etc/cron.d/sysstat",
+      "sha256": "47a67deba0d029d43209e6e512399543a945172f2a640021a6c21422a66adb1a",
+      "owners": [
+        "root"
+      ],
+      "entryCount": 2,
+      "classification": "NONFINANCIAL_SCHEDULER",
+      "entrypoints": [
+        "command",
+        "debian-sa1"
+      ],
+      "maintenanceFence": "NONE_IDENTIFIED",
+      "limits": "Package jobs may invoke package/security maintenance; require no overlapping OS upgrade or config change in protected window."
+    },
+    {
+      "surface": "/var/spool/cron/crontabs/tony",
+      "sha256": "b7b0f4e0c77d8c2ed5c389fd31d9449b6791fd3dcc3ee2b838efc87967e8e181",
+      "owners": [],
+      "entryCount": 0,
+      "classification": "NO_ACTIVE_CRON_ENTRY",
+      "entrypoints": [],
+      "maintenanceFence": "NONE_IDENTIFIED",
+      "limits": "Package jobs may invoke package/security maintenance; require no overlapping OS upgrade or config change in protected window."
+    },
+    {
+      "surface": "/etc/cron.hourly/.placeholder",
+      "sha256": "49674d9b1bd433cdb58f30497f6c441dc823de549160eef5c1acec4c20786810",
+      "owners": [
+        "root"
+      ],
+      "executable": false,
+      "classification": "NONEXECUTABLE_PLACEHOLDER",
+      "maintenanceFence": "NONE_IDENTIFIED",
+      "dependencies": "Distribution package/security/log rotation utilities; no Wolo source or broadcast path identified. Rkhunter uses wget/curl for security database updates."
+    },
+    {
+      "surface": "/etc/cron.daily/.placeholder",
+      "sha256": "49674d9b1bd433cdb58f30497f6c441dc823de549160eef5c1acec4c20786810",
+      "owners": [
+        "root"
+      ],
+      "executable": false,
+      "classification": "NONEXECUTABLE_PLACEHOLDER",
+      "maintenanceFence": "NONE_IDENTIFIED",
+      "dependencies": "Distribution package/security/log rotation utilities; no Wolo source or broadcast path identified. Rkhunter uses wget/curl for security database updates."
+    },
+    {
+      "surface": "/etc/cron.daily/apport",
+      "sha256": "ece406240beddfd8d262a9f0f2ffd5aa40cae4bf5401e7641db3ae1aca737a39",
+      "owners": [
+        "root"
+      ],
+      "executable": true,
+      "classification": "NONFINANCIAL_PACKAGE_MAINTENANCE",
+      "maintenanceFence": "NONE_IDENTIFIED",
+      "dependencies": "Distribution package/security/log rotation utilities; no Wolo source or broadcast path identified. Rkhunter uses wget/curl for security database updates."
+    },
+    {
+      "surface": "/etc/cron.daily/apt-compat",
+      "sha256": "1983c659b042b1ec26127e7874954d83cd97eb8dcfd03238a7d2031ea0182fbe",
+      "owners": [
+        "root"
+      ],
+      "executable": true,
+      "classification": "NONFINANCIAL_PACKAGE_MAINTENANCE",
+      "maintenanceFence": "NONE_IDENTIFIED",
+      "dependencies": "Distribution package/security/log rotation utilities; no Wolo source or broadcast path identified. Rkhunter uses wget/curl for security database updates."
+    },
+    {
+      "surface": "/etc/cron.daily/chkrootkit",
+      "sha256": "c11da6d73cd9b0fb4ec86825920d82c6546eae7b553e31c783b197443c00d754",
+      "owners": [
+        "root"
+      ],
+      "executable": true,
+      "classification": "NONFINANCIAL_PACKAGE_MAINTENANCE",
+      "maintenanceFence": "NONE_IDENTIFIED",
+      "dependencies": "Distribution package/security/log rotation utilities; no Wolo source or broadcast path identified. Rkhunter uses wget/curl for security database updates."
+    },
+    {
+      "surface": "/etc/cron.daily/debsums",
+      "sha256": "ed9bfbc41b488b27247d500c2e69378fac9c8ad630bebf2fdc755fbf25dade68",
+      "owners": [
+        "root"
+      ],
+      "executable": true,
+      "classification": "NONFINANCIAL_PACKAGE_MAINTENANCE",
+      "maintenanceFence": "NONE_IDENTIFIED",
+      "dependencies": "Distribution package/security/log rotation utilities; no Wolo source or broadcast path identified. Rkhunter uses wget/curl for security database updates."
+    },
+    {
+      "surface": "/etc/cron.daily/dpkg",
+      "sha256": "9f2fdd4b4e7706dda74e8e443e1e1da0fbbb19c62a58e230e90d648b69177c35",
+      "owners": [
+        "root"
+      ],
+      "executable": true,
+      "classification": "NONFINANCIAL_PACKAGE_MAINTENANCE",
+      "maintenanceFence": "NONE_IDENTIFIED",
+      "dependencies": "Distribution package/security/log rotation utilities; no Wolo source or broadcast path identified. Rkhunter uses wget/curl for security database updates."
+    },
+    {
+      "surface": "/etc/cron.daily/logrotate",
+      "sha256": "12b36ff7068d3932f428e6eba07cbc9b9b2f7f7d37756d86ce13ddfcc6cd875f",
+      "owners": [
+        "root"
+      ],
+      "executable": true,
+      "classification": "NONFINANCIAL_PACKAGE_MAINTENANCE",
+      "maintenanceFence": "NONE_IDENTIFIED",
+      "dependencies": "Distribution package/security/log rotation utilities; no Wolo source or broadcast path identified. Rkhunter uses wget/curl for security database updates."
+    },
+    {
+      "surface": "/etc/cron.daily/man-db",
+      "sha256": "8436d3109f24a1a4e221e765c42b3cc34a455bd30478ad3a09d793c736a8a2e7",
+      "owners": [
+        "root"
+      ],
+      "executable": true,
+      "classification": "NONFINANCIAL_PACKAGE_MAINTENANCE",
+      "maintenanceFence": "NONE_IDENTIFIED",
+      "dependencies": "Distribution package/security/log rotation utilities; no Wolo source or broadcast path identified. Rkhunter uses wget/curl for security database updates."
+    },
+    {
+      "surface": "/etc/cron.daily/rkhunter",
+      "sha256": "c67c1129cd34f0d1da9bb68e1309cff700c7fd83c79993469367c51205ca0da5",
+      "owners": [
+        "root"
+      ],
+      "executable": true,
+      "classification": "NONFINANCIAL_PACKAGE_MAINTENANCE",
+      "maintenanceFence": "NONE_IDENTIFIED",
+      "dependencies": "Distribution package/security/log rotation utilities; no Wolo source or broadcast path identified. Rkhunter uses wget/curl for security database updates."
+    },
+    {
+      "surface": "/etc/cron.daily/sysstat",
+      "sha256": "bf4e40f5cbe6a073dbd2b7148a8f4c574e33729426d44b0ef852d78f12c8a0c9",
+      "owners": [
+        "root"
+      ],
+      "executable": true,
+      "classification": "NONFINANCIAL_PACKAGE_MAINTENANCE",
+      "maintenanceFence": "NONE_IDENTIFIED",
+      "dependencies": "Distribution package/security/log rotation utilities; no Wolo source or broadcast path identified. Rkhunter uses wget/curl for security database updates."
+    },
+    {
+      "surface": "/etc/cron.weekly/.placeholder",
+      "sha256": "49674d9b1bd433cdb58f30497f6c441dc823de549160eef5c1acec4c20786810",
+      "owners": [
+        "root"
+      ],
+      "executable": false,
+      "classification": "NONEXECUTABLE_PLACEHOLDER",
+      "maintenanceFence": "NONE_IDENTIFIED",
+      "dependencies": "Distribution package/security/log rotation utilities; no Wolo source or broadcast path identified. Rkhunter uses wget/curl for security database updates."
+    },
+    {
+      "surface": "/etc/cron.weekly/debsums",
+      "sha256": "3810e77314bbd7a6f8e48047b1cfefd67cf0bedc300c8080ba1a4bc56a34aaad",
+      "owners": [
+        "root"
+      ],
+      "executable": true,
+      "classification": "NONFINANCIAL_PACKAGE_MAINTENANCE",
+      "maintenanceFence": "NONE_IDENTIFIED",
+      "dependencies": "Distribution package/security/log rotation utilities; no Wolo source or broadcast path identified. Rkhunter uses wget/curl for security database updates."
+    },
+    {
+      "surface": "/etc/cron.weekly/man-db",
+      "sha256": "292aa5e844ae053ede690e31806c0a1f0451789555b3655a1a93221f7df4bfd5",
+      "owners": [
+        "root"
+      ],
+      "executable": true,
+      "classification": "NONFINANCIAL_PACKAGE_MAINTENANCE",
+      "maintenanceFence": "NONE_IDENTIFIED",
+      "dependencies": "Distribution package/security/log rotation utilities; no Wolo source or broadcast path identified. Rkhunter uses wget/curl for security database updates."
+    },
+    {
+      "surface": "/etc/cron.weekly/rkhunter",
+      "sha256": "07caf77b7b0b9c4c10edda2648da8b8ac8e71f7967f86bb6ff98048e6003bfdd",
+      "owners": [
+        "root"
+      ],
+      "executable": true,
+      "classification": "NONFINANCIAL_PACKAGE_MAINTENANCE",
+      "maintenanceFence": "NONE_IDENTIFIED",
+      "dependencies": "Distribution package/security/log rotation utilities; no Wolo source or broadcast path identified. Rkhunter uses wget/curl for security database updates."
+    },
+    {
+      "surface": "/etc/cron.monthly/.placeholder",
+      "sha256": "49674d9b1bd433cdb58f30497f6c441dc823de549160eef5c1acec4c20786810",
+      "owners": [
+        "root"
+      ],
+      "executable": false,
+      "classification": "NONEXECUTABLE_PLACEHOLDER",
+      "maintenanceFence": "NONE_IDENTIFIED",
+      "dependencies": "Distribution package/security/log rotation utilities; no Wolo source or broadcast path identified. Rkhunter uses wget/curl for security database updates."
+    },
+    {
+      "surface": "/etc/cron.monthly/debsums",
+      "sha256": "5b3af0861893badaa674aa6de294b57cf68cc02f5a80cff533203a6bf737c13e",
+      "owners": [
+        "root"
+      ],
+      "executable": true,
+      "classification": "NONFINANCIAL_PACKAGE_MAINTENANCE",
+      "maintenanceFence": "NONE_IDENTIFIED",
+      "dependencies": "Distribution package/security/log rotation utilities; no Wolo source or broadcast path identified. Rkhunter uses wget/curl for security database updates."
+    },
+    {
+      "surface": "user@0.service",
+      "owner": "root",
+      "classification": "NO_WOLO_JOB_IDENTIFIED_IN_EXISTING_MANAGER",
+      "activeServices": [
+        [
+          "dbus.service",
+          "inactive",
+          "dead"
+        ],
+        [
+          "dirmngr.service",
+          "inactive",
+          "dead"
+        ],
+        [
+          "gpg-agent.service",
+          "inactive",
+          "dead"
+        ],
+        [
+          "keyboxd.service",
+          "inactive",
+          "dead"
+        ],
+        [
+          "launchpadlib-cache-clean.service",
+          "inactive",
+          "dead"
+        ],
+        [
+          "pk-debconf-helper.service",
+          "inactive",
+          "dead"
+        ],
+        [
+          "snapd.session-agent.service",
+          "inactive",
+          "dead"
+        ],
+        [
+          "systemd-remount-fs.service",
+          "inactive",
+          "dead"
+        ],
+        [
+          "dbus.socket",
+          "active",
+          "listening"
+        ],
+        [
+          "dirmngr.socket",
+          "active",
+          "listening"
+        ],
+        [
+          "gpg-agent-browser.socket",
+          "active",
+          "listening"
+        ],
+        [
+          "gpg-agent-extra.socket",
+          "active",
+          "listening"
+        ],
+        [
+          "gpg-agent-ssh.socket",
+          "active",
+          "listening"
+        ],
+        [
+          "gpg-agent.socket",
+          "active",
+          "listening"
+        ],
+        [
+          "keyboxd.socket",
+          "active",
+          "listening"
+        ],
+        [
+          "pk-debconf-helper.socket",
+          "active",
+          "listening"
+        ],
+        [
+          "snapd.session-agent.socket",
+          "active",
+          "listening"
+        ],
+        [
+          "launchpadlib-cache-clean.timer",
+          "active",
+          "waiting"
+        ]
+      ],
+      "customDefinitionDirectoriesPresent": [],
+      "scheduledJob": "launchpadlib-cache-clean.timer -> find Launchpad cache files older than30days, daily",
+      "maintenanceFence": "NONE_IDENTIFIED",
+      "limits": "GPG/SSH/desktop agents are generic capabilities; these manager snapshots cannot prove future operator/manual jobs absent. Do not stop whole manager."
+    },
+    {
+      "surface": "user@1000.service",
+      "owner": "tony",
+      "classification": "NO_WOLO_JOB_IDENTIFIED_IN_EXISTING_MANAGER",
+      "activeServices": [
+        [
+          "dbus.service",
+          "inactive",
+          "dead"
+        ],
+        [
+          "dirmngr.service",
+          "inactive",
+          "dead"
+        ],
+        [
+          "gpg-agent.service",
+          "inactive",
+          "dead"
+        ],
+        [
+          "keyboxd.service",
+          "inactive",
+          "dead"
+        ],
+        [
+          "launchpadlib-cache-clean.service",
+          "inactive",
+          "dead"
+        ],
+        [
+          "pk-debconf-helper.service",
+          "inactive",
+          "dead"
+        ],
+        [
+          "snapd.session-agent.service",
+          "inactive",
+          "dead"
+        ],
+        [
+          "systemd-remount-fs.service",
+          "inactive",
+          "dead"
+        ],
+        [
+          "dbus.socket",
+          "active",
+          "listening"
+        ],
+        [
+          "dirmngr.socket",
+          "active",
+          "listening"
+        ],
+        [
+          "gpg-agent-browser.socket",
+          "active",
+          "listening"
+        ],
+        [
+          "gpg-agent-extra.socket",
+          "active",
+          "listening"
+        ],
+        [
+          "gpg-agent-ssh.socket",
+          "active",
+          "listening"
+        ],
+        [
+          "gpg-agent.socket",
+          "active",
+          "listening"
+        ],
+        [
+          "keyboxd.socket",
+          "active",
+          "listening"
+        ],
+        [
+          "pk-debconf-helper.socket",
+          "active",
+          "listening"
+        ],
+        [
+          "snapd.session-agent.socket",
+          "active",
+          "listening"
+        ],
+        [
+          "launchpadlib-cache-clean.timer",
+          "active",
+          "waiting"
+        ]
+      ],
+      "customDefinitionDirectoriesPresent": [],
+      "scheduledJob": "launchpadlib-cache-clean.timer -> find Launchpad cache files older than30days, daily",
+      "maintenanceFence": "NONE_IDENTIFIED",
+      "limits": "GPG/SSH/desktop agents are generic capabilities; these manager snapshots cannot prove future operator/manual jobs absent. Do not stop whole manager."
+    },
+    {
+      "surface": "[withheld separate-system label; sha256:1ef6603c15a6dba5dff492cf666606d3f4e62f0359261765a9ea75d4297e93aa]",
+      "owner": "[withheld separate-system label; sha256:0fcd972f4515e13ca887757ab46575c2a7c131c83421abe574b060cec4fb5894]",
+      "sourceEntryPoint": "[withheld separate-system label; sha256:12a16896504834c8d28126dbc85eee1d51951902277eeb85991bc024d0d8a29c]",
+      "definitionHashes": [
+        {
+          "file": "[withheld separate-system label; sha256:12a16896504834c8d28126dbc85eee1d51951902277eeb85991bc024d0d8a29c]",
+          "sha256": "4ee029c0f29d8f622ffae7e30acf563ccf4adda52ca29e8275af1f7f2f5ee391"
+        }
+      ],
+      "state": "inactive",
+      "unitFileState": "disabled",
+      "classification": "DORMANT_OTHER_CHAIN_INDEXER",
+      "capability": "[withheld separate-system label; sha256:170a6e1ea8c576185143a5e7eb2f34ee3a800258848aec1957d1affa9a5654fb]",
+      "maintenanceFence": "NONE_IDENTIFIED_FOR_WOLO; PRESERVE_CURRENT_STATE",
+      "dependencies": {
+        "requires": "[withheld separate-system label; sha256:52259acde8ac1ab064c6b925e89984b1deef7b7993dad12a44180dfc8e9845d5]",
+        "triggeredBy": "",
+        "triggers": "",
+        "restart": "always"
+      }
+    },
+    {
+      "surface": "[withheld separate-system label; sha256:5304c543541baa52935292c6d4f4c28c266399e04d24b60f840ac3e85c768aa2]",
+      "owner": "[withheld separate-system label; sha256:0fcd972f4515e13ca887757ab46575c2a7c131c83421abe574b060cec4fb5894]",
+      "sourceEntryPoint": "[withheld separate-system label; sha256:e3654a958ba6ac0b713c509e097d31d69e245140f40b67079fa6b70743a1be73]",
+      "definitionHashes": [
+        {
+          "file": "[withheld separate-system label; sha256:e8d8cec947355e3ea2f8d5a3033a81fbf4fe8019f5295c43c23c8bcac163de26]",
+          "sha256": "78bf849daf4c1dec87420bf779ef2819898395fda8e486f8511c4d3469c971d3"
+        }
+      ],
+      "state": "inactive",
+      "unitFileState": "disabled",
+      "classification": "DORMANT_OTHER_CHAIN_PRODUCER",
+      "capability": "[withheld separate-system label; sha256:2628e2de32047919e9a5c9d99883ed35784c190198664ea5161d61923cba0b17]",
+      "maintenanceFence": "NONE_IDENTIFIED_FOR_WOLO; PRESERVE_CURRENT_STATE",
+      "dependencies": {
+        "requires": "-.mount system.slice sysinit.target",
+        "triggeredBy": "",
+        "triggers": "",
+        "restart": "no"
+      }
+    },
+    {
+      "surface": "[withheld separate-system label; sha256:d6dcd7c29b00d11dac38b6b4d45a280de9260f3a80540404f369bce75a518130]",
+      "owner": "root",
+      "sourceEntryPoint": "[withheld separate-system label; sha256:36e40eb88b46e07feae54b3b590965f142a5caa297fd0b3714125102f0e369f1]",
+      "definitionHashes": [
+        {
+          "file": "[withheld separate-system label; sha256:36e40eb88b46e07feae54b3b590965f142a5caa297fd0b3714125102f0e369f1]",
+          "sha256": "a105c9ac90fd0bd36a047c29c68d55d4813827b532268f89c3a9124d2aa1b3cb"
+        }
+      ],
+      "state": "inactive",
+      "unitFileState": "disabled",
+      "classification": "DORMANT_OTHER_CHAIN_SCHEDULE",
+      "capability": "daily allocation service",
+      "maintenanceFence": "NONE_IDENTIFIED_FOR_WOLO; PRESERVE_CURRENT_STATE",
+      "dependencies": {
+        "requires": "-.mount sysinit.target",
+        "triggeredBy": "",
+        "triggers": "[withheld separate-system label; sha256:5304c543541baa52935292c6d4f4c28c266399e04d24b60f840ac3e85c768aa2]",
+        "restart": null
+      }
+    },
+    {
+      "surface": "[withheld separate-system label; sha256:36f0ff6a91b32715b99f77668a4dbbf38f5c44352c406d842e64b2f36f3e1102]",
+      "owner": "[withheld separate-system label; sha256:0fcd972f4515e13ca887757ab46575c2a7c131c83421abe574b060cec4fb5894]",
+      "sourceEntryPoint": "[withheld separate-system label; sha256:3c9fbaf55e661a3e7894ddbfb60c307b9926b50a2f13b9074dd9b444b86f5ac9]",
+      "definitionHashes": [
+        {
+          "file": "[withheld separate-system label; sha256:62684b09dec62db8fcb77b667db589ebce45a2eab1244e9cbcaaef9f264c6ee1]",
+          "sha256": "c5366c9c70a99634a72d15058f54b4fff25f11dab8d36f3655441eceabcb08d9"
+        }
+      ],
+      "state": "inactive",
+      "unitFileState": "disabled",
+      "classification": "DORMANT_OTHER_CHAIN_SIGNER",
+      "capability": "[withheld separate-system label; sha256:c2feb1dc52f0a7fc8339a8d3f6f43dc12090a3bd2400eacae2ddb0c12881b763]",
+      "maintenanceFence": "NONE_IDENTIFIED_FOR_WOLO; PRESERVE_CURRENT_STATE",
+      "dependencies": {
+        "requires": "-.mount system.slice sysinit.target",
+        "triggeredBy": "",
+        "triggers": "",
+        "restart": "always"
+      }
+    },
+    {
+      "surface": "[withheld separate-system label; sha256:fd3aadd3cd4f319bdf71b947a7a70bcd0679a19e248c8d9ad6baf9e39e212355]",
+      "owner": "[withheld separate-system label; sha256:0fcd972f4515e13ca887757ab46575c2a7c131c83421abe574b060cec4fb5894]",
+      "sourceEntryPoint": "[withheld separate-system label; sha256:a4e27ec6e242d99df49f7a9c4a87875ef5452720803ea70fe611f409ab2480ea]",
+      "definitionHashes": [
+        {
+          "file": "[withheld separate-system label; sha256:decd016a66e0344633224994aeef17bb0572551b99aa2f29c4e140b2d5b62e28]",
+          "sha256": "4984e6698058f29ff3ec53614d0b71161a04af9a042347eb47326a90643f6eea"
+        }
+      ],
+      "state": "active",
+      "unitFileState": "enabled",
+      "classification": "ACTIVE_OTHER_CHAIN_SIGNER",
+      "capability": "[withheld separate-system label; sha256:66618185508bc07fc64731b898ae45e71fbb4c5529ce60ae058f4c3ab9fd8871]",
+      "maintenanceFence": "NONE_IDENTIFIED_FOR_WOLO; PRESERVE_CURRENT_STATE",
+      "dependencies": {
+        "requires": "-.mount system.slice sysinit.target",
+        "triggeredBy": "",
+        "triggers": "",
+        "restart": "always"
+      }
+    },
+    {
+      "surface": "[withheld separate-system label; sha256:45a5b4536bff9f54144a3ead1c8fee6f0577010a22b9db44667b12227787ba8e]",
+      "owner": "[withheld separate-system label; sha256:0fcd972f4515e13ca887757ab46575c2a7c131c83421abe574b060cec4fb5894]",
+      "sourceEntryPoint": "[withheld separate-system label; sha256:e3654a958ba6ac0b713c509e097d31d69e245140f40b67079fa6b70743a1be73]",
+      "definitionHashes": [
+        {
+          "file": "[withheld separate-system label; sha256:df5675c1ad0ca3c589bdc54b3815a4298c1f9e7a9e65ba0f34d35c251ac49e21]",
+          "sha256": "6aa0662f5aa4958024be1e374b22044080b506c20058eceeb34566a94d617767"
+        }
+      ],
+      "state": "inactive",
+      "unitFileState": "disabled",
+      "classification": "DORMANT_OTHER_CHAIN_SIGNER",
+      "capability": "[withheld separate-system label; sha256:18b16d63e491488ad554c915b40b6aa5fd60bfc576e1ad86c4696fbdd8657d99]",
+      "maintenanceFence": "NONE_IDENTIFIED_FOR_WOLO; PRESERVE_CURRENT_STATE",
+      "dependencies": {
+        "requires": "sysinit.target system.slice -.mount",
+        "triggeredBy": "",
+        "triggers": "",
+        "restart": "no"
+      }
+    },
+    {
+      "surface": "[withheld separate-system label; sha256:54d9b1c25f7e25755c826bcc9e0d5c9de8b1d427c92757e8ae1e5c0a0a7ea2f5]",
+      "owner": "root",
+      "sourceEntryPoint": "[withheld separate-system label; sha256:57d6ece24ac09413e71ae8d2217e59bddd8c6073d1d7f435b47b362045a196ec]",
+      "definitionHashes": [
+        {
+          "file": "[withheld separate-system label; sha256:57d6ece24ac09413e71ae8d2217e59bddd8c6073d1d7f435b47b362045a196ec]",
+          "sha256": "70c019ecd1a11fde54f6b9d82b4d42c55d79daa0ef2a8d0eb6a523ce0143fbff"
+        }
+      ],
+      "state": "inactive",
+      "unitFileState": "disabled",
+      "classification": "DORMANT_OTHER_CHAIN_SCHEDULE",
+      "capability": "15min bootstrap service",
+      "maintenanceFence": "NONE_IDENTIFIED_FOR_WOLO; PRESERVE_CURRENT_STATE",
+      "dependencies": {
+        "requires": "-.mount sysinit.target",
+        "triggeredBy": "",
+        "triggers": "[withheld separate-system label; sha256:45a5b4536bff9f54144a3ead1c8fee6f0577010a22b9db44667b12227787ba8e]",
+        "restart": null
+      }
+    },
+    {
+      "surface": "[withheld separate-system label; sha256:f499e30c80bcb4b49529cb3af4bf116c196ba96712ec9dd0aeb65cbc66888ef0]",
+      "owner": "[withheld separate-system label; sha256:0fcd972f4515e13ca887757ab46575c2a7c131c83421abe574b060cec4fb5894]",
+      "sourceEntryPoint": "[withheld separate-system label; sha256:e289912288a387a5b9f033cf5b6e2d661f64f0a217b316eccb81dc3e49b63fed]",
+      "definitionHashes": [
+        {
+          "file": "[withheld separate-system label; sha256:e87cb3b04a78dcc8d004d64f4f7833cab147295b8553bb779a534d254b7d2be8]",
+          "sha256": "0dd5e5be451e0b1c541c8543a6e04a54dc12b6736615f6fd932fa5051fe9a82d"
+        }
+      ],
+      "state": "inactive",
+      "unitFileState": "disabled",
+      "classification": "DORMANT_OTHER_CHAIN_SIGNER",
+      "capability": "[withheld separate-system label; sha256:e6e0b5ca3a0150df2e33acc8fca54f61c85dd6f7190a3c2d4cc266a5702e4d1e]",
+      "maintenanceFence": "NONE_IDENTIFIED_FOR_WOLO; PRESERVE_CURRENT_STATE",
+      "dependencies": {
+        "requires": "sysinit.target -.mount system.slice",
+        "triggeredBy": "",
+        "triggers": "",
+        "restart": "always"
+      }
+    },
+    {
+      "surface": "[withheld separate-system label; sha256:c1469c963b6f650d6c597ae71b0131e54619b268d42d666a9e770a3788552d00]",
+      "owner": "tony",
+      "sourceEntryPoint": "[withheld separate-system label; sha256:7367e8bce6a9be7632840d2c9b585c027393aa498c60f3be61ea435ad712e39c]",
+      "definitionHashes": [
+        {
+          "file": "[withheld separate-system label; sha256:140153da072ec0bcbb1eec2af2bc67f469d53d6f7ecdc1c4771bbf80de300684]",
+          "sha256": "a9d787e7246a5e4eae599518af1fabdc252fc2aac2d61965e318f37f51d54b74"
+        }
+      ],
+      "state": "active",
+      "unitFileState": "enabled",
+      "classification": "OTHER_CHAIN_HTTP_PRODUCER",
+      "capability": "[withheld separate-system label; sha256:184460290ca90d9da339991d6e6bedde53bb4b0c0cea3e3936208fd8d9e544d5]",
+      "maintenanceFence": "NONE_IDENTIFIED_FOR_WOLO; PRESERVE_CURRENT_STATE",
+      "dependencies": {
+        "requires": "system.slice -.mount sysinit.target",
+        "triggeredBy": "",
+        "triggers": "",
+        "restart": "on-failure"
+      }
+    },
+    {
+      "surface": "[withheld separate-system label; sha256:6c69d9f8a62114945fe299f2eb82bc16807c7c95e65dd918c61b121e2ca34429]",
+      "owner": "[withheld separate-system label; sha256:0fcd972f4515e13ca887757ab46575c2a7c131c83421abe574b060cec4fb5894]",
+      "sourceEntryPoint": "[withheld separate-system label; sha256:3c9fbaf55e661a3e7894ddbfb60c307b9926b50a2f13b9074dd9b444b86f5ac9]",
+      "definitionHashes": [
+        {
+          "file": "[withheld separate-system label; sha256:fcc122218a2d45eebb8a1ef854bed4227961a4f484acf064a60240df34cdfab4]",
+          "sha256": "4624401ca87765f86ba892002952a62493544e2da499803ea7d3beb4dfc4611f"
+        }
+      ],
+      "state": "inactive",
+      "unitFileState": "disabled",
+      "classification": "DORMANT_OTHER_CHAIN_NODE",
+      "capability": "[withheld separate-system label; sha256:170a6e1ea8c576185143a5e7eb2f34ee3a800258848aec1957d1affa9a5654fb]",
+      "maintenanceFence": "NONE_IDENTIFIED_FOR_WOLO; PRESERVE_CURRENT_STATE",
+      "dependencies": {
+        "requires": "-.mount system.slice sysinit.target",
+        "triggeredBy": "",
+        "triggers": "",
+        "restart": "on-failure"
+      }
+    },
+    {
+      "surface": "[withheld separate-system label; sha256:8b3828f1f5fa86cdd56c7286acb8c077087cebb977905bb49c8b997a31e8fdd1]",
+      "owner": "tony",
+      "sourceEntryPoint": "/var/www/token-tap-api",
+      "definitionHashes": [
+        {
+          "file": "[withheld separate-system label; sha256:2dbdf6c7f3178f7d5bbac22a53bbde1969295079b4970924c265e5075efa519b]",
+          "sha256": "8f6acef3249d42dde6b9b19af09576170447d0793a759f188079f70ad65e5dcc"
+        }
+      ],
+      "state": "active",
+      "unitFileState": "enabled",
+      "classification": "NON_WOLO_DB_MUTATOR",
+      "capability": "DB token issuance/redemption; noWolo orCLIbroadcast refs in11sourcefiles",
+      "maintenanceFence": "NONE_IDENTIFIED_FOR_WOLO; PRESERVE_CURRENT_STATE",
+      "dependencies": {
+        "requires": "sysinit.target -.mount system.slice",
+        "triggeredBy": "",
+        "triggers": "",
+        "restart": "always"
+      }
+    },
+    {
+      "surface": "[withheld separate-system label; sha256:2383bad1a7da39e5d4f8200133dd0da3869307ee50759aad557a787d412d3f69]",
+      "owner": "tony",
+      "sourceEntryPoint": "/var/www/token-tap-app",
+      "definitionHashes": [
+        {
+          "file": "[withheld separate-system label; sha256:82031775b34197b85f605cc1cd8d15446f713ff4e2d84a04b66ce7975f78015b]",
+          "sha256": "50002a36913ebcbd8df547ee9acf15f62fafa757e3b97e805cd7640c20100dde"
+        },
+        {
+          "file": "[withheld separate-system label; sha256:79320a1e90069bc0d17f0fe2b41f7efbbb137afcba00a4069f8a6badd3d26722]",
+          "sha256": "569ac6c4cfa6e54b7b212b106034e5861230700c63a10956ce6ef272313bc4a8"
+        }
+      ],
+      "state": "active",
+      "unitFileState": "enabled",
+      "classification": "NON_WOLO_PAYMENTS_APP",
+      "capability": "Stripe; noWolo/broadcast refs in83sourcefiles",
+      "maintenanceFence": "NONE_IDENTIFIED_FOR_WOLO; PRESERVE_CURRENT_STATE",
+      "dependencies": {
+        "requires": "-.mount system.slice sysinit.target",
+        "triggeredBy": "",
+        "triggers": "",
+        "restart": "on-failure"
+      }
+    },
+    {
+      "surface": "wolochain-mainnet-osmosis-relayer.service",
+      "owner": "root",
+      "sourceEntryPoint": "/var/lib/wolochain-mainnet-relayer",
+      "definitionHashes": [
+        {
+          "file": "/etc/systemd/system/wolochain-mainnet-osmosis-relayer.service",
+          "sha256": "b39fdc1c971f394a2f70dbc37c0d352a343a040d6cf3f4c4c120c7362be7551d"
+        }
+      ],
+      "state": "inactive",
+      "unitFileState": "disabled",
+      "classification": "POSSIBLE_WOLO_SIGNER_DORMANT",
+      "capability": "Hermes config explicitlywolo-1/osmosis-1, key_namepresent; actualkeyprovisioningnotinspected",
+      "maintenanceFence": "OWNER_MANUAL_LAUNCH_FREEZE_AND_RECHECK_INACTIVE",
+      "dependencies": {
+        "requires": "system.slice -.mount sysinit.target",
+        "triggeredBy": "",
+        "triggers": "",
+        "restart": "always"
+      }
+    },
+    {
+      "surface": "wolochain-settlement.service",
+      "owner": "wolo",
+      "sourceEntryPoint": "/var/www/WoloChain",
+      "definitionHashes": [
+        {
+          "file": "/etc/systemd/system/wolochain-settlement.service",
+          "sha256": "fb7e665f36b888f84fbf62ff5ae69ca146636cd0f99e06a79af222177ffe1843"
+        }
+      ],
+      "state": "inactive",
+      "unitFileState": "disabled",
+      "classification": "DORMANT_TESTNET_SETTLEMENT_SIGNER",
+      "capability": "Configuredwolo-testnet, RPC26657/REST1317; oldbinary",
+      "maintenanceFence": "NONE_IDENTIFIED_FOR_WOLO; PRESERVE_CURRENT_STATE",
+      "dependencies": {
+        "requires": "-.mount system.slice wolochaind-testnet.service sysinit.target",
+        "triggeredBy": "",
+        "triggers": "",
+        "restart": "always"
+      }
+    },
+    {
+      "surface": "wolochaind-testnet.service",
+      "owner": "wolo",
+      "sourceEntryPoint": "/var/www/WoloChain",
+      "definitionHashes": [
+        {
+          "file": "/etc/systemd/system/wolochaind-testnet.service",
+          "sha256": "ab1c99c07ca0a13c207f50d60a483e9d52e8ebd404ae2dcc81f4bc6f6a051785"
+        }
+      ],
+      "state": "inactive",
+      "unitFileState": "disabled",
+      "classification": "DORMANT_TESTNET_NODE",
+      "capability": "Configuredwolo-testnet",
+      "maintenanceFence": "NONE_IDENTIFIED_FOR_WOLO; PRESERVE_CURRENT_STATE",
+      "dependencies": {
+        "requires": "sysinit.target -.mount system.slice",
+        "triggeredBy": "",
+        "triggers": "",
+        "restart": "always"
+      }
+    },
+    {
+      "surface": "wolo-mainnet-health.service",
+      "owner": "root",
+      "sourceEntryPoint": "/etc/systemd/system/wolo-mainnet-health.service",
+      "definitionHashes": [
+        {
+          "file": "/etc/systemd/system/wolo-mainnet-health.service",
+          "sha256": "09793c680e45b7622e689cfea59f2f8e56af789823958c97a734421b7e3cb361"
+        }
+      ],
+      "state": "inactive",
+      "unitFileState": "static",
+      "classification": "READ_ONLY_CHAIN_CONSUMER_LOCAL_CHECKPOINT",
+      "capability": "GETRPC/REST, is-active checks, writeslocalheightcheckpoint; no service mutations/broadcast",
+      "maintenanceFence": "NONE_IDENTIFIED_FOR_WOLO; PRESERVE_CURRENT_STATE",
+      "dependencies": {
+        "requires": "system.slice sysinit.target",
+        "triggeredBy": "wolo-mainnet-health.timer",
+        "triggers": "",
+        "restart": "no"
+      }
+    },
+    {
+      "surface": "wolo-mainnet-health.timer",
+      "owner": "root",
+      "sourceEntryPoint": "/etc/systemd/system/wolo-mainnet-health.timer",
+      "definitionHashes": [
+        {
+          "file": "/etc/systemd/system/wolo-mainnet-health.timer",
+          "sha256": "b69d7ed5e976b23d9d1c1c3895aa5302f225a430ff5e78f52e15f8a026323f48"
+        }
+      ],
+      "state": "active",
+      "unitFileState": "enabled",
+      "classification": "READ_ONLY_CHAIN_OBSERVATION_SCHEDULE",
+      "capability": "60sec health service",
+      "maintenanceFence": "NONE_IDENTIFIED_FOR_WOLO; PRESERVE_CURRENT_STATE",
+      "dependencies": {
+        "requires": "sysinit.target",
+        "triggeredBy": "",
+        "triggers": "wolo-mainnet-health.service",
+        "restart": null
+      }
+    },
+    {
+      "surface": "traffic-project-daily-rollups-aoe2hdbets.service",
+      "owner": "tony",
+      "sourceEntryPoint": "/var/www/Traffic/traffic-api",
+      "definitionHashes": [
+        {
+          "file": "/etc/systemd/system/traffic-project-daily-rollups-aoe2hdbets.service",
+          "sha256": "a4752bea70d1a3db34eb5947fc3825697924ab2e93e5da9276a6639075ce5322"
+        }
+      ],
+      "state": "activating",
+      "unitFileState": "static",
+      "classification": "NONFINANCIAL_ANALYTICS_SQLITE_WRITER",
+      "capability": "Unit invokes the traffic SQLite daily rollup / public audience archive script. Source entry points and 12 local dependency files traced; direct SQL targets traffic_* analytics tables, without a Wolo signer, payout RPC, or subprocess execution identified.",
+      "maintenanceFence": "NONE_IDENTIFIED_FOR_WOLO; PRESERVE_CURRENT_STATE",
+      "dependencies": {
+        "requires": "sysinit.target -.mount system.slice",
+        "triggeredBy": "traffic-project-daily-rollups-aoe2hdbets.timer",
+        "triggers": "",
+        "restart": "no"
+      },
+      "sourceEvidence": "traffic-scheduler-transitive-source.json"
+    },
+    {
+      "surface": "traffic-public-audience-aoe2hdbets.service",
+      "owner": "tony",
+      "sourceEntryPoint": "/var/www/Traffic/traffic-api",
+      "definitionHashes": [
+        {
+          "file": "/etc/systemd/system/traffic-public-audience-aoe2hdbets.service",
+          "sha256": "ae3232f83e0673457a3aadc986f93d067afb85694bc97f7fba31073a2a6dccb1"
+        }
+      ],
+      "state": "inactive",
+      "unitFileState": "static",
+      "classification": "NONFINANCIAL_ANALYTICS_SQLITE_WRITER",
+      "capability": "Unit invokes the traffic SQLite daily rollup / public audience archive script. Source entry points and 12 local dependency files traced; direct SQL targets traffic_* analytics tables, without a Wolo signer, payout RPC, or subprocess execution identified.",
+      "maintenanceFence": "NONE_IDENTIFIED_FOR_WOLO; PRESERVE_CURRENT_STATE",
+      "dependencies": {
+        "requires": "-.mount system.slice sysinit.target",
+        "triggeredBy": "",
+        "triggers": "",
+        "restart": "no"
+      },
+      "sourceEvidence": "traffic-scheduler-transitive-source.json"
+    }
+  ],
+  "hasura": {
+    "name_sha256": "8a23a14f0218c88678ffa0624350b4630c107104aaa7f981e2290427eb376c32",
+    "classification": "SEPARATE_INDEXER_DB_WRITABLE_CONSUMER",
+    "owner": "Separate indexer operator; host root controls container",
+    "image": "Hasura v2.0.4, hostnetwork, no signer mounts",
+    "capabilities": "44explorer tables, separateDB fromHD/DE; zero actions/cron/event triggers/remote schemas/queuedscheduledactions. No Wolo signer or bank/payment routine identified. Public unauthenticated GraphQL mutation surface makes indexer data untrusted; not financial proof.",
+    "fence": "No settlement fence justified by reviewed capabilities; preserve container, metadata/image identity; separate GraphQL access review remains outside this feature."
+  },
+  "external_and_ingress": {
+    "settlement": "No nginx proxy to8092/8093/8094 in63directives/40includedconfigs; listeners loopback,8094absent. Bearers distinct; only observed currentuserspaceholders are2settlementprocesses andHDweb.",
+    "rpc": "Public canonical RPC/REST admits already-signed external transactions. Do not shut consensus/publicchain to fence applications.",
+    "api": "PublicHD/DEAPIaliases bypass respective web processes; web stop alone cannot freeze wallet/identity writes.",
+    "unknown_next_investigations": [
+      {
+        "owner": "Tony + HD/DE financial operators + CI/release owners",
+        "action": "Name and suspend all off-host/manual/CI/Operator Bridge signing and restore authority for approved window. Host metadata cannot prove absence."
+      },
+      {
+        "owner": "WoloChain operator",
+        "action": "Keep configured dormant mainnet Hermes relay inactive; attest no manual start/signing and prove any activation fence under actual systemd unit precedence. No keys inspected."
+      },
+      {
+        "owner": "HD/DE app owners",
+        "action": "Prove any availability-preserving global financial/identity gate covers GET side effects, workers, direct API aliases and independent CLI signers; current source does not."
+      },
+      {
+        "owner": "Release operator + independent reviewer",
+        "action": "Validate actual activation-fence mechanism on custom /etc unit files; runtime mask semantics are not assumed. Review proposed sequence and partial failure behavior before approval."
+      },
+      {
+        "owner": "Release operator",
+        "action": "Bind per-PID kernel cohort classification to a fresh exact-bearer observation before window; existing126 ESRCH gaps have separate same-series PF_KTHREAD evidence, not retroactive perPID proof."
+      }
+    ]
+  },
+  "proposed_minimum_current_source_fence": {
+    "application_services": [
+      "aoe2hdbets-web.service",
+      "aoe2hdbets-api.service",
+      "aoe2dewarwagers-web.service",
+      "aoe2dewarwagers-api.service"
+    ],
+    "timer_families": [
+      "aoe2hdbets-bet-stake-reconcile",
+      "aoe2hdbets-challenge-reconcile",
+      "aoe2hdbets-replay-auto-recovery",
+      "aoe2hdbets-staking-rewards",
+      "aoe2hdbets-trophy-tributes",
+      "aoe2war-prewarm"
+    ],
+    "also_launchable": [
+      "aoe2hdbets-bet-stake-reconcile-plan.service",
+      "wolochain-mainnet-osmosis-relayer.service"
+    ],
+    "preserve": [
+      "wolochaind-mainnet.service",
+      "canonical chainRPC/REST",
+      "both settlementservices until separately approved paired upgrade",
+      "aoe2-wolo-transfer-heartbeat.service/timer",
+      "cron.service",
+      "user@0.service",
+      "user@1000.service",
+      "separate indexer/container/analytics services"
+    ],
+    "impact": "Without a separately verified global financial gate, HD/DE dynamic websites and recipient-changing/replay API writes pause. Consensus and chain/indexer services stay online.",
+    "restore": "No blanket restart, previousinactive units remaininactive, persistent timers may catchup, leases/queued callbacks reviewed before owner-approved one-at-a-time resumption. Never restore old financial state or replay uncertain100WOLO/889/aggregate-onlyrefusal."
+  },
+  "raw_evidence_provenance": {
+    "scheduler-entrypoints.json": {
+      "sha256": "08129609c25899b93167e64571eecee2813f3bd2fa1fa9d021ac9fccdcc9f6e6",
+      "retained_location": "/Users/tonyblum/.codex/visualizations/2026/10/16/01a1420c-6115-7242-94e3-ade7dbdd80e8/wolo-control-one-20261018/scheduler-entrypoints.json"
+    },
+    "de-local-live-source-match.json": {
+      "sha256": "0bafb2b6a8d5547c8814f0fcd277675503385bc1ebfc28bd01fc544eec0287a5",
+      "retained_location": "/Users/tonyblum/.codex/visualizations/2026/10/16/01a1420c-6115-7242-94e3-ade7dbdd80e8/wolo-control-one-20261018/de-local-live-source-match.json"
+    },
+    "traffic-scheduler-transitive-source.json": {
+      "sha256": "23301606fdd6126b3d2b36dd25fc9f0bc3dd10b1f53d45659a3ca5bde211ed19",
+      "retained_location": "/Users/tonyblum/.codex/visualizations/2026/10/16/01a1420c-6115-7242-94e3-ade7dbdd80e8/wolo-control-one-20261018/traffic-scheduler-transitive-source.json"
+    },
+    "hd-config-roles.json": {
+      "sha256": "7a4baa66d4eb95246430c59d548aae081d34542b2299a1a750a004292f9ca89e",
+      "retained_location": "/Users/tonyblum/.codex/visualizations/2026/10/16/01a1420c-6115-7242-94e3-ade7dbdd80e8/wolo-control-one-20261018/hd-config-roles.json"
+    },
+    "kernel-process-metadata-gaps.json": {
+      "sha256": "2961118cd3563cf730071cd78e06d5c5acc003b201b2d08b261f94e5b224b026",
+      "retained_location": "/Users/tonyblum/.codex/visualizations/2026/10/16/01a1420c-6115-7242-94e3-ade7dbdd80e8/wolo-control-one-20261018/kernel-process-metadata-gaps.json"
+    },
+    "scheduler-disposition.json": {
+      "sha256": "877f970ce02147ac6a9136a7c12271836b5806c942738d6c2718c24afb234ecb",
+      "retained_location": "/Users/tonyblum/.codex/visualizations/2026/10/16/01a1420c-6115-7242-94e3-ade7dbdd80e8/wolo-control-one-20261018/scheduler-disposition.json"
+    },
+    "de-container-followup.json": {
+      "sha256": "f365c2751f7cba1f1b0ecea978b1af523294c0aa78c07be7bb0cc294f37286c2",
+      "retained_location": "/Users/tonyblum/.codex/visualizations/2026/10/16/01a1420c-6115-7242-94e3-ade7dbdd80e8/wolo-control-one-20261018/de-container-followup.json"
+    },
+    "hd-unit-entrypoints.json": {
+      "sha256": "f665a05a22a6d8607a71de674ffd7742c26c023c5579bd0bda7f370c4f85e8d0",
+      "retained_location": "/Users/tonyblum/.codex/visualizations/2026/10/16/01a1420c-6115-7242-94e3-ade7dbdd80e8/wolo-control-one-20261018/hd-unit-entrypoints.json"
+    },
+    "exact-bearer-holders.json": {
+      "sha256": "259910d9f4bd7b2d52e27478664a7667e5b33c1375c7d03cb300b6df6f1f1626",
+      "retained_location": "/Users/tonyblum/.codex/visualizations/2026/10/16/01a1420c-6115-7242-94e3-ade7dbdd80e8/wolo-control-one-20261018/exact-bearer-holders.json"
+    },
+    "de-container-inspect.json": {
+      "sha256": "d0caab50e05401562f434df1edb6e71f74579a7f8595795da0222e030bf0b27f",
+      "retained_location": "/Users/tonyblum/.codex/visualizations/2026/10/16/01a1420c-6115-7242-94e3-ade7dbdd80e8/wolo-control-one-20261018/de-container-inspect.json"
+    },
+    "hasura-active-query-only.json": {
+      "sha256": "fe08e70c06ff10b6eb0ab33e0e3f6930374a97f12ceeee5695c72efeba85b21a",
+      "retained_location": "/Users/tonyblum/.codex/visualizations/2026/10/16/01a1420c-6115-7242-94e3-ade7dbdd80e8/wolo-control-one-20261018/hasura-active-query-only.json"
+    },
+    "de-queue-container-hooks.json": {
+      "sha256": "90587bf33e5d9bb7c1d6e14d347687be7c59a185c39be4fa95467cd2176b6304",
+      "retained_location": "/Users/tonyblum/.codex/visualizations/2026/10/16/01a1420c-6115-7242-94e3-ade7dbdd80e8/wolo-control-one-20261018/de-queue-container-hooks.json"
+    },
+    "scheduler-and-extra-unit-details.json": {
+      "sha256": "c0339f68a987ba1ace1616ed43c643351ce2cb7a1e392a755bd413eb70c4d44d",
+      "retained_location": "/Users/tonyblum/.codex/visualizations/2026/10/16/01a1420c-6115-7242-94e3-ade7dbdd80e8/wolo-control-one-20261018/scheduler-and-extra-unit-details.json"
+    },
+    "hd-capability-findings.json": {
+      "sha256": "a15dc3bd5c61023b2575118a52fa82af7953d8e32c5fa5c19aafb9ae74fa1e06",
+      "retained_location": "/Users/tonyblum/.codex/visualizations/2026/10/16/01a1420c-6115-7242-94e3-ade7dbdd80e8/wolo-control-one-20261018/hd-capability-findings.json"
+    },
+    "container-db-capabilities.json": {
+      "sha256": "a4330f0802c7a5a0860f9d66c4865c6cddd234f9276a3b5d77ace87e39acdec5",
+      "retained_location": "/Users/tonyblum/.codex/visualizations/2026/10/16/01a1420c-6115-7242-94e3-ade7dbdd80e8/wolo-control-one-20261018/container-db-capabilities.json"
+    },
+    "nginx-financial-ingress-completeness.json": {
+      "sha256": "d3191665f533afb2fbc51395f2f78479b7cd49ff529975ff529080367448f702",
+      "retained_location": "/Users/tonyblum/.codex/visualizations/2026/10/16/01a1420c-6115-7242-94e3-ade7dbdd80e8/wolo-control-one-20261018/nginx-financial-ingress-completeness.json"
+    },
+    "de-container-control-one-analysis.json": {
+      "sha256": "ce92e8f19f222e51c443f2da0f53e57a46265ebc29cde8fc071a10dabc22f502",
+      "retained_location": "/Users/tonyblum/.codex/visualizations/2026/10/16/01a1420c-6115-7242-94e3-ade7dbdd80e8/wolo-control-one-20261018/de-container-control-one-analysis.json"
+    },
+    "traffic-scheduler-source.json": {
+      "sha256": "3c20b13ca5c8edc8fa6096094430c23457ee77d687db8431939e9e4e212623ab",
+      "retained_location": "/Users/tonyblum/.codex/visualizations/2026/10/16/01a1420c-6115-7242-94e3-ade7dbdd80e8/wolo-control-one-20261018/traffic-scheduler-source.json"
+    },
+    "nginx-financial-ingress.json": {
+      "sha256": "f6af91dc7c6b98bf40cdafe4f0c6a7eb557f20706beb7229e18d598d2f43f166",
+      "retained_location": "/Users/tonyblum/.codex/visualizations/2026/10/16/01a1420c-6115-7242-94e3-ade7dbdd80e8/wolo-control-one-20261018/nginx-financial-ingress.json"
+    },
+    "scheduler-hooks-and-manual-signers.json": {
+      "sha256": "47638dcc159423d91c387ec30f3d5bb790d3ff18a4c05f40c759ee4b80be0d57",
+      "retained_location": "/Users/tonyblum/.codex/visualizations/2026/10/16/01a1420c-6115-7242-94e3-ade7dbdd80e8/wolo-control-one-20261018/scheduler-hooks-and-manual-signers.json"
+    },
+    "de-source-tree.json": {
+      "sha256": "230c76ae26f9ae34568413d1882fbe343a5b52c3a52fd668e42afe6ae089e631",
+      "retained_location": "/Users/tonyblum/.codex/visualizations/2026/10/16/01a1420c-6115-7242-94e3-ade7dbdd80e8/wolo-control-one-20261018/de-source-tree.json"
+    },
+    "hasura-active-graphql-readonly.json": {
+      "sha256": "e21fec61595820c6b5bfedbb6293a3c0172568f3b31bec89770bbfeb1af5cc93",
+      "retained_location": "/Users/tonyblum/.codex/visualizations/2026/10/16/01a1420c-6115-7242-94e3-ade7dbdd80e8/wolo-control-one-20261018/hasura-active-graphql-readonly.json"
+    },
+    "hd-additional-source-hashes.json": {
+      "sha256": "00931ed5a16b2d7edf27c9c3c35d5507de076177a5d22809975e1ae3504ed6b2",
+      "retained_location": "/Users/tonyblum/.codex/visualizations/2026/10/16/01a1420c-6115-7242-94e3-ade7dbdd80e8/wolo-control-one-20261018/hd-additional-source-hashes.json"
+    },
+    "hd-runtime-guards.json": {
+      "sha256": "1f847087c0408c36c3f625c9e27a548bb127d4def07685af8476eb2a38fa20c5",
+      "retained_location": "/Users/tonyblum/.codex/visualizations/2026/10/16/01a1420c-6115-7242-94e3-ade7dbdd80e8/wolo-control-one-20261018/hd-runtime-guards.json"
+    },
+    "scheduler-transitive-source.json": {
+      "sha256": "1253af76fdf99ef789301cc2565187f7a920f596e6e28f3b785a0943f5e88cef",
+      "retained_location": "/Users/tonyblum/.codex/visualizations/2026/10/16/01a1420c-6115-7242-94e3-ade7dbdd80e8/wolo-control-one-20261018/scheduler-transitive-source.json"
+    },
+    "hd-unit-source-details.json": {
+      "sha256": "819f2d3dada66b86dd3d8fa74b2578b633a0f845902464618f09a7b8b72adcc0",
+      "retained_location": "/Users/tonyblum/.codex/visualizations/2026/10/16/01a1420c-6115-7242-94e3-ade7dbdd80e8/wolo-control-one-20261018/hd-unit-source-details.json"
+    },
+    "hd-helpers-sanitized.json": {
+      "sha256": "53273690bad5182c141fe6f05d14a140efd4d4b5ff447bb432a07e4c7bbe8f2e",
+      "retained_location": "/Users/tonyblum/.codex/visualizations/2026/10/16/01a1420c-6115-7242-94e3-ade7dbdd80e8/wolo-control-one-20261018/hd-helpers-sanitized.json"
+    }
+  },
+  "financial_producers_fenced": false,
+  "complete_external_authority_inventory": false,
+  "maintenance_plan_independently_reviewed": false,
+  "production_mutated": false,
+  "all_existing_financial_holds_preserved": true
+}

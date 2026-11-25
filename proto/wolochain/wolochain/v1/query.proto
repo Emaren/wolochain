@@ -4,7 +4,6 @@ package wolochain.wolochain.v1;
 import "amino/amino.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
-import "cosmos/base/query/v1beta1/pagination.proto";
 import "wolochain/wolochain/v1/params.proto";
 
 option go_package = "github.com/emaren/wolochain/x/wolochain/types";

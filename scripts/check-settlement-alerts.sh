@@ -5,7 +5,7 @@ set -euo pipefail
 ROOT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 WOLOCHAIND_BIN="${WOLOCHAIND_BIN:-$ROOT_DIR/build/wolochaind}"
 SETTLEMENT_ENV_FILE="${SETTLEMENT_ENV_FILE:-}"
-SETTLEMENT_BASE_URL="${SETTLEMENT_BASE_URL:-http://127.0.0.1:8091}"
+SETTLEMENT_BASE_URL="${SETTLEMENT_BASE_URL:-http://127.0.0.1:8092}"
 WOLOCHAIND_SUDO_USER="${WOLOCHAIND_SUDO_USER:-}"
 WOLO_ALERT_ROOT_PATH="${WOLO_ALERT_ROOT_PATH:-/}"
 WOLO_ALERT_ROOT_WARN_FREE_KB="${WOLO_ALERT_ROOT_WARN_FREE_KB:-2097152}"
@@ -15,7 +15,7 @@ WOLO_ALERT_EXTRA_WARN_FREE_KB="${WOLO_ALERT_EXTRA_WARN_FREE_KB:-8388608}"
 WOLO_ALERT_EXTRA_FAIL_FREE_KB="${WOLO_ALERT_EXTRA_FAIL_FREE_KB:-4194304}"
 
 if [[ -z "$SETTLEMENT_ENV_FILE" ]] && command -v systemctl >/dev/null 2>&1; then
-  SETTLEMENT_ENV_FILE="$(systemctl show -p EnvironmentFiles --value wolochain-settlement.service 2>/dev/null | awk '{print $1}' | sed 's/^-//')"
+  SETTLEMENT_ENV_FILE="$(systemctl show -p EnvironmentFiles --value wolochain-mainnet-settlement.service 2>/dev/null | awk '{print $1}' | sed 's/^-//')"
 fi
 if [[ -n "$SETTLEMENT_ENV_FILE" ]]; then
   if [[ ! -r "$SETTLEMENT_ENV_FILE" ]]; then
@@ -28,15 +28,17 @@ if [[ -n "$SETTLEMENT_ENV_FILE" ]]; then
   fi
 fi
 
-WOLO_SETTLEMENT_HOME="${WOLO_SETTLEMENT_HOME:-${WOLO_HOME:-/var/lib/wolochaind-testnet}}"
-WOLO_SETTLEMENT_STATE_DIR="${WOLO_SETTLEMENT_STATE_DIR:-/mnt/HC_Volume_105319120/wolochain/settlement-state}"
-WOLO_SETTLEMENT_KEYRING_BACKEND="${WOLO_SETTLEMENT_KEYRING_BACKEND:-test}"
-WOLO_SETTLEMENT_CHAIN_ID="${WOLO_SETTLEMENT_CHAIN_ID:-wolo-testnet}"
+WOLO_SETTLEMENT_HOME="${WOLO_SETTLEMENT_HOME:-${WOLO_HOME:-/var/lib/wolochaind-mainnet}}"
+WOLO_SETTLEMENT_STATE_DIR="${WOLO_SETTLEMENT_STATE_DIR:-/mnt/HC_Volume_105319120/wolochain-mainnet/settlement-state}"
+WOLO_SETTLEMENT_KEYRING_BACKEND="${WOLO_SETTLEMENT_KEYRING_BACKEND:-os}"
+WOLO_SETTLEMENT_KEYRING_DIR="${WOLO_SETTLEMENT_KEYRING_DIR:-}"
+WOLO_SETTLEMENT_KEYRING_PASSPHRASE_FILE="${WOLO_SETTLEMENT_KEYRING_PASSPHRASE_FILE:-}"
+WOLO_SETTLEMENT_CHAIN_ID="${WOLO_SETTLEMENT_CHAIN_ID:-wolo-1}"
 WOLO_SETTLEMENT_BASE_DENOM="${WOLO_SETTLEMENT_BASE_DENOM:-uwolo}"
 WOLO_SETTLEMENT_DISPLAY_DENOM="${WOLO_SETTLEMENT_DISPLAY_DENOM:-wolo}"
 WOLO_SETTLEMENT_ADDRESS_PREFIX="${WOLO_SETTLEMENT_ADDRESS_PREFIX:-wolo}"
-WOLO_SETTLEMENT_PAYOUT_KEY_NAME="${WOLO_SETTLEMENT_PAYOUT_KEY_NAME:-payout}"
-WOLO_SETTLEMENT_ESCROW_KEY_NAME="${WOLO_SETTLEMENT_ESCROW_KEY_NAME:-escrow}"
+WOLO_SETTLEMENT_PAYOUT_KEY_NAME="${WOLO_SETTLEMENT_PAYOUT_KEY_NAME:-mainnet-payout}"
+WOLO_SETTLEMENT_ESCROW_KEY_NAME="${WOLO_SETTLEMENT_ESCROW_KEY_NAME:-mainnet-escrow}"
 WOLO_SETTLEMENT_PAYOUT_ADDRESS="${WOLO_SETTLEMENT_PAYOUT_ADDRESS:-}"
 WOLO_SETTLEMENT_ESCROW_ADDRESS="${WOLO_SETTLEMENT_ESCROW_ADDRESS:-}"
 WOLO_SETTLEMENT_AUTH_TOKEN="${WOLO_SETTLEMENT_AUTH_TOKEN:-}"
@@ -86,6 +88,8 @@ run_wolochaind() {
       WOLO_SETTLEMENT_HOME="$WOLO_SETTLEMENT_HOME" \
       WOLO_SETTLEMENT_STATE_DIR="$WOLO_SETTLEMENT_STATE_DIR" \
       WOLO_SETTLEMENT_KEYRING_BACKEND="$WOLO_SETTLEMENT_KEYRING_BACKEND" \
+      WOLO_SETTLEMENT_KEYRING_DIR="$WOLO_SETTLEMENT_KEYRING_DIR" \
+      WOLO_SETTLEMENT_KEYRING_PASSPHRASE_FILE="$WOLO_SETTLEMENT_KEYRING_PASSPHRASE_FILE" \
       WOLO_SETTLEMENT_CHAIN_ID="$WOLO_SETTLEMENT_CHAIN_ID" \
       WOLO_SETTLEMENT_BASE_DENOM="$WOLO_SETTLEMENT_BASE_DENOM" \
       WOLO_SETTLEMENT_DISPLAY_DENOM="$WOLO_SETTLEMENT_DISPLAY_DENOM" \
@@ -105,6 +109,8 @@ run_wolochaind() {
     WOLO_SETTLEMENT_HOME="$WOLO_SETTLEMENT_HOME" \
     WOLO_SETTLEMENT_STATE_DIR="$WOLO_SETTLEMENT_STATE_DIR" \
     WOLO_SETTLEMENT_KEYRING_BACKEND="$WOLO_SETTLEMENT_KEYRING_BACKEND" \
+    WOLO_SETTLEMENT_KEYRING_DIR="$WOLO_SETTLEMENT_KEYRING_DIR" \
+    WOLO_SETTLEMENT_KEYRING_PASSPHRASE_FILE="$WOLO_SETTLEMENT_KEYRING_PASSPHRASE_FILE" \
     WOLO_SETTLEMENT_CHAIN_ID="$WOLO_SETTLEMENT_CHAIN_ID" \
     WOLO_SETTLEMENT_BASE_DENOM="$WOLO_SETTLEMENT_BASE_DENOM" \
     WOLO_SETTLEMENT_DISPLAY_DENOM="$WOLO_SETTLEMENT_DISPLAY_DENOM" \
@@ -120,19 +126,30 @@ run_wolochaind() {
 }
 
 key_address() {
-  local key_name="$1"
-  if [[ -n "$WOLOCHAIND_SUDO_USER" ]]; then
-    sudo -u "$WOLOCHAIND_SUDO_USER" "$WOLOCHAIND_BIN" keys show "$key_name" \
-      --address \
-      --home "$WOLO_SETTLEMENT_HOME" \
-      --keyring-backend "$WOLO_SETTLEMENT_KEYRING_BACKEND"
-    return
-  fi
+	local key_name="$1"
+	local args=(
+		keys show "$key_name"
+		--address
+		--home "$WOLO_SETTLEMENT_HOME"
+		--keyring-backend "$WOLO_SETTLEMENT_KEYRING_BACKEND"
+	)
+	if [[ -n "$WOLO_SETTLEMENT_KEYRING_DIR" ]]; then
+		args+=(--keyring-dir "$WOLO_SETTLEMENT_KEYRING_DIR")
+	fi
+	if [[ -n "$WOLOCHAIND_SUDO_USER" ]]; then
+		if [[ -n "$WOLO_SETTLEMENT_KEYRING_PASSPHRASE_FILE" ]]; then
+			sudo -u "$WOLOCHAIND_SUDO_USER" "$WOLOCHAIND_BIN" "${args[@]}" <"$WOLO_SETTLEMENT_KEYRING_PASSPHRASE_FILE"
+		else
+			sudo -u "$WOLOCHAIND_SUDO_USER" "$WOLOCHAIND_BIN" "${args[@]}"
+		fi
+		return
+	fi
 
-  "$WOLOCHAIND_BIN" keys show "$key_name" \
-    --address \
-    --home "$WOLO_SETTLEMENT_HOME" \
-    --keyring-backend "$WOLO_SETTLEMENT_KEYRING_BACKEND"
+	if [[ -n "$WOLO_SETTLEMENT_KEYRING_PASSPHRASE_FILE" ]]; then
+		"$WOLOCHAIND_BIN" "${args[@]}" <"$WOLO_SETTLEMENT_KEYRING_PASSPHRASE_FILE"
+	else
+		"$WOLOCHAIND_BIN" "${args[@]}"
+	fi
 }
 
 http_request() {
@@ -221,17 +238,17 @@ fi
 
 payout_address="$(sed -n 's/.*"payout_address":[[:space:]]*"\([^"]*\)".*/\1/p' "$tmpdir/health.json" | head -n 1)"
 if [[ -z "$payout_address" ]]; then
-  payout_address="${WOLO_SETTLEMENT_PAYOUT_ADDRESS:-wolo1jx4n3n2ey6uzfq28kplkmpd2am98xsmcn0nerx}"
+  payout_address="${WOLO_SETTLEMENT_PAYOUT_ADDRESS:-}"
 fi
 
 run_body="$tmpdir/run.json"
 cat >"$run_body" <<EOF
 {
-  "settlement_run_id": "alert-check-run",
-  "source_app": "settlement-alert-check",
-  "source_event_id": "alert-check",
-  "note": "dry-run only",
-  "memo": "dry-run alert",
+  "settlement_run_id": "settlement-health-probe-alert",
+  "source_app": "settlement-health-probe",
+  "source_event_id": "health-probe-alert-check",
+  "note": "health probe only; dry-run route validation",
+  "memo": "health_probe_alert",
   "payouts": [
     {
       "to_address": "$payout_address",
@@ -265,6 +282,8 @@ export WOLOCHAIND_SUDO_USER
 export WOLO_SETTLEMENT_HOME
 export WOLO_SETTLEMENT_STATE_DIR
 export WOLO_SETTLEMENT_KEYRING_BACKEND
+export WOLO_SETTLEMENT_KEYRING_DIR
+export WOLO_SETTLEMENT_KEYRING_PASSPHRASE_FILE
 export WOLO_SETTLEMENT_PAYOUT_KEY_NAME
 export WOLO_SETTLEMENT_ESCROW_KEY_NAME
 export WOLO_SETTLEMENT_PAYOUT_ADDRESS

@@ -46,27 +46,40 @@ YAML
 
 "$BUF_BIN" generate --template "$tmpdir/buf.gen.gogo.yaml" --output "$tmpdir/out"
 
-generated_root="$tmpdir/out/github.com/emaren/wolochain/x/wolochain/types"
-expected_files=(
-  genesis.pb.go
-  module.pb.go
-  params.pb.go
-  query.pb.go
-  query.pb.gw.go
+check_generated_module() {
+  local module="$1"
+  shift
+
+  local generated_root="$tmpdir/out/github.com/emaren/wolochain/x/$module/types"
+  local name generated committed
+  for name in "$@"; do
+    generated="$generated_root/$name"
+    committed="x/$module/types/$name"
+
+    [[ -f "$generated" ]] || fail "Generator did not produce $module/$name"
+    [[ -f "$committed" ]] || fail "Committed generated file is missing: $committed"
+
+    if ! cmp -s "$generated" "$committed"; then
+      diff -u "$committed" "$generated" | sed -n '1,160p'
+      fail "Generated proto output is stale: $committed"
+    fi
+  done
+}
+
+check_generated_module wolochain \
+  genesis.pb.go \
+  module.pb.go \
+  params.pb.go \
+  query.pb.go \
+  query.pb.gw.go \
   tx.pb.go
-)
 
-for name in "${expected_files[@]}"; do
-  generated="$generated_root/$name"
-  committed="x/wolochain/types/$name"
-
-  [[ -f "$generated" ]] || fail "Generator did not produce $name"
-  [[ -f "$committed" ]] || fail "Committed generated file is missing: $committed"
-
-  if ! cmp -s "$generated" "$committed"; then
-    diff -u "$committed" "$generated" | sed -n '1,160p'
-    fail "Generated proto output is stale: $committed"
-  fi
-done
+check_generated_module wartrophy \
+  genesis.pb.go \
+  module.pb.go \
+  query.pb.go \
+  query.pb.gw.go \
+  trophy.pb.go \
+  tx.pb.go
 
 echo "Generated proto outputs are current."

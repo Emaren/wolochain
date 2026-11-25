@@ -1,0 +1,51 @@
+{
+  "schema": "aoe2war.wolo.app-liability-observation.v1",
+  "observed_at_utc": "2026-10-18T18:12:23.812Z",
+  "source": "HD production PG, read-only repeatable-read; source-bound PendingWoloClaim model",
+  "claim_889": {
+    "present": true,
+    "expected_identity": true,
+    "status": "pending",
+    "recorded_principal_uwolo": "300000000",
+    "attempted_at": "2026-07-04T22:23:41.342Z",
+    "has_payout_hash": false,
+    "updated_at": "2026-07-04T22:23:42.513Z",
+    "paid_or_unpaid_proven": false,
+    "retry_authorized": false,
+    "liability_hold_preserved": true
+  },
+  "recorded_hd_claim_groups": [
+    {
+      "status": "pending",
+      "claim_kind": "founders_bonus",
+      "record_count": "729",
+      "attempted_count": "0",
+      "hash_bearing_count": "0",
+      "recorded_requested_uwolo": "207979000000",
+      "invalid_amount_count": "0"
+    },
+    {
+      "status": "pending",
+      "claim_kind": "founders_win",
+      "record_count": "74",
+      "attempted_count": "1",
+      "hash_bearing_count": "0",
+      "recorded_requested_uwolo": "110524000000",
+      "invalid_amount_count": "0"
+    },
+    {
+      "status": "pending",
+      "claim_kind": "winner_bounty",
+      "record_count": "144",
+      "attempted_count": "0",
+      "hash_bearing_count": "0",
+      "recorded_requested_uwolo": "674686000000",
+      "invalid_amount_count": "0"
+    }
+  ],
+  "scope": "Only pending/error_state HD claim rows; excludes DE, escrow, unmaterialized market claims, direct staking/faucet/external signers, fee liabilities and historical ambiguities. Do not sum with settlement journals: obligations may overlap.",
+  "global_liability_upper_bound_uwolo": null,
+  "complete_liabilities_known": false,
+  "financial_drain_certified": false,
+  "production_mutated": false
+}

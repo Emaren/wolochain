@@ -1,0 +1,42 @@
+name: Settlement PostgreSQL quiescence qualification (disposable only)
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/settlement_pg_quiescence_observer.py'
+      - 'tests/test_settlement_pg_quiescence_observer.py'
+      - 'tests/test_settlement_pg_isolated_restore.py'
+      - '.github/workflows/settlement-pg-quiescence-rehearsal.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  disposable-postgresql-16:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Start isolated PostgreSQL (prepared transactions enabled)
+        run: |
+          docker run --rm -d --name wolo-qualify-postgres -e POSTGRES_PASSWORD=isolated-ci-only -e POSTGRES_DB=wolo_qualify -p 127.0.0.1:55432:5432 postgres@sha256:9e2cf6287f25c3151f4c9421ccce2b17f3e60061c111a29165e0d2cdd9ff0a97 -c max_prepared_transactions=16
+          for i in $(seq 1 40); do
+            if docker exec wolo-qualify-postgres pg_isready -U postgres -d wolo_qualify; then break; fi
+            sleep 1
+          done
+          docker exec wolo-qualify-postgres pg_isready -U postgres -d wolo_qualify
+      - name: Run genuine PostgreSQL catalog and two-phase commit regressions
+        env:
+          WOLO_TEST_PG_DSN: postgresql://postgres:isolated-ci-only@127.0.0.1:55432/wolo_qualify
+          WOLO_PG_DISPOSABLE_ONLY: 'YES'
+        run: |
+          python -m pip install 'psycopg[binary]==3.2.12'
+          python -m unittest discover -s tests -p 'test_settlement_pg_quiescence_observer.py' -v
+          python -m unittest discover -s tests -p 'test_settlement_pg_isolated_restore.py' -v
+      - name: Remove disposable instance
+        if: always()
+        run: docker rm -f wolo-qualify-postgres || true

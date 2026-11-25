@@ -1,0 +1,36 @@
+syntax = "proto3";
+package wolochain.wartrophy.v1;
+
+option go_package = "github.com/emaren/wolochain/x/wartrophy/types";
+
+// TrophyStatus is the lifecycle state of a Warbound trophy.
+enum TrophyStatus {
+  // TROPHY_STATUS_UNSPECIFIED is invalid for a stored trophy.
+  TROPHY_STATUS_UNSPECIFIED = 0;
+  // TROPHY_STATUS_DRAFT is registered but not yet minted.
+  TROPHY_STATUS_DRAFT = 1;
+  // TROPHY_STATUS_ACTIVE can be assigned or reassigned by the authority.
+  TROPHY_STATUS_ACTIVE = 2;
+  // TROPHY_STATUS_RETIRED is permanently inactive.
+  TROPHY_STATUS_RETIRED = 3;
+}
+
+// Trophy is the chain-side entitlement record for an AoE2WAR Warbound trophy.
+//
+// In the first implementation pass this is deliberately state-backed rather
+// than holder-owned through x/nft. Standard x/nft MsgSend cannot enforce
+// class-specific transfer restrictions.
+message Trophy {
+  string trophy_id = 1;
+  string class_id = 2;
+  string display_name = 3;
+  TrophyStatus status = 4;
+  bool minted = 5;
+  string owner = 6;
+  string metadata_uri = 7;
+  string image_uri = 8;
+  uint64 tribute_per_day_uwolo = 9;
+  uint64 bounty_growth_per_day_uwolo = 10;
+  int64 created_height = 11;
+  int64 updated_height = 12;
+}

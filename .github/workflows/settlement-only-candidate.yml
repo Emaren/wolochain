@@ -1,0 +1,59 @@
+name: Legacy settlement helper retirement (NO DEPLOY)
+on:
+  pull_request:
+    branches: [wolo-1-mainnet-prep]
+    paths:
+      - ".github/workflows/settlement-only-candidate.yml"
+      - "scripts/settlement-only-provenance.sh"
+      - "scripts/settlement-dual-service-snapshot.sh"
+      - "scripts/settlement-dual-service-release-preflight.sh"
+      - "scripts/settlement-two-service-code-rollback.sh"
+      - "scripts/settlement-parallel-de-authority-inventory.py"
+      - "tests/test_parallel_de_authority_inventory.py"
+      - "docs/mainnet-settlement-runbook.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  operator-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout preflight tools under review
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Verify read-only legacy helper and refusal of obsolete recovery
+        run: |
+          set -euo pipefail
+          bash -n scripts/settlement-only-provenance.sh
+          bash -n scripts/settlement-dual-service-snapshot.sh
+          bash -n scripts/settlement-dual-service-release-preflight.sh
+          bash -n scripts/settlement-two-service-code-rollback.sh
+          python3 -m py_compile scripts/settlement-parallel-de-authority-inventory.py
+          python3 -m unittest discover -s tests -p 'test_parallel_de_authority_inventory.py' -v
+          ! grep -Eiq 'systemctl[[:space:]]+(start|stop|restart|reload|daemon-reload)' scripts/settlement-parallel-de-authority-inventory.py
+          grep -q 'NOT_CERTIFIED_FOR_SHARED_WOLO_SETTLEMENT_DOWNTIME' scripts/settlement-parallel-de-authority-inventory.py
+          # Code-only rescuer must NEVER operate the consensus unit, restore
+          # historic state, or replace the shared settlement executable.
+          grep -q -- '--rescue' scripts/settlement-two-service-code-rollback.sh
+          grep -q 'OBSOLETE_LEGACY_RECOVERY' scripts/settlement-two-service-code-rollback.sh
+          grep -q 'MUTATING_LEGACY_MODES_DISABLED=true' scripts/settlement-two-service-code-rollback.sh
+          grep -q 'FINANCIAL_RESUME_AUTHORIZED=false' scripts/settlement-two-service-code-rollback.sh
+          ! grep -Eq 'systemctl[[:space:]]+(stop|start|restart|daemon-reload)[[:space:]]' scripts/settlement-two-service-code-rollback.sh
+          ! grep -Eq '([[:space:]]cp[[:space:]]|[[:space:]]rsync[[:space:]]|[[:space:]]restore-live-settlement.sh)' scripts/settlement-two-service-code-rollback.sh
+          python3 -m unittest discover -s tests -p 'test_settlement_legacy_rollback_quiescence.py' -v
+          ! grep -Eiq 'systemctl[[:space:]]+(restart|stop|start|reload|daemon-reload)' scripts/settlement-dual-service-release-preflight.sh
+          ! grep -Eq '[[:space:]]+(cp|mv|rm|install|tee|touch)[[:space:]]' scripts/settlement-dual-service-release-preflight.sh
+          grep -q 'wolochain-founder-rewards-settlement.service' scripts/settlement-dual-service-release-preflight.sh
+          grep -q 'RECEIPT.txt' scripts/settlement-dual-service-release-preflight.sh
+          grep -q 'founder_addr' scripts/settlement-dual-service-release-preflight.sh
+          test "$(grep -c 'check_env ' scripts/settlement-dual-service-snapshot.sh)" -ge 2
+          test "$(grep -c 'check_state ' scripts/settlement-dual-service-snapshot.sh)" -ge 4
+          ! grep -Eiq 'systemctl[[:space:]]+(restart|stop|start|reload|daemon-reload)' scripts/settlement-dual-service-snapshot.sh
+          bash scripts/settlement-only-provenance.sh --help | grep -q 'Read-only'
+          ! grep -Eiq 'systemctl[[:space:]]+(restart|stop|start|reload)' scripts/settlement-only-provenance.sh
+          ! grep -Eq '[[:space:]]+(cp|mv|rm|install)[[:space:]]' scripts/settlement-only-provenance.sh
+

@@ -1,7 +1,18 @@
 package cmd
 
 import (
+	bank "cosmossdk.io/api/cosmos/bank/v1beta1"
+	base "cosmossdk.io/api/cosmos/base/v1beta1"
+	txapi "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"encoding/json"
+	"fmt"
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmtjson "github.com/cometbft/cometbft/libs/json"
+	core "github.com/cometbft/cometbft/rpc/core/types"
+	cmt "github.com/cometbft/cometbft/types"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -18,7 +29,7 @@ func TestNormalizeSettlementRequest(t *testing.T) {
 
 	request, err := normalizeSettlementRequest(settlementExecuteRequest{
 		RequestID:  "payout:match-42:user-8",
-		ToAddress:  "wolo1abcdefghijklmnopqrstuvwxyz0123456789abcd",
+		ToAddress:  "wolo1jssp9fggqduu06wj5klxu3pru0upx23f9slc5m",
 		AmountWolo: 7,
 		Memo:       "  settled  ",
 	})
@@ -39,7 +50,7 @@ func TestNormalizeSettlementRequestRejectsConflictingAmounts(t *testing.T) {
 
 	_, err := normalizeSettlementRequest(settlementExecuteRequest{
 		RequestID:   "payout:match-42:user-8",
-		ToAddress:   "wolo1abcdefghijklmnopqrstuvwxyz0123456789abcd",
+		ToAddress:   "wolo1jssp9fggqduu06wj5klxu3pru0upx23f9slc5m",
 		AmountUWolo: "1000000",
 		AmountWolo:  1,
 	})
@@ -399,8 +410,8 @@ func TestSummarizeSettlementRecentItems(t *testing.T) {
 func TestSettlementHTTPAuthBehavior(t *testing.T) {
 	t.Parallel()
 
-	cfg := newTestSettlementConfig(t, "wolo1payoutaddress000000000000000000000000000", map[string]string{
-		"wolo1payoutaddress000000000000000000000000000": "5000000",
+	cfg := newTestSettlementConfig(t, "wolo14hteq5qgk8gzme3z2d20enyyannru3hgpue70n", map[string]string{
+		"wolo14hteq5qgk8gzme3z2d20enyyannru3hgpue70n": "5000000",
 	})
 	cfg.AuthToken = "secret-token"
 
@@ -442,8 +453,8 @@ func TestSettlementHTTPAuthBehavior(t *testing.T) {
 func TestSettlementHTTPReadOnlyRoutesStayOpen(t *testing.T) {
 	t.Parallel()
 
-	cfg := newTestSettlementConfig(t, "wolo1payoutaddress000000000000000000000000000", map[string]string{
-		"wolo1payoutaddress000000000000000000000000000": "5000000",
+	cfg := newTestSettlementConfig(t, "wolo14hteq5qgk8gzme3z2d20enyyannru3hgpue70n", map[string]string{
+		"wolo14hteq5qgk8gzme3z2d20enyyannru3hgpue70n": "5000000",
 	})
 	cfg.AuthToken = "secret-token"
 
@@ -481,7 +492,7 @@ func TestSettlementHTTPReadOnlyRoutesStayOpen(t *testing.T) {
 func TestSettlementDoctorWarningsAndPayoutAddressMismatch(t *testing.T) {
 	t.Parallel()
 
-	const payoutAddress = "wolo1payoutaddress000000000000000000000000000"
+	const payoutAddress = "wolo14hteq5qgk8gzme3z2d20enyyannru3hgpue70n"
 
 	t.Run("warnings", func(t *testing.T) {
 		t.Parallel()
@@ -520,9 +531,9 @@ func TestSettlementDoctorWarningsAndPayoutAddressMismatch(t *testing.T) {
 		cfg := newTestSettlementConfig(t, payoutAddress, map[string]string{
 			payoutAddress: "5000000",
 		})
-		cfg.PayoutAddress = "wolo1differentpayout0000000000000000000000000"
-		cfg.EscrowAddress = "wolo1escrow000000000000000000000000000000000"
-		cfg.PublicRESTURL = "https://aoe2war.com/rest"
+		cfg.PayoutAddress = "wolo1mnheaf7vlczjw8a54kn4euk8x9vkxrcpdxdplk"
+		cfg.EscrowAddress = "wolo1tc6mt544hmyzj2plzmnws5d28ag9rru26aeuec"
+		cfg.PublicRESTURL = "https://rest-mainnet.aoe2war.com"
 		cfg.AuthToken = "secret-token"
 		cfg.MinPayoutBalanceUWolo = 1000000000
 		cfg.FeeHeadroomUWolo = 10000000
@@ -537,10 +548,10 @@ func TestSettlementDoctorWarningsAndPayoutAddressMismatch(t *testing.T) {
 func TestVerifyEscrowDepositAndHTTPRoute(t *testing.T) {
 	t.Parallel()
 
-	const payoutAddress = "wolo1payoutaddress000000000000000000000000000"
-	const escrowAddress = "wolo1escrow000000000000000000000000000000000"
-	const depositorAddress = "wolo1sender000000000000000000000000000000000"
-	txHash := strings.Repeat("D", 64)
+	const payoutAddress = "wolo14hteq5qgk8gzme3z2d20enyyannru3hgpue70n"
+	const escrowAddress = "wolo1tc6mt544hmyzj2plzmnws5d28ag9rru26aeuec"
+	const depositorAddress = "wolo16lh78t7mksfgu46l8kscqm6yjlw5hhrllmdfr4"
+	txHash := mockSettlementHash(depositorAddress, escrowAddress, "700", "escrow deposit")
 
 	cfg := newTestSettlementConfigWithTxs(
 		t,
@@ -596,13 +607,157 @@ func TestVerifyEscrowDepositAndHTTPRoute(t *testing.T) {
 	}
 }
 
+func TestVerifyEscrowDepositRejectsFailedTransaction(t *testing.T) {
+	t.Parallel()
+
+	const payoutAddress = "wolo14hteq5qgk8gzme3z2d20enyyannru3hgpue70n"
+	const escrowAddress = "wolo1tc6mt544hmyzj2plzmnws5d28ag9rru26aeuec"
+	const depositorAddress = "wolo16lh78t7mksfgu46l8kscqm6yjlw5hhrllmdfr4"
+	txHash := strings.Repeat("F", 64)
+
+	// Even a matching transfer event from a failed tx is never spendable funds.
+	cfg := newTestSettlementConfigWithTxs(
+		t,
+		payoutAddress,
+		map[string]string{payoutAddress: "5000"},
+		map[string]mockSettlementTx{
+			txHash: {
+				Hash:        txHash,
+				Sender:      depositorAddress,
+				Recipient:   escrowAddress,
+				AmountUWolo: "700",
+				Memo:        "failed escrow transfer",
+				Code:        5,
+				Codespace:   "bank",
+				RawLog:      "insufficient funds",
+				Timestamp:   "2026-04-08T00:00:03Z",
+			},
+		},
+		nil,
+	)
+	cfg.EscrowAddress = escrowAddress
+
+	response, err := cfg.verifyEscrowDeposit(t.Context(), txHash, depositorAddress, "700")
+	if err != nil {
+		t.Fatalf("verify failed escrow deposit: %v", err)
+	}
+	if response.OK || response.DepositFound || response.FailureCode != "TX_EXECUTION_FAILED" {
+		t.Fatalf("failed transaction must never be certified as escrow-funded: %+v", response)
+	}
+	if response.Lookup == nil || response.Lookup.TxSuccess || response.Lookup.Code != 5 || !response.Lookup.MatchedExpected {
+		t.Fatalf("negative control must be a matched transfer event inside a failed tx: %+v", response.Lookup)
+	}
+
+	request := httptest.NewRequest(http.MethodGet, "/settlement/v1/escrow/txs/"+txHash+"?expected_sender="+depositorAddress+"&expected_amount_uwolo=700", nil)
+	recorder := httptest.NewRecorder()
+	cfg.newSettlementHTTPHandler().ServeHTTP(recorder, request)
+	if recorder.Code != http.StatusConflict {
+		t.Fatalf("expected HTTP 409 with a structured custody refusal, got %d: %s", recorder.Code, recorder.Body.String())
+	}
+	var httpResponse settlementEscrowVerifyResponse
+	if err := json.Unmarshal(recorder.Body.Bytes(), &httpResponse); err != nil {
+		t.Fatalf("decode escrow verifier response: %v", err)
+	}
+	if httpResponse.OK || httpResponse.DepositFound || httpResponse.FailureCode != "TX_EXECUTION_FAILED" {
+		t.Fatalf("HTTP verification must reject matched events from failed transactions: %+v", httpResponse)
+	}
+}
+
+func TestVerifyEscrowDepositRequiresMatchedUwoloDenom(t *testing.T) {
+	t.Parallel()
+	const payout = "wolo14hteq5qgk8gzme3z2d20enyyannru3hgpue70n"
+	const escrow = "wolo1tc6mt544hmyzj2plzmnws5d28ag9rru26aeuec"
+	const sender = "wolo16lh78t7mksfgu46l8kscqm6yjlw5hhrllmdfr4"
+	badHash := fmt.Sprintf("%X", mockSettlementRaw(mockSettlementTx{Sender: sender, Recipient: escrow, AmountUWolo: "700", TransferCoins: "700ufake,1uwolo"}).Hash())
+	goodHash := fmt.Sprintf("%X", mockSettlementRaw(mockSettlementTx{Sender: sender, Recipient: escrow, AmountUWolo: "700", TransferCoins: "700ufake,700uwolo"}).Hash())
+	cfg := newTestSettlementConfigWithTxs(t, payout, map[string]string{payout: "5000"}, map[string]mockSettlementTx{
+		badHash:  {Hash: badHash, Sender: sender, Recipient: escrow, AmountUWolo: "700", TransferCoins: "700ufake,1uwolo"},
+		goodHash: {Hash: goodHash, Sender: sender, Recipient: escrow, AmountUWolo: "700", TransferCoins: "700ufake,700uwolo"},
+	}, nil)
+	cfg.EscrowAddress = escrow
+
+	bad, err := cfg.verifyEscrowDeposit(t.Context(), badHash, sender, "700")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if bad.OK || !bad.DepositFound || bad.FailureCode != "ESCROW_DEPOSIT_MISMATCH" ||
+		bad.Lookup == nil || bad.Lookup.MatchedExpected || bad.Lookup.MatchedTransfer != nil {
+		t.Fatalf("foreign-denom 700 cannot be credited as uwolo when only 1uwolo was transferred: %+v", bad)
+	}
+	good, err := cfg.verifyEscrowDeposit(t.Context(), goodHash, sender, "700")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !good.OK || !good.DepositFound || good.Lookup == nil || !good.Lookup.MatchedExpected ||
+		good.Lookup.MatchedTransfer == nil || good.Lookup.MatchedTransfer.Denom != "uwolo" ||
+		good.Lookup.MatchedTransfer.Amount != "700" {
+		t.Fatalf("genuine uwolo match must be used despite foreign-denom decoy: %+v", good)
+	}
+}
+
+func TestVerifyEscrowDepositUniqueTransferOrdinal(t *testing.T) {
+	t.Parallel()
+	const payout = "wolo14hteq5qgk8gzme3z2d20enyyannru3hgpue70n"
+	const escrow = "wolo1tc6mt544hmyzj2plzmnws5d28ag9rru26aeuec"
+	const sender = "wolo16lh78t7mksfgu46l8kscqm6yjlw5hhrllmdfr4"
+	oneHash := fmt.Sprintf("%X", mockSettlementRaw(mockSettlementTx{Sender: sender, Recipient: escrow, AmountUWolo: "700", TransferCoins: "700ufake,700uwolo"}).Hash())
+	ambiguousHash := fmt.Sprintf("%X", mockSettlementRaw(mockSettlementTx{Sender: sender, Recipient: escrow, AmountUWolo: "700", RepeatTransfer: true}).Hash())
+	cfg := newTestSettlementConfigWithTxs(t, payout, map[string]string{payout: "5000"}, map[string]mockSettlementTx{
+		oneHash: {
+			Hash: oneHash, Sender: sender, Recipient: escrow,
+			AmountUWolo: "700", TransferCoins: "700ufake,700uwolo",
+		},
+		ambiguousHash: {
+			Hash: ambiguousHash, Sender: sender, Recipient: escrow,
+			AmountUWolo: "700", RepeatTransfer: true,
+		},
+	}, nil)
+	cfg.EscrowAddress = escrow
+
+	unique, err := cfg.verifyEscrowDeposit(t.Context(), oneHash, sender, "700")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !unique.OK || unique.Lookup == nil || unique.Lookup.MatchingTransferCount != 1 ||
+		unique.Lookup.MatchedTransferIndex == nil || *unique.Lookup.MatchedTransferIndex != 1 ||
+		unique.Lookup.MatchedTransfer == nil || unique.Lookup.MatchedTransfer.Denom != "uwolo" {
+		t.Fatalf("only the exact WOLO transfer index 1 is a single-match receipt: %+v", unique)
+	}
+
+	ambiguous, err := cfg.verifyEscrowDeposit(t.Context(), ambiguousHash, sender, "700")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ambiguous.OK || ambiguous.FailureCode != "TX_TRANSFER_AMBIGUOUS" || ambiguous.Lookup == nil ||
+		ambiguous.Lookup.MatchedTransferIndex != nil {
+		t.Fatalf("two identical transfers cannot verify one escrow obligation: %+v", ambiguous)
+	}
+
+	handler := cfg.newSettlementHTTPHandler()
+	request := httptest.NewRequest(http.MethodGet, "/settlement/v1/escrow/txs/"+oneHash+
+		"?expected_sender="+sender+"&expected_amount_uwolo=700", nil)
+	recorder := httptest.NewRecorder()
+	handler.ServeHTTP(recorder, request)
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("verification route: %d %s", recorder.Code, recorder.Body.String())
+	}
+	var decoded settlementEscrowVerifyResponse
+	if err := json.Unmarshal(recorder.Body.Bytes(), &decoded); err != nil {
+		t.Fatal(err)
+	}
+	if decoded.Lookup == nil || decoded.Lookup.MatchedTransferIndex == nil ||
+		*decoded.Lookup.MatchedTransferIndex != 1 || decoded.Lookup.MatchingTransferCount != 1 {
+		t.Fatalf("HTTP response lost immutable transfer ordinal: %+v", decoded)
+	}
+}
+
 func TestListRecentEscrowDepositsAndHTTPRoute(t *testing.T) {
 	t.Parallel()
 
-	const payoutAddress = "wolo1payoutaddress000000000000000000000000000"
-	const escrowAddress = "wolo1escrow000000000000000000000000000000000"
-	const senderA = "wolo1sendera00000000000000000000000000000000"
-	const senderB = "wolo1senderb00000000000000000000000000000000"
+	const payoutAddress = "wolo14hteq5qgk8gzme3z2d20enyyannru3hgpue70n"
+	const escrowAddress = "wolo1tc6mt544hmyzj2plzmnws5d28ag9rru26aeuec"
+	const senderA = "wolo1d0w4j4k9wn9dnk9thjt2hazt9dsr2mzpwf8f6e"
+	const senderB = "wolo13c4m4mecw6ewzcwhz5a7sar5avp3rwkmqd692j"
 	txHashA := strings.Repeat("A", 64)
 	txHashB := strings.Repeat("B", 64)
 
@@ -680,11 +835,11 @@ func TestPrepareSettlementRunRequestDerivesIDsAndWarnings(t *testing.T) {
 		Memo:            " batch memo ",
 		Payouts: []settlementRunPayoutInput{
 			{
-				ToAddress:   "wolo1recipienta000000000000000000000000000000",
+				ToAddress:   "wolo1uyge4kml7ecajn8gjrvgeuw0h2fq4alywnf7ux",
 				AmountUWolo: "100",
 			},
 			{
-				ToAddress:   "wolo1recipienta000000000000000000000000000000",
+				ToAddress:   "wolo1uyge4kml7ecajn8gjrvgeuw0h2fq4alywnf7ux",
 				AmountUWolo: "100",
 			},
 		},
@@ -719,7 +874,7 @@ func TestPrepareSettlementRunSignerRoleDefaultsAndRejectsUnknown(t *testing.T) {
 		SettlementRunID: "run-default-role",
 		Payouts: []settlementRunPayoutInput{
 			{
-				ToAddress:   "wolo1recipienta000000000000000000000000000000",
+				ToAddress:   "wolo1uyge4kml7ecajn8gjrvgeuw0h2fq4alywnf7ux",
 				AmountUWolo: "100",
 			},
 		},
@@ -736,7 +891,7 @@ func TestPrepareSettlementRunSignerRoleDefaultsAndRejectsUnknown(t *testing.T) {
 		SignerRole:      "treasury",
 		Payouts: []settlementRunPayoutInput{
 			{
-				ToAddress:   "wolo1recipienta000000000000000000000000000000",
+				ToAddress:   "wolo1uyge4kml7ecajn8gjrvgeuw0h2fq4alywnf7ux",
 				AmountUWolo: "100",
 			},
 		},
@@ -752,8 +907,8 @@ func TestPrepareSettlementRunSignerRoleDefaultsAndRejectsUnknown(t *testing.T) {
 func TestValidateSettlementRunCapacityBoundariesAndPrecedence(t *testing.T) {
 	t.Parallel()
 
-	const payoutAddress = "wolo1payoutaddress000000000000000000000000000"
-	const recipientAddress = "wolo1recipienta000000000000000000000000000000"
+	const payoutAddress = "wolo14hteq5qgk8gzme3z2d20enyyannru3hgpue70n"
+	const recipientAddress = "wolo1uyge4kml7ecajn8gjrvgeuw0h2fq4alywnf7ux"
 
 	testCases := []struct {
 		name           string
@@ -868,9 +1023,9 @@ func TestValidatePayoutSettlementRunIgnoresEscrowBalance(t *testing.T) {
 	t.Parallel()
 
 	const (
-		payoutAddress    = "wolo1payoutaddress000000000000000000000000000"
-		escrowAddress    = "wolo1escrow000000000000000000000000000000000"
-		recipientAddress = "wolo1recipienta000000000000000000000000000000"
+		payoutAddress    = "wolo14hteq5qgk8gzme3z2d20enyyannru3hgpue70n"
+		escrowAddress    = "wolo1tc6mt544hmyzj2plzmnws5d28ag9rru26aeuec"
+		recipientAddress = "wolo1uyge4kml7ecajn8gjrvgeuw0h2fq4alywnf7ux"
 	)
 
 	cfg := newTestChallengeSettlementConfig(t, payoutAddress, escrowAddress, "", map[string]string{
@@ -899,9 +1054,9 @@ func TestValidateEscrowSettlementRunUsesEscrowBalance(t *testing.T) {
 	t.Parallel()
 
 	const (
-		payoutAddress    = "wolo1payoutaddress000000000000000000000000000"
-		escrowAddress    = "wolo1escrow000000000000000000000000000000000"
-		recipientAddress = "wolo1recipienta000000000000000000000000000000"
+		payoutAddress    = "wolo14hteq5qgk8gzme3z2d20enyyannru3hgpue70n"
+		escrowAddress    = "wolo1tc6mt544hmyzj2plzmnws5d28ag9rru26aeuec"
+		recipientAddress = "wolo1uyge4kml7ecajn8gjrvgeuw0h2fq4alywnf7ux"
 	)
 
 	cfg := newTestChallengeSettlementConfig(t, payoutAddress, escrowAddress, "", map[string]string{
@@ -943,9 +1098,9 @@ func TestValidateEscrowSettlementRunBalanceAndHeadroom(t *testing.T) {
 	t.Parallel()
 
 	const (
-		payoutAddress    = "wolo1payoutaddress000000000000000000000000000"
-		escrowAddress    = "wolo1escrow000000000000000000000000000000000"
-		recipientAddress = "wolo1recipienta000000000000000000000000000000"
+		payoutAddress    = "wolo14hteq5qgk8gzme3z2d20enyyannru3hgpue70n"
+		escrowAddress    = "wolo1tc6mt544hmyzj2plzmnws5d28ag9rru26aeuec"
+		recipientAddress = "wolo1uyge4kml7ecajn8gjrvgeuw0h2fq4alywnf7ux"
 	)
 
 	testCases := []struct {
@@ -1020,12 +1175,12 @@ func TestExecuteEscrowSettlementRunUsesEscrowSigner(t *testing.T) {
 	t.Parallel()
 
 	const (
-		payoutAddress    = "wolo1payoutaddress000000000000000000000000000"
-		escrowAddress    = "wolo1escrow000000000000000000000000000000000"
-		recipientAddress = "wolo1recipienta000000000000000000000000000000"
+		payoutAddress    = "wolo14hteq5qgk8gzme3z2d20enyyannru3hgpue70n"
+		escrowAddress    = "wolo1tc6mt544hmyzj2plzmnws5d28ag9rru26aeuec"
+		recipientAddress = "wolo1uyge4kml7ecajn8gjrvgeuw0h2fq4alywnf7ux"
 	)
 
-	txHash := strings.Repeat("E", 64)
+	txHash := mockSettlementHash(escrowAddress, recipientAddress, "300", "escrow memo")
 	cfg := newTestChallengeSettlementConfig(t, payoutAddress, escrowAddress, "", map[string]string{
 		payoutAddress: "10",
 		escrowAddress: "5000",
@@ -1077,13 +1232,13 @@ func TestExecuteEscrowSettlementRunUsesEscrowSigner(t *testing.T) {
 func TestSettlementHTTPRunAuthBehavior(t *testing.T) {
 	t.Parallel()
 
-	cfg := newTestSettlementConfig(t, "wolo1payoutaddress000000000000000000000000000", map[string]string{
-		"wolo1payoutaddress000000000000000000000000000": "5000000",
+	cfg := newTestSettlementConfig(t, "wolo14hteq5qgk8gzme3z2d20enyyannru3hgpue70n", map[string]string{
+		"wolo14hteq5qgk8gzme3z2d20enyyannru3hgpue70n": "5000000",
 	})
 	cfg.AuthToken = "secret-token"
 
 	handler := cfg.newSettlementHTTPHandler()
-	validPayload := `{"settlement_run_id":"run-1","payouts":[{"to_address":"wolo1recipienta000000000000000000000000000000","amount_uwolo":"1"}]}`
+	validPayload := `{"settlement_run_id":"run-1","payouts":[{"to_address":"wolo1uyge4kml7ecajn8gjrvgeuw0h2fq4alywnf7ux","amount_uwolo":"1"}]}`
 
 	request := httptest.NewRequest(http.MethodPost, "/settlement/v1/runs/validate", strings.NewReader(validPayload))
 	recorder := httptest.NewRecorder()
@@ -1143,11 +1298,11 @@ func TestSettlementHTTPRunAuthBehavior(t *testing.T) {
 func TestExecuteSettlementRunStoresProofsAndReplays(t *testing.T) {
 	t.Parallel()
 
-	const payoutAddress = "wolo1payoutaddress000000000000000000000000000"
-	const recipientA = "wolo1recipienta000000000000000000000000000000"
-	const recipientB = "wolo1recipientb000000000000000000000000000000"
-	txHashA := strings.Repeat("A", 64)
-	txHashB := strings.Repeat("B", 64)
+	const payoutAddress = "wolo14hteq5qgk8gzme3z2d20enyyannru3hgpue70n"
+	const recipientA = "wolo1uyge4kml7ecajn8gjrvgeuw0h2fq4alywnf7ux"
+	const recipientB = "wolo19nmlmyfhzkze7rcm3jj2yd65utujp8p8cnxa22"
+	txHashA := mockSettlementHash(payoutAddress, recipientA, "100", "batch memo")
+	txHashB := mockSettlementHash(payoutAddress, recipientB, "200", "batch memo")
 
 	cfg := newTestSettlementConfigWithTxs(
 		t,
@@ -1244,10 +1399,10 @@ func TestExecuteSettlementRunStoresProofsAndReplays(t *testing.T) {
 func TestExecuteSettlementRunPartialAndRecentHistory(t *testing.T) {
 	t.Parallel()
 
-	const payoutAddress = "wolo1payoutaddress000000000000000000000000000"
-	const recipientA = "wolo1recipienta000000000000000000000000000000"
-	const recipientB = "wolo1recipientb000000000000000000000000000000"
-	txHashA := strings.Repeat("A", 64)
+	const payoutAddress = "wolo14hteq5qgk8gzme3z2d20enyyannru3hgpue70n"
+	const recipientA = "wolo1uyge4kml7ecajn8gjrvgeuw0h2fq4alywnf7ux"
+	const recipientB = "wolo19nmlmyfhzkze7rcm3jj2yd65utujp8p8cnxa22"
+	txHashA := mockSettlementHash(payoutAddress, recipientA, "100", "partial memo")
 
 	cfg := newTestSettlementConfigWithTxs(
 		t,
@@ -1270,7 +1425,7 @@ func TestExecuteSettlementRunPartialAndRecentHistory(t *testing.T) {
 
 	conflicting := normalizedSettlementRequest{
 		RequestID:   "run-partial:item-002",
-		ToAddress:   "wolo1otherrecipient000000000000000000000000000",
+		ToAddress:   "wolo1gryx57qs6drna29lmsz5nx2znzs2c3m6jnvfew",
 		AmountUWolo: "999",
 		Memo:        "previous payout",
 	}
@@ -1296,6 +1451,7 @@ func TestExecuteSettlementRunPartialAndRecentHistory(t *testing.T) {
 
 	request := settlementRunRequest{
 		SettlementRunID: "run-partial",
+		Memo:            "partial memo",
 		SourceApp:       "settler",
 		Payouts: []settlementRunPayoutInput{
 			{ToAddress: recipientA, AmountUWolo: "100"},
@@ -1335,11 +1491,11 @@ func TestExecuteSettlementRunPartialAndRecentHistory(t *testing.T) {
 func TestExecuteSettlementRunPartialRetryDoesNotResendConfirmedPayout(t *testing.T) {
 	t.Parallel()
 
-	const payoutAddress = "wolo1payoutaddress000000000000000000000000000"
-	const recipientA = "wolo1recipienta000000000000000000000000000000"
-	const recipientB = "wolo1recipientb000000000000000000000000000000"
-	txHashA := strings.Repeat("A", 64)
-	txHashB := strings.Repeat("B", 64)
+	const payoutAddress = "wolo14hteq5qgk8gzme3z2d20enyyannru3hgpue70n"
+	const recipientA = "wolo1uyge4kml7ecajn8gjrvgeuw0h2fq4alywnf7ux"
+	const recipientB = "wolo19nmlmyfhzkze7rcm3jj2yd65utujp8p8cnxa22"
+	txHashA := mockSettlementHash(payoutAddress, recipientA, "100", "retry memo")
+	txHashB := mockSettlementHash(payoutAddress, recipientB, "200", "retry memo")
 
 	cfg := newTestSettlementConfigWithTxs(
 		t,
@@ -1381,8 +1537,10 @@ func TestExecuteSettlementRunPartialRetryDoesNotResendConfirmedPayout(t *testing
 	if err != nil {
 		t.Fatalf("execute first partial run: %v", err)
 	}
-	if first.OK || first.Status != "partial" || !first.Retryable || first.Payouts[1].FailureCode != "RPC_UNREACHABLE" {
-		t.Fatalf("expected retryable partial run, got %+v", first)
+	if first.OK || first.Status != "unverifiable" || first.Retryable ||
+		first.Payouts[1].FailureCode != "BROADCAST_OUTCOME_UNRECORDED" ||
+		first.Payouts[1].Retryable || first.Payouts[1].TxHash != "" {
+		t.Fatalf("unknown signer result must hold the entire partial run: %+v", first)
 	}
 	if got := readRetryFakeSendCount(t, countsDir, recipientA); got != 1 {
 		t.Fatalf("expected recipient A to be sent once after first run, got %d", got)
@@ -1395,27 +1553,117 @@ func TestExecuteSettlementRunPartialRetryDoesNotResendConfirmedPayout(t *testing
 	if err != nil {
 		t.Fatalf("execute retry run: %v", err)
 	}
-	if !second.OK || second.Status != "confirmed" || second.ConfirmedPayoutCount != 2 {
-		t.Fatalf("expected retry to finish run, got %+v", second)
+	if second.OK || second.Status != "unverifiable" || second.Retryable || !second.IdempotentReplay ||
+		second.ConfirmedPayoutCount != 1 {
+		t.Fatalf("same grouped request must replay unresolved payment without rebroadcast: %+v", second)
 	}
-	if !second.Payouts[0].IdempotentReplay || second.Payouts[0].TxHash != txHashA {
-		t.Fatalf("expected first payout to replay stored tx, got %+v", second.Payouts[0])
+	if second.Payouts[0].TxHash != txHashA || second.Payouts[0].Status != "confirmed" {
+		t.Fatalf("first payout must remain confirmed by the original transfer: %+v", second.Payouts[0])
 	}
-	if second.Payouts[1].IdempotentReplay || second.Payouts[1].TxHash != txHashB {
-		t.Fatalf("expected second payout to execute on retry, got %+v", second.Payouts[1])
+	if second.Payouts[1].TxHash != "" || second.Payouts[1].Retryable ||
+		second.Payouts[1].Status != "unverifiable" {
+		t.Fatalf("ambiguous second payout must remain held for human review: %+v", second.Payouts[1])
 	}
 	if got := readRetryFakeSendCount(t, countsDir, recipientA); got != 1 {
 		t.Fatalf("confirmed payout was resent on retry; count=%d", got)
 	}
-	if got := readRetryFakeSendCount(t, countsDir, recipientB); got != 2 {
-		t.Fatalf("expected failed payout to be retried once; count=%d", got)
+	if got := readRetryFakeSendCount(t, countsDir, recipientB); got != 1 {
+		t.Fatalf("ambiguous payout cannot be sent a second time; count=%d", got)
+	}
+}
+
+func TestSettlementRunLogEventClassification(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name      string
+		operation string
+		response  settlementRunResponse
+		wantEvent string
+		wantProbe bool
+	}{
+		{
+			name:      "health probe ok",
+			operation: "validate",
+			response: settlementRunResponse{
+				OK:              true,
+				DryRun:          true,
+				SettlementRunID: "settlement-health-probe-alert",
+				SourceApp:       "settlement-health-probe",
+			},
+			wantEvent: "health_probe_ok",
+			wantProbe: true,
+		},
+		{
+			name:      "health probe failed",
+			operation: "validate",
+			response: settlementRunResponse{
+				OK:              false,
+				DryRun:          true,
+				SettlementRunID: "settlement-health-probe-verify",
+				SourceEventID:   "health-probe-verify-20260525T000000Z",
+				FailureCode:     "PAYOUT_RESERVE_FLOOR_HIT",
+			},
+			wantEvent: "health_probe_failed",
+			wantProbe: true,
+		},
+		{
+			name:      "real validation failed",
+			operation: "validate",
+			response: settlementRunResponse{
+				OK:              false,
+				DryRun:          true,
+				SettlementRunID: "aoe2hdbets:match-42",
+				SourceApp:       "aoe2hdbets",
+				FailureCode:     "INVALID_RUN",
+			},
+			wantEvent: "settlement_validation_failed",
+			wantProbe: false,
+		},
+		{
+			name:      "execution ok",
+			operation: "execute",
+			response: settlementRunResponse{
+				OK:              true,
+				DryRun:          false,
+				SettlementRunID: "aoe2hdbets:match-42",
+				SourceApp:       "aoe2hdbets",
+			},
+			wantEvent: "payout_execution_ok",
+			wantProbe: false,
+		},
+		{
+			name:      "execution failed",
+			operation: "execute",
+			response: settlementRunResponse{
+				OK:              false,
+				DryRun:          false,
+				SettlementRunID: "aoe2hdbets:match-42",
+				SourceApp:       "aoe2hdbets",
+				FailureCode:     "PAYOUT_BALANCE_TOO_LOW",
+			},
+			wantEvent: "payout_execution_failed",
+			wantProbe: false,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			gotEvent, gotProbe := settlementRunLogEvent(tt.operation, tt.response)
+			if gotEvent != tt.wantEvent || gotProbe != tt.wantProbe {
+				t.Fatalf("unexpected log event: event=%s probe=%v", gotEvent, gotProbe)
+			}
+		})
 	}
 }
 
 func TestExecuteSettlementStoresRetryableRefusal(t *testing.T) {
 	t.Parallel()
 
-	payoutAddress := "wolo1payoutaddress000000000000000000000000000"
+	payoutAddress := "wolo14hteq5qgk8gzme3z2d20enyyannru3hgpue70n"
 	cfg := newTestSettlementConfig(t, payoutAddress, map[string]string{
 		payoutAddress: "250",
 	})
@@ -1424,7 +1672,7 @@ func TestExecuteSettlementStoresRetryableRefusal(t *testing.T) {
 
 	response, err := cfg.executeSettlement(t.Context(), settlementExecuteRequest{
 		RequestID:   "reserve-floor-refusal",
-		ToAddress:   "wolo1recipient000000000000000000000000000000",
+		ToAddress:   "wolo16082h2x52u87uj4pjj5049mvh9fxu0gjal08j5",
 		AmountUWolo: "101",
 		Memo:        "reserve check",
 	})
@@ -1463,15 +1711,17 @@ func newMockSettlementChainHandler(balances map[string]string) http.Handler {
 }
 
 type mockSettlementTx struct {
-	Hash        string
-	Sender      string
-	Recipient   string
-	AmountUWolo string
-	Memo        string
-	Code        uint32
-	Codespace   string
-	RawLog      string
-	Timestamp   string
+	Hash           string
+	Sender         string
+	Recipient      string
+	AmountUWolo    string
+	TransferCoins  string
+	RepeatTransfer bool
+	Memo           string
+	Code           uint32
+	Codespace      string
+	RawLog         string
+	Timestamp      string
 }
 
 func newTestSettlementConfigWithTxs(t *testing.T, payoutAddress string, balances map[string]string, txs map[string]mockSettlementTx, recipientTxHashes map[string]string) settlementConfig {
@@ -1483,31 +1733,32 @@ func newTestSettlementConfigWithTxs(t *testing.T, payoutAddress string, balances
 	executablePath := writeFakeSettlementExecutableWithTxs(t, payoutAddress, recipientTxHashes)
 
 	return settlementConfig{
-		ExecutablePath:  executablePath,
-		HomeDir:         t.TempDir(),
-		KeyringBackend:  "test",
-		NodeAddr:        "tcp://127.0.0.1:26657",
-		RPCHTTP:         server.URL,
-		RESTURL:         server.URL,
-		PublicRESTURL:   "https://api.wolochain.example/",
-		ChainID:         settlementCanonicalChainID,
-		BaseDenom:       settlementCanonicalBaseDenom,
-		DisplayDenom:    settlementCanonicalDisplayDenom,
-		AddressPrefix:   settlementCanonicalPrefix,
-		PayoutKeyName:   "payout",
-		PayoutAddress:   payoutAddress,
-		BroadcastMode:   "sync",
-		Gas:             "auto",
-		GasAdjustment:   "1.5",
-		GasPrices:       settlementDefaultGasPrices,
-		StateDir:        t.TempDir(),
-		ListenAddr:      settlementDefaultListenAddr,
-		RequestLockTTL:  2 * time.Minute,
-		RequestTimeout:  30 * time.Second,
-		LookupTimeout:   2 * time.Second,
-		HealthTimeout:   2 * time.Second,
-		ConfirmTimeout:  2 * time.Second,
-		ConfirmInterval: 10 * time.Millisecond,
+		ExecutablePath:        executablePath,
+		ExecutableInterpreter: "/bin/sh",
+		HomeDir:               t.TempDir(),
+		KeyringBackend:        "test",
+		NodeAddr:              "tcp://127.0.0.1:26657",
+		RPCHTTP:               server.URL,
+		RESTURL:               server.URL,
+		PublicRESTURL:         "https://api.wolochain.example/",
+		ChainID:               settlementCanonicalChainID,
+		BaseDenom:             settlementCanonicalBaseDenom,
+		DisplayDenom:          settlementCanonicalDisplayDenom,
+		AddressPrefix:         settlementCanonicalPrefix,
+		PayoutKeyName:         "payout",
+		PayoutAddress:         payoutAddress,
+		BroadcastMode:         "sync",
+		Gas:                   "auto",
+		GasAdjustment:         "1.5",
+		GasPrices:             settlementDefaultGasPrices,
+		StateDir:              t.TempDir(),
+		ListenAddr:            settlementDefaultListenAddr,
+		RequestLockTTL:        2 * time.Minute,
+		RequestTimeout:        30 * time.Second,
+		LookupTimeout:         2 * time.Second,
+		HealthTimeout:         2 * time.Second,
+		ConfirmTimeout:        2 * time.Second,
+		ConfirmInterval:       10 * time.Millisecond,
 	}
 }
 
@@ -1522,6 +1773,21 @@ func newMockSettlementChainHandlerWithTxs(balances map[string]string, txs map[st
 			},
 		})
 	})
+	mux.HandleFunc("/tx", func(w http.ResponseWriter, r *http.Request) {
+		hash := strings.TrimPrefix(strings.ToUpper(r.URL.Query().Get("hash")), "0X")
+		tx, ok := txs[hash]
+		if !ok {
+			http.NotFound(w, r)
+			return
+		}
+		raw := mockSettlementRaw(tx)
+		result := core.ResultTx{Hash: raw.Hash(), Height: 123, Tx: raw, TxResult: abci.ExecTxResult{Code: tx.Code, Events: []abci.Event{{Type: "transfer", Attributes: []abci.EventAttribute{
+			{Key: "sender", Value: tx.Sender}, {Key: "recipient", Value: tx.Recipient}, {Key: "amount", Value: firstNonEmpty(tx.TransferCoins, tx.AmountUWolo+settlementCanonicalBaseDenom)},
+		}}}}}
+		encoded, _ := cmtjson.Marshal(result)
+		_, _ = w.Write(append(append([]byte(`{"jsonrpc":"2.0","id":-1,"result":`), encoded...), '}'))
+	})
+
 	mux.HandleFunc("/cosmos/base/tendermint/v1beta1/node_info", func(w http.ResponseWriter, _ *http.Request) {
 		_ = json.NewEncoder(w).Encode(map[string]any{
 			"default_node_info": map[string]any{
@@ -1620,7 +1886,7 @@ func newMockSettlementChainHandlerWithTxs(balances map[string]string, txs map[st
 						"attributes": []map[string]string{
 							{"key": "sender", "value": hit.tx.Sender},
 							{"key": "recipient", "value": hit.tx.Recipient},
-							{"key": "amount", "value": hit.tx.AmountUWolo + settlementCanonicalBaseDenom},
+							{"key": "amount", "value": firstNonEmpty(hit.tx.TransferCoins, hit.tx.AmountUWolo+settlementCanonicalBaseDenom)},
 						},
 					},
 				},
@@ -1647,9 +1913,7 @@ func newMockSettlementChainHandlerWithTxs(balances map[string]string, txs map[st
 
 		_ = json.NewEncoder(w).Encode(map[string]any{
 			"tx": map[string]any{
-				"body": map[string]any{
-					"memo": tx.Memo,
-				},
+				"body": mockSettlementBody(tx),
 			},
 			"tx_response": map[string]any{
 				"height":    "123",
@@ -1658,16 +1922,7 @@ func newMockSettlementChainHandlerWithTxs(balances map[string]string, txs map[st
 				"codespace": tx.Codespace,
 				"raw_log":   tx.RawLog,
 				"timestamp": firstNonEmpty(tx.Timestamp, "2026-04-08T00:00:00Z"),
-				"events": []map[string]any{
-					{
-						"type": "transfer",
-						"attributes": []map[string]string{
-							{"key": "sender", "value": tx.Sender},
-							{"key": "recipient", "value": tx.Recipient},
-							{"key": "amount", "value": tx.AmountUWolo + settlementCanonicalBaseDenom},
-						},
-					},
-				},
+				"events":    mockSettlementEvents(tx),
 			},
 		})
 	})
@@ -1828,7 +2083,6 @@ func readRetryFakeSendCount(t *testing.T, countsDir, recipient string) int {
 }
 
 func TestRequiresEscrowSignerForAoE2BetMarketRun(t *testing.T) {
-	t.Parallel()
 
 	tests := []struct {
 		name    string
@@ -1870,7 +2124,6 @@ func TestRequiresEscrowSignerForAoE2BetMarketRun(t *testing.T) {
 	for _, test := range tests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
-			t.Parallel()
 
 			got := requiresEscrowSignerForSettlementRun(test.request)
 			if got != test.want {
@@ -1885,7 +2138,6 @@ func TestRequiresEscrowSignerForAoE2BetMarketRun(t *testing.T) {
 }
 
 func TestSettlementRunEscrowAutoTopUpDisabledByPolicy(t *testing.T) {
-	t.Parallel()
 
 	for _, failureCode := range []string{
 		"PAYOUT_BALANCE_TOO_LOW",
@@ -1899,4 +2151,42 @@ func TestSettlementRunEscrowAutoTopUpDisabledByPolicy(t *testing.T) {
 			)
 		}
 	}
+}
+
+// Honest synthetic fixtures: signatures have no chain authority, but each hash
+// used for confirmation is derived from the protobuf bytes actually returned.
+func mockSettlementRaw(m mockSettlementTx) cmt.Tx {
+	coins := []*base.Coin{}
+	for _, coin := range splitCoinAmounts(firstNonEmpty(m.TransferCoins, m.AmountUWolo+settlementCanonicalBaseDenom)) {
+		coins = append(coins, &base.Coin{Denom: coin.Denom, Amount: coin.Amount})
+	}
+	send, _ := anypb.New(&bank.MsgSend{FromAddress: m.Sender, ToAddress: m.Recipient, Amount: coins})
+	send.TypeUrl = "/cosmos.bank.v1beta1.MsgSend"
+	messages := []*anypb.Any{send}
+	if m.RepeatTransfer {
+		messages = append(messages, send)
+	}
+	body, _ := proto.Marshal(&txapi.TxBody{Messages: messages, Memo: m.Memo})
+	raw, _ := proto.Marshal(&txapi.TxRaw{BodyBytes: body, AuthInfoBytes: []byte("synthetic-auth"), Signatures: [][]byte{[]byte("synthetic-signature")}})
+	return cmt.Tx(raw)
+}
+func mockSettlementBody(m mockSettlementTx) json.RawMessage {
+	var raw txapi.TxRaw
+	var body txapi.TxBody
+	_ = proto.Unmarshal(mockSettlementRaw(m), &raw)
+	_ = proto.Unmarshal(raw.BodyBytes, &body)
+	encoded, _ := protojson.Marshal(&body)
+	return encoded
+}
+func mockSettlementHash(sender, recipient, amount, memo string) string {
+	return fmt.Sprintf("%X", mockSettlementRaw(mockSettlementTx{Sender: sender, Recipient: recipient, AmountUWolo: amount, Memo: memo}).Hash())
+}
+
+func mockSettlementEvents(m mockSettlementTx) []map[string]any {
+	effect := map[string]any{"type": "transfer", "attributes": []map[string]string{{"key": "sender", "value": m.Sender}, {"key": "recipient", "value": m.Recipient}, {"key": "amount", "value": firstNonEmpty(m.TransferCoins, m.AmountUWolo+settlementCanonicalBaseDenom)}}}
+	events := []map[string]any{effect}
+	if m.RepeatTransfer {
+		events = append(events, effect)
+	}
+	return events
 }

@@ -1,0 +1,14 @@
+# Interval is observational only; does not start, stop or heal financial services.
+[Unit]
+Description=AoE2WAR C03 writer-observer hourly drift watch
+
+[Timer]
+OnBootSec=10min
+OnUnitActiveSec=1h
+RandomizedDelaySec=120
+AccuracySec=1min
+Persistent=true
+Unit=wolo-c03-observer.service
+
+[Install]
+WantedBy=timers.target

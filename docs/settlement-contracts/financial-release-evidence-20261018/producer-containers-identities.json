@@ -1,0 +1,43 @@
+{
+  "mode": "READ_ONLY_CONTAINER_NAMES_AND_UNIT_SERVICE_IDENTITIES",
+  "observedAtUtc": "2026-10-18T18:12:00.829108+00:00",
+  "noEnvironmentValuesOrCommandLines": true,
+  "servicesChanged": false,
+  "financialProducersFenced": false,
+  "containerInventoryAvailable": true,
+  "containers": [
+    {
+      "state": "running",
+      "name_sha256": "8a23a14f0218c88678ffa0624350b4630c107104aaa7f981e2290427eb376c32",
+      "name_disclosure": "WITHHELD_RAW_RECEIPT_RETAINED"
+    }
+  ],
+  "appServiceIdentityMetadata": [
+    {
+      "unit": "aoe2hdbets-web.service",
+      "runsAsRoot": false,
+      "dynamicUser": false
+    },
+    {
+      "unit": "aoe2hdbets-api.service",
+      "runsAsRoot": false,
+      "dynamicUser": false
+    },
+    {
+      "unit": "aoe2dewarwagers-web.service",
+      "runsAsRoot": false,
+      "dynamicUser": false
+    },
+    {
+      "unit": "aoe2dewarwagers-api.service",
+      "runsAsRoot": false,
+      "dynamicUser": false
+    }
+  ],
+  "limits": [
+    "Container names/states do not reveal code, mounts, credentials, queues, network ingress or signer capability.",
+    "Non-root service identity is not proof of keyring isolation; ACLs, supplemental groups, delegated services and secret loading remain unreviewed."
+  ],
+  "raw_receipt_sha256": "cebc2d48730c6d6b0485f3c343e49e80892f1049d5de53416118571aac08a428",
+  "published_receipt_transform": "Container names replaced with SHA256; raw original retained in restricted local evidence packet. State and all authority limits unchanged."
+}

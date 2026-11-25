@@ -1,0 +1,13 @@
+BEGIN TRANSACTION READ ONLY;
+SELECT 'ROLE_COUNT|'||count(*) FROM pg_roles WHERE rolname!='tonyblum';
+SELECT 'MEMBER_COUNT|'||count(*) FROM pg_auth_members;
+SELECT 'USER_REL_COUNT|'||count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname NOT LIKE 'pg_%' AND n.nspname!='information_schema' AND c.relkind IN ('r','p','S','v','m','f');
+SELECT 'USER_FUNCTION_COUNT|'||count(*) FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname NOT LIKE 'pg_%' AND n.nspname!='information_schema';
+SELECT 'SCHEMA_COUNT|'||count(*) FROM pg_namespace n WHERE n.nspname NOT LIKE 'pg_%' AND n.nspname!='information_schema';
+SELECT 'DB_OWNER|'||pg_get_userbyid(d.datdba) FROM pg_database d WHERE d.datname=current_database();
+SELECT 'REL_OWNER_SHA|'||md5(string_agg(n.nspname||'.'||c.relname||'|'||c.relkind::text||'|'||pg_get_userbyid(c.relowner),E'\n' ORDER BY n.nspname,c.relname,c.relkind)) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname NOT LIKE 'pg_%' AND n.nspname!='information_schema' AND c.relkind IN ('r','p','S','v','m','f');
+SELECT 'FUNC_OWNER_SHA|'||md5(string_agg(n.nspname||'.'||p.proname||'('||pg_get_function_identity_arguments(p.oid)||')'||'|'||p.prosecdef||'|'||pg_get_userbyid(p.proowner),E'\n' ORDER BY n.nspname,p.proname,pg_get_function_identity_arguments(p.oid))) FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname NOT LIKE 'pg_%' AND n.nspname!='information_schema';
+SELECT 'SCHEMA_OWNER_SHA|'||md5(string_agg(n.nspname||'|'||pg_get_userbyid(n.nspowner),E'\n' ORDER BY n.nspname)) FROM pg_namespace n WHERE n.nspname NOT LIKE 'pg_%' AND n.nspname!='information_schema';
+SELECT 'ROLE_FLAG_SHA|'||md5(string_agg(rolname||'|'||rolsuper::text||'|'||rolinherit::text||'|'||rolcreaterole::text||'|'||rolcreatedb::text||'|'||rolcanlogin::text||'|'||rolreplication::text||'|'||rolbypassrls::text||'|'||rolconnlimit::text||'|'||coalesce(extract(epoch from rolvaliduntil)::text,'')||'|'||md5(coalesce(rolconfig::text,'')),E'\n' ORDER BY rolname)) FROM pg_roles WHERE rolname!='tonyblum';
+SELECT 'MEMBER_SHA|'||md5(string_agg(m.rolname||'>'||p.rolname||'|admin='||a.admin_option::text||'|inherit='||a.inherit_option::text||'|set='||a.set_option::text,E'\n' ORDER BY m.rolname,p.rolname)) FROM pg_auth_members a JOIN pg_roles m ON m.oid=a.member JOIN pg_roles p ON p.oid=a.roleid;
+COMMIT;

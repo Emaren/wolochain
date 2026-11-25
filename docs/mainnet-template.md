@@ -1,4 +1,38 @@
-# WoloChain Testnet/Mainnet Alignment Notes
+---
+id: "aoe2war.wolochain.mainnet-template"
+title: "WoloChain Mainnet Template Report"
+type: "historical"
+status: "historical"
+owner: "wolochain-ops"
+systems: ["wolochain","aoe2war"]
+audience: ["developers","operators","ai-agents"]
+source_of_truth: "historical-evidence"
+authority: "mainnet-preparation-template-evidence"
+reviewed_at: "2026-08-10"
+review_interval_days: 0
+sensitivity: "internal"
+---
+
+# WoloChain Mainnet Template Report
+
+This report began as a planning template. `wolo-1` is now live; use the current mainnet docs for endpoint and wallet truth, and treat the testnet section below as legacy context only.
+
+Core rule: clone the architecture, not the state.
+
+## Planning Package
+
+- [Mainnet launch plan](mainnet-launch-plan.md)
+- [Tony decision checklist](mainnet-decision-checklist.md)
+- [Genesis allocation template](mainnet-genesis-allocation-template.md)
+- [Wallet and key plan](mainnet-wallets.md)
+- [Services and ports](mainnet-services-and-ports.md)
+- [DNS, nginx, and TLS](mainnet-dns-nginx-tls.md)
+- [Keplr and explorer metadata](mainnet-keplr-explorer.md)
+- [IBC and Osmosis plan](mainnet-ibc-osmosis.md)
+- [Cutover checklist](mainnet-cutover-checklist.md)
+- [Prep templates](../mainnet-prep/README.md)
+
+## Testnet/Mainnet Alignment Notes
 
 This doc is a boundary checklist for keeping `wolo-testnet` useful without leaking testnet copy, endpoints, balances, or assumptions into the live AoE2WAR mainnet app. It must not be used to launch or modify mainnet, reset testnet, clone validator state, move funds, alter relayer config, or create liquidity.
 
@@ -58,6 +92,33 @@ The mainnet app may share WOLO concepts with testnet, but it must not inherit te
 
 The testnet settlement state is operator truth for request and grouped-run history. Back it up before risky settlement work. Do not move it without stopping mapped services and verifying ownership and endpoints afterward.
 
+## Current Mainnet Values
+
+- Chain ID: `wolo-1`
+- Base denom: `uwolo`
+- Display denom: `wolo`
+- Symbol: `WOLO`
+- Decimals: `6`
+- Address prefix: `wolo`
+- Supply model: fixed supply, no silent inflation
+- Chain home: `/var/lib/wolochaind-mainnet`
+- Node service: `wolochaind-mainnet.service`
+- Settlement service: `wolochain-mainnet-settlement.service`
+- P2P: `0.0.0.0:27656`
+- RPC: `127.0.0.1:27657`
+- REST: `127.0.0.1:1318`
+- Settlement API: `127.0.0.1:8092`
+- Public RPC: `https://rpc-mainnet.aoe2war.com`
+- Public REST: `https://rest-mainnet.aoe2war.com`
+- Public explorer: not verified yet as a separate mainnet route
+- Settlement/operator state: `/mnt/HC_Volume_105319120/wolochain-mainnet/settlement-state`
+- Validator keys: fresh mainnet validator keys were used for launch
+- Genesis: fresh mainnet genesis was used for launch
+- Allocations: fresh mainnet allocation table was used for launch
+- Balances: no automatic migration from `wolo-testnet`
+- Local mainnet repo clone: `/Users/tonyblum/projects/WoloChain-wolo-1`
+- Mainnet branch: `wolo-1-mainnet-prep`
+
 ## What Must Stay Aligned
 
 These concepts should remain consistent across testnet, mainnet, docs, and app integrations where appropriate:
@@ -96,14 +157,14 @@ These must not be copied from testnet into mainnet without an explicit mainnet-s
 
 ## Mainnet Reference Only
 
-When this repo mentions mainnet, it is documenting separation, not operating mainnet. Mainnet facts that may be referenced for alignment are:
+These historical alignment notes grant no operating authority. Mainnet references retained from the main branch are:
 
 - `wolo-1` is the mainnet chain ID.
 - `https://aoe2war.com/wolo` is the public mainnet app route.
 - Osmosis pool `#3461` is the mainnet WOLO/USDC pool.
 - `https://app.osmosis.zone/pool/3461` is the mainnet pool URL.
 
-Do not use this testnet repo to change those resources. Update AoE2WAR, explorer, relayer, or mainnet operational repositories directly when the real mainnet surface changes.
+These testnet-era notes do not authorize changes to mainnet resources. Use the source-bound mainnet settlement runbook and its protected release gates for current operations.
 
 ## Non-Goals
 

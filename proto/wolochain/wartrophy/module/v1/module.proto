@@ -1,0 +1,17 @@
+syntax = "proto3";
+package wolochain.wartrophy.module.v1;
+
+import "cosmos/app/v1alpha1/module.proto";
+
+option go_package = "github.com/emaren/wolochain/x/wartrophy/types";
+
+// Module is the app wiring configuration for x/wartrophy.
+message Module {
+  option (cosmos.app.v1alpha1.module) = {
+    go_import: "github.com/emaren/wolochain/x/wartrophy/module"
+  };
+
+  // authority is the initial Trophy Authority. It defaults to governance when
+  // omitted and can later be rotated by the current authority.
+  string authority = 1;
+}

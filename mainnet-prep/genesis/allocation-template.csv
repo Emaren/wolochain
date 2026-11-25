@@ -1,0 +1,10 @@
+bucket,label,address,amount_wolo,amount_uwolo,custody,genesis,notes
+founder_cold,Founder Cold,wolo1r8kvt7me33rsv9ldaczj03xjrld4yumx0c0jkg,60000000,60000000000000,cold,yes,Long-term founder reserve
+founder_operating,Founder Operating,wolo1wue7vyque2pssskgdrww0fcadlq9ps6mtn605e,5000000,5000000000000,hot,yes,Founder operating and shipping budget
+community_treasury,Community Treasury,wolo1hlfvzuv4dc46ngvh3zlteuegx0xga20hj20zd2,10000000,10000000000000,cold-or-multisig,yes,Community treasury and protocol war chest
+dex_liquidity_reserve,DEX Liquidity Reserve,wolo1kwsmr9nzujwul6wmu4hqr90lel4ca4uy3l06en,10000000,10000000000000,cold-or-multisig,yes,Osmosis and future liquidity reserve
+faucet_growth_reserve,Faucet Growth Reserve,wolo12c009ektp58rr0gkjz3nk8f4kgvfpfzwfk86l3,6500000,6500000000000,cold-or-multisig,yes,Onboarding and growth reserve
+faucet_hot_wallet,Faucet Hot Wallet,wolo1dshyzxffd0jj39k7gj9tq9hgsx96ylxamyp5g0,500000,500000000000,hot,yes,Small app-facing onboarding wallet
+validator_ops,Validator Ops,wolo1nalsh7y0hzp33j996c90yxqgerxxvgpqtumfjt,5000000,5000000000000,hot,yes,Validator operations and self-delegation reserve
+ecosystem_bounties,Ecosystem Bounties,wolo1dmj5dnm7g9hmj005yzy5e5xcygudyt7wxzpxjq,3000000,3000000000000,cold-or-multisig,yes,Contributor rewards tools and bug bounties
+TOTAL,Total,,100000000,100000000000000,,yes,Must match fixed supply exactly

@@ -1,0 +1,487 @@
+---
+id: "aoe2war.wolochain.mainnet-prep-status"
+title: "WoloChain wolo-1 Mainnet Prep Status"
+type: "reference"
+status: "active"
+owner: "wolochain-ops"
+systems: ["wolochain","aoe2war"]
+audience: ["developers","operators","ai-agents"]
+source_of_truth: "runtime-evidence"
+authority: "mainnet-prep-chronological-handoff"
+reviewed_at: "2026-11-19"
+review_interval_days: 14
+sensitivity: "restricted"
+---
+
+# WoloChain wolo-1 Mainnet Prep Status
+
+## November 1 source review; dated runtime evidence retained
+
+Reviewed the current source contracts against the protected legacy confirmation,
+request/receipt uncertainty and two-service release boundaries. This renewal
+adds no runtime observation, financial disposition or production authority.
+The historical implementation and runtime receipts below retain their dates.
+New Satchel #115 source and its 8094/8095 qualification remain a separate path;
+legacy 8092/8093 must not be used as a fallback for the new return executor.
+Claim #889 and every uncertain historical outflow remain held.
+
+## Source-only settlement review — 2026-10-17
+
+The [legacy settlement hardening handoff](../docs/legacy-settlement-hardening.md)
+records a new isolated source candidate from
+`wolo-1-mainnet-prep@c1210dda37b725a5b141ad63361048d4b37731c2`.
+This date renews engineering memory only; no SSH, runtime inspection or financial
+operation was performed. Earlier runtime identities and readiness observations
+below retain their original dates and scope. The pinned `bdbce253` candidate
+workflow does not build this new source, and obsolete rollback/rescue modes
+remain disabled. A separately reviewed exact-source artifact and protected
+quiesced two-service release/recovery policy remain required, together with
+current financial reconciliation and the unresolved founder claim #889 hold.
+Existing 8092/8093 signer/state separation, consensus executable isolation and
+all liabilities remain preserved. Satchel PR #25 stays separate and unmerged;
+this work does not activate Satchel custody or certify live funds.
+
+## Review Renewal — 2026-10-07 UTC
+
+A bounded read-only review against the October 6 VPS context reconfirmed the
+live `wolo-1` operating boundary. The scheduled mainnet health check completed
+successfully at height `2313501` with `catching_up=False`; the mainnet node and
+mainnet settlement service were active, and recent settlement validation /
+execution evidence remained bound to chain `wolo-1`.
+
+This documentation renewal performs no chain, validator, keyring, wallet,
+transfer, relayer, liquidity, settlement, or Wolo mutation. It does not
+silently re-prove total supply, every wallet balance, validator voting power,
+IBC/Osmosis state, pool state, or other dated historical claims; those remain
+bound to their explicitly dated evidence below.
+
+Status: WoloChain mainnet is live; WOLO is bridged to Osmosis; WOLO/USDC Pool `3461` is live; post-launch metadata polish is pending.
+
+## Review Renewal — 2026-09-22 UTC
+
+A read-only VPS context capture at `2026-09-22T04:35:41Z` reconfirmed current
+mainnet liveness. The scheduled health check completed successfully with
+`OK: wolo-1 healthy height=2061334 catching_up=False`, and node logs shortly
+afterward showed committed/indexed height `2061341`.
+`wolochaind-mainnet.service` and
+`wolochain-mainnet-settlement.service` were active; P2P `27656`, RPC
+`27657`, REST `1318`, settlement `8092`, and protected `8093` were
+present. The legacy testnet node and settlement units were disabled. AoE2WAR
+certification evidence independently recorded `wolo8092=1` and
+`wolo8093=1`.
+
+This snapshot did not re-query validator voting power, consensus runtime version,
+IBC/Osmosis path state, pool state, or metadata publication. The September 9 and
+dated launch/IBC/pool sections remain the latest explicit evidence for those
+specific facts. No chain, validator, keyring, relayer, liquidity, settlement, or
+Wolo mutation was performed.
+
+## Review Renewal — 2026-09-09 UTC
+
+This living handoff was renewed against current read-only runtime evidence. Public
+RPC reported network `wolo-1`, block height `1835896`, `catching_up=false`, and
+validator voting power `2000`; public REST reported the preserved consensus
+runtime version `wolo-1-mainnet-prep-d3bd62414a047a492a3814b7d3baa2717d64db2e`.
+AoE2WAR release status independently reported protected settlement listeners
+`8092=UP` and `8093=UP`.
+
+This review performed no chain, validator, keyring, relayer, liquidity, settlement,
+or Wolo mutation. The dated launch/IBC/pool sections below remain chronological
+evidence; their historical point-in-time heights and voting-power observations
+are not rewritten as current runtime authority.
+
+## Completed
+
+- Created `wolo-1-mainnet-prep` branch.
+- Created mainnet prep package under `mainnet-prep/`.
+- Created 8 real Keplr `wolo1...` recipient wallets.
+- Updated `mainnet-prep/genesis/allocation-template.csv`.
+- Verified total supply:
+  - `100000000000000uwolo`
+  - `100000000 WOLO`
+- Verified genesis readiness:
+  - `ready_for_genesis: true`
+  - placeholders: `0`
+  - real addresses: `8`
+  - blockers: none
+  - warnings: none
+- Built disposable draft chain home:
+  - `build/mainnet-prep/wolo-1-home`
+- Validated draft genesis:
+  - chain_id: `wolo-1`
+  - balance count: `8`
+  - supply: `100000000000000uwolo`
+  - errors: none
+- Go tests pass.
+- Go build passes.
+
+## Remaining Not Done
+
+- Osmosis/Chain Registry metadata still needs to be prepared so the Osmosis frontend can display `WOLO` instead of the raw IBC denom.
+- AoE2War `/wolo` can use local known metadata as an immediate display workaround.
+- `wolo-testnet` has not been touched.
+
+## Next Phase
+
+Prepare Chain Registry and Osmosis assetlist metadata. No funds, transfers, relayer changes, genesis changes, validator changes, new pool creation, or additional liquidity are required for metadata polish.
+
+## Launch Update
+
+`wolo-1` mainnet was launched on the VPS.
+
+Confirmed:
+
+- `wolochaind-mainnet.service` is active.
+- RPC is listening on `127.0.0.1:27657`.
+- REST is listening on `127.0.0.1:1318`.
+- P2P is listening on `0.0.0.0:27656`.
+- Chain ID is `wolo-1`.
+- Blocks are being produced.
+- Validator voting power is `1000`.
+- `wolochaind-testnet.service` remained active.
+- `wolochain-settlement.service` remained active.
+
+Next steps:
+
+1. Clean pprof/log warnings.
+2. Add public Nginx routes for mainnet RPC/REST.
+3. Update AoE2War/Keplr/explorer configs.
+4. Add monitoring checks.
+5. Do not create Osmosis liquidity until public endpoints and explorer are stable.
+
+## Public Endpoint Update
+
+Public HTTPS endpoints are live:
+
+- RPC: `https://rpc-mainnet.aoe2war.com/status`
+- REST: `https://rest-mainnet.aoe2war.com/cosmos/base/tendermint/v1beta1/node_info`
+
+Confirmed:
+
+- RPC reports network `wolo-1`.
+- RPC block height is increasing.
+- RPC reports `catching_up: false`.
+- Validator voting power is `1000`.
+- REST reports network `wolo-1`.
+- Nginx is active.
+- `wolochaind-mainnet.service` is active.
+
+Next steps:
+
+1. Add mainnet endpoint monitoring.
+2. Update Keplr config for `wolo-1`.
+3. Update explorer config for `wolo-1`.
+4. Update AoE2War app wallet/network surfaces.
+5. Delay Osmosis liquidity until explorer and wallet UX are confirmed stable.
+
+## Monitoring Update
+
+Mainnet health monitoring is installed.
+
+Confirmed:
+
+- `/usr/local/bin/check-wolo-mainnet-health` exists.
+- `wolo-mainnet-health.timer` is enabled and active.
+- `wolo-mainnet-health.service` runs successfully.
+- Health check validates:
+  - `wolochaind-mainnet.service` is active.
+  - Nginx is active.
+  - Public HTTPS RPC responds.
+  - Public HTTPS REST responds.
+  - Chain ID is `wolo-1`.
+  - `catching_up` is false.
+  - Block height is increasing.
+
+Latest observed health output:
+
+```txt
+OK: wolo-1 healthy height=138 catching_up=False
+```
+
+Next steps:
+
+1. Wire mainnet into Keplr/AoE2War wallet UX.
+2. Add explorer mainnet config.
+3. Add VPSSentry/Traffic visibility for mainnet health.
+4. Delay Osmosis liquidity until wallet and explorer surfaces are stable.
+
+## Osmosis Relayer Staging Update
+
+WoloChain mainnet Osmosis Hermes relayer staging is documented.
+
+Confirmed:
+
+- Dedicated config staged on the VPS:
+  - `/etc/wolochain-mainnet/hermes-osmosis.toml`
+- Dedicated service unit staged on the VPS:
+  - `/etc/systemd/system/wolochain-mainnet-osmosis-relayer.service`
+- Dedicated relayer home staged on the VPS:
+  - `/var/lib/wolochain-mainnet-relayer`
+- Hermes config validation passed.
+- Systemd unit validation passed.
+- `wolochain-mainnet-osmosis-relayer.service` remains inactive and was not started.
+- `tokenchain-relayer.service` remains active and was not modified.
+- No IBC clients, connections, or channels have been created.
+- No WOLO transfer, liquidity action, or WOLO/USDC pool creation has happened.
+
+Next steps:
+
+1. Review `mainnet-prep/HERMES_OSMOSIS_RELAYER_STAGING.md`.
+2. Review `mainnet-prep/RELAYER_KEYS_AND_FUNDING_CHECKLIST.md`.
+3. Create/import dedicated relayer gas keys only after Tony confirms.
+4. Fund only the dedicated relayer gas wallets with small `uwolo` and `uosmo` amounts.
+5. Stop before Phase 3 IBC path creation until Tony explicitly confirms.
+
+## Relayer Keys and Funding Prep Update
+
+WoloChain mainnet Osmosis relayer key state was inspected using the dedicated Hermes home and config.
+
+Confirmed:
+
+- Dedicated Hermes home used:
+  - `/var/lib/wolochain-mainnet-relayer`
+- Dedicated Hermes config used:
+  - `/etc/wolochain-mainnet/hermes-osmosis.toml`
+- `wolo-mainnet-osmosis-relayer` is not present yet.
+- `osmosis-mainnet-wolo-relayer` is not present yet.
+- No relayer addresses are available yet.
+- `uwolo` balance check is blocked by the missing Wolo relayer key.
+- `uosmo` balance check is blocked by the missing Osmosis relayer key.
+- No relayer keys were generated or imported.
+- `wolochain-mainnet-osmosis-relayer.service` remains inactive and was not started.
+- `tokenchain-relayer.service` remains active and was not modified.
+- No IBC clients, connections, or channels have been created.
+- No WOLO transfer, OSMO transfer, liquidity action, or WOLO/USDC pool creation has happened.
+
+Next steps:
+
+1. Tony confirms the secure relayer key creation/import method.
+2. Import dedicated relayer gas keys into Hermes without exposing private material.
+3. Record the Wolo and Osmosis relayer gas wallet addresses.
+4. Fund those gas wallets only with small `uwolo` and `uosmo` amounts.
+5. Stop before Phase 3 IBC path creation until Tony explicitly confirms.
+
+## Secure Relayer Key Import Plan Update
+
+WoloChain mainnet Osmosis relayer key creation/import planning is documented.
+
+Confirmed:
+
+- Hermes supports importing a relayer key from a mnemonic file.
+- Hermes supports importing a relayer key from a Comet keyring JSON file.
+- The installed Hermes CLI does not expose an internal fresh-key generation command that avoids supplying private key material.
+- No relayer keys were created or imported.
+- No mnemonics or private keys were displayed.
+- Prepared private-material directory path:
+  - `/root/wolo-1-mainnet-prep-markers/private-relayer-key-material`
+- Prepared Wolo mnemonic placeholder:
+  - `/root/wolo-1-mainnet-prep-markers/private-relayer-key-material/wolo-relayer.mnemonic`
+- Prepared Osmosis mnemonic placeholder:
+  - `/root/wolo-1-mainnet-prep-markers/private-relayer-key-material/osmosis-relayer.mnemonic`
+- `wolochain-mainnet-osmosis-relayer.service` remains inactive and was not started.
+- `tokenchain-relayer.service` remains active and was not modified.
+- No IBC clients, connections, or channels have been created.
+- No WOLO transfer, OSMO transfer, liquidity action, or WOLO/USDC pool creation has happened.
+
+Next steps:
+
+1. Tony explicitly confirms the mnemonic-file or key-file import workflow.
+2. Create/import the two dedicated relayer gas keys without exposing private material.
+3. Record the Wolo and Osmosis relayer gas addresses.
+4. Fund only those relayer gas wallets with small `uwolo` and `uosmo` amounts.
+5. Stop before Phase 3 IBC path creation until Tony explicitly confirms.
+
+## Private Relayer Mnemonic File Update
+
+Fresh relayer-only mnemonic files were created privately on the VPS outside git.
+
+Confirmed:
+
+- Mnemonic command exists:
+  - `/usr/local/bin/wolochaind-mainnet keys mnemonic`
+- Private directory:
+  - `/root/wolo-1-mainnet-prep-markers/private-relayer-key-material`
+- Directory permissions:
+  - `0700 root:root`
+- Wolo relayer mnemonic file:
+  - `/root/wolo-1-mainnet-prep-markers/private-relayer-key-material/wolo-relayer.mnemonic`
+  - permissions: `0600 root:root`
+  - word count: `24`
+- Osmosis relayer mnemonic file:
+  - `/root/wolo-1-mainnet-prep-markers/private-relayer-key-material/osmosis-relayer.mnemonic`
+  - permissions: `0600 root:root`
+  - word count: `24`
+- Mnemonic contents were not displayed, printed, echoed, catted, or copied into the repo.
+- These are relayer gas wallet mnemonics only.
+- They are not liquidity wallets, Founder Cold, Community Treasury, or DEX Liquidity Reserve.
+- No keys were imported into Hermes.
+- No relayer addresses are available yet.
+- `wolochain-mainnet-osmosis-relayer.service` remains inactive and was not started.
+- `tokenchain-relayer.service` remains active and was not modified.
+- No IBC clients, connections, or channels have been created.
+- No WOLO transfer, OSMO transfer, liquidity action, or WOLO/USDC pool creation has happened.
+
+Next step:
+
+Phase 2.9 should import the mnemonic files into Hermes, list the resulting relayer addresses, and stop before gas funding or Phase 3 unless Tony explicitly confirms.
+
+## Relayer Key Import Update
+
+Relayer-only gas keys were imported into the dedicated WoloChain mainnet Osmosis Hermes home.
+
+Confirmed:
+
+- Hermes home:
+  - `/var/lib/wolochain-mainnet-relayer`
+- Wolo relayer key name:
+  - `wolo-mainnet-osmosis-relayer`
+- Wolo relayer address:
+  - `wolo1m8qzq92hkktgqp47aewzylkatk6c22vc8c4vgj`
+- Osmosis relayer key name:
+  - `osmosis-mainnet-wolo-relayer`
+- Osmosis relayer address:
+  - `osmo1tu4gfazupfyhf7zcxmtzvkuynaclgkaavhj4g7`
+- Wolo key file:
+  - `/var/lib/wolochain-mainnet-relayer/.hermes/keys/wolo-1/keyring-test/wolo-mainnet-osmosis-relayer.json`
+- Osmosis key file:
+  - `/var/lib/wolochain-mainnet-relayer/.hermes/keys/osmosis-1/keyring-test/osmosis-mainnet-wolo-relayer.json`
+- Key file permissions:
+  - `0600 root:root`
+- Mnemonic contents were not displayed, printed, echoed, catted, logged, or copied into the repo.
+- Wolo relayer balance:
+  - `0 uwolo`
+- Osmosis relayer balance:
+  - `0 uosmo`
+- These are relayer gas wallets only.
+- They are not liquidity wallets, Founder Cold, Community Treasury, or DEX Liquidity Reserve.
+- `wolochain-mainnet-osmosis-relayer.service` remains inactive and was not started.
+- `tokenchain-relayer.service` remains active and was not modified.
+- No IBC clients, connections, or channels have been created.
+- No WOLO transfer, OSMO transfer, liquidity action, or WOLO/USDC pool creation has happened.
+
+Next step:
+
+Fund only the relayer gas wallets with small `uwolo` and `uosmo` amounts, then stop before Phase 3 IBC path creation until Tony explicitly confirms.
+
+## WoloChain Osmosis IBC Path Update
+
+WoloChain mainnet `wolo-1` is now connected to Osmosis mainnet `osmosis-1` for ICS-20 transfer.
+
+Confirmed:
+
+- Hermes config:
+  - `/etc/wolochain-mainnet/hermes-osmosis.toml`
+- Hermes home:
+  - `/var/lib/wolochain-mainnet-relayer`
+- Wolo client ID:
+  - `07-tendermint-0`
+- Osmosis client ID:
+  - `07-tendermint-3705`
+- Wolo connection ID:
+  - `connection-0`
+- Osmosis connection ID:
+  - `connection-11058`
+- Wolo transfer channel ID:
+  - `channel-0`
+- Osmosis transfer channel ID:
+  - `channel-110224`
+- Channel state is open on both sides.
+- Port is `transfer` on both sides.
+- Ordering is `unordered`.
+- Channel version is `ics20-1`.
+- Wolo relayer balance after path creation:
+  - `99998485uwolo`
+- Osmosis relayer balance after path creation:
+  - `199266uosmo`
+- Marker written on the VPS:
+  - `/root/wolo-1-mainnet-prep-markers/wolo-osmosis-ibc-path-20260525T070440Z.txt`
+- `wolochain-mainnet-osmosis-relayer.service` remains inactive and was not started.
+- `tokenchain-relayer.service` remains active and was not stopped or modified.
+- `/etc/tokenchain/hermes.toml` was not touched.
+- No WOLO transfer, OSMO transfer, 200,000 WOLO liquidity transfer, liquidity action, or WOLO/USDC pool creation happened.
+
+Operational note:
+
+- Osmosis primary RPC `https://rpc.osmosis.zone` returned HTTP 429 during proof-bearing Hermes steps.
+- The isolated WoloChain Hermes config was backed up before each Osmosis endpoint fallback.
+- Current Osmosis RPC in the WoloChain Hermes config:
+  - `https://osmosis.rpc.kjnodes.com`
+- Current Osmosis gRPC in the WoloChain Hermes config:
+  - `https://grpc.osmosis.validatus.com:443`
+
+Next step:
+
+Phase 4 should perform only a tiny 1 WOLO test transfer, base amount `1000000uwolo`, over Wolo channel `channel-0` after Tony explicitly confirms.
+
+## Phase 4 Test Transfer Update
+
+A tiny WoloChain mainnet to Osmosis test transfer completed successfully.
+
+Confirmed:
+
+- Amount: `1000000uwolo` / `1 WOLO`
+- Source chain: `wolo-1`
+- Destination chain: `osmosis-1`
+- Wolo channel: `channel-0`
+- Osmosis channel: `channel-110224`
+- Receiver: `osmo1yyuu097eppte7qya48r3dth86smdl3sjyx7qc6`
+- Tx hash: `63877698D884CE7BC92002F97A24333102DB21F52E8343C3997F9E8D5BBB5C08`
+- Packet sequence: `1`
+- Osmosis denom: `ibc/D09120C7085DFA412DF77608DAD3A4797F5F097A038DA0C2E1D1426FC9CD836D`
+- Relay acknowledgement completed.
+
+No liquidity transfer or pool creation has happened yet.
+
+## Phase 5 Liquidity Transfer Update
+
+The WOLO DEX Liquidity Reserve transferred `200000000000uwolo` / `200,000 WOLO` to Osmosis.
+
+Confirmed:
+
+- Source: `wolo1kwsmr9nzujwul6wmu4hqr90lel4ca4uy3l06en`
+- Receiver: `osmo1yyuu097eppte7qya48r3dth86smdl3sjyx7qc6`
+- Wolo channel: `channel-0`
+- Osmosis channel: `channel-110224`
+- Tx hash: `6A324B8070FF558B0188F3B0DD3E290BA8594A94E3C3500757D35808BB9C81D5`
+- Packet sequence: `2`
+- Osmosis denom: `ibc/D09120C7085DFA412DF77608DAD3A4797F5F097A038DA0C2E1D1426FC9CD836D`
+
+No WOLO/USDC pool has been created yet.
+
+## Phase 6 Osmosis Pool Launch Update
+
+The first WOLO/USDC Osmosis pool is live.
+
+Confirmed:
+
+- Pool ID: `3461`
+- Pool URL: `https://app.osmosis.zone/pool/3461`
+- Pool address: `osmo1kt0m5gfjunhgd2z7emnqqejrygwcuw7h5w39rqtq3ykzc55m09nqyzt5yj`
+- WOLO amount: `200000000000uwolo` / `200,000 WOLO`
+- USDC amount: `20 USDC`
+- WOLO denom: `ibc/D09120C7085DFA412DF77608DAD3A4797F5F097A038DA0C2E1D1426FC9CD836D`
+- USDC denom: `ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4`
+- Swap fee: `0.2%`
+- Launch price: `1 WOLO = 0.0001 USDC`
+
+WOLO is now live on Osmosis.
+
+## Post-Launch Metadata Update
+
+Osmosis Pool `3461` is live, but the Osmosis frontend may temporarily display WOLO as the raw IBC denom until Chain Registry and Osmosis assetlist metadata propagate.
+
+Metadata plan:
+
+- `mainnet-prep/WOLO_OSMOSIS_METADATA_PLAN.md`
+
+No additional liquidity, new pool, new IBC transfer, relayer/service change, genesis change, or validator change is required for this metadata polish.
+
+## November 19, 2026 — limited authority and dated evidence review
+
+An AI source examiner acting through the sole owner's existing connected source workspace checked this document's 463 original body lines for repository-source links, gate-authorization claims, older governance conditions and current-versus-historical language; 5 referenced local source paths were resolved. This is a **scope and safety review**, not an independent human signature or a fresh validation of each historical physical claim. Original observations remain dated and unmodified.
+
+**Topic-specific reconciliation (mainnet status):** Older launch, relayer, liquidity and Osmosis claims remain time-stamped historical observations, not a new funding decision.
+
+**Current controlling decision:** WoloChain issue #239 and reviewed code head `70a95e8f9cb0facbec314063e9deafe7e15aa550`. C04 and C08 CLOSED; C01/C02/C03/C05/C06/C07/C09 OPEN; funding DENIED. The original test/source facts remain evidence only and may not authorize live SQL, HBA, custody, funds, backups or a canary. Live acceptance requires exact source, legitimate protected owner authority and independent physical readback.
+
+**References not resolved in this WoloChain checkout:** `mainnet-prep/wolo-1-home`. They are not falsely asserted present; they may be other-repository or historical identifiers.

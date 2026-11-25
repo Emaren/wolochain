@@ -1,0 +1,93 @@
+{
+  "active_financial_timer_families": [
+    "aoe2-wolo-transfer-heartbeat.timer",
+    "aoe2hdbets-bet-stake-reconcile.timer",
+    "aoe2hdbets-challenge-reconcile.timer",
+    "aoe2hdbets-replay-auto-recovery.timer",
+    "aoe2hdbets-staking-rewards.timer",
+    "aoe2hdbets-trophy-tributes.timer"
+  ],
+  "bank_values_refreshed": false,
+  "chain_after": {
+    "block_hash": "78A319EE2D14F2E36FF3986ACE35222DC7CB202261AF69F5A20ECE7072E084D9",
+    "catching_up": false,
+    "chain_id": "wolo-1",
+    "height": "2649283"
+  },
+  "chain_before": {
+    "block_hash": "C57E8CC95CB1FDD019BF3010289C1277CC41AF460BB18604C41C7DE4A0425203",
+    "catching_up": false,
+    "chain_id": "wolo-1",
+    "height": "2649282"
+  },
+  "collection": "ROOT_SSH_READ_ONLY_SAME_OPERATOR_NOT_INDEPENDENT_FINALITY",
+  "financial_release_authorized": false,
+  "github_main": "a2fba6bfd98d7b28fb113badbadf23ec9096a4af",
+  "held_parent_sha": "6889dd34b28f89a4a1be9cb3622d88609fe56e50",
+  "independent_consensus_authentication_proven": false,
+  "liabilities_refreshed": false,
+  "observed_at_utc": "2026-10-26T09:21:09.845635+00:00",
+  "primary_mac_docs_baseline": "4ce11c4965da64e3d4dee6a8681b6198e1aba1eb",
+  "primary_mac_head": "98f781d61fa6b35d2cc09b48f84605a617efc2c4",
+  "producer_isolation": "NOT_FENCED",
+  "production_mutated": false,
+  "raw_private_receipt_sha256": {
+    "runtime_cockpit": "90f2f76f5c01ea683ccb8dd311566f9132b7a216126871d718b8d80c96de303e",
+    "runtime_vcs_chain": "88d41f4db0c88dd53153b4769efa83d5c65807efdf2f53715fb25fc5c916312e"
+  },
+  "runtime_vcs": {
+    "8092": {
+      "build_info": {
+        "GOARCH": "amd64",
+        "GOOS": "linux",
+        "vcs.modified": "false",
+        "vcs.revision": "78c25985420ee41a6678c42fab8ea8d6c3b1b519"
+      },
+      "pid": 1012
+    },
+    "8093": {
+      "build_info": {
+        "GOARCH": "amd64",
+        "GOOS": "linux",
+        "vcs.modified": "false",
+        "vcs.revision": "78c25985420ee41a6678c42fab8ea8d6c3b1b519"
+      },
+      "pid": 1010
+    },
+    "consensus": {
+      "build_info": {
+        "GOARCH": "amd64",
+        "GOOS": "linux",
+        "vcs.modified": "true",
+        "vcs.revision": "d3bd62414a047a492a3814b7d3baa2717d64db2e"
+      },
+      "pid": 1009
+    }
+  },
+  "schema": "wolo.release.runtime-refresh.nonauthorizing.v1",
+  "services": {
+    "wolochain-founder-rewards-settlement.service": {
+      "activeState": "active",
+      "executableSha256": "040126a2884946caf1651a50b7d8115c5a6fb2d5aa94fcbbe150694602d451a5",
+      "historicalComparison": "MATCH_HISTORICAL",
+      "pid": 1010,
+      "processStable": true
+    },
+    "wolochain-mainnet-settlement.service": {
+      "activeState": "active",
+      "executableSha256": "040126a2884946caf1651a50b7d8115c5a6fb2d5aa94fcbbe150694602d451a5",
+      "historicalComparison": "MATCH_HISTORICAL",
+      "pid": 1012,
+      "processStable": true
+    },
+    "wolochaind-mainnet.service": {
+      "activeState": "active",
+      "executableSha256": "4b77f622191db7550cb87cafb8f1886a0aadebee3eb6565f9f90036f809e61d3",
+      "historicalComparison": "MATCH_HISTORICAL",
+      "pid": 1009,
+      "processStable": true
+    }
+  },
+  "tracked_source_state": "CLEAN",
+  "vps_checkout": "78c25985420ee41a6678c42fab8ea8d6c3b1b519"
+}

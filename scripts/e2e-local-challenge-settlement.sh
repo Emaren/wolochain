@@ -12,7 +12,8 @@ RPC_HTTP="${WOLO_RPC_HTTP:-http://127.0.0.1:26657}"
 REST_HTTP="${WOLO_REST_HTTP:-${WOLO_REST_URL:-http://127.0.0.1:1317}}"
 FUNDER_KEY="${WOLO_E2E_FUNDER_KEY:-founderoperating}"
 RUN_SUFFIX="${WOLO_E2E_RUN_SUFFIX:-$(date -u +%Y%m%d%H%M%S)-$$}"
-SETTLEMENT_RUN_ID="${WOLO_E2E_SETTLEMENT_RUN_ID:-local-e2e-$RUN_SUFFIX}"
+CHALLENGE_ID="${WOLO_E2E_CHALLENGE_ID:-$(date -u +%Y%m%d%H%M%S)$$}"
+SETTLEMENT_RUN_ID="${WOLO_E2E_SETTLEMENT_RUN_ID:-aoe2hdbets:challenge-$CHALLENGE_ID:v1}"
 WORK_DIR="${WOLO_E2E_WORK_DIR:-$ROOT/build/local-settlement-e2e/$SETTLEMENT_RUN_ID}"
 STATE_DIR="$WORK_DIR/state"
 FEES="${WOLO_E2E_FEES:-0uwolo}"
@@ -26,9 +27,6 @@ RIGHT_KEY="e2e-right-$RUN_SUFFIX"
 PAYOUT_KEY="e2e-payout-$RUN_SUFFIX"
 ESCROW_KEY="e2e-escrow-$RUN_SUFFIX"
 SOURCE_APP="aoe2hdbets"
-CHALLENGE_ID="local-e2e-challenge-$RUN_SUFFIX"
-LEFT_ID="local-left-$RUN_SUFFIX"
-RIGHT_ID="local-right-$RUN_SUFFIX"
 
 mkdir -p "$WORK_DIR" "$STATE_DIR"
 
@@ -221,8 +219,8 @@ LEFT_FUND_TX="$(tx_send fund-left "$FUNDER_KEY" "$LEFT_ADDR" "$PLAYER_FUND_UWOLO
 RIGHT_FUND_TX="$(tx_send fund-right "$FUNDER_KEY" "$RIGHT_ADDR" "$PLAYER_FUND_UWOLO" "local e2e fund right")"
 printf 'left_fund_tx=%s\nright_fund_tx=%s\n' "$LEFT_FUND_TX" "$RIGHT_FUND_TX"
 
-LEFT_MEMO="wolo.challenge.funding.v1:app=$SOURCE_APP&sid=$SETTLEMENT_RUN_ID&cid=$CHALLENGE_ID&side=left&pid=$LEFT_ID&w=$WAGER_UWOLO&g=$GUARANTEE_UWOLO&t=$TOTAL_DEPOSIT_UWOLO"
-RIGHT_MEMO="wolo.challenge.funding.v1:app=$SOURCE_APP&sid=$SETTLEMENT_RUN_ID&cid=$CHALLENGE_ID&side=right&pid=$RIGHT_ID&w=$WAGER_UWOLO&g=$GUARANTEE_UWOLO&t=$TOTAL_DEPOSIT_UWOLO"
+LEFT_MEMO="wolo.challenge.funding.v1:app=$SOURCE_APP&sid=$SETTLEMENT_RUN_ID&cid=$CHALLENGE_ID&side=left&w=$WAGER_UWOLO&g=$GUARANTEE_UWOLO&t=$TOTAL_DEPOSIT_UWOLO"
+RIGHT_MEMO="wolo.challenge.funding.v1:app=$SOURCE_APP&sid=$SETTLEMENT_RUN_ID&cid=$CHALLENGE_ID&side=right&w=$WAGER_UWOLO&g=$GUARANTEE_UWOLO&t=$TOTAL_DEPOSIT_UWOLO"
 
 echo
 echo "=== send challenge funding deposits into escrow ==="
@@ -237,7 +235,6 @@ printf 'left_funding_tx=%s\nright_funding_tx=%s\n' "$LEFT_FUNDING_TX" "$RIGHT_FU
   --settlement-run-id "$SETTLEMENT_RUN_ID" \
   --challenge-id "$CHALLENGE_ID" \
   --participant-side left \
-  --participant-id "$LEFT_ID" \
   --expected-amount-uwolo "$TOTAL_DEPOSIT_UWOLO" \
   --wager-uwolo "$WAGER_UWOLO" \
   --guarantee-uwolo "$GUARANTEE_UWOLO" >"$WORK_DIR/left-funding-verify.json"
@@ -250,14 +247,13 @@ assert_json_ok "$WORK_DIR/left-funding-verify.json" "left funding verify"
   --settlement-run-id "$SETTLEMENT_RUN_ID" \
   --challenge-id "$CHALLENGE_ID" \
   --participant-side right \
-  --participant-id "$RIGHT_ID" \
   --expected-amount-uwolo "$TOTAL_DEPOSIT_UWOLO" \
   --wager-uwolo "$WAGER_UWOLO" \
   --guarantee-uwolo "$GUARANTEE_UWOLO" >"$WORK_DIR/right-funding-verify.json"
 assert_json_ok "$WORK_DIR/right-funding-verify.json" "right funding verify"
 
 REQUEST_FILE="$WORK_DIR/challenge-one-noshow-request.json"
-export REQUEST_FILE SETTLEMENT_RUN_ID SOURCE_APP CHALLENGE_ID LEFT_ID RIGHT_ID LEFT_ADDR RIGHT_ADDR TREASURY_ADDR LEFT_FUNDING_TX RIGHT_FUNDING_TX WAGER_UWOLO GUARANTEE_UWOLO
+export REQUEST_FILE SETTLEMENT_RUN_ID SOURCE_APP CHALLENGE_ID LEFT_ADDR RIGHT_ADDR TREASURY_ADDR LEFT_FUNDING_TX RIGHT_FUNDING_TX WAGER_UWOLO GUARANTEE_UWOLO
 python3 <<'PY'
 import json
 import os
@@ -276,7 +272,6 @@ request = {
             "depositor_address": os.environ["LEFT_ADDR"],
             "settlement_run_id": os.environ["SETTLEMENT_RUN_ID"],
             "participant_side": "left",
-            "participant_id": os.environ["LEFT_ID"],
             "expected_amount_uwolo": str(int(os.environ["WAGER_UWOLO"]) + int(os.environ["GUARANTEE_UWOLO"])),
             "wager_uwolo": os.environ["WAGER_UWOLO"],
             "guarantee_uwolo": os.environ["GUARANTEE_UWOLO"],
@@ -286,7 +281,6 @@ request = {
             "depositor_address": os.environ["RIGHT_ADDR"],
             "settlement_run_id": os.environ["SETTLEMENT_RUN_ID"],
             "participant_side": "right",
-            "participant_id": os.environ["RIGHT_ID"],
             "expected_amount_uwolo": str(int(os.environ["WAGER_UWOLO"]) + int(os.environ["GUARANTEE_UWOLO"])),
             "wager_uwolo": os.environ["WAGER_UWOLO"],
             "guarantee_uwolo": os.environ["GUARANTEE_UWOLO"],
@@ -295,7 +289,6 @@ request = {
     "transfers": [
         {
             "participant_side": "left",
-            "participant_id": os.environ["LEFT_ID"],
             "bucket": "guarantee",
             "reason": "return",
             "to_address": os.environ["LEFT_ADDR"],
@@ -304,7 +297,6 @@ request = {
         },
         {
             "participant_side": "right",
-            "participant_id": os.environ["RIGHT_ID"],
             "bucket": "guarantee",
             "reason": "forfeit",
             "to_address": os.environ["LEFT_ADDR"],
@@ -313,7 +305,6 @@ request = {
         },
         {
             "participant_side": "left",
-            "participant_id": os.environ["LEFT_ID"],
             "bucket": "wager",
             "reason": "refund",
             "to_address": os.environ["LEFT_ADDR"],
@@ -322,7 +313,6 @@ request = {
         },
         {
             "participant_side": "right",
-            "participant_id": os.environ["RIGHT_ID"],
             "bucket": "wager",
             "reason": "refund",
             "to_address": os.environ["RIGHT_ADDR"],

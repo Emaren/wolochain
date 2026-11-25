@@ -1,0 +1,26 @@
+{
+  "mode": "READ_ONLY_TWO_FILESYSTEM_DEPLOYMENT_HEADROOM",
+  "observedAtUtc": "2026-10-18T18:12:53.306804+00:00",
+  "root": {
+    "freeGiB": 109.82,
+    "policyMinimumGiB": 8,
+    "minimumHeadroomPresent": true
+  },
+  "woloStateVolume": {
+    "mountPresentAndSeparateFromRoot": true,
+    "freeGiB": 46.17,
+    "policyMinimumGiB": 20,
+    "minimumHeadroomPresent": true
+  },
+  "status": "CAPACITY_POLICY_FLOOR_PASS_NOT_RELEASE_APPROVAL",
+  "limits": [
+    "Policy free-space floors are conservative screening values, not a measured backup or build footprint",
+    "State snapshot must have its own measured, protected capacity reservation after ingress is fenced",
+    "Actual database migration, Next.js build and rollback must be separately rehearsed",
+    "Never prune chain data, settlement receipts, or financial backups to satisfy this check"
+  ],
+  "filesystemMutations": false,
+  "financialDrainCertified": false,
+  "rollbackCertified": false,
+  "productionAuthorized": false
+}

@@ -4,6 +4,7 @@ vue/dist
 
 # build artifacts
 build/
+/build/mainnet-prep/
 release/
 
 # editor / OS junk

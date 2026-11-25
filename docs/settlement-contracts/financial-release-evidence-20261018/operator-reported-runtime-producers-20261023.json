@@ -1,0 +1,174 @@
+{
+  "schema": "aoe2war.wolo.operator-reported-runtime-producers.v1",
+  "prepared_at_utc": "2026-10-23T02:34:56.844157Z",
+  "canonical_issue": "https://github.com/Emaren/wolochain/issues/5",
+  "classification": "OPERATOR_REPORTED_NOT_INDEPENDENT_FINANCIAL_ATTESTATION",
+  "scope": "Redacted supplement to the existing six-control index; no new live collection, release permit or readiness registry",
+  "applicable_controls": [
+    "hd_de_producers_isolated",
+    "reviewed_code_only_rollback_rehearsed"
+  ],
+  "sources": [
+    {
+      "kind": "PUBLIC_ISSUE_OPERATOR_REPORT",
+      "url": "https://github.com/Emaren/wolochain/issues/5#issuecomment-6355541780",
+      "comment_id": "6355541780",
+      "published_at_utc": "2026-10-23T01:57:20Z",
+      "updated_at_utc": "2026-10-23T01:57:20Z",
+      "body_sha256": "3e0d1deddb3d9c4747885633bb781d807143960f93e59638230233f00d0fd89a",
+      "reporter": "repository-owner",
+      "retrieved_at_utc": "2026-10-23T02:34:56.844157Z",
+      "raw_live_transcript_in_this_packet": false
+    },
+    {
+      "kind": "PUBLIC_ISSUE_OPERATOR_REPORT",
+      "url": "https://github.com/Emaren/wolochain/issues/5#issuecomment-6355581039",
+      "comment_id": "6355581039",
+      "published_at_utc": "2026-10-23T02:00:33Z",
+      "updated_at_utc": "2026-10-23T02:00:33Z",
+      "body_sha256": "e33d63a414debe3e65e30e4c8ee97947810a39075b29c5fcfaac9083e4427504",
+      "reporter": "repository-owner",
+      "retrieved_at_utc": "2026-10-23T02:34:56.844157Z",
+      "raw_live_transcript_in_this_packet": false
+    },
+    {
+      "kind": "OWNER_SUPPLIED_HANDOFF",
+      "source_id": "user-attachment-dbd7898e-a88d-4d0c-9586-38762e0810dc",
+      "source_attachment_sha256": "d911dd6acf8075d715367eb7816e0fc96388a23534cee5bd09c99d9e9e0f50ac",
+      "reported_observed_at_utc": "2026-10-23T02:03:29Z",
+      "raw_live_transcript_in_this_packet": false
+    }
+  ],
+  "reported_executable_witness": {
+    "source_comment_id": "6355541780",
+    "exact_observed_at_utc": null,
+    "report_published_at_utc": "2026-10-23T01:57:20Z",
+    "reported_window": "October 22 local / October 23 UTC, before issue-comment publication",
+    "method_reported": "Privileged running-executable digest and stable process identity observation; no command or private configuration copied",
+    "services": [
+      {
+        "unit": "wolochain-mainnet-settlement.service",
+        "reported_pid": 1012,
+        "reported_executable_sha256": "040126a2884946caf1651a50b7d8115c5a6fb2d5aa94fcbbe150694602d451a5",
+        "reported_loopback_port": 8092,
+        "reported_pid_and_start_stable": true
+      },
+      {
+        "unit": "wolochain-founder-rewards-settlement.service",
+        "reported_pid": 1010,
+        "reported_executable_sha256": "040126a2884946caf1651a50b7d8115c5a6fb2d5aa94fcbbe150694602d451a5",
+        "reported_loopback_port": 8093,
+        "reported_pid_and_start_stable": true
+      },
+      {
+        "unit": "wolochaind-mainnet.service",
+        "reported_pid": 1009,
+        "reported_executable_sha256": "4b77f622191db7550cb87cafb8f1886a0aadebee3eb6565f9f90036f809e61d3",
+        "reported_pid_and_start_stable": true
+      }
+    ],
+    "reported_historical_fingerprint_match": true,
+    "source_to_binary_build_provenance_established": false,
+    "live_source_drift_cleared": false,
+    "raw_receipt_sha256": null
+  },
+  "reported_systemd_inventory": {
+    "source_comment_id": "6355581039",
+    "reported_observed_at_utc": "2026-10-23T01:59:03Z",
+    "active_running_services": [
+      "aoe2hdbets-web.service",
+      "aoe2hdbets-api.service",
+      "aoe2dewarwagers-web.service",
+      "aoe2dewarwagers-api.service",
+      "wolochain-mainnet-settlement.service",
+      "wolochain-founder-rewards-settlement.service",
+      "wolochaind-mainnet.service"
+    ],
+    "active_waiting_system_timers": [
+      "aoe2hdbets-replay-auto-recovery.timer",
+      "aoe2hdbets-challenge-reconcile.timer",
+      "aoe2hdbets-bet-stake-reconcile.timer",
+      "wolo-mainnet-health.timer",
+      "aoe2-wolo-transfer-heartbeat.timer",
+      "aoe2war-prewarm.timer",
+      "traffic-v2-forward-ledger-aoe2hdbets.timer",
+      "traffic-project-daily-rollups-aoe2hdbets.timer",
+      "aoe2hdbets-trophy-tributes.timer",
+      "aoe2hdbets-staking-rewards.timer"
+    ],
+    "associated_oneshot_services_reported_inactive_at_observation": true,
+    "successful_timer_effects_authenticated": false,
+    "login_listing_is_user_manager_inventory": false,
+    "financial_ingress_or_queue_coverage_established": false
+  },
+  "later_reported_financial_timer_details": {
+    "source_id": "user-attachment-dbd7898e-a88d-4d0c-9586-38762e0810dc",
+    "reported_observed_at_utc": "2026-10-23T02:03:29Z",
+    "reported_active_services": [
+      "aoe2hdbets-web.service",
+      "aoe2hdbets-api.service",
+      "aoe2dewarwagers-web.service",
+      "aoe2dewarwagers-api.service",
+      "wolochain-mainnet-settlement.service",
+      "wolochain-founder-rewards-settlement.service",
+      "wolochaind-mainnet.service"
+    ],
+    "reported_active_financial_timer_triggers": [
+      {
+        "unit": "aoe2hdbets-bet-stake-reconcile.timer",
+        "reported_trigger_kind": "monotonic",
+        "reported_interval_seconds": 300
+      },
+      {
+        "unit": "aoe2hdbets-challenge-reconcile.timer",
+        "reported_trigger_kind": "monotonic",
+        "reported_interval_seconds": 300
+      },
+      {
+        "unit": "aoe2hdbets-replay-auto-recovery.timer",
+        "reported_trigger_kind": "monotonic",
+        "reported_interval_seconds": 300
+      },
+      {
+        "unit": "aoe2hdbets-staking-rewards.timer",
+        "reported_trigger_kind": "daily_utc",
+        "reported_time_utc": "00:10"
+      },
+      {
+        "unit": "aoe2hdbets-trophy-tributes.timer",
+        "reported_trigger_kind": "daily_utc",
+        "reported_time_utc": "00:05"
+      },
+      {
+        "unit": "aoe2-wolo-transfer-heartbeat.timer",
+        "reported_trigger_kind": "monotonic",
+        "reported_interval_seconds": 60
+      }
+    ],
+    "reported_user_manager_uid": 1000,
+    "scope_relation": "Later owner report names six financial timers and trigger cadence; it does not replace the ten-timer public observation or prove other timers absent",
+    "trigger_properties_independently_inspected": false
+  },
+  "unresolved": [
+    "Active timers can reactivate inactive one-shot services; inactivity is not a producer fence or proof of drained queues.",
+    "Historical digest continuity does not prove source-to-binary build provenance, reviewed-candidate runtime parity or bounded rollback.",
+    "Cron, both previously discovered user-manager paths, containers, external ingress, independent signers and all queue/in-flight paths still need named-owner classification.",
+    "No independent consensus trust root, immutable payment reconciliation, global liability bound, fresh quiesced snapshot or paired rollback rehearsal is established by these reports."
+  ],
+  "provenance_limits": [
+    "GitHub API retrieval authenticates the public comment identity and bytes, not its underlying live measurements or a financial reviewer signature.",
+    "The handoff digest binds supplied text only. No raw terminal transcript or independently collected raw-receipt digest is invented.",
+    "Reported timestamps describe separate scopes; the privileged executable inspection has no exact timestamp in the public report.",
+    "Only public unit names, reported PIDs, ports, trigger metadata and executable digests are copied; no environment values, arguments, addresses, credentials or signing material.",
+    "Earlier financial records and observation dates remain unchanged and must not be reinterpreted as current solvency or zero liabilities."
+  ],
+  "independent_financial_attestation": false,
+  "complete_producer_inventory_proven": false,
+  "financial_producers_fenced": false,
+  "financial_drain_certified": false,
+  "fresh_quiesced_snapshot_certified": false,
+  "live_rollback_certified": false,
+  "financial_release_authorized": false,
+  "production_mutated": false,
+  "next_action": "Named HD, DE, external-finance and recovery owners classify exact timer/service/cron/user/container/HTTP/signer paths, then seek explicit approval for the bounded coordinated fence and queue drain. Preserve consensus, all uncertain requests and state; no blanket stop or retry is authorized."
+}

@@ -1,0 +1,49 @@
+name: Held Wolo Satchel documentation source seal
+on:
+  push:
+    branches:
+      - fix/20261022-satchel-signer-10k-owner-cap-held
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: held-wolo-satchel-docs-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  source-seal:
+    if: github.repository == 'Emaren/wolochain' && github.ref == 'refs/heads/fix/20261022-satchel-signer-10k-owner-cap-held'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Seal reviewed held Wolo source into Documentation OS
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git branch --show-current)" = "fix/20261022-satchel-signer-10k-owner-cap-held"
+          if python3 scripts/docs_v2_check.py; then
+            echo "Documentation control is already sealed."
+            exit 0
+          fi
+          python3 scripts/docs_v2_check.py --write --refresh-baseline
+          python3 scripts/docs_v2_check.py
+          changed="$(git diff --name-only)"
+          test -n "$changed" || { echo "Missing reviewed baseline delta"; exit 1; }
+          while IFS= read -r path; do
+            case "$path" in
+              docs/document-registry.json|docs/DOCUMENTATION_CONTROL_PLANE.md|catalog-info.yaml) ;;
+              *) echo "Unexpected regenerated path: $path" >&2; exit 1 ;;
+            esac
+          done <<< "$changed"
+          git diff --check
+          git add docs/document-registry.json docs/DOCUMENTATION_CONTROL_PLANE.md catalog-info.yaml
+          git config user.name 'aoe2war-held-document-bot'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m "docs(HOLD): seal reviewed 10k custody cap source baseline"
+          git push origin HEAD:refs/heads/fix/20261022-satchel-signer-10k-owner-cap-held

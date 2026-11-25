@@ -4,10 +4,9 @@
   "status": "confirmed",
   "retryable": false,
   "idempotent_replay": false,
-  "settlement_run_id": "aoe2hdbets:challenge-42:one-noshow:v1",
+  "settlement_run_id": "aoe2hdbets:challenge-42:v1",
   "source_app": "aoe2hdbets",
-  "challenge_id": "challenge-42",
-  "source_event_id": "match-2026-04-20-00042",
+  "challenge_id": "42",
   "treasury_address": "wolo1treasury000000000000000000000000000000",
   "participant_count": 2,
   "funding_count": 2,
@@ -52,7 +51,7 @@
     "enabled": true,
     "possible": true,
     "detail": "escrow transfer confirmed on WoloChain",
-    "request_id": "aoe2hdbets:challenge-42:one-noshow:v1:topup",
+    "request_id": "aoe2hdbets:challenge-42:v1:topup",
     "signer_role": "escrow",
     "from_address": "wolo1escrow0000000000000000000000000000000",
     "to_address": "wolo1payout0000000000000000000000000000000",
@@ -69,8 +68,8 @@
       "status": "confirmed",
       "retryable": false,
       "idempotent_replay": false,
-      "request_id": "aoe2hdbets:challenge-42:one-noshow:v1:topup",
-      "chain_id": "wolo-testnet",
+      "request_id": "aoe2hdbets:challenge-42:v1:topup",
+      "chain_id": "wolo-1",
       "signer_role": "escrow",
       "signer_address": "wolo1escrow0000000000000000000000000000000",
       "to_address": "wolo1payout0000000000000000000000000000000",
@@ -79,7 +78,7 @@
       "broadcast_mode": "sync",
       "tx_hash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
       "detail": "escrow transfer confirmed on WoloChain",
-      "canonical_tx_lookup_preferred": "https://aoe2war.com/rest/cosmos/tx/v1beta1/txs/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+      "canonical_tx_lookup_preferred": "https://rest-mainnet.aoe2war.com/cosmos/tx/v1beta1/txs/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
     }
   },
   "detail": "all 4 challenge transfers confirmed on WoloChain",
@@ -90,12 +89,14 @@
       "detail": "challenge funding deposit verified",
       "deposit_found": true,
       "funding_tx_hash": "1111111111111111111111111111111111111111111111111111111111111111",
+      "chain_id": "wolo-1",
+      "tx_success": true,
+      "height": "12345",
+      "timestamp": "2026-06-27T20:00:00Z",
       "source_app": "aoe2hdbets",
-      "settlement_run_id": "aoe2hdbets:challenge-42:one-noshow:v1",
-      "challenge_id": "challenge-42",
-      "source_event_id": "match-2026-04-20-00042",
+      "settlement_run_id": "aoe2hdbets:challenge-42:v1",
+      "challenge_id": "42",
       "participant_side": "left",
-      "participant_id": "aoe2-user-left",
       "sender": "wolo1leftplayer0000000000000000000000000000",
       "escrow_address": "wolo1escrow0000000000000000000000000000000",
       "total_funded_uwolo": "1500000",
@@ -104,7 +105,7 @@
       "wager_wolo": "1.000000",
       "guarantee_uwolo": "500000",
       "guarantee_wolo": "0.500000",
-      "canonical_tx_lookup_preferred": "https://aoe2war.com/rest/cosmos/tx/v1beta1/txs/1111111111111111111111111111111111111111111111111111111111111111"
+      "canonical_tx_lookup_preferred": "https://rest-mainnet.aoe2war.com/cosmos/tx/v1beta1/txs/1111111111111111111111111111111111111111111111111111111111111111"
     },
     {
       "index": 1,
@@ -112,12 +113,14 @@
       "detail": "challenge funding deposit verified",
       "deposit_found": true,
       "funding_tx_hash": "2222222222222222222222222222222222222222222222222222222222222222",
+      "chain_id": "wolo-1",
+      "tx_success": true,
+      "height": "12346",
+      "timestamp": "2026-06-27T20:01:00Z",
       "source_app": "aoe2hdbets",
-      "settlement_run_id": "aoe2hdbets:challenge-42:one-noshow:v1",
-      "challenge_id": "challenge-42",
-      "source_event_id": "match-2026-04-20-00042",
+      "settlement_run_id": "aoe2hdbets:challenge-42:v1",
+      "challenge_id": "42",
       "participant_side": "right",
-      "participant_id": "aoe2-user-right",
       "sender": "wolo1rightplayer000000000000000000000000000",
       "escrow_address": "wolo1escrow0000000000000000000000000000000",
       "total_funded_uwolo": "1500000",
@@ -126,7 +129,7 @@
       "wager_wolo": "1.000000",
       "guarantee_uwolo": "500000",
       "guarantee_wolo": "0.500000",
-      "canonical_tx_lookup_preferred": "https://aoe2war.com/rest/cosmos/tx/v1beta1/txs/2222222222222222222222222222222222222222222222222222222222222222"
+      "canonical_tx_lookup_preferred": "https://rest-mainnet.aoe2war.com/cosmos/tx/v1beta1/txs/2222222222222222222222222222222222222222222222222222222222222222"
     }
   ],
   "transfers": [
@@ -134,7 +137,6 @@
       "index": 0,
       "request_id": "aoe2hdbets:challenge-42:left-guarantee-return",
       "participant_side": "left",
-      "participant_id": "aoe2-user-left",
       "bucket": "guarantee",
       "reason": "return",
       "attempted": true,
@@ -151,13 +153,12 @@
       "memo": "challenge-42 left guarantee return",
       "tx_hash": "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
       "detail": "payout confirmed on WoloChain",
-      "canonical_tx_lookup_preferred": "https://aoe2war.com/rest/cosmos/tx/v1beta1/txs/BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+      "canonical_tx_lookup_preferred": "https://rest-mainnet.aoe2war.com/cosmos/tx/v1beta1/txs/BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
     },
     {
       "index": 1,
       "request_id": "aoe2hdbets:challenge-42:right-guarantee-forfeit",
       "participant_side": "right",
-      "participant_id": "aoe2-user-right",
       "bucket": "guarantee",
       "reason": "forfeit",
       "attempted": true,
@@ -174,13 +175,12 @@
       "memo": "challenge-42 right no-show guarantee",
       "tx_hash": "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
       "detail": "payout confirmed on WoloChain",
-      "canonical_tx_lookup_preferred": "https://aoe2war.com/rest/cosmos/tx/v1beta1/txs/CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"
+      "canonical_tx_lookup_preferred": "https://rest-mainnet.aoe2war.com/cosmos/tx/v1beta1/txs/CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"
     },
     {
       "index": 2,
       "request_id": "aoe2hdbets:challenge-42:left-wager-refund",
       "participant_side": "left",
-      "participant_id": "aoe2-user-left",
       "bucket": "wager",
       "reason": "refund",
       "attempted": true,
@@ -197,13 +197,12 @@
       "memo": "challenge-42 left wager refund",
       "tx_hash": "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
       "detail": "payout confirmed on WoloChain",
-      "canonical_tx_lookup_preferred": "https://aoe2war.com/rest/cosmos/tx/v1beta1/txs/DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD"
+      "canonical_tx_lookup_preferred": "https://rest-mainnet.aoe2war.com/cosmos/tx/v1beta1/txs/DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD"
     },
     {
       "index": 3,
       "request_id": "aoe2hdbets:challenge-42:right-wager-refund",
       "participant_side": "right",
-      "participant_id": "aoe2-user-right",
       "bucket": "wager",
       "reason": "refund",
       "attempted": true,
@@ -220,7 +219,7 @@
       "memo": "challenge-42 right wager refund",
       "tx_hash": "EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
       "detail": "payout confirmed on WoloChain",
-      "canonical_tx_lookup_preferred": "https://aoe2war.com/rest/cosmos/tx/v1beta1/txs/EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE"
+      "canonical_tx_lookup_preferred": "https://rest-mainnet.aoe2war.com/cosmos/tx/v1beta1/txs/EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE"
     }
   ],
   "run": {
@@ -229,9 +228,8 @@
     "status": "confirmed",
     "retryable": false,
     "idempotent_replay": false,
-    "settlement_run_id": "aoe2hdbets:challenge-42:one-noshow:v1",
+    "settlement_run_id": "aoe2hdbets:challenge-42:v1",
     "source_app": "aoe2hdbets",
-    "source_event_id": "match-2026-04-20-00042",
     "requested_payout_count": 4,
     "executed_payout_count": 4,
     "confirmed_payout_count": 4,

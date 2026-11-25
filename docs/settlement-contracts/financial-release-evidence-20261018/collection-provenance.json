@@ -1,0 +1,41 @@
+{
+  "schema": "aoe2war.wolo.financial-evidence-collection.v1",
+  "operator_channel": "existing SSH host authority hel1-vscode, root read-only inspections; no new trust anchor established",
+  "observer_base_commit": "9fb53d95e4ea03ea812d54acee7bc72392836faa",
+  "new_state_reader_commit": "079919d4157c8762752e302e69dd704e2c2e297a",
+  "new_state_reader_sha256": "8bc5f0c525626ee332d705055aa977cb23bcf29a7802a8023385388a55c78121",
+  "local_collection_inputs_sha256": {
+    "wolo-financial-observation.py": "4f6a641e1243fe5f76feb60b75f8690860dcc332b08477adc5bcd02e2fc12b6b",
+    "wolo-claim-liability-observation.py": "2c16f07264b419d1b53abb88250130711bd4647768db30aaa6cd5692e1ff93b8",
+    "producer-surface-metadata.command.py": "359a6734529acea19a8c70c66c3709e7be17d67223eee3d4854ece625fc1a947",
+    "producer-containers-identities.command.py": "eae0b1354671429392840121ae30bf41d0e30440daf774398a14348febe328e4",
+    "aggregate-only-child-followup.command.py": "62bcce0942789031f28d4200d44c7501b84282d47135a3e1ade467f5d35d19f7"
+  },
+  "bank_sources": "GET-only canonical loopback health8092/8093, RPC27657 and REST1318; same chain trust domain. No keyring operations. Addresses used internally, emitted only as SHA256 role equality observations.",
+  "hd_sql_session": "Existing HD process credential inherited privately, not echoed or written. default_transaction_read_only=on, explicit BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY, statement/query8s, ROLLBACK. No app edits or transient service creation.",
+  "hd_queries": [
+    "SELECT id,claim_kind,source_founder_bonus_id,source_market_id,status,amount_wolo::text,payout_attempted_at,payout_tx_hash IS NOT NULL AS has_payout_hash,updated_at FROM pending_wolo_claims WHERE id=889",
+    "SELECT status,claim_kind,COUNT(*)::text AS record_count,COUNT(*) FILTER(WHERE payout_attempted_at IS NOT NULL)::text AS attempted_count,COUNT(*) FILTER(WHERE payout_tx_hash IS NOT NULL)::text AS hash_bearing_count,SUM(amount_wolo::numeric*1000000)::text AS recorded_requested_uwolo,COUNT(*) FILTER(WHERE amount_wolo<=0)::text AS invalid_amount_count FROM pending_wolo_claims WHERE status IN ('pending','error_state') GROUP BY status,claim_kind ORDER BY status,claim_kind"
+  ],
+  "source_bound_models": "Read-only app main78d2a332, prisma/schema.prisma PendingWoloClaim, existing claim889 diagnostics; no exhausted cache/history search repeated.",
+  "snapshot_command": "Existing settlement-dual-service-snapshot.sh --inspect ONLY; exit0. No snapshot created.",
+  "capacity_command": "Existing settlement-predeploy-capacity-readonly.py --inspect; exit0 screening floors only.",
+  "state_command": "python3 -I - --state-root [governed primary root] --state-root [governed founder root], exact reader bytes on stdin; exit3 HELD.",
+  "limitations": [
+    "Hashes bind collected bytes, not their external truth or continuing freshness.",
+    "RPC/REST agreement is not independent CometBFT authentication.",
+    "Sequential reads are not a coordinated or quiesced snapshot.",
+    "No producer fenced, payment retried, journal rewritten, backup created or service changed."
+  ],
+  "production_mutated": false,
+  "published_receipt_transforms": {
+    "producer-containers-identities.json": {
+      "raw_receipt_sha256": "cebc2d48730c6d6b0485f3c343e49e80892f1049d5de53416118571aac08a428",
+      "transform": "Container name withheld as name_sha256 to preserve repository legacy-name invariant; raw SSH output retained locally."
+    },
+    "producer-refresh-handoff.json": {
+      "raw_receipt_sha256": "ac79b0c99925f7f2a9b35fa5cbf04f2f77f31affe48dc148766e5c41ef249a36",
+      "transform": "Container name withheld as name_sha256 to preserve repository legacy-name invariant; raw SSH output retained locally."
+    }
+  }
+}

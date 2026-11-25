@@ -1,0 +1,91 @@
+syntax = "proto3";
+package wolochain.wartrophy.v1;
+
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "wolochain/wartrophy/v1/trophy.proto";
+
+option go_package = "github.com/emaren/wolochain/x/wartrophy/types";
+
+// Query defines the wartrophy gRPC query service.
+service Query {
+  // Trophy returns one trophy by identifier.
+  rpc Trophy(QueryTrophyRequest) returns (QueryTrophyResponse) {
+    option (google.api.http).get = "/wolochain/wartrophy/v1/trophies/{trophy_id}";
+  }
+
+  // Trophies returns all trophies.
+  rpc Trophies(QueryTrophiesRequest) returns (QueryTrophiesResponse) {
+    option (google.api.http).get = "/wolochain/wartrophy/v1/trophies";
+  }
+
+  // TrophyOwner returns the current entitlement owner and status.
+  rpc TrophyOwner(QueryTrophyOwnerRequest) returns (QueryTrophyOwnerResponse) {
+    option (google.api.http).get = "/wolochain/wartrophy/v1/trophies/{trophy_id}/owner";
+  }
+
+  // TrophiesByOwner returns active trophies assigned to an owner.
+  rpc TrophiesByOwner(QueryTrophiesByOwnerRequest) returns (QueryTrophiesByOwnerResponse) {
+    option (google.api.http).get = "/wolochain/wartrophy/v1/owners/{owner}/trophies";
+  }
+
+  // TrophyAuthority returns the current authority signer.
+  rpc TrophyAuthority(QueryTrophyAuthorityRequest) returns (QueryTrophyAuthorityResponse) {
+    option (google.api.http).get = "/wolochain/wartrophy/v1/authority";
+  }
+}
+
+// QueryTrophyRequest identifies one trophy.
+message QueryTrophyRequest {
+  string trophy_id = 1;
+}
+
+// QueryTrophyResponse contains one trophy.
+message QueryTrophyResponse {
+  Trophy trophy = 1;
+}
+
+// QueryTrophiesRequest contains pagination options.
+message QueryTrophiesRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+// QueryTrophiesResponse contains a trophy page.
+message QueryTrophiesResponse {
+  repeated Trophy trophies = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryTrophyOwnerRequest identifies a trophy.
+message QueryTrophyOwnerRequest {
+  string trophy_id = 1;
+}
+
+// QueryTrophyOwnerResponse contains the current owner and lifecycle status.
+message QueryTrophyOwnerResponse {
+  string trophy_id = 1;
+  string owner = 2;
+  TrophyStatus status = 3;
+}
+
+// QueryTrophiesByOwnerRequest identifies an owner and pagination options.
+message QueryTrophiesByOwnerRequest {
+  string owner = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// QueryTrophiesByOwnerResponse contains trophies assigned to an owner.
+message QueryTrophiesByOwnerResponse {
+  repeated Trophy trophies = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryTrophyAuthorityRequest requests the current authority.
+message QueryTrophyAuthorityRequest {}
+
+// QueryTrophyAuthorityResponse contains the current authority address.
+message QueryTrophyAuthorityResponse {
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}

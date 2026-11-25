@@ -1,0 +1,139 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wolochain.local/schemas/wolo-website-hold-evidence-v1.schema.json",
+  "title": "WoloChain observations for a future website-only release lane",
+  "description": "Observational references only. Schema validity authenticates nothing and authorizes no deployment. A future app controller must independently authenticate the channel, immutable baseline and candidate-specific scope admission, enforce freshness and equality, and consume the attempt durably. Existing Wolo source-authority BLOCKED evidence and all financial holds remain binding.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "release_attempt", "external_authority", "before", "after", "app_scope_admission", "source_authority_status", "financial_hold", "app_deployment_authorized", "financial_release_authorized", "custody_authorized", "claim_889_resolved", "production_mutated"],
+  "properties": {
+    "schema": {"const": "aoe2war.wolo.website-hold-evidence.v1"},
+    "release_attempt": {"$ref": "#/$defs/attempt"},
+    "external_authority": {"$ref": "#/$defs/authority"},
+    "before": {"$ref": "#/$defs/observation"},
+    "after": {"$ref": "#/$defs/observation"},
+    "app_scope_admission": {"$ref": "#/$defs/scope_admission"},
+    "source_authority_status": {"const": "BLOCKED"},
+    "financial_hold": {"const": "HOLD"},
+    "app_deployment_authorized": {"const": false},
+    "financial_release_authorized": {"const": false},
+    "custody_authorized": {"const": false},
+    "claim_889_resolved": {"const": false},
+    "production_mutated": {"const": false}
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string", "minLength": 64, "maxLength": 64,
+      "pattern": "^(?!0{64}$)[a-f0-9]{64}$"
+    },
+    "commit": {
+      "type": "string", "minLength": 40, "maxLength": 40,
+      "pattern": "^(?!0{40}$)[a-f0-9]{40}$"
+    },
+    "identity": {
+      "type": "string", "minLength": 3, "maxLength": 160,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@-]{2,159}$", "not": {"pattern": "[\r\n]"}
+    },
+    "utc": {
+      "type": "string", "format": "date-time", "maxLength": 35,
+      "pattern": "Z$", "not": {"pattern": "[\r\n]"}
+    },
+    "attempt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "attempt_id", "challenge", "deployed_commit", "candidate_commit", "candidate_artifact_sha256", "app_controller_commit", "issued_at_utc", "expires_at_utc"],
+      "properties": {
+        "repository": {"const": "Emaren/app-prodn"},
+        "attempt_id": {"$ref": "#/$defs/identity"},
+        "challenge": {"$ref": "#/$defs/sha256"},
+        "deployed_commit": {"$ref": "#/$defs/commit"},
+        "candidate_commit": {"$ref": "#/$defs/commit"},
+        "candidate_artifact_sha256": {"$ref": "#/$defs/sha256"},
+        "app_controller_commit": {"$ref": "#/$defs/commit"},
+        "issued_at_utc": {"$ref": "#/$defs/utc"},
+        "expires_at_utc": {"$ref": "#/$defs/utc"}
+      },
+      "description": "The trusted app controller generates a unique challenge and durably fences attempt reuse before mutation. It binds the reviewed candidate, actual deployed ancestor, artifact and controller; no candidate supplies its own release authority. Timestamps and cross-field equality require external policy validation."
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reviewed_baseline_sha256", "review_receipt_sha256", "observer_source_commit", "observer_sha256", "host_identity", "channel_anchor_sha256", "channel_receipt_sha256", "verification_required"],
+      "properties": {
+        "reviewed_baseline_sha256": {"$ref": "#/$defs/sha256"},
+        "review_receipt_sha256": {"$ref": "#/$defs/sha256"},
+        "observer_source_commit": {"$ref": "#/$defs/commit"},
+        "observer_sha256": {"$ref": "#/$defs/sha256"},
+        "host_identity": {"$ref": "#/$defs/identity"},
+        "channel_anchor_sha256": {"$ref": "#/$defs/sha256"},
+        "channel_receipt_sha256": {"$ref": "#/$defs/sha256"},
+        "verification_required": {"const": "EXTERNAL_APP_CONTROLLER"}
+      },
+      "description": "References to separately authenticated, independently reviewed authority. The consumer pins these outside this document, verifies exact observed bytes through its authenticated operator channel, and rejects baseline substitution, downgrade or replay. These hashes are not signatures or self-authenticating certification."
+    },
+    "process": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pid", "executable_path", "binary_sha256", "vcs_revision", "vcs_modified"],
+      "properties": {
+        "pid": {"type": "integer", "minimum": 1},
+        "executable_path": {"type": "string", "pattern": "^/", "maxLength": 512, "not": {"pattern": "[\r\n]"}},
+        "binary_sha256": {"$ref": "#/$defs/sha256"},
+        "vcs_revision": {"$ref": "#/$defs/commit"},
+        "vcs_modified": {"type": "boolean"}
+      },
+      "description": "Actual /proc/PID/exe identity and embedded Go metadata, never inferred from checkout or an installed filename. The consumer compares every field with its reviewed baseline and the other observation."
+    },
+    "observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["attempt_id", "challenge", "candidate_commit", "started_at_utc", "finished_at_utc", "source_authority_receipt_sha256", "source_authority_status", "source_authority_blockers", "checkout_revision", "source_tree_index_sha256", "runtime_configuration_sha256", "hold_record_sha256", "primary", "founder", "consensus", "source_runtime_aligned", "custody_capability", "chain_evidence", "financial_reconciliation_proven", "financial_release_authorized", "custody_authorized", "claim_889_resolved", "production_mutated"],
+      "properties": {
+        "attempt_id": {"$ref": "#/$defs/identity"},
+        "challenge": {"$ref": "#/$defs/sha256"},
+        "candidate_commit": {"$ref": "#/$defs/commit"},
+        "started_at_utc": {"$ref": "#/$defs/utc"},
+        "finished_at_utc": {"$ref": "#/$defs/utc"},
+        "source_authority_receipt_sha256": {"$ref": "#/$defs/sha256"},
+        "source_authority_status": {"const": "BLOCKED"},
+        "source_authority_blockers": {
+          "type": "array", "minItems": 1, "maxItems": 16, "uniqueItems": true,
+          "items": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]{2,95}$", "not": {"pattern": "[\r\n]"}}
+        },
+        "checkout_revision": {"$ref": "#/$defs/commit"},
+        "source_tree_index_sha256": {"$ref": "#/$defs/sha256"},
+        "runtime_configuration_sha256": {"$ref": "#/$defs/sha256"},
+        "hold_record_sha256": {"$ref": "#/$defs/sha256"},
+        "primary": {"$ref": "#/$defs/process"},
+        "founder": {"$ref": "#/$defs/process"},
+        "consensus": {"$ref": "#/$defs/process"},
+        "source_runtime_aligned": {"const": false},
+        "custody_capability": {"const": "UNAVAILABLE"},
+        "chain_evidence": {"const": "NONCREDITING"},
+        "financial_reconciliation_proven": {"const": false},
+        "financial_release_authorized": {"const": false},
+        "custody_authorized": {"const": false},
+        "claim_889_resolved": {"const": false},
+        "production_mutated": {"const": false}
+      },
+      "description": "Preserve the complete original source-authority v1 receipt by raw digest; the consumer verifies its exact blockers and fields, including ignored/hidden source state. Private baseline inputs identify configuration, signer boundaries and unresolved hold records; a count alone cannot fingerprint ignored content. No secret bytes enter this document. Digests assert neither isolation, solvency nor authenticated finality. Each observation must be freshly authenticated for this attempt; age must be rechecked after I/O."
+    },
+    "scope_admission": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "attempt_id", "challenge", "deployed_commit", "candidate_commit", "candidate_artifact_sha256", "policy_sha256", "receipt_sha256", "verification_required"],
+      "properties": {
+        "repository": {"const": "Emaren/app-prodn"},
+        "attempt_id": {"$ref": "#/$defs/identity"},
+        "challenge": {"$ref": "#/$defs/sha256"},
+        "deployed_commit": {"$ref": "#/$defs/commit"},
+        "candidate_commit": {"$ref": "#/$defs/commit"},
+        "candidate_artifact_sha256": {"$ref": "#/$defs/sha256"},
+        "policy_sha256": {"$ref": "#/$defs/sha256"},
+        "receipt_sha256": {"$ref": "#/$defs/sha256"},
+        "verification_required": {"const": "EXTERNAL_APP_CONTROLLER"}
+      },
+      "description": "Mandatory reference, not acceptance. The future app controller independently verifies the receipt and exact attempt/candidate/artifact binding under reviewed app-owner policy. Scope must exclude changes to financial routes, workers, signers, credentials, flags, schemas/migrations, financial configuration and transitive dependencies/deployment behavior affecting them. Unavailable, malformed, unauthenticated or ambiguous admission fails closed. Filename classification or a JSON claim cannot prove this."
+    }
+  }
+}

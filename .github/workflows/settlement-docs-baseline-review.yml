@@ -1,0 +1,34 @@
+name: Review-only DocsV2 baseline regeneration (no repository write)
+on:
+  pull_request:
+    branches:
+      - codex/recovery-aggregate-budget
+  push:
+    branches:
+      - review/20261024-five-human-maintenance-authority
+permissions:
+  contents: read
+jobs:
+  produce-reviewed-baseline:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Source at exact pushed commit
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Generate DocsV2 baseline in disposable runner only
+        run: |
+          python3 scripts/docs_v2_check.py --write --refresh-baseline --branch review/20261024-five-human-maintenance-authority --head "$(git rev-parse HEAD)"
+          python3 scripts/docs_v2_check.py
+      - name: Emit review artifacts for independent GitHub-controlled commit
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          for name,path in [('INDEX','docs/DOCUMENTATION_CONTROL_PLANE.md'),
+                            ('REGISTRY','docs/document-registry.json')]:
+              value=Path(path).read_text()
+              for i in range(0,len(value),1000):
+                  print('AOE2_DOCS_%s_%04d='%(name,i//1000)+json.dumps(value[i:i+1000]))
+          PY

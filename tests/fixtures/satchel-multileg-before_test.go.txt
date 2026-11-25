@@ -1,0 +1,18 @@
+// Baseline-only reproducer: d3b7586dc13c9ab38d634acbc0572e350463a325.
+// Copy into an isolated archive of that exact source; both tests must fail.
+package satchelservice
+
+import "testing"
+
+func baselineTwoLegTicket(t *testing.T)(*Engine,Policy,TransferRequest){
+ t.Helper();backend:=&engineTestBackend{confirmationStatus:"CONFIRMED"};e,_,p:=engineTestOpen(t,backend);r:=engineTestWager(t,"1");r.AmountUWolo="2000000"
+ if _,err:=e.Submit(t.Context(),r);err!=nil{t.Fatal(err)};if _,err:=e.Reconcile(t.Context(),r.OperationID);err!=nil{t.Fatal(err)};return e,p,r
+}
+func TestBaselineMultiLegIndependentPayouts(t *testing.T){
+ e,p,r:=baselineTwoLegTicket(t)
+ for _,claim:=range []string{"101","102"}{a:=testReturnApproval(t,r.OperationID,claim);a.ClaimKind="bet_payout";a.AmountUWolo="1000000";testSignReturnApproval(&a,p);if _,err:=e.PrepareReturnRun(t.Context(),a);err!=nil{t.Fatalf("leg claim %s refused despite separate authorized entitlement: %v",claim,err)}}
+}
+func TestBaselinePartialLegFullRefund(t *testing.T){
+ e,p,r:=baselineTwoLegTicket(t);a:=testReturnApproval(t,r.OperationID,"101");a.ClaimKind="bet_refund";a.AmountUWolo="1000000";testSignReturnApproval(&a,p)
+ if _,err:=e.PrepareReturnRun(t.Context(),a);err!=nil{t.Fatalf("one entire unmatched 1-WOLO leg of funded 2-WOLO ticket refused: %v",err)}
+}

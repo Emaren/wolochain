@@ -1,0 +1,120 @@
+{
+  "accounting": {
+    "aggregate_only_obligation_count": 1,
+    "amount_groups": [
+      {
+        "lane_index": 0,
+        "recorded_requested_principal_uwolo": "100000000",
+        "recorded_status": "accepted",
+        "request_count": 1,
+        "signer_role": "escrow"
+      },
+      {
+        "lane_index": 0,
+        "recorded_requested_principal_uwolo": "13615199250000",
+        "recorded_status": "confirmed",
+        "request_count": 724,
+        "signer_role": "escrow"
+      },
+      {
+        "lane_index": 0,
+        "recorded_requested_principal_uwolo": "25000000",
+        "recorded_status": "failed",
+        "request_count": 1,
+        "signer_role": "escrow"
+      },
+      {
+        "lane_index": 0,
+        "recorded_requested_principal_uwolo": "1323000000000",
+        "recorded_status": "aggregate_only",
+        "request_count": 1,
+        "signer_role": "payout"
+      },
+      {
+        "lane_index": 0,
+        "recorded_requested_principal_uwolo": "698745500000",
+        "recorded_status": "confirmed",
+        "request_count": 190,
+        "signer_role": "payout"
+      },
+      {
+        "lane_index": 0,
+        "recorded_requested_principal_uwolo": "5001000000",
+        "recorded_status": "failed",
+        "request_count": 4,
+        "signer_role": "payout"
+      },
+      {
+        "lane_index": 1,
+        "recorded_requested_principal_uwolo": "141660000000",
+        "recorded_status": "confirmed",
+        "request_count": 609,
+        "signer_role": "payout"
+      },
+      {
+        "lane_index": 1,
+        "recorded_requested_principal_uwolo": "4018000000",
+        "recorded_status": "failed",
+        "request_count": 37,
+        "signer_role": "payout"
+      }
+    ],
+    "complete_for_observed_requests_and_runs": false,
+    "deduplicated_aggregate_references": 886,
+    "deduplicated_observed_requested_principal_uwolo": "15787748750000",
+    "fees_included": false,
+    "gaps": [
+      "AGGREGATE_CHILD_WITHOUT_REQUEST_RECORD",
+      "RETRYABLE_RECORD_REQUIRES_RECONCILIATION"
+    ],
+    "global_liability_bound": "UNBOUNDED_NOT_PROVEN",
+    "global_liability_upper_bound_uwolo": null,
+    "historical_outflow_upper_bound_uwolo": null,
+    "leaf_record_requested_principal_uwolo": "14464748750000",
+    "observed_execution_principal_max_uwolo": null,
+    "observed_execution_principal_min_uwolo": "0",
+    "observed_execution_principal_scope": "at_most_one_canonical_principal_effect_per_observed_obligation_not_historical_bank_outflow",
+    "recorded_status_is_chain_proof": false,
+    "unique_obligation_count": 1567
+  },
+  "all_historical_paths_covered": false,
+  "blockers": [
+    "AGGREGATE_CHILD_OUTCOMES_REQUIRE_RECONCILIATION",
+    "CHAIN_OUTCOMES_NOT_REVERIFIED",
+    "LOCAL_STATE_CANNOT_CERTIFY_GLOBAL_DRAIN",
+    "RETRYABLE_RECORD_REQUIRES_RECONCILIATION",
+    "UNRESOLVED_RECORDED_OUTCOME"
+  ],
+  "bytes_observed": 5712281,
+  "chain_proof_verified": false,
+  "counts": {
+    "aggregate_status_accepted": 1,
+    "aggregate_status_confirmed": 789,
+    "aggregate_status_failed": 3,
+    "files": 2359,
+    "recorded_chain_failure_not_reverified": 6,
+    "recorded_local_failure_not_payment": 36,
+    "recorded_payment_not_reverified": 1523,
+    "recorded_status_accepted": 1,
+    "recorded_status_confirmed": 1523,
+    "recorded_status_failed": 42,
+    "requests": 1566,
+    "runs": 793
+  },
+  "filesystem_writes": false,
+  "financial_drained": false,
+  "founder_889_resolved": false,
+  "observation_atomic": false,
+  "observation_complete": true,
+  "reader_source_identity": "EXTERNAL_EXACT_SOURCE_PROVENANCE_REQUIRED",
+  "reader_source_sha256": null,
+  "release_authorized": false,
+  "request_fingerprint_algorithm": "Go_normalized_request_schema_v1",
+  "retry_authorized": false,
+  "rollback_compatible": false,
+  "roots_observed": 2,
+  "source_tree_scope": "bounded_observed_state_tree_not_git_or_atomic_snapshot",
+  "source_tree_sha256": "52f8d6ab59bdc9714519708ce5f9cd6063d07a4b8dc01e667f5efd764d0b7c9f",
+  "status": "HELD",
+  "version": "wolo.settlement.state-evidence.v1"
+}

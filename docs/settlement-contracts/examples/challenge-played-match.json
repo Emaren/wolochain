@@ -1,9 +1,8 @@
 {
   "$schema": "../challenge-settlement-request.schema.json",
-  "settlement_run_id": "aoe2hdbets:challenge-44:played:v1",
+  "settlement_run_id": "aoe2hdbets:challenge-44:v1",
   "source_app": "aoe2hdbets",
-  "challenge_id": "challenge-44",
-  "source_event_id": "match-2026-04-20-00044",
+  "challenge_id": "44",
   "treasury_address": "wolo1treasury000000000000000000000000000000",
   "note": "AoE2HDBets decided the match was played and left won",
   "memo": "challenge-44 played left-wins",
@@ -11,9 +10,8 @@
     {
       "funding_tx_hash": "5555555555555555555555555555555555555555555555555555555555555555",
       "depositor_address": "wolo1leftplayer0000000000000000000000000000",
-      "settlement_run_id": "aoe2hdbets:challenge-44:played:v1",
+      "settlement_run_id": "aoe2hdbets:challenge-44:v1",
       "participant_side": "left",
-      "participant_id": "aoe2-user-left",
       "expected_amount_uwolo": "1500000",
       "wager_uwolo": "1000000",
       "guarantee_uwolo": "500000"
@@ -21,9 +19,8 @@
     {
       "funding_tx_hash": "6666666666666666666666666666666666666666666666666666666666666666",
       "depositor_address": "wolo1rightplayer000000000000000000000000000",
-      "settlement_run_id": "aoe2hdbets:challenge-44:played:v1",
+      "settlement_run_id": "aoe2hdbets:challenge-44:v1",
       "participant_side": "right",
-      "participant_id": "aoe2-user-right",
       "expected_amount_uwolo": "1500000",
       "wager_uwolo": "1000000",
       "guarantee_uwolo": "500000"
@@ -33,7 +30,6 @@
     {
       "request_id": "aoe2hdbets:challenge-44:left-guarantee-return",
       "participant_side": "left",
-      "participant_id": "aoe2-user-left",
       "bucket": "guarantee",
       "reason": "return",
       "to_address": "wolo1leftplayer0000000000000000000000000000",
@@ -43,7 +39,6 @@
     {
       "request_id": "aoe2hdbets:challenge-44:right-guarantee-return",
       "participant_side": "right",
-      "participant_id": "aoe2-user-right",
       "bucket": "guarantee",
       "reason": "return",
       "to_address": "wolo1rightplayer000000000000000000000000000",
@@ -53,7 +48,6 @@
     {
       "request_id": "aoe2hdbets:challenge-44:left-wager-payout",
       "participant_side": "left",
-      "participant_id": "aoe2-user-left",
       "bucket": "wager",
       "reason": "release",
       "to_address": "wolo1leftplayer0000000000000000000000000000",
@@ -63,7 +57,6 @@
     {
       "request_id": "aoe2hdbets:challenge-44:right-wager-payout",
       "participant_side": "right",
-      "participant_id": "aoe2-user-right",
       "bucket": "wager",
       "reason": "release",
       "to_address": "wolo1leftplayer0000000000000000000000000000",

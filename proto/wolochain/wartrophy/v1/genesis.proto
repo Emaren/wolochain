@@ -1,0 +1,13 @@
+syntax = "proto3";
+package wolochain.wartrophy.v1;
+
+import "gogoproto/gogo.proto";
+import "wolochain/wartrophy/v1/trophy.proto";
+
+option go_package = "github.com/emaren/wolochain/x/wartrophy/types";
+
+// GenesisState defines the wartrophy module's genesis state.
+message GenesisState {
+  string authority = 1;
+  repeated Trophy trophies = 2 [(gogoproto.nullable) = false];
+}

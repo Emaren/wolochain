@@ -1,15 +1,59 @@
+---
+id: "aoe2war.wolochain.readme"
+title: "WoloChain"
+type: "reference"
+status: "active"
+owner: "wolochain-ops"
+systems: ["wolochain","aoe2war"]
+audience: ["developers","operators","ai-agents"]
+source_of_truth: "git"
+authority: "chain-repository-entrypoint"
+reviewed_at: "2026-11-24"
+review_interval_days: 14
+sensitivity: "public"
+---
+
 # WoloChain
+
+
+## Current applicability — reviewed 2026-11-24
+
+**Current operational boundary (2026-11-24):** The historical launch, September/October/November 6 observations and funded settlement instructions below are retained as historical API/design reference only. Do not execute them. C04/C08 are physically CLOSED; C01/C02/C03/C05/C06/C07/C09 remain OPEN. Funding DENIED, custody inactive. Six legacy settlement/stake units are masked/inactive and 8092–8095 closed; PG5432 is loopback-only (November 24 native receipt #7133994664). Mainnet validator remains separate; do not restart or build on HEL1 under current capacity pressure. The held source recovery campaign is #258, not a deployed runtime. Complete genuine B PREPARE, WE2 exclusive capacity/IO and native checkpoint authority before coordinated C06, independently recover identical ciphertext for C07, then admit permanent C03. Preserve all historical claims and exact source/receipt identities. Current gate tracker [#239](https://github.com/Emaren/wolochain/issues/239).
+
+Current source and evidence: [#239](https://github.com/Emaren/wolochain/issues/239), [#258](https://github.com/Emaren/wolochain/pull/258), [physical quarantine and witness receipt](https://github.com/Emaren/wolochain/pull/258#issuecomment-7133994664). Funding DENIED; no production permit granted.
+
+
+## November 6, 2026 — Chain source and live-boundary technical review (non-authorizing)
+
+Rechecked the current WoloChain source paths for `wolo-1`, `uwolo`, the frozen named-profile build policy in `scripts/settlement-artifact.py`, and the live HEL1 chain operating boundary. The incumbent validator and legacy 8092/8093 settlement services remain active, while new 8094 Satchel and 8095 reviewer services are inactive. This editorial and source verification **does not** certify current total supply, historical payout finality, independently controlled custody keys, solvency, quiesced backups, or funded mainnet transactions. C01–C09 remain HARD HOLD under issue #5; historical operating observations below retain their original timestamps. The independent chain checkpoint is still unresolved, and `/net_info` observed zero peers on November 6; that observation does not establish there are no external copies. Do not restart the validator or substitute the legacy 8092 rail for new returns.
+
+
+## Source documentation review — 2026-10-22
+
+This renewal checks the repository's chain identity, role separation and
+source-only War Satchel integration references against the held GitHub release
+work. It is **not** a new live node, payout, escrow, balance, custody, validator
+or settlement-process inspection. Earlier operational claims below remain
+bound to their individually dated observations. Mainnet Satchel signing
+remains financially **HELD** under [release issue #5](https://github.com/Emaren/wolochain/issues/5);
+source review and successful CI do not authorize 8094 deployment, mainnet
+transfers or replacement of 8092/8093. Historical shared-binary recovery
+examples do not authorize a consensus restart; use the current
+[settlement runbook](docs/mainnet-settlement-runbook.md) and
+[Satchel operator gates](docs/war-satchel-mainnet-execution.md).
+
 
 WoloChain is the fixed-supply Cosmos chain for the AoE2HDBets ecosystem.
 
 ## Canonical Identity
 
 - Chain name: `WoloChain`
-- Binary: `wolochaind`
-- Chain ID: `wolo-testnet`
+- Mainnet binary/service: `wolochaind-mainnet`
+- Chain ID: `wolo-1`
 - Address prefix: `wolo`
 - Base denom: `uwolo`
-- Display denom: `wolo`
+- On-chain display denom: `wolo`
+- Human display symbol: `WOLO`
 - Symbol: `WOLO`
 - Decimals: `6`
 
@@ -17,21 +61,41 @@ WoloChain is the fixed-supply Cosmos chain for the AoE2HDBets ecosystem.
 
 WoloChain owns:
 
-- chain identity
+- chain identity and public endpoint truth
 - balances and transfers
-- settlement execution rails
+- signed transaction truth, including tx hash lookup and chain-indexed transfer proof
+- settlement execution rails when a WoloChain settlement service is intentionally deployed for the target chain
 - genesis and denom metadata
-- node / bootstrap / testnet operations
+- node / bootstrap / mainnet operations
 - integration-facing proof and status primitives
 
 WoloChain does not own:
 
 - AoE2HDBets betting rules
 - AoE2HDBets UX and operator presentation
+- AoE2HDBets app-side wager, profile, staking, or display filters
 - explorer UI bugs or Ping route presentation
 - market math, pool math, refund policy, or entitlement logic
 
-## Current Testnet State
+## Current Mainnet State
+
+A read-only VPS context capture at `2026-09-22T04:35:41Z` renewed the live
+operational boundary. `wolochaind-mainnet.service` and
+`wolochain-mainnet-settlement.service` were active; the health timer completed
+successfully at height `2061334` with `catching_up=false`, and the node then
+logged committed/indexed height `2061341`. The socket snapshot showed public
+P2P `27656` plus loopback RPC `27657`, REST `1318`, settlement `8092`,
+and protected listener `8093`. Settlement logs on September 21–22 recorded
+successful `wolo-1` validation/execution with the documented payout and escrow
+signers. AoE2WAR certification evidence independently reported
+`wolo8092=1` and `wolo8093=1`.
+
+This September 22 review did **not** re-prove fixed supply, bank metadata,
+historical funding balances, or the deployed binary's Git commit. Those facts
+remain tied to the dated evidence stated below rather than being silently
+promoted to a newer observation.
+
+## Historical Testnet Observation — May 24, 2026
 
 Verified on May 24, 2026. This section describes the public WoloChain testnet only; do not copy these routes or caveats into the live AoE2WAR mainnet app.
 
@@ -45,25 +109,50 @@ Verified on May 24, 2026. This section describes the public WoloChain testnet on
 - Public testnet REST route: `https://aoe2war.com/rest/`
 - Public testnet explorer route: `https://aoe2war.com/wolo-testnet`
 
-Current live settlement posture:
 
-- Settlement uses the dedicated `payout` signer.
-- Payout address: `wolo1cy04t5af0mr9d8n6rrzgr8e9j4vuf42nfg02q5`
-- Escrow address: `wolo1t4jq7wd4x030t9f0yfqfq74pt4pmaep5nu67y4`
-- Payout and escrow are distinct live addresses.
-- `WOLO_SETTLEMENT_AUTH_TOKEN` is set.
-- Settlement POST routes reject missing bearer auth.
-- `POST /settlement/v1/runs/validate` is live and auth-protected.
-- Grouped settlement CLI surfaces are live.
-- Escrow discovery and escrow verification routes are live.
-- Settlement request / grouped-run state lives on the VPS extra volume.
+The launch baseline below was verified on June 4, 2026. A read-only review on
+September 9, 2026 reconfirmed the canonical `wolo-1` identity, fixed supply,
+public RPC/REST metadata, active mainnet node and settlement service, and protected
+mainnet settlement port `8092`. The running node binary reports implementation
+commit `d5dea8d6f1a2b0b57489a5e468dd21e34246891e`; `catching_up=false` and tx
+indexing remains on. Legacy testnet node/settlement services were inactive at the
+review observation. No runtime or Wolo mutation was performed by the review.
 
-Current live caveats:
 
-- The VPS validator is currently isolated with `0` peers.
-- Settlement still uses the `test` keyring backend on the VPS.
-- Settlement proof links use `WOLO_SETTLEMENT_PUBLIC_REST_URL=https://aoe2war.com/rest`; keep live settlement health aligned after env changes.
-- The highest-value WoloChain work right now is restart reliability, operator truthfulness, monitoring, backup / restore ergonomics, and doc accuracy — not new chain features.
+- VPS node service: `wolochaind-mainnet.service`
+- VPS moniker: `wolo-mainnet-hel1`
+- Runtime chain ID: `wolo-1`
+- Public RPC: `https://rpc-mainnet.aoe2war.com`
+- Public REST: `https://rest-mainnet.aoe2war.com`
+- Path aliases: `https://aoe2war.com/rpc-mainnet/` and `https://aoe2war.com/rest-mainnet/`
+- Browser CORS: `https://aoe2war.com` is allowed on the public mainnet RPC/REST hosts for wallet reads and broadcasts.
+- Chain start boundary: first block at `2026-05-25T03:54:33Z`
+- Fixed supply: `100000000000000uwolo`
+- Tx indexing: `on`
+- Bank metadata: base `uwolo`, display unit `wolo`, symbol `WOLO`, exponent `6`
+
+The old routes `https://aoe2war.com/rpc/`, `https://aoe2war.com/rest/`, and `https://aoe2war.com/wolo-testnet` are testnet-era surfaces only. Do not present them as current mainnet truth.
+
+Current mainnet settlement posture:
+
+- The mainnet node is live and healthy.
+- Mainnet tx lookup by hash is live through RPC and REST.
+- `wolochain-settlement.service` on the VPS remains the old testnet settlement service.
+- `wolochain-mainnet-settlement.service` is the only intended mainnet settlement service and must bind `127.0.0.1:8092`.
+- AoE2HDBets mainnet settlement, staking reward, and Community Treasury payout calls must use only the verified `127.0.0.1:8092` `wolo-1` service with the funded June 4, 2026 payout/escrow signers.
+- Do not point mainnet callers at `127.0.0.1:8091`; that is the old `wolo-testnet` settlement service.
+- AoE2HDBets app-side mainnet signer operations use the separate app keyring home `/var/lib/aoe2hdbets-wolo-mainnet`; do not point app signer env at `/var/lib/wolochaind-testnet` or grant the web app access to the validator/node config under `/var/lib/wolochaind-mainnet`.
+- AoE2HDBets mainnet faucet claims should use the funded Faucet Hot Wallet `wolo1dshyzxffd0jj39k7gj9tq9hgsx96ylxamyp5g0`, restored in the app keyring as `faucet-hot-mainnet`. Do not treat the old app key name `faucetgrowth` as the mainnet faucet wallet; on the VPS it resolves to `wolo1jx4n3n2ey6uzfq28kplkmpd2am98xsmcn0nerx`, which is a zero-balance legacy/test faucet key.
+
+Current WoloChain / AoE2HDBets boundary:
+
+- WoloChain owns whether `wolo-1` exists, is healthy, indexes txs, and can prove a signed mainnet tx by hash.
+- WoloChain owns canonical denom, display, bech32, supply, and public endpoint truth.
+- WoloChain owns signed transfer truth and custody-address bank balances as reported by `wolo-1`.
+- AoE2HDBets owns app-side display windows, profile ledgers, staking filters, wager visibility, and hiding old app-only/testnet rows from mainnet-facing pages.
+- AoE2HDBets owns staking deposit/top-up classification and staking liabilities. WoloChain records the underlying bank transfer and treats an operational staking memo as opaque metadata, not a consensus rule.
+- Direct staking reserve top-ups must target the current staking wallet from an app-approved reserve source; they must not use the settlement payout signer, module accounts, or retired wallet addresses.
+- AoE2HDBets must not treat old testnet database rows as chain truth without a `wolo-1` tx hash that verifies against the mainnet endpoints above.
 
 ## Local Workflow
 
@@ -74,6 +163,17 @@ Current live caveats:
 - Local balances snapshot: `./scripts/write-local-balances-json.sh`
 - Chain invariant check: `./scripts/check-chain-invariants.sh`
 - Public endpoint check: `./scripts/check-public-endpoints.sh`
+
+## Warbound Trophies
+
+The local `x/wartrophy` first pass provides authority-gated, non-transferable
+AoE2WAR trophy entitlement state. It is not deployed on `wolo-1`, and it does
+not yet mint holder-owned `x/nft` assets because standard NFT sends would bypass
+the Warbound restriction.
+
+See [`docs/warbound-trophies.md`](docs/warbound-trophies.md) for the NFT audit,
+CLI/query surface, app boundary, test flow, and required coordinated mainnet
+upgrade work.
 
 ## Settlement Surfaces
 
@@ -134,6 +234,7 @@ Settlement execution supports:
 - stored request inspection by `request_id`
 - grouped settlement runs over the same request-level idempotent payout rail
 - dry-run validation before grouped execution, including requested totals and reserve / headroom impact
+- noninteractive `file` keyring signing through `WOLO_SETTLEMENT_KEYRING_DIR` plus root-only `WOLO_SETTLEMENT_KEYRING_PASSPHRASE_FILE`
 - stored grouped-run inspection by `settlement_run_id`
 - recent failure / refusal summaries via `wolochaind settlement recent --summary-only`
 - recent grouped-run summaries via `wolochaind settlement run recent --summary-only`
@@ -146,6 +247,7 @@ Settlement execution supports:
 
 Operator helpers in this repo:
 
+- [`docs/mainnet-settlement-runbook.md`](docs/mainnet-settlement-runbook.md): exact `wolo-1` env, keyring, service, funding, dry-run, and AoE2HDBets cutover steps
 - [`scripts/check-settlement-cutover.sh`](scripts/check-settlement-cutover.sh): separates intended config checks, local CLI doctor truth, live service truth, and operator warnings
 - [`scripts/check-settlement-alerts.sh`](scripts/check-settlement-alerts.sh): machine-readable settlement JSON with separate live / local / operator / storage scopes and exit codes for cron or VPSSentry
 - [`scripts/run-settlement-alert-check.sh`](scripts/run-settlement-alert-check.sh): writes the latest alert JSON to `$HOME/wolochain-settlement-alerts/latest.json` by default and preserves the alert script exit code
@@ -155,6 +257,14 @@ Operator helpers in this repo:
 - [`scripts/clean-build-cache.sh`](scripts/clean-build-cache.sh): clears Go build cache, module cache, and temp directories only; it does not touch settlement state
 - [`scripts/backup-live-settlement.sh`](scripts/backup-live-settlement.sh): rollback-oriented backup with source-path and free-space sanity checks
 - [`scripts/restore-live-settlement.sh`](scripts/restore-live-settlement.sh): defaults to a shared-binary rollback that restarts node + settlement; `RESTORE_MODE=settlement-only` is the explicit env/state-only path
+
+Settlement run stderr logs use explicit event names:
+
+- `health_probe_ok` / `health_probe_failed` for dry settlement capability probes from operator health scripts.
+- `settlement_validation_ok` / `settlement_validation_failed` for real dry-run settlement validation requests.
+- `payout_execution_ok` / `payout_execution_failed` for actual grouped payout execution attempts.
+
+Health probes are always marked with `dry_run=true`, `health_probe=true`, and `probe_kind=dry_settlement_run_validate`; real validation and payout failures remain loud.
 
 ## Settlement Boundary
 
@@ -187,6 +297,8 @@ Grouped run signer roles are explicit:
 - `payout`: default for legacy callers; used by normal bet/player payouts and staking Treasury payouts from AoE2HDBets.
 - `escrow`: must be requested with `signer_role=escrow`; used by scheduled-match escrow settlements from AoE2HDBets.
 
+An app-requested staking Treasury payout is distinct from a direct staking reserve top-up. Reserve top-ups are ordinary bank sends into the current staking wallet and must not be routed through the settlement payout signer.
+
 Unknown `signer_role` values are rejected as `INVALID_RUN`; they are never silently treated as payout. Responses and stored records report the actual `signer_role` and `signer_address` selected for the run and each transfer line.
 
 Generic refunds or reversals do not need a special WoloChain abstraction. The existing single-payout and grouped-run rails already cover that operator path as long as the caller provides the recipient, amount, and metadata.
@@ -215,19 +327,19 @@ AoE2HDBets still owns:
 The canonical funding memo convention is:
 
 ```text
-wolo.challenge.funding.v1:app=aoe2hdbets&sid=aoe2hdbets:challenge-42:one-noshow:v1&cid=challenge-42&side=left&pid=user-1&w=1000000&g=500000&t=1500000
+wolo.challenge.funding.v1:app=aoe2hdbets&sid=aoe2hdbets:challenge-42:v1&cid=42&side=left&w=1000000&g=500000&t=1500000
 ```
 
-Use the compact aliases on actual funding transactions so the memo stays under the chain memo limit. WoloChain normalizes them to `source_app`, `settlement_run_id`, `challenge_id`, `participant_side`, `participant_id`, `wager_uwolo`, `guarantee_uwolo`, and `total_funded_uwolo` in proof responses.
+For canonical AoE2HDBets deposits, WoloChain requires exactly one each of `app`, `sid`, `cid`, `side`, `w`, `g`, and `t`; `app=aoe2hdbets`; a positive decimal `cid`; `sid=aoe2hdbets:challenge-<cid>:v1`; `side=left|right`; positive canonical `w` and `t`; canonical non-negative `g` (Championship V2 deliberately uses `g=0`); and `w + g = t =` the successful transfer into the configured escrow. Proof responses also expose the exact sender, canonical escrow, chain, transaction status, height, timestamp, tx hash, and normalized bucket fields.
 
 AoE2HDBets should verify funding with `GET /settlement/v1/challenges/funding/txs/{tx_hash}` or `wolochaind settlement challenge funding verify`, then submit the explicit bucket moves to `POST /settlement/v1/challenges/validate` or `wolochaind settlement challenge validate` before calling `POST /settlement/v1/challenges` or `wolochaind settlement challenge execute`.
 
-For automatic funding detection, AoE2HDBets can poll `GET /settlement/v1/challenges/funding/deposits?source_app=aoe2hdbets&settlement_run_id=...&challenge_id=...` or run `wolochaind settlement challenge funding recent`. That read-only surface proves which escrow deposits WoloChain can see; AoE2HDBets still decides whether a challenge is ready to lock, cancel, or settle.
+For automatic funding detection, AoE2HDBets should poll `GET /settlement/v1/challenges/funding/deposits?sender=<wallet>&source_app=aoe2hdbets&settlement_run_id=aoe2hdbets:challenge-<id>:v1&challenge_id=<id>&participant_side=<left|right>` or run `wolochaind settlement challenge funding recent` with the equivalent filters. The route is read-only and deterministic; invalid, failed, non-escrow, cross-challenge, wrong-side, or bucket-mismatched transactions are not returned. Challenge settlement stores one immutable request fingerprint under the same canonical `settlement_run_id`, replays the stored result for the same payload, rejects a changed payload, and rejects duplicate funding tx hashes.
 
 After execution, operators can reconcile stored challenge state against chain reality with:
 
 ```bash
-wolochaind settlement challenge audit --settlement-id aoe2hdbets:challenge-42:one-noshow:v1
+wolochaind settlement challenge audit --settlement-id aoe2hdbets:challenge-42:v1
 ```
 
 The audit report re-checks escrow funding txs, wager and guarantee bucket totals, treasury routes, payout/refund tx hashes, grouped run state, per-transfer state, and escrow-to-payout top-ups when present.
@@ -261,7 +373,9 @@ For one logical result with many payouts, the preferred flow is:
 - Treat grouped run state as operator data too; it lives beside request state under the settlement state dir.
 - Treat testnet balances as testnet-only data. They do not migrate to mainnet.
 - Keep testnet/mainnet boundaries explicit. See [`docs/mainnet-template.md`](docs/mainnet-template.md) before touching any mainnet-facing config or app copy.
+- The historical mainnet planning package remains linked from [`docs/mainnet-template.md`](docs/mainnet-template.md); use the current mainnet runbook for operational authority.
 - Prefer keeping `WOLO_SETTLEMENT_AUTH_TOKEN` enabled even for localhost-only POSTs and have callers send bearer auth.
+- For mainnet, keep payout and escrow signers in `/var/lib/wolochain-mainnet-settlement/keyring` with `WOLO_SETTLEMENT_KEYRING_BACKEND=file` and `WOLO_SETTLEMENT_KEYRING_PASSPHRASE_FILE=/etc/wolochain-mainnet-settlement.keyring-passphrase`.
 - `WOLO_SETTLEMENT_ESCROW_ADDRESS` only affects proof classification and operator warnings; it does not create escrow semantics by itself.
 - `WOLO_SETTLEMENT_ESCROW_KEY_NAME` and `WOLO_SETTLEMENT_ESCROW_ADDRESS` are both required if you want challenge auto-top-up from escrow.
 - `WOLO_SETTLEMENT_TREASURY_ADDRESS` sets the default challenge treasury route, but callers can still pass an explicit `treasury_address` per challenge request.
@@ -278,10 +392,29 @@ For one logical result with many payouts, the preferred flow is:
 - Run [`scripts/clean-build-cache.sh`](scripts/clean-build-cache.sh) before retrying VPS builds under disk pressure; it only clears Go build/module cache and temp paths.
 - If the VPS still fails a fresh build after cleanup, stop and re-check the mounted extra-volume size and free space before falling back to an off-box build.
 - Prefer `BACKUP_ROOT=/home/tony/wolochain-settlement-backups ./scripts/backup-live-settlement.sh` when the extra volume is tight on free space.
-- Use [`scripts/restore-live-settlement.sh`](scripts/restore-live-settlement.sh) if the live service comes up wrong and you need to return to the last known-good backup quickly. The default restore mode is `shared-binary`, because the live node and settlement services both execute `/var/www/WoloChain/build/wolochaind`.
+- Use [`scripts/restore-live-settlement.sh`](scripts/restore-live-settlement.sh) if the live service comes up wrong and you need to return to the last known-good backup quickly. The default restore mode is `shared-binary`; for `wolo-1`, that targets `/usr/local/bin/wolochaind-mainnet` and `wolochain-mainnet-settlement.service`.
 - Use `wolochaind settlement escrow verify` or `GET /settlement/v1/escrow/txs/{tx_hash}` when an app / operator needs to prove a deposit really hit the configured escrow address.
 - Use `wolochaind settlement escrow recent` or `GET /settlement/v1/escrow/deposits` to recover from partial app-side state loss without adding market logic to WoloChain.
 - Use `wolochaind settlement challenge funding verify` or `GET /settlement/v1/challenges/funding/txs/{tx_hash}` when AoE2HDBets needs a challenge-aware proof surface for escrow funding.
 - Use `wolochaind settlement challenge recent --summary-only` or `GET /settlement/v1/challenges?summary_only=1` for operator visibility into challenge settlement replays, partial failures, and top-up history.
 
 For the live VPS layout and deploy runbook, see [docs/testnet-ops.md](docs/testnet-ops.md).
+
+## Documentation Control
+
+Repository documentation is federated through:
+
+- [`docs/DOCUMENTATION_CONTROL_PLANE.md`](docs/DOCUMENTATION_CONTROL_PLANE.md)
+- [`docs/BRANCH_AUTHORITY.md`](docs/BRANCH_AUTHORITY.md)
+- [`docs/document-registry.json`](docs/document-registry.json)
+
+Validate the repository documentation contract with:
+
+```bash
+python3 scripts/docs_v2_check.py
+```
+
+The registry keeps the implementation baseline separate from later
+documentation-only commits. WoloChain runtime, consensus, balances, and
+settlement truth remain owned by WoloChain; the central AoE2WAR documentation
+portal indexes that authority without replacing it.

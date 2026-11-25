@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/emaren/wolochain/internal/chainjson"
 	"net/url"
 	"os"
 	"os/exec"
@@ -25,11 +26,13 @@ const (
 	settlementChallengeFundingMemoPrefix = "wolo.challenge.funding.v1:"
 	settlementChallengeBucketWager       = "wager"
 	settlementChallengeBucketGuarantee   = "guarantee"
+	settlementAoE2HDBetsSourceApp        = "aoe2hdbets"
 )
 
 var (
 	settlementChallengeParticipantSidePattern = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_-]{0,31}$`)
 	settlementChallengeReasonPattern          = regexp.MustCompile(`^[a-z][a-z0-9_-]{0,31}$`)
+	settlementAoE2HDBetsChallengeIDPattern    = regexp.MustCompile(`^[1-9][0-9]*$`)
 )
 
 type settlementChallengeFundingExpectation struct {
@@ -52,6 +55,11 @@ type settlementChallengeFundingResult struct {
 	Detail                     string `json:"detail,omitempty"`
 	DepositFound               bool   `json:"deposit_found"`
 	FundingTxHash              string `json:"funding_tx_hash,omitempty"`
+	ChainID                    string `json:"chain_id,omitempty"`
+	TxSuccess                  bool   `json:"tx_success"`
+	Height                     string `json:"height,omitempty"`
+	Code                       uint32 `json:"code,omitempty"`
+	Timestamp                  string `json:"timestamp,omitempty"`
 	SourceApp                  string `json:"source_app,omitempty"`
 	SettlementRunID            string `json:"settlement_run_id,omitempty"`
 	ChallengeID                string `json:"challenge_id,omitempty"`
@@ -179,6 +187,7 @@ type normalizedSettlementChallengeRequest struct {
 }
 
 type settlementChallengeTransferResult struct {
+	ConfirmationStatus         string   `json:"confirmation_status,omitempty"`
 	Index                      int      `json:"index"`
 	RequestID                  string   `json:"request_id"`
 	ParticipantSide            string   `json:"participant_side,omitempty"`
@@ -680,6 +689,9 @@ func (cfg settlementConfig) executeSettlementChallenge(ctx context.Context, requ
 				}, nil
 			}
 
+			if held := cfg.guardSettlementChallengeStoredReplay(ctx, stored, plan.Response); held != nil {
+				return *held, nil
+			}
 			if settlementChallengeResponseIsFinal(stored.Response) {
 				replayed := stored.Response
 				replayed.DryRun = false
@@ -845,6 +857,17 @@ func (cfg settlementConfig) buildSettlementChallengePlan(ctx context.Context, re
 	}
 	if challengeID == "" && sourceEventID == "" {
 		validationErrors = append(validationErrors, "challenge_id or source_event_id is required")
+	}
+	if strings.EqualFold(sourceApp, settlementAoE2HDBetsSourceApp) &&
+		settlementAoE2HDBetsChallengeIDPattern.MatchString(challengeID) {
+		expectedSettlementID := aoE2HDBetsChallengeSettlementRunID(challengeID)
+		if settlementID != expectedSettlementID {
+			validationErrors = append(validationErrors, fmt.Sprintf(
+				"settlement_run_id must be %q for AoE2HDBets challenge_id %q",
+				expectedSettlementID,
+				challengeID,
+			))
+		}
 	}
 	if treasuryAddress != "" && !isWoloAddress(treasuryAddress, cfg.AddressPrefix) {
 		validationErrors = append(validationErrors, "treasury_address must be a valid WOLO address")
@@ -1189,10 +1212,17 @@ func validateVerifiedChallengeFundingParticipants(funding []verifiedSettlementCh
 	errorsOut := make([]string, 0)
 	seenSides := map[string]string{}
 	seenIDs := map[string]string{}
+	seenTxHashes := map[string]string{}
 	for _, item := range funding {
 		side := strings.TrimSpace(item.Result.ParticipantSide)
 		id := strings.TrimSpace(item.Result.ParticipantID)
 		label := challengeFundingLabel(item.Result.ParticipantSide, item.Result.ParticipantID, item.Result.FundingTxHash)
+		txHash := normalizeTxHash(item.Result.FundingTxHash)
+		if existing, ok := seenTxHashes[txHash]; ok {
+			errorsOut = append(errorsOut, fmt.Sprintf("funding_tx_hash %q appears more than once (%s and %s)", txHash, existing, label))
+		} else {
+			seenTxHashes[txHash] = label
+		}
 		if side != "" {
 			lower := strings.ToLower(side)
 			if existing, ok := seenSides[lower]; ok {
@@ -1439,9 +1469,10 @@ func (cfg settlementConfig) verifyChallengeFundingDeposit(ctx context.Context, t
 	}
 
 	lookup, err := cfg.lookupSettlementTx(ctx, txHash, settlementLookupExpectations{
-		Sender:      strings.TrimSpace(expectation.Sender),
-		Recipient:   cfg.EscrowAddress,
-		AmountUWolo: strings.TrimSpace(expectation.TotalFundedUWolo),
+		RequireEscrow: true,
+		Sender:        strings.TrimSpace(expectation.Sender),
+		Recipient:     cfg.EscrowAddress,
+		AmountUWolo:   strings.TrimSpace(expectation.TotalFundedUWolo),
 	})
 	if err != nil {
 		return settlementChallengeFundingVerifyResponse{}, err
@@ -1459,6 +1490,18 @@ func (cfg settlementConfig) verifyChallengeFundingDeposit(ctx context.Context, t
 		response.Detail = "tx hash not found on WoloChain REST"
 		response.Funding.FailureCode = response.FailureCode
 		response.Funding.Detail = response.Detail
+		return response, nil
+	}
+	if !lookup.TxSuccess {
+		response.FailureCode = "TX_FAILED"
+		response.Detail = fmt.Sprintf("tx failed on WoloChain with code %d", lookup.Code)
+		response.Funding.FailureCode = response.FailureCode
+		response.Funding.Detail = response.Detail
+		response.Funding.ChainID = lookup.ChainID
+		response.Funding.FundingTxHash = lookup.TxHash
+		response.Funding.Height = lookup.Height
+		response.Funding.Code = lookup.Code
+		response.Funding.Timestamp = lookup.Timestamp
 		return response, nil
 	}
 	if lookup.Kind != "escrow_deposit" {
@@ -1512,6 +1555,7 @@ func validateChallengeFundingExpectation(expectation settlementChallengeFundingE
 	if sender := strings.TrimSpace(expectation.Sender); sender != "" && !isWoloAddress(sender, addressPrefix) {
 		return errors.New("expected_sender must be a valid WOLO address")
 	}
+	sourceApp := strings.TrimSpace(expectation.SourceApp)
 	if sourceApp := strings.TrimSpace(expectation.SourceApp); sourceApp != "" {
 		if _, err := normalizeSettlementRunMetadataID("source_app", sourceApp, 64, settlementRequestIDPattern); err != nil {
 			return err
@@ -1525,6 +1569,21 @@ func validateChallengeFundingExpectation(expectation settlementChallengeFundingE
 	if challengeID := strings.TrimSpace(expectation.ChallengeID); challengeID != "" {
 		if _, err := normalizeSettlementRunMetadataID("challenge_id", challengeID, 128, settlementSourceEventPattern); err != nil {
 			return err
+		}
+		if strings.EqualFold(sourceApp, settlementAoE2HDBetsSourceApp) &&
+			settlementAoE2HDBetsChallengeIDPattern.MatchString(challengeID) {
+			if settlementRunID := strings.TrimSpace(expectation.SettlementRunID); settlementRunID != "" &&
+				settlementRunID != aoE2HDBetsChallengeSettlementRunID(challengeID) {
+				return fmt.Errorf(
+					"settlement_run_id must be %q for AoE2HDBets challenge_id %q",
+					aoE2HDBetsChallengeSettlementRunID(challengeID),
+					challengeID,
+				)
+			}
+			if participantSide := strings.TrimSpace(expectation.ParticipantSide); participantSide != "" &&
+				participantSide != "left" && participantSide != "right" {
+				return errors.New("participant_side must be left or right for an AoE2HDBets challenge")
+			}
 		}
 	}
 	if sourceEventID := strings.TrimSpace(expectation.SourceEventID); sourceEventID != "" {
@@ -1543,7 +1602,6 @@ func validateChallengeFundingExpectation(expectation settlementChallengeFundingE
 	for field, value := range map[string]string{
 		"expected_amount_uwolo": strings.TrimSpace(expectation.TotalFundedUWolo),
 		"wager_uwolo":           strings.TrimSpace(expectation.WagerUWolo),
-		"guarantee_uwolo":       strings.TrimSpace(expectation.GuaranteeUWolo),
 	} {
 		if value == "" {
 			continue
@@ -1551,6 +1609,11 @@ func validateChallengeFundingExpectation(expectation settlementChallengeFundingE
 		parsed, err := strconv.ParseUint(value, 10, 64)
 		if err != nil || parsed == 0 {
 			return fmt.Errorf("%s must be a positive integer", field)
+		}
+	}
+	if value := strings.TrimSpace(expectation.GuaranteeUWolo); value != "" {
+		if !isCanonicalNonNegativeInteger(value) {
+			return errors.New("guarantee_uwolo must be a canonical non-negative integer")
 		}
 	}
 	return nil
@@ -1565,6 +1628,11 @@ func parseChallengeFundingResult(transfer settlementTransfer, lookup settlementL
 	values, err := url.ParseQuery(strings.TrimPrefix(memo, settlementChallengeFundingMemoPrefix))
 	if err != nil {
 		return settlementChallengeFundingResult{}, fmt.Errorf("memo query string is invalid: %w", err)
+	}
+	if strings.EqualFold(values.Get("app"), settlementAoE2HDBetsSourceApp) {
+		if err := validateCanonicalAoE2HDBetsFundingMemo(values); err != nil {
+			return settlementChallengeFundingResult{}, err
+		}
 	}
 
 	getValue := func(keys ...string) string {
@@ -1629,11 +1697,11 @@ func parseChallengeFundingResult(transfer settlementTransfer, lookup settlementL
 		return settlementChallengeFundingResult{}, errors.New("memo is missing participant_side or participant_id")
 	}
 
-	wagerUWolo, err := parseChallengeMemoAmount("wager_uwolo", getValue("wager_uwolo", "w"))
+	wagerUWolo, err := parseChallengeMemoAmount("wager_uwolo", getValue("wager_uwolo", "w"), false)
 	if err != nil {
 		return settlementChallengeFundingResult{}, err
 	}
-	guaranteeUWolo, err := parseChallengeMemoAmount("guarantee_uwolo", getValue("guarantee_uwolo", "g"))
+	guaranteeUWolo, err := parseChallengeMemoAmount("guarantee_uwolo", getValue("guarantee_uwolo", "g"), true)
 	if err != nil {
 		return settlementChallengeFundingResult{}, err
 	}
@@ -1657,6 +1725,11 @@ func parseChallengeFundingResult(transfer settlementTransfer, lookup settlementL
 		OK:                         true,
 		DepositFound:               true,
 		FundingTxHash:              lookup.TxHash,
+		ChainID:                    lookup.ChainID,
+		TxSuccess:                  lookup.TxSuccess,
+		Height:                     lookup.Height,
+		Code:                       lookup.Code,
+		Timestamp:                  lookup.Timestamp,
 		SourceApp:                  sourceApp,
 		SettlementRunID:            settlementRunID,
 		ChallengeID:                challengeID,
@@ -1679,13 +1752,82 @@ func parseChallengeFundingResult(transfer settlementTransfer, lookup settlementL
 	}, nil
 }
 
-func parseChallengeMemoAmount(fieldName, raw string) (uint64, error) {
+func validateCanonicalAoE2HDBetsFundingMemo(values url.Values) error {
+	requiredKeys := []string{"app", "sid", "cid", "side", "w", "g", "t"}
+	if len(values) != len(requiredKeys) {
+		return errors.New("AoE2HDBets funding memo must contain exactly app, sid, cid, side, w, g, and t")
+	}
+	for _, key := range requiredKeys {
+		entries, ok := values[key]
+		if !ok || len(entries) != 1 || strings.TrimSpace(entries[0]) == "" {
+			return fmt.Errorf("AoE2HDBets funding memo must contain exactly one non-empty %s value", key)
+		}
+	}
+	if values.Get("app") != settlementAoE2HDBetsSourceApp {
+		return errors.New("AoE2HDBets funding memo app must be exactly aoe2hdbets")
+	}
+
+	challengeID := values.Get("cid")
+	if !settlementAoE2HDBetsChallengeIDPattern.MatchString(challengeID) {
+		return errors.New("AoE2HDBets funding memo cid must be a canonical positive integer")
+	}
+	expectedSettlementRunID := aoE2HDBetsChallengeSettlementRunID(challengeID)
+	if values.Get("sid") != expectedSettlementRunID {
+		return fmt.Errorf(
+			"AoE2HDBets funding memo sid=%q must equal %q for cid=%q",
+			values.Get("sid"),
+			expectedSettlementRunID,
+			challengeID,
+		)
+	}
+	if side := values.Get("side"); side != "left" && side != "right" {
+		return errors.New("AoE2HDBets funding memo side must be left or right")
+	}
+	for _, key := range []string{"w", "t"} {
+		if !isCanonicalPositiveInteger(values.Get(key)) {
+			return fmt.Errorf("AoE2HDBets funding memo %s must be a canonical positive uwolo integer", key)
+		}
+	}
+	if !isCanonicalNonNegativeInteger(values.Get("g")) {
+		return errors.New("AoE2HDBets funding memo g must be a canonical non-negative uwolo integer")
+	}
+	return nil
+}
+
+func aoE2HDBetsChallengeSettlementRunID(challengeID string) string {
+	return settlementAoE2HDBetsSourceApp + ":challenge-" + challengeID + ":v1"
+}
+
+func isCanonicalPositiveInteger(value string) bool {
+	if value == "" || value[0] < '1' || value[0] > '9' {
+		return false
+	}
+	for index := 1; index < len(value); index++ {
+		if value[index] < '0' || value[index] > '9' {
+			return false
+		}
+	}
+	_, err := strconv.ParseUint(value, 10, 64)
+	return err == nil
+}
+
+func isCanonicalNonNegativeInteger(value string) bool {
+	if value == "0" {
+		return true
+	}
+	return isCanonicalPositiveInteger(value)
+}
+
+func parseChallengeMemoAmount(fieldName, raw string, allowZero bool) (uint64, error) {
 	raw = strings.TrimSpace(raw)
 	if raw == "" {
 		return 0, fmt.Errorf("memo is missing %s", fieldName)
 	}
 	value, err := strconv.ParseUint(raw, 10, 64)
-	if err != nil || value == 0 {
+	if err != nil {
+		return 0, fmt.Errorf("%s must be an integer", fieldName)
+	}
+	if !allowZero && value == 0 {
 		return 0, fmt.Errorf("%s must be a positive integer", fieldName)
 	}
 	return value, nil
@@ -1737,7 +1879,7 @@ func (cfg settlementConfig) listRecentChallengeFundingDeposits(ctx context.Conte
 		response.Detail = "limit must be greater than zero"
 		return response, nil
 	}
-	if err := validateChallengeFundingExpectation(settlementChallengeFundingExpectation{
+	expectation := settlementChallengeFundingExpectation{
 		Sender:          response.SenderFilter,
 		SourceApp:       response.SourceApp,
 		SettlementRunID: response.SettlementRunID,
@@ -1745,11 +1887,15 @@ func (cfg settlementConfig) listRecentChallengeFundingDeposits(ctx context.Conte
 		SourceEventID:   response.SourceEventID,
 		ParticipantSide: response.ParticipantSide,
 		ParticipantID:   response.ParticipantID,
-	}, cfg.AddressPrefix); err != nil {
+	}
+	if err := validateChallengeFundingExpectation(expectation, cfg.AddressPrefix); err != nil {
 		response.FailureCode = "INVALID_CHALLENGE"
 		response.Detail = err.Error()
 		return response, nil
 	}
+	// One deadline bounds search and all exact transaction observations together.
+	ctx, cancel := context.WithTimeout(ctx, cfg.LookupTimeout)
+	defer cancel()
 
 	searchLimit := response.Limit * 5
 	if searchLimit < response.Limit {
@@ -1768,44 +1914,28 @@ func (cfg settlementConfig) listRecentChallengeFundingDeposits(ctx context.Conte
 		return response, nil
 	}
 
-	items := make([]settlementChallengeFundingResult, 0, response.Limit)
+	items := make([]settlementChallengeFundingResult, 0, len(escrowRecent.Deposits))
+	seen := make(map[string]struct{}, len(escrowRecent.Deposits))
 	for _, deposit := range escrowRecent.Deposits {
-		lookup := settlementLookupResponse{
-			OK:                         deposit.TxSuccess,
-			Found:                      true,
-			ChainID:                    cfg.ChainID,
-			TxHash:                     deposit.TxHash,
-			TxSuccess:                  deposit.TxSuccess,
-			Kind:                       "escrow_deposit",
-			Height:                     deposit.Height,
-			Memo:                       deposit.Memo,
-			Timestamp:                  deposit.Timestamp,
-			CanonicalTxLookup:          deposit.CanonicalTxLookup,
-			CanonicalTxLookupPreferred: deposit.CanonicalTxLookupPreferred,
-			CanonicalTxLookupInternal:  deposit.CanonicalTxLookupInternal,
-			CanonicalTxLookupPublic:    deposit.CanonicalTxLookupPublic,
-			MatchedTransfer: &settlementTransfer{
-				Sender:    deposit.Sender,
-				Recipient: deposit.Recipient,
-				Amount:    deposit.AmountUWolo,
-				Denom:     cfg.BaseDenom,
-			},
+		if ctx.Err() != nil {
+			break
 		}
-		funding, err := parseChallengeFundingResult(*lookup.MatchedTransfer, lookup, cfg.EscrowAddress)
-		if err != nil {
+		hash := normalizeTxHash(deposit.TxHash)
+		if len(hash) != 64 || !isHexHash(hash) {
 			continue
 		}
-		if mismatch := compareChallengeFundingExpectation(funding, settlementChallengeFundingExpectation{
-			Sender:          response.SenderFilter,
-			SourceApp:       response.SourceApp,
-			SettlementRunID: response.SettlementRunID,
-			ChallengeID:     response.ChallengeID,
-			SourceEventID:   response.SourceEventID,
-			ParticipantSide: response.ParticipantSide,
-			ParticipantID:   response.ParticipantID,
-		}); mismatch != "" {
+		if _, exists := seen[hash]; exists {
 			continue
 		}
+		seen[hash] = struct{}{}
+		// Search events identify candidates only. Reuse the same exact bytes,
+		// committed result, bank effect and memo contract as direct verification
+		// before exposing Funding.OK. Repeated rows never repeat an observation.
+		verified, err := cfg.verifyChallengeFundingDeposit(ctx, hash, expectation)
+		if err != nil || !verified.OK || verified.Funding == nil || !verified.Funding.OK {
+			continue
+		}
+		funding := *verified.Funding
 		funding.Index = len(items)
 		items = append(items, funding)
 		if len(items) >= response.Limit {
@@ -1813,6 +1943,11 @@ func (cfg settlementConfig) listRecentChallengeFundingDeposits(ctx context.Conte
 		}
 	}
 
+	if ctx.Err() != nil {
+		response.FailureCode = "LOOKUP_FAILED"
+		response.Detail = "challenge funding evidence collection was canceled or exceeded the lookup deadline"
+		return response, nil
+	}
 	response.OK = true
 	response.Count = len(items)
 	response.Funding = items
@@ -1834,7 +1969,9 @@ func (cfg settlementConfig) resolveEscrowAddress(ctx context.Context) (string, e
 		args = append(args, "--keyring-dir", cfg.KeyringDir)
 	}
 
-	cmd := exec.CommandContext(ctx, cfg.ExecutablePath, args...)
+	executablePath, commandArgs := cfg.executableCommand(args)
+	cmd := exec.CommandContext(ctx, executablePath, commandArgs...)
+	cfg.attachKeyringPassphrase(cmd)
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
 	output, err := cmd.Output()
@@ -1895,10 +2032,19 @@ func (cfg settlementConfig) executeEscrowTransfer(ctx context.Context, request s
 				}, nil
 			}
 
+			if held := cfg.guardSettlementStoredReplay(ctx, stored); held != nil {
+				return *held, nil
+			}
 			if stored.Response.OK || stored.Response.TxHash != "" || !stored.Response.Retryable {
 				replayed := stored.Response
 				replayed.IdempotentReplay = true
 				return replayed, nil
+			}
+			// The historical writer could persist a retryable RPC timeout AFTER
+			// invoking bank-send, with no returned tx hash. Only a narrowly
+			// proved pre-signing refusal may be retried after this upgrade.
+			if !legacySettlementPreflightRetryProven(stored.Response, normalized.SignerRole) {
+				return quarantineAmbiguousLegacySettlementResponse(stored.Response), nil
 			}
 		} else if !errors.Is(readErr, os.ErrNotExist) {
 			return settlementExecuteResponse{
@@ -1932,7 +2078,13 @@ func (cfg settlementConfig) executeEscrowTransfer(ctx context.Context, request s
 			return *failure, nil
 		}
 
+		// Persist an explicitly ambiguous, non-retryable request before calling
+		// the signing/broadcast command. A crash cannot erase the request ID.
+		if err := cfg.writeSettlementPrebroadcastHold(recordPath, normalized, signerAddress); err != nil {
+			return settlementExecuteResponse{}, err
+		}
 		result := cfg.broadcastEscrowTransfer(ctx, normalized, signerAddress)
+		result = preserveUnresolvedSettlementBroadcast(result)
 		if err := cfg.writeSettlementRecord(recordPath, normalized, signerAddress, result); err != nil {
 			return settlementExecuteResponse{}, err
 		}
@@ -2091,7 +2243,9 @@ func (cfg settlementConfig) broadcastEscrowTransfer(ctx context.Context, request
 		args = append(args, "--note", request.Memo)
 	}
 
-	cmd := exec.CommandContext(ctx, cfg.ExecutablePath, args...)
+	executablePath, commandArgs := cfg.executableCommand(args)
+	cmd := exec.CommandContext(ctx, executablePath, commandArgs...)
+	cfg.attachKeyringPassphrase(cmd)
 	output, err := cmd.CombinedOutput()
 
 	response := settlementExecuteResponse{
@@ -2123,31 +2277,8 @@ func (cfg settlementConfig) broadcastEscrowTransfer(ctx context.Context, request
 			response.CanonicalTxLookupInternal = cfg.txLookupURL(broadcast.TxHash)
 			response.CanonicalTxLookupPublic = cfg.publicTxLookupURL(broadcast.TxHash)
 			if broadcast.Code == 0 {
-				confirmed, confirmErr := cfg.waitForTxConfirmation(ctx, broadcast.TxHash)
-				if confirmErr == nil && confirmed != nil {
-					response.Code = confirmed.Code
-					response.Codespace = confirmed.Codespace
-					response.RawLog = confirmed.RawLog
-					if confirmed.TxSuccess {
-						response.OK = true
-						response.Status = "confirmed"
-						response.Detail = "escrow transfer confirmed on WoloChain"
-						return response
-					}
-
-					response.FailureCode = classifyRejectedTx(confirmed.RawLog, confirmed.Code)
-					response.Detail = fmt.Sprintf("tx failed with code %d", confirmed.Code)
-					response.Retryable = false
-					return response
-				}
-
-				response.OK = true
-				response.Status = "accepted"
-				if confirmErr != nil {
-					response.Detail = "escrow transfer broadcast accepted; final confirmation check failed"
-				} else {
-					response.Detail = "escrow transfer broadcast accepted; final confirmation pending"
-				}
+				confirmed, confirmErr := cfg.waitForTxConfirmation(ctx, broadcast.TxHash, payoutConfirmationExpectations(request, signerAddress))
+				cfg.applySettlementConfirmation(ctx, &response, request, signerAddress, confirmed, confirmErr)
 				return response
 			}
 
@@ -2195,6 +2326,7 @@ func mergeChallengeRunResults(transfers []normalizedSettlementChallengeTransfer,
 		if payout, ok := resultsByRequestID[transfer.RequestID]; ok {
 			result.Attempted = payout.Attempted
 			result.OK = payout.OK
+			result.ConfirmationStatus = payout.ConfirmationStatus
 			result.Status = payout.Status
 			result.Outcome = payout.Outcome
 			result.FailureCode = payout.FailureCode
@@ -2398,7 +2530,7 @@ func settlementChallengeResponseIsFinal(response settlementChallengeResponse) bo
 	if response.Retryable {
 		return false
 	}
-	return response.OK || strings.EqualFold(strings.TrimSpace(response.Status), "failed") || strings.EqualFold(strings.TrimSpace(response.Status), "partial")
+	return response.OK || strings.EqualFold(strings.TrimSpace(response.Status), "failed") || strings.EqualFold(strings.TrimSpace(response.Status), "partial") || strings.EqualFold(strings.TrimSpace(response.Status), "unverifiable")
 }
 
 func hashSettlementChallengeRequest(request normalizedSettlementChallengeRequest) string {
@@ -2424,11 +2556,6 @@ func (cfg settlementConfig) withChallengeLock(settlementID string, fn func() (se
 	lockFile, err := os.OpenFile(lockPath, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0o600)
 	if err != nil {
 		if errors.Is(err, os.ErrExist) {
-			info, statErr := os.Stat(lockPath)
-			if statErr == nil && time.Since(info.ModTime()) > cfg.RequestLockTTL {
-				_ = os.Remove(lockPath)
-				return cfg.withChallengeLock(settlementID, fn)
-			}
 			return settlementChallengeResponse{
 				OK:              false,
 				DryRun:          false,
@@ -2436,7 +2563,7 @@ func (cfg settlementConfig) withChallengeLock(settlementID string, fn func() (se
 				FailureCode:     "CHALLENGE_IN_PROGRESS",
 				Retryable:       true,
 				SettlementRunID: settlementID,
-				Detail:          "another challenge settlement attempt with this settlement_run_id is already running",
+				Detail:          "challenge lock exists; its owner may be running or interrupted; independent reconciliation is required before any lock recovery",
 			}, nil
 		}
 		return settlementChallengeResponse{}, err
@@ -2450,9 +2577,12 @@ func (cfg settlementConfig) withChallengeLock(settlementID string, fn func() (se
 }
 
 func readSettlementChallengeStoredResult(path string) (settlementChallengeStoredResult, error) {
-	data, err := os.ReadFile(path)
+	data, err := readSettlementStateBounded(path, settlementReceiptMaxStateBytes)
 	if err != nil {
 		return settlementChallengeStoredResult{}, err
+	}
+	if !chainjson.ValidFolded(data) {
+		return settlementChallengeStoredResult{}, errSettlementReceiptState
 	}
 	result := settlementChallengeStoredResult{}
 	if err := json.Unmarshal(data, &result); err != nil {

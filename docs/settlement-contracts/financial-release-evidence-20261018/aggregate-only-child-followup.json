@@ -1,0 +1,55 @@
+{
+  "mode": "READ_ONLY_PRIMARY_AGGREGATE_ONLY_CHILD_CONTEXT",
+  "observedAtUtc": "2026-10-18T18:18:02.674979+00:00",
+  "status": "HELD",
+  "observation_atomic": false,
+  "leaf_request_count": 920,
+  "run_record_count": 793,
+  "missing_unique_child_count": 1,
+  "missing_unique_requested_principal_uwolo": "1323000000000",
+  "findings": [
+    {
+      "source_record_sha256": "1efbc5c65b51cf4556639b5676321c9120d4d0c510b905e9006310676e412a0e",
+      "signer_role": "payout",
+      "requested_principal_uwolo": "1323000000000",
+      "parent_recorded_status": "failed",
+      "parent_ok": false,
+      "parent_retryable": true,
+      "parent_dry_run": false,
+      "parent_failure_category": "PREBROADCAST_FUNDS_OR_RESERVE_GUARD",
+      "parent_counts": {
+        "requested_payout_count": 1,
+        "executed_payout_count": 0,
+        "confirmed_payout_count": 0,
+        "accepted_payout_count": 0,
+        "refused_payout_count": 1,
+        "rejected_payout_count": 0
+      },
+      "matching_child_response_count": 1,
+      "matching_child_response_summaries": [
+        {
+          "recorded_status": "failed",
+          "ok": false,
+          "retryable": true,
+          "attempted": false,
+          "failure_category": "PREBROADCAST_FUNDS_OR_RESERVE_GUARD",
+          "tx_hash_present": false,
+          "tx_hash_shape_valid": true
+        }
+      ]
+    }
+  ],
+  "bytes_observed": 4553242,
+  "chain_outcomes_verified": false,
+  "actual_liability_proven": false,
+  "absence_of_payment_proven": false,
+  "retry_authorized": false,
+  "release_authorized": false,
+  "filesystem_writes": false,
+  "raw_ids_addresses_memos_errors_or_hashes_printed": false,
+  "limits": [
+    "Recorded plan/refusal/attempt fields describe local state only; no chain query or independent payment exclusion was performed.",
+    "No missing request implies failed payment, resolved liability or retry authorization.",
+    "Production remains active; this is not a quiesced or atomic observation."
+  ]
+}

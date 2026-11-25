@@ -3,11 +3,11 @@
 set -euo pipefail
 
 BACKUP_DIR="${BACKUP_DIR:-${1:-}}"
-SETTLEMENT_BIN_PATH="${SETTLEMENT_BIN_PATH:-/var/www/WoloChain/build/wolochaind}"
-SETTLEMENT_ENV_PATH="${SETTLEMENT_ENV_PATH:-/etc/wolochain-settlement.env}"
-SETTLEMENT_STATE_DIR="${WOLO_SETTLEMENT_STATE_DIR:-/mnt/HC_Volume_105319120/wolochain/settlement-state}"
-NODE_SERVICE_NAME="${NODE_SERVICE_NAME:-wolochaind-testnet.service}"
-SETTLEMENT_SERVICE_NAME="${SETTLEMENT_SERVICE_NAME:-wolochain-settlement.service}"
+SETTLEMENT_BIN_PATH="${SETTLEMENT_BIN_PATH:-/usr/local/bin/wolochaind-mainnet}"
+SETTLEMENT_ENV_PATH="${SETTLEMENT_ENV_PATH:-/etc/wolochain-mainnet-settlement.env}"
+SETTLEMENT_STATE_DIR="${WOLO_SETTLEMENT_STATE_DIR:-/mnt/HC_Volume_105319120/wolochain-mainnet/settlement-state}"
+NODE_SERVICE_NAME="${NODE_SERVICE_NAME:-wolochaind-mainnet.service}"
+SETTLEMENT_SERVICE_NAME="${SETTLEMENT_SERVICE_NAME:-wolochain-mainnet-settlement.service}"
 RESTORE_MODE="${RESTORE_MODE:-shared-binary}"
 VERIFY_AFTER_RESTORE="${VERIFY_AFTER_RESTORE:-1}"
 RESTORE_FREE_HEADROOM_KB="${RESTORE_FREE_HEADROOM_KB:-131072}"
