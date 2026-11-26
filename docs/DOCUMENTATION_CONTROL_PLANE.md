@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `we1/chat-media-protected-delivery-20261124` at `522da037fbfb647cc63d9bb1e6057d0fc522e3fd`
+Implementation baseline: `we1/direct-inbox-restricted-reader-20261126` at `1376638114a94d50ecd341800e06a313ac21ad3c`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
