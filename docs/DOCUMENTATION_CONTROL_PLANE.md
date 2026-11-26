@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `we1/clan-image-member-only-20261125` at `6e673f13ab64ae8a8ca3d496c82dff536f606d3a`
+Implementation baseline: `we1/clan-hall-restricted-reader-20261126` at `60cb0a164d035087e873f3153c00ed39e36e49db`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 

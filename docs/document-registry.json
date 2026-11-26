@@ -1175,7 +1175,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-11-10",
       "sensitivity": "internal",
-      "sha256": "81567a167ef4bb87ec3c8aecc0742258f0383b6acb651d05d5ad22981f2a8210",
+      "sha256": "5361b54e0a8db2a2bdcd51efae3a906e0f5fd7e732f8d20187580bd25498e088",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -2344,8 +2344,8 @@
   ],
   "generated_at": "2026-11-19T17:35:00+00:00",
   "implementation_baseline": {
-    "branch": "we1/clan-image-member-only-20261125",
-    "commit": "6e673f13ab64ae8a8ca3d496c82dff536f606d3a"
+    "branch": "we1/clan-hall-restricted-reader-20261126",
+    "commit": "60cb0a164d035087e873f3153c00ed39e36e49db"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",

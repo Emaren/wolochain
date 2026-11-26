@@ -1,0 +1,24 @@
+CREATE DATABASE aoe2hd_db;
+\c aoe2hd_db
+CREATE ROLE aoe2hd_user LOGIN;
+CREATE ROLE aoe2war_social_writer LOGIN NOINHERIT;
+CREATE ROLE aoe2war_web_prod LOGIN NOINHERIT;
+CREATE SCHEMA aoe2war_social_hd_v2;
+CREATE FUNCTION aoe2war_social_hd_v2.clan_text(text,text,text,text) RETURNS jsonb LANGUAGE sql AS 'SELECT NULL::jsonb';
+CREATE TABLE users(id serial primary key,uid text unique,verification_method text,in_game_name text,steam_persona_name text,is_admin boolean);
+CREATE TABLE clans(id serial primary key,slug text unique,status text,chat_audience_policy text,name text,tagline text,description text,crest_url text);
+CREATE TABLE clan_members(id serial primary key,user_id int,clan_id int,status text,role text,UNIQUE(user_id,clan_id));
+CREATE TABLE clan_messages(id serial primary key,clan_id int,author_user_id int,body varchar(1200),audience text,created_at timestamp,updated_at timestamp);
+CREATE TABLE clan_message_attachments(id serial primary key,message_id int,kind text,name text,mime_type text,storage_ref text,size_bytes int);
+CREATE TABLE finance_sentinel(id int,user_id int);
+ALTER TABLE users OWNER TO aoe2hd_user;
+ALTER TABLE clans OWNER TO aoe2hd_user;
+ALTER TABLE clan_members OWNER TO aoe2hd_user;
+ALTER TABLE clan_messages OWNER TO aoe2hd_user;
+ALTER TABLE clan_message_attachments OWNER TO aoe2hd_user;
+INSERT INTO users(uid,verification_method,in_game_name,is_admin) VALUES ('alice','steam','Alice',false),('bob','steam','Bob',false),('eve','steam','Eve',true),('bot','system','Bot',false);
+INSERT INTO clans(slug,status,chat_audience_policy,name) VALUES ('alpha','active','clan','Alpha'),('beta','active','public','Beta');
+INSERT INTO clan_members(user_id,clan_id,status,role) VALUES (1,1,'active','member'),(2,1,'active','leader'),(3,2,'active','member'),(4,1,'active','member');
+INSERT INTO clan_messages(clan_id,author_user_id,body,audience,created_at,updated_at) SELECT 1,2,'hello '||i,'clan',timestamp '2026-11-26 00:00:00'+i*interval '1 second',timestamp '2026-11-26 00:00:00'+i*interval '1 second' FROM generate_series(1,82) i;
+INSERT INTO clan_messages(clan_id,author_user_id,body,audience,created_at,updated_at) VALUES (2,3,'other clan','public',now(),now()),(1,2,'unexpected audience','secret',now(),now()),(1,2,'','clan',now(),now()),(1,2,'legacy','clan',now(),now());
+INSERT INTO clan_message_attachments(message_id,kind,name,mime_type,storage_ref,size_bytes) VALUES (85,'image','x.png','image/png','file:v1:clan-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.png',123),(86,'image','old.png','image/png','data:image/png;base64,AAAA',123);
