@@ -8,10 +8,15 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "runtime-evidence"
 authority: "mainnet-settlement-operations"
-reviewed_at: "2026-11-10"
+reviewed_at: "2026-11-25"
 review_interval_days: 14
 sensitivity: "restricted"
 ---
+
+
+## November 25, 2026 — bounded current authority and evidence precedence
+
+Central #46 retains C04/C08 CLOSED, seven gates OPEN, funding DENIED, custody inactive. HEL1 12:51:06Z socket observation confirms 8092–8095 absent and 3030/3032/3033/5432 loopback. Earlier R25 PID/Steam observations are dated history, not current release identity. #258 remains a held source candidate; no C06/C07 physical proof from Clan/Radio fixtures or storage transport. Social V2 seq3 installed Nov20; never reinstall or reuse its permit. This review updates operating precedence only, not the authorization or validity of archived commands.
 
 # WoloChain Mainnet Settlement Runbook
 

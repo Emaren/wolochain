@@ -1221,7 +1221,7 @@
       "review_interval_days": 30,
       "reviewed_at": "2026-11-10",
       "sensitivity": "internal",
-      "sha256": "37028a573f963f92a84ce6b1a8f8ca8c2407e7ffb7edce46c105ff0c069822be",
+      "sha256": "344dda515c25fb2d0eb0ea8dcb9867fd88a69bbc74618b80aade569970c4e6cf",
       "source_of_truth": "git",
       "status": "active",
       "systems": [
@@ -1540,9 +1540,9 @@
       "owner": "wolochain-ops",
       "path": "docs/mainnet-settlement-runbook.md",
       "review_interval_days": 14,
-      "reviewed_at": "2026-11-10",
+      "reviewed_at": "2026-11-25",
       "sensitivity": "restricted",
-      "sha256": "2e2a716367709151723f08c221f38bc5fa486e42ad3388a1984bcc175f125a95",
+      "sha256": "e61ef848158bc39eeef198617fa8962b3e86a56ebf3fd91a0c11ce84466e0357",
       "source_of_truth": "runtime-evidence",
       "status": "active",
       "systems": [
@@ -2367,8 +2367,8 @@
   ],
   "generated_at": "2026-11-19T17:35:00+00:00",
   "implementation_baseline": {
-    "branch": "we1/chat-media-protected-delivery-20261124",
-    "commit": "522da037fbfb647cc63d9bb1e6057d0fc522e3fd"
+    "branch": "we1/direct-inbox-restricted-reader-20261126",
+    "commit": "1376638114a94d50ecd341800e06a313ac21ad3c"
   },
   "owner": "wolochain-ops",
   "repo": "wolochain",
