@@ -1,0 +1,21 @@
+CREATE ROLE aoe2hd_user NOLOGIN NOINHERIT;
+CREATE ROLE aoe2war_social_writer LOGIN NOINHERIT;
+CREATE ROLE aoe2war_web_prod LOGIN NOINHERIT;
+CREATE DATABASE aoe2hd_db;
+\connect aoe2hd_db
+CREATE TABLE public.users(id integer PRIMARY KEY,uid varchar(100) UNIQUE NOT NULL,in_game_name varchar,steam_persona_name varchar,is_admin boolean NOT NULL DEFAULT false,verification_method varchar NOT NULL DEFAULT 'steam');
+CREATE TABLE public.direct_conversations(id integer PRIMARY KEY,pair_key varchar(64) UNIQUE NOT NULL,updated_at timestamp NOT NULL DEFAULT now());
+CREATE TABLE public.direct_conversation_participants(id serial PRIMARY KEY,conversation_id integer NOT NULL,user_id integer NOT NULL,last_read_at timestamp,UNIQUE(conversation_id,user_id));
+CREATE TABLE public.direct_messages(id integer PRIMARY KEY,conversation_id integer NOT NULL,sender_user_id integer NOT NULL,body text,transcription text,created_at timestamp NOT NULL DEFAULT now(),delivered_at timestamp,edited_at timestamp,reply_to_message_id integer,attachment_kind varchar,attachment_name varchar,attachment_mime_type varchar,attachment_data_url text);
+ALTER TABLE public.users OWNER TO aoe2hd_user;
+ALTER TABLE public.direct_conversations OWNER TO aoe2hd_user;
+ALTER TABLE public.direct_conversation_participants OWNER TO aoe2hd_user;
+ALTER TABLE public.direct_messages OWNER TO aoe2hd_user;
+CREATE TABLE public.financial_sentinel(id integer PRIMARY KEY);
+INSERT INTO public.financial_sentinel VALUES(123);
+INSERT INTO public.users(id,uid,in_game_name,is_admin) VALUES(1,'alice','Alice',false),(2,'bob','Bob',false),(3,'outsider','Outside',true),(4,'dave','Dave',false),(5,'extra','Extra',false);
+INSERT INTO public.direct_conversations(id,pair_key) VALUES(1,'1:2'),(2,'3:4'),(3,'1:5');
+INSERT INTO public.direct_conversation_participants(conversation_id,user_id) VALUES(1,1),(1,2),(2,3),(2,4),(3,1),(3,5),(3,3);
+INSERT INTO public.direct_messages(id,conversation_id,sender_user_id,body) SELECT i,1,CASE WHEN i%2=0 THEN 1 ELSE 2 END,'fixture '||i FROM generate_series(1,90)i;
+INSERT INTO public.direct_messages(id,conversation_id,sender_user_id,body) VALUES(100,2,3,'other private'),(101,3,5,'corrupt pair'),(102,1,3,'corrupt sender');
+INSERT INTO public.direct_messages(id,conversation_id,sender_user_id,body,reply_to_message_id,attachment_kind,attachment_name,attachment_mime_type,attachment_data_url) VALUES(91,1,2,'needle',100,'image','fixture.png','image/png','file:v1:dm-01234567-89ab-cdef-0123-456789abcdef.png'),(92,1,2,'legacy',NULL,'image','legacy.png','image/png','data:image/png;base64,AAAA');
