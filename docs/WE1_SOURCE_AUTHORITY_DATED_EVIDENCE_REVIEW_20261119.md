@@ -8,7 +8,7 @@ systems: ["wolochain","aoe2war"]
 audience: ["developers","operators","ai-agents"]
 source_of_truth: "git"
 authority: "AI-machine-assisted-review-nonfinancial-nonfunding"
-reviewed_at: "2026-11-19"
+reviewed_at: "2026-11-27"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -94,3 +94,7 @@ C04/C08 CLOSED. C01/C02/C03/C05/C06/C07/C09 OPEN. Funding DENIED. The website Li
 ## Remaining gaps
 
 These scoped documentation reviews do not establish the full real PostgreSQL writer graph, new root/owner permits, eligible reserves, accepted C06 ciphertext, matching C07 restore, or a funded C09 canary. Some source-looking references are historical or cross-repository; their nonresolution is counted, not hidden. Any source-to-live claim still requires an independent protected physical receipt.
+
+## Current applicability — 2026-11-27
+
+Exact source and dated-evidence scope review only: this document was byte-identical to the November 19 reviewed version before this renewal. Its earlier observations, commands and receipts remain historical; they do not authorize live execution. Current gate precedence: [#239](https://github.com/Emaren/wolochain/issues/239), C04/C08 closed, seven gates open, no funded operation authorized. No new custody, reserve, backup, writer-fence or funded-canary certification. See `docs/WE1_SOURCE_SCOPE_REVIEW_20261127.md` for preserved preimage hashes and review limitations.

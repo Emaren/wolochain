@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war"]
 audience: ["operators", "developers", "financial-reviewers", "ai-agents"]
 source_of_truth: "git"
 authority: "root-private-repeatable-read-historical-claim-attribution-never-payment-or-reserve-admission"
-reviewed_at: "2026-11-19"
+reviewed_at: "2026-11-27"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
@@ -102,3 +102,7 @@ An AI source examiner acting through the sole owner's existing connected source 
 **Topic-specific reconciliation (reserves and liabilities):** C05 is OPEN. Amounts, 24-wallet indexes and earlier bank results are not an independently authenticated, disjoint same-height liability/reserve solvency proof.
 
 **Current controlling decision:** WoloChain issue #239 and reviewed code head `70a95e8f9cb0facbec314063e9deafe7e15aa550`. C04 and C08 CLOSED; C01/C02/C03/C05/C06/C07/C09 OPEN; funding DENIED. The original test/source facts remain evidence only and may not authorize live SQL, HBA, custody, funds, backups or a canary. Live acceptance requires exact source, legitimate protected owner authority and independent physical readback.
+
+## Current applicability — 2026-11-27
+
+Exact source and dated-evidence scope review only: this document was byte-identical to the November 19 reviewed version before this renewal. Its earlier observations, commands and receipts remain historical; they do not authorize live execution. Current gate precedence: [#239](https://github.com/Emaren/wolochain/issues/239), C04/C08 closed, seven gates open, no funded operation authorized. No new custody, reserve, backup, writer-fence or funded-canary certification. See `docs/WE1_SOURCE_SCOPE_REVIEW_20261127.md` for preserved preimage hashes and review limitations.
