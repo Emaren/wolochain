@@ -13,7 +13,7 @@ review_interval_days: 7
 sensitivity: "restricted"
 ---
 
-# November 27 source scope review
+# November 27 financial dated-evidence source scope review
 
 Machine-assisted incremental review, not fresh physical evidence or independent human ratification. All 51 expired files were compared byte-for-byte against the November 19 individually reviewed commit `40179af91eb118e379091d56c67a73ca587b0808`; every comparison matched, including authority metadata and body. The intervening source delta was enumerated: new restricted HD Chat/reader/media code and tests, documentation precedence updates, manifest and workflow changes, and a C08 witness test edit. No financial gate is closed by these changes. Current issue #239 was inspected and retains C04/C08 closed, seven gates open, no funding. November 24/25 runbook updates distinguish historic active listeners and earlier ceremonies from current HOLD. The current native HD catalog witness is restricted to Chat; it is not a full C03 writer graph. No fresh custody, solvency, C06/C07 capture/restore or C09 evidence was verified. Renewed dates describe source applicability only, not physical observation freshness. Prior bodies and authority labels preserved; appended precedence warning on every file. No executable financial source changed in this documentation commit.
 
