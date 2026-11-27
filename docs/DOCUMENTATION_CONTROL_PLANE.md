@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `we1/direct-inbox-restricted-reader-20261126` at `1376638114a94d50ecd341800e06a313ac21ad3c`
+Implementation baseline: `we1/direct-read-ack-source-review-20261127` at `08c68292e12aaa49048a1f57b067b2f9850aaa69`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
@@ -27,7 +27,7 @@ This page is generated from the validated front matter in this repository. Cross
 
 ## Documentation health
 
-- Authoritative repository documents: **101**
+- Authoritative repository documents: **103**
 - Path moves in this migration: **0**
 - Every listed document has an explicit owner, lifecycle, authority, and review interval.
 
@@ -36,12 +36,12 @@ This page is generated from the validated front matter in this repository. Cross
 - `historical`: 14
 - `reference`: 49
 - `runbook`: 33
-- `working`: 5
+- `working`: 7
 
 ### Lifecycle
 
 - `active`: 16
-- `draft`: 71
+- `draft`: 73
 - `historical`: 14
 
 ## Documents
@@ -101,6 +101,7 @@ This page is generated from the validated front matter in this repository. Cross
 | [C09 Ratified C08 Governance Bridge — Signed Canary Ceiling and No Spending](C09_RATIFIED_C08_POLICY_BRIDGE.md) | `runbook` | `draft` | `authenticated-C08-governance-preflight-only-no-spending-permit` |
 | [WE1 solo-owner financial engineering — source review vs physical authority](WE1_SOLO_OWNER_FINANCIAL_TECHNICAL_REVIEW_POLICY_20261119.md) | `working` | `draft` | `single-human-source-review-policy-no-production-permit` |
 | [WE1 Source Authority and Dated Evidence Review — November 19, 2026](WE1_SOURCE_AUTHORITY_DATED_EVIDENCE_REVIEW_20261119.md) | `working` | `draft` | `AI-machine-assisted-review-nonfinancial-nonfunding` |
+| [November 27 financial dated-evidence source scope review](WE1_SOURCE_SCOPE_REVIEW_20261127.md) | `working` | `draft` | `nonfunding-source-delta-review-only` |
 | [Native epoch-v3 wire-v1 trust mismatch and held handoff](epoch-v3-wire-v1-hold.md) | `reference` | `draft` | `source-only-verifier-mismatch-not-financial-authority` |
 | [Exact Settlement Confirmation C4](exact-settlement-confirmation-c4.md) | `reference` | `draft` | `source-only-exact-settlement-confirmation` |
 | [Legacy Settlement Hardening and Protected Release Handoff](legacy-settlement-hardening.md) | `reference` | `draft` | `source-only-legacy-settlement-hardening` |
@@ -148,6 +149,7 @@ This page is generated from the validated front matter in this repository. Cross
 | [Production P1 source integrity, writer evidence, five-person authority and bounded recovery proposal — 2026-10-24](../reviews/financial-maintenance/20261024-p1-writer-evidence-and-budget-proposal.md) | `runbook` | `draft` | `non-authorizing-financial-human-signature-review` |
 | [Financial maintenance phase integration operator runbook — 2026-10-24](../reviews/financial-maintenance/20261024-phase-integration-operator-runbook.md) | `runbook` | `draft` | `non-authorizing-financial-human-signature-review` |
 | [Financial controller source integrity and five-human enrollment — 2026-10-24](../reviews/financial-maintenance/20261024-source-integrity-enrollment-and-restore-qualification.md) | `runbook` | `draft` | `non-authorizing-financial-human-signature-review` |
+| [HD Direct Chat read acknowledgement source review](../scripts/direct_read_ack_v1/README.md) | `working` | `draft` | `nonfinancial-HD-source-only-no-native-permit` |
 
 ## Canonical commands
 
