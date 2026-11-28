@@ -27,6 +27,9 @@ with tempfile.TemporaryDirectory(prefix='clan-legacy-fixture-',dir='/tmp') as tm
    raw=psql(f"SELECT aoe2war_clan_read_hd_v1.read_hall('{actor}','{slug}',NULL,86)",role='aoe2war_social_writer').stdout.strip();return json.loads(raw) if raw else None
   snap="SELECT md5(string_agg(row_to_json(a)::text,',' ORDER BY id)) FROM public.clan_message_attachments a"
   before=psql(snap).stdout
+  ok('native catalog preflight', 'PASS_NATIVE_CLAN_LEGACY_CATALOG_PREFLIGHT_READ_ONLY' in psql(file=root/'clan_legacy_reader_v1/native-preflight.sql').stdout)
+  psql('GRANT SELECT ON public.clan_message_attachments TO aoe2war_social_writer');ok('preflight rejects raw grant',psql(file=root/'clan_legacy_reader_v1/native-preflight.sql',check=False).returncode!=0);psql('REVOKE SELECT ON public.clan_message_attachments FROM aoe2war_social_writer')
+  psql('ALTER FUNCTION aoe2war_clan_image_hd_v1.read_image(text,text,integer) RESET search_path');ok('preflight rejects search path drift',psql(file=root/'clan_legacy_reader_v1/native-preflight.sql',check=False).returncode!=0);psql('ALTER FUNCTION aoe2war_clan_image_hd_v1.read_image(text,text,integer) SET search_path=pg_catalog,pg_temp')
   ok('original legacy denied',read() is None and hall()['messages'][0]['unsupportedAttachment'])
   ok('wrong database rejected',psql(file=root/'clan_legacy_reader_v1/install.sql',db='postgres',check=False).returncode!=0)
   psql(file=root/'clan_legacy_reader_v1/install.sql')
