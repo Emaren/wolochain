@@ -8,7 +8,7 @@ systems: ["wolochain"]
 audience: ["operators", "developers", "financial-reviewers", "ai-agents"]
 source_of_truth: "git"
 authority: "c01-source-provenance-nonfunded-candidate-review-not-custody-approval"
-reviewed_at: "2026-11-19"
+reviewed_at: "2026-11-28"
 review_interval_days: 7
 sensitivity: "restricted"
 ---

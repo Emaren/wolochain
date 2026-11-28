@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war", "aoe2dewarwagers"]
 audience: ["developers", "operators", "ai-agents"]
 source_of_truth: "git"
 authority: "source-only-c05-historical-payment-ambiguity-no-payment-authority"
-reviewed_at: "2026-11-19"
+reviewed_at: "2026-11-28"
 review_interval_days: 7
 sensitivity: "restricted"
 ---

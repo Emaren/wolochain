@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war"]
 audience: ["developers", "operators", "financial-reviewers", "ai-agents"]
 source_of_truth: "git"
 authority: "authenticated-C08-governance-preflight-only-no-spending-permit"
-reviewed_at: "2026-11-19"
+reviewed_at: "2026-11-28"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
