@@ -1,3 +1,18 @@
+---
+id: "aoe2war.wolochain.clan-legacy-reader-v1"
+title: "Historical Clan image admission — source review only"
+type: "working"
+status: "draft"
+owner: "wolochain-ops"
+systems: ["wolochain", "aoe2war"]
+audience: ["developers", "operators", "ai-agents"]
+source_of_truth: "git"
+authority: "source-only-clan-legacy-reader-not-production-admission"
+reviewed_at: "2026-11-28"
+review_interval_days: 7
+sensitivity: "restricted"
+---
+
 # Historical Clan image admission — source review only
 
 Exact successor to #266 and #264; adds a separate root/database-owner controlled
