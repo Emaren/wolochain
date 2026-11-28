@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war"]
 audience: ["developers", "operators", "ai-agents"]
 source_of_truth: "git"
 authority: "read-only-physical-observer-no-solvency-or-funding-authority"
-reviewed_at: "2026-11-19"
+reviewed_at: "2026-11-28"
 review_interval_days: 7
 sensitivity: "restricted"
 ---

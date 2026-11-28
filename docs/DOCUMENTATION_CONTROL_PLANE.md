@@ -19,7 +19,7 @@ Repository ID: `wolochain`
 
 Documentation owner: `wolochain-ops`
 
-Implementation baseline: `we1/clan-hall-restricted-reader-20261126` at `60cb0a164d035087e873f3153c00ed39e36e49db`
+Implementation baseline: `review/clan-legacy-image-recovery-20261128` at `f2349e91de655d3ca6a281d342078dcedac7e6d9`
 
 The implementation baseline identifies the code commit described by this documentation. Documentation-only commits may follow it without creating a self-referential registry hash.
 
@@ -27,7 +27,7 @@ This page is generated from the validated front matter in this repository. Cross
 
 ## Documentation health
 
-- Authoritative repository documents: **100**
+- Authoritative repository documents: **102**
 - Path moves in this migration: **0**
 - Every listed document has an explicit owner, lifecycle, authority, and review interval.
 
@@ -36,12 +36,12 @@ This page is generated from the validated front matter in this repository. Cross
 - `historical`: 18
 - `reference`: 49
 - `runbook`: 27
-- `working`: 6
+- `working`: 8
 
 ### Lifecycle
 
 - `active`: 16
-- `draft`: 66
+- `draft`: 68
 - `historical`: 18
 
 ## Documents
@@ -98,6 +98,7 @@ This page is generated from the validated front matter in this repository. Cross
 | [C09 Distinct Intel FileVault P-256 Transaction Key: Physical Enrollment HOLD](C09_INTEL_FILEVAULT_TRANSACTION_KEY_ENROLLMENT_HOLD.md) | `runbook` | `draft` | `owner-only-unfunded-filevault-keychain-enrollment-not-a-payment-permit` |
 | [C09 Ratified C08 Governance Bridge — Signed Canary Ceiling and No Spending](C09_RATIFIED_C08_POLICY_BRIDGE.md) | `runbook` | `draft` | `authenticated-C08-governance-preflight-only-no-spending-permit` |
 | [WE1 Clan image member-only admission — source HOLD](WE1_CLAN_IMAGE_MEMBER_ONLY_ADMISSION_20261125.md) | `working` | `draft` | `source-only-clan-image-contract-not-production-admission` |
+| [Dated financial documentation continuity review — November 28, 2026](WE1_DATED_DOCUMENT_CONTINUITY_REVIEW_20261128.md) | `working` | `draft` | `machine-assisted-document-continuity-only-no-financial-admission` |
 | [WE1 solo-owner financial engineering — source review vs physical authority](WE1_SOLO_OWNER_FINANCIAL_TECHNICAL_REVIEW_POLICY_20261119.md) | `working` | `draft` | `single-human-source-review-policy-no-production-permit` |
 | [WE1 Source Authority and Dated Evidence Review — November 19, 2026](WE1_SOURCE_AUTHORITY_DATED_EVIDENCE_REVIEW_20261119.md) | `working` | `draft` | `AI-machine-assisted-review-nonfinancial-nonfunding` |
 | [Native epoch-v3 wire-v1 trust mismatch and held handoff](epoch-v3-wire-v1-hold.md) | `reference` | `draft` | `source-only-verifier-mismatch-not-financial-authority` |
@@ -147,6 +148,7 @@ This page is generated from the validated front matter in this repository. Cross
 | [Production P1 source integrity, writer evidence, five-person authority and bounded recovery proposal — 2026-10-24](../reviews/financial-maintenance/20261024-p1-writer-evidence-and-budget-proposal.md) | `historical` | `historical` | `non-authorizing-financial-human-signature-review` |
 | [Financial maintenance phase integration operator runbook — 2026-10-24](../reviews/financial-maintenance/20261024-phase-integration-operator-runbook.md) | `historical` | `historical` | `non-authorizing-financial-human-signature-review` |
 | [Financial controller source integrity and five-human enrollment — 2026-10-24](../reviews/financial-maintenance/20261024-source-integrity-enrollment-and-restore-qualification.md) | `historical` | `historical` | `non-authorizing-financial-human-signature-review` |
+| [Historical Clan image admission — source review only](../scripts/clan_legacy_reader_v1/README.md) | `working` | `draft` | `source-only-clan-legacy-reader-not-production-admission` |
 
 ## Canonical commands
 

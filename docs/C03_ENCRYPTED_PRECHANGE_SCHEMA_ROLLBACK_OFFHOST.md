@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war", "aoe2dewarwagers"]
 audience: ["operators", "developers", "financial-reviewers", "ai-agents"]
 source_of_truth: "git"
 authority: "pre-migration-source-metadata-insurance-only-not-full-financial-backup-or-writer-fence"
-reviewed_at: "2026-11-19"
+reviewed_at: "2026-11-28"
 review_interval_days: 7
 sensitivity: "restricted"
 ---

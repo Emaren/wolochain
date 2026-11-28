@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war"]
 audience: ["operators", "developers", "financial-reviewers"]
 source_of_truth: "git"
 authority: "public-notice-source-integrity-only-no-financial-permit"
-reviewed_at: "2026-11-19"
+reviewed_at: "2026-11-28"
 review_interval_days: 7
 sensitivity: "internal"
 ---

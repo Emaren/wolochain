@@ -8,7 +8,7 @@ systems: ["wolochain", "aoe2war", "aoe2dewarwagers"]
 audience: ["developers", "operators", "ai-agents"]
 source_of_truth: "git"
 authority: "non-authorizing-c07-isolated-recovery-rehearsal"
-reviewed_at: "2026-11-19"
+reviewed_at: "2026-11-28"
 review_interval_days: 7
 sensitivity: "restricted"
 ---
