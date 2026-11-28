@@ -55,6 +55,14 @@ with tempfile.TemporaryDirectory(prefix='clan-legacy-fixture-',dir='/tmp') as tm
   ok('raw legacy helper denied to social caller',psql("SELECT aoe2war_clan_legacy_hd_v1.read_mapped('alice','alpha',2)",role='aoe2war_social_writer',check=False).returncode!=0)
   ok('populated inverse refuses',psql(file=root/'clan_legacy_reader_v1/inverse-empty.sql',check=False).returncode!=0 and read() is not None)
   ok('original records untouched',psql(snap).stdout==before)
+  map_snap="SELECT md5(string_agg(row_to_json(a)::text,',' ORDER BY attachment_id)) FROM aoe2war_clan_legacy_hd_v1.admitted a"
+  map_before=psql(map_snap).stdout
+  psql(file=root/'clan_legacy_reader_v1/disable-populated.sql')
+  ok('populated disable restores legacy denial',read() is None and hall()['messages'][0]['unsupportedAttachment'])
+  ok('populated disable preserves upload receipt',read(aid=1)['name']=='x.png')
+  ok('populated disable retains records and map',psql(snap).stdout==before and psql(map_snap).stdout==map_before)
+  ok('populated disable revokes helper execution',psql("SELECT has_function_privilege('aoe2war_clan_image_exec_v1','aoe2war_clan_legacy_hd_v1.read_mapped(text,text,integer)','EXECUTE')").stdout.strip()=='f')
+  ok('disable replay refused',psql(file=root/'clan_legacy_reader_v1/disable-populated.sql',check=False).returncode!=0)
  finally:
   if started:run(pg/'pg_ctl','-D',data,'-m','fast','-w','stop')
 print('ISOLATED_PG16_STOPPED_REMOVED')
