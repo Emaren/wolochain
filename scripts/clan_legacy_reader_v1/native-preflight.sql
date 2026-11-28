@@ -19,6 +19,14 @@ BEGIN
  FOR rel IN SELECT * FROM pg_class WHERE oid IN ('public.users'::regclass,'public.clans'::regclass,'public.clan_members'::regclass,'public.clan_messages'::regclass,'public.clan_message_attachments'::regclass,'aoe2war_clan_image_hd_v1.request_keys'::regclass) LOOP
   IF rel.relkind<>'r' OR rel.relrowsecurity OR rel.relforcerowsecurity OR rel.relowner<>(CASE WHEN rel.oid='aoe2war_clan_image_hd_v1.request_keys'::regclass THEN 'aoe2war_clan_image_exec_v1'::regrole ELSE 'aoe2hd_user'::regrole END) THEN RAISE EXCEPTION 'CLAN_LEGACY_RELATION_HOLD %',rel.relname; END IF;
   FOR r IN SELECT * FROM (VALUES ('aoe2war_social_writer'),('aoe2war_web_prod'),('aoe2war_clan_image_exec_v1')) v(name) LOOP
+   -- Exact display-column contract: app-prodn 15c693d141640ae51dea416ae996b3e3c0357c0f
+   -- config/nonfinancial-production-auth.sql and scripts/r25_c_start_root.py.
+   IF r.name='aoe2war_web_prod' AND rel.oid='public.users'::regclass THEN
+    IF has_table_privilege(r.name,rel.oid,'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER') OR has_any_column_privilege(r.name,rel.oid,'INSERT,UPDATE,REFERENCES') OR
+       (SELECT array_agg(a.attname::text ORDER BY a.attname::text COLLATE "C") FROM pg_attribute a WHERE a.attrelid=rel.oid AND a.attnum>0 AND NOT a.attisdropped AND has_column_privilege(r.name,rel.oid,a.attnum,'SELECT')) IS DISTINCT FROM ARRAY['created_at','gender_division','gender_division_updated_at','id','in_game_name','last_seen','lock_name','preferred_language','represented_country','represented_country_updated_at','steam_id','steam_persona_name','twitch_stream_url','uid','verification_level','verification_method','verified','verified_at' ] OR
+       EXISTS(SELECT 1 FROM pg_attribute a WHERE a.attrelid=rel.oid AND a.attnum>0 AND NOT a.attisdropped AND has_column_privilege(r.name,rel.oid,a.attnum,'SELECT WITH GRANT OPTION')) THEN RAISE EXCEPTION 'CLAN_LEGACY_WEB_DISPLAY_ACL_DRIFT'; END IF;
+    CONTINUE;
+   END IF;
    IF rel.relowner<>to_regrole(r.name) AND (has_table_privilege(r.name,rel.oid,'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER') OR has_any_column_privilege(r.name,rel.oid,'SELECT,INSERT,UPDATE,REFERENCES')) THEN RAISE EXCEPTION 'CLAN_LEGACY_RAW_PRIVILEGE_HOLD % %',r.name,rel.relname; END IF;
   END LOOP;
  END LOOP;
